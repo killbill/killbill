@@ -34,10 +34,12 @@ public @interface Cachable {
     public final String TENANT_CATALOG_CACHE_NAME = "tenant-catalog";
     public final String TENANT_OVERDUE_CONFIG_CACHE_NAME = "tenant-overdue-config";
     public final String TENANT_KV_CACHE_NAME = "tenant-kv";
+    public final String OVERRIDDEN_PLAN_CACHE_NAME = "overridden-plan";
 
     public CacheType value();
 
     public enum CacheType {
+
         /* Mapping from object 'id (UUID)' -> object 'recordId (Long' */
         RECORD_ID(RECORD_ID_CACHE_NAME, false),
 
@@ -63,7 +65,10 @@ public @interface Cachable {
         TENANT_OVERDUE_CONFIG(TENANT_OVERDUE_CONFIG_CACHE_NAME, false),
 
         /* Tenant overdue config cache */
-        TENANT_KV(TENANT_KV_CACHE_NAME, false);
+        TENANT_KV(TENANT_KV_CACHE_NAME, false),
+
+        /* Overwritten plans  */
+        OVERRIDDEN_PLAN(OVERRIDDEN_PLAN_CACHE_NAME, false);
 
         private final String cacheName;
         private final boolean isKeyPrefixedWithTableName;

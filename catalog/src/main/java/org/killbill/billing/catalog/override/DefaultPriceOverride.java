@@ -18,7 +18,6 @@
 package org.killbill.billing.catalog.override;
 
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
@@ -29,14 +28,13 @@ import org.killbill.billing.catalog.DefaultPlan;
 import org.killbill.billing.catalog.DefaultPlanPhase;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.caching.OverriddenPlanCache;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
-import org.killbill.billing.catalog.dao.CatalogOverridePhaseDefinitionModelDao;
 import org.killbill.billing.catalog.dao.CatalogOverridePlanDefinitionModelDao;
 
 import com.google.common.base.Predicate;
@@ -48,10 +46,12 @@ public class DefaultPriceOverride implements PriceOverride {
     public static final Pattern CUSTOM_PLAN_NAME_PATTERN = Pattern.compile("(.*)-(\\d+)$");
 
     private final CatalogOverrideDao overrideDao;
+    private final OverriddenPlanCache overriddenPlanCache;
 
     @Inject
-    public DefaultPriceOverride(final CatalogOverrideDao overrideDao) {
+    public DefaultPriceOverride(final CatalogOverrideDao overrideDao, final OverriddenPlanCache overriddenPlanCache) {
         this.overrideDao = overrideDao;
+        this.overriddenPlanCache = overriddenPlanCache;
     }
 
     @Override
@@ -66,7 +66,7 @@ public class DefaultPriceOverride implements PriceOverride {
                     if (input.getPhaseName() != null) {
                         return input.getPhaseName().equals(curPhase.getName());
                     }
-                    // If the phaseName was not passed, we infer by matching the phaseType. This obvously would not work in a case where
+                    // If the phaseName was not passed, we infer by matching the phaseType. This obviously would not work in a case where
                     // a plan is defined with multiple phases of the same type.
                     final PlanPhaseSpecifier curPlanPhaseSpecifier = input.getPlanPhaseSpecifier();
                     if (curPlanPhaseSpecifier.getPhaseType().equals(curPhase.getPhaseType())) {
@@ -105,39 +105,6 @@ public class DefaultPriceOverride implements PriceOverride {
 
     @Override
     public DefaultPlan getOverriddenPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
-
-        final Matcher m = CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
-        if (!m.matches()) {
-            throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PLAN, planName);
-        }
-        final String parentPlanName = m.group(1);
-        final Long planDefRecordId = Long.parseLong(m.group(2));
-
-        final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs = overrideDao.getOverriddenPlanPhases(planDefRecordId, context);
-        final DefaultPlan defaultPlan = (DefaultPlan) catalog.findCurrentPlan(parentPlanName);
-
-        final PlanPhasePriceOverride[] overrides = createOverrides(defaultPlan, phaseDefs);
-        return new DefaultPlan(planName, defaultPlan, overrides);
+        return overriddenPlanCache.getOverriddenPlan(planName, catalog, context);
     }
-
-    private PlanPhasePriceOverride[] createOverrides(final Plan defaultPlan, final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs) {
-
-        final PlanPhasePriceOverride[] result = new PlanPhasePriceOverride[defaultPlan.getAllPhases().length];
-
-        for (int i = 0; i < defaultPlan.getAllPhases().length; i++) {
-
-            final PlanPhase curPhase = defaultPlan.getAllPhases()[i];
-            final CatalogOverridePhaseDefinitionModelDao overriddenPhase = Iterables.tryFind(phaseDefs, new Predicate<CatalogOverridePhaseDefinitionModelDao>() {
-                @Override
-                public boolean apply(final CatalogOverridePhaseDefinitionModelDao input) {
-                    return input.getParentPhaseName().equals(curPhase.getName());
-                }
-            }).orNull();
-            result[i] = (overriddenPhase != null) ?
-                        new DefaultPlanPhasePriceOverride(curPhase.getName(), Currency.valueOf(overriddenPhase.getCurrency()), overriddenPhase.getFixedPrice(), overriddenPhase.getRecurringPrice()) :
-                        null;
-        }
-        return result;
-    }
-
 }
