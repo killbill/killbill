@@ -82,7 +82,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
                 xmlURIs = findXmlReferences(directoryContents, new URL(uriString));
             }
 
-            final VersionedCatalog result = new VersionedCatalog(clock, InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID);
+            final VersionedCatalog result = new VersionedCatalog(clock);
             for (final URI u : xmlURIs) {
                 final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(u, StandaloneCatalog.class);
                 result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, internalCallContextFactory));
@@ -94,7 +94,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
     }
 
     public VersionedCatalog load(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
-        final VersionedCatalog result = new VersionedCatalog(clock, tenantRecordId);
+        final VersionedCatalog result = new VersionedCatalog(clock);
         final URI uri;
         try {
             uri = new URI("/tenantCatalog");

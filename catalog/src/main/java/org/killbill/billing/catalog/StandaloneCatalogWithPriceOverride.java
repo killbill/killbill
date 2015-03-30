@@ -52,19 +52,47 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<StandaloneCatalogWithPriceOverride> implements StaticCatalog {
 
     private final StandaloneCatalog standaloneCatalog;
-    private final PriceOverride priceOverride;
     private final Long tenantRecordId;
 
+    /* Since we offer endpoints that attempt to serialize catalog objects, we need to explicitly tell Jackson to ignore those fields */
+    @JsonIgnore
     private final InternalCallContextFactory internalCallContextFactory;
+    @JsonIgnore
+    private final PriceOverride priceOverride;
 
     public StandaloneCatalogWithPriceOverride(final StandaloneCatalog staticCatalog, final PriceOverride priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
         this.tenantRecordId = tenantRecordId;
         this.standaloneCatalog = staticCatalog;
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;
+    }
+
+    public StandaloneCatalogWithPriceOverride(final StandaloneCatalogWithPriceOverride cur, final InternalTenantContext tenantContext) {
+        this.tenantRecordId = tenantContext.getTenantRecordId();
+        this.priceOverride = cur.getPriceOverride();
+        this.standaloneCatalog = cur.getStandaloneCatalog();
+        this.internalCallContextFactory = cur.getInternalCallContextFactory();
+    }
+
+    public StandaloneCatalog getStandaloneCatalog() {
+        return standaloneCatalog;
+    }
+
+    public PriceOverride getPriceOverride() {
+        return priceOverride;
+    }
+
+    public Long getTenantRecordId() {
+        return tenantRecordId;
+    }
+
+    public InternalCallContextFactory getInternalCallContextFactory() {
+        return internalCallContextFactory;
     }
 
     @Override
