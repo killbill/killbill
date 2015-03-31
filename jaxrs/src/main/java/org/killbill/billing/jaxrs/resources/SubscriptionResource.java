@@ -156,7 +156,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
                              entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set",
                              entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
-                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set",
+                             entitlement.getAccountId(), "SubscriptionJson accountId needs to be set");
+
         final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
         if (createAddOnEntitlement) {
             verifyNonNullOrEmpty(entitlement.getBundleId(), "SubscriptionJson bundleId should be specified");
@@ -244,7 +246,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified");
         verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
                              entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
-                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set",
+                             entitlement.getAccountId(), "SubscriptionJson accountId needs to be set");
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 

@@ -112,7 +112,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
                 keys.add(key.toString());
             }
         }
-        return sqlDao.getTargetPlanDefinition(keys, keys.size(), context);
+        return keys.size() > 0 ? sqlDao.getTargetPlanDefinition(keys, keys.size(), context) : null;
     }
 
     private void createCatalogOverridePlanPhaseFromTransaction(final short phaseNum, final CatalogOverridePhaseDefinitionModelDao phaseDef, final CatalogOverridePlanDefinitionModelDao planDef, final Handle inTransactionHandle, final InternalCallContext context) {

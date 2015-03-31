@@ -65,7 +65,7 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         assertEquals(newPlan.getParentPlanName(), "discount-standard-monthly");
         assertTrue(newPlan.getIsActive());
 
-        final List<CatalogOverridePhaseDefinitionModelDao> phases = catalogOverrideDao.getOverriddenPlanPhases(1L, internalCallContext);
+        final List<CatalogOverridePhaseDefinitionModelDao> phases = catalogOverrideDao.getOverriddenPlanPhases(newPlan.getRecordId(), internalCallContext);
         assertEquals(phases.size(), 2);
     }
 
