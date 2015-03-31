@@ -83,10 +83,12 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         Assert.assertEquals(products.length, 3);
 
         // Verify the lookup with other contexts
-        Assert.assertEquals(catalogCache.getCatalog(multiTenantContext), result);
-        Assert.assertEquals(catalogCache.getCatalog(otherMultiTenantContext), result);
-        Assert.assertEquals(catalogCache.getCatalog(Mockito.mock(InternalTenantContext.class)), result);
-        Assert.assertEquals(catalogCache.getCatalog(Mockito.mock(InternalCallContext.class)), result);
+        final VersionedCatalog resultForMultiTenantContext = new VersionedCatalog(result, multiTenantContext);
+        Assert.assertEquals(catalogCache.getCatalog(multiTenantContext).getCatalogName(), resultForMultiTenantContext.getCatalogName());
+        Assert.assertEquals(catalogCache.getCatalog(multiTenantContext).getVersions().size(), resultForMultiTenantContext.getVersions().size());
+        for (int i = 0; i < catalogCache.getCatalog(multiTenantContext).getVersions().size(); i++) {
+            Assert.assertEquals(catalogCache.getCatalog(multiTenantContext).getVersions().get(i).getTenantRecordId(), resultForMultiTenantContext.getVersions().get(i).getTenantRecordId());
+        }
     }
 
     //

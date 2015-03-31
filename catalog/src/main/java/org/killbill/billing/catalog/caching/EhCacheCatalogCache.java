@@ -70,8 +70,14 @@ public class EhCacheCatalogCache implements CatalogCache {
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,
         // but to be on the safe side;;
         try {
-            final VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
-            return (tenantCatalog != null) ? tenantCatalog : defaultCatalog;
+            VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
+            // It means we are using a default catalog in a multi-tenant deployment, that does not really match a real use case, but we want to support it
+            // for test purpose.
+            if (tenantCatalog == null) {
+                tenantCatalog = new VersionedCatalog(defaultCatalog, tenantContext);
+                cacheController.add(tenantContext.getTenantRecordId(), tenantCatalog);
+            }
+            return tenantCatalog;
         } catch (final IllegalStateException e) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, tenantContext.getTenantRecordId());
         }

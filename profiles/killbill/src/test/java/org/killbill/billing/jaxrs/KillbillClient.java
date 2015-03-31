@@ -40,7 +40,7 @@ import static org.testng.Assert.assertNotNull;
 
 public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
-    private final int DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC = 5;
+    protected final int DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC = 5;
 
     protected static final String PLUGIN_NAME = "noop";
 

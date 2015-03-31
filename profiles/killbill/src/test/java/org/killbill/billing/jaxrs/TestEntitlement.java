@@ -18,6 +18,9 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -25,12 +28,17 @@ import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
+import org.killbill.billing.client.model.Invoice;
+import org.killbill.billing.client.model.PhasePriceOverride;
 import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
+import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -189,4 +197,35 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertNotNull(objFromJson);
         assertEquals(objFromJson.getBillingPeriod(), BillingPeriod.MONTHLY);
     }
+
+
+    @Test(groups = "slow", description = "Can override a price when creating a subscription")
+    public void testOverridePrice() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.ANNUAL;
+
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setExternalKey("identical");
+        input.setProductName(productName);
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final List<PhasePriceOverride> overrides = new ArrayList<PhasePriceOverride>();
+        overrides.add(new PhasePriceOverride(null, PhaseType.TRIAL.toString(), BigDecimal.TEN, null));
+        input.setPriceOverrides(overrides);
+
+        final Subscription subscription =  killBillClient.createSubscription(input,  DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
+        assertEquals(invoices.size(), 1);
+        assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+    }
+
 }

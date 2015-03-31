@@ -333,8 +333,8 @@ public class SubscriptionJson extends JsonBase {
         for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
             this.events.add(new EventSubscriptionJson(subscriptionEvent, accountAuditLogs));
         }
+        // It may be nice to recreate the override that were applied on the plans associated with that subscription
         this.priceOverrides = new LinkedList<PhasePriceOverrideJson>();
-        // STEPH_PO
     }
 
     public String getAccountId() {

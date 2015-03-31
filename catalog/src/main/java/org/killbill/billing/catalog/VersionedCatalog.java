@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingMode;
@@ -66,7 +67,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     private final Clock clock;
     private String catalogName;
     private BillingMode recurringBillingMode;
-    private final Long tenantRecordId;
 
     @XmlElement(name = "catalogVersion", required = true)
     private final List<StandaloneCatalogWithPriceOverride> versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
@@ -74,14 +74,21 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     // Required for JAXB deserialization
     public VersionedCatalog() {
         this.clock = null;
-        this.tenantRecordId = null;
     }
 
-    public VersionedCatalog(final Clock clock, final Long tenantRecordId) {
+    public VersionedCatalog(final Clock clock) {
         this.clock = clock;
-        this.tenantRecordId = tenantRecordId;
     }
 
+    public VersionedCatalog(final VersionedCatalog inputCatalog, final InternalTenantContext tenantContext) {
+        this.clock = inputCatalog.getClock();
+        this.catalogName = inputCatalog.getCatalogName();
+        this.recurringBillingMode = inputCatalog.getRecurringBillingMode();
+        for (final StandaloneCatalogWithPriceOverride cur : inputCatalog.getVersions()) {
+            final StandaloneCatalogWithPriceOverride catalogWithTenantInfo = new StandaloneCatalogWithPriceOverride(cur, tenantContext);
+            versions.add(catalogWithTenantInfo);
+        }
+    }
 
     //
     // Private methods
@@ -175,6 +182,14 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
         }
 
         throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
+    }
+
+    public Clock getClock() {
+        return clock;
+    }
+
+    public List<StandaloneCatalogWithPriceOverride> getVersions() {
+        return versions;
     }
 
     //
