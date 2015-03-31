@@ -20,10 +20,13 @@ package org.killbill.billing.server.modules;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import javax.inject.Inject;
+
 import org.killbill.commons.jdbi.guice.DaoConfig;
 
 public class KillBillEmbeddedDBProvider extends EmbeddedDBProvider {
 
+    @Inject
     public KillBillEmbeddedDBProvider(final DaoConfig daoConfig) {super(daoConfig);}
 
     @Override
