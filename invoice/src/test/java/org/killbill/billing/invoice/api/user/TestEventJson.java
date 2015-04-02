@@ -19,7 +19,9 @@ package org.killbill.billing.invoice.api.user;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -39,6 +41,16 @@ public class TestEventJson extends InvoiceTestSuiteNoDB {
         final String json = mapper.writeValueAsString(e);
 
         final Object obj = mapper.readValue(json, DefaultInvoiceCreationEvent.class);
+        Assert.assertEquals(obj, e);
+    }
+
+
+    @Test(groups = "fast")
+    public void testInvoiceNotificationEvent() throws Exception {
+        final InvoiceNotificationInternalEvent e = new DefaultInvoiceNotificationInternalEvent(UUID.randomUUID(),  new BigDecimal(12.0), Currency.USD, new DateTime(), 1L, 2L, null);
+        final String json = mapper.writeValueAsString(e);
+
+        final Object obj = mapper.readValue(json, DefaultInvoiceNotificationInternalEvent.class);
         Assert.assertEquals(obj, e);
     }
 

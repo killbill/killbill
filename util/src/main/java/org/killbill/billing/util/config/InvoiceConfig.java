@@ -19,6 +19,7 @@ package org.killbill.billing.util.config;
 import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.Description;
+import org.skife.config.TimeSpan;
 
 public interface InvoiceConfig extends KillbillConfig {
 
@@ -37,4 +38,8 @@ public interface InvoiceConfig extends KillbillConfig {
     @Description("Whether to insert usage items with a zero amount")
     public boolean isInsertZeroUsageItems();
 
+    @Config("org.killbill.invoice.dryRunNotificationSchedule")
+    @Default("0s")
+    @Description("DryRun invoice notification time before targetDate (ignored if set to 0s)")
+    public TimeSpan getDryRunNotificationSchedule();
 }

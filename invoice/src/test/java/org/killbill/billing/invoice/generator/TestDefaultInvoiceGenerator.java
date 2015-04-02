@@ -65,6 +65,7 @@ import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
 import org.mockito.Mockito;
+import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -112,6 +113,11 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
             @Override
             public boolean isInsertZeroUsageItems() {
                 return true;
+            }
+
+            @Override
+            public TimeSpan getDryRunNotificationSchedule() {
+                return new TimeSpan("0s");
             }
         };
         this.generator = new DefaultInvoiceGenerator(clock, null, invoiceConfig, internalCallContextFactory);

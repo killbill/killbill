@@ -77,12 +77,20 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
                     }
 
                     final NextBillingDateNotificationKey key = (NextBillingDateNotificationKey) notificationKey;
+
+                    // Just to ensure compatibility with json that might not have that targetDate field (old versions < 0.13.6)
+                    final DateTime targetDate = key.getTargetDate() != null ? key.getTargetDate() : eventDate;
                     try {
                         final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(key.getUuidKey(), callContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
                         if (subscription == null) {
                             log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")");
+                            return;
+                        }
+                        if (key.isDryRunForInvoiceNotification() != null && // Just to ensure compatibility with json that might not have that field (old versions < 0.13.6)
+                            key.isDryRunForInvoiceNotification()) {
+                            processEventForInvoiceNotification(key.getUuidKey(), targetDate, userToken, accountRecordId, tenantRecordId);
                         } else {
-                            processEvent(key.getUuidKey(), eventDate, userToken, accountRecordId, tenantRecordId);
+                            processEventForInvoiceGeneration(key.getUuidKey(), targetDate, userToken, accountRecordId, tenantRecordId);
                         }
                     } catch (SubscriptionBaseApiException e) {
                         log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")", e);
@@ -111,7 +119,11 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
         }
     }
 
-    private void processEvent(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+    private void processEventForInvoiceGeneration(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         listener.handleNextBillingDateEvent(subscriptionId, eventDateTime, userToken, accountRecordId, tenantRecordId);
+    }
+
+    private void processEventForInvoiceNotification(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        listener.handleEventForInvoiceNotification(subscriptionId, eventDateTime, userToken, accountRecordId, tenantRecordId);
     }
 }

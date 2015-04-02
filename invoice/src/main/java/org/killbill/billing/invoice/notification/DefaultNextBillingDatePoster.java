@@ -47,6 +47,19 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
     @Override
     public void insertNextBillingNotificationFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
                                                              final UUID subscriptionId, final DateTime futureNotificationTime, final InternalCallContext internalCallContext) {
+        insertNextBillingFromTransactionInternal(entitySqlDaoWrapperFactory, accountId, subscriptionId, Boolean.FALSE, futureNotificationTime, futureNotificationTime, internalCallContext);
+    }
+
+
+    @Override
+    public void insertNextBillingDryRunNotificationFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
+                                                                   final UUID subscriptionId, final DateTime futureNotificationTime, final DateTime targetDate, final InternalCallContext internalCallContext) {
+        insertNextBillingFromTransactionInternal(entitySqlDaoWrapperFactory, accountId, subscriptionId, Boolean.TRUE, futureNotificationTime, targetDate, internalCallContext);
+    }
+
+
+    private void insertNextBillingFromTransactionInternal(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
+                                                                   final UUID subscriptionId, final Boolean isDryRunForInvoiceNotification,  final DateTime futureNotificationTime, final DateTime targetDate, final InternalCallContext internalCallContext) {
         final NotificationQueue nextBillingQueue;
         try {
             nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
@@ -54,7 +67,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
             log.info("Queuing next billing date notification at {} for subscriptionId {}", futureNotificationTime.toString(), subscriptionId.toString());
 
             nextBillingQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), futureNotificationTime,
-                                                                     new NextBillingDateNotificationKey(subscriptionId), internalCallContext.getUserToken(),
+                                                                     new NextBillingDateNotificationKey(subscriptionId, targetDate, isDryRunForInvoiceNotification), internalCallContext.getUserToken(),
                                                                      internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
         } catch (final NoSuchNotificationQueue e) {
             log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
@@ -62,4 +75,5 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
             log.error("Failed to serialize notificationKey for subscriptionId {}", subscriptionId);
         }
     }
+
 }

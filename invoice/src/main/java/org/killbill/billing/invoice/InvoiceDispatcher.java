@@ -38,14 +38,19 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceInternalEvent;
+import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -54,6 +59,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
+import org.killbill.billing.invoice.api.user.DefaultInvoiceNotificationInternalEvent;
 import org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
@@ -93,6 +99,8 @@ public class InvoiceDispatcher {
     private static final Logger log = LoggerFactory.getLogger(InvoiceDispatcher.class);
     private static final int NB_LOCK_TRY = 5;
 
+    private static final NullDryRunArguments NULL_DRY_RUN_ARGUMENTS = new NullDryRunArguments();
+
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
@@ -130,26 +138,48 @@ public class InvoiceDispatcher {
         this.clock = clock;
     }
 
-    public void processSubscription(final EffectiveSubscriptionInternalEvent transition,
-                                    final InternalCallContext context) throws InvoiceApiException {
+    public void processSubscriptionForInvoiceGeneration(final EffectiveSubscriptionInternalEvent transition,
+                                                        final InternalCallContext context) throws InvoiceApiException {
         final UUID subscriptionId = transition.getSubscriptionId();
         final DateTime targetDate = transition.getEffectiveTransitionTime();
-        processSubscription(subscriptionId, targetDate, context);
+        processSubscriptionForInvoiceGeneration(subscriptionId, targetDate, context);
     }
 
-    public void processSubscription(final UUID subscriptionId, final DateTime targetDate, final InternalCallContext context) throws InvoiceApiException {
+    public void processSubscriptionForInvoiceGeneration(final UUID subscriptionId, final DateTime targetDate, final InternalCallContext context) throws InvoiceApiException {
+        processSubscriptionInternal(subscriptionId, targetDate, false, context);
+    }
+
+    public void processSubscriptionForInvoiceNotification(final UUID subscriptionId, final DateTime targetDate, final InternalCallContext context) throws InvoiceApiException {
+        final Invoice dryRunInvoice = processSubscriptionInternal(subscriptionId, targetDate, true, context);
+        if (dryRunInvoice != null && dryRunInvoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
+            final InvoiceNotificationInternalEvent event = new DefaultInvoiceNotificationInternalEvent(dryRunInvoice.getAccountId(), dryRunInvoice.getBalance(), dryRunInvoice.getCurrency(),
+                                                                                                       targetDate, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+            try {
+                eventBus.post(event);
+            } catch (EventBusException e) {
+                log.error("Failed to post event " + event, e);
+            }
+        }
+    }
+
+
+    private Invoice processSubscriptionInternal(final UUID subscriptionId, final DateTime targetDate, final boolean dryRunForNotification, final InternalCallContext context) throws InvoiceApiException {
         try {
             if (subscriptionId == null) {
                 log.error("Failed handling SubscriptionBase change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
-                return;
+                return null;
             }
             final UUID accountId = subscriptionApi.getAccountIdFromSubscriptionId(subscriptionId, context);
-            processAccount(accountId, targetDate, null, context);
+            final DryRunArguments dryRunArguments = dryRunForNotification ? NULL_DRY_RUN_ARGUMENTS : null;
+
+            return processAccount(accountId, targetDate, dryRunArguments, context);
         } catch (final SubscriptionBaseApiException e) {
             log.error("Failed handling SubscriptionBase change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
+            return null;
         }
     }
+
 
     public Invoice processAccount(final UUID accountId, final DateTime targetDate,
                                   @Nullable final DryRunArguments dryRunArguments, final InternalCallContext context) throws InvoiceApiException {
@@ -424,6 +454,37 @@ public class InvoiceDispatcher {
             } else {
                 chargeThroughDates.put(subscriptionId, proposedChargedThroughDate);
             }
+        }
+    }
+
+    private final static class NullDryRunArguments implements DryRunArguments {
+        @Override
+        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+            return null;
+        }
+        @Override
+        public SubscriptionEventType getAction() {
+            return null;
+        }
+        @Override
+        public UUID getSubscriptionId() {
+            return null;
+        }
+        @Override
+        public DateTime getEffectiveDate() {
+            return null;
+        }
+        @Override
+        public UUID getBundleId() {
+            return null;
+        }
+        @Override
+        public BillingActionPolicy getBillingActionPolicy() {
+            return null;
+        }
+        @Override
+        public List<PlanPhasePriceOverride> getPlanPhasePriceoverrides() {
+            return null;
         }
     }
 }
