@@ -777,18 +777,15 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
                                              final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final InternalCallContext internalCallContext) {
 
-
         final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule().getMillis();
-        final boolean isInvoiceNotificationEnabled =  dryRunNotificationTime > 0;
+        final boolean isInvoiceNotificationEnabled = dryRunNotificationTime > 0;
         for (final UUID subscriptionId : callbackDateTimePerSubscriptions.keySet()) {
             final List<DateTime> callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
             for (final DateTime cur : callbackDateTimeUTC) {
                 if (isInvoiceNotificationEnabled) {
                     final DateTime curDryRunNotificationTime = cur.minus(dryRunNotificationTime);
-                    // Only schedule if the date is in the future
-                    if (curDryRunNotificationTime.isAfter(clock.getUTCNow())) {
-                        nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, curDryRunNotificationTime, cur, internalCallContext);
-                    }
+                    final DateTime effectiveCurDryRunNotificationTime = (curDryRunNotificationTime.isAfter(clock.getUTCNow())) ? curDryRunNotificationTime : clock.getUTCNow();
+                    nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, effectiveCurDryRunNotificationTime, cur, internalCallContext);
                 }
                 nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur, internalCallContext);
             }

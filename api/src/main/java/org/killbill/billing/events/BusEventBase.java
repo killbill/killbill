@@ -48,4 +48,36 @@ public class BusEventBase implements BusEvent {
     public UUID getUserToken() {
         return userToken;
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof BusEventBase)) {
+            return false;
+        }
+
+        final BusEventBase that = (BusEventBase) o;
+
+        if (searchKey1 != null ? !searchKey1.equals(that.searchKey1) : that.searchKey1 != null) {
+            return false;
+        }
+        if (searchKey2 != null ? !searchKey2.equals(that.searchKey2) : that.searchKey2 != null) {
+            return false;
+        }
+        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = searchKey1 != null ? searchKey1.hashCode() : 0;
+        result = 31 * result + (searchKey2 != null ? searchKey2.hashCode() : 0);
+        result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
+        return result;
+    }
 }

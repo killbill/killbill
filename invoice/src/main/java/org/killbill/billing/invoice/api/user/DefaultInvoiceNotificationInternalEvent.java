@@ -85,6 +85,9 @@ public class DefaultInvoiceNotificationInternalEvent extends BusEventBase implem
         if (!(o instanceof DefaultInvoiceNotificationInternalEvent)) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         final DefaultInvoiceNotificationInternalEvent that = (DefaultInvoiceNotificationInternalEvent) o;
 
@@ -100,15 +103,18 @@ public class DefaultInvoiceNotificationInternalEvent extends BusEventBase implem
         if (targetDate != null ? targetDate.compareTo(that.targetDate) != 0 : that.targetDate != null) {
             return false;
         }
+
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = targetDate != null ? targetDate.hashCode() : 0;
+        int result = super.hashCode();
+        result = 31 * result + (targetDate != null ? targetDate.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (amountOwed != null ? amountOwed.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         return result;
     }
 }
+
