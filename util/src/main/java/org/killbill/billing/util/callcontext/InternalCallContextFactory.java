@@ -247,9 +247,13 @@ public class InternalCallContextFactory {
 
     // Safe method to retrieve the record id from any object (should only be used by DefaultRecordIdApi)
     public Long getRecordIdFromObject(final UUID objectId, final ObjectType objectType, final TenantContext context) {
-        if (objectBelongsToTheRightTenant(objectId, objectType, context)) {
-            return nonEntityDao.retrieveRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
-        } else {
+        try {
+            if (objectBelongsToTheRightTenant(objectId, objectType, context)) {
+                return nonEntityDao.retrieveRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
+            } else {
+                return null;
+            }
+        } catch (final ObjectDoesNotExist e) {
             return null;
         }
     }
@@ -266,7 +270,7 @@ public class InternalCallContextFactory {
         }
     }
 
-    private Long getAccountRecordIdSafe(final UUID objectId, final ObjectType objectType, final Long tenantRecordId) {
+    private Long getAccountRecordIdSafe(final UUID objectId, final ObjectType objectType, final Long tenantRecordId) throws ObjectDoesNotExist {
         if (objectBelongsToTheRightTenant(objectId, objectType, tenantRecordId)) {
             return getAccountRecordIdUnsafe(objectId, objectType);
         } else {
@@ -293,14 +297,20 @@ public class InternalCallContextFactory {
     // In-code tenant checkers
     //
 
-    private boolean objectBelongsToTheRightTenant(final UUID objectId, final ObjectType objectType, final TenantContext context) {
+    private boolean objectBelongsToTheRightTenant(final UUID objectId, final ObjectType objectType, final TenantContext context) throws ObjectDoesNotExist {
         final Long realTenantRecordId = getTenantRecordIdSafe(context);
+        if (realTenantRecordId == null) {
+            throw new ObjectDoesNotExist(String.format("Tenant id=%s doesn't exist!", context.getTenantId()));
+        }
         return objectBelongsToTheRightTenant(objectId, objectType, realTenantRecordId);
     }
 
-    private boolean objectBelongsToTheRightTenant(final UUID objectId, final ObjectType objectType, final Long realTenantRecordId) {
+    private boolean objectBelongsToTheRightTenant(final UUID objectId, final ObjectType objectType, final Long realTenantRecordId) throws ObjectDoesNotExist {
         final Long objectTenantRecordId = getTenantRecordIdUnsafe(objectId, objectType);
-        return realTenantRecordId != null && realTenantRecordId.equals(objectTenantRecordId);
+        if (objectTenantRecordId == null) {
+            throw new ObjectDoesNotExist(String.format("Object id=%s type=%s doesn't exist!", objectId, objectType));
+        }
+        return objectTenantRecordId.equals(realTenantRecordId);
     }
 
     //
@@ -313,5 +323,12 @@ public class InternalCallContextFactory {
 
     private Long getTenantRecordIdUnsafe(final UUID objectId, final ObjectType objectType) {
         return nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID));
+    }
+
+    private static final class ObjectDoesNotExist extends IllegalStateException {
+
+        public ObjectDoesNotExist(final String s) {
+            super(s);
+        }
     }
 }
