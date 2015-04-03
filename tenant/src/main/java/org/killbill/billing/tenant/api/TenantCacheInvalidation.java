@@ -189,6 +189,10 @@ public class TenantCacheInvalidation {
                             final BusInternalEvent event;
                             if (tenantKvsTargetRecordId != null) {
                                 final TenantKVModelDao tenantModelDao = tenantDao.getKeyByRecordId(tenantKvsTargetRecordId, tenantContext);
+                                if (tenantModelDao == null) {
+                                    // Probably inactive entry
+                                    continue;
+                                }
                                 event = new DefaultTenantConfigChangeInternalEvent(tenantModelDao.getId(), cur.getType(),
                                                                                    null, tenantContext.getTenantRecordId(), cur.getUserToken());
                             } else {
