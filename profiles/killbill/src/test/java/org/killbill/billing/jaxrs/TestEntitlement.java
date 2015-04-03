@@ -149,21 +149,21 @@ public class TestEntitlement extends TestJaxrsBase {
             killBillClient.updateSubscription(subscription, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
             Assert.fail();
         } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "java.lang.IllegalStateException");
+            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
         }
 
         try {
             killBillClient.cancelSubscription(subscriptionId, createdBy, reason, comment);
             Assert.fail();
         } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "java.lang.IllegalStateException");
+            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
         }
 
         try {
             killBillClient.getSubscription(subscriptionId);
             Assert.fail();
         } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "java.lang.IllegalStateException");
+            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
         }
     }
 

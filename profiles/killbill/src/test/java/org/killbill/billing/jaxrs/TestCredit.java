@@ -92,7 +92,7 @@ public class TestCredit extends TestJaxrsBase {
             killBillClient.getCredit(UUID.randomUUID());
             Assert.fail();
         } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "java.lang.IllegalStateException");
+            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
         }
     }
 }

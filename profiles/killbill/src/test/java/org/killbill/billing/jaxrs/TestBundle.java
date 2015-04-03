@@ -74,7 +74,7 @@ public class TestBundle extends TestJaxrsBase {
             killBillClient.getBundle(UUID.randomUUID());
             Assert.fail();
         } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "java.lang.IllegalStateException");
+            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
         }
         Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892").isEmpty());
         Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId()).isEmpty());
