@@ -43,6 +43,7 @@ import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
@@ -89,6 +90,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceDaoHelper invoiceDaoHelper;
     private final CBADao cbaDao;
+    private final InvoiceConfig invoiceConfig;
+    private final Clock clock;
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi,
@@ -97,13 +100,16 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              final Clock clock,
                              final CacheControllerDispatcher cacheControllerDispatcher,
                              final NonEntityDao nonEntityDao,
+                             final InvoiceConfig invoiceConfig,
                              final InternalCallContextFactory internalCallContextFactory) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), InvoiceSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.eventBus = eventBus;
+        this.invoiceConfig = invoiceConfig;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceDaoHelper = new InvoiceDaoHelper();
         this.cbaDao = new CBADao();
+        this.clock = clock;
     }
 
     @Override
@@ -770,9 +776,17 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
                                              final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final InternalCallContext internalCallContext) {
+
+        final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule().getMillis();
+        final boolean isInvoiceNotificationEnabled = dryRunNotificationTime > 0;
         for (final UUID subscriptionId : callbackDateTimePerSubscriptions.keySet()) {
             final List<DateTime> callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
             for (final DateTime cur : callbackDateTimeUTC) {
+                if (isInvoiceNotificationEnabled) {
+                    final DateTime curDryRunNotificationTime = cur.minus(dryRunNotificationTime);
+                    final DateTime effectiveCurDryRunNotificationTime = (curDryRunNotificationTime.isAfter(clock.getUTCNow())) ? curDryRunNotificationTime : clock.getUTCNow();
+                    nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, effectiveCurDryRunNotificationTime, cur, internalCallContext);
+                }
                 nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur, internalCallContext);
             }
         }

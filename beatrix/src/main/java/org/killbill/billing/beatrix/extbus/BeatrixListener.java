@@ -38,6 +38,7 @@ import org.killbill.billing.events.CustomFieldDeletionEvent;
 import org.killbill.billing.events.EntitlementInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
+import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.killbill.billing.events.OverdueChangeInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
@@ -158,6 +159,15 @@ public class BeatrixListener {
                 objectId = realEventInv.getInvoiceId();
                 eventBusType = ExtBusEventType.INVOICE_CREATION;
                 break;
+
+            case INVOICE_NOTIFICATION:
+                final InvoiceNotificationInternalEvent realEventInvNotification = (InvoiceNotificationInternalEvent) event;
+                objectType = ObjectType.INVOICE;
+                objectId = null;
+                accountId = realEventInvNotification.getAccountId(); // has to be set here because objectId is null with a dryRun Invoice
+                eventBusType = ExtBusEventType.INVOICE_NOTIFICATION;
+                break;
+
 
             case INVOICE_ADJUSTMENT:
                 final InvoiceAdjustmentInternalEvent realEventInvAdj = (InvoiceAdjustmentInternalEvent) event;

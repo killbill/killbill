@@ -31,7 +31,7 @@ CREATE TABLE accounts (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX accounts_id ON accounts(id);
-CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key);
+CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key, tenant_record_id);
 CREATE INDEX accounts_tenant_record_id ON accounts(tenant_record_id);
 
 DROP TABLE IF EXISTS account_history;

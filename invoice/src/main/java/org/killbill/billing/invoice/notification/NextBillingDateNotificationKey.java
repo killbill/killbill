@@ -18,6 +18,7 @@ package org.killbill.billing.invoice.notification;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.notificationq.DefaultUUIDNotificationKey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -25,8 +26,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
 
+    private Boolean isDryRunForInvoiceNotification;
+    private DateTime targetDate;
+
     @JsonCreator
-    public NextBillingDateNotificationKey(@JsonProperty("uuidKey") final UUID uuidKey) {
+    public NextBillingDateNotificationKey(@JsonProperty("uuidKey") final UUID uuidKey,
+                                          @JsonProperty("targetDate") final DateTime targetDate,
+                                          @JsonProperty("isDryRunForInvoiceNotification") final Boolean isDryRunForInvoiceNotification) {
         super(uuidKey);
+        this.targetDate = targetDate;
+        this.isDryRunForInvoiceNotification = isDryRunForInvoiceNotification;
+    }
+
+    @JsonProperty("isDryRunForInvoiceNotification")
+    public Boolean isDryRunForInvoiceNotification() {
+        return isDryRunForInvoiceNotification;
+    }
+
+    public DateTime getTargetDate() {
+        return targetDate;
     }
 }

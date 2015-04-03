@@ -61,7 +61,6 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(overriddenPlan.getName());
         assertTrue(m.matches());
         assertEquals(m.group(1), plan.getName());
-        assertEquals(m.group(2), "1"); // first entry in the table
 
         assertEquals(overriddenPlan.getProduct().getName(), plan.getProduct().getName());
         assertEquals(overriddenPlan.getRecurringBillingPeriod(), plan.getRecurringBillingPeriod());

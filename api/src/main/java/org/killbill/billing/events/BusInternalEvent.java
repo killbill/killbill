@@ -35,6 +35,7 @@ public interface BusInternalEvent extends BusEvent {
         ENTITLEMENT_TRANSITION,
         INVOICE_ADJUSTMENT,
         INVOICE_CREATION,
+        INVOICE_NOTIFICATION,
         INVOICE_EMPTY,
         OVERDUE_CHANGE,
         PAYMENT_ERROR,

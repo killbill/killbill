@@ -37,7 +37,6 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
     @Test(groups = "slow")
     public void testInvoiceNotifier() throws Exception {
 
-        final UUID accountId = UUID.randomUUID();
         final SubscriptionBase subscription = invoiceUtil.createSubscription();
         final UUID subscriptionId = subscription.getId();
         final DateTime now = clock.getUTCNow();
@@ -46,7 +45,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME, DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
 
 
-        nextBillingQueue.recordFutureNotification(now, new NextBillingDateNotificationKey(subscriptionId), internalCallContext.getUserToken(), internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+        nextBillingQueue.recordFutureNotification(now, new NextBillingDateNotificationKey(subscriptionId, now, Boolean.FALSE), internalCallContext.getUserToken(), internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
         // Move time in the future after the notification effectiveDate
         ((ClockMock) clock).setDeltaFromReality(3000);

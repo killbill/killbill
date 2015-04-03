@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -102,6 +103,7 @@ public class TestApiListener {
         PHASE,
         BLOCK,
         INVOICE,
+        INVOICE_NOTIFICATION,
         INVOICE_ADJUSTMENT,
         PAYMENT,
         PAYMENT_ERROR,
@@ -204,6 +206,13 @@ public class TestApiListener {
     public synchronized void processTagDefinitonEvent(final TagDefinitionInternalEvent event) {
         log.info(String.format("Got TagDefinitionInternalEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.TAG_DEFINITION);
+        notifyIfStackEmpty();
+    }
+
+    @Subscribe
+    public void handleInvoiceNotificationEvents(final InvoiceNotificationInternalEvent event) {
+        log.info(String.format("Got Invoice notification event %s", event.toString()));
+        assertEqualsNicely(NextEvent.INVOICE_NOTIFICATION);
         notifyIfStackEmpty();
     }
 

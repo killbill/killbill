@@ -83,7 +83,7 @@ public class InvoiceListener {
                 return;
             }
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-            dispatcher.processSubscription(event, context);
+            dispatcher.processSubscriptionForInvoiceGeneration(event, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
         }
@@ -122,7 +122,16 @@ public class InvoiceListener {
     public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
-            dispatcher.processSubscription(subscriptionId, eventDateTime, context);
+            dispatcher.processSubscriptionForInvoiceGeneration(subscriptionId, eventDateTime, context);
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    public void handleEventForInvoiceNotification(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        try {
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
+            dispatcher.processSubscriptionForInvoiceNotification(subscriptionId, eventDateTime, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
         }
