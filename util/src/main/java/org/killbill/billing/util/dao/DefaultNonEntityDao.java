@@ -85,7 +85,8 @@ public class DefaultNonEntityDao implements NonEntityDao {
             public Long doRetrieve(final UUID objectId, final ObjectType objectType) {
                 switch (tableName) {
                     case TENANT:
-                        return objectId == null ? 0L : nonEntitySqlDao.getTenantRecordIdFromTenant(objectId.toString());
+                        // Explicit cast to Long to avoid NPE (unboxing to long)
+                        return objectId == null ? (Long) 0L : nonEntitySqlDao.getTenantRecordIdFromTenant(objectId.toString());
 
                     default:
                         return nonEntitySqlDao.getTenantRecordIdFromObjectOtherThanTenant(objectId.toString(), tableName.getTableName());
