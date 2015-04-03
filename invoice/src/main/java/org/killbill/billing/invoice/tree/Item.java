@@ -197,4 +197,121 @@ public class Item {
                Objects.firstNonNull(phaseName, "").equals(Objects.firstNonNull(otherItem.getPhaseName(), "")) &&
                Objects.firstNonNull(rate, BigDecimal.ZERO).compareTo(Objects.firstNonNull(otherItem.getRate(), BigDecimal.ZERO)) == 0;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Item{");
+        sb.append("id=").append(id);
+        sb.append(", accountId=").append(accountId);
+        sb.append(", bundleId=").append(bundleId);
+        sb.append(", subscriptionId=").append(subscriptionId);
+        sb.append(", targetInvoiceId=").append(targetInvoiceId);
+        sb.append(", invoiceId=").append(invoiceId);
+        sb.append(", planName='").append(planName).append('\'');
+        sb.append(", phaseName='").append(phaseName).append('\'');
+        sb.append(", startDate=").append(startDate);
+        sb.append(", endDate=").append(endDate);
+        sb.append(", amount=").append(amount);
+        sb.append(", rate=").append(rate);
+        sb.append(", currency=").append(currency);
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", linkedId=").append(linkedId);
+        sb.append(", currentRepairedAmount=").append(currentRepairedAmount);
+        sb.append(", adjustedAmount=").append(adjustedAmount);
+        sb.append(", action=").append(action);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final Item item = (Item) o;
+
+        if (accountId != null ? !accountId.equals(item.accountId) : item.accountId != null) {
+            return false;
+        }
+        if (action != item.action) {
+            return false;
+        }
+        if (adjustedAmount != null ? adjustedAmount.compareTo(item.adjustedAmount) != 0 : item.adjustedAmount != null) {
+            return false;
+        }
+        if (amount != null ? amount.compareTo(item.amount) != 0 : item.amount != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(item.bundleId) : item.bundleId != null) {
+            return false;
+        }
+        if (createdDate != null ? createdDate.compareTo(item.createdDate) != 0 : item.createdDate != null) {
+            return false;
+        }
+        if (currency != item.currency) {
+            return false;
+        }
+        if (currentRepairedAmount != null ? currentRepairedAmount.compareTo(item.currentRepairedAmount) != 0 : item.currentRepairedAmount != null) {
+            return false;
+        }
+        if (endDate != null ? endDate.compareTo(item.endDate) != 0 : item.endDate != null) {
+            return false;
+        }
+        if (id != null ? !id.equals(item.id) : item.id != null) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(item.invoiceId) : item.invoiceId != null) {
+            return false;
+        }
+        if (linkedId != null ? !linkedId.equals(item.linkedId) : item.linkedId != null) {
+            return false;
+        }
+        if (phaseName != null ? !phaseName.equals(item.phaseName) : item.phaseName != null) {
+            return false;
+        }
+        if (planName != null ? !planName.equals(item.planName) : item.planName != null) {
+            return false;
+        }
+        if (rate != null ? rate.compareTo(item.rate) != 0 : item.rate != null) {
+            return false;
+        }
+        if (startDate != null ? startDate.compareTo(item.startDate) != 0 : item.startDate != null) {
+            return false;
+        }
+        if (subscriptionId != null ? !subscriptionId.equals(item.subscriptionId) : item.subscriptionId != null) {
+            return false;
+        }
+        if (targetInvoiceId != null ? !targetInvoiceId.equals(item.targetInvoiceId) : item.targetInvoiceId != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (targetInvoiceId != null ? targetInvoiceId.hashCode() : 0);
+        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (planName != null ? planName.hashCode() : 0);
+        result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
+        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
+        result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (rate != null ? rate.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
+        result = 31 * result + (linkedId != null ? linkedId.hashCode() : 0);
+        result = 31 * result + (currentRepairedAmount != null ? currentRepairedAmount.hashCode() : 0);
+        result = 31 * result + (adjustedAmount != null ? adjustedAmount.hashCode() : 0);
+        result = 31 * result + (action != null ? action.hashCode() : 0);
+        return result;
+    }
 }
