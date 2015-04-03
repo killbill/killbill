@@ -30,6 +30,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.DefaultProduct;
 import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
@@ -59,15 +60,17 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         otherMultiTenantContext = Mockito.mock(InternalCallContext.class);
         Mockito.when(otherMultiTenantContext.getAccountRecordId()).thenReturn(123L);
         Mockito.when(otherMultiTenantContext.getTenantRecordId()).thenReturn(112233L);
+
+        ((EhCacheCatalogCache) catalogCache).setDefaultCatalog();
     }
 
     //
-    // Verify CatalogCache throws CatalogApiException when used in mono-tenant and catalog system property has not been set
+    // Verify CatalogCache returns default Catalog when used in mono-tenant and catalog system property has not been set
     //
-    @Test(groups = "fast", expectedExceptions = CatalogApiException.class)
+    @Test(groups = "fast")
     public void testMissingDefaultCatalog() throws CatalogApiException {
         catalogCache.loadDefaultCatalog(null);
-        catalogCache.getCatalog(internalCallContext);
+        Assert.assertEquals(catalogCache.getCatalog(internalCallContext).getCatalogName(), "EmptyCatalog");
     }
 
     //
@@ -99,9 +102,12 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
     //
     @Test(groups = "fast")
     public void testExistingTenantCatalog() throws CatalogApiException, URISyntaxException, IOException {
+        final InternalCallContext differentMultiTenantContext = Mockito.mock(InternalCallContext.class);
+        Mockito.when(differentMultiTenantContext.getTenantRecordId()).thenReturn(55667788L);
+
         final AtomicBoolean shouldThrow = new AtomicBoolean(false);
         final Long multiTenantRecordId = multiTenantContext.getTenantRecordId();
-        catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
+        final Long otherMultiTenantRecordId = otherMultiTenantContext.getTenantRecordId();
 
         final InputStream tenantInputCatalog = UriAccessor.accessUri(new URI(Resources.getResource("SpyCarAdvanced.xml").toExternalForm()));
         final String tenantCatalogXML = CharStreams.toString(new InputStreamReader(tenantInputCatalog, "UTF-8"));
@@ -116,11 +122,30 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
                 final InternalTenantContext internalContext = (InternalTenantContext) invocation.getArguments()[0];
                 if (multiTenantRecordId.equals(internalContext.getTenantRecordId())) {
                     return ImmutableList.<String>of(tenantCatalogXML);
-                } else {
+                } else if (otherMultiTenantRecordId.equals(internalContext.getTenantRecordId())) {
                     return ImmutableList.<String>of(otherTenantCatalogXML);
+                } else {
+                    return ImmutableList.<String>of();
                 }
             }
         });
+
+        // Verify the lookup for a non-cached tenant. No system config is set yet but EhCacheCatalogCache returns a default empty one
+        VersionedCatalog differentResult = catalogCache.getCatalog(differentMultiTenantContext);
+        Assert.assertNotNull(differentResult);
+        Assert.assertEquals(differentResult.getCatalogName(), "EmptyCatalog");
+
+        // Make sure the cache loader isn't invoked, see https://github.com/killbill/killbill/issues/300
+        shouldThrow.set(true);
+
+        differentResult = catalogCache.getCatalog(differentMultiTenantContext);
+        Assert.assertNotNull(differentResult);
+        Assert.assertEquals(differentResult.getCatalogName(), "EmptyCatalog");
+
+        shouldThrow.set(false);
+
+        // Set a default config
+        catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
 
         // Verify the lookup for this tenant
         final VersionedCatalog result = catalogCache.getCatalog(multiTenantContext);

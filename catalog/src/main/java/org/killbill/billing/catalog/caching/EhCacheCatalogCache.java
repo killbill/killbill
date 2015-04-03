@@ -36,6 +36,8 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class EhCacheCatalogCache implements CatalogCache {
 
     private final Logger logger = LoggerFactory.getLogger(EhCacheCatalogCache.class);
@@ -51,20 +53,19 @@ public class EhCacheCatalogCache implements CatalogCache {
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         this.loader = loader;
         this.cacheLoaderArgument = initializeCacheLoaderArgument(this);
+        setDefaultCatalog();
     }
 
     @Override
     public void loadDefaultCatalog(final String url) throws CatalogApiException {
-        defaultCatalog = (url != null) ? loader.loadDefaultCatalog(url) : null;
+        if (url != null) {
+            defaultCatalog = loader.loadDefaultCatalog(url);
+        }
     }
 
     @Override
     public VersionedCatalog getCatalog(final InternalTenantContext tenantContext) throws CatalogApiException {
         if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
-            if (defaultCatalog == null) {
-                throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT,
-                                              "the system property org.killbill.catalog.uri must be specified and point to valid catalog xml");
-            }
             return defaultCatalog;
         }
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,
@@ -107,5 +108,16 @@ public class EhCacheCatalogCache implements CatalogCache {
         final ObjectType irrelevant = null;
         final InternalTenantContext notUsed = null;
         return new CacheLoaderArgument(irrelevant, args, notUsed);
+    }
+
+    @VisibleForTesting
+    void setDefaultCatalog() {
+        try {
+            // Provided in the classpath
+            this.defaultCatalog = loader.loadDefaultCatalog("EmptyCatalog.xml");
+        } catch (final CatalogApiException e) {
+            this.defaultCatalog = new VersionedCatalog();
+            logger.warn("Exception loading EmptyCatalog - should never happen!", e);
+        }
     }
 }
