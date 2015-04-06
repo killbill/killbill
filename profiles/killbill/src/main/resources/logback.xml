@@ -17,9 +17,11 @@
   -->
 
 <configuration>
+    <conversionRule conversionWord="maskedMsg" converterClass="org.killbill.billing.server.log.obfuscators.ObfuscatorConverter" />
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%date [%thread] %-5level %logger{36} - %msg%n%ex</pattern>
+            <pattern>%date [%thread] %-5level %logger{36} - %maskedMsg%n%ex</pattern>
         </encoder>
     </appender>
 
@@ -40,7 +42,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %msg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -61,7 +63,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %msg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -82,7 +84,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %msg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -103,7 +105,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %msg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -124,7 +126,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %msg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -145,7 +147,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %msg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
                 </encoder>
             </appender>
         </sift>
