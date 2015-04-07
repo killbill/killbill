@@ -48,6 +48,7 @@ import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.RepairSubscriptionInternalEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
@@ -416,7 +417,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                         new SubscriptionNotificationKey(nextPhase.getId()), context);
 
                 // Notify the Bus of the requested change
-                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhase, context);
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhase, SubscriptionBaseTransitionType.PHASE, context);
 
                 return null;
             }
@@ -511,7 +512,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 }
                 // Notify the Bus of the latest requested change, if needed
                 if (initialEvents.size() > 0) {
-                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, initialEvents.get(initialEvents.size() - 1), context);
+                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, initialEvents.get(initialEvents.size() - 1), SubscriptionBaseTransitionType.CREATE, context);
                 }
                 return null;
             }
@@ -533,7 +534,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 }
 
                 // Notify the Bus of the latest requested change
-                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, recreateEvents.get(recreateEvents.size() - 1), context);
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, recreateEvents.get(recreateEvents.size() - 1), SubscriptionBaseTransitionType.RE_CREATE, context);
 
                 return null;
             }
@@ -600,7 +601,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     }
 
                     // Notify the Bus of the latest requested change
-                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, uncancelEvents.get(uncancelEvents.size() - 1), context);
+                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, uncancelEvents.get(uncancelEvents.size() - 1), SubscriptionBaseTransitionType.UNCANCEL, context);
                 }
 
                 return null;
@@ -634,7 +635,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
                 // Notify the Bus of the latest requested change
                 final SubscriptionBaseEvent finalEvent = changeEventsTweakedWithMigrateBilling.get(changeEvents.size() - 1);
-                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, finalEvent, context);
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, finalEvent, SubscriptionBaseTransitionType.CHANGE, context);
 
                 return null;
             }
@@ -765,7 +766,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         recordBusOrFutureNotificationFromTransaction(subscription, cancelEvent, entitySqlDaoWrapperFactory, isBusEvent, seqId, context);
 
         // Notify the Bus of the requested change
-        notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, cancelEvent, context);
+        notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, cancelEvent, SubscriptionBaseTransitionType.CANCEL, context);
     }
 
     private void cancelNextPhaseEventFromTransaction(final UUID subscriptionId, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
@@ -1103,9 +1104,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     private void notifyBusOfRequestedChange(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final DefaultSubscriptionBase subscription,
-                                            final SubscriptionBaseEvent nextEvent, final InternalCallContext context) {
+                                            final SubscriptionBaseEvent nextEvent, final SubscriptionBaseTransitionType transitionType, final InternalCallContext context) {
         try {
-            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()), entitySqlDaoWrapperFactory.getHandle().getConnection());
+            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, transitionType, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()), entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (EventBusException e) {
             log.warn("Failed to post requested change event for subscription " + subscription.getId(), e);
         }
@@ -1151,7 +1152,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
             // Notify the Bus of the latest requested change
             final SubscriptionBaseEvent finalEvent = curSubscription.getInitialEvents().get(curSubscription.getInitialEvents().size() - 1);
-            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subData, finalEvent, context);
+            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subData, finalEvent, SubscriptionBaseTransitionType.MIGRATE_BILLING, context);
         }
 
         transBundleDao.create(new SubscriptionBundleModelDao(bundleData), context);
