@@ -1,16 +1,37 @@
 language: java
-script: mvn -B -q clean install -Ptravis
+
+sudo: false
+cache:
+  directories:
+      - $HOME/.m2
+
+script: if [[ -v COMMAND ]]; then $COMMAND; else travis_retry mvn clean install $PHASE | egrep -v 'Download|Install'; [ ${PIPESTATUS[0]} == 0 ]; fi
 # Remove --quiet to avoid timeouts
-install: mvn install -DskipTests=true
+install: mvn -U install -DskipTests=true | egrep -v 'Download|Install'
 
 notifications:
   email:
     - kill-bill-commits@googlegroups.com
 
-jdk:
-  - openjdk7
-  - oraclejdk7
-  - oraclejdk8
-
 env:
-  - MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=192m"
+  global:
+    - MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=192m"
+
+matrix:
+  allow_failures:
+    - jdk: oraclejdk8
+  include:
+    - env: PHASE="-Ptravis"
+      jdk: openjdk7
+    - env: PHASE="-Ptravis"
+      jdk: oraclejdk7
+    - env: PHASE="-Ptravis,jdk17"
+      jdk: openjdk7
+    - env: PHASE="-Ptravis,jdk17"
+      jdk: oraclejdk7
+    - env: PHASE="-Ptravis,jdk18"
+      jdk: oraclejdk8
+  fast_finish: true
+
+after_success:
+  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && echo "<settings><servers><server><id>sonatype-nexus-snapshots</id><username>\${env.OSSRH_USER}</username><password>\${env.OSSRH_PASS}</password></server></servers></settings>" > ~/settings.xml && mvn deploy -DskipTests=true --settings ~/settings.xml | egrep -v "Download|Install|Upload" ; rm -f ~/settings.xml'
