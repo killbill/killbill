@@ -31,7 +31,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -186,7 +185,7 @@ public class InvoiceDispatcher {
                                   @Nullable final DryRunArguments dryRunArguments, final InternalCallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
-            lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), accountId.toString(), NB_LOCK_TRY);
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), NB_LOCK_TRY);
 
             return processAccountWithLock(accountId, targetDate, dryRunArguments, context);
         } catch (final LockFailedException e) {

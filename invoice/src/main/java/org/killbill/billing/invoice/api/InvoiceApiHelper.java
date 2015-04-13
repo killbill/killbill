@@ -74,7 +74,7 @@ public class InvoiceApiHelper {
     public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId, final WithAccountLock withAccountLock, final CallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
-            lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), accountId.toString(), NB_LOCK_TRY);
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), NB_LOCK_TRY);
 
             final Iterable<Invoice> invoicesForPlugins = withAccountLock.prepareInvoices();
 
