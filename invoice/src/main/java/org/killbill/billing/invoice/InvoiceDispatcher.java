@@ -31,6 +31,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -287,8 +288,8 @@ public class InvoiceDispatcher {
                                                                                                                        }
                                                                                                                    }));
 
-                final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents.getUsages(), dateAndTimeZoneContext);
-                invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, callbackDateTimePerSubscriptions, context);
+                final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents.getUsages(), dateAndTimeZoneContext);
+                invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, futureAccountNotifications, context);
 
                 final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                 final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
@@ -353,8 +354,9 @@ public class InvoiceDispatcher {
         return internalCallContextFactory.createCallContext(context);
     }
 
+
     @VisibleForTesting
-    Map<UUID, List<DateTime>> createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final Map<String, Usage> knownUsages, final DateAndTimeZoneContext dateAndTimeZoneContext) {
+    FutureAccountNotifications createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final Map<String, Usage> knownUsages, final DateAndTimeZoneContext dateAndTimeZoneContext) {
 
         final Map<UUID, List<DateTime>> result = new HashMap<UUID, List<DateTime>>();
 
@@ -405,7 +407,7 @@ public class InvoiceDispatcher {
             perSubscriptionCallback.add(subscriptionUsageCallbackDate);
         }
 
-        return result;
+        return new FutureAccountNotifications(dateAndTimeZoneContext, result);
     }
 
     private DateTime getNextUsageBillingDate(final String usageName, final LocalDate chargedThroughDate, final DateAndTimeZoneContext dateAndTimeZoneContext, final Map<String, Usage> knownUsages) {
@@ -456,6 +458,25 @@ public class InvoiceDispatcher {
             }
         }
     }
+
+    public static class FutureAccountNotifications {
+        private final DateAndTimeZoneContext accountDateAndTimeZoneContext;
+        private final Map<UUID, List<DateTime>> notifications;
+
+        public FutureAccountNotifications(final DateAndTimeZoneContext accountDateAndTimeZoneContext, final Map<UUID, List<DateTime>> notifications) {
+            this.accountDateAndTimeZoneContext = accountDateAndTimeZoneContext;
+            this.notifications = notifications;
+        }
+
+        public DateAndTimeZoneContext getAccountDateAndTimeZoneContext() {
+            return accountDateAndTimeZoneContext;
+        }
+
+        public Map<UUID, List<DateTime>> getNotifications() {
+            return notifications;
+        }
+    }
+
 
     private final static class NullDryRunArguments implements DryRunArguments {
         @Override

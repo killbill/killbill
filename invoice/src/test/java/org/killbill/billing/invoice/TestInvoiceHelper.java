@@ -49,6 +49,7 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -76,6 +77,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.mockito.Mockito;
@@ -278,7 +280,8 @@ public class TestInvoiceHelper {
                                                                                                                                          }));
 
         // The test does not use the invoice callback notifier hence the empty map
-        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContext);
+        final DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC, clock);
+        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<DateTime>>of()), internalCallContext);
     }
 
     public void createPayment(final InvoicePayment invoicePayment, final InternalCallContext internalCallContext) {

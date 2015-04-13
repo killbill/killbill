@@ -226,7 +226,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         // Pretty-print the generated invoice items from the junction events
-        final StringBuilder logStringBuilder = new StringBuilder("Invoice items generated for invoiceId ")
+        final StringBuilder logStringBuilder = new StringBuilder("Proposed Invoice items for invoiceId ")
                 .append(invoiceId)
                 .append(" and accountId ")
                 .append(accountId);

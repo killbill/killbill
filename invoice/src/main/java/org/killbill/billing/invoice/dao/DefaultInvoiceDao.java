@@ -35,6 +35,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -217,7 +218,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final boolean isRealInvoice, final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions,
+                              final boolean isRealInvoice, final FutureAccountNotifications callbackDateTimePerSubscriptions,
                               final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
@@ -775,19 +776,19 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
-                                             final Map<UUID, List<DateTime>> callbackDateTimePerSubscriptions, final InternalCallContext internalCallContext) {
+                                             final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext internalCallContext) {
 
         final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule().getMillis();
         final boolean isInvoiceNotificationEnabled = dryRunNotificationTime > 0;
-        for (final UUID subscriptionId : callbackDateTimePerSubscriptions.keySet()) {
-            final List<DateTime> callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
+        for (final UUID subscriptionId : callbackDateTimePerSubscriptions.getNotifications().keySet()) {
+            final List<DateTime> callbackDateTimeUTC = callbackDateTimePerSubscriptions.getNotifications().get(subscriptionId);
             for (final DateTime cur : callbackDateTimeUTC) {
                 if (isInvoiceNotificationEnabled) {
                     final DateTime curDryRunNotificationTime = cur.minus(dryRunNotificationTime);
                     final DateTime effectiveCurDryRunNotificationTime = (curDryRunNotificationTime.isAfter(clock.getUTCNow())) ? curDryRunNotificationTime : clock.getUTCNow();
-                    nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, effectiveCurDryRunNotificationTime, cur, internalCallContext);
+                    nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, effectiveCurDryRunNotificationTime, cur, callbackDateTimePerSubscriptions.getAccountDateAndTimeZoneContext(), internalCallContext);
                 }
-                nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur, internalCallContext);
+                nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur, callbackDateTimePerSubscriptions.getAccountDateAndTimeZoneContext(), internalCallContext);
             }
         }
     }

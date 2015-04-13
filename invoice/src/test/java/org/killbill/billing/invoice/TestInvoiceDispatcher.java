@@ -39,6 +39,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.TestInvoiceHelper.DryRunFutureDateArguments;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
@@ -208,11 +209,11 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                    internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    clock);
 
-        final Map<UUID, List<DateTime>> result = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), null, dateAndTimeZoneContext);
+        final FutureAccountNotifications futureAccountNotifications = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), null, dateAndTimeZoneContext);
 
-        Assert.assertEquals(result.size(), 1);
+        Assert.assertEquals(futureAccountNotifications.getNotifications().size(), 1);
 
-        final List<DateTime> receivedDates = result.get(item.getSubscriptionId());
+        final List<DateTime> receivedDates = futureAccountNotifications.getNotifications().get(item.getSubscriptionId());
         Assert.assertEquals(receivedDates.size(), 1);
 
         final LocalDate receivedTargetDate = new LocalDate(receivedDates.get(0), DateTimeZone.forID("Pacific/Pitcairn"));
