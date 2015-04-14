@@ -5,7 +5,7 @@ cache:
   directories:
       - $HOME/.m2
 
-script: if [[ -v COMMAND ]]; then $COMMAND; else travis_retry mvn -Dmaven.test.redirectTestOutputToFile=true clean install $PHASE | egrep -v 'Download|Install'; [ ${PIPESTATUS[0]} == 0 ]; fi
+script: if [[ -v COMMAND ]]; then $COMMAND; else travis_retry travis_wait mvn -Dmaven.test.redirectTestOutputToFile=true clean install $PHASE | egrep -v 'Download|Install'; [ ${PIPESTATUS[0]} == 0 ]; fi
 # Remove --quiet to avoid timeouts
 install: mvn -U install -DskipTests=true | egrep -v 'Download|Install'
 
@@ -34,4 +34,4 @@ matrix:
   fast_finish: true
 
 after_success:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && echo "<settings><servers><server><id>sonatype-nexus-snapshots</id><username>\${env.OSSRH_USER}</username><password>\${env.OSSRH_PASS}</password></server></servers></settings>" > ~/settings.xml && mvn deploy -DskipTests=true --settings ~/settings.xml | egrep -v "Download|Install|Upload" ; rm -f ~/settings.xml'
+  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && echo "<settings><servers><server><id>sonatype-nexus-snapshots</id><username>\${env.OSSRH_USER}</username><password>\${env.OSSRH_PASS}</password></server></servers></settings>" > ~/settings.xml && travis_wait mvn deploy -DskipTests=true --settings ~/settings.xml | egrep -v "Download|Install|Upload" ; rm -f ~/settings.xml'
