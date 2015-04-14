@@ -4,7 +4,7 @@
     https://github.com/killbill/killbill/issues/298
     https://github.com/killbill/killbill/issues/299
     NPE fix in DefaultPaymentApi#getPaymentMethodById
-    Update killbill-oss-parent to 0.11.0
+    Update killbill-oss-parent to 0.11
 
 0.13.6
     See https://github.com/killbill/killbill/issues?utf8=%E2%9C%93&q=milestone%3ARelease-0.13.6+
