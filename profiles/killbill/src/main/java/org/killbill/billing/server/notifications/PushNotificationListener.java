@@ -64,7 +64,7 @@ public class PushNotificationListener {
 
     @Inject
     public PushNotificationListener(final ObjectMapper mapper, final TenantUserApi tenantApi, final CallContextFactory contextFactory) {
-        this.httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(TIMEOUT_NOTIFICATION * 1000).build());
+        this.httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeout(TIMEOUT_NOTIFICATION * 1000).build());
         this.tenantApi = tenantApi;
         this.contextFactory = contextFactory;
         this.mapper = mapper;
