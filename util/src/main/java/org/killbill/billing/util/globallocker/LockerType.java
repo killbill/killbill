@@ -17,5 +17,5 @@
 package org.killbill.billing.util.globallocker;
 
 public enum LockerType {
-    ACCOUNT_FOR_INVOICE_PAYMENTS
+    ACCNT_INV_PAY
 }

@@ -21,7 +21,11 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
+import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,8 +68,9 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
 
     @Override
     public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final BigDecimal balance, final Currency currency, final CallContext context) {
+        Account account;
         try {
-            accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+            account = accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
         } catch (AccountApiException e) {
             log.warn("Unable to find account for id {}", accountId);
             return null;
@@ -75,8 +80,11 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
         final InvoiceItemModelDao migrationInvoiceItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.FIXED, migrationInvoice.getId(), accountId, null, null,
                                                                                  null, MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME, null,
                                                                                  targetDate, null, balance, null, currency, null);
+
+        final DateTime wrongEffectiveDateButDoesNotMatter = null;
+        final DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(wrongEffectiveDateButDoesNotMatter, account.getTimeZone(), clock);
         dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),
-                          true, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContextFactory.createInternalCallContext(accountId, context));
+                          true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<DateTime>>of()), internalCallContextFactory.createInternalCallContext(accountId, context));
 
         return migrationInvoice.getId();
     }

@@ -215,7 +215,7 @@ public abstract class ProcessorBase {
                 throws ExceptionType, LockFailedException {
             GlobalLock lock = null;
             try {
-                lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), accountExternalKey, NB_LOCK_TRY);
+                lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountExternalKey, NB_LOCK_TRY);
                 return callback.doOperation();
             } finally {
                 if (lock != null) {

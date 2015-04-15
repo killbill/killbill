@@ -26,9 +26,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.commons.locker.GlobalLock;
-import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
-import org.killbill.commons.locker.mysql.MySqlGlobalLocker;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 
 public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
@@ -38,7 +36,7 @@ public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
     public void testSimpleLocking() throws IOException, LockFailedException {
         final String lockName = UUID.randomUUID().toString();
 
-        final GlobalLock lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), lockName, 3);
+        final GlobalLock lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), lockName, 3);
 
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
@@ -48,11 +46,11 @@ public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
                 return null;
             }
         });
-        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), lockName), false);
+        Assert.assertEquals(locker.isFree(LockerType.ACCNT_INV_PAY.toString(), lockName), false);
 
         boolean gotException = false;
         try {
-            locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), lockName, 1);
+            locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), lockName, 1);
         } catch (LockFailedException e) {
             gotException = true;
         }
@@ -60,6 +58,6 @@ public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
 
         lock.release();
 
-        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), lockName), true);
+        Assert.assertEquals(locker.isFree(LockerType.ACCNT_INV_PAY.toString(), lockName), true);
     }
 }

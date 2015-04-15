@@ -24,11 +24,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.TestInvoiceHelper;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -40,6 +42,7 @@ import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
+import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
 import org.killbill.clock.Clock;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -103,7 +106,9 @@ public class InvoiceTestUtils {
         }
         Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
 
-        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, true, ImmutableMap.<UUID, List<DateTime>>of(), internalCallContext);
+        final DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC, clock);
+
+        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<DateTime>>of()), internalCallContext);
 
         return invoice;
     }

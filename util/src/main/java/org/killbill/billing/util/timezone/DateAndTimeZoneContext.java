@@ -77,4 +77,7 @@ public final class DateAndTimeZoneContext {
         return computeUTCDateTimeFromLocalDate(now);
     }
 
+    public DateTimeZone getAccountTimeZone() {
+        return accountTimeZone;
+    }
 }

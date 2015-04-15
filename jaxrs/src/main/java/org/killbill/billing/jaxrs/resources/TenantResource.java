@@ -16,7 +16,6 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,7 +32,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
@@ -209,6 +207,58 @@ public class TenantResource extends JaxRsResourceBase {
         return deleteTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, createdBy, reason, comment, request);
     }
 
+
+    @Timed
+    @POST
+    @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
+    @Consumes(TEXT_PLAIN)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add a per tenant user key/value")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response insertUserKeyValue(@PathParam("keyName") final String key,
+                               final String value,
+                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                               @HeaderParam(HDR_REASON) final String reason,
+                               @HeaderParam(HDR_COMMENT) final String comment,
+                               @javax.ws.rs.core.Context final HttpServletRequest request,
+                               @javax.ws.rs.core.Context  final UriInfo uriInfo) throws TenantApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        tenantApi.addTenantKeyValue(key, value, callContext);
+        return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getUserKeyValue", key);
+    }
+
+    @Timed
+    @GET
+    @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a per tenant user key/value", response = TenantKeyJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response getUserKeyValue(@PathParam("keyName") final String key,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final List<String> values = tenantApi.getTenantValuesForKey(key, tenantContext);
+        final TenantKeyJson result = new TenantKeyJson(key, values);
+        return Response.status(Status.OK).entity(result).build();
+    }
+
+
+    @Timed
+    @DELETE
+    @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
+    @ApiOperation(value = "Delete  a per tenant user key/value")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response deleteUserKeyValue(@PathParam("keyName") final String key,
+                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                              @HeaderParam(HDR_REASON) final String reason,
+                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        tenantApi.deleteTenantKey(key, callContext);
+        return Response.status(Status.OK).build();
+    }
+
+
+
     private Response insertTenantKey(final TenantKey key,
                                      @Nullable final String keyPostfix,
                                      final String value,
@@ -223,9 +273,9 @@ public class TenantResource extends JaxRsResourceBase {
         tenantApi.addTenantKeyValue(tenantKey, value, callContext);
 
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, getMethodStr, keyPostfix);
-//        final URI uri = UriBuilder.fromResource(TenantResource.class).path(TenantResource.class, getMethodStr).build();
-//        return Response.created(uri).build();
     }
+
+
 
     private Response getTenantKey(final TenantKey key,
                                   @Nullable final String keyPostfix,
