@@ -57,6 +57,7 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
+import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.NullInvoiceInternalEvent;
@@ -85,6 +86,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -156,40 +158,36 @@ public class SubscriptionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
                              entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set",
                              entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
-                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set",
-                             entitlement.getAccountId(), "SubscriptionJson accountId needs to be set");
+                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
 
         final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
         if (createAddOnEntitlement) {
-            verifyNonNullOrEmpty(entitlement.getBundleId(), "SubscriptionJson bundleId should be specified");
+            verifyNonNullOrEmpty(entitlement.getBundleId(), "SubscriptionJson bundleId should be specified for ADD_ON");
         } else {
-            verifyNonNullOrEmpty(entitlement.getAccountId(), "SubscriptionJson accountId should be specified");
+            verifyNonNullOrEmpty(entitlement.getAccountId(), "SubscriptionJson accountId should be specified for BP");
         }
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
-        final Account account = accountUserApi.getAccountById(accountId, callContext);
 
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
-            public Entitlement doOperation(final CallContext ctx) throws InterruptedException, TimeoutException, EntitlementApiException {
+            public Entitlement doOperation(final CallContext ctx) throws InterruptedException, TimeoutException, EntitlementApiException, SubscriptionApiException, AccountApiException {
 
+                final Account account = getAccountFromSubscriptionJson(entitlement, callContext);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(entitlement.getProductName(),
                                                                        ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
 
-                final LocalDate inputLocalDate = toLocalDate(accountId, requestedDate, callContext);
-
-
+                final LocalDate inputLocalDate = toLocalDate(account, requestedDate, callContext);
                 final UUID bundleId = entitlement.getBundleId() != null ? UUID.fromString(entitlement.getBundleId()) : null;
-
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
                                                                  ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
+
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
                 return createAddOnEntitlement ?
                        entitlementApi.addEntitlement(bundleId, spec, overrides, inputLocalDate, callContext) :
-                       entitlementApi.createBaseEntitlement(accountId, spec, entitlement.getExternalKey(), overrides, inputLocalDate, callContext);
+                       entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, inputLocalDate, callContext);
             }
 
             @Override
@@ -206,6 +204,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final EntitlementCallCompletion<Entitlement> callCompletionCreation = new EntitlementCallCompletion<Entitlement>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
+
+
 
     @Timed
     @PUT
@@ -246,12 +246,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified");
         verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
                              entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
-                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set",
-                             entitlement.getAccountId(), "SubscriptionJson accountId needs to be set");
+                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
@@ -265,7 +263,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
                 final Entitlement newEntitlement;
 
-                final Account account = accountUserApi.getAccountById(accountId, callContext);
+                final Account account = accountUserApi.getAccountById(current.getAccountId(), callContext);
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
                                                                  ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
@@ -335,7 +333,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final UUID uuid = UUID.fromString(subscriptionId);
 
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, ctx);
-
                 final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
                 final Entitlement newEntitlement;
                 if (billingPolicyString == null && entitlementPolicyString == null) {
@@ -556,5 +553,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Override
     protected ObjectType getObjectType() {
         return ObjectType.SUBSCRIPTION;
+    }
+
+    private Account getAccountFromSubscriptionJson(final SubscriptionJson entitlementJson, final CallContext callContext) throws SubscriptionApiException, AccountApiException, EntitlementApiException {
+        final UUID accountId;
+        if (entitlementJson.getAccountId() != null) {
+            accountId = UUID.fromString(entitlementJson.getAccountId());
+        } else if (entitlementJson.getSubscriptionId() != null) {
+            final Entitlement entitlement = entitlementApi.getEntitlementForId(UUID.fromString(entitlementJson.getSubscriptionId()), callContext);
+            accountId = entitlement.getAccountId();
+        } else {
+            final SubscriptionBundle subscriptionBundle = subscriptionApi.getSubscriptionBundle(UUID.fromString(entitlementJson.getBundleId()), callContext);
+            accountId = subscriptionBundle.getAccountId();
+        }
+        return accountUserApi.getAccountById(accountId, callContext);
     }
 }
