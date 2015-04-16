@@ -34,7 +34,7 @@ public class TestDefaultSecurityApi extends UtilTestSuiteNoDB {
         configureShiro();
 
         // We don't want the Guice injected one (it has Shiro disabled)
-        final SecurityApi securityApi = new DefaultSecurityApi();
+        final SecurityApi securityApi = new DefaultSecurityApi(null);
 
         final Set<Permission> anonsPermissions = securityApi.getCurrentUserPermissions(callContext);
         Assert.assertEquals(anonsPermissions.size(), 0);

@@ -23,12 +23,11 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.tenant.TenantTestSuiteWithEmbeddedDb;
 import org.killbill.billing.tenant.api.DefaultTenant;
-import org.killbill.billing.tenant.security.KillbillCredentialsMatcher;
+import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 
 public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
 

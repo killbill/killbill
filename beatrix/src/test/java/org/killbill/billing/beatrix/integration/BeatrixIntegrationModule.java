@@ -57,6 +57,8 @@ import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
+import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
+import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 
 public class BeatrixIntegrationModule extends KillBillModule {
 
@@ -95,7 +97,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
         install(new RecordIdModule(configSource));
         install(new UsageModule(configSource));
         install(new SecurityModule(configSource));
-        install(new KillBillShiroModule(configSource));
+        install(new KillBillShiroModuleOnlyIniRealm(configSource));
         install(new BeatrixModule(configSource));
 
         bind(AccountChecker.class).asEagerSingleton();
@@ -104,7 +106,6 @@ public class BeatrixIntegrationModule extends KillBillModule {
         bind(PaymentChecker.class).asEagerSingleton();
         bind(RefundChecker.class).asEagerSingleton();
         bind(AuditChecker.class).asEagerSingleton();
-
         bind(TestApiListener.class).asEagerSingleton();
     }
 
@@ -129,5 +130,17 @@ public class BeatrixIntegrationModule extends KillBillModule {
         protected void installPaymentProviderPlugins(final PaymentConfig config) {
             install(new MockPaymentProviderPluginModule(NON_OSGI_PLUGIN_NAME, TestIntegrationBase.getClock(), configSource));
         }
+    }
+
+    private static class KillBillShiroModuleOnlyIniRealm extends KillBillShiroModule {
+
+        public KillBillShiroModuleOnlyIniRealm(final KillbillConfigSource configSource) {
+            super(configSource);
+        }
+        protected void configureJDBCRealm() {
+        }
+        protected void configureLDAPRealm() {
+        }
+
     }
 }

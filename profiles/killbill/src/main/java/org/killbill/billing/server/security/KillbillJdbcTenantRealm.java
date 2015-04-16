@@ -27,22 +27,21 @@ import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.codec.Base64;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.util.ByteSource;
-import org.killbill.billing.tenant.security.KillbillCredentialsMatcher;
+import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 
 /**
  * @see {shiro.ini}
  */
-public class KillbillJdbcRealm extends JdbcRealm {
+public class KillbillJdbcTenantRealm extends JdbcRealm {
 
     private static final String KILLBILL_AUTHENTICATION_QUERY = "select api_secret, api_salt from tenants where api_key = ?";
 
-    public KillbillJdbcRealm(final DataSource dataSource) {
+    public KillbillJdbcTenantRealm(final DataSource dataSource) {
         super();
-
-        setDataSource(dataSource);
 
         configureSecurity();
         configureQueries();
+        configureDataSource();
     }
 
     @Override
@@ -63,5 +62,9 @@ public class KillbillJdbcRealm extends JdbcRealm {
 
     private void configureQueries() {
         setAuthenticationQuery(KILLBILL_AUTHENTICATION_QUERY);
+    }
+
+    private void configureDataSource() {
+        setDataSource(dataSource);
     }
 }

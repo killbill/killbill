@@ -48,8 +48,21 @@ public class TestUtilModuleNoDB extends TestUtilModule {
 
         installAuditMock();
 
-        install(new KillBillShiroModule(configSource));
+        install(new ShiroModuleNoDB(configSource));
         install(new KillBillShiroAopModule());
         install(new SecurityModule(configSource));
+    }
+
+    public static class ShiroModuleNoDB extends KillBillShiroModule {
+
+        public ShiroModuleNoDB(final KillbillConfigSource configSource) {
+            super(configSource);
+        }
+
+        protected void configureJDBCRealm() {
+        }
+
+        protected void configureLDAPRealm() {
+        }
     }
 }

@@ -24,6 +24,8 @@ import org.killbill.billing.util.config.SecurityConfig;
 import org.killbill.billing.util.security.api.DefaultSecurityApi;
 import org.killbill.billing.util.security.api.DefaultSecurityService;
 import org.killbill.billing.util.security.api.SecurityService;
+import org.killbill.billing.util.security.shiro.dao.DefaultUserDao;
+import org.killbill.billing.util.security.shiro.dao.UserDao;
 import org.skife.config.ConfigurationObjectFactory;
 
 public class SecurityModule extends KillBillModule {
@@ -34,8 +36,13 @@ public class SecurityModule extends KillBillModule {
 
     public void configure() {
         installConfig();
+        installDao();
         installSecurityApi();
         installSecurityService();
+    }
+
+    protected void installDao() {
+        bind(UserDao.class).to(DefaultUserDao.class).asEagerSingleton();
     }
 
     private void installConfig() {

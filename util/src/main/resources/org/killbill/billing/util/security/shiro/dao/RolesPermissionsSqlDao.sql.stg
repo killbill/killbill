@@ -1,0 +1,63 @@
+group RolesPermissionsSqlDao;
+
+
+tableName() ::= "roles_permissions"
+
+tableFields(prefix) ::= <<
+  <prefix>role_name
+, <prefix>permission
+, <prefix>is_active
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>updated_date
+, <prefix>updated_by
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+
+tableValues() ::= <<
+  :roleName
+, :permission
+, :isActive
+, :createdDate
+, :createdBy
+, :updatedDate
+, :updatedBy
+>>
+
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields()>
+)
+values (
+<tableValues()>
+)
+;
+>>
+
+getByRecordId() ::= <<
+select <allTableFields()>
+from <tableName()>
+where record_id = :recordId
+and is_active
+;
+>>
+
+
+getByRoleName() ::= <<
+select <allTableFields()>
+from <tableName()>
+where role_name = :roleName
+and is_active
+;
+>>

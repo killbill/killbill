@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // Really Provider<IniRealm>, but avoid an extra cast below
-public class IniRealmProvider implements Provider<Realm> {
+public class IniRealmProvider implements Provider<IniRealm> {
 
     private static final Logger log = LoggerFactory.getLogger(IniRealmProvider.class);
 
@@ -45,7 +45,7 @@ public class IniRealmProvider implements Provider<Realm> {
     }
 
     @Override
-    public Realm get() {
+    public IniRealm get() {
         try {
             final Factory<SecurityManager> factory = new IniSecurityManagerFactory(securityConfig.getShiroResourcePath());
             // TODO Pierre hack - lame cast here, but we need to have Shiro go through its reflection magic
@@ -53,8 +53,17 @@ public class IniRealmProvider implements Provider<Realm> {
             // by going through IniSecurityManagerFactory.
             final DefaultSecurityManager securityManager = (DefaultSecurityManager) factory.getInstance();
             final Collection<Realm> realms = securityManager.getRealms();
-            // Null check mainly for testing
-            return realms == null ? new IniRealm(securityConfig.getShiroResourcePath()) : realms.iterator().next();
+            if (realms == null || realms.isEmpty()) {
+                return new IniRealm(securityConfig.getShiroResourcePath());
+            }
+
+            for (final Realm cur : realms) {
+                if (cur instanceof IniRealm) {
+                    return (IniRealm) cur;
+                }
+            }
+            throw new ConfigurationException();
+
         } catch (final ConfigurationException e) {
             log.warn("Unable to configure RBAC", e);
             return new IniRealm();

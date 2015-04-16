@@ -18,6 +18,7 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -25,11 +26,18 @@ import javax.annotation.Nullable;
 import javax.ws.rs.core.Response.Status;
 
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.model.Permissions;
+import org.killbill.billing.client.model.RoleDefinition;
+import org.killbill.billing.client.model.UserRoles;
 import org.killbill.billing.security.Permission;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.http.client.Response;
+
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Resources;
 
 public class TestSecurity extends TestJaxrsBase {
 
@@ -53,6 +61,146 @@ public class TestSecurity extends TestJaxrsBase {
         final List<String> stephanesPermissions = getPermissions("stephane", "password");
         Assert.assertEquals(stephanesPermissions.size(), 1);
         Assert.assertEquals(new HashSet<String>(stephanesPermissions), ImmutableSet.<String>of(Permission.PAYMENT_CAN_REFUND.toString()));
+    }
+
+    @Test(groups = "slow")
+    public void testDynamicUserRolesAllPermissions() throws Exception {
+        testDynamicUserRolesInternal("wqeqwe", "jdsh763s", "all", "*", true);
+    }
+
+    @Test(groups = "slow")
+    public void testDynamicUserRolesAllCatalogPermissions() throws Exception {
+        testDynamicUserRolesInternal("wqeqsdswe", "jsddsh763s", "allcatalog", "catalog:*", true);
+    }
+
+    @Test(groups = "slow")
+    public void testDynamicUserRolesCorrectCatalogPermissions() throws Exception {
+        testDynamicUserRolesInternal("wqeq23f6we", "jds5gh763s", "correctcatalog", "catalog:config_upload", true);
+    }
+
+    @Test(groups = "slow")
+    public void testDynamicUserRolesIncorrectPermissions() throws Exception {
+        testDynamicUserRolesInternal("wqsdeqwe", "jd23fsh63s", "incorrect", "account:*", false);
+    }
+
+    @Test(groups = "slow")
+    public void testUserPermission() throws KillBillClientException {
+
+        final String roleDefinition = "notEnoughToAddUserAndRoles";
+
+        final List<String> permissions = new ArrayList<String>();
+        for (Permission cur : Permission.values()) {
+            if (!cur.getGroup().equals("user")) {
+                permissions.add(cur.toString());
+            }
+        }
+        Response response = killBillClient.addRoleDefinition(new RoleDefinition(roleDefinition, permissions), createdBy, reason, comment);
+        Assert.assertEquals(response.getStatusCode(), 201);
+
+        final String username = "candy";
+        final String password = "lolipop";
+        response = killBillClient.addUserRoles(new UserRoles(username, password, ImmutableList.of(roleDefinition)), createdBy, reason, comment);
+        Assert.assertEquals(response.getStatusCode(), 201);
+
+        // Now 'login' as new user (along with roles to make an API call requiring permissions), and check behavior
+        logout();
+        login(username, password);
+
+        boolean success = false;
+        try {
+            killBillClient.addRoleDefinition(new RoleDefinition("dsfdsfds", ImmutableList.of("*")), createdBy, reason, comment);
+            success = true;
+        } catch (final Exception e) {
+        } finally {
+            Assert.assertFalse(success);
+        }
+
+        success = false;
+        try {
+            killBillClient.addUserRoles(new UserRoles("sdsd", "sdsdsd", ImmutableList.of(roleDefinition)), createdBy, reason, comment);
+            success = true;
+        } catch (final Exception e) {
+        } finally {
+            Assert.assertFalse(success);
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testUserWithUpdates() throws KillBillClientException {
+
+        final String roleDefinition = "somethingNice";
+        final String allPermissions = "*";
+
+        final String username = "GuanYu";
+        final String password = "IamAGreatWarrior";
+
+        Response response = killBillClient.addRoleDefinition(new RoleDefinition(roleDefinition, ImmutableList.of(allPermissions)), createdBy, reason, comment);
+        Assert.assertEquals(response.getStatusCode(), 201);
+
+        response = killBillClient.addUserRoles(new UserRoles(username, password, ImmutableList.of(roleDefinition)), createdBy, reason, comment);
+        Assert.assertEquals(response.getStatusCode(), 201);
+
+        logout();
+        login(username, password);
+        Permissions permissions =  killBillClient.getPermissions();
+        Assert.assertEquals(permissions.size(), Permission.values().length);
+
+        String newPassword = "IamTheBestWarrior";
+        killBillClient.updateUserPassword(username, newPassword, createdBy, reason, comment);
+
+        logout();
+        login(username, newPassword);
+        permissions =  killBillClient.getPermissions();
+        Assert.assertEquals(permissions.size(), Permission.values().length);
+
+        final String newRoleDefinition = "somethingLessNice";
+        // Only enough permissions to invalidate itself in the last step...
+        final String littlePermissions = "user";
+
+        response = killBillClient.addRoleDefinition(new RoleDefinition(newRoleDefinition, ImmutableList.of(littlePermissions)), createdBy, reason, comment);
+        Assert.assertEquals(response.getStatusCode(), 201);
+
+        killBillClient.updateUserRoles(username, ImmutableList.of(newRoleDefinition), createdBy, reason, comment);
+        permissions =  killBillClient.getPermissions();
+        // This will only work if correct shiro cache invalidation was performed... requires lots of sweat to get it to work ;-)
+        Assert.assertEquals(permissions.size(), 2);
+
+        killBillClient.invalidateUser(username, createdBy, reason, comment);
+        try {
+            killBillClient.getPermissions();
+            Assert.fail();
+        } catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getResponse().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
+        }
+
+
+    }
+
+    private void testDynamicUserRolesInternal(final String username, final String password, final String roleDefinition, final String permissions, final boolean expectPermissionSuccess) throws Exception {
+
+        Response response = killBillClient.addRoleDefinition(new RoleDefinition(roleDefinition, ImmutableList.of(permissions)), createdBy, reason, comment);
+        Assert.assertEquals(response.getStatusCode(), 201);
+
+        response = killBillClient.addUserRoles(new UserRoles(username, password, ImmutableList.of(roleDefinition)), createdBy, reason, comment);
+        Assert.assertEquals(response.getStatusCode(), 201);
+
+        // Now 'login' as new user (along with roles to make an API call requiring permissions), and check behavior
+        logout();
+        login(username, password);
+
+        boolean success = false;
+        try {
+            final String catalogPath = Resources.getResource("SpyCarBasic.xml").getPath();
+            killBillClient.uploadXMLCatalog(catalogPath, createdBy, reason, comment);
+            success = true;
+        } catch (final Exception e) {
+            if (expectPermissionSuccess ||
+                !e.getMessage().startsWith("java.lang.IllegalArgumentException: Unauthorized")) {
+                throw e;
+            }
+        } finally {
+            Assert.assertTrue(success == expectPermissionSuccess);
+        }
     }
 
     private List<String> getPermissions(@Nullable final String username, @Nullable final String password) throws Exception {

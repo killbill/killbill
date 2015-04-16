@@ -79,7 +79,7 @@ public class PluginResource extends JaxRsResourceBase {
     private final HttpServlet osgiServlet;
 
     @Inject
-    public PluginResource(@Named("osgi") final HttpServlet osgiServlet,
+    public PluginResource(@Named("osgi") final HttpServlet osgiServlet, // See DefaultOSGIModule.OSGI_NAMED
                           final JaxrsUriBuilder uriBuilder,
                           final TagUserApi tagUserApi,
                           final CustomFieldUserApi customFieldUserApi,

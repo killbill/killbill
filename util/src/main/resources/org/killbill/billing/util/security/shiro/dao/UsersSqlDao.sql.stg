@@ -1,0 +1,83 @@
+group UsersSqlDao;
+
+tableName() ::= "users"
+
+tableFields(prefix) ::= <<
+  <prefix>username
+, <prefix>password
+, <prefix>password_salt
+, <prefix>is_active
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>updated_date
+, <prefix>updated_by
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+
+tableValues() ::= <<
+  :username
+, :password
+, :passwordSalt
+, :isActive
+, :createdDate
+, :createdBy
+, :updatedDate
+, :updatedBy
+>>
+
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields()>
+)
+values (
+<tableValues()>
+)
+;
+>>
+
+getByRecordId() ::= <<
+select <allTableFields()>
+from <tableName()>
+where record_id = :recordId
+and is_active
+;
+>>
+
+getByUsername() ::= <<
+select <allTableFields()>
+from <tableName()>
+where username = :username
+and is_active
+;
+>>
+
+updatePassword() ::= <<
+update <tableName()>
+set password = :password
+, password_salt = :passwordSalt
+, updated_date = :updatedDate
+, updated_by = :updatedBy
+where username = :username
+and is_active
+;
+>>
+
+invalidate() ::= <<
+update <tableName()>
+set is_active = 0
+where
+username = :username
+;
+>>
+

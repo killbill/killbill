@@ -20,6 +20,8 @@ import javax.inject.Singleton;
 
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthenticatedException;
+import org.killbill.billing.util.glue.TestSecurityModuleNoDB;
+import org.killbill.billing.util.glue.TestUtilModuleNoDB.ShiroModuleNoDB;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
@@ -74,9 +76,9 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
         // Shutdown the cache manager to avoid duplicate exceptions
         CacheManager.getInstance().shutdown();
         final Injector injector = Guice.createInjector(Stage.PRODUCTION,
-                                                       new KillBillShiroModule(configSource),
+                                                       new ShiroModuleNoDB(configSource),
                                                        new KillBillShiroAopModule(),
-                                                       new SecurityModule(configSource),
+                                                       new TestSecurityModuleNoDB(configSource),
                                                        new AbstractModule() {
                                                            @Override
                                                            protected void configure() {
@@ -102,9 +104,9 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
         // Shutdown the cache manager to avoid duplicate exceptions
         CacheManager.getInstance().shutdown();
         final Injector injector = Guice.createInjector(Stage.PRODUCTION,
-                                                       new KillBillShiroModule(configSource),
+                                                       new ShiroModuleNoDB(configSource),
                                                        new KillBillShiroAopModule(),
-                                                       new SecurityModule(configSource),
+                                                       new TestSecurityModuleNoDB(configSource),
                                                        new AbstractModule() {
                                                            @Override
                                                            public void configure() {

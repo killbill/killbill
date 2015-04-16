@@ -82,6 +82,8 @@ public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @AfterMethod(groups = "fast")
     public void afterMethod() throws Exception {
         eventBus.stop();
+        // Reset the security manager
+        ThreadContext.unbindSecurityManager();
     }
 
     // Security helpers

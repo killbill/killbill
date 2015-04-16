@@ -36,6 +36,7 @@ import org.killbill.billing.util.glue.IniRealmProvider;
 import org.killbill.billing.util.glue.JDBCSessionDaoProvider;
 import org.killbill.billing.util.glue.KillBillShiroModule;
 import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
+import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
@@ -60,6 +61,8 @@ public class KillBillShiroWebModule extends ShiroWebModule {
         bind(RbacConfig.class).toInstance(config);
 
         bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
+
+        bindRealm().to(KillBillJdbcRealm.class).asEagerSingleton();
 
         if (KillBillShiroModule.isLDAPEnabled()) {
             bindRealm().to(KillBillJndiLdapRealm.class).asEagerSingleton();

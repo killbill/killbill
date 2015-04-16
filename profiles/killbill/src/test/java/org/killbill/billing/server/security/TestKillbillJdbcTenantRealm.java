@@ -38,7 +38,7 @@ import org.testng.annotations.Test;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-public class TestKillbillJdbcRealm extends TestJaxrsBase {
+public class TestKillbillJdbcTenantRealm extends TestJaxrsBase {
 
     private SecurityManager securityManager;
     private DefaultTenant tenant;
@@ -60,8 +60,7 @@ public class TestKillbillJdbcRealm extends TestJaxrsBase {
         dbConfig.setUsername(helper.getUsername());
         dbConfig.setPassword(helper.getPassword());
 
-        final KillbillJdbcRealm jdbcRealm;
-        jdbcRealm = new KillbillJdbcRealm(shiroDataSource);
+        final KillbillJdbcTenantRealm jdbcRealm = new KillbillJdbcTenantRealm(shiroDataSource);
         jdbcRealm.setDataSource(new HikariDataSource(dbConfig));
 
         securityManager = new DefaultSecurityManager(jdbcRealm);

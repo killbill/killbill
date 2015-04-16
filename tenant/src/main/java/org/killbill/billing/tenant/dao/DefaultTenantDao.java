@@ -33,7 +33,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
-import org.killbill.billing.tenant.security.KillbillCredentialsMatcher;
+import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;

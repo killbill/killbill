@@ -26,6 +26,7 @@ import org.apache.shiro.session.mgt.SessionManager;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.RbacConfig;
 import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
+import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
@@ -38,6 +39,7 @@ public class KillBillShiroModule extends ShiroModule {
 
     public static final String KILLBILL_LDAP_PROPERTY = "killbill.server.ldap";
     public static final String KILLBILL_RBAC_PROPERTY = "killbill.server.rbac";
+
 
     public static boolean isLDAPEnabled() {
         return Boolean.parseBoolean(System.getProperty(KILLBILL_LDAP_PROPERTY, "false"));
@@ -64,6 +66,16 @@ public class KillBillShiroModule extends ShiroModule {
 
         bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
 
+        configureJDBCRealm();
+
+        configureLDAPRealm();
+    }
+
+    protected void configureJDBCRealm() {
+        bindRealm().to(KillBillJdbcRealm.class).asEagerSingleton();
+    }
+
+    protected void configureLDAPRealm() {
         if (isLDAPEnabled()) {
             bindRealm().to(KillBillJndiLdapRealm.class).asEagerSingleton();
         }

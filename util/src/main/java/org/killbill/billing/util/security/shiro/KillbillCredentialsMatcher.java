@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package org.killbill.billing.tenant.security;
+package org.killbill.billing.util.security.shiro;
 
 import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;

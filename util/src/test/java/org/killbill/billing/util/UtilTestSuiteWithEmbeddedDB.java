@@ -18,6 +18,8 @@ package org.killbill.billing.util;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.security.api.SecurityApi;
+import org.killbill.billing.util.security.shiro.dao.UserDao;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +79,9 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected IDBI idbi;
     @Inject
     protected TestApiListener eventsListener;
+    @Inject
+    protected SecurityApi securityApi;
+
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
