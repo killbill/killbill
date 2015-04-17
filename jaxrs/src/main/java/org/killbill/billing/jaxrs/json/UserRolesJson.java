@@ -21,11 +21,15 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class UserRolesJson {
 
+    @ApiModelProperty(required = true)
     private final String username;
+    @ApiModelProperty(required = true)
     private final String password;
+    @ApiModelProperty(required = true)
     private final List<String> roles;
 
     @JsonCreator

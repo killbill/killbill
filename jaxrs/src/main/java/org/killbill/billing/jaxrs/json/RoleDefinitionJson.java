@@ -21,10 +21,13 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class RoleDefinitionJson {
 
+    @ApiModelProperty(required = true)
     private final String role;
+    @ApiModelProperty(required = true)
     private final List<String> permissions;
 
     @JsonCreator
