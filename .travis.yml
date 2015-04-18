@@ -6,7 +6,7 @@ sudo: false
 #  directories:
 #      - $HOME/.m2
 
-script: if [[ -v COMMAND ]]; then $COMMAND; else travis_retry travis_wait mvn -Dmaven.test.redirectTestOutputToFile=true clean install $PHASE | egrep -v 'Download|Install'; [ ${PIPESTATUS[0]} == 0 ]; fi
+script: if [[ -v COMMAND ]]; then $COMMAND; else travis_retry travis_wait mvn -q -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN clean install $PHASE | egrep -v 'Download|Install'; [ ${PIPESTATUS[0]} == 0 ]; fi
 # Remove --quiet to avoid timeouts
 install: mvn -U install -DskipTests=true | egrep -v 'Download|Install'
 
