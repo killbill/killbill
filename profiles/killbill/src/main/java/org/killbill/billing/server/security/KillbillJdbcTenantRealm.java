@@ -36,8 +36,12 @@ public class KillbillJdbcTenantRealm extends JdbcRealm {
 
     private static final String KILLBILL_AUTHENTICATION_QUERY = "select api_secret, api_salt from tenants where api_key = ?";
 
+    private final DataSource dataSource;
+
     public KillbillJdbcTenantRealm(final DataSource dataSource) {
         super();
+
+        this.dataSource = dataSource;
 
         configureSecurity();
         configureQueries();

@@ -113,10 +113,6 @@ public class KillbillServerModule extends KillbillPlatformModule {
     protected void configureDao() {
         super.configureDao();
 
-        final Provider<DataSource> dataSourceSpyProvider = new ReferenceableDataSourceSpyProvider(daoConfig, SHIRO_DATA_SOURCE_ID);
-        requestInjection(dataSourceSpyProvider);
-        bind(DataSource.class).annotatedWith(Names.named(SHIRO_DATA_SOURCE_ID)).toProvider(dataSourceSpyProvider).asEagerSingleton();
-
         final Multibinder<ResultSetMapperFactory> resultSetMapperFactorySetBinder = Multibinder.newSetBinder(binder(), ResultSetMapperFactory.class);
         resultSetMapperFactorySetBinder.addBinding().toInstance(new LowerToCamelBeanMapperFactory(SessionModelDao.class));
 
