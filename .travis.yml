@@ -1,9 +1,10 @@
 language: java
 
 sudo: false
-cache:
-  directories:
-      - $HOME/.m2
+# Flaky - see https://github.com/travis-ci/travis-ci/issues/3566
+#cache:
+#  directories:
+#      - $HOME/.m2
 
 script: if [[ -v COMMAND ]]; then $COMMAND; else travis_retry travis_wait mvn -Dmaven.test.redirectTestOutputToFile=true clean install $PHASE | egrep -v 'Download|Install'; [ ${PIPESTATUS[0]} == 0 ]; fi
 # Remove --quiet to avoid timeouts
