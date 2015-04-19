@@ -65,6 +65,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
     public void testWithAccountInUtcMinus8() throws EntitlementApiException {
 
         final LocalDate inputDate = new LocalDate(2013, 8, 7);
+        // Current time is in the future so we don't go through logic that will default to a Clock.getUTCNow.
         clock.setDay(inputDate.plusDays(3));
 
         final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(-8);
@@ -74,37 +75,18 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         final DateTime refererenceDateTime = new DateTime(2013, 1, 1, 1, 28, 10, 0, DateTimeZone.UTC);
         final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, refererenceDateTime, internalCallContext);
 
-        // And so that datetime in UTC becomes expectedDate below
-        final DateTime expectedDate = new DateTime(2013, 8, 8, 1, 28, 10, 0, DateTimeZone.UTC);
-        Assert.assertEquals(targetDate, expectedDate);
 
-        Assert.assertEquals(targetDate.toDateTime(timeZoneUtcMinus8).toLocalDate(), inputDate);
-    }
+        // Things to verify:
+        // 1. Verify the resulting DateTime brings us back into the correct LocalDate (in the account timezone)
+        Assert.assertEquals(new LocalDate(targetDate, timeZoneUtcMinus8), inputDate);
+        // 2. Verify the resulting DateTime has the same reference time as we indicated (in UTC)
+        Assert.assertEquals(targetDate.toLocalTime(), refererenceDateTime.toLocalTime());
 
-
-    @Test(groups = "fast")
-    public void test2WithAccountInUtcMinus8() throws EntitlementApiException {
-
-        final DateTime initialNow = new DateTime(2013, 8, 22,22, 07, 01, 0, DateTimeZone.UTC);
-        clock.setTime(initialNow);
-
-        final LocalDate inputDate = new LocalDate(2013, 8, 22);
-
-        final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(-8);
-        Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
-
-        // We also use a reference time of 16, 48, 0 -> DateTime in UTC will be (2013, 8, 23, 00, 48, 0) which:
-        // * is greater than now
-        // * with a inputLocalDate in the account timezone which is today
         //
-        // => Code will round to now to not end up in the future
+        // To be more specific, we should find a UTC Date, with the exact specified reference time, and with a LocalDate one day
+        // ahead because of the 8 hours difference.
         //
-        final DateTime refererenceDateTime = new DateTime(2013, 8, 22, 16, 48, 0, DateTimeZone.UTC);
-        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, refererenceDateTime, internalCallContext);
-
-        final DateTime now = clock.getUTCNow();
-        Assert.assertTrue(initialNow.compareTo(targetDate) <= 0);
-        Assert.assertTrue(targetDate.compareTo(now) <= 0);
+        Assert.assertEquals(targetDate, new DateTime(2013, 8, 8, 1, 28, 10, 0, DateTimeZone.UTC));
     }
 
 
@@ -122,13 +104,38 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         final DateTime refererenceDateTime = new DateTime(2013, 1, 1, 20, 28, 10, 0, DateTimeZone.UTC);
         final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, refererenceDateTime, internalCallContext);
 
-        // And so that datetime in UTC becomes expectedDate below
-        final DateTime expectedDate = new DateTime(2013, 8, 6, 20, 28, 10, 0, DateTimeZone.UTC);
-        Assert.assertEquals(targetDate, expectedDate);
+        // Things to verify:
+        // 1. Verify the resulting DateTime brings us back into the correct LocalDate (in the account timezone)
+        Assert.assertEquals(new LocalDate(targetDate, timeZoneUtcPlus5), inputDate);
+        // 2. Verify the resulting DateTime has the same reference time as we indicated (in UTC)
+        Assert.assertEquals(targetDate.toLocalTime(), refererenceDateTime.toLocalTime());
 
-        Assert.assertEquals(targetDate.toDateTime(timeZoneUtcPlus5).toLocalDate(), inputDate);
-
+        //
+        // To be more specific, we should find a UTC Date, with the exact specified reference time, and with a LocalDate one day
+        // ahead because of the 8 hours difference.
+        //
+        Assert.assertEquals(targetDate, new DateTime(2013, 8, 6, 20, 28, 10, 0, DateTimeZone.UTC));
     }
+
+    @Test(groups = "fast")
+    public void testWhereLocalDateInAccountTimeZoneContainsNow() throws EntitlementApiException {
+
+        final DateTime initialNow = new DateTime(2013, 8, 22,22, 07, 01, 0, DateTimeZone.UTC);
+        clock.setTime(initialNow);
+
+        final LocalDate inputDate = new LocalDate(2013, 8, 22);
+
+        final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(-8);
+        Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
+
+        final DateTime referenceDateTimeThatDoesNotMatter = new DateTime();
+        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, referenceDateTimeThatDoesNotMatter, internalCallContext);
+
+        final DateTime now = clock.getUTCNow();
+        Assert.assertTrue(initialNow.compareTo(targetDate) <= 0);
+        Assert.assertTrue(targetDate.compareTo(now) <= 0);
+    }
+
 
     @Test(groups = "fast")
     public void testIsBeforeOrEqualsToday() {

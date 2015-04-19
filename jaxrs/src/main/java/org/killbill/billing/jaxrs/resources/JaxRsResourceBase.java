@@ -292,18 +292,12 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-    protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) {
-
+    protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) throws AccountApiException {
         final LocalDate maybeResult = extractLocalDate(inputDate);
         if (maybeResult != null) {
             return maybeResult;
         }
-        Account account = null;
-        try {
-            account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
-        } catch (final AccountApiException e) {
-            log.info("Failed to retrieve account for id " + accountId);
-        }
+        Account account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
         final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
         return toLocalDate(account, inputDateTime, context);
     }
