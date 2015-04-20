@@ -96,6 +96,7 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         } else {
             Assert.assertTrue(locker instanceof MemoryGlobalLocker);
         }
+        Assert.assertTrue(locker.isFree("a", "b"));
     }
 
     @Override
