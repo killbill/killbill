@@ -22,6 +22,16 @@ matrix:
   allow_failures:
     - jdk: oraclejdk8
   include:
+    - env: PHASE="-Pmysql"
+      jdk: openjdk7
+    - env: PHASE="-Pmysql"
+      jdk: oraclejdk7
+    - env: PHASE="-Pmysql,jdk17"
+      jdk: openjdk7
+    - env: PHASE="-Pmysql,jdk17"
+      jdk: oraclejdk7
+    - env: PHASE="-Pmysql,jdk18"
+      jdk: oraclejdk8
     - env: PHASE="-Ptravis"
       jdk: openjdk7
     - env: PHASE="-Ptravis"
@@ -35,4 +45,4 @@ matrix:
   fast_finish: true
 
 after_success:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && echo "<settings><servers><server><id>sonatype-nexus-snapshots</id><username>\${env.OSSRH_USER}</username><password>\${env.OSSRH_PASS}</password></server></servers></settings>" > ~/settings.xml && travis_wait mvn deploy -DskipTests=true --settings ~/settings.xml | egrep -v "Download|Install|Upload" ; rm -f ~/settings.xml'
+  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && echo "<settings><servers><server><id>sonatype-nexus-snapshots</id><username>\${env.OSSRH_USER}</username><password>\${env.OSSRH_PASS}</password></server></servers></settings>" > ~/settings.xml && mvn deploy -DskipTests=true --settings ~/settings.xml | egrep -v "Download|Install|Upload" ; rm -f ~/settings.xml'
