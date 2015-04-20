@@ -182,7 +182,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     @Override
     public DateTime getEndDate() {
         final SubscriptionBaseTransition latestTransition = getPreviousTransition();
-        if (latestTransition.getNextState() == EntitlementState.CANCELLED) {
+        if (latestTransition != null && latestTransition.getNextState() == EntitlementState.CANCELLED) {
             return latestTransition.getEffectiveTransitionTime();
         }
         return null;

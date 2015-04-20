@@ -108,9 +108,11 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final DateTime now = clock.getUTCNow();
             final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
+            /*
             if (requestedDate.isAfter(now)) {
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, now.toString(), requestedDate.toString());
             }
+            */
             final DateTime effectiveDate = requestedDate;
 
             final CallContext callContext = internalCallContextFactory.createCallContext(context);

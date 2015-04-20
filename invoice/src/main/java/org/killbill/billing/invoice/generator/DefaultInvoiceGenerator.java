@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -87,7 +88,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      * adjusts target date to the maximum invoice target date, if future invoices exist
      */
     @Override
-    public Invoice generateInvoice(final UUID accountId, @Nullable final BillingEventSet events,
+    public Invoice generateInvoice(final Account account, @Nullable final BillingEventSet events,
                                    @Nullable final List<Invoice> existingInvoices,
                                    final LocalDate targetDate,
                                    final Currency targetCurrency, final InternalCallContext context) throws InvoiceApiException {
@@ -98,10 +99,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         validateTargetDate(targetDate);
         final LocalDate adjustedTargetDate = adjustTargetDate(existingInvoices, targetDate);
 
-        final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), adjustedTargetDate, targetCurrency);
+        final Invoice invoice = new DefaultInvoice(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), adjustedTargetDate, targetCurrency);
         final UUID invoiceId = invoice.getId();
 
-        final List<InvoiceItem> inAdvanceItems = generateInAdvanceInvoiceItems(accountId, invoiceId, events, existingInvoices, adjustedTargetDate, targetCurrency);
+        final List<InvoiceItem> inAdvanceItems = generateInAdvanceInvoiceItems(account.getId(), invoiceId, events, existingInvoices, adjustedTargetDate, targetCurrency);
         invoice.addInvoiceItems(inAdvanceItems);
 
         final List<InvoiceItem> usageItems = generateUsageInvoiceItems(invoiceId, events, existingInvoices, targetDate, context);

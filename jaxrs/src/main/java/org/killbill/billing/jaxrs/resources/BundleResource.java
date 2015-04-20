@@ -201,7 +201,7 @@ public class BundleResource extends JaxRsResourceBase {
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
-                                @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException {
+                                @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
@@ -224,7 +224,7 @@ public class BundleResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException {
+                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);

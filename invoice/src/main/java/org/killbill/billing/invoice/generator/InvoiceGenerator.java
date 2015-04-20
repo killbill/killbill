@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
@@ -31,6 +32,6 @@ import org.killbill.billing.junction.BillingEventSet;
 
 public interface InvoiceGenerator {
 
-    public Invoice generateInvoice(UUID accountId, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
+    public Invoice generateInvoice(Account account, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
                                    LocalDate targetDate, Currency targetCurrency, final InternalCallContext context) throws InvoiceApiException;
 }

@@ -228,7 +228,7 @@ public class InvoiceDispatcher {
             final Currency targetCurrency = account.getCurrency();
 
             final LocalDate targetDate = dateAndTimeZoneContext != null ? dateAndTimeZoneContext.computeTargetDate(targetDateTime) : null;
-            final Invoice invoice = targetDate != null ? generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency, context) : null;
+            final Invoice invoice = targetDate != null ? generator.generateInvoice(account, billingEvents, invoices, targetDate, targetCurrency, context) : null;
             //
             // If invoice comes back null, there is nothing new to generate, we can bail early
             //
