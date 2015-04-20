@@ -38,7 +38,7 @@ public class GlobalLockerModule extends KillBillModule {
     @Provides
     @Singleton
     protected GlobalLocker provideGlobalLocker(final EmbeddedDB embeddedDB) throws IOException {
-        if (EmbeddedDB.DBEngine.MYSQL.equals(embeddedDB)) {
+        if (EmbeddedDB.DBEngine.MYSQL.equals(embeddedDB.getDBEngine())) {
             return new MySqlGlobalLocker(embeddedDB.getDataSource());
         } else {
             return new MemoryGlobalLocker();
