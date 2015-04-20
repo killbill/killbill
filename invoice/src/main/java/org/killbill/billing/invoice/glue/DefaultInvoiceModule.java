@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.glue;
 
 import org.killbill.billing.glue.InvoiceModule;
+import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.InvoiceTagHandler;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
@@ -117,6 +118,10 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         }
     }
 
+    protected void installInvoiceDispatcher() {
+        bind(InvoiceDispatcher.class).asEagerSingleton();
+    }
+
     protected void installInvoiceListener() {
         bind(InvoiceListener.class).asEagerSingleton();
     }
@@ -141,6 +146,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoiceService();
         installInvoiceNotifier();
         installNotifiers();
+        installInvoiceDispatcher();
         installInvoiceListener();
         installTagHandler();
         installInvoiceGenerator();

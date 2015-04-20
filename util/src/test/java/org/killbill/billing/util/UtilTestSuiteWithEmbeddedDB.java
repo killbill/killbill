@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,20 +20,9 @@ package org.killbill.billing.util;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.security.api.SecurityApi;
-import org.killbill.billing.util.security.shiro.dao.UserDao;
-import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.api.TestApiListener;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.commons.locker.GlobalLocker;
-import org.killbill.notificationq.api.NotificationQueueService;
+import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -42,6 +33,19 @@ import org.killbill.billing.util.export.dao.DatabaseExportDao;
 import org.killbill.billing.util.glue.TestUtilModuleWithEmbeddedDB;
 import org.killbill.billing.util.tag.dao.DefaultTagDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionDao;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.commons.embeddeddb.EmbeddedDB.DBEngine;
+import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.memory.MemoryGlobalLocker;
+import org.killbill.commons.locker.mysql.MySqlGlobalLocker;
+import org.killbill.notificationq.api.NotificationQueueService;
+import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -82,11 +86,17 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @Inject
     protected SecurityApi securityApi;
 
-
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleWithEmbeddedDB(configSource));
         g.injectMembers(this);
+
+        if (DBEngine.MYSQL.equals(helper.getDBEngine())) {
+            Assert.assertTrue(locker instanceof MySqlGlobalLocker);
+        } else {
+            Assert.assertTrue(locker instanceof MemoryGlobalLocker);
+        }
+        Assert.assertTrue(locker.isFree("a", "b"));
     }
 
     @Override

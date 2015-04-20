@@ -20,6 +20,8 @@ package org.killbill.billing.util.glue;
 
 import java.io.IOException;
 
+import javax.sql.DataSource;
+
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.commons.locker.GlobalLocker;
@@ -37,9 +39,10 @@ public class GlobalLockerModule extends KillBillModule {
 
     @Provides
     @Singleton
-    protected GlobalLocker provideGlobalLocker(final EmbeddedDB embeddedDB) throws IOException {
-        if (EmbeddedDB.DBEngine.MYSQL.equals(embeddedDB)) {
-            return new MySqlGlobalLocker(embeddedDB.getDataSource());
+    // Note: we need to inject the pooled DataSource here, not the (direct) one from EmbeddedDB
+    protected GlobalLocker provideGlobalLocker(final DataSource dataSource, final EmbeddedDB embeddedDB) throws IOException {
+        if (EmbeddedDB.DBEngine.MYSQL.equals(embeddedDB.getDBEngine())) {
+            return new MySqlGlobalLocker(dataSource);
         } else {
             return new MemoryGlobalLocker();
         }
