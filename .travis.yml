@@ -6,7 +6,7 @@ sudo: false
 #  directories:
 #      - $HOME/.m2
 
-script: if [[ -v COMMAND ]]; then $COMMAND; else travis_retry mvn -q -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN -Dorg.slf4j.simpleLogger.log.org.killbill.billing.util.cache=ERROR -Dorg.slf4j.simpleLogger.log.org.killbill.billing.lifecycle=ERROR clean install $PHASE 2>&1 | egrep -v 'Download|Install|[ \t]*at [ \ta-zA-Z0-9\.\:\(\)]+'; [ ${PIPESTATUS[0]} == 0 ]; fi
+script: if [[ -v COMMAND ]]; then $COMMAND; else travis_retry mvn -q -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN -Dorg.slf4j.simpleLogger.log.org.killbill.billing.util.cache=ERROR -Dorg.slf4j.simpleLogger.log.org.killbill.billing.lifecycle=ERROR clean install $PHASE 2>&1 | egrep -v 'Download|Install|[ \t]*at [ \ta-zA-Z0-9\.\:\(\)]+|[0-9]+ [><]'; [ ${PIPESTATUS[0]} == 0 ]; fi
 # Remove --quiet to avoid timeouts
 install: mvn -U install -DskipTests=true | egrep -v 'Download|Install'
 
