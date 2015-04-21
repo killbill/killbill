@@ -18,14 +18,28 @@ package org.killbill.billing.util;
 
 import java.math.BigDecimal;
 
+/**
+ * Util class for a series of static utility methods for BigDecimal.
+ * @see java.math.BigDecimal
+ */
 public class DefaultAmountFormatter {
 
-    public static final int SCALE = 2;
+    // new scale to be used in the BigDecimal setScale
+    private static final int SCALE = 2;
 
-    // Static only
+    // Private Constructor so static only methods no instances
     private DefaultAmountFormatter() {
     }
 
+    /**
+     * <p>Rounds a given BigDecimal to a scale of 2. If null is passed then 0.00 is
+     * returned.<i>Note {@link java.math.BigDecimal#setScale(int, int)} is used by this method.
+     * Meaning that a new instance of BigDecimal not the object passed is returned.</i></p>
+     *
+     * @param decimal BigDecimal to be rounded.
+     * @return new instance of BigDecimal with the rounding applied.
+     * @see java.math.BigDecimal
+     */
     public static BigDecimal round(final BigDecimal decimal) {
         if (decimal == null) {
             return BigDecimal.ZERO.setScale(SCALE, BigDecimal.ROUND_HALF_UP);

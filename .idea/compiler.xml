@@ -42,42 +42,26 @@
         <module name="killbill-util" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="currency" target="1.6" />
-      <module name="killbill" target="1.6" />
-      <module name="killbill-account" target="1.6" />
-      <module name="killbill-beatrix" target="1.6" />
-      <module name="killbill-catalog" target="1.6" />
-      <module name="killbill-currency" target="1.6" />
-      <module name="killbill-entitlement" target="1.6" />
-      <module name="killbill-internal-api" target="1.6" />
-      <module name="killbill-invoice" target="1.6" />
-      <module name="killbill-jaxrs" target="1.6" />
-      <module name="killbill-junction" target="1.6" />
-      <module name="killbill-osgi" target="1.6" />
-      <module name="killbill-osgi-all-bundles" target="1.6" />
-      <module name="killbill-osgi-bundles" target="1.6" />
-      <module name="killbill-osgi-bundles-defaultbundles" target="1.6" />
-      <module name="killbill-osgi-bundles-jruby" target="1.6" />
-      <module name="killbill-osgi-bundles-lib-killbill" target="1.6" />
-      <module name="killbill-osgi-bundles-lib-slf4j-osgi" target="1.6" />
-      <module name="killbill-osgi-bundles-logger" target="1.6" />
-      <module name="killbill-osgi-bundles-test-beatrix" target="1.6" />
-      <module name="killbill-osgi-bundles-test-payment" target="1.6" />
-      <module name="killbill-osgi-bundles-webconsolebranding" target="1.6" />
-      <module name="killbill-osgi-lib-bundles" target="1.6" />
-      <module name="killbill-osgi-test-bundles" target="1.6" />
-      <module name="killbill-overdue" target="1.6" />
-      <module name="killbill-payment" target="1.6" />
-      <module name="killbill-profiles" target="1.6" />
-      <module name="killbill-profiles-killbill" target="1.6" />
-      <module name="killbill-profiles-killpay" target="1.6" />
-      <module name="killbill-server" target="1.6" />
-      <module name="killbill-subscription" target="1.6" />
-      <module name="killbill-tenant" target="1.6" />
-      <module name="killbill-usage" target="1.6" />
-      <module name="killbill-util" target="1.6" />
+    <bytecodeTargetLevel target="1.7">
+      <module name="killbill" target="1.7" />
+      <module name="killbill-account" target="1.7" />
+      <module name="killbill-beatrix" target="1.7" />
+      <module name="killbill-catalog" target="1.7" />
+      <module name="killbill-currency" target="1.7" />
+      <module name="killbill-entitlement" target="1.7" />
+      <module name="killbill-internal-api" target="1.7" />
+      <module name="killbill-invoice" target="1.7" />
+      <module name="killbill-jaxrs" target="1.7" />
+      <module name="killbill-junction" target="1.7" />
+      <module name="killbill-overdue" target="1.7" />
+      <module name="killbill-payment" target="1.7" />
+      <module name="killbill-profiles" target="1.7" />
+      <module name="killbill-profiles-killbill" target="1.7" />
+      <module name="killbill-profiles-killpay" target="1.7" />
+      <module name="killbill-subscription" target="1.7" />
+      <module name="killbill-tenant" target="1.7" />
+      <module name="killbill-usage" target="1.7" />
+      <module name="killbill-util" target="1.7" />
     </bytecodeTargetLevel>
   </component>
 </project>
-
