@@ -348,7 +348,11 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         for (final String pluginProperty : pluginProperties) {
             final List<String> property = ImmutableList.<String>copyOf(pluginProperty.split("="));
             final String key = property.get(0);
-            final String value = property.size() == 1 ? null : Joiner.on("=").join(property.subList(1, property.size()));
+            // Should we URL decode the value?
+            String value = property.size() == 1 ? null : Joiner.on("=").join(property.subList(1, property.size()));
+            if (pluginProperty.endsWith("=")) {
+                value += "=";
+            }
             properties.add(new PluginProperty(key, value, false));
         }
         for (final PluginProperty cur : additionalProperties) {
