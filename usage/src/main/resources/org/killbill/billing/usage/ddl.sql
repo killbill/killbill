@@ -17,3 +17,4 @@ CREATE TABLE rolled_up_usage (
 CREATE UNIQUE INDEX rolled_up_usage_id ON rolled_up_usage(id);
 CREATE INDEX rolled_up_usage_subscription_id ON rolled_up_usage(subscription_id ASC);
 CREATE INDEX rolled_up_usage_tenant_account_record_id ON rolled_up_usage(tenant_record_id, account_record_id);
+CREATE INDEX rolled_up_usage_account_record_id ON rolled_up_usage(account_record_id);

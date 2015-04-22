@@ -45,3 +45,15 @@ and record_date \< :endDate
 ;
 >>
 
+getRawUsageForAccount() ::= <<
+select
+  <allTableFields()>
+from <tableName()>
+where account_record_id = :accountRecordId
+and record_date >= :startDate
+and record_date \< :endDate
+<AND_CHECK_TENANT()>
+;
+>>
+
+

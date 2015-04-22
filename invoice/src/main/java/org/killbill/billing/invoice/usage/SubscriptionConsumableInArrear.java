@@ -17,6 +17,7 @@
 package org.killbill.billing.invoice.usage;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,33 +32,54 @@ import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.usage.api.UsageUserApi;
-import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.usage.RawUsage;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 
 /**
  * There is one such class created for each subscriptionId referenced in the billingEvents.
  */
 public class SubscriptionConsumableInArrear {
 
+    private static final Comparator<RawUsage> RAW_USAGE_DATE_COMPARATOR = new Comparator<RawUsage>() {
+        @Override
+        public int compare(final RawUsage o1, final RawUsage o2) {
+            int compared = o1.getDate().compareTo(o2.getDate());
+            if (compared != 0) {
+                return compared;
+            } else {
+                compared = o1.getUnitType().compareTo(o2.getUnitType());
+                if (compared != 0) {
+                    return compared;
+                } else {
+                    return o1.hashCode() != o2.hashCode() ? o1.hashCode() - o2.hashCode() : 0;
+                }
+            }
+        }
+    };
+
     private final UUID invoiceId;
     private final List<BillingEvent> subscriptionBillingEvents;
-    private final UsageUserApi usageApi;
     private final LocalDate targetDate;
-    private final TenantContext context;
-    private final boolean insertZeroAmountItems;
+    private final List<RawUsage> rawSubscriptionUsage;
 
-    public SubscriptionConsumableInArrear(final UUID invoiceId, final List<BillingEvent> subscriptionBillingEvents, final UsageUserApi usageApi, final boolean insertZeroAmountItems, LocalDate targetDate, final TenantContext context) {
+    public SubscriptionConsumableInArrear(final UUID invoiceId, final List<BillingEvent> subscriptionBillingEvents, final List<RawUsage> rawUsage, LocalDate targetDate) {
         this.invoiceId = invoiceId;
         this.subscriptionBillingEvents = subscriptionBillingEvents;
-        this.usageApi = usageApi;
-        this.insertZeroAmountItems = insertZeroAmountItems;
         this.targetDate = targetDate;
-        this.context = context;
+        // Extract raw usage for that subscription and sort it by date
+        this.rawSubscriptionUsage = Ordering.<RawUsage>from(RAW_USAGE_DATE_COMPARATOR).sortedCopy(Iterables.filter(rawUsage, new Predicate<RawUsage>() {
+            @Override
+            public boolean apply(final RawUsage input) {
+                return input.getSubscriptionId().equals(subscriptionBillingEvents.get(0).getSubscription().getId());
+            }
+        }));
     }
 
     /**
@@ -88,7 +110,6 @@ public class SubscriptionConsumableInArrear {
 
         for (BillingEvent event : subscriptionBillingEvents) {
 
-
             // Extract all in arrear /consumable usage section for that billing event.
             final List<Usage> usages = findConsumableInArrearUsages(event);
             allSeenUsage.addAll(Collections2.transform(usages, new Function<Usage, String>() {
@@ -106,7 +127,7 @@ public class SubscriptionConsumableInArrear {
                 // Add inflight usage interval if non existent
                 ContiguousIntervalConsumableInArrear existingInterval = inFlightInArrearUsageIntervals.get(usage.getName());
                 if (existingInterval == null) {
-                    existingInterval = new ContiguousIntervalConsumableInArrear(usage, invoiceId, usageApi, insertZeroAmountItems, targetDate, context);
+                    existingInterval = new ContiguousIntervalConsumableInArrear(usage, invoiceId, rawSubscriptionUsage, targetDate);
                     inFlightInArrearUsageIntervals.put(usage.getName(), existingInterval);
                 }
                 // Add billing event for that usage interval

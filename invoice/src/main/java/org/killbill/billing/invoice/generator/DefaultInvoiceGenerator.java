@@ -36,6 +36,8 @@ import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -51,7 +53,8 @@ import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.usage.api.UsageUserApi;
+import org.killbill.billing.usage.InternalUserApi;
+import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.InvoiceConfig;
@@ -73,15 +76,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     private final Clock clock;
     private final InvoiceConfig config;
-    private final UsageUserApi usageApi;
-    private final InternalCallContextFactory internalCallContextFactory;
+    private final InternalUserApi usageApi;
 
     @Inject
-    public DefaultInvoiceGenerator(final Clock clock, final UsageUserApi usageApi, final InvoiceConfig config, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultInvoiceGenerator(final Clock clock, final InternalUserApi usageApi, final InvoiceConfig config) {
         this.clock = clock;
         this.config = config;
         this.usageApi = usageApi;
-        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     /*
@@ -105,22 +106,23 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final List<InvoiceItem> inAdvanceItems = generateInAdvanceInvoiceItems(account.getId(), invoiceId, events, existingInvoices, adjustedTargetDate, targetCurrency);
         invoice.addInvoiceItems(inAdvanceItems);
 
-        final List<InvoiceItem> usageItems = generateUsageInvoiceItems(invoiceId, events, existingInvoices, targetDate, context);
+        final List<InvoiceItem> usageItems = generateUsageInvoiceItems(account, invoiceId, events, existingInvoices, targetDate, context);
         invoice.addInvoiceItems(usageItems);
 
         return invoice.getInvoiceItems().size() != 0 ? invoice : null;
     }
 
     // STEPH_USAGE Only deals with consumable in arrear usage billing.
-    private List<InvoiceItem> generateUsageInvoiceItems(final UUID invoiceId, final BillingEventSet eventSet,
+    private List<InvoiceItem> generateUsageInvoiceItems(final Account account,
+                                                        final UUID invoiceId, final BillingEventSet eventSet,
                                                         @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
-                                                        final InternalCallContext context) throws InvoiceApiException {
-        final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
+                                                        final InternalCallContext internalCallContext) throws InvoiceApiException {
         try {
-
             final List<InvoiceItem> items = Lists.newArrayList();
             final Iterator<BillingEvent> events = eventSet.iterator();
 
+            boolean seenAnyUsageItems = false;
+            List<RawUsage> rawUsage = ImmutableList.of();
             List<BillingEvent> curEvents = Lists.newArrayList();
             UUID curSubscriptionId = null;
             while (events.hasNext()) {
@@ -131,9 +133,25 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     continue;
                 }
 
+                // Optimize to do the usage query only once after we know there are indeed some usage items
+                if (!seenAnyUsageItems) {
+                    final boolean foundUsage = Iterables.tryFind(event.getUsages(), new Predicate<Usage>() {
+                        @Override
+                        public boolean apply(@Nullable final Usage input) {
+                            return (input.getUsageType() == UsageType.CONSUMABLE &&
+                                    input.getBillingMode() == BillingMode.IN_ARREAR);
+                        }
+                    }).orNull() != null;
+                    if (foundUsage) {
+                        rawUsage = usageApi.getRawUsageForAccount(account.getId(), new LocalDate(event.getEffectiveDate(), account.getTimeZone()), targetDate, internalCallContext);
+                        seenAnyUsageItems = true;
+                    }
+                }
+
+                // We always go in the usage invoicing logic to at least generate $0 USAGE items that will indicate the time for the next notification
                 final UUID subscriptionId = event.getSubscription().getId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
-                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, config.isInsertZeroUsageItems(), targetDate, tenantContext);
+                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, rawUsage, targetDate);
                     items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(curSubscriptionId, existingInvoices)));
                     curEvents = Lists.newArrayList();
                 }
@@ -141,7 +159,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 curEvents.add(event);
             }
             if (curSubscriptionId != null) {
-                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, usageApi, config.isInsertZeroUsageItems(), targetDate, tenantContext);
+
+                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, rawUsage, targetDate);
                 items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(extractUsageItemsForSubscription(curSubscriptionId, existingInvoices)));
             }
             return items;

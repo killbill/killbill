@@ -220,6 +220,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
                               final boolean isRealInvoice, final FutureAccountNotifications callbackDateTimePerSubscriptions,
                               final InternalCallContext context) {
+
+        // We could be called with an empty list of items (for when we ONLY need to set the future account notifications).
+        final boolean hasInvoiceItems = !invoiceItems.isEmpty();
+
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -233,13 +237,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         transactional.create(invoice, context);
                     }
 
-                    // Create the invoice items
-                    final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
-                    for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
-                        createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context);
+                    if (hasInvoiceItems) {
+                        // Create the invoice items
+                        final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+                        for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
+                            createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context);
+                        }
+                        cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
                     }
-
-                    cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
 
                     notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }

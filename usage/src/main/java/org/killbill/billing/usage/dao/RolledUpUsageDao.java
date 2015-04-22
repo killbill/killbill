@@ -31,4 +31,7 @@ public interface RolledUpUsageDao {
     List<RolledUpUsageModelDao> getUsageForSubscription(UUID subscriptionId, LocalDate startDate, LocalDate endDate, String unitType, InternalTenantContext context);
 
     List<RolledUpUsageModelDao> getAllUsageForSubscription(UUID subscriptionId, LocalDate startDate, LocalDate endDate, InternalTenantContext context);
+
+
+    List<RolledUpUsageModelDao> getRawUsageForAccount(LocalDate startDate, LocalDate endDate, InternalTenantContext context);
 }

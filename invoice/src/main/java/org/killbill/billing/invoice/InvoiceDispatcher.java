@@ -90,8 +90,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class InvoiceDispatcher {
@@ -279,16 +281,26 @@ public class InvoiceDispatcher {
 
                 // Transformation to Invoice -> InvoiceModelDao
                 final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
-                final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.copyOf(Collections2.transform(invoice.getInvoiceItems(),
-                                                                                                                   new Function<InvoiceItem, InvoiceItemModelDao>() {
-                                                                                                                       @Override
-                                                                                                                       public InvoiceItemModelDao apply(final InvoiceItem input) {
-                                                                                                                           return new InvoiceItemModelDao(input);
-                                                                                                                       }
-                                                                                                                   }));
-
+                final Iterable<InvoiceItemModelDao> invoiceItemModelDaos = Iterables.transform(invoice.getInvoiceItems(),
+                                                                                               new Function<InvoiceItem, InvoiceItemModelDao>() {
+                                                                                                   @Override
+                                                                                                   public InvoiceItemModelDao apply(final InvoiceItem input) {
+                                                                                                       return new InvoiceItemModelDao(input);
+                                                                                                   }
+                                                                                               });
                 final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents.getUsages(), dateAndTimeZoneContext);
-                invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, futureAccountNotifications, context);
+
+                // We filter any zero amount for USAGE items prior we generate the invoice, which may leave us with an invoice with no items;
+                // we recompute the isRealInvoiceWithItems flag based on what is left (the call to invoice is still necessary to set the future notifications).
+                final Iterable<InvoiceItemModelDao> filteredInvoiceItemModelDaos = Iterables.filter(invoiceItemModelDaos, new Predicate<InvoiceItemModelDao>() {
+                    @Override
+                    public boolean apply(@Nullable final InvoiceItemModelDao input) {
+                        return (input.getType() != InvoiceItemType.USAGE || input.getAmount().compareTo(BigDecimal.ZERO) != 0);
+                    }
+                });
+                isRealInvoiceWithItems = filteredInvoiceItemModelDaos.iterator().hasNext() ? isRealInvoiceWithItems : false;
+
+                invoiceDao.createInvoice(invoiceModelDao, ImmutableList.copyOf(filteredInvoiceItemModelDaos), isRealInvoiceWithItems, futureAccountNotifications, context);
 
                 final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                 final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
@@ -355,7 +367,7 @@ public class InvoiceDispatcher {
 
 
     @VisibleForTesting
-    FutureAccountNotifications createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final Map<String, Usage> knownUsages, final DateAndTimeZoneContext dateAndTimeZoneContext) {
+    FutureAccountNotifications createNextFutureNotificationDate(final Iterable<InvoiceItemModelDao> invoiceItems, final Map<String, Usage> knownUsages, final DateAndTimeZoneContext dateAndTimeZoneContext) {
 
         final Map<UUID, List<DateTime>> result = new HashMap<UUID, List<DateTime>>();
 

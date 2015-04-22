@@ -33,11 +33,6 @@ public interface InvoiceConfig extends KillbillConfig {
     @Description("Whether to send email notifications on invoice creation (for configured accounts)")
     public boolean isEmailNotificationsEnabled();
 
-    @Config("org.killbill.invoice.usage.insert.zero.amount")
-    @Default("true")
-    @Description("Whether to insert usage items with a zero amount")
-    public boolean isInsertZeroUsageItems();
-
     @Config("org.killbill.invoice.dryRunNotificationSchedule")
     @Default("0s")
     @Description("DryRun invoice notification time before targetDate (ignored if set to 0s)")

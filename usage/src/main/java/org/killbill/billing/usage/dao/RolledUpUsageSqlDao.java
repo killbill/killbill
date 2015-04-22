@@ -50,4 +50,9 @@ public interface RolledUpUsageSqlDao extends EntitySqlDao<RolledUpUsageModelDao,
                                                                   @Bind("startDate") final Date startDate,
                                                                   @Bind("endDate") final Date endDate,
                                                                   @InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    public List<RolledUpUsageModelDao> getRawUsageForAccount(@Bind("startDate") final Date startDate,
+                                                             @Bind("endDate") final Date endDate,
+                                                             @InternalTenantContextBinder final InternalTenantContext context);
 }
