@@ -67,9 +67,13 @@ public class RawUsageOptimizer {
         this.config = config;
     }
 
-    public List<RawUsage> getConsumableInArrearUsage(final LocalDate firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, final InternalCallContext internalCallContext) {
+    public RawUsageOptimizerResult getConsumableInArrearUsage(final LocalDate firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, final InternalCallContext internalCallContext) {
         final LocalDate targetStartDate = config.getMaxRawUsagePreviousPeriod() > 0 ? getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, existingUsageItems, knownUsage) : firstEventStartDate;
-        return usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
+        log.info("RawUsageOptimizer [accountRecordId = {}]: rawUsageStartDate = {}, (proposed) firstEventStartDate = {}",
+                 new Object[]{internalCallContext.getAccountRecordId(), targetStartDate, firstEventStartDate});
+
+        final List<RawUsage> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
+        return new RawUsageOptimizerResult(firstEventStartDate, targetStartDate, rawUsageData);
     }
 
     @VisibleForTesting
@@ -108,12 +112,7 @@ public class RawUsageOptimizer {
 
             if (perBillingPeriodMostRecentConsumableInArrearItemEndDate[usage.getBillingPeriod().ordinal()] == null) {
                 perBillingPeriodMostRecentConsumableInArrearItemEndDate[usage.getBillingPeriod().ordinal()] = item.getEndDate();
-                if (!Iterables.any(ImmutableList.copyOf(perBillingPeriodMostRecentConsumableInArrearItemEndDate), new Predicate<LocalDate>() {
-                    @Override
-                    public boolean apply(@Nullable final LocalDate input) {
-                        return input == null;
-                    }
-                })) {
+                if (!containsNullEntries(perBillingPeriodMostRecentConsumableInArrearItemEndDate)) {
                     break;
                 }
             }
@@ -134,8 +133,43 @@ public class RawUsageOptimizer {
         }
 
         final LocalDate result = targetStartDate.compareTo(firstEventStartDate) > 0 ? targetStartDate : firstEventStartDate;
-        log.info("RawUsageOptimizer rawEventStartDate = {}, firstEventStartDate = {}", result, firstEventStartDate);
         return result;
+    }
+
+    private boolean containsNullEntries(final LocalDate[] entries) {
+        boolean result = false;
+        for (final LocalDate entry : entries) {
+            if (entry == null) {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
+
+    public static class RawUsageOptimizerResult {
+
+        private final LocalDate firstEventStartDate;
+        private final LocalDate rawUsageStartDate;
+        private final List<RawUsage> rawUsage;
+
+        public RawUsageOptimizerResult(final LocalDate firstEventStartDate, final LocalDate rawUsageStartDate, final List<RawUsage> rawUsage) {
+            this.firstEventStartDate = firstEventStartDate;
+            this.rawUsageStartDate = rawUsageStartDate;
+            this.rawUsage = rawUsage;
+        }
+
+        public LocalDate getFirstEventStartDate() {
+            return firstEventStartDate;
+        }
+
+        public LocalDate getRawUsageStartDate() {
+            return rawUsageStartDate;
+        }
+
+        public List<RawUsage> getRawUsage() {
+            return rawUsage;
+        }
     }
 
 }

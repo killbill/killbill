@@ -53,6 +53,7 @@ import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItemData;
 import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
+import org.killbill.billing.invoice.usage.RawUsageOptimizer.RawUsageOptimizerResult;
 import org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
@@ -123,8 +124,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             final List<InvoiceItem> items = Lists.newArrayList();
             final Iterator<BillingEvent> events = eventSet.iterator();
 
-            boolean seenAnyUsageItems = false;
-            List<RawUsage> rawUsage = ImmutableList.of();
+            RawUsageOptimizerResult rawUsageOptimizerResult = null;
             List<BillingEvent> curEvents = Lists.newArrayList();
             UUID curSubscriptionId = null;
             while (events.hasNext()) {
@@ -136,24 +136,25 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 }
 
                 // Optimize to do the usage query only once after we know there are indeed some usage items
-                if (!seenAnyUsageItems) {
-                    final boolean foundUsage = Iterables.tryFind(event.getUsages(), new Predicate<Usage>() {
+                if (rawUsageOptimizerResult == null &&
+                    Iterables.any(event.getUsages(), new Predicate<Usage>() {
                         @Override
                         public boolean apply(@Nullable final Usage input) {
                             return (input.getUsageType() == UsageType.CONSUMABLE &&
                                     input.getBillingMode() == BillingMode.IN_ARREAR);
                         }
-                    }).orNull() != null;
-                    if (foundUsage) {
-                        rawUsage = rawUsageOptimizer.getConsumableInArrearUsage(new LocalDate(event.getEffectiveDate(), account.getTimeZone()), targetDate, Iterables.concat(perSubscriptionConsumableInArrearUsageItems.values()), eventSet.getUsages(), internalCallContext);
-                        seenAnyUsageItems = true;
-                    }
+                    })) {
+                    rawUsageOptimizerResult = rawUsageOptimizer.getConsumableInArrearUsage(new LocalDate(event.getEffectiveDate(), account.getTimeZone()), targetDate, Iterables.concat(perSubscriptionConsumableInArrearUsageItems.values()), eventSet.getUsages(), internalCallContext);
                 }
 
-                // We always go in the usage invoicing logic to at least generate $0 USAGE items that will indicate the time for the next notification
+                // None of the billing events report any usage (CONSUMABLE/IN_ARREAR) sections
+                if (rawUsageOptimizerResult == null) {
+                    continue;
+                }
+
                 final UUID subscriptionId = event.getSubscription().getId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
-                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, rawUsage, targetDate);
+                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, rawUsageOptimizerResult.getRawUsage(), targetDate, rawUsageOptimizerResult.getRawUsageStartDate());
                     final List<InvoiceItem> consumableInUsageArrearItems = perSubscriptionConsumableInArrearUsageItems.get(curSubscriptionId);
                     items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(consumableInUsageArrearItems != null ? consumableInUsageArrearItems : ImmutableList.<InvoiceItem>of()));
                     curEvents = Lists.newArrayList();
@@ -162,8 +163,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 curEvents.add(event);
             }
             if (curSubscriptionId != null) {
-
-                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, rawUsage, targetDate);
+                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, rawUsageOptimizerResult.getRawUsage(), targetDate, rawUsageOptimizerResult.getRawUsageStartDate());
                 final List<InvoiceItem> consumableInUsageArrearItems = perSubscriptionConsumableInArrearUsageItems.get(curSubscriptionId);
                 items.addAll(subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(consumableInUsageArrearItems != null ? consumableInUsageArrearItems : ImmutableList.<InvoiceItem>of()));
             }

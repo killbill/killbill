@@ -71,7 +71,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     }
 
     protected ContiguousIntervalConsumableInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
-        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, invoiceId, rawUsages, targetDate);
+        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()));
         for (BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
         }
@@ -84,7 +84,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         usage.setName(usageName);
         usage.setBillingMode(BillingMode.IN_ARREAR);
         usage.setUsageType(UsageType.CONSUMABLE);
-        usage.setBillingPeriod(BillingPeriod.MONTHLY);
+        usage.setBillingPeriod(billingPeriod);
         usage.setTiers(tiers);
         return usage;
     }

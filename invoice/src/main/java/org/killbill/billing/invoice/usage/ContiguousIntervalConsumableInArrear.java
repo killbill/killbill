@@ -70,13 +70,15 @@ public class ContiguousIntervalConsumableInArrear {
     private final LocalDate targetDate;
     private final UUID invoiceId;
     private final AtomicBoolean isBuilt;
+    private final LocalDate rawUsageStartDate;
 
-    public ContiguousIntervalConsumableInArrear(final Usage usage, final UUID invoiceId, final List<RawUsage> rawSubscriptionUsage, final LocalDate targetDate) {
+    public ContiguousIntervalConsumableInArrear(final Usage usage, final UUID invoiceId, final List<RawUsage> rawSubscriptionUsage, final LocalDate targetDate, final LocalDate rawUsageStartDate) {
         this.usage = usage;
         this.invoiceId = invoiceId;
         this.unitTypes = getConsumableInArrearUnitTypes(usage);
         this.rawSubscriptionUsage = rawSubscriptionUsage;
         this.targetDate = targetDate;
+        this.rawUsageStartDate = rawUsageStartDate;
         this.billingEvents = Lists.newLinkedList();
         this.transitionTimes = Lists.newLinkedList();
         this.isBuilt = new AtomicBoolean(false);
@@ -109,10 +111,14 @@ public class ContiguousIntervalConsumableInArrear {
         int numberOfPeriod = 0;
         // First billingCycleDate prior startDate
         LocalDate nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
-        transitionTimes.add(startDate);
+        if (startDate.compareTo(rawUsageStartDate) >= 0) {
+            transitionTimes.add(startDate);
+        }
         while (!nextBillCycleDate.isAfter(endDate)) {
             if (nextBillCycleDate.isAfter(startDate)) {
-                transitionTimes.add(nextBillCycleDate);
+                if (nextBillCycleDate.compareTo(rawUsageStartDate) >= 0) {
+                    transitionTimes.add(nextBillCycleDate);
+                }
             }
             numberOfPeriod++;
             nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
@@ -132,8 +138,11 @@ public class ContiguousIntervalConsumableInArrear {
 
         Preconditions.checkState(isBuilt.get());
 
-        final List<InvoiceItem> result = Lists.newLinkedList();
+        if (transitionTimes.size() < 2) {
+            return ImmutableList.of();
+        }
 
+        final List<InvoiceItem> result = Lists.newLinkedList();
         final List<RolledUpUsage> allUsage = getRolledUpUsage();
 
         // We start by generating 'marker' USAGE items with $0 that will allow to correctly insert the next notification for when there is no USAGE to bill.

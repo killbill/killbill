@@ -68,11 +68,13 @@ public class SubscriptionConsumableInArrear {
     private final List<BillingEvent> subscriptionBillingEvents;
     private final LocalDate targetDate;
     private final List<RawUsage> rawSubscriptionUsage;
+    private final LocalDate rawUsageStartDate;
 
-    public SubscriptionConsumableInArrear(final UUID invoiceId, final List<BillingEvent> subscriptionBillingEvents, final List<RawUsage> rawUsage, LocalDate targetDate) {
+    public SubscriptionConsumableInArrear(final UUID invoiceId, final List<BillingEvent> subscriptionBillingEvents, final List<RawUsage> rawUsage, final LocalDate targetDate, final LocalDate rawUsageStartDate) {
         this.invoiceId = invoiceId;
         this.subscriptionBillingEvents = subscriptionBillingEvents;
         this.targetDate = targetDate;
+        this.rawUsageStartDate = rawUsageStartDate;
         // Extract raw usage for that subscription and sort it by date
         this.rawSubscriptionUsage = Ordering.<RawUsage>from(RAW_USAGE_DATE_COMPARATOR).sortedCopy(Iterables.filter(rawUsage, new Predicate<RawUsage>() {
             @Override
@@ -127,7 +129,7 @@ public class SubscriptionConsumableInArrear {
                 // Add inflight usage interval if non existent
                 ContiguousIntervalConsumableInArrear existingInterval = inFlightInArrearUsageIntervals.get(usage.getName());
                 if (existingInterval == null) {
-                    existingInterval = new ContiguousIntervalConsumableInArrear(usage, invoiceId, rawSubscriptionUsage, targetDate);
+                    existingInterval = new ContiguousIntervalConsumableInArrear(usage, invoiceId, rawSubscriptionUsage, targetDate, rawUsageStartDate);
                     inFlightInArrearUsageIntervals.put(usage.getName(), existingInterval);
                 }
                 // Add billing event for that usage interval
