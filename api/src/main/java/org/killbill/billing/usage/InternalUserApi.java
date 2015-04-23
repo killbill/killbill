@@ -25,5 +25,5 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 
 public interface InternalUserApi {
 
-    public List<RawUsage> getRawUsageForAccount(final UUID accountId, final LocalDate stateDate, final LocalDate endDate, final InternalTenantContext tenantContext);
+    public List<RawUsage> getRawUsageForAccount(final LocalDate stateDate, final LocalDate endDate, final InternalTenantContext tenantContext);
 }

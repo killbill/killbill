@@ -37,4 +37,11 @@ public interface InvoiceConfig extends KillbillConfig {
     @Default("0s")
     @Description("DryRun invoice notification time before targetDate (ignored if set to 0s)")
     public TimeSpan getDryRunNotificationSchedule();
+
+
+    @Config("org.killbill.invoice.readMaxRawUsagePreviousPeriod")
+    @Default("2")
+    @Description("Maximum number of billingPeriod we read when retrieve raw usage data")
+    public int getMaxRawUsagePreviousPeriod();
+
 }

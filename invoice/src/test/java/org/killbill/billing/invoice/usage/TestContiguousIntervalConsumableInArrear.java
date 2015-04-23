@@ -28,6 +28,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultTier;
 import org.killbill.billing.catalog.DefaultTieredBlock;
 import org.killbill.billing.catalog.DefaultUsage;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Usage;
@@ -71,7 +72,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTier(block);
-        final DefaultUsage usage = createDefaultUsage(usageName, tier);
+        final DefaultUsage usage = createDefaultUsage(usageName, BillingPeriod.MONTHLY, tier);
 
         final LocalDate targetDate = startDate.plusDays(1);
         final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, ImmutableList.<RawUsage>of(), targetDate, false,
@@ -109,7 +110,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final DefaultTieredBlock block2 = createDefaultTieredBlock("unit", 1000, 100, BigDecimal.ONE);
         final DefaultTier tier2 = createDefaultTier(block2);
-        final DefaultUsage usage = createDefaultUsage(usageName, tier1, tier2);
+        final DefaultUsage usage = createDefaultUsage(usageName, BillingPeriod.MONTHLY, tier1, tier2);
 
         final LocalDate targetDate = new LocalDate(2014, 03, 20);
         final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, ImmutableList.<RawUsage>of(), targetDate, false,
@@ -139,7 +140,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTier(block);
-        final DefaultUsage usage = createDefaultUsage(usageName, tier);
+        final DefaultUsage usage = createDefaultUsage(usageName, BillingPeriod.MONTHLY, tier);
 
         final LocalDate targetDate = endDate;
 
@@ -199,7 +200,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final DefaultTier tier = createDefaultTier(tieredBlock1, tieredBlock2);
 
 
-        final DefaultUsage usage = createDefaultUsage(usageName, tier);
+        final DefaultUsage usage = createDefaultUsage(usageName, BillingPeriod.MONTHLY, tier);
 
 
         final LocalDate t0 = new LocalDate(2015, 03, BCD);

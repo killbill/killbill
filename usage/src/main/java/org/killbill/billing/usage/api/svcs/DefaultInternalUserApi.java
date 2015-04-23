@@ -18,7 +18,6 @@
 package org.killbill.billing.usage.api.svcs;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -44,7 +43,7 @@ public class DefaultInternalUserApi implements InternalUserApi {
     }
 
     @Override
-    public List<RawUsage> getRawUsageForAccount(final UUID accountId, final LocalDate stateDate, final LocalDate endDate, final InternalTenantContext internalTenantContext) {
+    public List<RawUsage> getRawUsageForAccount(final LocalDate stateDate, final LocalDate endDate, final InternalTenantContext internalTenantContext) {
         final List<RolledUpUsageModelDao> usage = rolledUpUsageDao.getRawUsageForAccount(stateDate, endDate, internalTenantContext);
         return ImmutableList.copyOf(Iterables.transform(usage, new Function<RolledUpUsageModelDao, RawUsage>() {
             @Nullable

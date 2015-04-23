@@ -41,7 +41,6 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.usage.RawUsage;
-import org.killbill.billing.usage.api.UsageUserApi;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 
@@ -56,8 +55,6 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     protected String phaseName;
     protected Currency currency;
     protected String usageName;
-
-    protected UsageUserApi mockUsageUserApi;
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
@@ -82,7 +79,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return intervalConsumableInArrear;
     }
 
-    protected DefaultUsage createDefaultUsage(final String usageName, final DefaultTier... tiers) {
+    protected DefaultUsage createDefaultUsage(final String usageName, final BillingPeriod billingPeriod, final DefaultTier... tiers) {
         final DefaultUsage usage = new DefaultUsage();
         usage.setName(usageName);
         usage.setBillingMode(BillingMode.IN_ARREAR);
