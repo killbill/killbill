@@ -64,11 +64,13 @@ import org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
+import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
+import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -288,7 +290,7 @@ public class InvoiceDispatcher {
                                                                                                        return new InvoiceItemModelDao(input);
                                                                                                    }
                                                                                                });
-                final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents.getUsages(), dateAndTimeZoneContext);
+                final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents, dateAndTimeZoneContext);
 
                 // We filter any zero amount for USAGE items prior we generate the invoice, which may leave us with an invoice with no items;
                 // we recompute the isRealInvoiceWithItems flag based on what is left (the call to invoice is still necessary to set the future notifications).
@@ -367,7 +369,7 @@ public class InvoiceDispatcher {
 
 
     @VisibleForTesting
-    FutureAccountNotifications createNextFutureNotificationDate(final Iterable<InvoiceItemModelDao> invoiceItems, final Map<String, Usage> knownUsages, final DateAndTimeZoneContext dateAndTimeZoneContext) {
+    FutureAccountNotifications createNextFutureNotificationDate(final Iterable<InvoiceItemModelDao> invoiceItems, final BillingEventSet billingEvents, final DateAndTimeZoneContext dateAndTimeZoneContext) {
 
         final Map<UUID, List<DateTime>> result = new HashMap<UUID, List<DateTime>>();
 
@@ -414,16 +416,25 @@ public class InvoiceDispatcher {
             final String usageName = parts[1];
             final LocalDate endDate = perSubscriptionUsage.get(key);
 
-            final DateTime subscriptionUsageCallbackDate = getNextUsageBillingDate(usageName, endDate, dateAndTimeZoneContext, knownUsages);
+            final DateTime subscriptionUsageCallbackDate = getNextUsageBillingDate(subscriptionId, usageName, endDate, dateAndTimeZoneContext, billingEvents);
             perSubscriptionCallback.add(subscriptionUsageCallbackDate);
         }
 
         return new FutureAccountNotifications(dateAndTimeZoneContext, result);
     }
 
-    private DateTime getNextUsageBillingDate(final String usageName, final LocalDate chargedThroughDate, final DateAndTimeZoneContext dateAndTimeZoneContext, final Map<String, Usage> knownUsages) {
-        final Usage usage = knownUsages.get(usageName);
-        final LocalDate nextCallbackUsageDate = (usage.getBillingMode() == BillingMode.IN_ARREAR) ? chargedThroughDate.plusMonths(usage.getBillingPeriod().getNumberOfMonths()) : chargedThroughDate;
+    private DateTime getNextUsageBillingDate(final UUID subscriptionId, final String usageName, final LocalDate chargedThroughDate, final DateAndTimeZoneContext dateAndTimeZoneContext, final BillingEventSet billingEvents) {
+
+
+        final Usage usage = billingEvents.getUsages().get(usageName);
+        final  BillingEvent billingEventSubscription = Iterables.tryFind(billingEvents, new Predicate<BillingEvent>() {
+            @Override
+            public boolean apply(@Nullable final BillingEvent input) {
+                return input.getSubscription().getId().equals(subscriptionId);
+            }
+        }).orNull();
+
+        final LocalDate nextCallbackUsageDate = (usage.getBillingMode() == BillingMode.IN_ARREAR) ? BillingIntervalDetail.alignProposedBillCycleDate(chargedThroughDate.plusMonths(usage.getBillingPeriod().getNumberOfMonths()), billingEventSubscription.getBillCycleDayLocal()) : chargedThroughDate;
         return dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(nextCallbackUsageDate);
     }
 
