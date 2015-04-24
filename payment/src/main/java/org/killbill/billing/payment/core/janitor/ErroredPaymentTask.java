@@ -75,7 +75,9 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
         final DateTime createdAfterDate = clock.getUTCNow().minusDays(OLDER_PAYMENTS_IN_DAYS);
 
         final List<PaymentModelDao> result = paymentDao.getPaymentsByStates(paymentStateMachineHelper.getErroredStateNames(), createdBeforeDate, createdAfterDate, MAX_ITEMS_PER_LOOP, completionTaskCallContext);
-        log.info("Janitor ErroredPaymentTask start run : found {} errored/unknown payments", result.size());
+        if (!result.isEmpty()) {
+            log.info("Janitor ErroredPaymentTask start run: found {} errored/unknown payments", result.size());
+        }
         return result;
     }
 

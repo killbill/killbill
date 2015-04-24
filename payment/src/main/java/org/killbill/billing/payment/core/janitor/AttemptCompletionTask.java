@@ -63,7 +63,9 @@ final class AttemptCompletionTask extends CompletionTaskBase<PaymentAttemptModel
     @Override
     public List<PaymentAttemptModelDao> getItemsForIteration() {
         final List<PaymentAttemptModelDao> incompleteAttempts = paymentDao.getPaymentAttemptsByState(retrySMHelper.getInitialState().getName(), getCreatedDateBefore(), completionTaskCallContext);
-        log.info("Janitor AttemptCompletionTask start run : found " + incompleteAttempts.size() + " incomplete attempts");
+        if (!incompleteAttempts.isEmpty()) {
+            log.info("Janitor AttemptCompletionTask start run: found {} incomplete attempts", incompleteAttempts.size());
+        }
         return incompleteAttempts;
     }
 
