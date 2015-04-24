@@ -258,8 +258,9 @@ public class InvoiceDispatcher {
             final CallContext callContext = buildCallContext(context);
             invoice.addInvoiceItems(invoicePluginDispatcher.getAdditionalInvoiceItems(invoice, callContext));
 
-            boolean isRealInvoiceWithItems = false;
+            boolean isRealInvoiceWithNonEmptyItems = false;
             if (!isDryRun) {
+                boolean isRealInvoiceWithItems;
 
                 // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
                 final Set<UUID> adjustedUniqueOtherInvoiceId = new TreeSet<UUID>();
@@ -300,16 +301,22 @@ public class InvoiceDispatcher {
                         return (input.getType() != InvoiceItemType.USAGE || input.getAmount().compareTo(BigDecimal.ZERO) != 0);
                     }
                 });
-                isRealInvoiceWithItems = filteredInvoiceItemModelDaos.iterator().hasNext() ? isRealInvoiceWithItems : false;
 
-                invoiceDao.createInvoice(invoiceModelDao, ImmutableList.copyOf(filteredInvoiceItemModelDaos), isRealInvoiceWithItems, futureAccountNotifications, context);
+                final boolean isThereAnyItemsLeft = filteredInvoiceItemModelDaos.iterator().hasNext();
+                isRealInvoiceWithNonEmptyItems = isThereAnyItemsLeft ? isRealInvoiceWithItems : false;
+
+                if (isThereAnyItemsLeft) {
+                    invoiceDao.createInvoice(invoiceModelDao, ImmutableList.copyOf(filteredInvoiceItemModelDaos), isRealInvoiceWithItems, futureAccountNotifications, context);
+                } else {
+                    invoiceDao.setFutureAccountNotificationsForEmptyInvoice(accountId, futureAccountNotifications, context);
+                }
 
                 final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                 final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                 setChargedThroughDates(dateAndTimeZoneContext, fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
                 final List<InvoiceInternalEvent> events = new ArrayList<InvoiceInternalEvent>();
-                if (isRealInvoiceWithItems) {
+                if (isRealInvoiceWithNonEmptyItems) {
                     events.add(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                invoice.getBalance(), invoice.getCurrency(),
                                                                context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
@@ -325,7 +332,7 @@ public class InvoiceDispatcher {
                 }
             }
 
-            if (account.isNotifiedForInvoices() && isRealInvoiceWithItems && !isDryRun) {
+            if (account.isNotifiedForInvoices() && isRealInvoiceWithNonEmptyItems && !isDryRun) {
                 // Need to re-hydrate the invoice object to get the invoice number (record id)
                 // API_FIX InvoiceNotifier public API?
                 invoiceNotifier.notify(account, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), buildTenantContext(context));
