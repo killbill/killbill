@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -96,7 +97,9 @@ public class RawUsageOptimizer {
         final List<InvoiceItem> sortedUsageItems = USAGE_ITEM_ORDERING.sortedCopy(existingUsageItems);
 
         // Compute an array with one date per BillingPeriod:
-        // If BillingPeriod is never defined in the catalog (no need to look for items), we initialize its value such that
+        // If BillingPeriod is never defined in the catalog (no need to look for items), we initialize its value
+        // such that it cannot be chosen
+        //
         final LocalDate[] perBillingPeriodMostRecentConsumableInArrearItemEndDate = new LocalDate[BillingPeriod.values().length];
         int idx = 0;
         for (BillingPeriod bp : BillingPeriod.values()) {
@@ -106,8 +109,9 @@ public class RawUsageOptimizer {
 
         final ListIterator<InvoiceItem> iterator = sortedUsageItems.listIterator(sortedUsageItems.size());
         while (iterator.hasPrevious()) {
-
-            final UsageInvoiceItem item = (UsageInvoiceItem) iterator.previous();
+            final InvoiceItem previous = iterator.previous();
+            Preconditions.checkState(previous instanceof  UsageInvoiceItem);
+            final UsageInvoiceItem item = (UsageInvoiceItem) previous;
             final Usage usage = knownUsage.get(item.getUsageName());
 
             if (perBillingPeriodMostRecentConsumableInArrearItemEndDate[usage.getBillingPeriod().ordinal()] == null) {

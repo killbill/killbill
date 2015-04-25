@@ -33,22 +33,9 @@ import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestRawUsageOptimizer extends TestUsageInArrearBase {
-
-    @BeforeClass(groups = "fast")
-    protected void beforeClass() throws Exception {
-        super.beforeClass();
-    }
-
-    @BeforeMethod(groups = "fast")
-    public void beforeMethod() {
-        super.beforeMethod();
-    }
-
 
     @Test(groups = "fast")
     public void testWithNoItems() {
@@ -67,16 +54,13 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
         Assert.assertEquals(result.compareTo(firstEventStartDate), 0);
     }
 
-
     @Test(groups = "fast")
     public void testWithOneMonthlyUsageSectionTooFewItems() {
 
         final LocalDate firstEventStartDate = new LocalDate(2014, 03, 15);
 
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
-        for (int i = 0; i < 1; i++) {
-            invoiceItems.add(createUsageItem(firstEventStartDate.plusMonths(i)));
-        }
+        invoiceItems.add(createUsageItem(firstEventStartDate));
         final LocalDate targetDate = invoiceItems.get(invoiceItems.size() - 1).getEndDate();
 
         final Map<String, Usage> knownUsage = new HashMap<String, Usage>();
@@ -113,7 +97,6 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
         Assert.assertEquals(result.compareTo(new LocalDate(2014, 06, 15)), 0, "112 got " + result);
     }
 
-
     @Test(groups = "fast")
     public void testWithOneMonthlyAndOneNonActiveAnnualUsageSectionAndEnoughUsageItems() {
 
@@ -136,13 +119,11 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
         final DefaultUsage usage2 = createDefaultUsage("usageName2", BillingPeriod.ANNUAL, tier2);
         knownUsage.put("usageName2", usage2);
 
-
         final LocalDate result = rawUsageOptimizer.getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, invoiceItems, knownUsage);
         // The same reasoning applies as previously because there is no usage items against the annual and
         // so, the largest endDate for ii is 2014-08-15, and by default org.killbill.invoice.readMaxRawUsagePreviousPeriod == 2 => targetDate =>  2014-06-15
         Assert.assertEquals(result.compareTo(new LocalDate(2014, 06, 15)), 0, "142 got " + result);
     }
-
 
     private InvoiceItem createUsageItem(final LocalDate startDate) {
         return new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, startDate.plusMonths(1), BigDecimal.TEN, Currency.USD);
