@@ -44,15 +44,26 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearBase {
+
+    // Only works if the RolledUpUsage have at least one
+    private static final Ordering<RolledUpUsage> TEST_ROLLED_UP_FIRST_USAGE_ORDERING = Ordering.natural()
+                                                                                               .onResultOf(new Function<RolledUpUsage, Comparable>() {
+                                                                                                   @Override
+                                                                                                   public Comparable apply(final RolledUpUsage ru) {
+                                                                                                       return ru.getRolledUpUnits().get(0).getUnitType();
+                                                                                                   }
+                                                                                               });
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
@@ -197,7 +208,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     public void testGetRolledUpUsage() {
 
         final DefaultTieredBlock tieredBlock1 = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
-        final DefaultTieredBlock tieredBlock2 = createDefaultTieredBlock("other_unit", 10, 1000, BigDecimal.ONE);
+        final DefaultTieredBlock tieredBlock2 = createDefaultTieredBlock("unit2", 10, 1000, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTier(tieredBlock1, tieredBlock2);
 
 
@@ -230,7 +241,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // t2 - t3
         final RawUsage raw4 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 15), "unit", 13L);
-        final RawUsage oraw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 21), "other_unit", 21L);
+        final RawUsage oraw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 21), "unit2", 21L);
         final RawUsage raw5 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 31), "unit", 7L);
 
         // after t3
@@ -241,8 +252,10 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsage, targetDate, true, eventT0, eventT1, eventT2, eventT3);
 
 
-        final List<RolledUpUsage> rolledUpUsage =  intervalConsumableInArrear.getRolledUpUsage();
-        Assert.assertEquals(rolledUpUsage.size(), 2);
+        final List<RolledUpUsage> unsortedRolledUpUsage =  intervalConsumableInArrear.getRolledUpUsage();
+        Assert.assertEquals(unsortedRolledUpUsage.size(), 2);
+
+        final List<RolledUpUsage> rolledUpUsage = TEST_ROLLED_UP_FIRST_USAGE_ORDERING.sortedCopy(unsortedRolledUpUsage);
 
         Assert.assertEquals(rolledUpUsage.get(0).getStart().compareTo(t0), 0);
         Assert.assertEquals(rolledUpUsage.get(0).getEnd().compareTo(t1), 0);
@@ -255,7 +268,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().size(),2);
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getUnitType(), "unit");
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount(), new Long(20L));
-        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getUnitType(), "other_unit");
+        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getUnitType(), "unit2");
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getAmount(), new Long(21L));
     }
+
 }
