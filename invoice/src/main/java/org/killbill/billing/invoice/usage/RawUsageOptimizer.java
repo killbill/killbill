@@ -34,15 +34,12 @@ import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.util.config.InvoiceConfig;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -100,17 +97,19 @@ public class RawUsageOptimizer {
         // If BillingPeriod is never defined in the catalog (no need to look for items), we initialize its value
         // such that it cannot be chosen
         //
-        final LocalDate[] perBillingPeriodMostRecentConsumableInArrearItemEndDate = new LocalDate[BillingPeriod.values().length];
+        final LocalDate[] perBillingPeriodMostRecentConsumableInArrearItemEndDate = new LocalDate[BillingPeriod.values().length - 1]; // Exclude the NO_BILLING_PERIOD
         int idx = 0;
         for (BillingPeriod bp : BillingPeriod.values()) {
-            final LocalDate makerDateThanCannotBeChosenAsTheMinOfAllDates = targetDate.plusMonths(config.getMaxRawUsagePreviousPeriod() * bp.getNumberOfMonths());
-            perBillingPeriodMostRecentConsumableInArrearItemEndDate[idx++] = (knownUsageBillingPeriod.contains(bp)) ? null : makerDateThanCannotBeChosenAsTheMinOfAllDates;
+            if (bp != BillingPeriod.NO_BILLING_PERIOD) {
+                final LocalDate makerDateThanCannotBeChosenAsTheMinOfAllDates = targetDate.plusMonths(config.getMaxRawUsagePreviousPeriod() * bp.getNumberOfMonths());
+                perBillingPeriodMostRecentConsumableInArrearItemEndDate[idx++] = (knownUsageBillingPeriod.contains(bp)) ? null : makerDateThanCannotBeChosenAsTheMinOfAllDates;
+            }
         }
 
         final ListIterator<InvoiceItem> iterator = sortedUsageItems.listIterator(sortedUsageItems.size());
         while (iterator.hasPrevious()) {
             final InvoiceItem previous = iterator.previous();
-            Preconditions.checkState(previous instanceof  UsageInvoiceItem);
+            Preconditions.checkState(previous instanceof UsageInvoiceItem);
             final UsageInvoiceItem item = (UsageInvoiceItem) previous;
             final Usage usage = knownUsage.get(item.getUsageName());
 
@@ -132,8 +131,8 @@ public class RawUsageOptimizer {
                 if (targetStartDate == null || (targetBillingPeriodDate != null && targetBillingPeriodDate.compareTo(targetStartDate) < 0)) {
                     targetStartDate = targetBillingPeriodDate;
                 }
+                idx++;
             }
-            idx++;
         }
 
         final LocalDate result = targetStartDate.compareTo(firstEventStartDate) > 0 ? targetStartDate : firstEventStartDate;

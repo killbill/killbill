@@ -260,8 +260,6 @@ public class InvoiceDispatcher {
 
             boolean isRealInvoiceWithNonEmptyItems = false;
             if (!isDryRun) {
-                boolean isRealInvoiceWithItems;
-
                 // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
                 final Set<UUID> adjustedUniqueOtherInvoiceId = new TreeSet<UUID>();
                 adjustedUniqueOtherInvoiceId.addAll(Collections2.transform(invoice.getInvoiceItems(), new Function<InvoiceItem, UUID>() {
@@ -271,8 +269,7 @@ public class InvoiceDispatcher {
                         return input.getInvoiceId();
                     }
                 }));
-                isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
-
+                boolean isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
                 if (isRealInvoiceWithItems) {
                     log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(), accountId, targetDate, targetDateTime});
                 } else {
