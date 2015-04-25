@@ -17,9 +17,11 @@
 package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,16 +37,16 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
-import org.killbill.billing.usage.api.UsageUserApi;
-import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -64,21 +66,19 @@ public class ContiguousIntervalConsumableInArrear {
 
     private final Usage usage;
     private final Set<String> unitTypes;
-    private final UsageUserApi usageApi;
+    private final List<RawUsage> rawSubscriptionUsage;
     private final LocalDate targetDate;
     private final UUID invoiceId;
-    private final TenantContext context;
     private final AtomicBoolean isBuilt;
-    private final boolean insertZeroAmountItems;
+    private final LocalDate rawUsageStartDate;
 
-    public ContiguousIntervalConsumableInArrear(final Usage usage, final UUID invoiceId, final UsageUserApi usageApi, final boolean insertZeroAmountItems, final LocalDate targetDate, final TenantContext context) {
+    public ContiguousIntervalConsumableInArrear(final Usage usage, final UUID invoiceId, final List<RawUsage> rawSubscriptionUsage, final LocalDate targetDate, final LocalDate rawUsageStartDate) {
         this.usage = usage;
         this.invoiceId = invoiceId;
         this.unitTypes = getConsumableInArrearUnitTypes(usage);
-        this.usageApi = usageApi;
-        this.insertZeroAmountItems = insertZeroAmountItems;
+        this.rawSubscriptionUsage = rawSubscriptionUsage;
         this.targetDate = targetDate;
-        this.context = context;
+        this.rawUsageStartDate = rawUsageStartDate;
         this.billingEvents = Lists.newLinkedList();
         this.transitionTimes = Lists.newLinkedList();
         this.isBuilt = new AtomicBoolean(false);
@@ -111,10 +111,14 @@ public class ContiguousIntervalConsumableInArrear {
         int numberOfPeriod = 0;
         // First billingCycleDate prior startDate
         LocalDate nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
-        transitionTimes.add(startDate);
+        if (startDate.compareTo(rawUsageStartDate) >= 0) {
+            transitionTimes.add(startDate);
+        }
         while (!nextBillCycleDate.isAfter(endDate)) {
             if (nextBillCycleDate.isAfter(startDate)) {
-                transitionTimes.add(nextBillCycleDate);
+                if (nextBillCycleDate.compareTo(rawUsageStartDate) >= 0) {
+                    transitionTimes.add(nextBillCycleDate);
+                }
             }
             numberOfPeriod++;
             nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
@@ -134,11 +138,26 @@ public class ContiguousIntervalConsumableInArrear {
 
         Preconditions.checkState(isBuilt.get());
 
+        if (transitionTimes.size() < 2) {
+            return ImmutableList.of();
+        }
+
         final List<InvoiceItem> result = Lists.newLinkedList();
-
         final List<RolledUpUsage> allUsage = getRolledUpUsage();
-        for (final RolledUpUsage ru : allUsage) {
 
+        // We start by generating 'marker' USAGE items with $0 that will allow to correctly insert the next notification for when there is no USAGE to bill.
+        // Those will be removed by the invoicing code later so as to not end up with superfluous $0 items
+        LocalDate prevDate = null;
+        for (LocalDate curDate : transitionTimes) {
+            if (prevDate != null) {
+                InvoiceItem item = new UsageInvoiceItem(invoiceId, getAccountId(), getBundleId(), getSubscriptionId(), getPlanName(),
+                                                        getPhaseName(), usage.getName(), prevDate, curDate, BigDecimal.ZERO, getCurrency());
+                result.add(item);
+            }
+            prevDate = curDate;
+        }
+
+        for (final RolledUpUsage ru : allUsage) {
             // Compute total price amount that should be billed for that period of time (and usage section) across unitTypes.
             BigDecimal toBeBilledUsage = BigDecimal.ZERO;
             for (final RolledUpUnit cur : ru.getRolledUpUnits()) {
@@ -158,7 +177,7 @@ public class ContiguousIntervalConsumableInArrear {
             // Compare the two and add the missing piece if required.
             if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
                 final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
-                if (amountToBill.compareTo(BigDecimal.ZERO) > 0 || insertZeroAmountItems) {
+                if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
                     InvoiceItem item = new UsageInvoiceItem(invoiceId, getAccountId(), getBundleId(), getSubscriptionId(), getPlanName(),
                                                             getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), amountToBill, getCurrency());
                     result.add(item);
@@ -168,15 +187,89 @@ public class ContiguousIntervalConsumableInArrear {
         return result;
     }
 
-    /**
-     * @return a list of {@code RolledUpUsage} for each period (between two transitions) * each unitType.
-     */
+    @VisibleForTesting
     List<RolledUpUsage> getRolledUpUsage() {
-        // There needs to be at least two transitions to define an interval to bill
-        if (transitionTimes.size() <= 1) {
-            return Collections.emptyList();
+
+        final Iterator<RawUsage> rawUsageIterator = rawSubscriptionUsage.iterator();
+        if (!rawUsageIterator.hasNext()) {
+            return ImmutableList.of();
         }
-        return usageApi.getAllUsageForSubscription(getSubscriptionId(), transitionTimes, context);
+
+        final List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
+
+        //
+        // Skip all items before our first transition date
+        //
+        // prevRawUsage keeps track of first unconsumed raw usage element
+        RawUsage prevRawUsage = null;
+        while (rawUsageIterator.hasNext()) {
+            final RawUsage curRawUsage = rawUsageIterator.next();
+            if (curRawUsage.getDate().compareTo(transitionTimes.get(0)) >= 0) {
+                prevRawUsage = curRawUsage;
+                break;
+            }
+        }
+
+        // Optimize path where all raw usage items are outside or our transitionTimes range
+        if (prevRawUsage.getDate().compareTo(transitionTimes.get(transitionTimes.size() - 1)) >= 0) {
+            return ImmutableList.of();
+        }
+
+        //
+        // Loop through each interval [prevDate, curDate) and consume as many rawSubscriptionUsage elements within that range
+        // to create one RolledUpUsage per interval. If an interval does not have any rawSubscriptionUsage element, there will be no
+        // matching RolledUpUsage for that interval, and we'll detect that in the 'computeMissingItems' logic
+        //
+        LocalDate prevDate = null;
+        for (LocalDate curDate : transitionTimes) {
+
+            if (prevDate != null) {
+
+                // Allocate new perRangeUnitToAmount for this interval and populate with rawSubscriptionUsage items
+                final Map<String, Long> perRangeUnitToAmount = new HashMap<String, Long>();
+
+                // Start consuming prevRawUsage element if it exists and falls into the range
+                if (prevRawUsage != null) {
+                    if (prevRawUsage.getDate().compareTo(prevDate) >= 0 && prevRawUsage.getDate().compareTo(curDate) < 0) {
+                        Long currentAmount = perRangeUnitToAmount.get(prevRawUsage.getUnitType());
+                        Long updatedAmount = (currentAmount != null) ? currentAmount + prevRawUsage.getAmount() : prevRawUsage.getAmount();
+                        perRangeUnitToAmount.put(prevRawUsage.getUnitType(), updatedAmount);
+                        prevRawUsage = null;
+                    }
+                }
+
+                //
+                // If prevRawUsage != null it means that our first and current rawSubscriptionUsage does not fall into that interval; we can't
+                // just 'continue' as we need to correctly set next 'prevDate'
+                // If prevRawUsage == null, then consume as much as we can for that interval. Note that the stop condition requires consuming
+                // one additional element which will become the prevRawUsage for the next interval.
+                //
+                if (prevRawUsage == null) {
+                    while (rawUsageIterator.hasNext()) {
+                        final RawUsage curRawUsage = rawUsageIterator.next();
+                        if (curRawUsage.getDate().compareTo(curDate) >= 0) {
+                            prevRawUsage = curRawUsage;
+                            break;
+                        }
+
+                        Long currentAmount = perRangeUnitToAmount.get(curRawUsage.getUnitType());
+                        Long updatedAmount = (currentAmount != null) ? currentAmount + curRawUsage.getAmount() : curRawUsage.getAmount();
+                        perRangeUnitToAmount.put(curRawUsage.getUnitType(), updatedAmount);
+                    }
+                }
+
+                // If we did find some usage for that date range, let's populate the result
+                if (!perRangeUnitToAmount.isEmpty()) {
+                    final List<RolledUpUnit> rolledUpUnits = new ArrayList<RolledUpUnit>(perRangeUnitToAmount.size());
+                    for (final String unitType : perRangeUnitToAmount.keySet()) {
+                        rolledUpUnits.add(new DefaultRolledUpUnit(unitType, perRangeUnitToAmount.get(unitType)));
+                    }
+                    result.add(new DefaultRolledUpUsage(getSubscriptionId(), prevDate, curDate, rolledUpUnits));
+                }
+            }
+            prevDate = curDate;
+        }
+        return result;
     }
 
     /**
