@@ -25,6 +25,12 @@ import com.google.common.io.ByteStreams;
 public class IOUtils {
 
     public static String toString(final InputStream inputStream) throws IOException {
-        return new String(ByteStreams.toByteArray(inputStream), Charsets.UTF_8);
+        final String result;
+        try {
+            result = new String(ByteStreams.toByteArray(inputStream), Charsets.UTF_8);
+        } finally {
+            inputStream.close();
+        }
+        return result;
     }
 }
