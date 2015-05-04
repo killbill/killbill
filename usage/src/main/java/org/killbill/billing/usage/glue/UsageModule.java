@@ -19,7 +19,9 @@
 package org.killbill.billing.usage.glue;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.api.UsageUserApi;
+import org.killbill.billing.usage.api.svcs.DefaultInternalUserApi;
 import org.killbill.billing.usage.api.user.DefaultUsageUserApi;
 import org.killbill.billing.usage.dao.DefaultRolledUpUsageDao;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
@@ -39,9 +41,15 @@ public class UsageModule extends KillBillModule {
         bind(UsageUserApi.class).to(DefaultUsageUserApi.class).asEagerSingleton();
     }
 
+    protected void installInternalUserApi() {
+        bind(InternalUserApi.class).to(DefaultInternalUserApi.class).asEagerSingleton();
+    }
+
+
     @Override
     protected void configure() {
         installRolledUpUsageDao();
         installUsageUserApi();
+        installInternalUserApi();
     }
 }

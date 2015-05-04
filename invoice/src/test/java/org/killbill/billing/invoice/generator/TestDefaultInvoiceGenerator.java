@@ -119,16 +119,16 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
             }
 
             @Override
-            public boolean isInsertZeroUsageItems() {
-                return true;
-            }
-
-            @Override
             public TimeSpan getDryRunNotificationSchedule() {
                 return new TimeSpan("0s");
             }
+
+            @Override
+            public int getMaxRawUsagePreviousPeriod() {
+                return -1;
+            }
         };
-        this.generator = new DefaultInvoiceGenerator(clock, null, invoiceConfig, internalCallContextFactory);
+        this.generator = new DefaultInvoiceGenerator(clock, invoiceConfig, null);
         this.account = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
                                                .firstNameLength(6)
                                                .email(UUID.randomUUID().toString().substring(1, 8))

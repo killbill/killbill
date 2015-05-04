@@ -24,8 +24,10 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultTier;
 import org.killbill.billing.catalog.DefaultTieredBlock;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.usage.RawUsage;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -50,12 +52,12 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
         final String usageName1 = "erw";
         final DefaultTieredBlock block1 = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier1 = createDefaultTier(block1);
-        final Usage usage1 = createDefaultUsage(usageName1, tier1);
+        final Usage usage1 = createDefaultUsage(usageName1, BillingPeriod.MONTHLY, tier1);
 
         final String usageName2 = "hghg";
         final DefaultTieredBlock block2 = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier2 = createDefaultTier(block2);
-        final Usage usage2 = createDefaultUsage(usageName2, tier2);
+        final Usage usage2 = createDefaultUsage(usageName2, BillingPeriod.MONTHLY, tier2);
 
         final DateTime dt1 = new DateTime(2013, 3, 23, 4, 34, 59, DateTimeZone.UTC);
         final BillingEvent evt1 = createMockBillingEvent(dt1, ImmutableList.<Usage>builder().add(usage1).add(usage2).build());
@@ -71,7 +73,7 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
         LocalDate targetDate = new LocalDate(2013, 6, 23);
 
-        final SubscriptionConsumableInArrear foo = new SubscriptionConsumableInArrear(invoiceId, billingEvents, usageUserApi, true, targetDate, callContext);
+        final SubscriptionConsumableInArrear foo = new SubscriptionConsumableInArrear(invoiceId, billingEvents, ImmutableList.<RawUsage>of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC));
         final List<ContiguousIntervalConsumableInArrear> result = foo.computeInArrearUsageInterval();
         assertEquals(result.size(), 3);
 
@@ -91,7 +93,5 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
         assertEquals(result.get(2).getTransitionTimes().size(), 2);
         assertTrue(result.get(2).getTransitionTimes().get(0).compareTo(new LocalDate(2013, 5, 23)) == 0);
         assertTrue(result.get(2).getTransitionTimes().get(1).compareTo(new LocalDate(2013, 6, 15)) == 0);
-
     }
-
 }

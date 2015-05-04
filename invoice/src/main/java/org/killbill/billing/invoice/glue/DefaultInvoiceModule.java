@@ -48,6 +48,7 @@ import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.template.bundles.DefaultResourceBundleFactory;
+import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.InvoiceConfig;
@@ -156,7 +157,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
         installResourceBundleFactory();
-
+        bind(RawUsageOptimizer.class).asEagerSingleton();;
         bind(InvoiceApiHelper.class).asEagerSingleton();
     }
 }

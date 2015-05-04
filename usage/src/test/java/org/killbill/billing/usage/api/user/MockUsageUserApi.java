@@ -17,7 +17,6 @@
 package org.killbill.billing.usage.api.user;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -49,5 +48,4 @@ public class MockUsageUserApi implements UsageUserApi {
     public List<RolledUpUsage> getAllUsageForSubscription(final UUID uuid, final List<LocalDate> localDates, final TenantContext tenantContext) {
         return null;
     }
-
 }

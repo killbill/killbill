@@ -19,11 +19,8 @@ package org.killbill.billing.beatrix.integration.usage;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
@@ -34,14 +31,10 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UnitUsageRecord;
 import org.killbill.billing.usage.api.UsageRecord;
-import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.callcontext.TenantContext;
-import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -52,15 +45,8 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         super.beforeMethod();
     }
 
-    protected UsageUserApi createMockUsageUserApi(final List<RolledUpUsage> returnValue) {
-        final UsageUserApi result = Mockito.mock(UsageUserApi.class);
-        Mockito.when(result.getAllUsageForSubscription(Mockito.<UUID>any(), Mockito.<List<LocalDate>>any(), Mockito.<TenantContext>any())).thenReturn(returnValue);
-        return result;
-    }
-
     @Test(groups = "slow")
     public void testSimple() throws Exception {
-
 
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
@@ -78,7 +64,6 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
 
-
         //
         // ADD ADD_ON ON THE SAME DAY
         //
@@ -95,25 +80,38 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
-
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        // We don't expect any invoice, but we want to give the system the time to verify there is nothing to do so we can fail
         clock.setDay(new LocalDate(2012, 6, 1));
-        assertListenerStatus();
-
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
-
+        Thread.sleep(1000);
 
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 1), 50L, callContext);
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 16), 300L, callContext);
-
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.setDay(new LocalDate(2012, 7, 1));
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+
+
+        // Should be ignored because this is outside of optimization range (org.killbill.invoice.readMaxRawUsagePreviousPeriod = 2) => we will only look for items > 2012-7-1 - 2 months = 2012-5-1
+        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 30), 100L, callContext);
+
+        // Should be invoiced from past period
+        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 1), 199L, callContext);
+
+        // New usage for this past period
+        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 7, 1), 50L, callContext);
+        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 7, 16), 300L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        clock.setDay(new LocalDate(2012, 8, 1));
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
 
     }
 

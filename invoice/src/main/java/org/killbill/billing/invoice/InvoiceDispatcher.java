@@ -64,11 +64,13 @@ import org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
+import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
+import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -90,8 +92,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class InvoiceDispatcher {
@@ -254,9 +258,8 @@ public class InvoiceDispatcher {
             final CallContext callContext = buildCallContext(context);
             invoice.addInvoiceItems(invoicePluginDispatcher.getAdditionalInvoiceItems(invoice, callContext));
 
-            boolean isRealInvoiceWithItems = false;
+            boolean isRealInvoiceWithNonEmptyItems = false;
             if (!isDryRun) {
-
                 // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
                 final Set<UUID> adjustedUniqueOtherInvoiceId = new TreeSet<UUID>();
                 adjustedUniqueOtherInvoiceId.addAll(Collections2.transform(invoice.getInvoiceItems(), new Function<InvoiceItem, UUID>() {
@@ -266,8 +269,7 @@ public class InvoiceDispatcher {
                         return input.getInvoiceId();
                     }
                 }));
-                isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
-
+                boolean isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
                 if (isRealInvoiceWithItems) {
                     log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(), accountId, targetDate, targetDateTime});
                 } else {
@@ -279,23 +281,39 @@ public class InvoiceDispatcher {
 
                 // Transformation to Invoice -> InvoiceModelDao
                 final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
-                final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.copyOf(Collections2.transform(invoice.getInvoiceItems(),
-                                                                                                                   new Function<InvoiceItem, InvoiceItemModelDao>() {
-                                                                                                                       @Override
-                                                                                                                       public InvoiceItemModelDao apply(final InvoiceItem input) {
-                                                                                                                           return new InvoiceItemModelDao(input);
-                                                                                                                       }
-                                                                                                                   }));
+                final Iterable<InvoiceItemModelDao> invoiceItemModelDaos = Iterables.transform(invoice.getInvoiceItems(),
+                                                                                               new Function<InvoiceItem, InvoiceItemModelDao>() {
+                                                                                                   @Override
+                                                                                                   public InvoiceItemModelDao apply(final InvoiceItem input) {
+                                                                                                       return new InvoiceItemModelDao(input);
+                                                                                                   }
+                                                                                               });
+                final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents, dateAndTimeZoneContext);
 
-                final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents.getUsages(), dateAndTimeZoneContext);
-                invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, futureAccountNotifications, context);
+                // We filter any zero amount for USAGE items prior we generate the invoice, which may leave us with an invoice with no items;
+                // we recompute the isRealInvoiceWithItems flag based on what is left (the call to invoice is still necessary to set the future notifications).
+                final Iterable<InvoiceItemModelDao> filteredInvoiceItemModelDaos = Iterables.filter(invoiceItemModelDaos, new Predicate<InvoiceItemModelDao>() {
+                    @Override
+                    public boolean apply(@Nullable final InvoiceItemModelDao input) {
+                        return (input.getType() != InvoiceItemType.USAGE || input.getAmount().compareTo(BigDecimal.ZERO) != 0);
+                    }
+                });
+
+                final boolean isThereAnyItemsLeft = filteredInvoiceItemModelDaos.iterator().hasNext();
+                isRealInvoiceWithNonEmptyItems = isThereAnyItemsLeft ? isRealInvoiceWithItems : false;
+
+                if (isThereAnyItemsLeft) {
+                    invoiceDao.createInvoice(invoiceModelDao, ImmutableList.copyOf(filteredInvoiceItemModelDaos), isRealInvoiceWithItems, futureAccountNotifications, context);
+                } else {
+                    invoiceDao.setFutureAccountNotificationsForEmptyInvoice(accountId, futureAccountNotifications, context);
+                }
 
                 final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                 final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                 setChargedThroughDates(dateAndTimeZoneContext, fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
                 final List<InvoiceInternalEvent> events = new ArrayList<InvoiceInternalEvent>();
-                if (isRealInvoiceWithItems) {
+                if (isRealInvoiceWithNonEmptyItems) {
                     events.add(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                invoice.getBalance(), invoice.getCurrency(),
                                                                context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
@@ -311,7 +329,7 @@ public class InvoiceDispatcher {
                 }
             }
 
-            if (account.isNotifiedForInvoices() && isRealInvoiceWithItems && !isDryRun) {
+            if (account.isNotifiedForInvoices() && isRealInvoiceWithNonEmptyItems && !isDryRun) {
                 // Need to re-hydrate the invoice object to get the invoice number (record id)
                 // API_FIX InvoiceNotifier public API?
                 invoiceNotifier.notify(account, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), buildTenantContext(context));
@@ -355,7 +373,7 @@ public class InvoiceDispatcher {
 
 
     @VisibleForTesting
-    FutureAccountNotifications createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final Map<String, Usage> knownUsages, final DateAndTimeZoneContext dateAndTimeZoneContext) {
+    FutureAccountNotifications createNextFutureNotificationDate(final Iterable<InvoiceItemModelDao> invoiceItems, final BillingEventSet billingEvents, final DateAndTimeZoneContext dateAndTimeZoneContext) {
 
         final Map<UUID, List<DateTime>> result = new HashMap<UUID, List<DateTime>>();
 
@@ -402,16 +420,25 @@ public class InvoiceDispatcher {
             final String usageName = parts[1];
             final LocalDate endDate = perSubscriptionUsage.get(key);
 
-            final DateTime subscriptionUsageCallbackDate = getNextUsageBillingDate(usageName, endDate, dateAndTimeZoneContext, knownUsages);
+            final DateTime subscriptionUsageCallbackDate = getNextUsageBillingDate(subscriptionId, usageName, endDate, dateAndTimeZoneContext, billingEvents);
             perSubscriptionCallback.add(subscriptionUsageCallbackDate);
         }
 
         return new FutureAccountNotifications(dateAndTimeZoneContext, result);
     }
 
-    private DateTime getNextUsageBillingDate(final String usageName, final LocalDate chargedThroughDate, final DateAndTimeZoneContext dateAndTimeZoneContext, final Map<String, Usage> knownUsages) {
-        final Usage usage = knownUsages.get(usageName);
-        final LocalDate nextCallbackUsageDate = (usage.getBillingMode() == BillingMode.IN_ARREAR) ? chargedThroughDate.plusMonths(usage.getBillingPeriod().getNumberOfMonths()) : chargedThroughDate;
+    private DateTime getNextUsageBillingDate(final UUID subscriptionId, final String usageName, final LocalDate chargedThroughDate, final DateAndTimeZoneContext dateAndTimeZoneContext, final BillingEventSet billingEvents) {
+
+
+        final Usage usage = billingEvents.getUsages().get(usageName);
+        final  BillingEvent billingEventSubscription = Iterables.tryFind(billingEvents, new Predicate<BillingEvent>() {
+            @Override
+            public boolean apply(@Nullable final BillingEvent input) {
+                return input.getSubscription().getId().equals(subscriptionId);
+            }
+        }).orNull();
+
+        final LocalDate nextCallbackUsageDate = (usage.getBillingMode() == BillingMode.IN_ARREAR) ? BillingIntervalDetail.alignProposedBillCycleDate(chargedThroughDate.plusMonths(usage.getBillingPeriod().getNumberOfMonths()), billingEventSubscription.getBillCycleDayLocal()) : chargedThroughDate;
         return dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(nextCallbackUsageDate);
     }
 

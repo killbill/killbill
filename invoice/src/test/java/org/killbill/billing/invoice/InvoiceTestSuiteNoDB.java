@@ -29,6 +29,7 @@ import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.TestInvoiceModuleNoDB;
+import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -94,6 +95,8 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected UsageUserApi usageUserApi;
     @Inject
     protected ResourceBundleFactory resourceBundleFactory;
+    @Inject
+    protected RawUsageOptimizer rawUsageOptimizer;
 
     @Override
     protected KillbillConfigSource getConfigSource() {
