@@ -84,6 +84,10 @@
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-logback</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-servlet</artifactId>
         </dependency>
         <dependency>
