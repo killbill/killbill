@@ -19,7 +19,6 @@
 package org.killbill.billing.server.modules;
 
 import javax.servlet.ServletContext;
-import javax.sql.DataSource;
 
 import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.beatrix.glue.BeatrixModule;
@@ -52,7 +51,6 @@ import org.killbill.billing.junction.glue.DefaultJunctionModule;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.platform.glue.ReferenceableDataSourceSpyProvider;
 import org.killbill.billing.server.DefaultServerService;
 import org.killbill.billing.server.ServerService;
 import org.killbill.billing.server.config.KillbillServerConfig;
@@ -86,9 +84,7 @@ import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.ResultSetMapperFactory;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
 
 public class KillbillServerModule extends KillbillPlatformModule {
 
