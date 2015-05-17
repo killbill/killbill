@@ -31,7 +31,6 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
-import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.config.PaymentConfig;
 
@@ -144,7 +143,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         }
         assertListenerStatus();
 
-        int nbDaysBeforeRetry = paymentConfig.getPaymentRetryDays().get(0);
+        int nbDaysBeforeRetry = paymentConfig.getPaymentFailureRetryDays().get(0);
 
         // MOVE TIME FOR RETRY TO HAPPEN
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
@@ -205,7 +204,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         assertListenerStatus();
 
         // RE-ADD AUTO_PAY_OFF to ON
-        int nbDaysBeforeRetry = paymentConfig.getPaymentRetryDays().get(0);
+        int nbDaysBeforeRetry = paymentConfig.getPaymentFailureRetryDays().get(0);
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
         // MOVE TIME FOR RETRY TO HAPPEN -> WILL BE DISCARDED SINCE AUTO_PAY_OFF IS SET

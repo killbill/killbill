@@ -33,12 +33,10 @@ public class DefaultPaymentRoutingProviderPluginRegistry implements OSGIServiceR
 
     private final static Logger log = LoggerFactory.getLogger(DefaultPaymentProviderPluginRegistry.class);
 
-    private final String defaultPlugin;
     private final Map<String, PaymentRoutingPluginApi> pluginsByName = new ConcurrentHashMap<String, PaymentRoutingPluginApi>();
 
     @Inject
-    public DefaultPaymentRoutingProviderPluginRegistry(final PaymentConfig config) {
-        this.defaultPlugin = config.getDefaultRetryProvider();
+    public DefaultPaymentRoutingProviderPluginRegistry() {
     }
 
     @Override

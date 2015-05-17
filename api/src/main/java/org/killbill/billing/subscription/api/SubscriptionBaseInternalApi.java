@@ -37,6 +37,7 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface SubscriptionBaseInternalApi {
 
+
     public SubscriptionBase createSubscription(UUID bundleId, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, DateTime requestedDateWithMs,
                                                InternalCallContext context) throws SubscriptionBaseApiException;
 
@@ -79,5 +80,7 @@ public interface SubscriptionBaseInternalApi {
                                                                      DateTime requestedDate, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public void updateExternalKey(UUID bundleId, String newExternalKey, InternalCallContext context);
+
+    public Iterable<DateTime> getFutureNotificationsForAccount(InternalCallContext context);
 
 }

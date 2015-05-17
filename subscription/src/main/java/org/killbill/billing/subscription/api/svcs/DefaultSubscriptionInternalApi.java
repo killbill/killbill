@@ -20,6 +20,7 @@ package org.killbill.billing.subscription.api.svcs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
+import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
@@ -73,12 +75,18 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
+import org.killbill.notificationq.api.NotificationEvent;
+import org.killbill.notificationq.api.NotificationEventWithMetadata;
+import org.killbill.notificationq.api.NotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService;
+import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
@@ -90,9 +98,12 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     private final AddonUtils addonUtils;
     private final InternalCallContextFactory internalCallContextFactory;
 
+    private final NotificationQueueService notificationQueueService;
+
     @Inject
     public DefaultSubscriptionInternalApi(final SubscriptionDao dao,
                                           final DefaultSubscriptionBaseApiService apiService,
+                                          final NotificationQueueService notificationQueueService,
                                           final Clock clock,
                                           final CatalogService catalogService,
                                           final AddonUtils addonUtils,
@@ -100,7 +111,9 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         super(dao, apiService, clock, catalogService);
         this.addonUtils = addonUtils;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.notificationQueueService = notificationQueueService;
     }
+
 
     @Override
     public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
@@ -477,6 +490,25 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             outputDryRunEvents.addAll(dryRunEvents);
         }
     }
+
+    @Override
+    public Iterable<DateTime> getFutureNotificationsForAccount(final InternalCallContext internalCallContext) {
+        try {
+            final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(DefaultSubscriptionBaseService.SUBSCRIPTION_SERVICE_NAME,
+                                                                                                      DefaultSubscriptionBaseService.NOTIFICATION_QUEUE_NAME);
+            final List<NotificationEventWithMetadata<NotificationEvent>> futureNotifications = notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+            return Iterables.transform(futureNotifications, new Function<NotificationEventWithMetadata<NotificationEvent>, DateTime>() {
+                @Nullable
+                @Override
+                public DateTime apply(final NotificationEventWithMetadata<NotificationEvent> input) {
+                    return input.getEffectiveDate();
+                }
+            });
+        } catch(NoSuchNotificationQueue noSuchNotificationQueue) {
+            throw new IllegalStateException(noSuchNotificationQueue);
+        }
+    }
+
 
     private DateTime getBundleStartDateWithSanity(final UUID bundleId, @Nullable final DefaultSubscriptionBase baseSubscription, final Plan plan,
                                                   final DateTime requestedDate, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {

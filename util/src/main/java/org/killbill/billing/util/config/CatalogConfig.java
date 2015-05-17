@@ -24,6 +24,6 @@ public interface CatalogConfig extends KillbillConfig {
 
     @Config("org.killbill.catalog.uri")
     @Default("SpyCarBasic.xml")
-    @Description("Catalog location. Either in the classpath or in the filesystem")
+    @Description("Default Catalog location, either in the classpath or in the filesystem. For multi-tenancy, one should use APIs to load per-tenant catalog")
     String getCatalogURI();
 }
