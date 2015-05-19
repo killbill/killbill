@@ -36,6 +36,7 @@ import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.globallocker.LockerType;
@@ -140,7 +141,7 @@ public class InvoiceApiHelper {
         }
 
         // Finally, create the adjustment
-        return new ItemAdjInvoiceItem(UUID.randomUUID(),
+        return new ItemAdjInvoiceItem(UUIDs.randomUUID(),
                                       context.getCreatedDate(),
                                       invoiceItemToBeAdjusted.getInvoiceId(),
                                       invoiceItemToBeAdjusted.getAccountId(),

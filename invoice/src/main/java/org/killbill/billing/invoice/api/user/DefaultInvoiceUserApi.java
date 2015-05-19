@@ -55,6 +55,7 @@ import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.template.HtmlInvoice;
 import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -291,7 +292,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                         invoiceForExternalCharge = existingInvoicesForExternalCharges.get(invoiceIdForExternalCharge);
                     }
 
-                    final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(UUID.randomUUID(),
+                    final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(UUIDs.randomUUID(),
                                                                                      context.getCreatedDate(),
                                                                                      invoiceForExternalCharge.getId(),
                                                                                      accountId,
@@ -349,7 +350,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                 }
 
                 // Create the new credit
-                creditItem = new CreditAdjInvoiceItem(UUID.randomUUID(),
+                creditItem = new CreditAdjInvoiceItem(UUIDs.randomUUID(),
                                                       context.getCreatedDate(),
                                                       invoiceForCredit.getId(),
                                                       accountId,

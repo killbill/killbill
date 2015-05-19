@@ -22,9 +22,9 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
@@ -75,7 +75,7 @@ public class InvoiceItemModelDao extends EntityModelDaoBase implements EntityMod
                                final UUID bundleId, final UUID subscriptionId, final String description, final String planName,
                                final String phaseName, final String usageName, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount,
                                final BigDecimal rate, final Currency currency, final UUID linkedItemId) {
-        this(UUID.randomUUID(), createdDate, type, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName,
+        this(UUIDs.randomUUID(), createdDate, type, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName,
              startDate, endDate, amount, rate, currency, linkedItemId);
     }
 

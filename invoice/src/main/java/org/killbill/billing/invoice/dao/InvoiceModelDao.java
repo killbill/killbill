@@ -27,8 +27,8 @@ import org.joda.time.LocalDate;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
@@ -61,11 +61,11 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     }
 
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final boolean migrated) {
-        this(UUID.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, migrated);
+        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, migrated);
     }
 
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
-        this(UUID.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, false);
+        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, false);
     }
 
     public InvoiceModelDao(final Invoice invoice) {

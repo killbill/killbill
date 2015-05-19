@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.clock.Clock;
 
 public class DefaultBlockingState extends EntityBase implements BlockingState {
@@ -82,7 +83,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
                                 final boolean blockEntitlement,
                                 final boolean blockBilling,
                                 final DateTime effectiveDate) {
-        this(UUID.randomUUID(),
+        this(UUIDs.randomUUID(),
              blockingId,
              type,
              stateName,

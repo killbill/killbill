@@ -55,6 +55,7 @@ import org.testng.annotations.BeforeMethod;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import org.killbill.billing.util.UUIDs;
 
 public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
@@ -128,7 +129,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService, internalCallContext);
         this.accountData = subscriptionTestInitializer.initAccountData();
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId = UUIDs.randomUUID();
         mockNonEntityDao.addTenantRecordIdMapping(accountId, internalCallContext);
         this.bundle = subscriptionTestInitializer.initBundle(accountId, subscriptionInternalApi, internalCallContext);
     }

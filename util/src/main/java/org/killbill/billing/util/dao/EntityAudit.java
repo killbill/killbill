@@ -20,12 +20,12 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
 public class EntityAudit extends EntityModelDaoBase {
-    
+
     private final TableName tableName;
     private final Long targetRecordId;
     private final ChangeType changeType;
@@ -38,7 +38,7 @@ public class EntityAudit extends EntityModelDaoBase {
 
     }
     public EntityAudit(final TableName tableName, final Long targetRecordId, final ChangeType changeType, final DateTime createdDate) {
-        this(UUID.randomUUID(), tableName, targetRecordId, changeType, createdDate);
+        this(UUIDs.randomUUID(), tableName, targetRecordId, changeType, createdDate);
     }
 
     public TableName getTableName() {

@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.UUIDs;
 
 public class DefaultPaymentMethod extends EntityBase implements PaymentMethod {
 
@@ -44,7 +45,7 @@ public class DefaultPaymentMethod extends EntityBase implements PaymentMethod {
     }
 
     public DefaultPaymentMethod(final String externalKey, final UUID accountId, final String pluginName, final PaymentMethodPlugin pluginDetail) {
-        this(UUID.randomUUID(), externalKey, null, null, accountId, true, pluginName, pluginDetail);
+        this(UUIDs.randomUUID(), externalKey, null, null, accountId, true, pluginName, pluginDetail);
     }
 
     public DefaultPaymentMethod(final UUID paymentMethodId, final String externalKey, final UUID accountId, final String pluginName) {

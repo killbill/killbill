@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 
 public class EntityHistoryModelDao<M extends EntityModelDao<E>, E extends Entity> extends EntityBase {
@@ -39,7 +40,7 @@ public class EntityHistoryModelDao<M extends EntityModelDao<E>, E extends Entity
     }
 
     public EntityHistoryModelDao(final M src, final Long targetRecordId, final ChangeType type, final DateTime createdDate) {
-        this(UUID.randomUUID(), src, targetRecordId, type, createdDate);
+        this(UUIDs.randomUUID(), src, targetRecordId, type, createdDate);
     }
 
     public ChangeType getChangeType() {

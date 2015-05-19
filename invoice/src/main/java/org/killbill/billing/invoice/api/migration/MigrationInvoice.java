@@ -22,10 +22,11 @@ import org.joda.time.LocalDate;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.model.DefaultInvoice;
+import org.killbill.billing.util.UUIDs;
 
 public class MigrationInvoice extends DefaultInvoice {
 
     public MigrationInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
-        super(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, true);
+        super(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, true);
     }
 }

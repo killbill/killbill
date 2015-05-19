@@ -16,8 +16,6 @@
 
 package org.killbill.billing.payment.core.sm;
 
-import java.util.UUID;
-
 import org.joda.time.DateTime;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
@@ -29,6 +27,7 @@ import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
+import org.killbill.billing.util.UUIDs;
 
 import com.google.common.base.Preconditions;
 
@@ -60,14 +59,14 @@ public class RetryLeavingStateCallback implements LeavingStateCallback {
             Preconditions.checkNotNull(payment, "payment cannot be null for id " + stateContext.getPaymentId());
             stateContext.setPaymentExternalKey(payment.getExternalKey());
         } else if (stateContext.getPaymentExternalKey() == null) {
-            stateContext.setPaymentExternalKey(UUID.randomUUID().toString());
+            stateContext.setPaymentExternalKey(UUIDs.randomUUID().toString());
         }
         if (stateContext.getTransactionId() != null && stateContext.getPaymentTransactionExternalKey() == null) {
             final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(stateContext.getTransactionId(), stateContext.internalCallContext);
             Preconditions.checkNotNull(paymentTransactionModelDao, "paymentTransaction cannot be null for id " + stateContext.getTransactionId());
             stateContext.setPaymentTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey());
         } else if (stateContext.getPaymentTransactionExternalKey() == null) {
-            stateContext.setPaymentTransactionExternalKey(UUID.randomUUID().toString());
+            stateContext.setPaymentTransactionExternalKey(UUIDs.randomUUID().toString());
         }
 
         if (state.getName().equals(initialState.getName()) || state.getName().equals(retriedState.getName())) {

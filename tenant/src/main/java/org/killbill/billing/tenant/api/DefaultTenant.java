@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.tenant.dao.TenantModelDao;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.UUIDs;
 
 public class DefaultTenant extends EntityBase implements Tenant {
 
@@ -38,7 +39,7 @@ public class DefaultTenant extends EntityBase implements Tenant {
      * @param data TenantData new data for the tenant
      */
     public DefaultTenant(final TenantData data) {
-        this(UUID.randomUUID(), data);
+        this(UUIDs.randomUUID(), data);
     }
 
     /**

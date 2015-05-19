@@ -19,7 +19,6 @@ package org.killbill.billing.subscription.api.timeline;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
@@ -42,6 +41,7 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.TestSubscriptionHelper.TestWithException;
 import org.killbill.billing.subscription.api.user.TestSubscriptionHelper.TestWithExceptionCallback;
+import org.killbill.billing.util.UUIDs;
 
 import static org.testng.Assert.assertEquals;
 
@@ -131,7 +131,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 testUtil.sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = testUtil.createNewEvent(SubscriptionBaseTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
-                final DeletedEvent de = testUtil.createDeletedEvent(UUID.randomUUID());
+                final DeletedEvent de = testUtil.createDeletedEvent(UUIDs.randomUUID());
                 final SubscriptionBaseTimeline sRepair = testUtil.createSubscriptionRepair(baseSubscription.getId(), Collections.singletonList(de), Collections.singletonList(ne));
 
                 final BundleBaseTimeline bRepair = testUtil.createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
@@ -266,7 +266,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 assertEquals(aoRepair.getExistingEvents().size(), 2);
 
                 final List<DeletedEvent> des = new LinkedList<SubscriptionBaseTimeline.DeletedEvent>();
-                //des.add(createDeletedEvent(aoRepair.getExistingEvents().get(1).getEventId()));        
+                //des.add(createDeletedEvent(aoRepair.getExistingEvents().get(1).getEventId()));
                 final DateTime aoCancelDate = aoSubscription.getStartDate().plusDays(10);
 
                 final NewEvent ne = testUtil.createNewEvent(SubscriptionBaseTransitionType.CANCEL, aoCancelDate, null);
@@ -334,10 +334,10 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
 
 
                 DefaultSubscriptionBase aoSubscription = createSubscription("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
-                
+
                 BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
-                
+
                 DateTime newCreateTime = baseSubscription.getStartDate().plusDays(3);
 
                 PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
@@ -348,18 +348,18 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
 
                 SubscriptionRepair bpRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
-                
+
                 ne = createNewEvent(SubscriptionBaseTransitionType.CANCEL, clock.getUTCNow().minusDays(1),  null);
                 SubscriptionRepair aoRepair = createSubscriptionReapir(aoSubscription.getId(), Collections.<SubscriptionRepair.DeletedEvent>emptyList(), Collections.singletonList(ne));
-                
-                
+
+
                 List<SubscriptionRepair> allRepairs = new LinkedList<SubscriptionRepair>();
                 allRepairs.add(bpRepair);
                 allRepairs.add(aoRepair);
                 bundleRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), allRepairs);
                 // FIRST ISSUE DRY RUN
                 BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), allRepairs);
-                
+
                 boolean dryRun = true;
                 repairApi.repairBundle(bRepair, dryRun, callcontext);
                 */
@@ -375,16 +375,16 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
 
                 /*
                 // MOVE CLOCK -- JUST BEFORE END OF TRIAL
-                 *                 
+                 *
                 Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(29));
                 clock.addDeltaFromReality(it.toDurationMillis());
 
                 clock.setDeltaFromReality(getDurationDay(29), 0);
-                
+
                 DefaultSubscriptionBase aoSubscription = createSubscription("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
-                
+
                 // MOVE CLOCK -- RIGHT OUT OF TRIAL
-                testListener.pushExpectedEvent(NextEvent.PHASE);                
+                testListener.pushExpectedEvent(NextEvent.PHASE);
                 clock.addDeltaFromReality(getDurationDay(5));
                 assertListenerStatus();
 
@@ -395,22 +395,22 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
 
                 BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
-                
+
                 SubscriptionRepair bpRepair = getSubscriptionRepair(baseSubscription.getId(), bundleRepair);
                 SubscriptionRepair aoRepair = getSubscriptionRepair(aoSubscription.getId(), bundleRepair);
 
                 List<DeletedEvent> bpdes = new LinkedList<SubscriptionRepair.DeletedEvent>();
-                bpdes.add(createDeletedEvent(bpRepair.getExistingEvents().get(2).getEventId()));    
+                bpdes.add(createDeletedEvent(bpRepair.getExistingEvents().get(2).getEventId()));
                 bpRepair = createSubscriptionReapir(baseSubscription.getId(), bpdes, Collections.<NewEvent>emptyList());
-                
+
                 NewEvent ne = createNewEvent(SubscriptionBaseTransitionType.CANCEL, reapairTime, null);
                 aoRepair = createSubscriptionReapir(aoSubscription.getId(), Collections.<SubscriptionRepair.DeletedEvent>emptyList(), Collections.singletonList(ne));
-                
+
                 List<SubscriptionRepair> allRepairs = new LinkedList<SubscriptionRepair>();
                 allRepairs.add(bpRepair);
                 allRepairs.add(aoRepair);
                 bundleRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), allRepairs);
-                
+
                 boolean dryRun = false;
                 repairApi.repairBundle(bundleRepair, dryRun, callcontext);
                 */

@@ -31,7 +31,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.entitlement.EntitlementTransitionType;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -43,6 +42,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
@@ -133,7 +133,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         if (dryRunArguments != null &&
             dryRunArguments.getAction() == SubscriptionEventType.START_BILLING &&
             dryRunArguments.getBundleId() == null) {
-            final UUID fakeBundleId = UUID.randomUUID();
+            final UUID fakeBundleId = UUIDs.randomUUID();
             final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(fakeBundleId, dryRunArguments, context);
 
             addBillingEventsForSubscription(subscriptions, fakeBundleId, account, dryRunMode, context, result);

@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.entity.Entity;
 
 public abstract class EntityBase implements Entity {
@@ -35,7 +36,7 @@ public abstract class EntityBase implements Entity {
 
     // used to create new objects
     public EntityBase() {
-        this(UUID.randomUUID(), null, null);
+        this(UUIDs.randomUUID(), null, null);
     }
 
     public EntityBase(final UUID id, final DateTime createdDate, final DateTime updatedDate) {

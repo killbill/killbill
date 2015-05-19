@@ -28,6 +28,7 @@ import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.UUIDs;
 
 public class DefaultInvoicePayment extends EntityBase implements InvoicePayment {
 
@@ -43,7 +44,7 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
 
     public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
                                  final BigDecimal amount, final Currency currency, final Currency processedCurrency) {
-        this(UUID.randomUUID(), null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, null, null);
+        this(UUIDs.randomUUID(), null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, null, null);
     }
 
     public DefaultInvoicePayment(final UUID id, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,

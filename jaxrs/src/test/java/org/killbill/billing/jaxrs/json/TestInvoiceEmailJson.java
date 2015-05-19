@@ -22,12 +22,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
+import org.killbill.billing.util.UUIDs;
 
 public class TestInvoiceEmailJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String accountId = UUID.randomUUID().toString();
+        final String accountId = UUIDs.randomUUID().toString();
         final boolean isNotifiedForInvoices = true;
 
         final InvoiceEmailJson invoiceEmailJson = new InvoiceEmailJson(accountId, isNotifiedForInvoices);

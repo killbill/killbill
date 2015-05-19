@@ -86,6 +86,7 @@ import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -969,7 +970,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                                           )
                                                     .orNull();
         if (existingEmail == null) {
-            accountUserApi.addEmail(accountId, json.toAccountEmail(UUID.randomUUID()), callContext);
+            accountUserApi.addEmail(accountId, json.toAccountEmail(UUIDs.randomUUID()), callContext);
         }
 
         return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getEmails", json.getAccountId());

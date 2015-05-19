@@ -36,6 +36,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.clock.ClockMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,16 +61,16 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
     }
 
     public AccountData initAccountData() {
-        final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+        final AccountData accountData = new MockAccountBuilder().name(UUIDs.randomUUID().toString().substring(1, 8))
                                                                 .firstNameLength(6)
-                                                                .email(UUID.randomUUID().toString().substring(1, 8))
-                                                                .phone(UUID.randomUUID().toString().substring(1, 8))
+                                                                .email(UUIDs.randomUUID().toString().substring(1, 8))
+                                                                .phone(UUIDs.randomUUID().toString().substring(1, 8))
                                                                 .migrated(false)
                                                                 .isNotifiedForInvoices(false)
-                                                                .externalKey(UUID.randomUUID().toString())
+                                                                .externalKey(UUIDs.randomUUID().toString())
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
-                                                                .paymentMethodId(UUID.randomUUID())
+                                                                .paymentMethodId(UUIDs.randomUUID())
                                                                 .timeZone(DateTimeZone.forID("Europe/Paris"))
                                                                 .build();
 

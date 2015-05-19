@@ -52,6 +52,7 @@ import org.killbill.billing.subscription.events.user.ApiEventMigrateBilling;
 import org.killbill.billing.subscription.events.user.ApiEventMigrateSubscription;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 
@@ -147,7 +148,7 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
         final DefaultSubscriptionBase defaultSubscriptionBase;
         try {
             defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
-                                                                          .setId(UUID.randomUUID())
+                                                                          .setId(UUIDs.randomUUID())
                                                                           .setBundleId(bundleId)
                                                                           .setCategory(productCategory)
                                                                           .setBundleStartDate(migrationStartDate)
@@ -169,7 +170,7 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
         final DefaultSubscriptionBase defaultSubscriptionBase;
         try {
             defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
-                                                                                                        .setId(UUID.randomUUID())
+                                                                                                        .setId(UUIDs.randomUUID())
                                                                                                         .setBundleId(bundleId)
                                                                                                         .setCategory(productCategory)
                                                                                                         .setBundleStartDate(bundleStartDate)
@@ -242,7 +243,7 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
             // create the MIGRATE_BILLING based on the current state of the last event.
             if (!cur.getEventTime().isAfter(ctd)) {
                 builder.setEffectiveDate(ctd);
-                builder.setUuid(UUID.randomUUID());
+                builder.setUuid(UUIDs.randomUUID());
                 apiEventMigrateBilling = new ApiEventMigrateBilling(builder);
             }
         }

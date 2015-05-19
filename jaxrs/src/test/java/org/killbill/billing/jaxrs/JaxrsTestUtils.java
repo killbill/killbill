@@ -18,19 +18,19 @@ package org.killbill.billing.jaxrs;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import org.killbill.billing.jaxrs.json.AuditLogJson;
+import org.killbill.billing.util.UUIDs;
 
 public abstract class JaxrsTestUtils {
 
     public static List<AuditLogJson> createAuditLogsJson(final DateTime changeDate) {
         final List<AuditLogJson> auditLogs = new ArrayList<AuditLogJson>();
         for (int i = 0; i < 20; i++) {
-            auditLogs.add(new AuditLogJson(UUID.randomUUID().toString(), changeDate, UUID.randomUUID().toString(),
-                                           UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
+            auditLogs.add(new AuditLogJson(UUIDs.randomUUID().toString(), changeDate, UUIDs.randomUUID().toString(),
+                                           UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString()));
         }
 
         return auditLogs;
