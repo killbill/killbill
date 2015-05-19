@@ -447,7 +447,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             } catch (final InterruptedException e) {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             } catch (final TimeoutException e) {
-                return Response.status(Status.fromStatusCode(408)).build();
+                return Response.status(408).build();
             } finally {
                 if (waiter != null) {
                     killbillHandler.unregisterCompletionUserRequestWaiter(waiter);
