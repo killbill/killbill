@@ -52,6 +52,7 @@ import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
@@ -67,6 +68,7 @@ import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseServ
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -84,8 +86,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
@@ -509,6 +513,25 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
     }
 
+
+    @Override
+    public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final SubscriptionBaseTransitionType eventType, final InternalCallContext internalCallContext) {
+        final Iterable<SubscriptionBaseEvent> events = dao.getFutureEventsForAccount(internalCallContext);
+        final Iterable<SubscriptionBaseEvent> filteredEvents = Iterables.filter(events, new Predicate<SubscriptionBaseEvent>() {
+            @Override
+            public boolean apply(final SubscriptionBaseEvent input) {
+                return (eventType == SubscriptionBaseTransitionType.PHASE && input.getType() == EventType.PHASE) || input.getType() != EventType.PHASE;
+            }
+        });
+        final Map<UUID, DateTime> result  = filteredEvents.iterator().hasNext() ? new HashMap<UUID, DateTime>() : ImmutableMap.<UUID, DateTime>of();
+        for (SubscriptionBaseEvent cur : filteredEvents) {
+            final DateTime targetDate = result.get(cur.getSubscriptionId());
+            if (targetDate == null || targetDate.compareTo(cur.getEffectiveDate()) > 0) {
+                result.put(cur.getSubscriptionId(), cur.getEffectiveDate());
+            }
+        }
+        return result;
+    }
 
     private DateTime getBundleStartDateWithSanity(final UUID bundleId, @Nullable final DefaultSubscriptionBase baseSubscription, final Plan plan,
                                                   final DateTime requestedDate, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {

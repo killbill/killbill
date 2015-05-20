@@ -59,5 +59,10 @@ public interface SubscriptionEventSqlDao extends EntitySqlDao<SubscriptionEventM
 
     @SqlQuery
     public List<SubscriptionEventModelDao> getEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
-                                                                   @BindBean final InternalTenantContext context);
+                                                                    @BindBean final InternalTenantContext context);
+
+
+    @SqlQuery
+    public List<SubscriptionEventModelDao> getFutureActiveEventsForAccount(@Bind("now") Date now, @BindBean final InternalTenantContext context);
+
 }

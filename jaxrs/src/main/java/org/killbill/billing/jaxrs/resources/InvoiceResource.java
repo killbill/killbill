@@ -321,8 +321,18 @@ public class InvoiceResource extends JaxRsResourceBase {
                                           @javax.ws.rs.core.Context final HttpServletRequest request,
                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        // We allow special value UPCOMING_INVOICE_TARGET_DATE where the system will automatically generate the resulting targetDate for upcoming invoice
-        final LocalDate inputDate = targetDate != null && targetDate.equals(UPCOMING_INVOICE_TARGET_DATE) ? null : toLocalDate(UUID.fromString(accountId), targetDate, callContext);
+        final LocalDate inputDate;
+        // In the case of subscription dryRun we set the targetDate to be the effective date of the change itself
+        if (dryRunSubscriptionSpec != null && dryRunSubscriptionSpec.getEffectiveDate() != null) {
+            inputDate = dryRunSubscriptionSpec.getEffectiveDate();
+        // In case of Invoice dryRun we also allow the special value UPCOMING_INVOICE_TARGET_DATE where the system will automatically
+        // generate the resulting targetDate for upcoming invoice; in terms of invoice api that maps to passing a null targetDate
+        } else if (targetDate != null && targetDate.equals(UPCOMING_INVOICE_TARGET_DATE)) {
+            inputDate = null;
+        // Finally, in case of Invoice dryRun, we allow a null input date (will default to NOW), or extract the value provided
+        } else {
+            inputDate = toLocalDate(UUID.fromString(accountId), targetDate, callContext);
+        }
 
         // Passing a null or empty body means we are trying to generate an invoice with a (future) targetDate
         // On the other hand if body is not null, we are attempting a dryRun subscription operation

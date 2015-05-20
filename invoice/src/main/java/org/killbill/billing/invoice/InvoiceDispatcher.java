@@ -51,6 +51,7 @@ import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
@@ -77,10 +78,12 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
 import org.killbill.bus.api.PersistentBus;
@@ -128,6 +131,7 @@ public class InvoiceDispatcher {
     private final PersistentBus eventBus;
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
+    private final InvoiceConfig invoiceConfig;
 
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator,
@@ -141,6 +145,7 @@ public class InvoiceDispatcher {
                              final GlobalLocker locker,
                              final PersistentBus eventBus,
                              final NotificationQueueService notificationQueueService,
+                             final InvoiceConfig invoiceConfig,
                              final Clock clock) {
         this.generator = generator;
         this.billingApi = billingApi;
@@ -154,6 +159,7 @@ public class InvoiceDispatcher {
         this.eventBus = eventBus;
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
+        this.invoiceConfig = invoiceConfig;
     }
 
     public void processSubscriptionForInvoiceGeneration(final EffectiveSubscriptionInternalEvent transition,
@@ -221,8 +227,7 @@ public class InvoiceDispatcher {
 
         final boolean isDryRun = dryRunArguments != null;
         // inputTargetDateTime is only allowed in dryRun mode to have the system compute it
-        Preconditions.checkArgument(inputTargetDateTime != null || isDryRun);
-
+        Preconditions.checkArgument(inputTargetDateTime != null || isDryRun, "inputTargetDateTime is required in non dryRun mode");
         try {
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
             final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, dryRunArguments, context);
@@ -288,7 +293,7 @@ public class InvoiceDispatcher {
             final CallContext callContext = buildCallContext(context);
             invoice.addInvoiceItems(invoicePluginDispatcher.getAdditionalInvoiceItems(invoice, callContext));
             if (!isDryRun) {
-                commitInvoiceStateAndNotifyAccountIfConfugured(account, invoice, billingEvents, dateAndTimeZoneContext, targetDate, context);
+                commitInvoiceStateAndNotifyAccountIfConfigured(account, invoice, billingEvents, dateAndTimeZoneContext, targetDate, context);
             }
             return invoice;
         } catch (final AccountApiException e) {
@@ -300,7 +305,7 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void commitInvoiceStateAndNotifyAccountIfConfugured(final Account account, final Invoice invoice, final BillingEventSet billingEvents, final DateAndTimeZoneContext dateAndTimeZoneContext, final LocalDate targetDate, final InternalCallContext context) throws SubscriptionBaseApiException, InvoiceApiException {
+    private void commitInvoiceStateAndNotifyAccountIfConfigured(final Account account, final Invoice invoice, final BillingEventSet billingEvents, final DateAndTimeZoneContext dateAndTimeZoneContext, final LocalDate targetDate, final InternalCallContext context) throws SubscriptionBaseApiException, InvoiceApiException {
         boolean isRealInvoiceWithNonEmptyItems = false;
         // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
         final Set<UUID> adjustedUniqueOtherInvoiceId = new TreeSet<UUID>();
@@ -330,7 +335,7 @@ public class InvoiceDispatcher {
                                                                                                return new InvoiceItemModelDao(input);
                                                                                            }
                                                                                        });
-        final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents, dateAndTimeZoneContext);
+        final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceItemModelDaos, billingEvents, dateAndTimeZoneContext, context);
 
         // We filter any zero amount for USAGE items prior we generate the invoice, which may leave us with an invoice with no items;
         // we recompute the isRealInvoiceWithItems flag based on what is left (the call to invoice is still necessary to set the future notifications).
@@ -401,9 +406,9 @@ public class InvoiceDispatcher {
     }
 
     @VisibleForTesting
-    FutureAccountNotifications createNextFutureNotificationDate(final Iterable<InvoiceItemModelDao> invoiceItems, final BillingEventSet billingEvents, final DateAndTimeZoneContext dateAndTimeZoneContext) {
+    FutureAccountNotifications createNextFutureNotificationDate(final Iterable<InvoiceItemModelDao> invoiceItems, final BillingEventSet billingEvents, final DateAndTimeZoneContext dateAndTimeZoneContext, final InternalCallContext context) {
 
-        final Map<UUID, List<DateTime>> result = new HashMap<UUID, List<DateTime>>();
+        final Map<UUID, List<SubscriptionNotification>> result = new HashMap<UUID, List<SubscriptionNotification>>();
 
         final Map<String, LocalDate> perSubscriptionUsage = new HashMap<String, LocalDate>();
 
@@ -412,9 +417,9 @@ public class InvoiceDispatcher {
         //
         for (final InvoiceItemModelDao item : invoiceItems) {
 
-            List<DateTime> perSubscriptionCallback = result.get(item.getSubscriptionId());
+            List<SubscriptionNotification> perSubscriptionCallback = result.get(item.getSubscriptionId());
             if (perSubscriptionCallback == null && (item.getType() == InvoiceItemType.RECURRING || item.getType() == InvoiceItemType.USAGE)) {
-                perSubscriptionCallback = new ArrayList<DateTime>();
+                perSubscriptionCallback = new ArrayList<SubscriptionNotification>();
                 result.put(item.getSubscriptionId(), perSubscriptionCallback);
             }
 
@@ -423,7 +428,7 @@ public class InvoiceDispatcher {
                     if ((item.getEndDate() != null) &&
                         (item.getAmount() == null ||
                          item.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                        perSubscriptionCallback.add(dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(item.getEndDate()));
+                        perSubscriptionCallback.add(new SubscriptionNotification(dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(item.getEndDate()), true));
                     }
                     break;
 
@@ -444,14 +449,28 @@ public class InvoiceDispatcher {
             final String[] parts = key.split(":");
             final UUID subscriptionId = UUID.fromString(parts[0]);
 
-            final List<DateTime> perSubscriptionCallback = result.get(subscriptionId);
+            final List<SubscriptionNotification> perSubscriptionCallback = result.get(subscriptionId);
             final String usageName = parts[1];
             final LocalDate endDate = perSubscriptionUsage.get(key);
 
             final DateTime subscriptionUsageCallbackDate = getNextUsageBillingDate(subscriptionId, usageName, endDate, dateAndTimeZoneContext, billingEvents);
-            perSubscriptionCallback.add(subscriptionUsageCallbackDate);
+            perSubscriptionCallback.add(new SubscriptionNotification(subscriptionUsageCallbackDate, true));
         }
 
+        // If dryRunNotification is enabled we also need to fetch the upcoming PHASE dates (we add SubscriptionNotification with isForInvoiceNotificationTrigger = false)
+        final boolean isInvoiceNotificationEnabled = invoiceConfig.getDryRunNotificationSchedule().getMillis() > 0;
+        if (isInvoiceNotificationEnabled) {
+            final Map<UUID, DateTime> upcomingPhasesForSubscriptions = subscriptionApi.getNextFutureEventForSubscriptions(SubscriptionBaseTransitionType.PHASE, context);
+            for (UUID cur : upcomingPhasesForSubscriptions.keySet()) {
+                final DateTime curDate = upcomingPhasesForSubscriptions.get(cur);
+                List<SubscriptionNotification> resultValue = result.get(cur);
+                if (resultValue == null) {
+                    resultValue = new ArrayList<SubscriptionNotification>();
+                }
+                resultValue.add(new SubscriptionNotification(curDate, false));
+                result.put(cur, resultValue);
+            }
+        }
         return new FutureAccountNotifications(dateAndTimeZoneContext, result);
     }
 
@@ -515,9 +534,9 @@ public class InvoiceDispatcher {
     public static class FutureAccountNotifications {
 
         private final DateAndTimeZoneContext accountDateAndTimeZoneContext;
-        private final Map<UUID, List<DateTime>> notifications;
+        private final Map<UUID, List<SubscriptionNotification>> notifications;
 
-        public FutureAccountNotifications(final DateAndTimeZoneContext accountDateAndTimeZoneContext, final Map<UUID, List<DateTime>> notifications) {
+        public FutureAccountNotifications(final DateAndTimeZoneContext accountDateAndTimeZoneContext, final Map<UUID, List<SubscriptionNotification>> notifications) {
             this.accountDateAndTimeZoneContext = accountDateAndTimeZoneContext;
             this.notifications = notifications;
         }
@@ -526,8 +545,28 @@ public class InvoiceDispatcher {
             return accountDateAndTimeZoneContext;
         }
 
-        public Map<UUID, List<DateTime>> getNotifications() {
+        public Map<UUID, List<SubscriptionNotification>> getNotifications() {
             return notifications;
+        }
+
+        public static class SubscriptionNotification {
+
+            private final DateTime effectiveDate;
+            private final boolean isForNotificationTrigger;
+
+
+            public SubscriptionNotification(final DateTime effectiveDate, final boolean isForNotificationTrigger) {
+                this.effectiveDate = effectiveDate;
+                this.isForNotificationTrigger = isForNotificationTrigger;
+            }
+
+            public DateTime getEffectiveDate() {
+                return effectiveDate;
+            }
+
+            public boolean isForInvoiceNotificationTrigger() {
+                return isForNotificationTrigger;
+            }
         }
     }
 

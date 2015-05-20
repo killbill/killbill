@@ -74,7 +74,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     public SubscriptionBaseEvent getEventById(UUID eventId, InternalTenantContext context);
 
-    public Map<UUID, List<SubscriptionBaseEvent>> getEventsForBundle(UUID bundleId, InternalTenantContext context);
+    public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(InternalTenantContext context);
 
     public List<SubscriptionBaseEvent> getEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
@@ -101,5 +101,6 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     // Repair
     public void repair(UUID accountId, UUID bundleId, List<SubscriptionDataRepair> inRepair, InternalCallContext context);
+
 }
 

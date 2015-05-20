@@ -94,8 +94,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(firstInvoiceByNumberJson, invoiceJson);
 
         // Then create a dryRun for next upcoming invoice
-        LocalDate futureDate = null;
-        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), futureDate, null, createdBy, reason, comment);
+        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), null, true, null, createdBy, reason, comment);
         assertEquals(dryRunInvoice.getBalance(), new BigDecimal("249.95"));
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2012, 6, 25));
         assertEquals(dryRunInvoice.getItems().size(), 1);
@@ -103,7 +102,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(dryRunInvoice.getItems().get(0).getEndDate(), new LocalDate(2012, 7, 25));
         assertEquals(dryRunInvoice.getItems().get(0).getAmount(), new BigDecimal("249.95"));
 
-        futureDate = dryRunInvoice.getTargetDate();
+        final LocalDate futureDate = dryRunInvoice.getTargetDate();
         // The one more time with no DryRun
         killBillClient.createInvoice(accountJson.getAccountId(), futureDate, createdBy, reason, comment);
 
@@ -122,7 +121,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         final InvoiceDryRun dryRunArg = new InvoiceDryRun(SubscriptionEventType.START_BILLING,
                                                           null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, null, null, null);
-        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone())), dryRunArg, createdBy, reason, comment);
+        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone())), false, dryRunArg, createdBy, reason, comment);
         assertEquals(dryRunInvoice.getItems().size(), 1);
 
     }
