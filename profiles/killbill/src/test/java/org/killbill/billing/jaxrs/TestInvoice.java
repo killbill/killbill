@@ -26,6 +26,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -91,10 +93,16 @@ public class TestInvoice extends TestJaxrsBase {
         final Invoice firstInvoiceByNumberJson = killBillClient.getInvoice(invoiceJson.getInvoiceNumber());
         assertEquals(firstInvoiceByNumberJson, invoiceJson);
 
-        // Then create a dryRun Invoice
-        final DateTime futureDate = clock.getUTCNow().plusMonths(1).plusDays(3);
-        killBillClient.createDryRunInvoice(accountJson.getAccountId(), futureDate, null, createdBy, reason, comment);
+        // Then create a dryRun for next upcoming invoice
+        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), null, true, null, createdBy, reason, comment);
+        assertEquals(dryRunInvoice.getBalance(), new BigDecimal("249.95"));
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2012, 6, 25));
+        assertEquals(dryRunInvoice.getItems().size(), 1);
+        assertEquals(dryRunInvoice.getItems().get(0).getStartDate(), new LocalDate(2012, 6, 25));
+        assertEquals(dryRunInvoice.getItems().get(0).getEndDate(), new LocalDate(2012, 7, 25));
+        assertEquals(dryRunInvoice.getItems().get(0).getAmount(), new BigDecimal("249.95"));
 
+        final LocalDate futureDate = dryRunInvoice.getTargetDate();
         // The one more time with no DryRun
         killBillClient.createInvoice(accountJson.getAccountId(), futureDate, createdBy, reason, comment);
 
@@ -113,7 +121,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         final InvoiceDryRun dryRunArg = new InvoiceDryRun(SubscriptionEventType.START_BILLING,
                                                           null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, null, null, null);
-        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), initialDate, dryRunArg, createdBy, reason, comment);
+        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone())), false, dryRunArg, createdBy, reason, comment);
         assertEquals(dryRunInvoice.getItems().size(), 1);
 
     }

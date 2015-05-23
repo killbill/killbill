@@ -52,8 +52,11 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
 
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
 
+        // Move to end of trial =>  2012, 4, 24
+        addDaysAndCheckForCompletion(23, NextEvent.INVOICE_NOTIFICATION);
+
         // Move to end of trial =>  2012, 5, 1
-        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(7, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
         // Next invoice is scheduled for 2012, 6, 1 so we should have a NOTIFICATION event 7 days before, on 2012, 5, 25
         addDaysAndCheckForCompletion(24, NextEvent.INVOICE_NOTIFICATION);

@@ -109,12 +109,12 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testFailedPaymentWithLastRetrySuccess() throws Exception {
-        testSchedulesRetryInternal(paymentConfig.getPaymentRetryDays().size(), true, FailureType.PAYMENT_FAILURE);
+        testSchedulesRetryInternal(paymentConfig.getPaymentFailureRetryDays().size(), true, FailureType.PAYMENT_FAILURE);
     }
 
     @Test(groups = "fast")
     public void testAbortedPayment() throws Exception {
-        testSchedulesRetryInternal(paymentConfig.getPaymentRetryDays().size(), false, FailureType.PAYMENT_FAILURE);
+        testSchedulesRetryInternal(paymentConfig.getPaymentFailureRetryDays().size(), false, FailureType.PAYMENT_FAILURE);
     }
 
     private void testSchedulesRetryInternal(final int maxTries, final boolean lastSuccess, final FailureType failureType) throws Exception {
@@ -231,7 +231,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
     private void moveClockForFailureType(final FailureType failureType, final int curFailure) throws InterruptedException {
         final int nbDays;
         if (failureType == FailureType.PAYMENT_FAILURE) {
-            nbDays = paymentConfig.getPaymentRetryDays().get(curFailure) + 1;
+            nbDays = paymentConfig.getPaymentFailureRetryDays().get(curFailure) + 1;
         } else {
             nbDays = 1;
         }
@@ -240,7 +240,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
     private int getMaxRetrySizeForFailureType(final FailureType failureType) {
         if (failureType == FailureType.PAYMENT_FAILURE) {
-            return paymentConfig.getPaymentRetryDays().size();
+            return paymentConfig.getPaymentFailureRetryDays().size();
         } else {
             return paymentConfig.getPluginFailureRetryMaxAttempts();
         }

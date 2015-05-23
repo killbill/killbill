@@ -41,7 +41,7 @@ public interface InvoiceConfig extends KillbillConfig {
 
     @Config("org.killbill.invoice.readMaxRawUsagePreviousPeriod")
     @Default("2")
-    @Description("Maximum number of billingPeriod we read when retrieving raw usage data")
+    @Description("Maximum number of past billing periods we use to fetch raw usage data (usage optimization)")
     public int getMaxRawUsagePreviousPeriod();
 
 }

@@ -31,28 +31,24 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Default payment provider to use")
     public String getDefaultPaymentProvider();
 
-    // STEPH_RETRY unique property (does not match payment one)
-    @Config("org.killbill.payment.retry.provider.default")
-    @Default("__external_retry__")
-    @Description("Default retry provider to use")
-    public String getDefaultRetryProvider();
-
     @Config("org.killbill.payment.retry.days")
     @Default("8,8,8")
-    @Description("Interval in days between payment retries")
-    public List<Integer> getPaymentRetryDays();
+    @Description("Specify the number of payment retries along with the interval in days between payment retries when payment failures occur")
+    public List<Integer> getPaymentFailureRetryDays();
 
     @Config("org.killbill.payment.failure.retry.start.sec")
     @Default("300")
-    public int getPluginFailureRetryStart();
+    @Description("Specify the interval of time in seconds before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...")
+    public int getPluginFailureInitialRetryInSec();
 
     @Config("org.killbill.payment.failure.retry.multiplier")
     @Default("2")
+    @Description("Specify the multiplier to apply between in retry before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...")
     public int getPluginFailureRetryMultiplier();
 
     @Config("org.killbill.payment.failure.retry.max.attempts")
     @Default("8")
-    @Description("Maximum number of retries for failed payments")
+    @Description("Specify the max number of attempts before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...\"")
     public int getPluginFailureRetryMaxAttempts();
 
     @Config("org.killbill.payment.plugin.timeout")

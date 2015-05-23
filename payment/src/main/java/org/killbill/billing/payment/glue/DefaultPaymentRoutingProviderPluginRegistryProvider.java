@@ -44,7 +44,7 @@ public class DefaultPaymentRoutingProviderPluginRegistryProvider implements Prov
 
     @Override
     public OSGIServiceRegistration<PaymentRoutingPluginApi> get() {
-        final DefaultPaymentRoutingProviderPluginRegistry pluginRegistry = new DefaultPaymentRoutingProviderPluginRegistry(paymentConfig);
+        final DefaultPaymentRoutingProviderPluginRegistry pluginRegistry = new DefaultPaymentRoutingProviderPluginRegistry();
 
         // Make the external payment provider plugin available by default
         final OSGIServiceDescriptor desc = new OSGIServiceDescriptor() {

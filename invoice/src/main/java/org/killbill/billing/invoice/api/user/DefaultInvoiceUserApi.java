@@ -200,7 +200,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public Invoice triggerInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments,
+    public Invoice triggerInvoiceGeneration(final UUID accountId, @Nullable final LocalDate targetDate, final DryRunArguments dryRunArguments,
                                             final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
@@ -211,10 +211,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, e.toString());
         }
 
-        final DateTime processingDateTime = targetDate.toDateTimeAtCurrentTime(account.getTimeZone());
+        final DateTime processingDateTime = targetDate != null ? targetDate.toDateTimeAtCurrentTime(account.getTimeZone()) : null;
         final Invoice result = dispatcher.processAccount(accountId, processingDateTime, dryRunArguments, internalContext);
         if (result == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate);
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
             return result;
         }

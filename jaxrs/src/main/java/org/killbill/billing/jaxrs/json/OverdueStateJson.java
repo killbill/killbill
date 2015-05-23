@@ -56,7 +56,7 @@ public class OverdueStateJson {
     public OverdueStateJson(final OverdueState overdueState, final PaymentConfig paymentConfig) {
         this.name = overdueState.getName();
         this.externalMessage = overdueState.getExternalMessage();
-        this.daysBetweenPaymentRetries = paymentConfig.getPaymentRetryDays();
+        this.daysBetweenPaymentRetries = paymentConfig.getPaymentFailureRetryDays();
         this.disableEntitlementAndChangesBlocked = overdueState.isDisableEntitlementAndChangesBlocked();
         this.blockChanges = overdueState.isBlockChanges();
         this.isClearState = overdueState.isClearState();

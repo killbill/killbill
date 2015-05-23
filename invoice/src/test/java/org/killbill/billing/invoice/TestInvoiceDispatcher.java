@@ -21,7 +21,6 @@ package org.killbill.billing.invoice;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -40,6 +39,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.TestInvoiceHelper.DryRunFutureDateArguments;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
@@ -96,7 +96,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
-                                                                   clock);
+                                                                   null, invoiceConfig, clock);
 
         Invoice invoice = dispatcher.processAccount(accountId, target, new DryRunFutureDateArguments(), context);
         Assert.assertNotNull(invoice);
@@ -149,7 +149,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
-                                                                   clock);
+                                                                   null, invoiceConfig, clock);
 
         final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), null, context);
         Assert.assertNotNull(invoice);
@@ -207,18 +207,18 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
-                                                                   clock);
+                                                                   null, invoiceConfig, clock);
 
-        final FutureAccountNotifications futureAccountNotifications = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), null, dateAndTimeZoneContext);
+        final FutureAccountNotifications futureAccountNotifications = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), null, dateAndTimeZoneContext, context);
 
         Assert.assertEquals(futureAccountNotifications.getNotifications().size(), 1);
 
-        final List<DateTime> receivedDates = futureAccountNotifications.getNotifications().get(item.getSubscriptionId());
+        final List<SubscriptionNotification> receivedDates = futureAccountNotifications.getNotifications().get(item.getSubscriptionId());
         Assert.assertEquals(receivedDates.size(), 1);
 
-        final LocalDate receivedTargetDate = new LocalDate(receivedDates.get(0), DateTimeZone.forID("Pacific/Pitcairn"));
+        final LocalDate receivedTargetDate = new LocalDate(receivedDates.get(0).getEffectiveDate(), DateTimeZone.forID("Pacific/Pitcairn"));
         Assert.assertEquals(receivedTargetDate, endDate);
 
-        Assert.assertTrue(receivedDates.get(0).compareTo(new DateTime(2012, 11, 27, 1, 12, 23, DateTimeZone.UTC)) <= 0);
+        Assert.assertTrue(receivedDates.get(0).getEffectiveDate().compareTo(new DateTime(2012, 11, 27, 1, 12, 23, DateTimeZone.UTC)) <= 0);
     }
 }

@@ -120,6 +120,7 @@ public class TestIntegration extends TestIntegrationBase {
                                     expectedInvoices);
 
         checkNoMoreInvoiceToGenerate(account);
+
     }
 
     @Test(groups = "slow")
@@ -170,9 +171,12 @@ public class TestIntegration extends TestIntegrationBase {
 
         DateTime nextDate = clock.getUTCNow().plusDays(1);
         dryRun = new TestDryRunArguments();
-        dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
+
+
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("561.24")));
 
+        // Verify first next targetDate 
+        dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
 

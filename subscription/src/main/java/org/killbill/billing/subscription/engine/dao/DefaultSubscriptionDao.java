@@ -102,6 +102,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> implements SubscriptionDao {
@@ -447,30 +448,19 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public Map<UUID, List<SubscriptionBaseEvent>> getEventsForBundle(final UUID bundleId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Map<UUID, List<SubscriptionBaseEvent>>>() {
+    public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Iterable<SubscriptionBaseEvent>>() {
             @Override
-            public Map<UUID, List<SubscriptionBaseEvent>> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
+            public Iterable<SubscriptionBaseEvent> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+                final List<SubscriptionEventModelDao> activeEvents = transactional.getFutureActiveEventsForAccount(clock.getUTCNow().toDate(), context);
+                return Iterables.transform(activeEvents, new Function<SubscriptionEventModelDao, SubscriptionBaseEvent>() {
 
-                final List<SubscriptionModelDao> subscriptionModels = transactional.getSubscriptionsFromBundleId(bundleId.toString(), context);
-                if (subscriptionModels.size() == 0) {
-                    return Collections.emptyMap();
-                }
-
-                final SubscriptionEventSqlDao eventsDaoFromSameTransaction = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-                final Map<UUID, List<SubscriptionBaseEvent>> result = new HashMap<UUID, List<SubscriptionBaseEvent>>();
-                for (final SubscriptionModelDao cur : subscriptionModels) {
-                    final List<SubscriptionEventModelDao> eventModels = eventsDaoFromSameTransaction.getEventsForSubscription(cur.getId().toString(), context);
-                    final List<SubscriptionBaseEvent> events = new ArrayList<SubscriptionBaseEvent>(Collections2.transform(eventModels, new Function<SubscriptionEventModelDao, SubscriptionBaseEvent>() {
-                        @Override
-                        public SubscriptionBaseEvent apply(@Nullable final SubscriptionEventModelDao input) {
-                            return SubscriptionEventModelDao.toSubscriptionEvent(input);
-                        }
-                    }));
-                    result.put(cur.getId(), events);
-                }
-                return result;
+                    @Override
+                    public SubscriptionBaseEvent apply(final SubscriptionEventModelDao input) {
+                        return SubscriptionEventModelDao.toSubscriptionEvent(input);
+                    }
+                });
             }
         });
     }

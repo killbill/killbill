@@ -31,6 +31,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.TestInvoiceHelper;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -108,7 +109,7 @@ public class InvoiceTestUtils {
 
         final DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC, clock);
 
-        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<DateTime>>of()), internalCallContext);
+        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
 
         return invoice;
     }

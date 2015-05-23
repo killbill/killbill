@@ -36,6 +36,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -793,14 +794,16 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule().getMillis();
         final boolean isInvoiceNotificationEnabled = dryRunNotificationTime > 0;
         for (final UUID subscriptionId : callbackDateTimePerSubscriptions.getNotifications().keySet()) {
-            final List<DateTime> callbackDateTimeUTC = callbackDateTimePerSubscriptions.getNotifications().get(subscriptionId);
-            for (final DateTime cur : callbackDateTimeUTC) {
+            final List<SubscriptionNotification> callbackDateTimeUTC = callbackDateTimePerSubscriptions.getNotifications().get(subscriptionId);
+            for (final SubscriptionNotification cur : callbackDateTimeUTC) {
                 if (isInvoiceNotificationEnabled) {
-                    final DateTime curDryRunNotificationTime = cur.minus(dryRunNotificationTime);
+                    final DateTime curDryRunNotificationTime = cur.getEffectiveDate().minus(dryRunNotificationTime);
                     final DateTime effectiveCurDryRunNotificationTime = (curDryRunNotificationTime.isAfter(clock.getUTCNow())) ? curDryRunNotificationTime : clock.getUTCNow();
-                    nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, effectiveCurDryRunNotificationTime, cur, callbackDateTimePerSubscriptions.getAccountDateAndTimeZoneContext(), internalCallContext);
+                    nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, effectiveCurDryRunNotificationTime, cur.getEffectiveDate(), callbackDateTimePerSubscriptions.getAccountDateAndTimeZoneContext(), internalCallContext);
                 }
-                nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur, callbackDateTimePerSubscriptions.getAccountDateAndTimeZoneContext(), internalCallContext);
+                if (cur.isForInvoiceNotificationTrigger()) {
+                    nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur.getEffectiveDate(), callbackDateTimePerSubscriptions.getAccountDateAndTimeZoneContext(), internalCallContext);
+                }
             }
         }
     }

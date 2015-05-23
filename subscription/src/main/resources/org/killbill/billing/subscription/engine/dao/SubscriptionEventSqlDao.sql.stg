@@ -111,3 +111,17 @@ and is_active = 1
 ;
 >>
 
+getFutureActiveEventsForAccount() ::= <<
+select <allTableFields()>
+, record_id as total_ordering
+from <tableName()>
+where
+account_record_id = :accountRecordId
+and is_active = 1
+and effective_date > :now
+<AND_CHECK_TENANT()>
+<defaultOrderBy()>
+;
+>>
+
+

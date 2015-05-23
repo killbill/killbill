@@ -23,7 +23,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -36,6 +35,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.entity.Pagination;
 
 public interface SubscriptionBaseInternalApi {
+
 
     public SubscriptionBase createSubscription(UUID bundleId, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, DateTime requestedDateWithMs,
                                                InternalCallContext context) throws SubscriptionBaseApiException;
@@ -80,4 +80,7 @@ public interface SubscriptionBaseInternalApi {
 
     public void updateExternalKey(UUID bundleId, String newExternalKey, InternalCallContext context);
 
+    public Iterable<DateTime> getFutureNotificationsForAccount(InternalCallContext context);
+
+    public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final SubscriptionBaseTransitionType eventType, final InternalCallContext internalCallContext);
 }

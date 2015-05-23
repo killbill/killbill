@@ -283,14 +283,14 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiOperation(value = "Trigger an invoice generation", response = InvoiceJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response createFutureInvoice(@QueryParam(QUERY_ACCOUNT_ID) final String accountId,
-                                        @QueryParam(QUERY_TARGET_DATE) final String targetDateTime,
+                                        @QueryParam(QUERY_TARGET_DATE) final String targetDate,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final HttpServletRequest request,
                                         @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final LocalDate inputDate = toLocalDate(UUID.fromString(accountId), targetDateTime, callContext);
+        final LocalDate inputDate = toLocalDate(UUID.fromString(accountId), targetDate, callContext);
 
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, null,
@@ -304,6 +304,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
     }
 
+
     @Timed
     @POST
     @Path("/" + DRY_RUN)
@@ -313,14 +314,25 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response generateDryRunInvoice(@Nullable final InvoiceDryRunJson dryRunSubscriptionSpec,
                                           @QueryParam(QUERY_ACCOUNT_ID) final String accountId,
-                                          @QueryParam(QUERY_TARGET_DATE) final String targetDateTime,
+                                          @Nullable @QueryParam(QUERY_TARGET_DATE) final String targetDate,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final HttpServletRequest request,
                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final LocalDate inputDate = toLocalDate(UUID.fromString(accountId), targetDateTime, callContext);
+        final LocalDate inputDate;
+        // In the case of subscription dryRun we set the targetDate to be the effective date of the change itself
+        if (dryRunSubscriptionSpec != null && dryRunSubscriptionSpec.getEffectiveDate() != null) {
+            inputDate = dryRunSubscriptionSpec.getEffectiveDate();
+        // In case of Invoice dryRun we also allow the special value UPCOMING_INVOICE_TARGET_DATE where the system will automatically
+        // generate the resulting targetDate for upcoming invoice; in terms of invoice api that maps to passing a null targetDate
+        } else if (targetDate != null && targetDate.equals(UPCOMING_INVOICE_TARGET_DATE)) {
+            inputDate = null;
+        // Finally, in case of Invoice dryRun, we allow a null input date (will default to NOW), or extract the value provided
+        } else {
+            inputDate = toLocalDate(UUID.fromString(accountId), targetDate, callContext);
+        }
 
         // Passing a null or empty body means we are trying to generate an invoice with a (future) targetDate
         // On the other hand if body is not null, we are attempting a dryRun subscription operation
