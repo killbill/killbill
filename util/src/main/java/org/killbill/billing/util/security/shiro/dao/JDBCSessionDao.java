@@ -25,6 +25,8 @@ import javax.inject.Inject;
 
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -44,7 +46,10 @@ public class JDBCSessionDao extends CachingSessionDAO {
 
     @Override
     protected void doUpdate(final Session session) {
-        jdbcSessionSqlDao.update(new SessionModelDao(session));
+        // Assume only the last access time attribute was updated (see https://github.com/killbill/killbill/issues/326)
+        final DateTime lastAccessTime = new DateTime(session.getLastAccessTime(), DateTimeZone.UTC);
+        final Long sessionId = Long.valueOf(session.getId().toString());
+        jdbcSessionSqlDao.updateLastAccessTime(lastAccessTime, sessionId);
     }
 
     @Override

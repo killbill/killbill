@@ -16,6 +16,7 @@
 
 package org.killbill.billing.util.security.shiro.dao;
 
+import org.joda.time.DateTime;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -34,6 +35,9 @@ public interface JDBCSessionSqlDao extends Transactional<JDBCSessionSqlDao> {
 
     @SqlUpdate
     public void update(@SmartBindBean final SessionModelDao sessionModelDao);
+
+    @SqlUpdate
+    public void updateLastAccessTime(@Bind("lastAccessTime") final DateTime lastAccessTime, @Bind("recordId") final Long sessionId);
 
     @SqlUpdate
     public void delete(@SmartBindBean final SessionModelDao sessionModelDao);
