@@ -257,6 +257,12 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
               );
     }
 
+    @Test(groups = "fast", description = "Test for ActiveMerchant wiredump_device logging")
+    public void testWithQuotedNewLines() throws Exception {
+        verify("[cybersource-plugin] \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?><accountNumber>4111111111111111</accountNumber>\\n  <expirationMonth>09</expirationMonth>\\n  \"",
+               "[cybersource-plugin] \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?><accountNumber>*****MASKED*****</accountNumber>\\n  <expirationMonth>09</expirationMonth>\\n  \"");
+    }
+
     private void verify(final String input, final String output) {
         final String obfuscated = obfuscator.obfuscate(input);
         Assert.assertEquals(obfuscated, output, obfuscated);

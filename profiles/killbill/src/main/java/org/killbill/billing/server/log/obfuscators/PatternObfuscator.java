@@ -72,7 +72,7 @@ public class PatternObfuscator extends Obfuscator {
     }
 
     private Pattern buildXMLPattern(final String key) {
-        return Pattern.compile(key + ">([^<\\n]+)", DEFAULT_PATTERN_FLAGS);
+        return Pattern.compile(key + ">([^<\\n]+)</[^<>]*" + key + ">", DEFAULT_PATTERN_FLAGS);
     }
 
     private Pattern buildMultiValuesXMLPattern(final String key) {
