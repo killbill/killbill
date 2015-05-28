@@ -15,7 +15,10 @@
  */
 package org.killbill.billing.util;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -29,7 +32,7 @@ public abstract class UUIDs {
 
     private static UUID rndUUIDv4() {
         // ~ return UUID.randomUUID() :
-        final SecureRandom random = threadRandom.get();
+        final Random random = threadRandom.get();
 
         final byte[] uuid = new byte[16];
         random.nextBytes(uuid);
@@ -61,11 +64,199 @@ public abstract class UUIDs {
         return new UUID(msb, lsb);
     }
 
-    private static final ThreadLocal<SecureRandom> threadRandom =
-        new ThreadLocal<SecureRandom>() {
-            protected SecureRandom initialValue() {
-                return new SecureRandom();
+    private static final ThreadLocal<Random> threadRandom =
+        new ThreadLocal<Random>() {
+            protected Random initialValue() {
+                return new LightSecureRandom(); // new SecureRandom();
             }
     };
+
+    /**
+     * An implementation of SecureRandom inspired by bouncy-castle's own for
+     * light-weight APIs (JDK 1.0, and J2ME).
+     *
+     * Random generation is based on the traditional SHA1 with
+     * counter. Calling setSeed will always increase the entropy of the hash.
+     */
+    // NOTE: assumes non-concurrent use (generator calls should be synchronized)
+    private static class LightSecureRandom extends Random {
+
+        private static abstract class SeederHolder {
+            static final SecureRandom seeder = new SecureRandom();
+        }
+
+        private final DigestRandomGenerator generator;
+
+        LightSecureRandom() {
+            this( sha1Generator() );
+            setSeed( SeederHolder.seeder.generateSeed( generator.getDigestLength() ) );
+        }
+
+        LightSecureRandom(final byte[] inSeed) {
+            this( sha1Generator() );
+            setSeed(inSeed);
+        }
+
+        private LightSecureRandom(DigestRandomGenerator generator) {
+            super(0);
+            this.generator = generator;
+        }
+
+        private static DigestRandomGenerator sha1Generator() {
+            try {
+                return new DigestRandomGenerator(MessageDigest.getInstance("SHA-1"));
+            }
+            catch (NoSuchAlgorithmException ex) {
+                throw new AssertionError("unexpeced missing SHA-1 digest", ex);
+            }
+        }
+
+        @Override
+        public void setSeed(final long seed) {
+            if ( seed != 0 ) { // to avoid problems with Random calling setSeed in construction
+                generator.addSeedMaterial(seed);
+            }
+        }
+
+        public void setSeed(final byte[] seed) {
+            generator.addSeedMaterial(seed);
+        }
+
+        @Override
+        public void nextBytes(byte[] bytes) {
+            generator.nextBytes(bytes);
+        }
+
+        @Override
+        public int nextInt() {
+            final byte[] intBytes = new byte[4];
+
+            nextBytes(intBytes);
+
+            int result = 0;
+
+            for ( int i = 0; i < 4; i++ ) {
+                result = (result << 8) + (intBytes[i] & 0xff);
+            }
+
+            return result;
+        }
+
+        @Override
+        protected final int next(int numBits) {
+            int size = (numBits + 7) / 8;
+            byte[] bytes = new byte[size];
+
+            nextBytes(bytes);
+
+            int result = 0;
+
+            for (int i = 0; i < size; i++)
+            {
+                result = (result << 8) + (bytes[i] & 0xff);
+            }
+
+            return result & ((1 << numBits) - 1);
+        }
+
+    }
+
+    private static class DigestRandomGenerator {
+
+        private static final long CYCLE_COUNT = 10;
+
+        private long stateCounter;
+        private long seedCounter;
+        private final MessageDigest digest;
+        private byte[] state;
+        private byte[] seed;
+
+        private DigestRandomGenerator(MessageDigest digest) {
+            this.digest = digest;
+
+            this.seed = new byte[digest.getDigestLength()];
+            this.seedCounter = 1;
+
+            this.state = new byte[digest.getDigestLength()];
+            this.stateCounter = 1;
+        }
+
+        int getDigestLength() { return digest.getDigestLength(); }
+
+        // NOTE: requires external synchronization
+        final void addSeedMaterial(byte[] inSeed) {
+            //synchronized (this) {
+            digestUpdate(inSeed);
+            digestUpdate(seed);
+            seed = digest.digest(); // digestDoFinal(seed);
+            //}
+        }
+
+        // NOTE: requires external synchronization
+        final void addSeedMaterial(long rSeed) {
+            //synchronized (this) {
+            digestAddCounter(rSeed);
+            digestUpdate(seed);
+            seed = digest.digest(); // digestDoFinal(seed);
+            //}
+        }
+
+        void nextBytes(byte[] bytes) {
+            nextBytes(bytes, 0, bytes.length);
+        }
+
+        // NOTE: requires external synchronization
+        final void nextBytes(byte[] bytes, int start, int len) {
+            //synchronized (this) {
+            int stateOff = 0;
+
+            generateState();
+
+            int end = start + len;
+            for (int i = start; i != end; i++) {
+                if (stateOff == state.length) {
+                    generateState();
+                    stateOff = 0;
+                }
+                bytes[i] = state[stateOff++];
+            }
+            //}
+        }
+
+        private void cycleSeed() {
+            digestUpdate(seed);
+            digestAddCounter(seedCounter++);
+
+            seed = digest.digest(); // digestDoFinal(seed);
+        }
+
+        private void generateState() {
+            digestAddCounter(stateCounter++);
+            digestUpdate(state);
+            digestUpdate(seed);
+
+            state = digest.digest(); // digestDoFinal(state);
+
+            if ((stateCounter % CYCLE_COUNT) == 0) {
+                cycleSeed();
+            }
+        }
+
+        private void digestAddCounter(long seed) {
+            for (int i = 0; i != 8; i++) {
+                digest.update((byte) seed);
+                seed >>>= 8;
+            }
+        }
+
+        private void digestUpdate(byte[] inSeed) {
+            digest.update(inSeed, 0, inSeed.length);
+        }
+
+        //private void digestDoFinal(byte[] result) {
+        //    digest.doFinal(result, 0);
+        //}
+
+    }
 
 }
