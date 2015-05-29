@@ -20,16 +20,18 @@ package org.killbill.billing.server.log.obfuscators;
 import java.util.regex.Pattern;
 
 import org.killbill.billing.server.log.ServerTestSuiteNoDB;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.common.collect.ImmutableList;
 
 public class TestObfuscator extends ServerTestSuiteNoDB {
 
     private final Obfuscator obfuscator = new Obfuscator() {
         @Override
-        public String obfuscate(final String originalString) {
+        public String obfuscate(final String originalString, final ILoggingEvent event) {
             return null;
         }
     };
@@ -38,7 +40,7 @@ public class TestObfuscator extends ServerTestSuiteNoDB {
     public void testObfuscateWithOnePattern() throws Exception {
         final Pattern pattern = Pattern.compile("number=([^;]+)");
         final ImmutableList<Pattern> patterns = ImmutableList.<Pattern>of(pattern);
-        Assert.assertEquals(obfuscator.obfuscate("number=1234;number=12345;number=123456;number=1234567;number=12345678;number=123456789", patterns),
+        Assert.assertEquals(obfuscator.obfuscate("number=1234;number=12345;number=123456;number=1234567;number=12345678;number=123456789", patterns, Mockito.mock(ILoggingEvent.class)),
                             "number=MASKED;number=MASKED;number=MASKED;number=MASKED*;number=*MASKED*;number=*MASKED**");
 
     }
@@ -48,7 +50,7 @@ public class TestObfuscator extends ServerTestSuiteNoDB {
         final Pattern pattern1 = Pattern.compile("number=([^;]+)");
         final Pattern pattern2 = Pattern.compile("numberB=([^;]+)");
         final ImmutableList<Pattern> patterns = ImmutableList.<Pattern>of(pattern1, pattern2);
-        Assert.assertEquals(obfuscator.obfuscate("number=1234;numberB=12345;number=123456;numberB=1234567;number=12345678;numberB=123456789", patterns),
+        Assert.assertEquals(obfuscator.obfuscate("number=1234;numberB=12345;number=123456;numberB=1234567;number=12345678;numberB=123456789", patterns, Mockito.mock(ILoggingEvent.class)),
                             "number=MASKED;numberB=MASKED;number=MASKED;numberB=MASKED*;number=*MASKED*;numberB=*MASKED**");
 
     }

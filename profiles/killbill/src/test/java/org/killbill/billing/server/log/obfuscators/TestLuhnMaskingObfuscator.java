@@ -18,8 +18,11 @@
 package org.killbill.billing.server.log.obfuscators;
 
 import org.killbill.billing.server.log.ServerTestSuiteNoDB;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import ch.qos.logback.classic.spi.ILoggingEvent;
 
 public class TestLuhnMaskingObfuscator extends ServerTestSuiteNoDB {
 
@@ -212,8 +215,46 @@ public class TestLuhnMaskingObfuscator extends ServerTestSuiteNoDB {
                + "6331101999990017");
     }
 
+    @Test(groups = "fast")
+    public void testQueryParametersAreObfuscated() throws Exception {
+        final ILoggingEvent event = Mockito.mock(ILoggingEvent.class);
+        Mockito.when(event.getLoggerName()).thenReturn(Obfuscator.LOGGING_FILTER_NAME);
+
+        // Check the query parameters are obfuscated (see TestPatternObfuscator#testProfilingHeaderIsNotObfuscated)
+        // TODO Pierre: Obfuscate the Authorization and X-Killbill-ApiSecret headers?
+        verify("1 * Server in-bound request\n" +
+               "1 > POST http://127.0.0.1:8080/1.0/kb/accounts/2a55045a-ce1d-4344-942d-b825536328f9/payments?pluginProperty=cc_number=4111111111111111\n" +
+               "1 > X-Killbill-ApiSecret: lazar\n" +
+               "1 > Authorization: Basic YWRtaW46cGFzc3dvcmQ=\n" +
+               "1 > X-Killbill-CreatedBy: admin\n" +
+               "1 > Host: 127.0.0.1:8080\n" +
+               "1 > Content-Length: 62\n" +
+               "1 > User-Agent: curl/7.30.0\n" +
+               "1 > X-Killbill-Profiling-Req: DAO\n" +
+               "1 > X-Killbill-ApiKey: bob\n" +
+               "1 > Content-Type: application/json\n" +
+               "1 > Accept: */*",
+               "1 * Server in-bound request\n" +
+               "1 > POST http://127.0.0.1:8080/1.0/kb/accounts/2a55045a-ce1d-4344-942d-b825536328f9/payments?pluginProperty=cc_number=***MASKED***1111\n" +
+               "1 > X-Killbill-ApiSecret: lazar\n" +
+               "1 > Authorization: Basic YWRtaW46cGFzc3dvcmQ=\n" +
+               "1 > X-Killbill-CreatedBy: admin\n" +
+               "1 > Host: 127.0.0.1:8080\n" +
+               "1 > Content-Length: 62\n" +
+               "1 > User-Agent: curl/7.30.0\n" +
+               "1 > X-Killbill-Profiling-Req: DAO\n" +
+               "1 > X-Killbill-ApiKey: bob\n" +
+               "1 > Content-Type: application/json\n" +
+               "1 > Accept: */*",
+               event);
+    }
+
     private void verify(final String input, final String output) {
-        final String obfuscated = obfuscator.obfuscate(input);
+        verify(input, output, Mockito.mock(ILoggingEvent.class));
+    }
+
+    private void verify(final String input, final String output, final ILoggingEvent event) {
+        final String obfuscated = obfuscator.obfuscate(input, event);
         Assert.assertEquals(obfuscated, output, obfuscated);
     }
 }

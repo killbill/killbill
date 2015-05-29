@@ -18,8 +18,11 @@
 package org.killbill.billing.server.log.obfuscators;
 
 import org.killbill.billing.server.log.ServerTestSuiteNoDB;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import ch.qos.logback.classic.spi.ILoggingEvent;
 
 public class TestConfigMagicObfuscator extends ServerTestSuiteNoDB {
 
@@ -44,7 +47,7 @@ public class TestConfigMagicObfuscator extends ServerTestSuiteNoDB {
     }
 
     private void verify(final String input, final String output) {
-        final String obfuscated = obfuscator.obfuscate(input);
+        final String obfuscated = obfuscator.obfuscate(input, Mockito.mock(ILoggingEvent.class));
         Assert.assertEquals(obfuscated, output, obfuscated);
     }
 }

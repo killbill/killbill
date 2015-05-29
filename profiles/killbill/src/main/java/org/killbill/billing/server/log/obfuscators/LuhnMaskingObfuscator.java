@@ -17,6 +17,7 @@
 
 package org.killbill.billing.server.log.obfuscators;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.common.annotations.VisibleForTesting;
 
 /**
@@ -38,7 +39,7 @@ public class LuhnMaskingObfuscator extends Obfuscator {
     }
 
     @Override
-    public String obfuscate(final String originalString) {
+    public String obfuscate(final String originalString, final ILoggingEvent event) {
         return mask(originalString);
     }
 

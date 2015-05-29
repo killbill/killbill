@@ -53,7 +53,7 @@ public class ObfuscatorConverter extends ClassicConverter {
         String convertedMessage = event.getFormattedMessage();
         for (final Obfuscator obfuscator : obfuscators) {
             try {
-                convertedMessage = obfuscator.obfuscate(convertedMessage);
+                convertedMessage = obfuscator.obfuscate(convertedMessage, event);
             } catch (final RuntimeException e) {
                 // Ignore? Not sure the impact of importing a logger here
             }
