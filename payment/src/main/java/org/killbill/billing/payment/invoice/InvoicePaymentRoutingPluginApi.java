@@ -126,7 +126,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
             case REFUND:
                 return getPluginRefundResult(paymentRoutingContext, internalContext);
             case CHARGEBACK:
-                return new DefaultPriorPaymentRoutingResult(false, paymentRoutingContext.getAmount(), null, null);
+                return new DefaultPriorPaymentRoutingResult(false, paymentRoutingContext.getAmount());
             default:
                 throw new IllegalStateException("Unexpected transactionType " + transactionType);
         }
@@ -244,7 +244,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
                                                      " aborted : invoice balance is = " + invoice.getBalance() +
                                                      ", requested payment amount is = " + paymentRoutingPluginContext.getAmount());
             } else {
-                return new DefaultPriorPaymentRoutingResult(isAborted, requestedAmount, null, null);
+                return new DefaultPriorPaymentRoutingResult(isAborted, requestedAmount);
             }
         } catch (final InvoiceApiException e) {
             throw new PaymentRoutingApiException(e);
@@ -277,7 +277,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
                                                  " aborted : invoice item sum amount is " + amountToBeRefunded +
                                                  ", requested refund amount is = " + paymentRoutingPluginContext.getAmount());
         } else {
-            return new DefaultPriorPaymentRoutingResult(isAborted, amountToBeRefunded, null, null);
+            return new DefaultPriorPaymentRoutingResult(isAborted, amountToBeRefunded);
         }
     }
 
@@ -450,8 +450,8 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
             inputAmount != null &&
             invoice.getBalance().compareTo(inputAmount) < 0) {
             log.info("Invoice " + invoice.getId() +
-                        " has a balance of " + invoice.getBalance().floatValue() +
-                        " less than retry payment amount of " + inputAmount.floatValue());
+                     " has a balance of " + invoice.getBalance().floatValue() +
+                     " less than retry payment amount of " + inputAmount.floatValue());
             return BigDecimal.ZERO;
         }
         if (inputAmount == null) {

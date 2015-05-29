@@ -203,6 +203,9 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
         if (pluginResult.getAdjustedPaymentMethodId() != null) {
             input.setPaymentMethodId(pluginResult.getAdjustedPaymentMethodId());
         }
+        if (pluginResult.getAdjustedPluginProperties() != null) {
+            input.setProperties(pluginResult.getAdjustedPluginProperties());
+        }
     }
 
     private OperationResult getOperationResultOnException(final PaymentStateContext paymentStateContext) {
@@ -237,7 +240,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
                                                                           paymentStateContext.getTransactionType(),
                                                                           prevResult.getAdjustedAmount() != null ? prevResult.getAdjustedAmount() : inputPaymentRoutingContext.getAmount(),
                                                                           prevResult.getAdjustedCurrency() != null ? prevResult.getAdjustedCurrency() : inputPaymentRoutingContext.getCurrency(),
-                                                                          paymentStateContext.getProperties(),
+                                                                          prevResult.getAdjustedPluginProperties() != null ? prevResult.getAdjustedPluginProperties() : inputPaymentRoutingContext.getPluginProperties(),
                                                                           retryablePaymentStateContext.isApiPayment(),
                                                                           paymentStateContext.callContext);
 

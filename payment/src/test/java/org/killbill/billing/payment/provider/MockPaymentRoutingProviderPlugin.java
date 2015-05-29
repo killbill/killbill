@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -45,17 +46,17 @@ public class MockPaymentRoutingProviderPlugin implements PaymentRoutingPluginApi
     }
 
     @Override
-    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
-        return new DefaultPriorPaymentRoutingResult(isAborted, null, null, null);
+    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        return new DefaultPriorPaymentRoutingResult(isAborted);
     }
 
     @Override
-    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
         return null;
     }
 
     @Override
-    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
         return new DefaultFailureCallResult(nextRetryDate);
     }
 }

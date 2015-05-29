@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -31,17 +32,17 @@ public class DefaultPaymentRoutingProviderPlugin implements PaymentRoutingPlugin
     public static final String PLUGIN_NAME = "__DEFAULT_PAYMENT_CONTROL__";
 
     @Override
-    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentControlContext, Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
-        return new DefaultPriorPaymentRoutingResult(false, null, null, null);
+    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        return new DefaultPriorPaymentRoutingResult(false);
     }
 
     @Override
-    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentControlContext, Iterable<PluginProperty> properties) {
+    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) {
         return null;
     }
 
     @Override
-    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentControlContext, Iterable<PluginProperty> properties) {
+    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) {
         return new DefaultFailureCallResult(null);
     }
 }
