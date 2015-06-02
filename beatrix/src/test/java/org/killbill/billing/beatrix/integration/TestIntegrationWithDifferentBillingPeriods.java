@@ -317,4 +317,58 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
 
         checkNoMoreInvoiceToGenerate(account);
     }
+
+
+    @Test(groups = "slow")
+    public void testChangeAnnualToAnnual() throws Exception {
+
+        //
+        // Initialize test 'startDate' with 2014-12-2 with an account BCD  set to the 1st (in such a way that at the end of the 30 days TRIAL,
+        // recurring phase starts on 2015-01-01 and we invoice for a full year from 2015-01-01 to 2016-01-01
+        //
+        final LocalDate startDate = new LocalDate(2014, 12, 2);
+        final int accountBCD = 1;
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(accountBCD));
+
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDeltaFromReality(startDate.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        // Create subscription and check we get the initial invoice for the 30 days TRIAL
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
+
+        // Move out of TRIAL and verify we invioice for a full year
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        assertEquals(invoices.size(), 2);
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2015, 1, 1), new LocalDate(2016, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+        //
+        // Move to 2015-3-15 (somehow arbitrary date) and upgrade to another ANNUAL plan
+        // We verify that we will invoice for the longest possible period in such a way that:
+        // - We keep the same billing cycle day (1st)
+        // - We invoice for *up to* a full year (but no more)
+        //
+        clock.addDays(73);
+
+        changeEntitlementAndCheckForCompletion(bpEntitlement, "Assault-Rifle", BillingPeriod.ANNUAL, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE,  NextEvent.PAYMENT);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        assertEquals(invoices.size(), 3);
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2015, 3, 15), new LocalDate(2016, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("5770.44")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2015, 3, 15), new LocalDate(2016, 1, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-1919.96")));
+        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
+
+
+        checkNoMoreInvoiceToGenerate(account);
+    }
+
 }
