@@ -20,9 +20,9 @@
 
     <stateMachines>
         <stateMachine name="BIG_BANG">
-        <states>
-            <state name="BIG_BANG_INIT"/>
-        </states>
+            <states>
+                <state name="BIG_BANG_INIT"/>
+            </states>
             <transitions>
                 <transition>
                     <initialState>BIG_BANG_INIT</initialState>
@@ -277,12 +277,12 @@
             </operations>
         </stateMachine>
         <stateMachine name="CHARGEBACK">
-        <states>
-            <state name="CHARGEBACK_INIT"/>
-            <state name="CHARGEBACK_SUCCESS"/>
-            <state name="CHARGEBACK_FAILED"/>
-            <state name="CHARGEBACK_ERRORED"/>
-        </states>
+            <states>
+                <state name="CHARGEBACK_INIT"/>
+                <state name="CHARGEBACK_SUCCESS"/>
+                <state name="CHARGEBACK_FAILED"/>
+                <state name="CHARGEBACK_ERRORED"/>
+            </states>
             <transitions>
                 <transition>
                     <initialState>CHARGEBACK_INIT</initialState>
