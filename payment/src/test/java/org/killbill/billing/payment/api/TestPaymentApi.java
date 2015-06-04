@@ -40,6 +40,7 @@ import org.killbill.billing.routing.plugin.api.PaymentRoutingApiException;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -64,7 +65,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     private Account account;
 
-    @BeforeClass(groups = "slow")
+    @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
