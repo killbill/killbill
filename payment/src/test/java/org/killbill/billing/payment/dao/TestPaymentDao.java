@@ -452,7 +452,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         paymentDao.insertPaymentWithFirstTransaction(paymentModelDao5, transaction5, context5);
 
         final String[] errorStates = {"AUTH_ERRORED", "CAPTURE_ERRORED", "REFUND_ERRORED", "CREDIT_ERRORED"};
-        final List<PaymentModelDao> result = paymentDao.getPaymentsByStates(errorStates, createdBeforeDate, createdAfterDate, 10, internalCallContext);
+        final List<PaymentModelDao> result = paymentDao.getPaymentsByStatesAcrossTenants(errorStates, createdBeforeDate, createdAfterDate, 10);
         assertEquals(result.size(), 2);
     }
 

@@ -74,7 +74,7 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
         // We want to avoid iterating on the same failed payments -- if for some reasons they can't fix themselves.
         final DateTime createdAfterDate = clock.getUTCNow().minusDays(OLDER_PAYMENTS_IN_DAYS);
 
-        final List<PaymentModelDao> result = paymentDao.getPaymentsByStates(paymentStateMachineHelper.getErroredStateNames(), createdBeforeDate, createdAfterDate, MAX_ITEMS_PER_LOOP, completionTaskCallContext);
+        final List<PaymentModelDao> result = paymentDao.getPaymentsByStatesAcrossTenants(paymentStateMachineHelper.getErroredStateNames(), createdBeforeDate, createdAfterDate, MAX_ITEMS_PER_LOOP);
         if (!result.isEmpty()) {
             log.info("Janitor ErroredPaymentTask start run: found {} errored/unknown payments", result.size());
         }

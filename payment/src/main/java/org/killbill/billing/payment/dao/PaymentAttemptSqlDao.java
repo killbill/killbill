@@ -50,8 +50,7 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDa
                                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentAttemptModelDao> getByStateName(@Bind("stateName") final String stateName,
-                                                @Bind("createdBeforeDate") final Date createdBeforeDate,
-                                                @BindBean final InternalTenantContext context);
+    List<PaymentAttemptModelDao> getByStateNameAcrossTenants(@Bind("stateName") final String stateName,
+                                                             @Bind("createdBeforeDate") final Date createdBeforeDate);
 
 }
