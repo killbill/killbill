@@ -80,11 +80,11 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
         final Throwable realException = Objects.firstNonNull(e.getCause(), e);
         if (e.getCause() instanceof PaymentApiException) {
             logger.warn("Unsuccessful plugin call for account {}", paymentStateContext.getAccount().getExternalKey(), realException);
-            return new OperationException(realException, OperationResult.FAILURE);
+            return new OperationException(realException, OperationResult.EXCEPTION);
         } else if (e.getCause() instanceof LockFailedException) {
             final String format = String.format("Failed to lock account %s", paymentStateContext.getAccount().getExternalKey());
             logger.error(String.format(format));
-            return new OperationException(realException, OperationResult.FAILURE);
+            return new OperationException(realException, OperationResult.EXCEPTION);
         } else /* if (e instanceof RuntimeException) */ {
             logger.warn("Plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), e);
             return new OperationException(realException, OperationResult.EXCEPTION);
@@ -153,7 +153,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
         try {
             return doOperation();
         } catch (final PaymentApiException e) {
-            throw new OperationException(e, OperationResult.FAILURE);
+            throw new OperationException(e, OperationResult.EXCEPTION);
         } catch (final RuntimeException e) {
             throw new OperationException(e, OperationResult.EXCEPTION);
         }
@@ -206,7 +206,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
 
     private OperationResult processPaymentInfoPlugin() {
         if (paymentStateContext.getPaymentInfoPlugin() == null || paymentStateContext.getPaymentInfoPlugin().getStatus() == null) {
-            return OperationResult.FAILURE;
+            return OperationResult.EXCEPTION;
         }
 
         switch (paymentStateContext.getPaymentInfoPlugin().getStatus()) {
@@ -215,9 +215,10 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
             case PENDING:
                 return OperationResult.PENDING;
             case ERROR:
+                return OperationResult.FAILURE;
             case UNDEFINED:
             default:
-                return OperationResult.FAILURE;
+                return OperationResult.EXCEPTION;
         }
     }
 
