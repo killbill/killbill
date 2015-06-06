@@ -319,7 +319,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testPaymentByStates() {
+    public void testPaymentByStatesAcrossTenants() {
 
         final UUID paymentMethodId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
@@ -350,8 +350,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                        "unknown", "");
 
-        final InternalCallContext context1 = new InternalCallContext(internalCallContext.getTenantRecordId(),
-                                                                     internalCallContext.getAccountRecordId(),
+        final InternalCallContext context1 = new InternalCallContext(1L,
+                                                                     1L,
                                                                      internalCallContext.getUserToken(),
                                                                      internalCallContext.getCreatedBy(),
                                                                      internalCallContext.getCallOrigin(),
@@ -372,8 +372,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                        "unknown", "");
 
-        final InternalCallContext context2 = new InternalCallContext(internalCallContext.getTenantRecordId(),
-                                                                     internalCallContext.getAccountRecordId(),
+        final InternalCallContext context2 = new InternalCallContext(2L,
+                                                                     2L,
                                                                      internalCallContext.getUserToken(),
                                                                      internalCallContext.getCreatedBy(),
                                                                      internalCallContext.getCallOrigin(),
@@ -393,8 +393,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                        "unknown", "");
 
-        final InternalCallContext context3 = new InternalCallContext(internalCallContext.getTenantRecordId(),
-                                                                     internalCallContext.getAccountRecordId(),
+        final InternalCallContext context3 = new InternalCallContext(3L,
+                                                                     3L,
                                                                      internalCallContext.getUserToken(),
                                                                      internalCallContext.getCreatedBy(),
                                                                      internalCallContext.getCallOrigin(),
@@ -416,8 +416,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                        "unknown", "");
 
-        final InternalCallContext context4 = new InternalCallContext(internalCallContext.getTenantRecordId(),
-                                                                     internalCallContext.getAccountRecordId(),
+        final InternalCallContext context4 = new InternalCallContext(4L,
+                                                                     4L,
                                                                      internalCallContext.getUserToken(),
                                                                      internalCallContext.getCreatedBy(),
                                                                      internalCallContext.getCallOrigin(),
@@ -438,8 +438,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                        "unknown", "");
 
-        final InternalCallContext context5 = new InternalCallContext(internalCallContext.getTenantRecordId(),
-                                                                     internalCallContext.getAccountRecordId(),
+        final InternalCallContext context5 = new InternalCallContext(5L,
+                                                                     5L,
                                                                      internalCallContext.getUserToken(),
                                                                      internalCallContext.getCreatedBy(),
                                                                      internalCallContext.getCallOrigin(),
@@ -455,6 +455,63 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final List<PaymentModelDao> result = paymentDao.getPaymentsByStatesAcrossTenants(errorStates, createdBeforeDate, createdAfterDate, 10);
         assertEquals(result.size(), 2);
     }
+
+    @Test(groups = "slow")
+    public void testPaymentAttemptsByStateAcrossTenants() {
+
+        final UUID paymentMethodId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
+        final String externalKey1 = "gfhfg";
+        final String transactionExternalKey1 = "sadas";
+
+        final String externalKey2 = "asdwqeqw";
+        final String transactionExternalKey2 = "fghfg";
+
+        final DateTime createdAfterDate = clock.getUTCNow().minusDays(10);
+        final DateTime createdBeforeDate = clock.getUTCNow().minusDays(1);
+
+        final String stateName = "FOO";
+        final String pluginName = "miraculous";
+
+        final PaymentAttemptModelDao attempt1 = new PaymentAttemptModelDao(accountId, paymentMethodId, createdAfterDate, createdAfterDate, externalKey1,
+                                                                     UUID.randomUUID(), transactionExternalKey1, TransactionType.AUTHORIZE, stateName, BigDecimal.ONE, Currency.USD,
+                                                                     ImmutableList.<String>of(pluginName), null);
+
+
+        final PaymentAttemptModelDao attempt2 = new PaymentAttemptModelDao(accountId, paymentMethodId, createdAfterDate, createdAfterDate, externalKey2,
+                                                                     UUID.randomUUID(), transactionExternalKey2, TransactionType.AUTHORIZE, stateName, BigDecimal.ONE, Currency.USD,
+                                                                     ImmutableList.<String>of(pluginName), null);
+
+        final InternalCallContext context1 = new InternalCallContext(1L,
+                                                                     1L,
+                                                                     internalCallContext.getUserToken(),
+                                                                     internalCallContext.getCreatedBy(),
+                                                                     internalCallContext.getCallOrigin(),
+                                                                     internalCallContext.getContextUserType(),
+                                                                     internalCallContext.getReasonCode(),
+                                                                     internalCallContext.getComments(),
+                                                                     createdAfterDate,
+                                                                     createdAfterDate);
+        paymentDao.insertPaymentAttemptWithProperties(attempt1, context1);
+
+
+        final InternalCallContext context2 = new InternalCallContext(2L,
+                                                                     2L,
+                                                                     internalCallContext.getUserToken(),
+                                                                     internalCallContext.getCreatedBy(),
+                                                                     internalCallContext.getCallOrigin(),
+                                                                     internalCallContext.getContextUserType(),
+                                                                     internalCallContext.getReasonCode(),
+                                                                     internalCallContext.getComments(),
+                                                                     createdAfterDate,
+                                                                     createdAfterDate);
+        paymentDao.insertPaymentAttemptWithProperties(attempt2, context2);
+
+
+        final List<PaymentAttemptModelDao> result = paymentDao.getPaymentAttemptsByStateAcrossTenants(stateName, createdBeforeDate);
+        Assert.assertEquals(result.size(), 2);
+    }
+
 
     private List<PaymentTransactionModelDao> getPendingTransactions(final UUID paymentId) {
         final List<PaymentTransactionModelDao> total = paymentDao.getTransactionsForPayment(paymentId, internalCallContext);
