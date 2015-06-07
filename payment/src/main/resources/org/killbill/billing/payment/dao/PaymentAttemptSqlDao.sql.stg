@@ -65,7 +65,7 @@ where payment_external_key = :paymentExternalKey
 >>
 
 /* Does not include tenant info, global */
-getByStateName() ::= <<
+getByStateNameAcrossTenants() ::= <<
 select
 <allTableFields("")>
 from <tableName()>

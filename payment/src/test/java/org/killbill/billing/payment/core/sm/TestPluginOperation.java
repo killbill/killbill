@@ -81,7 +81,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
             pluginOperation.dispatchWithAccountLockAndTimeout(callback);
             Assert.fail();
         } catch (final OperationException e) {
-            Assert.assertEquals(e.getOperationResult(), OperationResult.FAILURE);
+            Assert.assertEquals(e.getOperationResult(), OperationResult.EXCEPTION);
             Assert.assertTrue(e.getCause() instanceof PaymentApiException);
         }
     }

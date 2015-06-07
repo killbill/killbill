@@ -105,7 +105,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentAttemptModelDao> getPaymentAttemptsByState(final String stateName, final DateTime createdBeforeDate, final InternalTenantContext context) {
+    public List<PaymentAttemptModelDao> getPaymentAttemptsByStateAcrossTenants(final String stateName, final DateTime createdBeforeDate) {
         return null;
     }
 
@@ -244,7 +244,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentModelDao> getPaymentsByStates(final String[] states, final DateTime createdBeforeDate, final DateTime createdAfterDate, final int limit, final InternalTenantContext context) {
+    public List<PaymentModelDao> getPaymentsByStatesAcrossTenants(final String[] states, final DateTime createdBeforeDate, final DateTime createdAfterDate, final int limit) {
         return null;
     }
 

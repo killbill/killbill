@@ -30,13 +30,13 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface PaymentDao {
 
-    public int failOldPendingTransactions(TransactionStatus newTransactionStatus, DateTime createdBeforeDate, InternalCallContext context);
+    public int failOldPendingTransactions(TransactionStatus newTransactionStatus, DateTime createdBeforeDate, InternalCallContext internalCallContextTemplate);
 
     public PaymentAttemptModelDao insertPaymentAttemptWithProperties(PaymentAttemptModelDao attempt, InternalCallContext context);
 
     public void updatePaymentAttempt(UUID paymentAttemptId, UUID transactionId, String state, InternalCallContext context);
 
-    public List<PaymentAttemptModelDao> getPaymentAttemptsByState(String stateName, DateTime createdBeforeDate, InternalTenantContext context);
+    public List<PaymentAttemptModelDao> getPaymentAttemptsByStateAcrossTenants(String stateName, DateTime createdBeforeDate);
 
     public List<PaymentAttemptModelDao> getPaymentAttempts(String paymentExternalKey, InternalTenantContext context);
 
@@ -64,7 +64,7 @@ public interface PaymentDao {
 
     public List<PaymentModelDao> getPaymentsForAccount(UUID accountId, InternalTenantContext context);
 
-    public List<PaymentModelDao> getPaymentsByStates(String [] states, DateTime createdBeforeDate, DateTime createdAfterDate, int limit, InternalTenantContext context);
+    public List<PaymentModelDao> getPaymentsByStatesAcrossTenants(String[] states, DateTime createdBeforeDate, DateTime createdAfterDate, int limit);
 
     public List<PaymentTransactionModelDao> getTransactionsForAccount(UUID accountId, InternalTenantContext context);
 

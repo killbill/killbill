@@ -102,7 +102,7 @@ where pm.plugin_name = :pluginName
 ;
 >>
 
-getPaymentsByStates(states) ::= <<
+getPaymentsByStatesAcrossTenants(states) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t

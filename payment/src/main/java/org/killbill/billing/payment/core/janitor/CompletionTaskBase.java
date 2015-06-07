@@ -52,7 +52,6 @@ abstract class CompletionTaskBase<T> implements Runnable {
     protected final PaymentConfig paymentConfig;
     protected final Clock clock;
     protected final PaymentDao paymentDao;
-    protected final InternalCallContext completionTaskCallContext;
     protected final InternalCallContextFactory internalCallContextFactory;
     protected final PaymentStateMachineHelper paymentStateMachineHelper;
     protected final RetryStateMachineHelper retrySMHelper;
@@ -76,7 +75,6 @@ abstract class CompletionTaskBase<T> implements Runnable {
         this.pluginRegistry = pluginRegistry;
         // Limit the length of the username in the context (limited to 50 characters)
         this.taskName = this.getClass().getSimpleName();
-        this.completionTaskCallContext = internalCallContextFactory.createInternalCallContext((Long) null, (Long) null, taskName, CallOrigin.INTERNAL, UserType.SYSTEM, UUIDs.randomUUID());
     }
 
     @Override

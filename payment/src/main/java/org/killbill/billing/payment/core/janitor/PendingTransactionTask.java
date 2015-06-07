@@ -20,6 +20,7 @@ package org.killbill.billing.payment.core.janitor;
 import java.util.List;
 
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
@@ -27,7 +28,10 @@ import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
+import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.clock.Clock;
 
@@ -55,9 +59,8 @@ final class PendingTransactionTask extends CompletionTaskBase<Integer> {
 
     @Override
     public void doIteration(final Integer item) {
-
-        // TODO this is needs to be fixed see- #230
-        int result = paymentDao.failOldPendingTransactions(TransactionStatus.PLUGIN_FAILURE, getCreatedDateBefore(), completionTaskCallContext);
+        final InternalCallContext contextTemplate = internalCallContextFactory.createInternalCallContext((Long) null, (Long) null, "PendingTransactionTask", CallOrigin.INTERNAL, UserType.SYSTEM, UUIDs.randomUUID());
+        int result = paymentDao.failOldPendingTransactions(TransactionStatus.PLUGIN_FAILURE, getCreatedDateBefore(), contextTemplate);
         if (result > 0) {
             log.info("Janitor PendingTransactionTask moved " + result + " PENDING payments ->  PLUGIN_FAILURE");
         }
