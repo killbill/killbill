@@ -62,9 +62,6 @@ public class JDBCSessionDao extends CachingSessionDAO {
                 final DateTime lastAccessTime = new DateTime(session.getLastAccessTime(), DateTimeZone.UTC);
                 final Long sessionId = Long.valueOf(session.getId().toString());
                 jdbcSessionSqlDao.updateLastAccessTime(lastAccessTime, sessionId);
-            } else if (session instanceof SimpleSession) {
-                // Hack to override the value in the cache so subsequent requests see the (stale) value on disk
-                ((SimpleSession) session).setLastAccessTime(previousSession.getLastAccessTime());
             }
         } else {
             // Various fields were changed, update the full row
