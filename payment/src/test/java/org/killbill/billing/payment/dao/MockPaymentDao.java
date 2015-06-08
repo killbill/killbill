@@ -64,15 +64,13 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public int failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalCallContext context) {
-        int result = 0;
-        synchronized (transactions) {
-            for (PaymentTransactionModelDao cur : transactions.values()) {
-                cur.setTransactionStatus(newTransactionStatus);
-                result++;
+    public List<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(final TransactionStatus transactionStatus, final DateTime createdBeforeDate) {
+        return ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionStatus() == transactionStatus;
             }
-        }
-        return result;
+        }));
     }
 
     @Override

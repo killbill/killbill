@@ -21,48 +21,52 @@ import java.util.List;
 
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.dao.PaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
-import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.clock.Clock;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * Task to find old PENDING transactions and move them into
  */
-final class PendingTransactionTask extends CompletionTaskBase<Integer> {
-
-    private final List<Integer> itemsForIterations;
+final class PendingTransactionTask extends CompletionTaskBase<PaymentTransactionModelDao> {
 
     public PendingTransactionTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                                   final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
                                   final RetryStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
                                   final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         super(janitor, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
-        this.itemsForIterations = ImmutableList.of(new Integer(1));
     }
 
     @Override
-    public List<Integer> getItemsForIteration() {
-        return itemsForIterations;
+    public List<PaymentTransactionModelDao> getItemsForIteration() {
+        return paymentDao.getByTransactionStatusPriorDateAcrossTenants(TransactionStatus.PENDING, getCreatedDateBefore());
     }
 
     @Override
-    public void doIteration(final Integer item) {
-        final InternalCallContext contextTemplate = internalCallContextFactory.createInternalCallContext((Long) null, (Long) null, "PendingTransactionTask", CallOrigin.INTERNAL, UserType.SYSTEM, UUIDs.randomUUID());
-        int result = paymentDao.failOldPendingTransactions(TransactionStatus.PLUGIN_FAILURE, getCreatedDateBefore(), contextTemplate);
-        if (result > 0) {
-            log.info("Janitor PendingTransactionTask moved " + result + " PENDING payments ->  PLUGIN_FAILURE");
-        }
+    public void doIteration(final PaymentTransactionModelDao paymentTransaction) {
+
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(paymentTransaction.getTenantRecordId(), paymentTransaction.getAccountRecordId());
+        final CallContext callContext = createCallContext("PendingTransactionTask", internalTenantContext);
+        final PaymentModelDao payment = paymentDao.getPayment(paymentTransaction.getPaymentId(), internalTenantContext);
+
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(payment.getAccountId(), callContext);
+
+        final String newPaymentState = paymentStateMachineHelper.getFailureStateForTransaction(paymentTransaction.getTransactionType());
+        paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, payment.getLastSuccessStateName(),
+                                                           paymentTransaction.getId(), TransactionStatus.PAYMENT_FAILURE, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
+                                                           paymentTransaction.getGatewayErrorCode(), paymentTransaction.getGatewayErrorMsg(), internalCallContext);
+
+        log.info("Janitor PendingTransactionTask repairing payment {}, transaction {}", payment.getId(), paymentTransaction.getId());
     }
 }

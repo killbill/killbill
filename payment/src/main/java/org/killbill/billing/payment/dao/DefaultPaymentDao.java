@@ -156,43 +156,16 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public int failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalCallContext internalCallContextTemplate) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Integer>() {
+    public List<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(final TransactionStatus transactionStatus, final DateTime createdBeforeDate) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentTransactionModelDao>>() {
             @Override
-            public Integer inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+            public List<PaymentTransactionModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TransactionSqlDao transactional = entitySqlDaoWrapperFactory.become(TransactionSqlDao.class);
-                final List<PaymentTransactionModelDao> oldPendingTransactions = transactional.getByTransactionStatusPriorDateAcrossTenants(TransactionStatus.PENDING.toString(), createdBeforeDate.toDate());
-                if (oldPendingTransactions.size() > 0) {
-
-                    // Partition per tenant to compute a valid context
-                    final Map<Long, List<PaymentTransactionModelDao>> perTenantPendingTransactions = new HashMap<Long, List<PaymentTransactionModelDao>>();
-                    for (PaymentTransactionModelDao curPaymentTransactionModelDao : oldPendingTransactions) {
-                        List<PaymentTransactionModelDao> pendingTransactions = perTenantPendingTransactions.get(curPaymentTransactionModelDao.getTenantRecordId());
-                        if (pendingTransactions == null) {
-                            pendingTransactions = new LinkedList<PaymentTransactionModelDao>();
-                            perTenantPendingTransactions.put(curPaymentTransactionModelDao.getTenantRecordId(), pendingTransactions);
-                        }
-                        pendingTransactions.add(curPaymentTransactionModelDao);
-                    }
-
-                    int result = 0;
-                    for (final Long curTenantRecordId : perTenantPendingTransactions.keySet()) {
-                        final InternalCallContext validContext = new InternalCallContext(internalCallContextTemplate, -1L, curTenantRecordId);
-                        final Collection<String> perTenantPendingTransactionIds = Collections2.transform(perTenantPendingTransactions.get(curTenantRecordId), new Function<PaymentTransactionModelDao, String>() {
-                            @Nullable
-                            @Override
-                            public String apply(@Nullable final PaymentTransactionModelDao input) {
-                                return input.getId().toString();
-                            }
-                        });
-                        result += transactional.failOldPendingTransactions(perTenantPendingTransactionIds, TransactionStatus.PAYMENT_FAILURE.toString(), validContext);
-                    }
-                    return result;
-                }
-                return 0;
+                return transactional.getByTransactionStatusPriorDateAcrossTenants(transactionStatus.toString(), createdBeforeDate.toDate());
             }
         });
     }
+
 
     @Override
     public List<PaymentTransactionModelDao> getPaymentTransactionsByExternalKey(final String transactionExternalKey, final InternalTenantContext context) {

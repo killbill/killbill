@@ -92,11 +92,3 @@ and created_date \< :beforeCreatedDate
 >>
 
 
-failOldPendingTransactions(ids) ::= <<
-update <tableName()>
-set transaction_status = :newTransactionStatus
-, updated_by = :updatedBy
-, updated_date = :createdDate
-where <idField("")> in (<ids: {id | :id_<i0>}; separator="," >)
-;
->>

@@ -56,12 +56,6 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
     List<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(@Bind("transactionStatus") final String transactionStatus,
                                                                                   @Bind("beforeCreatedDate") final Date beforeCreatedDate);
 
-    @SqlUpdate
-    @Audited(ChangeType.UPDATE)
-    int failOldPendingTransactions(@UUIDCollectionBinder final Collection<String> pendingTransactionIds,
-                                    @Bind("newTransactionStatus") final String newTransactionStatus,
-                                    @BindBean final InternalCallContext context);
-
     @SqlQuery
     public List<PaymentTransactionModelDao> getByPaymentId(@Bind("paymentId") final UUID paymentId,
                                                            @BindBean final InternalTenantContext context);

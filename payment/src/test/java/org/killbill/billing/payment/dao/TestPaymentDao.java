@@ -267,7 +267,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
                                                                                        "pending", "");
 
-        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, transaction1, internalCallContext);
+        final PaymentModelDao payment  = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, transaction1, internalCallContext);
 
         final PaymentTransactionModelDao transaction2 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey2,
                                                                                        paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
@@ -299,7 +299,13 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final List<PaymentTransactionModelDao> result = getPendingTransactions(paymentModelDao.getId());
         Assert.assertEquals(result.size(), 3);
 
-        paymentDao.failOldPendingTransactions(TransactionStatus.PAYMENT_FAILURE, newTime, internalCallContext);
+        final List<PaymentTransactionModelDao> transactions1 = paymentDao.getByTransactionStatusPriorDateAcrossTenants(TransactionStatus.PENDING, newTime);
+        for (PaymentTransactionModelDao paymentTransaction : transactions1) {
+            final String newPaymentState = "XXX_FAILED";
+            paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, payment.getLastSuccessStateName(),
+                                                               paymentTransaction.getId(), TransactionStatus.PAYMENT_FAILURE, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
+                                                               paymentTransaction.getGatewayErrorCode(), paymentTransaction.getGatewayErrorMsg(), internalCallContext);
+        }
 
         final List<PaymentTransactionModelDao> result2 = getPendingTransactions(paymentModelDao.getId());
         Assert.assertEquals(result2.size(), 1);
@@ -311,7 +317,13 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         }
         ;
 
-        paymentDao.failOldPendingTransactions(TransactionStatus.PAYMENT_FAILURE, clock.getUTCNow(), internalCallContextWithNewTime);
+        final List<PaymentTransactionModelDao> transactions2 = paymentDao.getByTransactionStatusPriorDateAcrossTenants(TransactionStatus.PENDING, clock.getUTCNow());
+        for (PaymentTransactionModelDao paymentTransaction : transactions2) {
+            final String newPaymentState = "XXX_FAILED";
+            paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, payment.getLastSuccessStateName(),
+                                                               paymentTransaction.getId(), TransactionStatus.PAYMENT_FAILURE, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
+                                                               paymentTransaction.getGatewayErrorCode(), paymentTransaction.getGatewayErrorMsg(), internalCallContext);
+        }
 
         final List<PaymentTransactionModelDao> result3 = getPendingTransactions(paymentModelDao.getId());
         Assert.assertEquals(result3.size(), 0);
