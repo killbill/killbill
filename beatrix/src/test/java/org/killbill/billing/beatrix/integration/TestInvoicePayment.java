@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertTrue;
 
-public class TestPayment extends TestIntegrationBase {
+public class TestInvoicePayment extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testPartialPayments() throws Exception {

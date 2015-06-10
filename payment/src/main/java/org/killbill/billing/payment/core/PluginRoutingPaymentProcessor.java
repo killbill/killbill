@@ -135,7 +135,7 @@ public class PluginRoutingPaymentProcessor extends ProcessorBase {
     }
 
     public Payment createVoid(final boolean isApiPayment, final Account account, final UUID paymentId, final String transactionExternalKey,
-                              final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                              final Iterable<PluginProperty> properties, final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
                                                           TransactionType.VOID,
                                                           account,
@@ -146,7 +146,7 @@ public class PluginRoutingPaymentProcessor extends ProcessorBase {
                                                           null,
                                                           null,
                                                           properties,
-                                                          null,
+                                                          paymentControlPluginNames,
                                                           callContext, internalCallContext);
     }
 
@@ -183,9 +183,9 @@ public class PluginRoutingPaymentProcessor extends ProcessorBase {
                                                           callContext, internalCallContext);
     }
 
-    public Payment createChargeback(final Account account, final UUID paymentId, final String transactionExternalKey, final BigDecimal amount, final Currency currency,
+    public Payment createChargeback(final boolean isApiPayment, final Account account, final UUID paymentId, final String transactionExternalKey, final BigDecimal amount, final Currency currency,
                                     final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        return pluginControlledPaymentAutomatonRunner.run(true,
+        return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
                                                           TransactionType.CHARGEBACK,
                                                           account,
                                                           null,

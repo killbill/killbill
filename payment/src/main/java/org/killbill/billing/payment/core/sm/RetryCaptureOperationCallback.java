@@ -36,7 +36,7 @@ public class RetryCaptureOperationCallback extends RetryOperationCallback {
         return paymentProcessor.createCapture(retryablePaymentStateContext.isApiPayment(),
                                               retryablePaymentStateContext.getAttemptId(),
                                               retryablePaymentStateContext.getAccount(),
-                                              retryablePaymentStateContext.getPaymentMethodId(),
+                                              retryablePaymentStateContext.getPaymentId(),
                                               retryablePaymentStateContext.getAmount(),
                                               retryablePaymentStateContext.getCurrency(),
                                               retryablePaymentStateContext.getPaymentTransactionExternalKey(),
