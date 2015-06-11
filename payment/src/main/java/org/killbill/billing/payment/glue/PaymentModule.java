@@ -29,6 +29,8 @@ import javax.inject.Provider;
 import org.killbill.automaton.DefaultStateMachineConfig;
 import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.AdminPaymentApi;
+import org.killbill.billing.payment.api.DefaultAdminPaymentApi;
 import org.killbill.billing.payment.api.DefaultPaymentApi;
 import org.killbill.billing.payment.api.DefaultPaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentApi;
@@ -175,6 +177,7 @@ public class PaymentModule extends KillBillModule {
 
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(PaymentGatewayApi.class).to(DefaultPaymentGatewayApi.class).asEagerSingleton();
+        bind(AdminPaymentApi.class).to(DefaultAdminPaymentApi.class).asEagerSingleton();
         bind(InvoiceHandler.class).asEagerSingleton();
         bind(PaymentTagHandler.class).asEagerSingleton();
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();
