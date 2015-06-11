@@ -40,7 +40,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
-import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -64,7 +64,7 @@ public class PluginRoutingPaymentProcessor extends ProcessorBase {
     private static final Joiner JOINER = Joiner.on(", ");
 
     private final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
-    private final RetryStateMachineHelper retrySMHelper;
+    private final PaymentControlStateMachineHelper paymentControlStateMachineHelper;
 
     @Inject
     public PluginRoutingPaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
@@ -76,10 +76,10 @@ public class PluginRoutingPaymentProcessor extends ProcessorBase {
                                          @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                                          final InternalCallContextFactory internalCallContextFactory,
                                          final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
-                                         final RetryStateMachineHelper retrySMHelper,
+                                         final PaymentControlStateMachineHelper paymentControlStateMachineHelper,
                                          final Clock clock) {
         super(pluginRegistry, accountInternalApi, paymentDao, tagUserApi, locker, executor, internalCallContextFactory, invoiceApi, clock);
-        this.retrySMHelper = retrySMHelper;
+        this.paymentControlStateMachineHelper = paymentControlStateMachineHelper;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
     }
 
@@ -209,7 +209,7 @@ public class PluginRoutingPaymentProcessor extends ProcessorBase {
             final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), internalCallContext);
             final CallContext callContext = buildCallContext(internalCallContext);
 
-            final State state = retrySMHelper.getState(attempt.getStateName());
+            final State state = paymentControlStateMachineHelper.getState(attempt.getStateName());
             pluginControlledPaymentAutomatonRunner.run(state,
                                                        false,
                                                        attempt.getTransactionType(),

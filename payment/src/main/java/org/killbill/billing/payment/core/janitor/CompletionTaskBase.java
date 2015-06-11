@@ -18,17 +18,15 @@
 package org.killbill.billing.payment.core.janitor;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.DefaultCallContext;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
-import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.UUIDs;
@@ -54,14 +52,14 @@ abstract class CompletionTaskBase<T> implements Runnable {
     protected final PaymentDao paymentDao;
     protected final InternalCallContextFactory internalCallContextFactory;
     protected final PaymentStateMachineHelper paymentStateMachineHelper;
-    protected final RetryStateMachineHelper retrySMHelper;
+    protected final PaymentControlStateMachineHelper retrySMHelper;
     protected final AccountInternalApi accountInternalApi;
     protected final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
 
     public CompletionTaskBase(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                               final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
-                              final RetryStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
+                              final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
                               final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         this.janitor = janitor;
         this.internalCallContextFactory = internalCallContextFactory;

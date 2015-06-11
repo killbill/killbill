@@ -41,6 +41,7 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
+import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.MockPaymentDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -106,7 +107,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
     @Inject
     private PaymentStateMachineHelper paymentSMHelper;
     @Inject
-    private RetryStateMachineHelper retrySMHelper;
+    private PaymentControlStateMachineHelper retrySMHelper;
     @Inject
     private InternalCallContextFactory internalCallContextFactory;
 
@@ -123,7 +124,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
 
     private byte[] EMPTY_PROPERTIES;
     private MockRetryablePaymentAutomatonRunner runner;
-    private RetryablePaymentStateContext paymentStateContext;
+    private PaymentStateControlContext paymentStateContext;
     private MockRetryAuthorizeOperationCallback mockRetryAuthorizeOperationCallback;
     private PluginRoutingPaymentProcessor processor;
 
@@ -171,7 +172,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                 eventBus);
 
         paymentStateContext =
-                new RetryablePaymentStateContext(ImmutableList.<String>of(MockPaymentRoutingProviderPlugin.PLUGIN_NAME),
+                new PaymentStateControlContext(ImmutableList.<String>of(MockPaymentRoutingProviderPlugin.PLUGIN_NAME),
                                                  true,
                                                  null,
                                                  paymentExternalKey,

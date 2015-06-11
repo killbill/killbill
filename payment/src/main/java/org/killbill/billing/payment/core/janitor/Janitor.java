@@ -27,7 +27,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
-import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -63,7 +63,7 @@ public class Janitor {
                    final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                    @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
                    final PaymentStateMachineHelper paymentSMHelper,
-                   final RetryStateMachineHelper retrySMHelper,
+                   final PaymentControlStateMachineHelper retrySMHelper,
                    final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         this.janitorExecutor = janitorExecutor;
         this.paymentConfig = paymentConfig;

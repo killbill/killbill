@@ -29,8 +29,8 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
-import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
-import org.killbill.billing.payment.core.sm.RetryablePaymentStateContext;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
+import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -55,7 +55,7 @@ final class AttemptCompletionTask extends CompletionTaskBase<PaymentAttemptModel
 
     public AttemptCompletionTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                                  final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
-                                 final RetryStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
+                                 final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
                                  final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         super(janitor, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
     }
@@ -95,7 +95,7 @@ final class AttemptCompletionTask extends CompletionTaskBase<PaymentAttemptModel
 
             final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
             final boolean isApiPayment = true; // unclear
-            final RetryablePaymentStateContext paymentStateContext = new RetryablePaymentStateContext(attempt.toPaymentControlPluginNames(),
+            final PaymentStateControlContext paymentStateContext = new PaymentStateControlContext(attempt.toPaymentControlPluginNames(),
                                                                                                       isApiPayment,
                                                                                                       transaction.getPaymentId(),
                                                                                                       attempt.getPaymentExternalKey(),

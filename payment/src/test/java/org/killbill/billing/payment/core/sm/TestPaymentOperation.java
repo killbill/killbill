@@ -31,6 +31,7 @@ import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.sm.payments.PaymentOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;

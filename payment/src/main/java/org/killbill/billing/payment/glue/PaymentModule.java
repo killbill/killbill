@@ -46,7 +46,7 @@ import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
-import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.dao.DefaultPaymentDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -116,7 +116,7 @@ public class PaymentModule extends KillBillModule {
 
         bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toInstance(new StateMachineProvider(DEFAULT_STATE_MACHINE_RETRY_XML));
         bind(StateMachineConfig.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toProvider(Key.get(StateMachineProvider.class, Names.named(STATE_MACHINE_RETRY)));
-        bind(RetryStateMachineHelper.class).asEagerSingleton();
+        bind(PaymentControlStateMachineHelper.class).asEagerSingleton();
 
         bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toInstance(new StateMachineProvider(DEFAULT_STATE_MACHINE_PAYMENT_XML));
         bind(StateMachineConfig.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toProvider(Key.get(StateMachineProvider.class, Names.named(STATE_MACHINE_PAYMENT)));

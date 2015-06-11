@@ -149,6 +149,10 @@ public class PaymentAutomatonDAOHelper {
         return eventBus;
     }
 
+    public PaymentDao getPaymentDao() {
+        return paymentDao;
+    }
+
     private PaymentModelDao buildNewPaymentModelDao() {
         final DateTime createdDate = utcNow;
         final DateTime updatedDate = utcNow;
