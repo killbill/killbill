@@ -95,7 +95,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
 
                 final PriorPaymentRoutingResult pluginResult;
                 try {
-                    pluginResult = getPluginResult(retryablePaymentStateContext.getPaymentControlPluginNames(), paymentControlContext);
+                    pluginResult = executePluginPriorCalls(retryablePaymentStateContext.getPaymentControlPluginNames(), paymentControlContext);
                     if (pluginResult != null && pluginResult.isAborted()) {
                         // Transition to ABORTED
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.EXCEPTION);
@@ -132,17 +132,17 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
                                                                                                                     retryablePaymentStateContext.isApiPayment(),
                                                                                                                     paymentStateContext.callContext);
 
-                        onCompletion(retryablePaymentStateContext.getPaymentControlPluginNames(), updatedPaymentRoutingContext);
+                        executePluginOnSuccessCalls(retryablePaymentStateContext.getPaymentControlPluginNames(), updatedPaymentRoutingContext);
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
                     } else {
-                        throw new OperationException(null, getOperationResultAndSetContext(retryablePaymentStateContext, paymentControlContext));
+                        throw new OperationException(null, executePluginOnFailureCallsAndSetRetryDate(retryablePaymentStateContext, paymentControlContext));
                     }
                 } catch (final PaymentApiException e) {
                     // Wrap PaymentApiException, and throw a new OperationException with an ABORTED/FAILURE state based on the retry result.
-                    throw new OperationException(e, getOperationResultAndSetContext(retryablePaymentStateContext, paymentControlContext));
+                    throw new OperationException(e, executePluginOnFailureCallsAndSetRetryDate(retryablePaymentStateContext, paymentControlContext));
                 } catch (final RuntimeException e) {
                     // Attempts to set the retry date in context if needed.
-                    getOperationResultAndSetContext(retryablePaymentStateContext, paymentControlContext);
+                    executePluginOnFailureCallsAndSetRetryDate(retryablePaymentStateContext, paymentControlContext);
                     throw e;
                 }
             }
@@ -175,14 +175,14 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
         return new OperationException(e, getOperationResultOnException(paymentStateContext));
     }
 
-    protected void onCompletion(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContext) {
+    protected void executePluginOnSuccessCalls(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContext) {
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentRoutingPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
                     plugin.onSuccessCall(paymentControlContext, paymentStateContext.getProperties());
                 } catch (final PaymentRoutingApiException e) {
-                    logger.warn("Plugin " + pluginName + " failed to complete onCompletion call for " + paymentControlContext.getPaymentExternalKey(), e);
+                    logger.warn("Plugin " + pluginName + " failed to complete executePluginOnSuccessCalls call for " + paymentControlContext.getPaymentExternalKey(), e);
                 }
             }
         }
@@ -214,7 +214,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
         return operationResult;
     }
 
-    private PriorPaymentRoutingResult getPluginResult(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContextArg) throws PaymentRoutingApiException {
+    private PriorPaymentRoutingResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContextArg) throws PaymentRoutingApiException {
         // Return as soon as the first plugin aborts, or the last result for the last plugin
         PriorPaymentRoutingResult prevResult = null;
 
@@ -248,8 +248,8 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
         return prevResult;
     }
 
-    private OperationResult getOperationResultAndSetContext(final RetryablePaymentStateContext retryablePaymentStateContext, final PaymentRoutingContext paymentControlContext) {
-        final DateTime retryDate = getNextRetryDate(retryablePaymentStateContext.getPaymentControlPluginNames(), paymentControlContext);
+    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final RetryablePaymentStateContext retryablePaymentStateContext, final PaymentRoutingContext paymentControlContext) {
+        final DateTime retryDate = executePluginOnFailureCalls(retryablePaymentStateContext.getPaymentControlPluginNames(), paymentControlContext);
         if (retryDate != null) {
             ((RetryablePaymentStateContext) paymentStateContext).setRetryDate(retryDate);
             return OperationResult.FAILURE;
@@ -258,7 +258,7 @@ public abstract class RetryOperationCallback extends OperationCallbackBase<Payme
         }
     }
 
-    private DateTime getNextRetryDate(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContext) {
+    private DateTime executePluginOnFailureCalls(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContext) {
         DateTime candidate = null;
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentRoutingPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);

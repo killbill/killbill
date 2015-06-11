@@ -60,7 +60,7 @@ public class RetryCompletionOperationCallback extends RetryOperationCallback {
                                                                                                             retryablePaymentStateContext.isApiPayment(),
                                                                                                             paymentStateContext.callContext);
 
-                onCompletion(retryablePaymentStateContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
+                executePluginOnSuccessCalls(retryablePaymentStateContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
                 return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
             }
         });

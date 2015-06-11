@@ -112,7 +112,7 @@ final class AttemptCompletionTask extends CompletionTaskBase<PaymentAttemptModel
             paymentStateContext.setAttemptId(attempt.getId()); // Normally set by leavingState Callback
             paymentStateContext.setPaymentTransactionModelDao(transaction); // Normally set by raw state machine
             //
-            // Will rerun the state machine with special callbacks to only make the onCompletion call
+            // Will rerun the state machine with special callbacks to only make the executePluginOnSuccessCalls call
             // to the PaymentControlPluginApi plugin and transition the state.
             //
             pluginControlledPaymentAutomatonRunner.completeRun(paymentStateContext);
