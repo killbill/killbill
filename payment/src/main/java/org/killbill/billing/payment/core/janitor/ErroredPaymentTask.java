@@ -30,6 +30,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
 import org.killbill.billing.payment.core.sm.payments.PaymentEnteringStateCallback;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
@@ -114,7 +115,7 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
         }
 
         // Compute new transactionStatus based on pluginInfo state; and if that did not change, bail early.
-        final TransactionStatus transactionStatus = PaymentEnteringStateCallback.paymentPluginStatusToTransactionStatus(pluginErroredTransaction);
+        final TransactionStatus transactionStatus = PaymentTransactionInfoPluginConverter.toTransactionStatus(pluginErroredTransaction);
         if (transactionStatus == unknownTransaction.getTransactionStatus()) {
             return;
         }

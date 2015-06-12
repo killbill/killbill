@@ -44,7 +44,7 @@ public class PaymentStateContext {
     // Stateful objects created by the callbacks and passed to the other following callbacks in the automaton
     protected List<PaymentTransactionModelDao> onLeavingStateExistingTransactions;
     protected PaymentTransactionModelDao paymentTransactionModelDao;
-    protected PaymentTransactionInfoPlugin paymentInfoPlugin;
+    protected PaymentTransactionInfoPlugin paymentTransactionInfoPlugin;
     protected BigDecimal amount;
     protected String paymentExternalKey;
     protected String paymentTransactionExternalKey;
@@ -120,12 +120,12 @@ public class PaymentStateContext {
         this.onLeavingStateExistingTransactions = onLeavingStateExistingTransactions;
     }
 
-    public PaymentTransactionInfoPlugin getPaymentInfoPlugin() {
-        return paymentInfoPlugin;
+    public PaymentTransactionInfoPlugin getPaymentTransactionInfoPlugin() {
+        return paymentTransactionInfoPlugin;
     }
 
-    public void setPaymentInfoPlugin(final PaymentTransactionInfoPlugin paymentInfoPlugin) {
-        this.paymentInfoPlugin = paymentInfoPlugin;
+    public void setPaymentTransactionInfoPlugin(final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
+        this.paymentTransactionInfoPlugin = paymentTransactionInfoPlugin;
     }
 
     public UUID getPaymentId() {

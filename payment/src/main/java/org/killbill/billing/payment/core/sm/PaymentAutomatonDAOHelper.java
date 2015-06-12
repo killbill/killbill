@@ -101,7 +101,7 @@ public class PaymentAutomatonDAOHelper {
         paymentStateContext.setOnLeavingStateExistingTransactions(existingTransactions);
     }
 
-    public void processPaymentInfoPlugin(final TransactionStatus paymentStatus, @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,
+    public void processPaymentInfoPlugin(final TransactionStatus transactionStatus, @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,
                                          final String currentPaymentStateName) {
         final BigDecimal processedAmount = paymentInfoPlugin == null ? null : paymentInfoPlugin.getAmount();
         final Currency processedCurrency = paymentInfoPlugin == null ? null : paymentInfoPlugin.getCurrency();
@@ -115,7 +115,7 @@ public class PaymentAutomatonDAOHelper {
                                                            currentPaymentStateName,
                                                            lastSuccessPaymentState,
                                                            paymentStateContext.getPaymentTransactionModelDao().getId(),
-                                                           paymentStatus,
+                                                           transactionStatus,
                                                            processedAmount,
                                                            processedCurrency,
                                                            gatewayErrorCode,

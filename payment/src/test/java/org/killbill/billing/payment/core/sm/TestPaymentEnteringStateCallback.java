@@ -89,7 +89,7 @@ public class TestPaymentEnteringStateCallback extends PaymentTestSuiteWithEmbedd
         Mockito.when(paymentInfoPlugin.getStatus()).thenReturn(PaymentPluginStatus.PENDING);
         Mockito.when(paymentInfoPlugin.getGatewayErrorCode()).thenReturn(UUID.randomUUID().toString().substring(0, 5));
         Mockito.when(paymentInfoPlugin.getGatewayError()).thenReturn(UUID.randomUUID().toString());
-        paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
+        paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
 
         // Process the plugin result
         callback.enteringState(state, operationCallback, operationResult, leavingStateCallback);
@@ -109,7 +109,7 @@ public class TestPaymentEnteringStateCallback extends PaymentTestSuiteWithEmbedd
     public void testEnterStateWithOperationException() throws Exception {
         daoHelper.createNewPaymentTransaction();
         // Simulate a bug in the plugin - i.e. nothing was returned
-        paymentStateContext.setPaymentInfoPlugin(null);
+        paymentStateContext.setPaymentTransactionInfoPlugin(null);
         operationResult = OperationResult.EXCEPTION;
 
         callback.enteringState(state, operationCallback, operationResult, leavingStateCallback);

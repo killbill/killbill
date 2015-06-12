@@ -29,6 +29,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.core.sm.OperationCallbackBase;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
@@ -108,7 +109,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                 PaymentPluginStatus.UNDEFINED,
                                                                                                 null);
 
-        paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
+        paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
         return new OperationException(e, OperationResult.EXCEPTION);
     }
 
@@ -173,8 +174,8 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                 // Throws if plugin is  ot correctly implemented (e.g returns null result, values,..)
                 sanityOnPaymentInfoPlugin(paymentInfoPlugin);
 
-                paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
-                return processPaymentInfoPlugin();
+                paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
+                return PaymentTransactionInfoPluginConverter.toOperationResult(paymentStateContext.getPaymentTransactionInfoPlugin());
             } else {
                 final PaymentTransactionInfoPlugin paymentInfoPlugin = new DefaultNoOpPaymentInfoPlugin(paymentStateContext.getPaymentId(),
                                                                                                         paymentStateContext.getTransactionId(),
@@ -185,7 +186,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                         paymentStateContext.getPaymentTransactionModelDao().getCreatedDate(),
                                                                                                         buildPaymentPluginStatusFromOperationResult(paymentStateContext.getOverridePluginOperationResult()),
                                                                                                         null);
-                paymentStateContext.setPaymentInfoPlugin(paymentInfoPlugin);
+                paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
                 return paymentStateContext.getOverridePluginOperationResult();
             }
         } catch (final PaymentPluginApiException e) {
@@ -207,37 +208,19 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
         }
     }
 
-    private OperationResult processPaymentInfoPlugin() {
-        if (paymentStateContext.getPaymentInfoPlugin() == null || paymentStateContext.getPaymentInfoPlugin().getStatus() == null) {
-            return OperationResult.EXCEPTION;
-        }
-
-        switch (paymentStateContext.getPaymentInfoPlugin().getStatus()) {
-            case PROCESSED:
-                return OperationResult.SUCCESS;
-            case PENDING:
-                return OperationResult.PENDING;
-            case ERROR:
-                return OperationResult.FAILURE;
-            case UNDEFINED:
-            default:
-                return OperationResult.EXCEPTION;
-        }
-    }
-
     private void sanityOnPaymentInfoPlugin(final PaymentTransactionInfoPlugin paymentInfoPlugin) throws PaymentApiException {
         if (paymentInfoPlugin == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned a null result");
         }
         /*
         TODO this breaks our tests so test would have to be fixed
-        if (paymentInfoPlugin.getKbTransactionPaymentId() == null || !paymentInfoPlugin.getKbTransactionPaymentId().equals(paymentStateContext.getTransactionId())) {
+        if (paymentTransactionInfoPlugin.getKbTransactionPaymentId() == null || !paymentTransactionInfoPlugin.getKbTransactionPaymentId().equals(paymentStateContext.getTransactionId())) {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned invalid kbTransactionId");
         }
-        if (paymentInfoPlugin.getKbPaymentId() == null || !paymentInfoPlugin.getKbPaymentId().equals(paymentStateContext.getPaymentId())) {
+        if (paymentTransactionInfoPlugin.getKbPaymentId() == null || !paymentTransactionInfoPlugin.getKbPaymentId().equals(paymentStateContext.getPaymentId())) {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned invalid kbPaymentId");
         }
-        if (paymentInfoPlugin.getTransactionType() == null || !paymentInfoPlugin.getKbPaymentId().equals(paymentStateContext.getTransactionType())) {
+        if (paymentTransactionInfoPlugin.getTransactionType() == null || !paymentTransactionInfoPlugin.getKbPaymentId().equals(paymentStateContext.getTransactionType())) {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned invalid transaction type");
         }
         */
