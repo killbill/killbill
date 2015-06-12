@@ -86,6 +86,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
         super.beforeMethod();
         eventBus.start();
         Profiling.resetPerThreadProfilingData();
+        clock.resetDeltaFromReality();
 
     }
 

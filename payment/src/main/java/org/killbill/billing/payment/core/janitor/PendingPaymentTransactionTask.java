@@ -39,12 +39,12 @@ import org.killbill.clock.Clock;
 /**
  * Task to find old PENDING transactions and move them into
  */
-final class PendingTransactionTask extends CompletionTaskBase<PaymentTransactionModelDao> {
+final class PendingPaymentTransactionTask extends CompletionTaskBase<PaymentTransactionModelDao> {
 
-    public PendingTransactionTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                                  final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
-                                  final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                                  final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
+    public PendingPaymentTransactionTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
+                                         final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
+                                         final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
+                                         final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         super(janitor, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
     }
 

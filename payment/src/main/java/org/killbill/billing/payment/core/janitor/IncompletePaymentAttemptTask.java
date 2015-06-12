@@ -51,12 +51,12 @@ import com.google.common.collect.Iterables;
  * If the state of the transaction associated with the attempt completed, but the attempt state machine did not,
  * we rerun the retry state machine to complete the call and transition the attempt into a terminal state.
  */
-final class AttemptCompletionTask extends CompletionTaskBase<PaymentAttemptModelDao> {
+final class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttemptModelDao> {
 
-    public AttemptCompletionTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                                 final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
-                                 final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                                 final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
+    public IncompletePaymentAttemptTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
+                                        final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
+                                        final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
+                                        final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         super(janitor, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
     }
 

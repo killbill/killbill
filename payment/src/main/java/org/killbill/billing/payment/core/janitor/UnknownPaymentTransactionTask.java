@@ -52,17 +52,17 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
+public class UnknownPaymentTransactionTask extends CompletionTaskBase<PaymentModelDao> {
 
     // We could configure all that if this becomes useful but we also want to avoid a flurry of parameters.
     private static final int SAFETY_DELAY_MS = (3 * 60 * 1000); // 3 minutes
     private final int OLDER_PAYMENTS_IN_DAYS = 3; // don't look at ERRORED payment older than 3 days
     private final int MAX_ITEMS_PER_LOOP = 100; // Limit of items per iteration
 
-    public ErroredPaymentTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                              final PaymentDao paymentDao, final Clock clock,
-                              final PaymentStateMachineHelper paymentStateMachineHelper, final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                              final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
+    public UnknownPaymentTransactionTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
+                                         final PaymentDao paymentDao, final Clock clock,
+                                         final PaymentStateMachineHelper paymentStateMachineHelper, final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
+                                         final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         super(janitor, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
     }
 
@@ -106,7 +106,7 @@ public class ErroredPaymentTask extends CompletionTaskBase<PaymentModelDao> {
 
             pluginErroredTransaction = Iterables.tryFind(result, new Predicate<PaymentTransactionInfoPlugin>() {
                 @Override
-                public boolean apply(@Nullable final PaymentTransactionInfoPlugin input) {
+                public boolean apply(final PaymentTransactionInfoPlugin input) {
                     return input.getKbTransactionPaymentId().equals(unknownTransaction.getId());
                 }
             }).orNull();
