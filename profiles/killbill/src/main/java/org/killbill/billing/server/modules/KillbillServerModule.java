@@ -27,6 +27,7 @@ import org.killbill.billing.currency.glue.CurrencyModule;
 import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.jaxrs.resources.AccountResource;
+import org.killbill.billing.jaxrs.resources.AdminResource;
 import org.killbill.billing.jaxrs.resources.BundleResource;
 import org.killbill.billing.jaxrs.resources.CatalogResource;
 import org.killbill.billing.jaxrs.resources.CreditResource;
@@ -184,6 +185,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         bind(TestResource.class).asEagerSingleton();
         bind(TransactionResource.class).asEagerSingleton();
         bind(UsageResource.class).asEagerSingleton();
+        bind(AdminResource.class).asEagerSingleton();
     }
 
     protected void configureFilters() {
