@@ -47,9 +47,9 @@ import org.killbill.billing.payment.core.sm.control.CaptureControlOperation;
 import org.killbill.billing.payment.core.sm.control.ChargebackControlOperation;
 import org.killbill.billing.payment.core.sm.control.CompletionControlOperation;
 import org.killbill.billing.payment.core.sm.control.CreditControlOperation;
-import org.killbill.billing.payment.core.sm.control.DefaultControlInitiated;
 import org.killbill.billing.payment.core.sm.control.DefaultControlCompleted;
-import org.killbill.billing.payment.core.sm.control.NoopControlCompleted;
+import org.killbill.billing.payment.core.sm.control.DefaultControlInitiated;
+import org.killbill.billing.payment.core.sm.control.NoopControlInitiated;
 import org.killbill.billing.payment.core.sm.control.PurchaseControlOperation;
 import org.killbill.billing.payment.core.sm.control.RefundControlOperation;
 import org.killbill.billing.payment.core.sm.control.VoidControlOperation;
@@ -112,8 +112,8 @@ public class PluginRoutingPaymentAutomatonRunner extends PaymentAutomatonRunner 
                                                                                properties, paymentControlPluginNames, callContext, internalCallContext);
         try {
             final OperationCallback callback = createOperationCallback(transactionType, paymentStateContext);
-            final LeavingStateCallback leavingStateCallback = new DefaultControlCompleted(this, paymentStateContext, paymentDao, paymentControlStateMachineHelper.getInitialState(), paymentControlStateMachineHelper.getRetriedState(), transactionType);
-            final EnteringStateCallback enteringStateCallback = new DefaultControlInitiated(this, paymentStateContext, retryServiceScheduler);
+            final LeavingStateCallback leavingStateCallback = new DefaultControlInitiated(this, paymentStateContext, paymentDao, paymentControlStateMachineHelper.getInitialState(), paymentControlStateMachineHelper.getRetriedState(), transactionType);
+            final EnteringStateCallback enteringStateCallback = new DefaultControlCompleted(this, paymentStateContext, retryServiceScheduler);
 
             state.runOperation(paymentControlStateMachineHelper.getOperation(), callback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {
@@ -134,8 +134,8 @@ public class PluginRoutingPaymentAutomatonRunner extends PaymentAutomatonRunner 
     public Payment completeRun(final PaymentStateControlContext paymentStateContext) throws PaymentApiException {
         try {
             final OperationCallback callback = new CompletionControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
-            final LeavingStateCallback leavingStateCallback = new NoopControlCompleted();
-            final EnteringStateCallback enteringStateCallback = new DefaultControlInitiated(this, paymentStateContext, retryServiceScheduler);
+            final LeavingStateCallback leavingStateCallback = new NoopControlInitiated();
+            final EnteringStateCallback enteringStateCallback = new DefaultControlCompleted(this, paymentStateContext, retryServiceScheduler);
 
             paymentControlStateMachineHelper.getInitialState().runOperation(paymentControlStateMachineHelper.getOperation(), callback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {

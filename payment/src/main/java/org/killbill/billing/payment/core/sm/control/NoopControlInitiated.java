@@ -21,7 +21,7 @@ import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
 
-public class NoopControlCompleted implements LeavingStateCallback {
+public class NoopControlInitiated implements LeavingStateCallback {
 
     @Override
     public void leavingState(final State oldState) throws OperationException {

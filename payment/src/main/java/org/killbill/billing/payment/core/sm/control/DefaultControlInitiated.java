@@ -1,8 +1,7 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014 Groupon, Inc
  *
- * The Billing Project licenses this file to you under the Apache License, version 2.0
+ * Groupon licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,42 +16,77 @@
 
 package org.killbill.billing.payment.core.sm.control;
 
-import java.util.UUID;
-
-import org.killbill.automaton.Operation.OperationCallback;
-import org.killbill.automaton.OperationResult;
+import org.joda.time.DateTime;
+import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
-import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
-import org.killbill.billing.ObjectType;
+import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
-import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
+import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.dao.PaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
+import org.killbill.billing.payment.dao.PluginPropertySerializer;
+import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
+import org.killbill.billing.util.UUIDs;
 
-public class DefaultControlInitiated implements EnteringStateCallback {
+import com.google.common.base.Preconditions;
 
-    private PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner;
-    private final PaymentStateControlContext paymentStateContext;
-    private final RetryServiceScheduler retryServiceScheduler;
+public class DefaultControlInitiated implements LeavingStateCallback {
 
-    public DefaultControlInitiated(final PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner, final PaymentStateControlContext paymentStateContext,
-                                   final RetryServiceScheduler retryServiceScheduler) {
+    private final PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner;
+    private final PaymentStateControlContext stateContext;
+    private final State initialState;
+    private final State retriedState;
+    private final TransactionType transactionType;
+    private final PaymentDao paymentDao;
+
+    public DefaultControlInitiated(final PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner, final PaymentStateContext stateContext, final PaymentDao paymentDao,
+                                   final State initialState, final State retriedState, final TransactionType transactionType) {
         this.retryablePaymentAutomatonRunner = retryablePaymentAutomatonRunner;
-        this.paymentStateContext = paymentStateContext;
-        this.retryServiceScheduler = retryServiceScheduler;
+        this.paymentDao = paymentDao;
+        this.initialState = initialState;
+        this.retriedState = retriedState;
+        this.stateContext = (PaymentStateControlContext) stateContext;
+        this.transactionType = transactionType;
     }
 
     @Override
-    public void enteringState(final State state, final OperationCallback operationCallback, final OperationResult operationResult, final LeavingStateCallback leavingStateCallback) {
-        final PaymentAttemptModelDao attempt = retryablePaymentAutomatonRunner.getPaymentDao().getPaymentAttempt(paymentStateContext.getAttemptId(), paymentStateContext.getInternalCallContext());
-        final UUID transactionId = paymentStateContext.getCurrentTransaction() != null ?
-                                   paymentStateContext.getCurrentTransaction().getId() :
-                                   null;
-        retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttempt(attempt.getId(), transactionId, state.getName(), paymentStateContext.getInternalCallContext());
+    public void leavingState(final State state) throws OperationException {
+        final DateTime utcNow = retryablePaymentAutomatonRunner.getClock().getUTCNow();
 
-        if ("RETRIED".equals(state.getName())) {
-            retryServiceScheduler.scheduleRetry(ObjectType.PAYMENT_ATTEMPT, attempt.getId(), attempt.getId(), attempt.getTenantRecordId(),
-                                                paymentStateContext.getPaymentControlPluginNames(), paymentStateContext.getRetryDate());
+        if (stateContext.getPaymentId() != null && stateContext.getPaymentExternalKey() == null) {
+            final PaymentModelDao payment = paymentDao.getPayment(stateContext.getPaymentId(), stateContext.getInternalCallContext());
+            Preconditions.checkNotNull(payment, "payment cannot be null for id " + stateContext.getPaymentId());
+            stateContext.setPaymentExternalKey(payment.getExternalKey());
+        } else if (stateContext.getPaymentExternalKey() == null) {
+            stateContext.setPaymentExternalKey(UUIDs.randomUUID().toString());
+        }
+        if (stateContext.getTransactionId() != null && stateContext.getPaymentTransactionExternalKey() == null) {
+            final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(stateContext.getTransactionId(), stateContext.getInternalCallContext());
+            Preconditions.checkNotNull(paymentTransactionModelDao, "paymentTransaction cannot be null for id " + stateContext.getTransactionId());
+            stateContext.setPaymentTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey());
+        } else if (stateContext.getPaymentTransactionExternalKey() == null) {
+            stateContext.setPaymentTransactionExternalKey(UUIDs.randomUUID().toString());
+        }
+
+        if (state.getName().equals(initialState.getName()) || state.getName().equals(retriedState.getName())) {
+            try {
+                final byte[] serializedProperties = PluginPropertySerializer.serialize(stateContext.getProperties());
+
+                final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
+                                                                                  utcNow, utcNow, stateContext.getPaymentExternalKey(), stateContext.getTransactionId(),
+                                                                                  stateContext.getPaymentTransactionExternalKey(), transactionType, initialState.getName(),
+                                                                                  stateContext.getAmount(), stateContext.getCurrency(),
+                                                                                  stateContext.getPaymentControlPluginNames(), serializedProperties);
+
+                retryablePaymentAutomatonRunner.getPaymentDao().insertPaymentAttemptWithProperties(attempt, stateContext.getInternalCallContext());
+
+                stateContext.setAttemptId(attempt.getId());
+            } catch (final PluginPropertySerializerException e) {
+                throw new OperationException(e);
+            }
         }
     }
 }
