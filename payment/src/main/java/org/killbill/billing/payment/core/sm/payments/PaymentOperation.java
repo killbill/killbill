@@ -84,7 +84,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
         final Throwable realException = Objects.firstNonNull(e.getCause(), e);
         if (e.getCause() instanceof PaymentApiException) {
             logger.warn("Unsuccessful plugin call for account {}", paymentStateContext.getAccount().getExternalKey(), realException);
-            return new OperationException(realException, OperationResult.EXCEPTION);
+            return convertToUnknownTransactionStatusAndErroredPaymentState(realException);
         } else if (e.getCause() instanceof LockFailedException) {
             final String format = String.format("Failed to lock account %s", paymentStateContext.getAccount().getExternalKey());
             logger.error(String.format(format));
@@ -98,14 +98,24 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     @Override
     protected OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e) {
         logger.error("Plugin call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
+        return convertToUnknownTransactionStatusAndErroredPaymentState(e);
+    }
+
+    //
+    // In the case we don't know exactly what happen (Timeout or PluginApiException):
+    // - Return an OperationResult.EXCEPTION to transition Payment State to Errored (see PaymentTransactionInfoPluginConverter#toOperationResult)
+    // - Construct a PaymentTransactionInfoPlugin whose PaymentPluginStatus = UNDEFINED to end up with a paymentTransactionStatus = UNKNOWN and have a chance to
+    //   be fixed by Janitor.
+    //
+    private OperationException convertToUnknownTransactionStatusAndErroredPaymentState(final Throwable e) {
 
         final PaymentTransactionInfoPlugin paymentInfoPlugin = new DefaultNoOpPaymentInfoPlugin(paymentStateContext.getPaymentId(),
                                                                                                 paymentStateContext.getTransactionId(),
                                                                                                 paymentStateContext.getTransactionType(),
-                                                                                                paymentStateContext.getPaymentTransactionModelDao().getProcessedAmount(),
-                                                                                                paymentStateContext.getPaymentTransactionModelDao().getProcessedCurrency(),
-                                                                                                paymentStateContext.getPaymentTransactionModelDao().getEffectiveDate(),
-                                                                                                paymentStateContext.getPaymentTransactionModelDao().getCreatedDate(),
+                                                                                                paymentStateContext.getAmount(),
+                                                                                                paymentStateContext.getCurrency(),
+                                                                                                paymentStateContext.getCallContext().getCreatedDate(),
+                                                                                                paymentStateContext.getCallContext().getCreatedDate(),
                                                                                                 PaymentPluginStatus.UNDEFINED,
                                                                                                 null);
 
