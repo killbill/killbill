@@ -19,6 +19,7 @@
 package org.killbill.billing.payment.provider;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -61,6 +62,8 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     private final AtomicBoolean makeAllInvoicesFailWithError = new AtomicBoolean(false);
 
     private final Map<String, InternalPaymentInfo> payments = new ConcurrentHashMap<String, InternalPaymentInfo>();
+    private final Map<String, List<PaymentTransactionInfoPlugin>> paymentTransactions = new ConcurrentHashMap<String, List<PaymentTransactionInfoPlugin>>();
+
     // Note: we can't use HashMultiMap as we care about storing duplicate key/value pairs
     private final Map<String, PaymentMethodPlugin> paymentMethods = new ConcurrentHashMap<String, PaymentMethodPlugin>();
     private final Map<String, PaymentMethodInfoPlugin> paymentMethodsInfo = new ConcurrentHashMap<String, PaymentMethodInfoPlugin>();
@@ -183,6 +186,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         makeNextInvoiceFailWithError.set(false);
         paymentMethods.clear();
         payments.clear();
+        paymentTransactions.clear();
         paymentMethodsInfo.clear();
     }
 
@@ -232,14 +236,8 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
     @Override
     public List<PaymentTransactionInfoPlugin> getPaymentInfo(final UUID kbAccountId, final UUID kbPaymentId, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentPluginApiException {
-        /*
-        final InternalPaymentInfo paymentInfo = payments.get(kbPaymentId.toString());
-        if (paymentInfo == null) {
-            throw new PaymentPluginApiException("", "No payment found for payment id " + kbPaymentId.toString());
-        }
-        */
-        // Can't be implemented because we did not keep transaction details.
-        return ImmutableList.<PaymentTransactionInfoPlugin>of();
+        final List<PaymentTransactionInfoPlugin> result = paymentTransactions.get(kbPaymentId.toString());
+        return result != null ? result : ImmutableList.<PaymentTransactionInfoPlugin>of();
     }
 
     @Override
@@ -346,6 +344,13 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         info.addAmount(type, amount);
 
         final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
+        List<PaymentTransactionInfoPlugin> existingTransactions = paymentTransactions.get(kbPaymentId.toString());
+        if (existingTransactions == null) {
+            existingTransactions = new ArrayList<PaymentTransactionInfoPlugin>();
+            paymentTransactions.put(kbPaymentId.toString(), existingTransactions);
+        }
+
+        existingTransactions.add(result);
         return result;
     }
 }

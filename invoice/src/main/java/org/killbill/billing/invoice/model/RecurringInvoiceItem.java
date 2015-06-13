@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.util.UUIDs;
 
 import com.google.common.base.Objects;
 
@@ -35,7 +36,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
     public RecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
                                 final String planName, final String phaseName, final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final BigDecimal rate, final Currency currency) {
-        this(UUID.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
+        this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
     }
 
     public RecurringInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,

@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.routing.plugin.api.PriorPaymentRoutingResult;
 
 public class DefaultPriorPaymentRoutingResult implements PriorPaymentRoutingResult {
@@ -28,19 +30,26 @@ public class DefaultPriorPaymentRoutingResult implements PriorPaymentRoutingResu
     private final BigDecimal adjustedRetryAmount;
     private final Currency adjustedCurrency;
     private final UUID adjustedPaymentMethodId;
+    private final Iterable<PluginProperty> adjustedPluginProperties;
 
     public DefaultPriorPaymentRoutingResult(final boolean isAborted,
                                             final BigDecimal adjustedRetryAmount,
                                             final Currency adjustedCurrency,
-                                            final UUID adjustedPaymentMethodId) {
+                                            final UUID adjustedPaymentMethodId,
+                                            final Iterable<PluginProperty> adjustedPluginProperties) {
         this.isAborted = isAborted;
         this.adjustedRetryAmount = adjustedRetryAmount;
         this.adjustedCurrency = adjustedCurrency;
         this.adjustedPaymentMethodId = adjustedPaymentMethodId;
+        this.adjustedPluginProperties = adjustedPluginProperties;
+    }
+
+    public DefaultPriorPaymentRoutingResult(final boolean isAborted, final BigDecimal adjustedRetryAmount) {
+        this(isAborted, adjustedRetryAmount, null, null, null);
     }
 
     public DefaultPriorPaymentRoutingResult(final boolean isAborted) {
-        this(isAborted, null, null, null);
+        this(isAborted, null);
     }
 
     @Override
@@ -61,5 +70,10 @@ public class DefaultPriorPaymentRoutingResult implements PriorPaymentRoutingResu
     @Override
     public UUID getAdjustedPaymentMethodId() {
         return adjustedPaymentMethodId;
+    }
+
+    @Override
+    public Iterable<PluginProperty> getAdjustedPluginProperties() {
+        return adjustedPluginProperties;
     }
 }

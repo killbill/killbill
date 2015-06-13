@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.util.UUIDs;
 
 import com.google.common.base.Objects;
 
@@ -34,7 +35,7 @@ public class RepairAdjInvoiceItem extends AdjInvoiceItem {
 
     public RepairAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final Currency currency, final UUID reversingId) {
-        this(UUID.randomUUID(), null, invoiceId, accountId, startDate, endDate, amount, currency, reversingId);
+        this(UUIDs.randomUUID(), null, invoiceId, accountId, startDate, endDate, amount, currency, reversingId);
     }
 
     public RepairAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate,

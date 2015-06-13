@@ -64,15 +64,18 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public int failOldPendingTransactions(final TransactionStatus newTransactionStatus, final DateTime createdBeforeDate, final InternalCallContext context) {
-        int result = 0;
-        synchronized (transactions) {
-            for (PaymentTransactionModelDao cur : transactions.values()) {
-                cur.setTransactionStatus(newTransactionStatus);
-                result++;
+    public List<PaymentTransactionModelDao> getByTransactionStatusAcrossTenants(final Iterable<TransactionStatus> transactionStatuses, DateTime createdBeforeDate, DateTime createdAfterDate, int limit) {
+        return ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return Iterables.any(transactionStatuses, new Predicate<TransactionStatus>() {
+                    @Override
+                    public boolean apply(final TransactionStatus transactionStatus) {
+                        return input.getTransactionStatus() == transactionStatus;
+                    }
+                });
             }
-        }
-        return result;
+        }));
     }
 
     @Override
@@ -105,7 +108,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentAttemptModelDao> getPaymentAttemptsByState(final String stateName, final DateTime createdBeforeDate, final InternalTenantContext context) {
+    public List<PaymentAttemptModelDao> getPaymentAttemptsByStateAcrossTenants(final String stateName, final DateTime createdBeforeDate) {
         return null;
     }
 
@@ -244,7 +247,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentModelDao> getPaymentsByStates(final String[] states, final DateTime createdBeforeDate, final DateTime createdAfterDate, final int limit, final InternalTenantContext context) {
+    public List<PaymentModelDao> getPaymentsByStatesAcrossTenants(final String[] states, final DateTime createdBeforeDate, final DateTime createdAfterDate, final int limit) {
         return null;
     }
 

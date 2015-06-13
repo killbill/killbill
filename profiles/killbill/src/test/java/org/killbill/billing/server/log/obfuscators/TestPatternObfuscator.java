@@ -18,8 +18,11 @@
 package org.killbill.billing.server.log.obfuscators;
 
 import org.killbill.billing.server.log.ServerTestSuiteNoDB;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import ch.qos.logback.classic.spi.ILoggingEvent;
 
 public class TestPatternObfuscator extends ServerTestSuiteNoDB {
 
@@ -257,8 +260,34 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
               );
     }
 
+    @Test(groups = "fast", description = "Test for ActiveMerchant wiredump_device logging")
+    public void testWithQuotedNewLines() throws Exception {
+        verify("[cybersource-plugin] \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?><accountNumber>4111111111111111</accountNumber>\\n  <expirationMonth>09</expirationMonth>\\n  \"",
+               "[cybersource-plugin] \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?><accountNumber>*****MASKED*****</accountNumber>\\n  <expirationMonth>09</expirationMonth>\\n  \"");
+    }
+
+    @Test(groups = "fast")
+    public void testProfilingHeaderIsNotObfuscated() throws Exception {
+        final ILoggingEvent event = Mockito.mock(ILoggingEvent.class);
+        Mockito.when(event.getLoggerName()).thenReturn(Obfuscator.LOGGING_FILTER_NAME);
+
+        verify("1 * Server out-bound response\n" +
+               "1 < 500\n" +
+               "1 < Content-Type: application/json\n" +
+               "1 < X-Killbill-Profiling-Resp: {\"rawData\":[{\"name\":\"DAO:AccountSqlDao:getById\",\"durationUsec\":14873},{\"name\":\"DAO:PaymentMethodSqlDao:getById\",\"durationUsec\":10438},{\"name\":\"DAO:PaymentSqlDao:create\",\"durationUsec\":31750},{\"name\":\"DAO:TransactionSqlDao:create\",\"durationUsec\":23121},{\"name\":\"DAO:PaymentSqlDao:getById\",\"durationUsec\":2541},{\"name\":\"DAO:TransactionSqlDao:getByPaymentId\",\"durationUsec\":3574},{\"name\":\"DAO:PaymentMethodSqlDao:getPaymentMethodIncludedDelete\",\"durationUsec\":1763},{\"name\":\"DAO:TransactionSqlDao:updateTransactionStatus\",\"durationUsec\":13994},{\"name\":\"DAO:PaymentSqlDao:updatePaymentStateName\",\"durationUsec\":11929},{\"name\":\"DAO:TransactionSqlDao:getById\",\"durationUsec\":5245}]}",
+               event);
+    }
+
+    private void verify(final String input, final ILoggingEvent event) {
+        verify(input, input, event);
+    }
+
     private void verify(final String input, final String output) {
-        final String obfuscated = obfuscator.obfuscate(input);
+        verify(input, output, Mockito.mock(ILoggingEvent.class));
+    }
+
+    private void verify(final String input, final String output, final ILoggingEvent event) {
+        final String obfuscated = obfuscator.obfuscate(input, event);
         Assert.assertEquals(obfuscated, output, obfuscated);
     }
 }

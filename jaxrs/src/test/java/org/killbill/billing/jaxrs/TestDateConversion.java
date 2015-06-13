@@ -23,7 +23,6 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -32,6 +31,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.clock.ClockMock;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
+import org.killbill.billing.util.UUIDs;
 
 public class TestDateConversion extends JaxRsResourceBase {
 
@@ -40,7 +40,7 @@ public class TestDateConversion extends JaxRsResourceBase {
     }
 
     public UUID setupAccount(DateTimeZone accountTimeZone) throws AccountApiException {
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId = UUIDs.randomUUID();
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
         Mockito.when(accountUserApi.getAccountById(accountId, null)).thenReturn(account);

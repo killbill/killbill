@@ -19,6 +19,7 @@ package org.killbill.billing.subscription.events;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.util.UUIDs;
 
 @SuppressWarnings("unchecked")
 public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
@@ -36,7 +37,7 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     private boolean isActive;
 
     public EventBaseBuilder() {
-        this.uuid = UUID.randomUUID();
+        this.uuid = UUIDs.randomUUID();
         this.isActive = true;
     }
 

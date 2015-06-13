@@ -29,6 +29,8 @@ import javax.inject.Provider;
 import org.killbill.automaton.DefaultStateMachineConfig;
 import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.AdminPaymentApi;
+import org.killbill.billing.payment.api.DefaultAdminPaymentApi;
 import org.killbill.billing.payment.api.DefaultPaymentApi;
 import org.killbill.billing.payment.api.DefaultPaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentApi;
@@ -44,7 +46,7 @@ import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
-import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.dao.DefaultPaymentDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -114,7 +116,7 @@ public class PaymentModule extends KillBillModule {
 
         bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toInstance(new StateMachineProvider(DEFAULT_STATE_MACHINE_RETRY_XML));
         bind(StateMachineConfig.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toProvider(Key.get(StateMachineProvider.class, Names.named(STATE_MACHINE_RETRY)));
-        bind(RetryStateMachineHelper.class).asEagerSingleton();
+        bind(PaymentControlStateMachineHelper.class).asEagerSingleton();
 
         bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toInstance(new StateMachineProvider(DEFAULT_STATE_MACHINE_PAYMENT_XML));
         bind(StateMachineConfig.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toProvider(Key.get(StateMachineProvider.class, Names.named(STATE_MACHINE_PAYMENT)));
@@ -175,6 +177,7 @@ public class PaymentModule extends KillBillModule {
 
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(PaymentGatewayApi.class).to(DefaultPaymentGatewayApi.class).asEagerSingleton();
+        bind(AdminPaymentApi.class).to(DefaultAdminPaymentApi.class).asEagerSingleton();
         bind(InvoiceHandler.class).asEagerSingleton();
         bind(PaymentTagHandler.class).asEagerSingleton();
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();

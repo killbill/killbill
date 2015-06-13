@@ -18,12 +18,11 @@ package org.killbill.billing.util.tag;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.UUIDs;
 
 public class DescriptiveTag extends EntityBase implements Tag {
 
@@ -41,7 +40,7 @@ public class DescriptiveTag extends EntityBase implements Tag {
 
     // use to create new objects
     public DescriptiveTag(final UUID tagDefinitionId, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
-        super(UUID.randomUUID(), createdDate, createdDate);
+        super(UUIDs.randomUUID(), createdDate, createdDate);
         this.tagDefinitionId = tagDefinitionId;
         this.objectType = objectType;
         this.objectId = objectId;

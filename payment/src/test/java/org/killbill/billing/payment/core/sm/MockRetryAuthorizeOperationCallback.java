@@ -27,6 +27,8 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.payment.core.sm.control.AuthorizeControlOperation;
+import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -35,7 +37,7 @@ import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
-public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperationCallback {
+public class MockRetryAuthorizeOperationCallback extends AuthorizeControlOperation {
 
     private final PaymentDao paymentDao;
     private final Clock clock;
@@ -43,7 +45,7 @@ public class MockRetryAuthorizeOperationCallback extends RetryAuthorizeOperation
     private Exception exception;
     private OperationResult result;
 
-    public MockRetryAuthorizeOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final RetryablePaymentStateContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry, final PaymentDao paymentDao, final Clock clock) {
+    public MockRetryAuthorizeOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry, final PaymentDao paymentDao, final Clock clock) {
         super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, retryPluginRegistry);
         this.paymentDao = paymentDao;
         this.clock = clock;

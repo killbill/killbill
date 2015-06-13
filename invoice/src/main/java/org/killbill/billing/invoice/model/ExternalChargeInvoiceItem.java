@@ -25,12 +25,13 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.util.UUIDs;
 
 public class ExternalChargeInvoiceItem extends InvoiceItemBase {
 
     public ExternalChargeInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final String description,
                                      final LocalDate date, final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), invoiceId, accountId, bundleId, description, date, amount, currency);
+        this(UUIDs.randomUUID(), invoiceId, accountId, bundleId, description, date, amount, currency);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,

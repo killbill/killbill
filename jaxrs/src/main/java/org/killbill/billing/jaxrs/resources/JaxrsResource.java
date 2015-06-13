@@ -117,6 +117,9 @@ public interface JaxrsResource {
 
     public static final String PAGINATION = "pagination";
 
+    public static final String ADMIN = "admin";
+    public static final String ADMIN_PATH = PREFIX + "/" + ADMIN;
+
     public static final String ACCOUNTS = "accounts";
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;
 

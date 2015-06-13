@@ -72,6 +72,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
+import org.killbill.billing.util.UUIDs;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationFromPlugins;
 
@@ -307,7 +308,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         if (externalPaymentMethod != null) {
             return externalPaymentMethod.getId();
         }
-        final DefaultNoOpPaymentMethodPlugin props = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, properties);
+        final DefaultNoOpPaymentMethodPlugin props = new DefaultNoOpPaymentMethodPlugin(UUIDs.randomUUID().toString(), false, properties);
         return addPaymentMethod(paymentMethodExternalKey, ExternalPaymentProviderPlugin.PLUGIN_NAME, account, false, props, properties, callContext, context);
     }
 
@@ -450,7 +451,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     final List<PaymentMethodModelDao> finalPaymentMethods = new ArrayList<PaymentMethodModelDao>();
                     for (final PaymentMethodInfoPlugin cur : pluginPms) {
                         // If the kbPaymentId is NULL, the plugin does not know about it, so we create a new UUID
-                        final UUID paymentMethodId = cur.getPaymentMethodId() != null ? cur.getPaymentMethodId() : UUID.randomUUID();
+                        final UUID paymentMethodId = cur.getPaymentMethodId() != null ? cur.getPaymentMethodId() : UUIDs.randomUUID();
                         // TODO paymentMethod externalKey seems broken here.
                         final PaymentMethod input = new DefaultPaymentMethod(paymentMethodId, paymentMethodId.toString(), account.getId(), pluginName);
                         final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getExternalKey(), input.getCreatedDate(), input.getUpdatedDate(),

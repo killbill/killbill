@@ -33,6 +33,7 @@ import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
 import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -84,7 +85,7 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Payment createAuthorizationWithPaymentControl(final Account account, final UUID paymentMethodId, final UUID paymentId, final BigDecimal amount, final Currency currency,
+    public Payment createAuthorizationWithPaymentControl(final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency,
                                                          @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey,
                                                          final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
         final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
@@ -121,6 +122,25 @@ public class DefaultPaymentApi implements PaymentApi {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         return paymentProcessor.createCapture(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, amount, currency, paymentTransactionExternalKey,
                                               SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
+    }
+
+    @Override
+    public Payment createCaptureWithPaymentControl(final Account account, final UUID paymentId, final BigDecimal amount, final Currency currency, @Nullable final String paymentTransactionExternalKey,
+                                                   final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        if (paymentControlPluginNames.isEmpty()) {
+            return createCapture(account, paymentId, amount, currency, paymentTransactionExternalKey, properties, callContext);
+        }
+
+        checkNotNullParameter(account, "account");
+        checkNotNullParameter(paymentId, "paymentId");
+        checkNotNullParameter(currency, "currency");
+        checkNotNullParameter(properties, "plugin properties");
+        checkPositiveAmount(amount);
+
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+        return pluginRoutingPaymentProcessor.createCapture(IS_API_PAYMENT, account, paymentId, amount, currency, paymentTransactionExternalKey,
+                                              properties, paymentControlPluginNames, callContext, internalCallContext);
     }
 
     @Override
@@ -166,7 +186,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
         final UUID nonNulPaymentMethodId = (paymentMethodId != null) ?
                                            paymentMethodId :
-                                           paymentMethodProcessor.createOrGetExternalPaymentMethod(UUID.randomUUID().toString(), account, properties, callContext, internalCallContext);
+                                           paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, properties, callContext, internalCallContext);
         return pluginRoutingPaymentProcessor.createPurchase(IS_API_PAYMENT, account, nonNulPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                             properties, paymentControlPluginNames, callContext, internalCallContext);
 
@@ -186,6 +206,24 @@ public class DefaultPaymentApi implements PaymentApi {
         return paymentProcessor.createVoid(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, paymentTransactionExternalKey,
                                            SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
+    }
+
+    @Override
+    public Payment createVoidWithPaymentControl(final Account account, final UUID paymentId, final String paymentTransactionExternalKey, final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        if (paymentControlPluginNames.isEmpty()) {
+            return createVoid(account, paymentId, paymentTransactionExternalKey, properties, callContext);
+        }
+
+        checkNotNullParameter(account, "account");
+        checkNotNullParameter(paymentId, "paymentId");
+        checkNotNullParameter(properties, "plugin properties");
+
+        logAPICall(TransactionType.VOID.name(), account, null, paymentId, null, null, null, null, paymentTransactionExternalKey);
+
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+        return pluginRoutingPaymentProcessor.createVoid(IS_API_PAYMENT, account, paymentId, paymentTransactionExternalKey,
+                                           properties, paymentControlPluginNames, callContext, internalCallContext);
     }
 
     @Override
@@ -285,7 +323,7 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Payment notifyPendingTransactionOfStateChangedWithPaymentControl(final Account account, final UUID paymentTransactionId, final boolean isSuccess, final PaymentOptions paymentOptions, final CallContext context) throws PaymentApiException {
+    public Payment notifyPendingTransactionOfStateChangedWithPaymentControl(final Account account, final UUID paymentTransactionId, final boolean isSuccess, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
         throw new IllegalStateException("Not implemented");
     }
 
@@ -319,7 +357,7 @@ public class DefaultPaymentApi implements PaymentApi {
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return pluginRoutingPaymentProcessor.createChargeback(account, paymentId, paymentTransactionExternalKey, amount, currency,
+        return pluginRoutingPaymentProcessor.createChargeback(IS_API_PAYMENT, account, paymentId, paymentTransactionExternalKey, amount, currency,
                                                               paymentControlPluginNames, callContext, internalCallContext);
     }
 

@@ -65,6 +65,7 @@ import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -369,8 +370,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             properties.add(pluginPropertyIterator.next());
         }
 
-        final String paymentExternalKey = UUID.randomUUID().toString();
-        final String transactionExternalKey = UUID.randomUUID().toString();
+        final String paymentExternalKey = UUIDs.randomUUID().toString();
+        final String transactionExternalKey = UUIDs.randomUUID().toString();
         final PluginProperty invoiceProperty = new PluginProperty("IPCD_INVOICE_ID" /* InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID (contract with plugin)  */,
                                                                   invoiceId.toString(), false);
         properties.add(invoiceProperty);

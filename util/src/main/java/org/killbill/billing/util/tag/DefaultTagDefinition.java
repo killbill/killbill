@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -39,7 +40,7 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
     }
 
     public DefaultTagDefinition(final String name, final String description, final Boolean isControlTag) {
-        this(UUID.randomUUID(), name, description, isControlTag);
+        this(UUIDs.randomUUID(), name, description, isControlTag);
     }
 
     public DefaultTagDefinition(final UUID id, final String name, final String description, final Boolean isControlTag) {

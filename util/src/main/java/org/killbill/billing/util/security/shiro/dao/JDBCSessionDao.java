@@ -24,7 +24,11 @@ import java.io.Serializable;
 import javax.inject.Inject;
 
 import org.apache.shiro.session.Session;
+import org.apache.shiro.session.UnknownSessionException;
+import org.apache.shiro.session.mgt.SimpleSession;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -44,7 +48,28 @@ public class JDBCSessionDao extends CachingSessionDAO {
 
     @Override
     protected void doUpdate(final Session session) {
-        jdbcSessionSqlDao.update(new SessionModelDao(session));
+        // The look-up should be cheap (most likely cached)
+        final Session previousSession = readSession(session.getId());
+
+        if (SessionUtils.sameSession(previousSession, session)) {
+            // Only the last access time attribute was updated.
+            // Avoid writing the state to disk for each request: we don't care so much about precision in the database,
+            // we just want to make sure the session doesn't timeout too early.
+            // Note also that in the case of a single node (or distributed cache), the timeout computation
+            // will be correct (because the cache value is correct).
+            // See https://github.com/killbill/killbill/issues/326
+            if (!SessionUtils.accessedRecently(previousSession, session)) {
+                final DateTime lastAccessTime = new DateTime(session.getLastAccessTime(), DateTimeZone.UTC);
+                final Long sessionId = Long.valueOf(session.getId().toString());
+                jdbcSessionSqlDao.updateLastAccessTime(lastAccessTime, sessionId);
+            } else if (session instanceof SimpleSession) {
+                // Hack to override the value in the cache so subsequent requests see the (stale) value on disk
+                ((SimpleSession) session).setLastAccessTime(previousSession.getLastAccessTime());
+            }
+        } else {
+            // Various fields were changed, update the full row
+            jdbcSessionSqlDao.update(new SessionModelDao(session));
+        }
     }
 
     @Override
@@ -64,6 +89,28 @@ public class JDBCSessionDao extends CachingSessionDAO {
         // See SessionModelDao#toSimpleSession for why we use toString()
         assignSessionId(session, sessionId.toString());
         return sessionId;
+    }
+
+    @Override
+    public Session readSession(final Serializable sessionId) throws UnknownSessionException {
+        final Session session = super.readSession(sessionId);
+
+        // Clone the session to avoid making changes to the existing one in the cache.
+        // This is required for the lookup in doUpdate to work
+        final SimpleSession clonedSession = new SimpleSession();
+        clonedSession.setId(session.getId());
+        clonedSession.setStartTimestamp(session.getStartTimestamp());
+        clonedSession.setLastAccessTime(session.getLastAccessTime());
+        clonedSession.setTimeout(session.getTimeout());
+        clonedSession.setHost(session.getHost());
+        clonedSession.setAttributes(SessionUtils.getSessionAttributes(session));
+
+        if (session instanceof SimpleSession) {
+            clonedSession.setStopTimestamp(((SimpleSession) session).getStopTimestamp());
+            clonedSession.setExpired(((SimpleSession) session).isExpired());
+        }
+
+        return clonedSession;
     }
 
     @Override

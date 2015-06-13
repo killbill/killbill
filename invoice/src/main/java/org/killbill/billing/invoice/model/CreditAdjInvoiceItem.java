@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.util.UUIDs;
 
 import com.google.common.base.Objects;
 
@@ -34,7 +35,7 @@ public class CreditAdjInvoiceItem extends AdjInvoiceItem {
 
     public CreditAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate date,
                                 final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), null, invoiceId, accountId, date, amount, currency);
+        this(UUIDs.randomUUID(), null, invoiceId, accountId, date, amount, currency);
     }
 
     public CreditAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate date,

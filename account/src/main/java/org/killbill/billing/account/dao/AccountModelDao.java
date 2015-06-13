@@ -25,6 +25,7 @@ import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
@@ -96,7 +97,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
     }
 
     public AccountModelDao(final AccountData account) {
-        this(UUID.randomUUID(), account);
+        this(UUIDs.randomUUID(), account);
     }
 
     public String getExternalKey() {

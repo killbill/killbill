@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.util.UUIDs;
 
 public class DefaultControlTag extends DescriptiveTag implements ControlTag {
 
@@ -28,7 +29,7 @@ public class DefaultControlTag extends DescriptiveTag implements ControlTag {
 
     // use to create new objects
     public DefaultControlTag(final ControlTagType controlTagType, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
-        this(UUID.randomUUID(), controlTagType, objectType, objectId, createdDate);
+        this(UUIDs.randomUUID(), controlTagType, objectType, objectId, createdDate);
     }
 
     // use to hydrate objects when loaded from the persistence layer

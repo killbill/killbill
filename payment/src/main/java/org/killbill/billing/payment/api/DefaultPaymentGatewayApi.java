@@ -53,7 +53,17 @@ public class DefaultPaymentGatewayApi implements PaymentGatewayApi {
     }
 
     @Override
+    public HostedPaymentPageFormDescriptor buildFormDescriptorWithPaymentControl(final Account account, final UUID uuid, final Iterable<PluginProperty> iterable, final Iterable<PluginProperty> iterable1, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
     public GatewayNotification processNotification(final String notification, final String pluginName, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         return paymentGatewayProcessor.processNotification(notification, pluginName, properties, callContext);
+    }
+
+    @Override
+    public GatewayNotification processNotificationWithPaymentControl(final String s, final String s1, final Iterable<PluginProperty> iterable, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
+        throw new IllegalStateException("Not implemented");
     }
 }

@@ -38,6 +38,7 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.clock.Clock;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -132,7 +133,7 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUID.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
+                final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUIDs.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
                 final TenantKVSqlDao tenantKVSqlDao = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class);
                 if (uniqueKey) {
                     deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);

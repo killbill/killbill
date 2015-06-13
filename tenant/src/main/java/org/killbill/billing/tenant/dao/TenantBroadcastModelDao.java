@@ -20,6 +20,7 @@ package org.killbill.billing.tenant.dao;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -35,7 +36,7 @@ public class TenantBroadcastModelDao extends EntityModelDaoBase implements Entit
     public TenantBroadcastModelDao() { /* For the DAO mapper */ }
 
     public TenantBroadcastModelDao(final Long targetRecordId, final String type, final UUID userToken) {
-        this(UUID.randomUUID(), null, null, type, userToken);
+        this(UUIDs.randomUUID(), null, null, type, userToken);
         this.targetRecordId = targetRecordId;
     }
 

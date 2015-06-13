@@ -20,8 +20,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.UUIDs;
 
 public class DefaultSubscriptionBaseBundle extends EntityBase implements SubscriptionBaseBundle {
 
@@ -32,7 +32,7 @@ public class DefaultSubscriptionBaseBundle extends EntityBase implements Subscri
 
     public DefaultSubscriptionBaseBundle(final String name, final UUID accountId, final DateTime startDate, final DateTime originalCreatedDate,
                                          final DateTime createdDate, final DateTime updatedDate) {
-        this(UUID.randomUUID(), name, accountId, startDate, originalCreatedDate, createdDate, updatedDate);
+        this(UUIDs.randomUUID(), name, accountId, startDate, originalCreatedDate, createdDate, updatedDate);
     }
 
     public DefaultSubscriptionBaseBundle(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdate, final DateTime originalCreatedDate,

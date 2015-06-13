@@ -536,7 +536,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_PAYMENT.getCode());
 
-            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), true, ImmutableList.<PluginProperty>of(), callContext);
             assertEquals(latestPayment, initialPayment);
         }
     }
@@ -556,7 +556,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
 
-            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), true, ImmutableList.<PluginProperty>of(), callContext);
             assertEquals(latestPayment, initialPayment);
         }
     }

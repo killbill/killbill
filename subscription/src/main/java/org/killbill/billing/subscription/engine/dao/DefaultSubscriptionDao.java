@@ -78,6 +78,7 @@ import org.killbill.billing.subscription.events.user.ApiEventChange;
 import org.killbill.billing.subscription.events.user.ApiEventMigrateBilling;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
@@ -695,7 +696,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     .setEventType(ApiEventType.MIGRATE_BILLING)
                     .setFromDisk(true)
                     .setTotalOrdering(migrateBillingEvent.getTotalOrdering())
-                    .setUuid(UUID.randomUUID())
+                    .setUuid(UUIDs.randomUUID())
                     .setSubscriptionId(migrateBillingEvent.getSubscriptionId())
                     .setCreatedDate(now)
                     .setUpdatedDate(now)

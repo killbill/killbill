@@ -21,8 +21,9 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.util.customfield.dao.CustomFieldModelDao;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.customfield.dao.CustomFieldModelDao;
 
 public class StringCustomField extends EntityBase implements CustomField {
 
@@ -32,7 +33,7 @@ public class StringCustomField extends EntityBase implements CustomField {
     private final ObjectType objectType;
 
     public StringCustomField(final String name, final String value, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
-        this(UUID.randomUUID(), name, value, objectType, objectId, createdDate);
+        this(UUIDs.randomUUID(), name, value, objectType, objectId, createdDate);
     }
 
     public StringCustomField(final UUID id, final String name, final String value, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {

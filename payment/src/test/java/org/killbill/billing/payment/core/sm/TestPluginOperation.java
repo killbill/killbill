@@ -37,6 +37,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
+import org.killbill.billing.payment.core.sm.payments.PaymentOperation;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
@@ -81,7 +82,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
             pluginOperation.dispatchWithAccountLockAndTimeout(callback);
             Assert.fail();
         } catch (final OperationException e) {
-            Assert.assertEquals(e.getOperationResult(), OperationResult.FAILURE);
+            Assert.assertEquals(e.getOperationResult(), OperationResult.EXCEPTION);
             Assert.assertTrue(e.getCause() instanceof PaymentApiException);
         }
     }

@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -71,7 +72,7 @@ public class PaymentAttemptModelDao extends EntityModelDaoBase implements Entity
     public PaymentAttemptModelDao(final UUID accountId, final UUID paymentMethodId, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                   final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType, final String stateName,
                                   final BigDecimal amount, final Currency currency, final List<String> paymentControlPluginNames, final byte[] pluginProperties) {
-        this(accountId, paymentMethodId, UUID.randomUUID(), createdDate, updatedDate, paymentExternalKey, transactionId, transactionExternalKey, transactionType, stateName,
+        this(accountId, paymentMethodId, UUIDs.randomUUID(), createdDate, updatedDate, paymentExternalKey, transactionId, transactionExternalKey, transactionType, stateName,
              amount, currency, toPluginNames(paymentControlPluginNames), pluginProperties);
     }
 

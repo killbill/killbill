@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -43,7 +44,7 @@ public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityM
     }
 
     public RolledUpUsageModelDao(final UUID subscriptionId, final String unitType, final LocalDate recordDate, final Long amount) {
-        this(UUID.randomUUID(), null, null, subscriptionId, unitType, recordDate, amount);
+        this(UUIDs.randomUUID(), null, null, subscriptionId, unitType, recordDate, amount);
     }
 
     public UUID getSubscriptionId() {

@@ -16,12 +16,11 @@
 
 package org.killbill.billing.jaxrs.util;
 
-import java.util.UUID;
-
 import javax.servlet.ServletRequest;
 
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.tenant.api.Tenant;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallContextFactory;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -50,7 +49,7 @@ public class Context {
             Preconditions.checkNotNull(createdBy, String.format("Header %s needs to be set", JaxrsResource.HDR_CREATED_BY));
             final Tenant tenant = getTenantFromRequest(request);
             return contextFactory.createCallContext(tenant == null ? null : tenant.getId(), createdBy, origin, userType, reason,
-                                                    comment, UUID.randomUUID());
+                                                    comment, UUIDs.randomUUID());
         } catch (final NullPointerException e) {
             throw new IllegalArgumentException(e.getMessage());
         }

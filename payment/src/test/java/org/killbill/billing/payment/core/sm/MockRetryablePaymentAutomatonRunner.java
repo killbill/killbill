@@ -36,6 +36,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.glue.PaymentModule;
@@ -55,17 +56,17 @@ import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 public class MockRetryablePaymentAutomatonRunner extends PluginRoutingPaymentAutomatonRunner {
 
     private OperationCallback operationCallback;
-    private RetryablePaymentStateContext context;
+    private PaymentStateControlContext context;
 
     @Inject
     public MockRetryablePaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, @Named(PaymentModule.STATE_MACHINE_RETRY) final StateMachineConfig retryStateMachine, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final PaymentProcessor paymentProcessor,
                                                @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler, final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
-                                               final PaymentStateMachineHelper paymentSMHelper, final RetryStateMachineHelper retrySMHelper, final PersistentBus eventBus) {
+                                               final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper retrySMHelper, final PersistentBus eventBus) {
         super(stateMachineConfig, paymentDao, locker, pluginRegistry, retryPluginRegistry, clock, paymentProcessor, retryServiceScheduler, paymentConfig, executor, paymentSMHelper, retrySMHelper, eventBus);
     }
 
     @Override
-    OperationCallback createOperationCallback(final TransactionType transactionType, final RetryablePaymentStateContext paymentStateContext) {
+    OperationCallback createOperationCallback(final TransactionType transactionType, final PaymentStateControlContext paymentStateContext) {
         if (operationCallback == null) {
             return super.createOperationCallback(transactionType, paymentStateContext);
         } else {
@@ -74,7 +75,7 @@ public class MockRetryablePaymentAutomatonRunner extends PluginRoutingPaymentAut
     }
 
     @Override
-    RetryablePaymentStateContext createContext(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
+    PaymentStateControlContext createContext(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
                                                      @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
                                                      @Nullable final BigDecimal amount, @Nullable final Currency currency,
                                                      final Iterable<PluginProperty> properties,
@@ -92,7 +93,7 @@ public class MockRetryablePaymentAutomatonRunner extends PluginRoutingPaymentAut
         return this;
     }
 
-    public MockRetryablePaymentAutomatonRunner setContext(final RetryablePaymentStateContext context) {
+    public MockRetryablePaymentAutomatonRunner setContext(final PaymentStateControlContext context) {
         this.context = context;
         return this;
     }

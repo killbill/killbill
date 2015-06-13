@@ -36,6 +36,7 @@ import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
+import org.killbill.billing.util.UUIDs;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -55,7 +56,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     // Used to create a new invoice
     public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
-        this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
+        this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
     }
 
     public DefaultInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,

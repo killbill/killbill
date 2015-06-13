@@ -45,6 +45,27 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.sm.payments.AuthorizeCompleted;
+import org.killbill.billing.payment.core.sm.payments.AuthorizeInitiated;
+import org.killbill.billing.payment.core.sm.payments.AuthorizeOperation;
+import org.killbill.billing.payment.core.sm.payments.CaptureCompleted;
+import org.killbill.billing.payment.core.sm.payments.CaptureInitiated;
+import org.killbill.billing.payment.core.sm.payments.CaptureOperation;
+import org.killbill.billing.payment.core.sm.payments.ChargebackCompleted;
+import org.killbill.billing.payment.core.sm.payments.ChargebackInitiated;
+import org.killbill.billing.payment.core.sm.payments.ChargebackOperation;
+import org.killbill.billing.payment.core.sm.payments.CreditCompleted;
+import org.killbill.billing.payment.core.sm.payments.CreditInitiated;
+import org.killbill.billing.payment.core.sm.payments.CreditOperation;
+import org.killbill.billing.payment.core.sm.payments.PurchaseCompleted;
+import org.killbill.billing.payment.core.sm.payments.PurchaseInitiated;
+import org.killbill.billing.payment.core.sm.payments.PurchaseOperation;
+import org.killbill.billing.payment.core.sm.payments.RefundCompleted;
+import org.killbill.billing.payment.core.sm.payments.RefundInitiated;
+import org.killbill.billing.payment.core.sm.payments.RefundOperation;
+import org.killbill.billing.payment.core.sm.payments.VoidCompleted;
+import org.killbill.billing.payment.core.sm.payments.VoidInitiated;
+import org.killbill.billing.payment.core.sm.payments.VoidOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
@@ -174,6 +195,17 @@ public class PaymentAutomatonRunner {
         runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback, account.getId(), getInvoiceId(properties));
 
         return paymentStateContext.getPaymentId();
+    }
+
+    //
+    // TODO Fix fields accessed by some callbacks (which are not injected)
+    //
+    public PaymentDao getPaymentDao() {
+        return paymentDao;
+    }
+
+    public Clock getClock() {
+        return clock;
     }
 
     protected void runStateMachineOperation(final String initialStateName, final TransactionType transactionType,

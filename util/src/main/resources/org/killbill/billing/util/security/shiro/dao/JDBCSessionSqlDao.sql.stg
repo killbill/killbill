@@ -40,6 +40,13 @@ where record_id = :recordId
 ;
 >>
 
+updateLastAccessTime() ::= <<
+update sessions set
+  last_access_time = :lastAccessTime
+where record_id = :recordId
+;
+>>
+
 delete() ::= <<
 delete from sessions
 where record_id = :recordId

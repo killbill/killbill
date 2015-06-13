@@ -31,6 +31,7 @@ import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.sm.payments.PaymentOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
@@ -55,18 +56,18 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
     public void testPaymentFailure() throws Exception {
         setUp(PaymentPluginStatus.ERROR);
 
-        Assert.assertNull(paymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNull(paymentStateContext.getPaymentTransactionInfoPlugin());
 
         Assert.assertEquals(paymentOperation.doOperationCallback(), OperationResult.FAILURE);
 
-        Assert.assertNotNull(paymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNotNull(paymentStateContext.getPaymentTransactionInfoPlugin());
     }
 
     @Test(groups = "fast")
     public void testPluginFailure() throws Exception {
         setUp(null);
 
-        Assert.assertNull(paymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNull(paymentStateContext.getPaymentTransactionInfoPlugin());
 
         try {
             paymentOperation.doOperationCallback();
@@ -75,29 +76,29 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
             Assert.assertEquals(e.getOperationResult(), OperationResult.EXCEPTION);
         }
 
-        Assert.assertNull(paymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNull(paymentStateContext.getPaymentTransactionInfoPlugin());
     }
 
     @Test(groups = "fast")
     public void testPaymentPending() throws Exception {
         setUp(PaymentPluginStatus.PENDING);
 
-        Assert.assertNull(paymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNull(paymentStateContext.getPaymentTransactionInfoPlugin());
 
         Assert.assertEquals(paymentOperation.doOperationCallback(), OperationResult.PENDING);
 
-        Assert.assertNotNull(paymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNotNull(paymentStateContext.getPaymentTransactionInfoPlugin());
     }
 
     @Test(groups = "fast")
     public void testPaymentSuccess() throws Exception {
         setUp(PaymentPluginStatus.PROCESSED);
 
-        Assert.assertNull(paymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNull(paymentStateContext.getPaymentTransactionInfoPlugin());
 
         Assert.assertEquals(paymentOperation.doOperationCallback(), OperationResult.SUCCESS);
 
-        Assert.assertNotNull(paymentStateContext.getPaymentInfoPlugin());
+        Assert.assertNotNull(paymentStateContext.getPaymentTransactionInfoPlugin());
     }
 
     private void setUp(final PaymentPluginStatus paymentPluginStatus) throws Exception {

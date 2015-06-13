@@ -30,7 +30,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
-import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -58,6 +57,7 @@ import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
 import org.killbill.billing.subscription.events.user.ApiEventTransfer;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 
@@ -262,7 +262,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
                 // Create the new subscription for the new bundle on the new account
                 final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
-                                                                                                            .setId(UUID.randomUUID())
+                                                                                                            .setId(UUIDs.randomUUID())
                                                                                                             .setBundleId(subscriptionBundleData.getId())
                                                                                                             .setCategory(productCategory)
                                                                                                             .setBundleStartDate(effectiveTransferDate)

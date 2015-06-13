@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.common.collect.ImmutableList;
 
 public class PatternObfuscator extends Obfuscator {
@@ -63,8 +64,8 @@ public class PatternObfuscator extends Obfuscator {
     }
 
     @Override
-    public String obfuscate(final String originalString) {
-        return obfuscate(originalString, patterns);
+    public String obfuscate(final String originalString, final ILoggingEvent event) {
+        return obfuscate(originalString, patterns, event);
     }
 
     private Pattern buildJSONPattern(final String key) {
@@ -72,7 +73,7 @@ public class PatternObfuscator extends Obfuscator {
     }
 
     private Pattern buildXMLPattern(final String key) {
-        return Pattern.compile(key + ">([^<\\n]+)", DEFAULT_PATTERN_FLAGS);
+        return Pattern.compile(key + ">([^<\\n]+)</[^<>]*" + key + ">", DEFAULT_PATTERN_FLAGS);
     }
 
     private Pattern buildMultiValuesXMLPattern(final String key) {

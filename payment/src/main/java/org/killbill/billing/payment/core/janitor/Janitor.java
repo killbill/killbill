@@ -27,7 +27,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
-import org.killbill.billing.payment.core.sm.RetryStateMachineHelper;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -48,9 +48,8 @@ public class Janitor {
 
     private final ScheduledExecutorService janitorExecutor;
     private final PaymentConfig paymentConfig;
-    private final PendingTransactionTask pendingTransactionTask;
-    private final AttemptCompletionTask attemptCompletionTask;
-    private final ErroredPaymentTask erroredPaymentCompletionTask;
+    private final IncompletePaymentAttemptTask incompletePaymentAttemptTask;
+    private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
 
     private volatile boolean isStopped;
 
@@ -63,15 +62,13 @@ public class Janitor {
                    final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                    @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
                    final PaymentStateMachineHelper paymentSMHelper,
-                   final RetryStateMachineHelper retrySMHelper,
+                   final PaymentControlStateMachineHelper retrySMHelper,
                    final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         this.janitorExecutor = janitorExecutor;
         this.paymentConfig = paymentConfig;
-        this.pendingTransactionTask = new PendingTransactionTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
-                                                                 accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
-        this.attemptCompletionTask = new AttemptCompletionTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
+        this.incompletePaymentAttemptTask = new IncompletePaymentAttemptTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
                                                                accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
-        this.erroredPaymentCompletionTask = new ErroredPaymentTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
+        this.incompletePaymentTransactionTask = new IncompletePaymentTransactionTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
                                                                    accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
         this.isStopped = false;
     }
@@ -82,20 +79,15 @@ public class Janitor {
             return;
         }
 
-        // Start task for removing old pending payments.
-        final TimeUnit pendingRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
-        final long pendingPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
-        janitorExecutor.scheduleAtFixedRate(pendingTransactionTask, pendingPeriod, pendingPeriod, pendingRateUnit);
-
         // Start task for completing incomplete payment attempts
         final TimeUnit attemptCompletionRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
         final long attemptCompletionPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
-        janitorExecutor.scheduleAtFixedRate(attemptCompletionTask, attemptCompletionPeriod, attemptCompletionPeriod, attemptCompletionRateUnit);
+        janitorExecutor.scheduleAtFixedRate(incompletePaymentAttemptTask, attemptCompletionPeriod, attemptCompletionPeriod, attemptCompletionRateUnit);
 
         // Start task for completing incomplete payment attempts
         final TimeUnit erroredCompletionRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
         final long erroredCompletionPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
-        janitorExecutor.scheduleAtFixedRate(erroredPaymentCompletionTask, erroredCompletionPeriod, erroredCompletionPeriod, erroredCompletionRateUnit);
+        janitorExecutor.scheduleAtFixedRate(incompletePaymentTransactionTask, erroredCompletionPeriod, erroredCompletionPeriod, erroredCompletionRateUnit);
     }
 
     public void stop() {
