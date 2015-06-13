@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -38,10 +39,13 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -72,6 +76,8 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     @Inject
     private Janitor janitor;
 
+    private MockPaymentProviderPlugin mockPaymentProviderPlugin;
+
     private Account account;
 
     @Override
@@ -86,6 +92,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
         super.beforeClass();
+        mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
         janitor.start();
     }
 
@@ -97,6 +104,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+        mockPaymentProviderPlugin.clear();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
     }
 
@@ -242,13 +250,83 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
-
     }
 
+    @Test(groups = "slow")
+    public void testUnknownEntriesWithFailures() throws PaymentApiException, EventBusException {
 
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "minus";
+        final String transactionExternalKey = "plus";
+
+        // Make sure the state as seen by the plugin will be in PaymentPluginStatus.ERROR, which will be returned later to Janitor
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), paymentExternalKey,
+                                                               transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+
+        // Artificially move the transaction status to UNKNOWN
+        final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+                                                           payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
+                                                           "foo", "bar", internalCallContext);
+
+        final List<PaymentTransactionModelDao> paymentTransactionHistoryBeforeJanitor = getPaymentTransactionHistory(transactionExternalKey);
+        Assert.assertEquals(paymentTransactionHistoryBeforeJanitor.size(), 3);
+
+        clock.addDays(1);
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+        }
+
+        // Proves the Janitor ran (and updated the transaction)
+        final List<PaymentTransactionModelDao> paymentTransactionHistoryAfterJanitor = getPaymentTransactionHistory(transactionExternalKey);
+        Assert.assertEquals(paymentTransactionHistoryAfterJanitor.size(), 4);
+        Assert.assertEquals(paymentTransactionHistoryAfterJanitor.get(3).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+
+        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        // Janitor should have moved us to PAYMENT_FAILURE
+        assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+    }
 
     @Test(groups = "slow")
-    public void testPendingEntries() throws PaymentApiException, InvoiceApiException, EventBusException {
+    public void testUnknownEntriesWithExceptions() throws PaymentApiException, EventBusException {
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "minus";
+        final String transactionExternalKey = "plus";
+
+        // Make sure the state as seen by the plugin will be in PaymentPluginStatus.ERROR, which will be returned later to Janitor
+        mockPaymentProviderPlugin.makeNextPaymentFailWithException();
+        try {
+            paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), paymentExternalKey,
+                                           transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+        } catch (PaymentApiException ignore) {
+        }
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, ImmutableList.<PluginProperty>of(), callContext);
+
+        // Artificially move the transaction status to UNKNOWN
+        final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+                                                           payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
+                                                           "foo", "bar", internalCallContext);
+
+        final List<PaymentTransactionModelDao> paymentTransactionHistoryBeforeJanitor = getPaymentTransactionHistory(transactionExternalKey);
+        Assert.assertEquals(paymentTransactionHistoryBeforeJanitor.size(), 3);
+
+        clock.addDays(1);
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+        }
+
+        // Nothing new happened
+        final List<PaymentTransactionModelDao> paymentTransactionHistoryAfterJanitor = getPaymentTransactionHistory(transactionExternalKey);
+        Assert.assertEquals(paymentTransactionHistoryAfterJanitor.size(), 3);
+    }
+
+    @Test(groups = "slow")
+    public void testPendingEntries() throws PaymentApiException, EventBusException {
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final String paymentExternalKey = "jhj44";
@@ -277,6 +355,35 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final List<PluginProperty> result = new ArrayList<PluginProperty>();
         result.add(new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
         return result;
+    }
+
+    // I wish we had a simplest way to query our history rows..
+    private List<PaymentTransactionModelDao> getPaymentTransactionHistory(final String transactionExternalKey) {
+        return dbi.withHandle(new HandleCallback<List<PaymentTransactionModelDao>>() {
+            @Override
+            public List<PaymentTransactionModelDao> withHandle(final Handle handle) throws Exception {
+                final List<Map<String, Object>> queryResult = handle.select("select * from payment_transaction_history where transaction_external_key = ? order by record_id asc",
+                                                                            transactionExternalKey);
+                final List<PaymentTransactionModelDao> result = new ArrayList<PaymentTransactionModelDao>(queryResult.size());
+                for (final Map<String, Object> row : queryResult) {
+                    final PaymentTransactionModelDao transactionModelDao = new PaymentTransactionModelDao(UUID.fromString((String) row.get("id")),
+                                                                                                          null,
+                                                                                                          (String) row.get("transaction_external_key"),
+                                                                                                          null,
+                                                                                                          null,
+                                                                                                          UUID.fromString((String) row.get("payment_id")),
+                                                                                                          TransactionType.valueOf((String) row.get("transaction_type")),
+                                                                                                          null,
+                                                                                                          TransactionStatus.valueOf((String) row.get("transaction_status")),
+                                                                                                          (BigDecimal) row.get("amount"),
+                                                                                                          Currency.valueOf((String) row.get("currency")),
+                                                                                                          (String) row.get("gateway_error_code"),
+                                                                                                          (String) row.get("gateway_error_msg"));
+                    result.add(transactionModelDao);
+                }
+                return result;
+            }
+        });
     }
 }
 

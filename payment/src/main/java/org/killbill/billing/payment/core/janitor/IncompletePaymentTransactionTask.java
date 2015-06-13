@@ -120,9 +120,10 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             case PLUGIN_FAILURE:
             case UNKNOWN:
             default:
-                // In this case we don't try to update the current paymentState (since we could not get anything interesting from the plugin)
-                newPaymentState = payment.getStateName();
-                break;
+                log.info("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, bail early...",
+                         new Object[] {payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus});
+                // We can't get anything interesting from the plugin...
+                return;
         }
 
         // Recompute new lastSuccessPaymentState. This is important to be able to allow new operations on the state machine (for e.g an AUTH_SUCCESS would now allow a CAPTURE operation)
