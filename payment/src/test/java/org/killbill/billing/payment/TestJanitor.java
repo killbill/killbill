@@ -151,7 +151,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
             Thread.sleep(1500);
         } catch (InterruptedException e) {
         }
-        ;
 
         final PaymentAttemptModelDao attempt3 = paymentDao.getPaymentAttempt(attempt.getId(), internalCallContext);
         assertEquals(attempt3.getStateName(), "SUCCESS");
@@ -214,7 +213,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
             Thread.sleep(1500);
         } catch (InterruptedException e) {
         }
-        ;
 
         final PaymentAttemptModelDao attempt3 = paymentDao.getPaymentAttempt(refundAttempt.getId(), internalCallContext);
         assertEquals(attempt3.getStateName(), "SUCCESS");

@@ -71,7 +71,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     public List<PaymentTransactionModelDao> getItemsForIteration() {
         final List<PaymentTransactionModelDao> result = paymentDao.getByTransactionStatusAcrossTenants(TRANSACTION_STATUSES_TO_CONSIDER, getCreatedDateBefore(), getCreatedDateAfter(), MAX_ITEMS_PER_LOOP);
         if (!result.isEmpty()) {
-            log.info("Janitor IncompletePaymentTransactionTask start run: found {} errored/unknown payments", result.size());
+            log.info("Janitor IncompletePaymentTransactionTask start run: found {} pending/unknown payments", result.size());
         }
         return result;
     }
@@ -138,7 +138,8 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         final String gatewayErrorCode = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin.getGatewayErrorCode() : paymentTransaction.getGatewayErrorCode();
         final String gatewayError = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin.getGatewayError() : paymentTransaction.getGatewayErrorMsg();
 
-        log.info("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}", payment.getId(), paymentTransaction.getId());
+        log.info("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, transitioning transactionStatus from {} -> {}",
+                 new Object[] {payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus});
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(payment.getAccountId(), callContext);
         paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, lastSuccessPaymentState,

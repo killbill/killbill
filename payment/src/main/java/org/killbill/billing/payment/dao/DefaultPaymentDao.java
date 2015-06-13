@@ -59,6 +59,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -161,12 +162,8 @@ public class DefaultPaymentDao implements PaymentDao {
             @Override
             public List<PaymentTransactionModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TransactionSqlDao transactional = entitySqlDaoWrapperFactory.become(TransactionSqlDao.class);
-                final Collection<String> allTransactionStatus = ImmutableList.copyOf(Iterables.transform(transactionStatuses, new Function<TransactionStatus, String>() {
-                    @Override
-                    public String apply(final TransactionStatus input) {
-                        return input.toString();
-                    }
-                }));
+
+                final Collection<String> allTransactionStatus = ImmutableList.copyOf(Iterables.transform(transactionStatuses,  Functions.toStringFunction()));
                  return transactional.getByTransactionStatusPriorDateAcrossTenants(allTransactionStatus, createdBeforeDate.toDate(), createdAfterDate.toDate(), limit);
             }
         });
