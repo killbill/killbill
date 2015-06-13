@@ -64,11 +64,16 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(final TransactionStatus transactionStatus, final DateTime createdBeforeDate) {
+    public List<PaymentTransactionModelDao> getByTransactionStatusAcrossTenants(final Iterable<TransactionStatus> transactionStatuses, DateTime createdBeforeDate, DateTime createdAfterDate, int limit) {
         return ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {
-                return input.getTransactionStatus() == transactionStatus;
+                return Iterables.any(transactionStatuses, new Predicate<TransactionStatus>() {
+                    @Override
+                    public boolean apply(final TransactionStatus transactionStatus) {
+                        return input.getTransactionStatus() == transactionStatus;
+                    }
+                });
             }
         }));
     }

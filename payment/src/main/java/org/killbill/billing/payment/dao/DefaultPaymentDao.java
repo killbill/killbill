@@ -156,12 +156,18 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(final TransactionStatus transactionStatus, final DateTime createdBeforeDate) {
+    public List<PaymentTransactionModelDao> getByTransactionStatusAcrossTenants(final Iterable<TransactionStatus> transactionStatuses, final DateTime createdBeforeDate, final DateTime createdAfterDate, final int limit) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentTransactionModelDao>>() {
             @Override
             public List<PaymentTransactionModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TransactionSqlDao transactional = entitySqlDaoWrapperFactory.become(TransactionSqlDao.class);
-                return transactional.getByTransactionStatusPriorDateAcrossTenants(transactionStatus.toString(), createdBeforeDate.toDate());
+                final Collection<String> allTransactionStatus = ImmutableList.copyOf(Iterables.transform(transactionStatuses, new Function<TransactionStatus, String>() {
+                    @Override
+                    public String apply(final TransactionStatus input) {
+                        return input.toString();
+                    }
+                }));
+                 return transactional.getByTransactionStatusPriorDateAcrossTenants(allTransactionStatus, createdBeforeDate.toDate(), createdAfterDate.toDate(), limit);
             }
         });
     }

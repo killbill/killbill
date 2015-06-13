@@ -82,13 +82,15 @@ where payment_id = :paymentId
 
 
 /* Does not include AND_CHECK_TENANT() since this is a global operation */
-getByTransactionStatusPriorDateAcrossTenants() ::= <<
+getByTransactionStatusPriorDateAcrossTenants(statuses) ::= <<
 select <allTableFields()>
 from <tableName()>
-where transaction_status = :transactionStatus
-and created_date \< :beforeCreatedDate
+where
+created_date >= :createdAfterDate
+and created_date \< :createdBeforeDate
+and transaction_status in (<statuses: {status | :status_<i0>}; separator="," >)
 <defaultOrderBy()>
+limit :limit
 ;
 >>
-
 

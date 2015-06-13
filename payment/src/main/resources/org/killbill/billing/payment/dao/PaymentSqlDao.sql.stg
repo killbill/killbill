@@ -108,7 +108,7 @@ select
 from <tableName()> t
 where
 created_date >= :createdAfterDate
-and created_date \<= :createdBeforeDate
+and created_date \< :createdBeforeDate
 and state_name in (<states: {state | :state_<i0>}; separator="," >)
 limit :limit
 ;

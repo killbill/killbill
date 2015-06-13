@@ -106,8 +106,4 @@ abstract class CompletionTaskBase<T> implements Runnable {
         return callContext;
     }
 
-    protected DateTime getCreatedDateBefore() {
-        final long delayBeforeNowMs = paymentConfig.getJanitorPendingCleanupTime().getMillis();
-        return clock.getUTCNow().minusMillis((int) delayBeforeNowMs);
-    }
 }

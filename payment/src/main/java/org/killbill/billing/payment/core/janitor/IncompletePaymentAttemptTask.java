@@ -19,6 +19,7 @@ package org.killbill.billing.payment.core.janitor;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -124,4 +125,10 @@ final class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttem
             log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
         }
     }
+
+    private DateTime getCreatedDateBefore() {
+        final long delayBeforeNowMs = paymentConfig.getIncompleteAttemptsTimeSpanDelay().getMillis();
+        return clock.getUTCNow().minusMillis((int) delayBeforeNowMs);
+    }
+
 }

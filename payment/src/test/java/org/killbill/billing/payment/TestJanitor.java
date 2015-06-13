@@ -235,7 +235,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
                                                            "foo", "bar", internalCallContext);
-        // The UnknownPaymentTransactionTask will look for UNKNOWN payment that *just happened* (in the last SAFETY_DELAY_MS=3min delay), and that are not too old (less than 3 days)
+        // The UnknownPaymentTransactionTask will look for UNKNOWN payment that *just happened* , and that are not too old (less than 7 days)
         clock.addDays(1);
         try {
             Thread.sleep(1500);
@@ -271,7 +271,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         }
 
         final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
-        Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
 
     }
 

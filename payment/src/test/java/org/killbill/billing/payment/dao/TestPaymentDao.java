@@ -259,7 +259,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey3 = "transaction3";
         final String transactionExternalKey4 = "transaction4";
 
-        final DateTime initialTime = clock.getUTCNow();
+        final DateTime initialTime = clock.getUTCNow().minusMinutes(1);
 
         final PaymentModelDao paymentModelDao = new PaymentModelDao(initialTime, initialTime, accountId, paymentMethodId, externalKey);
         final PaymentTransactionModelDao transaction1 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey1,
@@ -284,7 +284,6 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         clock.addDays(1);
         final DateTime newTime = clock.getUTCNow();
-
         final InternalCallContext internalCallContextWithNewTime = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),
                                                                                            UUID.randomUUID().toString(), CallOrigin.TEST,
                                                                                            UserType.TEST, "Testing", "This is a test",
@@ -299,7 +298,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final List<PaymentTransactionModelDao> result = getPendingTransactions(paymentModelDao.getId());
         Assert.assertEquals(result.size(), 3);
 
-        final List<PaymentTransactionModelDao> transactions1 = paymentDao.getByTransactionStatusPriorDateAcrossTenants(TransactionStatus.PENDING, newTime);
+        final List<PaymentTransactionModelDao> transactions1 = paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.PENDING), newTime, initialTime, 3);
         for (PaymentTransactionModelDao paymentTransaction : transactions1) {
             final String newPaymentState = "XXX_FAILED";
             paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, payment.getLastSuccessStateName(),
@@ -317,7 +316,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         }
         ;
 
-        final List<PaymentTransactionModelDao> transactions2 = paymentDao.getByTransactionStatusPriorDateAcrossTenants(TransactionStatus.PENDING, clock.getUTCNow());
+        final List<PaymentTransactionModelDao> transactions2 = paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.PENDING), clock.getUTCNow(), initialTime, 1);
         for (PaymentTransactionModelDao paymentTransaction : transactions2) {
             final String newPaymentState = "XXX_FAILED";
             paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, payment.getLastSuccessStateName(),

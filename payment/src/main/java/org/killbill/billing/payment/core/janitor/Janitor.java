@@ -48,9 +48,8 @@ public class Janitor {
 
     private final ScheduledExecutorService janitorExecutor;
     private final PaymentConfig paymentConfig;
-    private final PendingPaymentTransactionTask pendingPaymentTransactionTask;
     private final IncompletePaymentAttemptTask incompletePaymentAttemptTask;
-    private final UnknownPaymentTransactionTask erroredPaymentCompletionTask;
+    private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
 
     private volatile boolean isStopped;
 
@@ -67,11 +66,9 @@ public class Janitor {
                    final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
         this.janitorExecutor = janitorExecutor;
         this.paymentConfig = paymentConfig;
-        this.pendingPaymentTransactionTask = new PendingPaymentTransactionTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
-                                                                 accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
         this.incompletePaymentAttemptTask = new IncompletePaymentAttemptTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
                                                                accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
-        this.erroredPaymentCompletionTask = new UnknownPaymentTransactionTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
+        this.incompletePaymentTransactionTask = new IncompletePaymentTransactionTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
                                                                    accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
         this.isStopped = false;
     }
@@ -82,11 +79,6 @@ public class Janitor {
             return;
         }
 
-        // Start task for removing old pending payments.
-        final TimeUnit pendingRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
-        final long pendingPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
-        janitorExecutor.scheduleAtFixedRate(pendingPaymentTransactionTask, pendingPeriod, pendingPeriod, pendingRateUnit);
-
         // Start task for completing incomplete payment attempts
         final TimeUnit attemptCompletionRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
         final long attemptCompletionPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
@@ -95,7 +87,7 @@ public class Janitor {
         // Start task for completing incomplete payment attempts
         final TimeUnit erroredCompletionRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
         final long erroredCompletionPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
-        janitorExecutor.scheduleAtFixedRate(erroredPaymentCompletionTask, erroredCompletionPeriod, erroredCompletionPeriod, erroredCompletionRateUnit);
+        janitorExecutor.scheduleAtFixedRate(incompletePaymentTransactionTask, erroredCompletionPeriod, erroredCompletionPeriod, erroredCompletionRateUnit);
     }
 
     public void stop() {
