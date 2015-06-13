@@ -102,6 +102,11 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                 public UUID getAdjustedPaymentMethodId() {
                     return newPaymentMethodId;
                 }
+
+                @Override
+                public Iterable<PluginProperty> getAdjustedPluginProperties() {
+                    return ImmutableList.of();
+                }
             };
         }
 
