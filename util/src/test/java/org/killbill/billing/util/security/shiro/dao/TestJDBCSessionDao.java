@@ -56,15 +56,8 @@ public class TestJDBCSessionDao extends UtilTestSuiteWithEmbeddedDB {
         final Session retrievedSession = jdbcSessionDao.doReadSession(sessionId);
         Assert.assertEquals(retrievedSession, session);
 
-        // Update too soon, the database state won't be updated
-        Date lastAccessTime = new Date(retrievedSession.getLastAccessTime().getTime() + 1000);
-        Assert.assertNotEquals(retrievedSession.getLastAccessTime(), lastAccessTime);
-        session.setLastAccessTime(lastAccessTime);
-        jdbcSessionDao.doUpdate(session);
-        Assert.assertEquals(jdbcSessionDao.doReadSession(sessionId).getLastAccessTime().compareTo(retrievedSession.getLastAccessTime()), 0);
-
-        // Actual database update
-        lastAccessTime = new Date(retrievedSession.getLastAccessTime().getTime() + 100000);
+        // Update
+        final Date lastAccessTime = DateTime.now().withTimeAtStartOfDay().toDate(); // Milliseconds will be truncated
         Assert.assertNotEquals(retrievedSession.getLastAccessTime(), lastAccessTime);
         session.setLastAccessTime(lastAccessTime);
         jdbcSessionDao.doUpdate(session);
@@ -77,9 +70,8 @@ public class TestJDBCSessionDao extends UtilTestSuiteWithEmbeddedDB {
 
     private SimpleSession createSession() {
         final SimpleSession simpleSession = new SimpleSession();
-        // Truncate milliseconds for MySQL
-        simpleSession.setStartTimestamp(DateTime.now().withTimeAtStartOfDay().minusSeconds(5).toDate());
-        simpleSession.setLastAccessTime(DateTime.now().withTimeAtStartOfDay().toDate());
+        simpleSession.setStartTimestamp(new Date(System.currentTimeMillis() - 5000));
+        simpleSession.setLastAccessTime(new Date(System.currentTimeMillis()));
         simpleSession.setTimeout(493934L);
         simpleSession.setHost(UUID.randomUUID().toString());
         simpleSession.setAttribute(UUID.randomUUID().toString(), Short.MIN_VALUE);
