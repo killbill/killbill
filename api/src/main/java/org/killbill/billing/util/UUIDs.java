@@ -82,7 +82,49 @@ public abstract class UUIDs {
     private static class LightSecureRandom extends Random {
 
         private static abstract class SeederHolder {
-            static final SecureRandom seeder = new SecureRandom();
+            static final SecureRandom seeder;
+            /* some related info from the JDK itself :
+            # By default, an attempt is made to use the entropy gathering device
+            # specified by the "securerandom.source" Security property.  If an
+            # exception occurs while accessing the specified URL:
+            #
+            #     SHA1PRNG:
+            #         the traditional system/thread activity algorithm will be used.
+            #
+            #     NativePRNG:
+            #         a default value of /dev/random will be used.  If neither
+                      are available, the implementation will be disabled.
+            #         "file" is the only currently supported protocol type.
+            #
+            # The entropy gathering device can also be specified with the System
+              property "java.security.egd". For example:
+            #
+            #   % java -Djava.security.egd=file:/dev/random MainClass
+            #
+            # Specifying this System property will override the
+            # "securerandom.source" Security property.
+            #
+            # In addition, if "file:/dev/random" or "file:/dev/urandom" is
+            # specified, the "NativePRNG" implementation will be preferred over
+            # SHA1PRNG in the Sun provider.
+            #
+            securerandom.source=file:/dev/random
+            */
+            static {
+                SecureRandom random;
+                // if the securerandom.seed preference is set to file:/dev/urandom
+                // (default) for Linux, new SecureRandom() returns a NativePRNG,
+                // which generateSeed()s from /dev/xxx (thus might block terribly)
+                // ... instead we explicitly use a SHA1PRNG seeder which will only
+                // seeds itself on initialization (possibly from /dev/urandom)
+                try {
+                    random = SecureRandom.getInstance("SHA1PRNG");
+                }
+                catch (NoSuchAlgorithmException e) {
+                    random = new SecureRandom(); // should never happen
+                }
+                seeder = random;
+            }
         }
 
         private final DigestRandomGenerator generator;
