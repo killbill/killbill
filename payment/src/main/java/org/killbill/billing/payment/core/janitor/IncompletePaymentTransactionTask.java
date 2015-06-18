@@ -112,11 +112,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                     return undefinedPaymentTransaction;
                 }
             });
-        } catch (final PaymentPluginApiException ignored) {
-            // TODO STEPH: In the case of a payment call, PaymentPluginApiException means that plugin knows payment transaction WAS NOT EVEN attempted; what does it mean for the getPaymentInfo?
-            // The code below assumes the same, but that needs to be discussed
-            paymentTransactionInfoPlugin = null;
-        } catch (final RuntimeException e) {
+        } catch (final Exception e) {
             paymentTransactionInfoPlugin = undefinedPaymentTransaction;
         }
 
@@ -168,7 +164,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     }
 
     // Keep the existing currentTransactionStatus if we can't obtain a better answer from the plugin; if not, return the newTransactionStatus
-    private TransactionStatus computeNewTransactionStatusFromPaymentTransactionInfoPlugin(@Nullable PaymentTransactionInfoPlugin input, final TransactionStatus currentTransactionStatus) {
+    private TransactionStatus computeNewTransactionStatusFromPaymentTransactionInfoPlugin(PaymentTransactionInfoPlugin input, final TransactionStatus currentTransactionStatus) {
         final TransactionStatus newTransactionStatus = PaymentTransactionInfoPluginConverter.toTransactionStatus(input);
         return (newTransactionStatus != TransactionStatus.UNKNOWN) ? newTransactionStatus : currentTransactionStatus;
     }

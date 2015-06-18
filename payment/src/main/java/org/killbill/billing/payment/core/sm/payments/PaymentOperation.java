@@ -74,30 +74,24 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
             } else {
                 return doSimpleOperationCallback();
             }
-        } catch (final PaymentApiException e) {
-            throw new OperationException(e, OperationResult.EXCEPTION);
+        } catch (final Exception e) {
+            throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
         }
     }
 
     @Override
     protected OperationException rewrapExecutionException(final PaymentStateContext paymentStateContext, final ExecutionException e) {
         //
-        // There are 2 main cases to distinguish:
-        // - PaymentPluginApiException (hidden in the PaymentApiException) -> plugin is telling us transaction was not even attempted => TransactionStatus.PLUGIN_FAILURE
-        // - All other exceptions => TransactionStatus.UNKNOWN (Candidates to be fixed by Janitor)
+        // Any case of exception (checked or runtime) should lead to a TransactionStatus.UNKNOWN (and a XXX_ERRORED payment state).
+        // In order to reach that state we create PaymentTransactionInfoPlugin with an PaymentPluginStatus.UNDEFINED status (and an OperationResult.EXCEPTION).
         //
-        if (e.getCause() instanceof PaymentApiException && ((PaymentApiException)e.getCause()).getCode() == ErrorCode.PAYMENT_PLUGIN_EXCEPTION.getCode()) {
-            // We keep the PaymentTransactionInfoPlugin unset in the context to mark that specific case
-            return new OperationException(MoreObjects.firstNonNull(e.getCause(), e), OperationResult.EXCEPTION);
+        final Throwable originalExceptionOrCause = MoreObjects.firstNonNull(e.getCause(), e);
+        if (originalExceptionOrCause instanceof LockFailedException) {
+            logger.warn("Failed to lock account {}", paymentStateContext.getAccount().getExternalKey());
         } else {
-            if (e.getCause() instanceof LockFailedException) {
-                logger.warn("Failed to lock account {}", paymentStateContext.getAccount().getExternalKey());
-            } else {
-                logger.warn("Payment plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), e);
-            }
-            convertToUnknownTransactionStatusAndErroredPaymentState(e);
-            return new OperationException(MoreObjects.firstNonNull(e.getCause(), e), OperationResult.EXCEPTION);
+            logger.warn("Payment plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), originalExceptionOrCause);
         }
+        return convertToUnknownTransactionStatusAndErroredPaymentState(originalExceptionOrCause);
     }
 
     @Override
@@ -107,7 +101,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     }
 
     //
-    // In the case we don't know exactly what happen (Timeout or PluginApiException):
+    // In case of exceptions, timeouts, we don't really know what happened:
     // - Return an OperationResult.EXCEPTION to transition Payment State to Errored (see PaymentTransactionInfoPluginConverter#toOperationResult)
     // - Construct a PaymentTransactionInfoPlugin whose PaymentPluginStatus = UNDEFINED to end up with a paymentTransactionStatus = UNKNOWN and have a chance to
     //   be fixed by Janitor.

@@ -29,15 +29,7 @@ import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 public class PaymentTransactionInfoPluginConverter {
 
 
-    public static TransactionStatus toTransactionStatus(@Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
-        //
-        // A null paymentTransactionInfoPlugin means that plugin threw a PluginApiException to indicate it knew for sure
-        // the transaction did not occur, so we can safely transition into PLUGIN_FAILURE
-        //
-        if (paymentTransactionInfoPlugin == null) {
-            return TransactionStatus.PLUGIN_FAILURE;
-        }
-
+    public static TransactionStatus toTransactionStatus(final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
         switch (paymentTransactionInfoPlugin.getStatus()) {
             case PROCESSED:
                 return TransactionStatus.SUCCESS;
@@ -48,6 +40,10 @@ public class PaymentTransactionInfoPluginConverter {
             case ERROR:
                 return TransactionStatus.PAYMENT_FAILURE;
             //
+            // The plugin is trying to tell us that it knows for sure that payment transaction did not happen (connection failure,..)
+            case CANCELED:
+                return TransactionStatus.PLUGIN_FAILURE;
+            //
             // This will be picked up by Janitor to figure out what really happened and correct the state if needed
             // Note that the default case includes the null status
             //
@@ -57,11 +53,7 @@ public class PaymentTransactionInfoPluginConverter {
         }
     }
 
-    public static OperationResult toOperationResult(@Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
-        if (paymentTransactionInfoPlugin == null || paymentTransactionInfoPlugin.getStatus() == null) {
-            return OperationResult.EXCEPTION;
-        }
-
+    public static OperationResult toOperationResult(final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
         switch (paymentTransactionInfoPlugin.getStatus()) {
             case PROCESSED:
                 return OperationResult.SUCCESS;
@@ -69,8 +61,8 @@ public class PaymentTransactionInfoPluginConverter {
                 return OperationResult.PENDING;
             case ERROR:
                 return OperationResult.FAILURE;
-            // Might change later if janitor fixes the state
             case UNDEFINED:
+            case CANCELED:
             default:
                 return OperationResult.EXCEPTION;
         }
