@@ -45,7 +45,7 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -74,25 +74,24 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
             } else {
                 return doSimpleOperationCallback();
             }
-        } catch (final PaymentApiException e) {
-            throw new OperationException(e, OperationResult.EXCEPTION);
+        } catch (final Exception e) {
+            throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
         }
     }
 
     @Override
     protected OperationException rewrapExecutionException(final PaymentStateContext paymentStateContext, final ExecutionException e) {
-        final Throwable realException = Objects.firstNonNull(e.getCause(), e);
-        if (e.getCause() instanceof PaymentApiException) {
-            logger.warn("Unsuccessful plugin call for account {}", paymentStateContext.getAccount().getExternalKey(), realException);
-            return convertToUnknownTransactionStatusAndErroredPaymentState(realException);
-        } else if (e.getCause() instanceof LockFailedException) {
-            final String format = String.format("Failed to lock account %s", paymentStateContext.getAccount().getExternalKey());
-            logger.error(String.format(format));
-            return new OperationException(realException, OperationResult.EXCEPTION);
-        } else /* if (e instanceof RuntimeException) */ {
-            logger.warn("Plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), e);
-            return new OperationException(realException, OperationResult.EXCEPTION);
+        //
+        // Any case of exception (checked or runtime) should lead to a TransactionStatus.UNKNOWN (and a XXX_ERRORED payment state).
+        // In order to reach that state we create PaymentTransactionInfoPlugin with an PaymentPluginStatus.UNDEFINED status (and an OperationResult.EXCEPTION).
+        //
+        final Throwable originalExceptionOrCause = MoreObjects.firstNonNull(e.getCause(), e);
+        if (originalExceptionOrCause instanceof LockFailedException) {
+            logger.warn("Failed to lock account {}", paymentStateContext.getAccount().getExternalKey());
+        } else {
+            logger.warn("Payment plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), originalExceptionOrCause);
         }
+        return convertToUnknownTransactionStatusAndErroredPaymentState(originalExceptionOrCause);
     }
 
     @Override
@@ -102,7 +101,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     }
 
     //
-    // In the case we don't know exactly what happen (Timeout or PluginApiException):
+    // In case of exceptions, timeouts, we don't really know what happened:
     // - Return an OperationResult.EXCEPTION to transition Payment State to Errored (see PaymentTransactionInfoPluginConverter#toOperationResult)
     // - Construct a PaymentTransactionInfoPlugin whose PaymentPluginStatus = UNDEFINED to end up with a paymentTransactionStatus = UNKNOWN and have a chance to
     //   be fixed by Janitor.
@@ -181,8 +180,14 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
             //
             if (paymentStateContext.getOverridePluginOperationResult() == null) {
                 final PaymentTransactionInfoPlugin paymentInfoPlugin = doCallSpecificOperationCallback();
-                // Throws if plugin is  ot correctly implemented (e.g returns null result, values,..)
-                sanityOnPaymentInfoPlugin(paymentInfoPlugin);
+                //
+                // We catch null paymentInfoPlugin and throw a RuntimeException to end up in an UNKNOWN transactionStatus
+                // That way we can use the null paymentInfoPlugin when a PaymentPluginApiException is thrown and correctly
+                // make the transition to PLUGIN_FAILURE
+                //
+                if (paymentInfoPlugin == null) {
+                    throw new IllegalStateException("Payment plugin returned a null result");
+                }
 
                 paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
                 return PaymentTransactionInfoPluginConverter.toOperationResult(paymentStateContext.getPaymentTransactionInfoPlugin());
@@ -216,23 +221,5 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
             default:
                 return PaymentPluginStatus.UNDEFINED;
         }
-    }
-
-    private void sanityOnPaymentInfoPlugin(final PaymentTransactionInfoPlugin paymentInfoPlugin) throws PaymentApiException {
-        if (paymentInfoPlugin == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned a null result");
-        }
-        /*
-        TODO this breaks our tests so test would have to be fixed
-        if (paymentTransactionInfoPlugin.getKbTransactionPaymentId() == null || !paymentTransactionInfoPlugin.getKbTransactionPaymentId().equals(paymentStateContext.getTransactionId())) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned invalid kbTransactionId");
-        }
-        if (paymentTransactionInfoPlugin.getKbPaymentId() == null || !paymentTransactionInfoPlugin.getKbPaymentId().equals(paymentStateContext.getPaymentId())) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned invalid kbPaymentId");
-        }
-        if (paymentTransactionInfoPlugin.getTransactionType() == null || !paymentTransactionInfoPlugin.getKbPaymentId().equals(paymentStateContext.getTransactionType())) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Payment plugin returned invalid transaction type");
-        }
-        */
     }
 }
