@@ -30,7 +30,7 @@ DEBUG_OPTS_ECLIPSE=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,ad
 DEBUG_OPTS_ECLIPSE_WAIT=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=12345 "
 
 # Default JVM settings if unset
-MAVEN_OPTS=${MAVEN_OPTS-"-Duser.timezone=GMT -Xms512m -Xmx1024m -XX:MaxPermSize=512m -XX:MaxDirectMemorySize=512m -XX:+UseConcMarkSweepGC -Dcom.sun.xml.bind.v2.bytecode.ClassTailor.noOptimize=true"}
+MAVEN_OPTS=${MAVEN_OPTS-"-Duser.timezone=GMT -Xms512m -Xmx1024m -XX:MaxPermSize=512m -XX:MaxDirectMemorySize=512m -XX:+UseConcMarkSweepGC"}
 
 LOG="$SERVER/src/main/resources/logback.xml"
 LOG_DIR="$SERVER/logs"
@@ -60,7 +60,7 @@ function usage() {
 function start() {
     mkdir -p $LOG_DIR
 
-    local start_cmd="mvn -Dorg.killbill.server.properties=file://$PROPERTIES -Dlogback.configurationFile=$LOG jetty:run"
+    local start_cmd="mvn -Dcom.sun.xml.bind.v2.bytecode.ClassTailor.noOptimize=true -Dorg.killbill.server.properties=file://$PROPERTIES -Dlogback.configurationFile=$LOG jetty:run"
 
     local debug_opts_eclipse=
     if [ ! -z $DEBUG ]; then
