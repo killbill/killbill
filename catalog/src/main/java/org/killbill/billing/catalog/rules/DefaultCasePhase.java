@@ -23,14 +23,15 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.xmlloader.ValidationErrors;
 
-public abstract class CasePhase<T> extends CaseStandardNaming<T> {
+public abstract class DefaultCasePhase<T> extends DefaultCaseStandardNaming<T> {
 
     @XmlElement(required = false)
-    private PhaseType phaseType;
+    protected PhaseType phaseType;
 
-    public T getResult(final PlanPhaseSpecifier specifier, final StandaloneCatalog c) throws CatalogApiException {
+    public T getResult(final PlanPhaseSpecifier specifier, final StaticCatalog c) throws CatalogApiException {
         if ((phaseType == null || specifier.getPhaseType() == phaseType)
                 && satisfiesCase(new PlanSpecifier(specifier), c)
                 ) {
@@ -39,9 +40,9 @@ public abstract class CasePhase<T> extends CaseStandardNaming<T> {
         return null;
     }
 
-    public static <K> K getResult(final CasePhase<K>[] cases, final PlanPhaseSpecifier planSpec, final StandaloneCatalog catalog) throws CatalogApiException {
+    public static <K> K getResult(final DefaultCasePhase<K>[] cases, final PlanPhaseSpecifier planSpec, final StaticCatalog catalog) throws CatalogApiException {
         if (cases != null) {
-            for (final CasePhase<K> cp : cases) {
+            for (final DefaultCasePhase<K> cp : cases) {
                 final K result = cp.getResult(planSpec, catalog);
                 if (result != null) {
                     return result;
@@ -57,10 +58,36 @@ public abstract class CasePhase<T> extends CaseStandardNaming<T> {
         return errors;
     }
 
-    protected CasePhase<T> setPhaseType(final PhaseType phaseType) {
+    public DefaultCasePhase<T> setPhaseType(final PhaseType phaseType) {
         this.phaseType = phaseType;
         return this;
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultCasePhase)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
+        final DefaultCasePhase that = (DefaultCasePhase) o;
+
+        if (phaseType != that.phaseType) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (phaseType != null ? phaseType.hashCode() : 0);
+        return result;
+    }
 }

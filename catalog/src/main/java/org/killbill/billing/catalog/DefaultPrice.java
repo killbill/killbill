@@ -79,4 +79,32 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
         return errors;
 
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultPrice)) {
+            return false;
+        }
+
+        final DefaultPrice that = (DefaultPrice) o;
+
+        if (currency != that.currency) {
+            return false;
+        }
+        if (value != null ? !value.equals(that.value) : that.value != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = currency != null ? currency.hashCode() : 0;
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        return result;
+    }
 }

@@ -23,8 +23,9 @@ import org.killbill.billing.catalog.DefaultPriceList;
 import org.killbill.billing.catalog.DefaultProduct;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.rules.Case;
 
-public abstract class CaseStandardNaming<T> extends Case<T> {
+public abstract class DefaultCaseStandardNaming<T> extends DefaultCase<T> implements Case {
     @XmlElement(required = false, name = "product")
     @XmlIDREF
     private DefaultProduct product;
@@ -38,40 +39,79 @@ public abstract class CaseStandardNaming<T> extends Case<T> {
     @XmlIDREF
     private DefaultPriceList priceList;
 
+    @Override
     public DefaultProduct getProduct() {
         return product;
     }
 
+    @Override
     public ProductCategory getProductCategory() {
         return productCategory;
     }
 
+    @Override
     public BillingPeriod getBillingPeriod() {
         return billingPeriod;
     }
 
+    @Override
     public DefaultPriceList getPriceList() {
         return priceList;
     }
 
-    protected CaseStandardNaming<T> setProduct(final DefaultProduct product) {
+    public DefaultCaseStandardNaming<T> setProduct(final DefaultProduct product) {
         this.product = product;
         return this;
     }
 
-    protected CaseStandardNaming<T> setProductCategory(final ProductCategory productCategory) {
+    public DefaultCaseStandardNaming<T> setProductCategory(final ProductCategory productCategory) {
         this.productCategory = productCategory;
         return this;
     }
 
-    protected CaseStandardNaming<T> setBillingPeriod(final BillingPeriod billingPeriod) {
+    public DefaultCaseStandardNaming<T> setBillingPeriod(final BillingPeriod billingPeriod) {
         this.billingPeriod = billingPeriod;
         return this;
     }
 
-    protected CaseStandardNaming<T> setPriceList(final DefaultPriceList priceList) {
+    public DefaultCaseStandardNaming<T> setPriceList(final DefaultPriceList priceList) {
         this.priceList = priceList;
         return this;
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultCaseStandardNaming)) {
+            return false;
+        }
+
+        final DefaultCaseStandardNaming that = (DefaultCaseStandardNaming) o;
+
+        if (billingPeriod != that.billingPeriod) {
+            return false;
+        }
+        if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
+            return false;
+        }
+        if (product != null ? !product.equals(that.product) : that.product != null) {
+            return false;
+        }
+        if (productCategory != that.productCategory) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = product != null ? product.hashCode() : 0;
+        result = 31 * result + (productCategory != null ? productCategory.hashCode() : 0);
+        result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
+        result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
+        return result;
+    }
 }

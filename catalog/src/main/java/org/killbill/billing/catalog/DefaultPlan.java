@@ -54,7 +54,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     private String name;
 
     @XmlAttribute(required = false)
-    private Boolean retired = false;
+    private Boolean retired;
 
     //TODO MDW Validation - effectiveDateForExistingSubscriptons > catalog effectiveDate
     @XmlElement(required = false)
@@ -66,7 +66,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     @XmlElementWrapper(name = "initialPhases", required = false)
     @XmlElement(name = "phase", required = true)
-    private DefaultPlanPhase[] initialPhases = new DefaultPlanPhase[0];
+    private DefaultPlanPhase[] initialPhases;
 
     @XmlElement(name = "finalPhase", required = true)
     private DefaultPlanPhase finalPhase;
@@ -79,7 +79,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     private Integer plansAllowedInBundle = 1;
 
 
-    public DefaultPlan() {}
+    public DefaultPlan() {
+        initialPhases = new DefaultPlanPhase[0];
+        retired = false;
+    }
 
     public DefaultPlan(final String planName, final DefaultPlan in, final PlanPhasePriceOverride[] overrides) {
         this.name = planName;
@@ -215,27 +218,27 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return errors;
     }
 
-    protected void setEffectiveDateForExistingSubscriptons(
+    public void setEffectiveDateForExistingSubscriptons(
             final Date effectiveDateForExistingSubscriptons) {
         this.effectiveDateForExistingSubscriptons = effectiveDateForExistingSubscriptons;
     }
 
-    protected DefaultPlan setName(final String name) {
+    public DefaultPlan setName(final String name) {
         this.name = name;
         return this;
     }
 
-    protected DefaultPlan setFinalPhase(final DefaultPlanPhase finalPhase) {
+    public DefaultPlan setFinalPhase(final DefaultPlanPhase finalPhase) {
         this.finalPhase = finalPhase;
         return this;
     }
 
-    protected DefaultPlan setProduct(final DefaultProduct product) {
+    public DefaultPlan setProduct(final DefaultProduct product) {
         this.product = product;
         return this;
     }
 
-    protected DefaultPlan setInitialPhases(final DefaultPlanPhase[] phases) {
+    public DefaultPlan setInitialPhases(final DefaultPlanPhase[] phases) {
         this.initialPhases = phases;
         return this;
     }
@@ -272,9 +275,53 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return result;
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultPlan)) {
+            return false;
+        }
 
+        final DefaultPlan that = (DefaultPlan) o;
 
-	@Override
+        if (effectiveDateForExistingSubscriptons != null ? !effectiveDateForExistingSubscriptons.equals(that.effectiveDateForExistingSubscriptons) : that.effectiveDateForExistingSubscriptons != null) {
+            return false;
+        }
+        if (finalPhase != null ? !finalPhase.equals(that.finalPhase) : that.finalPhase != null) {
+            return false;
+        }
+        if (!Arrays.equals(initialPhases, that.initialPhases)) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (plansAllowedInBundle != null ? !plansAllowedInBundle.equals(that.plansAllowedInBundle) : that.plansAllowedInBundle != null) {
+            return false;
+        }
+        if (product != null ? !product.equals(that.product) : that.product != null) {
+            return false;
+        }
+        if (retired != null ? !retired.equals(that.retired) : that.retired != null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (retired != null ? retired.hashCode() : 0);
+        result = 31 * result + (effectiveDateForExistingSubscriptons != null ? effectiveDateForExistingSubscriptons.hashCode() : 0);
+        result = 31 * result + (initialPhases != null ? Arrays.hashCode(initialPhases) : 0);
+        result = 31 * result + (finalPhase != null ? finalPhase.hashCode() : 0);
+        result = 31 * result + (plansAllowedInBundle != null ? plansAllowedInBundle.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "DefaultPlan [name=" + name + ", retired=" + retired + ", effectiveDateForExistingSubscriptons="
                 + effectiveDateForExistingSubscriptons + ", product=" + product + ", initialPhases="

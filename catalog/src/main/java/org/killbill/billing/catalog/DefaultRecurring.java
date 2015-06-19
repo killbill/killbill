@@ -111,4 +111,32 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
         this.phase = phase;
         return this;
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultRecurring)) {
+            return false;
+        }
+
+        final DefaultRecurring that = (DefaultRecurring) o;
+
+        if (billingPeriod != that.billingPeriod) {
+            return false;
+        }
+        if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = billingPeriod != null ? billingPeriod.hashCode() : 0;
+        result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
+        return result;
+    }
 }

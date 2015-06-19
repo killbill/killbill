@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,40 +14,31 @@
  * under the License.
  */
 
-package org.killbill.billing.catalog;
+package org.killbill.billing.catalog.rules;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
-import org.killbill.billing.catalog.api.BlockType;
-import org.killbill.billing.catalog.api.TieredBlock;
+import org.killbill.billing.catalog.api.PlanAlignmentChange;
+import org.killbill.billing.catalog.api.rules.CaseChangePlanAlignment;
 
-@XmlAccessorType(XmlAccessType.NONE)
-public class DefaultTieredBlock extends DefaultBlock implements TieredBlock {
+public class DefaultCaseChangePlanAlignment extends DefaultCaseChange<PlanAlignmentChange> implements CaseChangePlanAlignment {
 
     @XmlElement(required = true)
-    private Double max;
+    private PlanAlignmentChange alignment;
 
     @Override
-    public Double getMax() {
-        return max;
+    protected PlanAlignmentChange getResult() {
+        return alignment;
     }
 
-    public DefaultTieredBlock setMax(final Double max) {
-        this.max = max;
+    public DefaultCaseChangePlanAlignment setAlignment(final PlanAlignmentChange alignment) {
+        this.alignment = alignment;
         return this;
     }
 
     @Override
-    public BlockType getType() {
-        return BlockType.TIERED;
-    }
-
-    @Override
-    public DefaultTieredBlock setType(final BlockType type) {
-        super.setType(BlockType.TIERED);
-        return this;
+    public PlanAlignmentChange getAlignment() {
+        return alignment;
     }
 
     @Override
@@ -55,16 +46,16 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof DefaultTieredBlock)) {
+        if (!(o instanceof DefaultCaseChangePlanAlignment)) {
             return false;
         }
         if (!super.equals(o)) {
             return false;
         }
 
-        final DefaultTieredBlock that = (DefaultTieredBlock) o;
+        final DefaultCaseChangePlanAlignment that = (DefaultCaseChangePlanAlignment) o;
 
-        if (max != null ? !max.equals(that.max) : that.max != null) {
+        if (alignment != that.alignment) {
             return false;
         }
 
@@ -74,7 +65,7 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (max != null ? max.hashCode() : 0);
+        result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
         return result;
     }
 }

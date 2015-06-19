@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,40 +14,37 @@
  * under the License.
  */
 
-package org.killbill.billing.catalog;
+package org.killbill.billing.catalog.rules;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
-import org.killbill.billing.catalog.api.BlockType;
-import org.killbill.billing.catalog.api.TieredBlock;
+import org.killbill.billing.catalog.api.BillingAlignment;
+import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.rules.CaseBillingAlignment;
 
-@XmlAccessorType(XmlAccessType.NONE)
-public class DefaultTieredBlock extends DefaultBlock implements TieredBlock {
+public class DefaultCaseBillingAlignment extends DefaultCasePhase<BillingAlignment> implements CaseBillingAlignment {
 
     @XmlElement(required = true)
-    private Double max;
+    private BillingAlignment alignment;
 
     @Override
-    public Double getMax() {
-        return max;
+    protected BillingAlignment getResult() {
+        return alignment;
     }
 
-    public DefaultTieredBlock setMax(final Double max) {
-        this.max = max;
+    public DefaultCaseBillingAlignment setAlignment(final BillingAlignment alignment) {
+        this.alignment = alignment;
         return this;
     }
 
     @Override
-    public BlockType getType() {
-        return BlockType.TIERED;
+    public BillingAlignment getBillingAlignment() {
+        return alignment;
     }
 
     @Override
-    public DefaultTieredBlock setType(final BlockType type) {
-        super.setType(BlockType.TIERED);
-        return this;
+    public PhaseType getPhaseType() {
+        return phaseType;
     }
 
     @Override
@@ -55,16 +52,16 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof DefaultTieredBlock)) {
+        if (!(o instanceof DefaultCaseBillingAlignment)) {
             return false;
         }
         if (!super.equals(o)) {
             return false;
         }
 
-        final DefaultTieredBlock that = (DefaultTieredBlock) o;
+        final DefaultCaseBillingAlignment that = (DefaultCaseBillingAlignment) o;
 
-        if (max != null ? !max.equals(that.max) : that.max != null) {
+        if (alignment != that.alignment) {
             return false;
         }
 
@@ -74,7 +71,7 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (max != null ? max.hashCode() : 0);
+        result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
         return result;
     }
 }

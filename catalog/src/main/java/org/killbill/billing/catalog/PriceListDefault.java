@@ -49,4 +49,5 @@ public class PriceListDefault extends DefaultPriceList {
         return PriceListSet.DEFAULT_PRICELIST_NAME;
     }
 
+
 }

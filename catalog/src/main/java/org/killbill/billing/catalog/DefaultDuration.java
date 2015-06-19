@@ -31,11 +31,13 @@ import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> implements Duration {
+
+    public static final int DEFAULT_DURATION_NUMBER  = -1;
     @XmlElement(required = true)
     private TimeUnit unit;
 
     @XmlElement(required = false)
-    private Integer number = -1;
+    private Integer number;
 
     /* (non-Javadoc)
       * @see org.killbill.billing.catalog.IDuration#getUnit()
@@ -51,6 +53,10 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
     @Override
     public int getNumber() {
         return number;
+    }
+
+    public DefaultDuration() {
+        number = DEFAULT_DURATION_NUMBER;
     }
 
     @Override
@@ -85,12 +91,12 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
         return errors;
     }
 
-    protected DefaultDuration setUnit(final TimeUnit unit) {
+    public DefaultDuration setUnit(final TimeUnit unit) {
         this.unit = unit;
         return this;
     }
 
-    protected DefaultDuration setNumber(final Integer number) {
+    public DefaultDuration setNumber(final Integer number) {
         this.number = number;
         return this;
     }
@@ -113,5 +119,33 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
             default:
                 return new Period();
         }
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultDuration)) {
+            return false;
+        }
+
+        final DefaultDuration that = (DefaultDuration) o;
+
+        if (number != null ? !number.equals(that.number) : that.number != null) {
+            return false;
+        }
+        if (unit != that.unit) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = unit != null ? unit.hashCode() : 0;
+        result = 31 * result + (number != null ? number.hashCode() : 0);
+        return result;
     }
 }

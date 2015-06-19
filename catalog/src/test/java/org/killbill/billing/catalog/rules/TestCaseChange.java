@@ -37,17 +37,17 @@ import org.killbill.billing.catalog.api.ProductCategory;
 
 public class TestCaseChange extends CatalogTestSuiteNoDB {
 
-    protected static class CaseChangeResult extends CaseChange<Result> {
+    protected static class DefaultCaseChangeResult extends DefaultCaseChange<Result> {
 
         @XmlElement(required = true)
         private final Result result;
 
-        public CaseChangeResult(final DefaultProduct from, final DefaultProduct to,
-                                final ProductCategory fromProductCategory, final ProductCategory toProductCategory,
-                                final BillingPeriod fromBP, final BillingPeriod toBP,
-                                final DefaultPriceList fromPriceList, final DefaultPriceList toPriceList,
-                                final PhaseType fromType,
-                                final Result result) {
+        public DefaultCaseChangeResult(final DefaultProduct from, final DefaultProduct to,
+                                       final ProductCategory fromProductCategory, final ProductCategory toProductCategory,
+                                       final BillingPeriod fromBP, final BillingPeriod toBP,
+                                       final DefaultPriceList fromPriceList, final DefaultPriceList toPriceList,
+                                       final PhaseType fromType,
+                                       final Result result) {
             setFromProduct(from);
             setToProduct(to);
             setFromProductCategory(fromProductCategory);
@@ -77,7 +77,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr = new CaseChangeResult(
+        final DefaultCaseChangeResult cr = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -166,7 +166,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr = new CaseChangeResult(
+        final DefaultCaseChangeResult cr = new DefaultCaseChangeResult(
                 null, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -248,7 +248,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr = new CaseChangeResult(
+        final DefaultCaseChangeResult cr = new DefaultCaseChangeResult(
                 product1, null,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -337,7 +337,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr = new CaseChangeResult(
+        final DefaultCaseChangeResult cr = new DefaultCaseChangeResult(
                 product1, product2,
                 null, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -426,7 +426,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr = new CaseChangeResult(
+        final DefaultCaseChangeResult cr = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, null,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -515,7 +515,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr = new CaseChangeResult(
+        final DefaultCaseChangeResult cr = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 null, BillingPeriod.MONTHLY,
@@ -604,7 +604,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr = new CaseChangeResult(
+        final DefaultCaseChangeResult cr = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, null,
@@ -693,7 +693,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr = new CaseChangeResult(
+        final DefaultCaseChangeResult cr = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -782,7 +782,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr = new CaseChangeResult(
+        final DefaultCaseChangeResult cr = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -871,7 +871,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr = new CaseChangeResult(
+        final DefaultCaseChangeResult cr = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -960,7 +960,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
-        final CaseChangeResult cr0 = new CaseChangeResult(
+        final DefaultCaseChangeResult cr0 = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -968,7 +968,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
                 PhaseType.EVERGREEN,
                 Result.FOO);
 
-        final CaseChangeResult cr1 = new CaseChangeResult(
+        final DefaultCaseChangeResult cr1 = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -976,7 +976,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
                 PhaseType.EVERGREEN,
                 Result.BAR);
 
-        final CaseChangeResult cr2 = new CaseChangeResult(
+        final DefaultCaseChangeResult cr2 = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
@@ -984,7 +984,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
                 PhaseType.EVERGREEN,
                 Result.TINKYWINKY);
 
-        final CaseChangeResult cr3 = new CaseChangeResult(
+        final DefaultCaseChangeResult cr3 = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.ANNUAL,
@@ -992,7 +992,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
                 PhaseType.EVERGREEN,
                 Result.DIPSY);
 
-        final CaseChangeResult cr4 = new CaseChangeResult(
+        final DefaultCaseChangeResult cr4 = new DefaultCaseChangeResult(
                 product1, product2,
                 ProductCategory.BASE, ProductCategory.BASE,
                 BillingPeriod.MONTHLY, BillingPeriod.ANNUAL,
@@ -1000,20 +1000,20 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
                 PhaseType.EVERGREEN,
                 Result.LALA);
 
-        final Result r1 = CaseChange.getResult(new CaseChangeResult[]{cr0, cr1, cr2, cr3, cr4},
-                                               new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN),
-                                               new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.MONTHLY, priceList2.getName()), cat);
+        final Result r1 = DefaultCaseChange.getResult(new DefaultCaseChangeResult[]{cr0, cr1, cr2, cr3, cr4},
+                                                      new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN),
+                                                      new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.MONTHLY, priceList2.getName()), cat);
 
         Assert.assertEquals(r1, Result.FOO);
 
-        final Result r2 = CaseChange.getResult(new CaseChangeResult[]{cr0, cr1, cr2, cr3, cr4},
-                                               new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN),
-                                               new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.ANNUAL, priceList2.getName()), cat);
+        final Result r2 = DefaultCaseChange.getResult(new DefaultCaseChangeResult[]{cr0, cr1, cr2, cr3, cr4},
+                                                      new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN),
+                                                      new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.ANNUAL, priceList2.getName()), cat);
 
         Assert.assertEquals(r2, Result.DIPSY);
     }
 
-    protected void assertionNull(final CaseChangeResult cr,
+    protected void assertionNull(final DefaultCaseChangeResult cr,
                                  final String fromProductName, final String toProductName,
                                  final ProductCategory fromProductCategory, final ProductCategory toProductCategory,
                                  final BillingPeriod fromBp, final BillingPeriod toBp,
@@ -1027,7 +1027,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         }
     }
 
-    protected void assertionException(final CaseChangeResult cr,
+    protected void assertionException(final DefaultCaseChangeResult cr,
                                       final String fromProductName, final String toProductName,
                                       final ProductCategory fromProductCategory, final ProductCategory toProductCategory,
                                       final BillingPeriod fromBp, final BillingPeriod toBp,
@@ -1042,7 +1042,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         }
     }
 
-    protected void assertion(final Result result, final CaseChangeResult cr,
+    protected void assertion(final Result result, final DefaultCaseChangeResult cr,
                              final String fromProductName, final String toProductName,
                              final ProductCategory fromProductCategory, final ProductCategory toProductCategory,
                              final BillingPeriod fromBp, final BillingPeriod toBp,

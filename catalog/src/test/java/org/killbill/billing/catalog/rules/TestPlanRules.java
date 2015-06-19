@@ -18,7 +18,6 @@ package org.killbill.billing.catalog.rules;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
@@ -46,14 +45,14 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
 
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[0];
 
-        final CaseChangePlanPolicy casePolicy = new CaseChangePlanPolicy().setPolicy(BillingActionPolicy.END_OF_TERM);
-        final CaseChangePlanAlignment caseAlignment = new CaseChangePlanAlignment().setAlignment(PlanAlignmentChange.START_OF_SUBSCRIPTION);
-        final CasePriceList casePriceList = new CasePriceList().setToPriceList(priceList2);
+        final DefaultCaseChangePlanPolicy casePolicy = new DefaultCaseChangePlanPolicy().setPolicy(BillingActionPolicy.END_OF_TERM);
+        final DefaultCaseChangePlanAlignment caseAlignment = new DefaultCaseChangePlanAlignment().setAlignment(PlanAlignmentChange.START_OF_SUBSCRIPTION);
+        final DefaultCasePriceList casePriceList = new DefaultCasePriceList().setToPriceList(priceList2);
 
         cat.getPlanRules().
-                setChangeCase(new CaseChangePlanPolicy[]{casePolicy}).
-                   setChangeAlignmentCase(new CaseChangePlanAlignment[]{caseAlignment}).
-                   setPriceListCase(new CasePriceList[]{casePriceList});
+                setChangeCase(new DefaultCaseChangePlanPolicy[]{casePolicy}).
+                   setChangeAlignmentCase(new DefaultCaseChangePlanAlignment[]{caseAlignment}).
+                   setPriceListCase(new DefaultCasePriceList[]{casePriceList});
     }
 
     @Test(groups = "fast")
