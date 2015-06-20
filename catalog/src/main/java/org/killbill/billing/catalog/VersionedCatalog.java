@@ -69,26 +69,42 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     private BillingMode recurringBillingMode;
 
     @XmlElement(name = "catalogVersion", required = true)
-    private final List<StandaloneCatalogWithPriceOverride> versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
+    private List<StandaloneCatalogWithPriceOverride> versions;
 
     // Required for JAXB deserialization
     public VersionedCatalog() {
         this.clock = null;
+        versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
     }
 
     public VersionedCatalog(final Clock clock) {
         this.clock = clock;
+        versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
     }
 
+    public VersionedCatalog(final Clock clock, final String catalogName, final BillingMode recurringBillingMode, final List<StandaloneCatalogWithPriceOverride> versions, final InternalTenantContext tenantContext) {
+        this.clock = clock;
+        this.catalogName = catalogName;
+        this.recurringBillingMode = recurringBillingMode;
+        this.versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
+        for (final StandaloneCatalogWithPriceOverride cur : versions) {
+            final StandaloneCatalogWithPriceOverride catalogWithTenantInfo = new StandaloneCatalogWithPriceOverride(cur, tenantContext);
+            this.versions.add(catalogWithTenantInfo);
+        }
+    }
+
+    /*
     public VersionedCatalog(final VersionedCatalog inputCatalog, final InternalTenantContext tenantContext) {
         this.clock = inputCatalog.getClock();
         this.catalogName = inputCatalog.getCatalogName();
         this.recurringBillingMode = inputCatalog.getRecurringBillingMode();
+        versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
         for (final StandaloneCatalogWithPriceOverride cur : inputCatalog.getVersions()) {
             final StandaloneCatalogWithPriceOverride catalogWithTenantInfo = new StandaloneCatalogWithPriceOverride(cur, tenantContext);
             versions.add(catalogWithTenantInfo);
         }
     }
+    */
 
     //
     // Private methods

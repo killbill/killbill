@@ -494,7 +494,7 @@ public class StandaloneCatalogMapper {
     }
 
     private <I, C extends I> C[] toArrayWithTransform(final Iterable<I> input, final Function<I, C> transformer, boolean returnNullIfNothing) {
-        if (returnNullIfNothing && !input.iterator().hasNext()) {
+        if (returnNullIfNothing && (input == null || !input.iterator().hasNext())) {
             return null;
         }
         final Iterable<C> tmp = Iterables.transform(input, transformer);
