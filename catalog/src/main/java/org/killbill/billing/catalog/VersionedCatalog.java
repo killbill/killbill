@@ -93,18 +93,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
         }
     }
 
-    /*
-    public VersionedCatalog(final VersionedCatalog inputCatalog, final InternalTenantContext tenantContext) {
-        this.clock = inputCatalog.getClock();
-        this.catalogName = inputCatalog.getCatalogName();
-        this.recurringBillingMode = inputCatalog.getRecurringBillingMode();
-        versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
-        for (final StandaloneCatalogWithPriceOverride cur : inputCatalog.getVersions()) {
-            final StandaloneCatalogWithPriceOverride catalogWithTenantInfo = new StandaloneCatalogWithPriceOverride(cur, tenantContext);
-            versions.add(catalogWithTenantInfo);
-        }
-    }
-    */
 
     //
     // Private methods
