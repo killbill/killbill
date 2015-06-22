@@ -105,18 +105,6 @@ public class TestPaymentEnteringStateCallback extends PaymentTestSuiteWithEmbedd
         Assert.assertEquals(paymentTransaction.getGatewayErrorMsg(), paymentInfoPlugin.getGatewayError());
     }
 
-    @Test(groups = "slow")
-    public void testEnterStateWithOperationException() throws Exception {
-        daoHelper.createNewPaymentTransaction();
-        // Simulate a bug in the plugin - i.e. nothing was returned
-        paymentStateContext.setPaymentTransactionInfoPlugin(null);
-        operationResult = OperationResult.EXCEPTION;
-
-        callback.enteringState(state, operationCallback, operationResult, leavingStateCallback);
-
-        Assert.assertEquals(paymentDao.getPaymentTransaction(paymentStateContext.getPaymentTransactionModelDao().getId(), internalCallContext).getTransactionStatus(), TransactionStatus.PLUGIN_FAILURE);
-    }
-
     private static final class PaymentEnteringStateTestCallback extends PaymentEnteringStateCallback {
 
         private PaymentEnteringStateTestCallback(final PaymentAutomatonDAOHelper daoHelper, final PaymentStateContext paymentStateContext) throws PaymentApiException {
