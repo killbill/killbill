@@ -76,7 +76,8 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
             Assert.assertEquals(e.getOperationResult(), OperationResult.EXCEPTION);
         }
 
-        Assert.assertNull(paymentStateContext.getPaymentTransactionInfoPlugin());
+        Assert.assertNotNull(paymentStateContext.getPaymentTransactionInfoPlugin());
+        Assert.assertEquals(paymentStateContext.getPaymentTransactionInfoPlugin().getStatus(), PaymentPluginStatus.UNDEFINED);
     }
 
     @Test(groups = "fast")

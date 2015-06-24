@@ -385,7 +385,8 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
     private DateTime getNextRetryDateForPluginFailure(final List<PaymentTransactionModelDao> purchasedTransactions) {
 
         DateTime result = null;
-        final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, TransactionStatus.PLUGIN_FAILURE);
+        // Not clear whether or not we should really include TransactionStatus.UNKNOWN
+        final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, TransactionStatus.PLUGIN_FAILURE, TransactionStatus.UNKNOWN);
         final int retryAttempt = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
 
         if (retryAttempt < paymentConfig.getPluginFailureRetryMaxAttempts()) {
