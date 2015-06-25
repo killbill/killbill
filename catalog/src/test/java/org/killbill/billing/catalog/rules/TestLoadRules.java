@@ -38,7 +38,7 @@ public class TestLoadRules extends CatalogTestSuiteNoDB {
         final URI uri = new URI(Resources.getResource("WeaponsHireSmall.xml").toExternalForm());
         final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(uri, StandaloneCatalog.class);
         Assert.assertNotNull(catalog);
-        final PlanRules rules = catalog.getPlanRules();
+        final DefaultPlanRules rules = catalog.getPlanRules();
 
         final PlanSpecifier specifier = new PlanSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
                                                           "DEFAULT");

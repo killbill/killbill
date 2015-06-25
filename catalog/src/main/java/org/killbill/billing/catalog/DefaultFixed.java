@@ -26,7 +26,6 @@ import javax.xml.bind.annotation.XmlElement;
 import org.killbill.billing.catalog.api.Fixed;
 import org.killbill.billing.catalog.api.FixedType;
 import org.killbill.billing.catalog.api.InternationalPrice;
-import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
@@ -34,15 +33,11 @@ import org.killbill.xmlloader.ValidationErrors;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements Fixed {
 
-
     @XmlAttribute(required = false)
-    private FixedType type = FixedType.ONE_TIME;
+    private FixedType type;
 
     @XmlElement(required = false)
     private DefaultInternationalPrice fixedPrice;
-
-    // Not exposed in xml.
-    private PlanPhase phase;
 
     @Override
     public FixedType getType() {
@@ -54,8 +49,9 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
         return fixedPrice;
     }
 
-
-    public DefaultFixed() {}
+    public DefaultFixed() {
+        type = FixedType.ONE_TIME;
+    }
 
     public DefaultFixed(final DefaultFixed in, final PlanPhasePriceOverride override) {
         this.type = in.getType();
@@ -68,23 +64,47 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
             fixedPrice.initialize(root, uri);
         }
     }
-        @Override
+
+    @Override
     public ValidationErrors validate(final StandaloneCatalog root, final ValidationErrors errors) {
         return errors;
     }
 
-    protected DefaultFixed setType(final FixedType type) {
+    public DefaultFixed setType(final FixedType type) {
         this.type = type;
         return this;
     }
 
-    protected DefaultFixed setFixedPrice(final DefaultInternationalPrice fixedPrice) {
+    public DefaultFixed setFixedPrice(final DefaultInternationalPrice fixedPrice) {
         this.fixedPrice = fixedPrice;
         return this;
     }
 
-    protected DefaultFixed setPhase(final PlanPhase phase) {
-        this.phase = phase;
-        return this;
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultFixed)) {
+            return false;
+        }
+
+        final DefaultFixed that = (DefaultFixed) o;
+
+        if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) {
+            return false;
+        }
+        if (type != that.type) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = type != null ? type.hashCode() : 0;
+        result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);
+        return result;
     }
 }

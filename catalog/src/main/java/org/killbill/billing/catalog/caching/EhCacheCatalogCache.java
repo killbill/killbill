@@ -27,16 +27,23 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
+import org.killbill.billing.catalog.plugin.VersionedCatalogMapper;
+import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
+import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.cache.TenantCatalogCacheLoader.LoaderCallback;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 public class EhCacheCatalogCache implements CatalogCache {
 
@@ -45,13 +52,23 @@ public class EhCacheCatalogCache implements CatalogCache {
     private final CacheController cacheController;
     private final VersionedCatalogLoader loader;
     private final CacheLoaderArgument cacheLoaderArgument;
+    private final OSGIServiceRegistration<CatalogPluginApi> pluginRegistry;
+    private final VersionedCatalogMapper versionedCatalogMapper;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     private VersionedCatalog defaultCatalog;
 
     @Inject
-    public EhCacheCatalogCache(final CacheControllerDispatcher cacheControllerDispatcher, final VersionedCatalogLoader loader) {
+    public EhCacheCatalogCache(final OSGIServiceRegistration<CatalogPluginApi> pluginRegistry,
+                               final VersionedCatalogMapper versionedCatalogMapper,
+                               final CacheControllerDispatcher cacheControllerDispatcher,
+                               final VersionedCatalogLoader loader,
+                               final InternalCallContextFactory internalCallContextFactory) {
+        this.pluginRegistry = pluginRegistry;
+        this.versionedCatalogMapper = versionedCatalogMapper;
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         this.loader = loader;
+        this.internalCallContextFactory = internalCallContextFactory;
         this.cacheLoaderArgument = initializeCacheLoaderArgument(this);
         setDefaultCatalog();
     }
@@ -65,6 +82,13 @@ public class EhCacheCatalogCache implements CatalogCache {
 
     @Override
     public VersionedCatalog getCatalog(final InternalTenantContext tenantContext) throws CatalogApiException {
+
+        // STEPH TODO what are the possibilities for caching here ?
+        final VersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext);
+        if (pluginVersionedCatalog != null) {
+            return pluginVersionedCatalog;
+        }
+
         if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
             return defaultCatalog;
         }
@@ -75,7 +99,7 @@ public class EhCacheCatalogCache implements CatalogCache {
             // It means we are using a default catalog in a multi-tenant deployment, that does not really match a real use case, but we want to support it
             // for test purpose.
             if (tenantCatalog == null) {
-                tenantCatalog = new VersionedCatalog(defaultCatalog, tenantContext);
+                tenantCatalog = new VersionedCatalog(defaultCatalog.getClock(), defaultCatalog.getCatalogName(), defaultCatalog.getRecurringBillingMode(), defaultCatalog.getVersions(), tenantContext);
                 cacheController.add(tenantContext.getTenantRecordId(), tenantCatalog);
             }
             return tenantCatalog;
@@ -89,6 +113,20 @@ public class EhCacheCatalogCache implements CatalogCache {
         if (tenantContext.getTenantRecordId() != InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
             cacheController.remove(tenantContext.getTenantRecordId());
         }
+    }
+
+    private VersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) {
+        final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
+        for (final String service : pluginRegistry.getAllServices()) {
+            final CatalogPluginApi plugin = pluginRegistry.getServiceForName(service);
+            final VersionedPluginCatalog pluginCatalog = plugin.getVersionedPluginCatalog(ImmutableList.<PluginProperty>of(), tenantContext);
+            // First plugin that gets something (for that tenant) returns it
+            if (pluginCatalog != null) {
+                logger.info("Returning catalog from plugin {} on tenant {} ", service, internalTenantContext.getTenantRecordId());
+                return versionedCatalogMapper.toVersionedCatalog(pluginCatalog, internalTenantContext);
+            }
+        }
+        return null;
     }
 
     //

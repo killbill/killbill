@@ -16,6 +16,8 @@
 
 package org.killbill.billing.catalog;
 
+import java.util.Arrays;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -111,7 +113,7 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         return count;
     }
 
-    protected DefaultPriceList setRetired(final boolean retired) {
+    public DefaultPriceList setRetired(final boolean retired) {
         this.retired = retired;
         return this;
     }
@@ -126,5 +128,35 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         return this;
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultPriceList)) {
+            return false;
+        }
 
+        final DefaultPriceList that = (DefaultPriceList) o;
+
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (!Arrays.equals(plans, that.plans)) {
+            return false;
+        }
+        if (retired != null ? !retired.equals(that.retired) : that.retired != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (retired != null ? retired.hashCode() : 0);
+        result = 31 * result + (plans != null ? Arrays.hashCode(plans) : 0);
+        return result;
+    }
 }

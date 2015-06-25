@@ -18,6 +18,7 @@ package org.killbill.billing.catalog;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -41,7 +42,6 @@ import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
@@ -49,11 +49,9 @@ import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.rules.PlanRules;
+import org.killbill.billing.catalog.rules.DefaultPlanRules;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
-
-import com.google.common.collect.ImmutableList;
 
 @XmlRootElement(name = "catalog")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -81,7 +79,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     private DefaultProduct[] products;
 
     @XmlElement(name = "rules", required = true)
-    private PlanRules planRules;
+    private DefaultPlanRules planRules;
 
     @XmlElementWrapper(name = "plans", required = true)
     @XmlElement(name = "plan", required = true)
@@ -147,7 +145,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return catalogURI;
     }
 
-    public PlanRules getPlanRules() {
+    public DefaultPlanRules getPlanRules() {
         return planRules;
     }
 
@@ -298,22 +296,17 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return phase.compliesWithLimits(unit, value);
     }
 
-    protected StandaloneCatalog setProducts(final DefaultProduct[] products) {
+    public StandaloneCatalog setProducts(final DefaultProduct[] products) {
         this.products = products;
         return this;
     }
 
-    protected StandaloneCatalog setSupportedCurrencies(final Currency[] supportedCurrencies) {
+    public StandaloneCatalog setSupportedCurrencies(final Currency[] supportedCurrencies) {
         this.supportedCurrencies = supportedCurrencies;
         return this;
     }
 
-    protected StandaloneCatalog setPlanChangeRules(final PlanRules planChangeRules) {
-        this.planRules = planChangeRules;
-        return this;
-    }
-
-    protected StandaloneCatalog setPlans(final DefaultPlan[] plans) {
+    public StandaloneCatalog setPlans(final DefaultPlan[] plans) {
         this.plans = plans;
         return this;
     }
@@ -323,7 +316,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
-    protected StandaloneCatalog setEffectiveDate(final Date effectiveDate) {
+    public StandaloneCatalog setEffectiveDate(final Date effectiveDate) {
         this.effectiveDate = effectiveDate;
         return this;
     }
@@ -333,13 +326,18 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
-    protected StandaloneCatalog setPlanRules(final PlanRules planRules) {
+    public StandaloneCatalog setPlanRules(final DefaultPlanRules planRules) {
         this.planRules = planRules;
         return this;
     }
 
-    protected StandaloneCatalog setPriceLists(final DefaultPriceListSet priceLists) {
+    public StandaloneCatalog setPriceLists(final DefaultPriceListSet priceLists) {
         this.priceLists = priceLists;
+        return this;
+    }
+
+    public StandaloneCatalog setUnits(final DefaultUnit[] units) {
+        this.units = units;
         return this;
     }
 
@@ -398,5 +396,65 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
             }
         }
         return availBasePlans;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof StandaloneCatalog)) {
+            return false;
+        }
+
+        final StandaloneCatalog that = (StandaloneCatalog) o;
+
+        if (catalogName != null ? !catalogName.equals(that.catalogName) : that.catalogName != null) {
+            return false;
+        }
+        if (catalogURI != null ? !catalogURI.equals(that.catalogURI) : that.catalogURI != null) {
+            return false;
+        }
+        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+            return false;
+        }
+        if (planRules != null ? !planRules.equals(that.planRules) : that.planRules != null) {
+            return false;
+        }
+        if (!Arrays.equals(plans, that.plans)) {
+            return false;
+        }
+        if (priceLists != null ? !priceLists.equals(that.priceLists) : that.priceLists != null) {
+            return false;
+        }
+        if (!Arrays.equals(products, that.products)) {
+            return false;
+        }
+        if (recurringBillingMode != that.recurringBillingMode) {
+            return false;
+        }
+        if (!Arrays.equals(supportedCurrencies, that.supportedCurrencies)) {
+            return false;
+        }
+        if (!Arrays.equals(units, that.units)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = effectiveDate != null ? effectiveDate.hashCode() : 0;
+        result = 31 * result + (catalogName != null ? catalogName.hashCode() : 0);
+        result = 31 * result + (recurringBillingMode != null ? recurringBillingMode.hashCode() : 0);
+        result = 31 * result + (supportedCurrencies != null ? Arrays.hashCode(supportedCurrencies) : 0);
+        result = 31 * result + (units != null ? Arrays.hashCode(units) : 0);
+        result = 31 * result + (products != null ? Arrays.hashCode(products) : 0);
+        result = 31 * result + (planRules != null ? planRules.hashCode() : 0);
+        result = 31 * result + (plans != null ? Arrays.hashCode(plans) : 0);
+        result = 31 * result + (priceLists != null ? priceLists.hashCode() : 0);
+        result = 31 * result + (catalogURI != null ? catalogURI.hashCode() : 0);
+        return result;
     }
 }

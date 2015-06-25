@@ -17,7 +17,6 @@
 package org.killbill.billing.catalog;
 
 import java.util.Date;
-import java.util.List;
 
 import org.joda.time.DateTime;
 
@@ -32,19 +31,16 @@ import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
-import org.killbill.billing.catalog.rules.CaseCancelPolicy;
-import org.killbill.billing.catalog.rules.CaseChangePlanAlignment;
-import org.killbill.billing.catalog.rules.CaseChangePlanPolicy;
-import org.killbill.billing.catalog.rules.CaseCreateAlignment;
-import org.killbill.billing.catalog.rules.PlanRules;
-
-import com.google.common.collect.ImmutableList;
+import org.killbill.billing.catalog.rules.DefaultCaseCancelPolicy;
+import org.killbill.billing.catalog.rules.DefaultCaseChangePlanAlignment;
+import org.killbill.billing.catalog.rules.DefaultCaseChangePlanPolicy;
+import org.killbill.billing.catalog.rules.DefaultCaseCreateAlignment;
+import org.killbill.billing.catalog.rules.DefaultPlanRules;
 
 public class MockCatalog extends StandaloneCatalog implements Catalog {
 
@@ -63,14 +59,14 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     public void populateRules() {
-        setPlanRules(new PlanRules());
+        setPlanRules(new DefaultPlanRules());
     }
 
     public void setRules(
-            final CaseChangePlanPolicy[] caseChangePlanPolicy,
-            final CaseChangePlanAlignment[] caseChangePlanAlignment,
-            final CaseCancelPolicy[] caseCancelPolicy,
-            final CaseCreateAlignment[] caseCreateAlignment
+            final DefaultCaseChangePlanPolicy[] caseChangePlanPolicy,
+            final DefaultCaseChangePlanAlignment[] caseChangePlanAlignment,
+            final DefaultCaseCancelPolicy[] caseCancelPolicy,
+            final DefaultCaseCreateAlignment[] caseCreateAlignment
                         ) {
 
     }

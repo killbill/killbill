@@ -36,13 +36,13 @@ import org.killbill.billing.catalog.api.ProductCategory;
 
 public class TestCase extends CatalogTestSuiteNoDB {
 
-    protected class CaseResult extends Case<Result> {
+    protected class DefaultCaseResult extends DefaultCase<Result> {
 
         @XmlElement(required = true)
         private final Result policy;
 
-        public CaseResult(final DefaultProduct product, final ProductCategory productCategory, final BillingPeriod billingPeriod, final DefaultPriceList priceList,
-                          final Result policy) {
+        public DefaultCaseResult(final DefaultProduct product, final ProductCategory productCategory, final BillingPeriod billingPeriod, final DefaultPriceList priceList,
+                                 final Result policy) {
             setProduct(product);
             setProductCategory(productCategory);
             setBillingPeriod(billingPeriod);
@@ -84,22 +84,22 @@ public class TestCase extends CatalogTestSuiteNoDB {
             return priceList;
         }
 
-        protected CaseResult setProduct(final DefaultProduct product) {
+        protected DefaultCaseResult setProduct(final DefaultProduct product) {
             this.product = product;
             return this;
         }
 
-        protected CaseResult setProductCategory(final ProductCategory productCategory) {
+        protected DefaultCaseResult setProductCategory(final ProductCategory productCategory) {
             this.productCategory = productCategory;
             return this;
         }
 
-        protected CaseResult setBillingPeriod(final BillingPeriod billingPeriod) {
+        protected DefaultCaseResult setBillingPeriod(final BillingPeriod billingPeriod) {
             this.billingPeriod = billingPeriod;
             return this;
         }
 
-        protected CaseResult setPriceList(final DefaultPriceList priceList) {
+        protected DefaultCaseResult setPriceList(final DefaultPriceList priceList) {
             this.priceList = priceList;
             return this;
         }
@@ -112,7 +112,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        final CaseResult cr = new CaseResult(
+        final DefaultCaseResult cr = new DefaultCaseResult(
                 product,
                 ProductCategory.BASE,
                 BillingPeriod.MONTHLY,
@@ -133,7 +133,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        final CaseResult cr = new CaseResult(
+        final DefaultCaseResult cr = new DefaultCaseResult(
                 null,
                 ProductCategory.BASE,
                 BillingPeriod.MONTHLY,
@@ -155,7 +155,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        final CaseResult cr = new CaseResult(
+        final DefaultCaseResult cr = new DefaultCaseResult(
                 product,
                 null,
                 BillingPeriod.MONTHLY,
@@ -177,7 +177,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        final CaseResult cr = new CaseResult(
+        final DefaultCaseResult cr = new DefaultCaseResult(
                 product,
                 ProductCategory.BASE,
                 null,
@@ -199,7 +199,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        final CaseResult cr = new CaseResult(
+        final DefaultCaseResult cr = new DefaultCaseResult(
                 product,
                 ProductCategory.BASE,
                 BillingPeriod.MONTHLY,
@@ -221,48 +221,48 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        final CaseResult cr0 = new CaseResult(
+        final DefaultCaseResult cr0 = new DefaultCaseResult(
                 product,
                 ProductCategory.BASE,
                 BillingPeriod.MONTHLY,
                 priceList,
                 Result.FOO);
 
-        final CaseResult cr1 = new CaseResult(
+        final DefaultCaseResult cr1 = new DefaultCaseResult(
                 product,
                 ProductCategory.BASE,
                 BillingPeriod.MONTHLY,
                 priceList,
                 Result.BAR);
 
-        final CaseResult cr2 = new CaseResult(
+        final DefaultCaseResult cr2 = new DefaultCaseResult(
                 product,
                 ProductCategory.BASE,
                 BillingPeriod.ANNUAL,
                 priceList,
                 Result.DIPSY);
 
-        final CaseResult cr3 = new CaseResult(
+        final DefaultCaseResult cr3 = new DefaultCaseResult(
                 product,
                 ProductCategory.BASE,
                 BillingPeriod.ANNUAL,
                 priceList,
                 Result.LALA);
 
-        final Result r1 = Case.getResult(new CaseResult[]{cr0, cr1, cr2, cr3},
-                                         new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName()), cat);
+        final Result r1 = DefaultCase.getResult(new DefaultCaseResult[]{cr0, cr1, cr2, cr3},
+                                                new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName()), cat);
         Assert.assertEquals(r1, Result.FOO);
 
-        final Result r2 = Case.getResult(new CaseResult[]{cr0, cr1, cr2},
-                                         new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName()), cat);
+        final Result r2 = DefaultCase.getResult(new DefaultCaseResult[]{cr0, cr1, cr2},
+                                                new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName()), cat);
         Assert.assertEquals(r2, Result.DIPSY);
     }
 
-    protected void assertionNull(final CaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) throws CatalogApiException {
+    protected void assertionNull(final DefaultCaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) throws CatalogApiException {
         Assert.assertNull(cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
     }
 
-    protected void assertionException(final CaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) {
+    protected void assertionException(final DefaultCaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) {
         try {
             cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat);
             Assert.fail("Expecting an exception");
@@ -271,7 +271,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         }
     }
 
-    protected void assertion(final Result result, final CaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) throws CatalogApiException {
+    protected void assertion(final Result result, final DefaultCaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) throws CatalogApiException {
         Assert.assertEquals(result, cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
     }
 }

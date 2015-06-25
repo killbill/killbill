@@ -19,6 +19,7 @@
 package org.killbill.billing.catalog;
 
 import java.net.URI;
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -58,12 +59,14 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
     @XmlElementWrapper(name = "usages", required = false)
     @XmlElement(name = "usage", required = false)
-    private DefaultUsage[] usages = new DefaultUsage[0];
+    private DefaultUsage[] usages;
 
     //Not exposed in XML
     private Plan plan;
 
-    public DefaultPlanPhase() {}
+    public DefaultPlanPhase() {
+        usages = new DefaultUsage[0];
+    }
 
     public DefaultPlanPhase(final DefaultPlan parentPlan, final DefaultPlanPhase in, @Nullable final PlanPhasePriceOverride override) {
         this.type = in.getPhaseType();
@@ -154,7 +157,6 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     public void initialize(final StandaloneCatalog root, final URI uri) {
         if (fixed != null) {
             fixed.initialize(root, uri);
-            fixed.setPhase(this);
         }
         if (recurring != null) {
             recurring.initialize(root, uri);
@@ -169,33 +171,75 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         }
     }
 
-    protected DefaultPlanPhase setFixed(final DefaultFixed fixed) {
+    public DefaultPlanPhase setFixed(final DefaultFixed fixed) {
         this.fixed = fixed;
         return this;
     }
 
-    protected DefaultPlanPhase setRecurring(final DefaultRecurring recurring) {
+    public DefaultPlanPhase setRecurring(final DefaultRecurring recurring) {
         this.recurring = recurring;
         return this;
     }
 
-    protected DefaultPlanPhase setUsages(final DefaultUsage[] usages) {
+    public DefaultPlanPhase setUsages(final DefaultUsage[] usages) {
         this.usages = usages;
         return this;
     }
 
-    protected DefaultPlanPhase setPhaseType(final PhaseType cohort) {
+    public DefaultPlanPhase setPhaseType(final PhaseType cohort) {
         this.type = cohort;
         return this;
     }
 
-    protected DefaultPlanPhase setDuration(final DefaultDuration duration) {
+    public DefaultPlanPhase setDuration(final DefaultDuration duration) {
         this.duration = duration;
         return this;
     }
 
-    protected DefaultPlanPhase setPlan(final Plan plan) {
+    public DefaultPlanPhase setPlan(final Plan plan) {
         this.plan = plan;
         return this;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultPlanPhase)) {
+            return false;
+        }
+
+        final DefaultPlanPhase that = (DefaultPlanPhase) o;
+
+        if (duration != null ? !duration.equals(that.duration) : that.duration != null) {
+            return false;
+        }
+        if (fixed != null ? !fixed.equals(that.fixed) : that.fixed != null) {
+            return false;
+        }
+        if (recurring != null ? !recurring.equals(that.recurring) : that.recurring != null) {
+            return false;
+        }
+        if (type != that.type) {
+            return false;
+        }
+        /*
+        if (!Arrays.equals(usages, that.usages)) {
+            return false;
+        }
+        */
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = type != null ? type.hashCode() : 0;
+        result = 31 * result + (duration != null ? duration.hashCode() : 0);
+        result = 31 * result + (fixed != null ? fixed.hashCode() : 0);
+        result = 31 * result + (recurring != null ? recurring.hashCode() : 0);
+        //result = 31 * result + (usages != null ? Arrays.hashCode(usages) : 0);
+        return result;
     }
 }

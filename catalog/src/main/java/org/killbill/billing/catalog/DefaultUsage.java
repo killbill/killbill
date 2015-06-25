@@ -18,6 +18,7 @@
 package org.killbill.billing.catalog;
 
 import java.net.URI;
+import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -58,17 +59,17 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     // Used for when billing usage IN_ADVANCE & CAPACITY
     @XmlElementWrapper(name = "limits", required = false)
     @XmlElement(name = "limit", required = true)
-    private DefaultLimit[] limits = new DefaultLimit[0];
+    private DefaultLimit[] limits;
 
     // Used for when billing usage IN_ADVANCE & CONSUMABLE
     @XmlElementWrapper(name = "blocks", required = false)
     @XmlElement(name = "block", required = true)
-    private DefaultBlock[] blocks = new DefaultBlock[0];
+    private DefaultBlock[] blocks;
 
     // Used for when billing usage IN_ARREAR
     @XmlElementWrapper(name = "tiers", required = false)
     @XmlElement(name = "tier", required = true)
-    private DefaultTier[] tiers = new DefaultTier[0];
+    private DefaultTier[] tiers;
 
     // Used to define a fixed price for the whole usage section -- bundle several limits/blocks of units.
     @XmlElement(required = false)
@@ -80,6 +81,12 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
 
     // Not exposed in xml.
     private PlanPhase phase;
+
+    public DefaultUsage() {
+        limits = new DefaultLimit[0];
+        blocks = new DefaultBlock[0];
+        tiers = new DefaultTier[0];
+    }
 
     @Override
     public String getName() {
@@ -228,5 +235,64 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultUsage)) {
+            return false;
+        }
+
+        final DefaultUsage that = (DefaultUsage) o;
+
+        if (billingMode != that.billingMode) {
+            return false;
+        }
+        if (billingPeriod != that.billingPeriod) {
+            return false;
+        }
+        if (!Arrays.equals(blocks, that.blocks)) {
+            return false;
+        }
+        if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) {
+            return false;
+        }
+        if (!Arrays.equals(limits, that.limits)) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (phase != null ? !phase.equals(that.phase) : that.phase != null) {
+            return false;
+        }
+        if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null) {
+            return false;
+        }
+        if (!Arrays.equals(tiers, that.tiers)) {
+            return false;
+        }
+        if (usageType != that.usageType) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (billingMode != null ? billingMode.hashCode() : 0);
+        result = 31 * result + (usageType != null ? usageType.hashCode() : 0);
+        result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
+        result = 31 * result + (limits != null ? Arrays.hashCode(limits) : 0);
+        result = 31 * result + (blocks != null ? Arrays.hashCode(blocks) : 0);
+        result = 31 * result + (tiers != null ? Arrays.hashCode(tiers) : 0);
+        result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);
+        result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
+        return result;
     }
 }

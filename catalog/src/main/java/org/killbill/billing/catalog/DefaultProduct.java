@@ -50,16 +50,16 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @XmlElementWrapper(name = "included", required = false)
     @XmlIDREF
     @XmlElement(name = "addonProduct", required = true)
-    private DefaultProduct[] included = EMPTY_PRODUCT_LIST;
+    private DefaultProduct[] included;
 
     @XmlElementWrapper(name = "available", required = false)
     @XmlIDREF
     @XmlElement(name = "addonProduct", required = true)
-    private DefaultProduct[] available = EMPTY_PRODUCT_LIST;
+    private DefaultProduct[] available;
 
     @XmlElementWrapper(name = "limits", required = false)
     @XmlElement(name = "limit", required = true)
-    private DefaultLimit[] limits = new DefaultLimit[0];
+    private DefaultLimit[] limits;
 
     //Not included in XML
     private String catalogName;
@@ -90,6 +90,9 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     }
 
     public DefaultProduct() {
+        included = EMPTY_PRODUCT_LIST;
+        available = EMPTY_PRODUCT_LIST;
+        limits = new DefaultLimit[0];
     }
 
     public DefaultProduct(final String name, final ProductCategory category) {
@@ -158,32 +161,32 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         return errors;
     }
 
-    protected DefaultProduct setName(final String name) {
+    public DefaultProduct setName(final String name) {
         this.name = name;
         return this;
     }
 
-    protected DefaultProduct setCatagory(final ProductCategory category) {
+    public DefaultProduct setCatagory(final ProductCategory category) {
         this.category = category;
         return this;
     }
 
-    protected DefaultProduct setCategory(final ProductCategory category) {
+    public DefaultProduct setCategory(final ProductCategory category) {
         this.category = category;
         return this;
     }
 
-    protected DefaultProduct setIncluded(final DefaultProduct[] included) {
+    public DefaultProduct setIncluded(final DefaultProduct[] included) {
         this.included = included;
         return this;
     }
 
-    protected DefaultProduct setAvailable(final DefaultProduct[] available) {
+    public DefaultProduct setAvailable(final DefaultProduct[] available) {
         this.available = available;
         return this;
     }
 
-    protected DefaultProduct setCatalogName(final String catalogName) {
+    public DefaultProduct setCatalogName(final String catalogName) {
         this.catalogName = catalogName;
         return this;
     }
@@ -244,7 +247,6 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         result = 31 * result + (included != null ? Arrays.hashCode(included) : 0);
         result = 31 * result + (available != null ? Arrays.hashCode(available) : 0);
         result = 31 * result + (limits != null ? Arrays.hashCode(limits) : 0);
-        result = 31 * result + (catalogName != null ? catalogName.hashCode() : 0);
         return result;
     }
 }

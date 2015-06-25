@@ -17,6 +17,8 @@
 
 package org.killbill.billing.catalog;
 
+import java.util.Arrays;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -36,11 +38,11 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
 
     @XmlElementWrapper(name = "limits", required = false)
     @XmlElement(name = "limit", required = true)
-    private DefaultLimit[] limits = new DefaultLimit[0];
+    private DefaultLimit[] limits;
 
     @XmlElementWrapper(name = "blocks", required = false)
     @XmlElement(name = "tieredBlock", required = true)
-    private DefaultTieredBlock[] blocks = new DefaultTieredBlock[0];
+    private DefaultTieredBlock[] blocks;
 
     // Used to define a fixed price for the whole tier section
     @XmlElement(required = false)
@@ -54,6 +56,11 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     private BillingMode billingMode;
     private UsageType usageType;
     private PlanPhase phase;
+
+    public DefaultTier() {
+        limits = new DefaultLimit[0];
+        blocks = new DefaultTieredBlock[0];
+    }
 
     @Override
     public DefaultLimit[] getLimits() {
@@ -120,5 +127,50 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
         }
         validateCollection(catalog, errors, limits);
         return errors;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultTier)) {
+            return false;
+        }
+
+        final DefaultTier that = (DefaultTier) o;
+
+        if (billingMode != that.billingMode) {
+            return false;
+        }
+        if (!Arrays.equals(blocks, that.blocks)) {
+            return false;
+        }
+        if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) {
+            return false;
+        }
+        if (!Arrays.equals(limits, that.limits)) {
+            return false;
+        }
+        if (phase != null ? !phase.equals(that.phase) : that.phase != null) {
+            return false;
+        }
+        if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null) {
+            return false;
+        }
+        if (usageType != that.usageType) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = limits != null ? Arrays.hashCode(limits) : 0;
+        result = 31 * result + (blocks != null ? Arrays.hashCode(blocks) : 0);
+        result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);
+        result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
+        return result;
     }
 }

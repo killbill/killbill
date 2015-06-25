@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Arrays;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -146,4 +147,26 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
         return true;
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DefaultInternationalPrice)) {
+            return false;
+        }
+
+        final DefaultInternationalPrice that = (DefaultInternationalPrice) o;
+
+        if (!Arrays.equals(prices, that.prices)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return prices != null ? Arrays.hashCode(prices) : 0;
+    }
 }
