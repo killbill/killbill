@@ -347,7 +347,7 @@ public class StandaloneCatalogMapper {
             public DefaultPriceList apply(final PriceList input) {
                 return toDefaultPriceList(input);
             }
-        }, false);
+        }, true);
     }
 
     private DefaultPrice[] toDefaultPrices(final Iterable<Price> input) {

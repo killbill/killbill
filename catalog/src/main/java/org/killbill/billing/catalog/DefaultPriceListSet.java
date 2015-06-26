@@ -39,7 +39,7 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
     private PriceListDefault defaultPricelist;
 
     @XmlElement(required = false, name = "childPriceList")
-    private DefaultPriceList[] childPriceLists = new DefaultPriceList[0];
+    private DefaultPriceList[] childPriceLists;
 
     public DefaultPriceListSet() {
         if (childPriceLists == null) {
@@ -49,7 +49,7 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
 
     public DefaultPriceListSet(final PriceListDefault defaultPricelist, final DefaultPriceList[] childPriceLists) {
         this.defaultPricelist = defaultPricelist;
-        this.childPriceLists = childPriceLists;
+        this.childPriceLists = childPriceLists != null ? childPriceLists : new DefaultPriceList[0];
     }
 
     public DefaultPlan getPlanFrom(final String priceListName, final Product product,
