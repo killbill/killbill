@@ -20,8 +20,6 @@ package org.killbill.billing.payment.core.janitor;
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -39,7 +37,6 @@ import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
@@ -56,11 +53,11 @@ import com.google.common.collect.Iterables;
 
 public class IncompletePaymentTransactionTask extends CompletionTaskBase<PaymentTransactionModelDao> {
 
-    private final static ImmutableList<TransactionStatus> TRANSACTION_STATUSES_TO_CONSIDER = ImmutableList.<TransactionStatus>builder()
+    private static final ImmutableList<TransactionStatus> TRANSACTION_STATUSES_TO_CONSIDER = ImmutableList.<TransactionStatus>builder()
                                                                                                           .add(TransactionStatus.PENDING)
                                                                                                           .add(TransactionStatus.UNKNOWN)
                                                                                                           .build();
-    private final static int MAX_ITEMS_PER_LOOP = 100;
+    private static final int MAX_ITEMS_PER_LOOP = 100;
 
     public IncompletePaymentTransactionTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                                             final PaymentDao paymentDao, final Clock clock,
@@ -80,7 +77,6 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
 
     @Override
     public void doIteration(final PaymentTransactionModelDao paymentTransaction) {
-
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(paymentTransaction.getTenantRecordId(), paymentTransaction.getAccountRecordId());
         final CallContext callContext = createCallContext("IncompletePaymentTransactionTask", internalTenantContext);
         final PaymentModelDao payment = paymentDao.getPayment(paymentTransaction.getPaymentId(), internalTenantContext);
@@ -88,16 +84,15 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         final PaymentMethodModelDao paymentMethod = paymentDao.getPaymentMethod(payment.getPaymentMethodId(), internalTenantContext);
         final PaymentPluginApi paymentPluginApi = getPaymentPluginApi(payment, paymentMethod.getPluginName());
 
-
         final PaymentTransactionInfoPlugin undefinedPaymentTransaction = new DefaultNoOpPaymentInfoPlugin(payment.getId(),
-                                                                                                     paymentTransaction.getId(),
-                                                                                                     paymentTransaction.getTransactionType(),
-                                                                                                     paymentTransaction.getAmount(),
-                                                                                                     paymentTransaction.getCurrency(),
-                                                                                                     paymentTransaction.getCreatedDate(),
-                                                                                                     paymentTransaction.getCreatedDate(),
-                                                                                                     PaymentPluginStatus.UNDEFINED,
-                                                                                                     null);
+                                                                                                          paymentTransaction.getId(),
+                                                                                                          paymentTransaction.getTransactionType(),
+                                                                                                          paymentTransaction.getAmount(),
+                                                                                                          paymentTransaction.getCurrency(),
+                                                                                                          paymentTransaction.getCreatedDate(),
+                                                                                                          paymentTransaction.getCreatedDate(),
+                                                                                                          PaymentPluginStatus.UNDEFINED,
+                                                                                                          null);
         PaymentTransactionInfoPlugin paymentTransactionInfoPlugin;
         try {
             final List<PaymentTransactionInfoPlugin> result = paymentPluginApi.getPaymentInfo(payment.getAccountId(), payment.getId(), ImmutableList.<PluginProperty>of(), callContext);
@@ -136,7 +131,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             case UNKNOWN:
             default:
                 log.info("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, bail early...",
-                         new Object[]{payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus});
+                         payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
                 // We can't get anything interesting from the plugin...
                 return;
         }
@@ -155,16 +150,15 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         final String gatewayError = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin.getGatewayError() : paymentTransaction.getGatewayErrorMsg();
 
         log.info("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, transitioning transactionStatus from {} -> {}",
-                 new Object[]{payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus});
+                 payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(payment.getAccountId(), callContext);
         paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, lastSuccessPaymentState,
                                                            paymentTransaction.getId(), transactionStatus, processedAmount, processedCurrency, gatewayErrorCode, gatewayError, internalCallContext);
-
     }
 
     // Keep the existing currentTransactionStatus if we can't obtain a better answer from the plugin; if not, return the newTransactionStatus
-    private TransactionStatus computeNewTransactionStatusFromPaymentTransactionInfoPlugin(PaymentTransactionInfoPlugin input, final TransactionStatus currentTransactionStatus) {
+    private TransactionStatus computeNewTransactionStatusFromPaymentTransactionInfoPlugin(final PaymentTransactionInfoPlugin input, final TransactionStatus currentTransactionStatus) {
         final TransactionStatus newTransactionStatus = PaymentTransactionInfoPluginConverter.toTransactionStatus(input);
         return (newTransactionStatus != TransactionStatus.UNKNOWN) ? newTransactionStatus : currentTransactionStatus;
     }

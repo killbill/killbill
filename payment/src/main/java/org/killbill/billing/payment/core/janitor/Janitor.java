@@ -25,9 +25,9 @@ import javax.inject.Named;
 
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
-import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -67,9 +67,9 @@ public class Janitor {
         this.janitorExecutor = janitorExecutor;
         this.paymentConfig = paymentConfig;
         this.incompletePaymentAttemptTask = new IncompletePaymentAttemptTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
-                                                               accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
+                                                                             accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
         this.incompletePaymentTransactionTask = new IncompletePaymentTransactionTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
-                                                                   accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
+                                                                                     accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
         this.isStopped = false;
     }
 
