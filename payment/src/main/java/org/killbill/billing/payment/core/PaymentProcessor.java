@@ -49,6 +49,7 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -85,6 +86,7 @@ public class PaymentProcessor extends ProcessorBase {
     private static final ImmutableList<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
 
     private final PaymentAutomatonRunner paymentAutomatonRunner;
+    private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
 
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessor.class);
 
@@ -98,9 +100,11 @@ public class PaymentProcessor extends ProcessorBase {
                             final GlobalLocker locker,
                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                             final PaymentAutomatonRunner paymentAutomatonRunner,
+                            final IncompletePaymentTransactionTask incompletePaymentTransactionTask,
                             final Clock clock) {
         super(pluginRegistry, accountUserApi, paymentDao, tagUserApi, locker, executor, internalCallContextFactory, invoiceApi, clock);
         this.paymentAutomatonRunner = paymentAutomatonRunner;
+        this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
     }
 
     public Payment createAuthorization(final boolean isApiPayment, @Nullable final UUID attemptId, final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency,
@@ -183,7 +187,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                                      pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, context);
                                                                  }
 
-                                                                 return toPayment(paymentModelDao, transactionsModelDao, pluginInfo);
+                                                                 return toPayment(paymentModelDao, transactionsModelDao, pluginInfo, tenantContext);
                                                              }
                                                          });
     }
@@ -383,11 +387,11 @@ public class PaymentProcessor extends ProcessorBase {
         final InternalTenantContext tenantContextWithAccountRecordId = getInternalTenantContextWithAccountRecordId(paymentModelDao.getAccountId(), tenantContext);
         final List<PaymentTransactionModelDao> transactionsForPayment = paymentDao.getTransactionsForPayment(paymentModelDao.getId(), tenantContextWithAccountRecordId);
 
-        return toPayment(paymentModelDao, transactionsForPayment, pluginTransactions);
+        return toPayment(paymentModelDao, transactionsForPayment, pluginTransactions, tenantContext);
     }
 
     // Used in bulk get API (getAccountPayments)
-    private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Iterable<PaymentTransactionModelDao> transactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions) {
+    private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Iterable<PaymentTransactionModelDao> curTransactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final InternalTenantContext internalTenantContext) {
         final Ordering<PaymentTransaction> perPaymentTransactionOrdering = Ordering.<PaymentTransaction>from(new Comparator<PaymentTransaction>() {
             @Override
             public int compare(final PaymentTransaction o1, final PaymentTransaction o2) {
@@ -396,34 +400,71 @@ public class PaymentProcessor extends ProcessorBase {
         });
 
         // Need to filter for optimized codepaths looking up by account_record_id
-        final Iterable<PaymentTransactionModelDao> filteredTransactions = Iterables.filter(transactionsModelDao, new Predicate<PaymentTransactionModelDao>() {
+        final Iterable<PaymentTransactionModelDao> filteredTransactions = Iterables.filter(curTransactionsModelDao, new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao curPaymentTransactionModelDao) {
                 return curPaymentTransactionModelDao.getPaymentId().equals(curPaymentModelDao.getId());
             }
         });
 
-        final Iterable<PaymentTransaction> transactions = Iterables.transform(filteredTransactions, new Function<PaymentTransactionModelDao, PaymentTransaction>() {
-            @Override
-            public PaymentTransaction apply(final PaymentTransactionModelDao paymentTransactionModelDao) {
-                final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin = pluginTransactions != null ?
-                                                                                  Iterables.tryFind(pluginTransactions, new Predicate<PaymentTransactionInfoPlugin>() {
-                                                                                      @Override
-                                                                                      public boolean apply(final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
-                                                                                          return paymentTransactionModelDao.getId().equals(paymentTransactionInfoPlugin.getKbTransactionPaymentId());
-                                                                                      }
-                                                                                  }).orNull() : null;
+        PaymentModelDao newPaymentModelDao = curPaymentModelDao;
+        final Collection<PaymentTransaction> transactions = new LinkedList<PaymentTransaction>();
+        for (final PaymentTransactionModelDao curPaymentTransactionModelDao : filteredTransactions) {
+            PaymentTransactionModelDao newPaymentTransactionModelDao = curPaymentTransactionModelDao;
 
-                return new DefaultPaymentTransaction(paymentTransactionModelDao.getId(), paymentTransactionModelDao.getAttemptId(), paymentTransactionModelDao.getTransactionExternalKey(), paymentTransactionModelDao.getCreatedDate(), paymentTransactionModelDao.getUpdatedDate(), paymentTransactionModelDao.getPaymentId(),
-                                                     paymentTransactionModelDao.getTransactionType(), paymentTransactionModelDao.getEffectiveDate(), paymentTransactionModelDao.getTransactionStatus(), paymentTransactionModelDao.getAmount(), paymentTransactionModelDao.getCurrency(),
-                                                     paymentTransactionModelDao.getProcessedAmount(), paymentTransactionModelDao.getProcessedCurrency(),
-                                                     paymentTransactionModelDao.getGatewayErrorCode(), paymentTransactionModelDao.getGatewayErrorMsg(), paymentTransactionInfoPlugin);
+            final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin = findPaymentTransactionInfoPlugin(newPaymentTransactionModelDao, pluginTransactions);
+            if (paymentTransactionInfoPlugin != null) {
+                // Make sure to invoke the Janitor task in case the plugin fixes its state on the fly
+                // See https://github.com/killbill/killbill/issues/341
+                final boolean hasChanged = incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeeded(newPaymentModelDao, newPaymentTransactionModelDao, paymentTransactionInfoPlugin, internalTenantContext);
+                if (hasChanged) {
+                    newPaymentModelDao = paymentDao.getPayment(newPaymentModelDao.getId(), internalTenantContext);
+                    newPaymentTransactionModelDao = paymentDao.getPaymentTransaction(newPaymentTransactionModelDao.getId(), internalTenantContext);
+                }
             }
-        });
+
+            final PaymentTransaction transaction = new DefaultPaymentTransaction(newPaymentTransactionModelDao.getId(),
+                                                                                 newPaymentTransactionModelDao.getAttemptId(),
+                                                                                 newPaymentTransactionModelDao.getTransactionExternalKey(),
+                                                                                 newPaymentTransactionModelDao.getCreatedDate(),
+                                                                                 newPaymentTransactionModelDao.getUpdatedDate(),
+                                                                                 newPaymentTransactionModelDao.getPaymentId(),
+                                                                                 newPaymentTransactionModelDao.getTransactionType(),
+                                                                                 newPaymentTransactionModelDao.getEffectiveDate(),
+                                                                                 newPaymentTransactionModelDao.getTransactionStatus(),
+                                                                                 newPaymentTransactionModelDao.getAmount(),
+                                                                                 newPaymentTransactionModelDao.getCurrency(),
+                                                                                 newPaymentTransactionModelDao.getProcessedAmount(),
+                                                                                 newPaymentTransactionModelDao.getProcessedCurrency(),
+                                                                                 newPaymentTransactionModelDao.getGatewayErrorCode(),
+                                                                                 newPaymentTransactionModelDao.getGatewayErrorMsg(),
+                                                                                 paymentTransactionInfoPlugin);
+            transactions.add(transaction);
+        }
 
         final List<PaymentTransaction> sortedTransactions = perPaymentTransactionOrdering.immutableSortedCopy(transactions);
-        return new DefaultPayment(curPaymentModelDao.getId(), curPaymentModelDao.getCreatedDate(), curPaymentModelDao.getUpdatedDate(), curPaymentModelDao.getAccountId(),
-                                  curPaymentModelDao.getPaymentMethodId(), curPaymentModelDao.getPaymentNumber(), curPaymentModelDao.getExternalKey(), sortedTransactions);
+        return new DefaultPayment(curPaymentModelDao.getId(),
+                                  curPaymentModelDao.getCreatedDate(),
+                                  curPaymentModelDao.getUpdatedDate(),
+                                  curPaymentModelDao.getAccountId(),
+                                  curPaymentModelDao.getPaymentMethodId(),
+                                  curPaymentModelDao.getPaymentNumber(),
+                                  curPaymentModelDao.getExternalKey(),
+                                  sortedTransactions);
+    }
+
+    private PaymentTransactionInfoPlugin findPaymentTransactionInfoPlugin(final PaymentTransactionModelDao paymentTransactionModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions) {
+        if (pluginTransactions == null) {
+            return null;
+        }
+
+        return Iterables.tryFind(pluginTransactions,
+                                 new Predicate<PaymentTransactionInfoPlugin>() {
+                                     @Override
+                                     public boolean apply(final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
+                                         return paymentTransactionModelDao.getId().equals(paymentTransactionInfoPlugin.getKbTransactionPaymentId());
+                                     }
+                                 }).orNull();
     }
 
     private InternalTenantContext getInternalTenantContextWithAccountRecordId(final UUID accountId, final InternalTenantContext tenantContext) {

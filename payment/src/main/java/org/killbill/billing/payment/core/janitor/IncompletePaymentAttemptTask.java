@@ -19,6 +19,8 @@ package org.killbill.billing.payment.core.janitor;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -28,9 +30,9 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
-import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -52,13 +54,17 @@ import com.google.common.collect.Iterables;
  * If the state of the transaction associated with the attempt completed, but the attempt state machine did not,
  * we rerun the retry state machine to complete the call and transition the attempt into a terminal state.
  */
-final class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttemptModelDao> {
+public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttemptModelDao> {
 
-    public IncompletePaymentAttemptTask(final Janitor janitor, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
+    private final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
+
+    @Inject
+    public IncompletePaymentAttemptTask(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                                         final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
                                         final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
                                         final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
-        super(janitor, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
+        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry);
+        this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
     }
 
     @Override
@@ -97,18 +103,18 @@ final class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttem
             final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
             final boolean isApiPayment = true; // unclear
             final PaymentStateControlContext paymentStateContext = new PaymentStateControlContext(attempt.toPaymentControlPluginNames(),
-                                                                                                      isApiPayment,
-                                                                                                      transaction.getPaymentId(),
-                                                                                                      attempt.getPaymentExternalKey(),
-                                                                                                      transaction.getTransactionExternalKey(),
-                                                                                                      transaction.getTransactionType(),
-                                                                                                      account,
-                                                                                                      attempt.getPaymentMethodId(),
-                                                                                                      transaction.getAmount(),
-                                                                                                      transaction.getCurrency(),
-                                                                                                      PluginPropertySerializer.deserialize(attempt.getPluginProperties()),
-                                                                                                      internalCallContext,
-                                                                                                      callContext);
+                                                                                                  isApiPayment,
+                                                                                                  transaction.getPaymentId(),
+                                                                                                  attempt.getPaymentExternalKey(),
+                                                                                                  transaction.getTransactionExternalKey(),
+                                                                                                  transaction.getTransactionType(),
+                                                                                                  account,
+                                                                                                  attempt.getPaymentMethodId(),
+                                                                                                  transaction.getAmount(),
+                                                                                                  transaction.getCurrency(),
+                                                                                                  PluginPropertySerializer.deserialize(attempt.getPluginProperties()),
+                                                                                                  internalCallContext,
+                                                                                                  callContext);
 
             paymentStateContext.setAttemptId(attempt.getId()); // Normally set by leavingState Callback
             paymentStateContext.setPaymentTransactionModelDao(transaction); // Normally set by raw state machine
@@ -130,5 +136,4 @@ final class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttem
         final long delayBeforeNowMs = paymentConfig.getIncompleteAttemptsTimeSpanDelay().getMillis();
         return clock.getUTCNow().minusMillis((int) delayBeforeNowMs);
     }
-
 }
