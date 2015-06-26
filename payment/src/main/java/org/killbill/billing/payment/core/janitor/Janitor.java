@@ -23,17 +23,8 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
-import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,22 +45,14 @@ public class Janitor {
     private volatile boolean isStopped;
 
     @Inject
-    public Janitor(final AccountInternalApi accountInternalApi,
-                   final PaymentDao paymentDao,
-                   final PaymentConfig paymentConfig,
-                   final Clock clock,
-                   final InternalCallContextFactory internalCallContextFactory,
-                   final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
+    public Janitor(final PaymentConfig paymentConfig,
                    @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
-                   final PaymentStateMachineHelper paymentSMHelper,
-                   final PaymentControlStateMachineHelper retrySMHelper,
-                   final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
+                   final IncompletePaymentAttemptTask incompletePaymentAttemptTask,
+                   final IncompletePaymentTransactionTask incompletePaymentTransactionTask) {
         this.janitorExecutor = janitorExecutor;
         this.paymentConfig = paymentConfig;
-        this.incompletePaymentAttemptTask = new IncompletePaymentAttemptTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
-                                                                             accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
-        this.incompletePaymentTransactionTask = new IncompletePaymentTransactionTask(this, internalCallContextFactory, paymentConfig, paymentDao, clock, paymentSMHelper, retrySMHelper,
-                                                                                     accountInternalApi, pluginControlledPaymentAutomatonRunner, pluginRegistry);
+        this.incompletePaymentAttemptTask = incompletePaymentAttemptTask;
+        this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
         this.isStopped = false;
     }
 
@@ -95,6 +78,10 @@ public class Janitor {
             log.warn("Janitor is already in a stopped state");
             return;
         }
+
+        incompletePaymentAttemptTask.stop();
+        incompletePaymentTransactionTask.stop();
+
         try {
             /* Previously submitted tasks will be executed with shutdown(); when task executes as a result of shutdown being called
              * or because it was already in its execution loop, it will check for the volatile boolean isStopped flag and
@@ -112,9 +99,5 @@ public class Janitor {
         } finally {
             isStopped = true;
         }
-    }
-
-    public boolean isStopped() {
-        return isStopped;
     }
 }
