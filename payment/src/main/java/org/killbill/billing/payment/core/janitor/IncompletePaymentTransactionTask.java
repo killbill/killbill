@@ -130,7 +130,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             case PLUGIN_FAILURE:
             case UNKNOWN:
             default:
-                log.info("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, bail early...",
+                log.info("Janitor IncompletePaymentTransactionTask unable to repair payment {}, transaction {}: {} -> {}",
                          payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
                 // We can't get anything interesting from the plugin...
                 return;
