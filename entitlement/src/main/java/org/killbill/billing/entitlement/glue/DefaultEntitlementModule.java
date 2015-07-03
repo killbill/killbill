@@ -24,6 +24,7 @@ import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
 import org.killbill.billing.entitlement.api.DefaultSubscriptionApi;
 import org.killbill.billing.entitlement.api.EntitlementApi;
+import org.killbill.billing.entitlement.api.EntitlementPluginExecution;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.svcs.DefaultEntitlementInternalApi;
 import org.killbill.billing.entitlement.api.svcs.DefaultInternalBlockingApi;
@@ -50,6 +51,7 @@ public class DefaultEntitlementModule extends KillBillModule implements Entitlem
 
     protected void installEntitlementPluginApi() {
         bind(new TypeLiteral<OSGIServiceRegistration<EntitlementPluginApi>>() {}).toProvider(DefaultEntitlementProviderPluginRegistryProvider.class).asEagerSingleton();
+        bind(EntitlementPluginExecution.class).asEagerSingleton();
     }
 
     @Override

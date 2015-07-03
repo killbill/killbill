@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -37,6 +38,8 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.ChangeType;
 
+import com.google.common.collect.ImmutableList;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -52,10 +55,10 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final Account account = accountApi.createAccount(getAccountData(7), callContext);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement1 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, initialDate, callContext);
+        final Entitlement entitlement1 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, initialDate, ImmutableList.<PluginProperty>of(), callContext);
         // Sleep 1 sec so created date are apparts from each other and ordering in the bundle does not default on the UUID which is random.
         try {Thread.sleep(1000); } catch (InterruptedException ignore) {};
-        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, initialDate, callContext);
+        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, initialDate, ImmutableList.<PluginProperty>of(), callContext);
         entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "stateName", "service", false, false, false, clock.getUTCNow()),
                                                                         internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
         assertListenerStatus();
@@ -98,7 +101,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, null, initialDate, callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, null, initialDate, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         assertEquals(entitlement.getAccountId(), account.getId());
         assertEquals(entitlement.getExternalKey(), externalKey);
@@ -115,7 +118,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         // Cancel entitlement
         clock.addDays(3);
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
-        entitlement.cancelEntitlementWithDate(new LocalDate(clock.getUTCNow(), account.getTimeZone()), true, callContext);
+        entitlement.cancelEntitlementWithDate(new LocalDate(clock.getUTCNow(), account.getTimeZone()), true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         try {
@@ -132,7 +135,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         // Create entitlement and check each field
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec2, externalKey, null, new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
+        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec2, externalKey, null, new LocalDate(clock.getUTCNow(), account.getTimeZone()), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         assertEquals(entitlement2.getAccountId(), account.getId());
         assertEquals(entitlement2.getExternalKey(), externalKey);
@@ -163,7 +166,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final Account account2 = accountApi.createAccount(getAccountData(7), callContext);
 
         testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.CANCEL, NextEvent.BLOCK);
-        entitlementApi.transferEntitlements(account.getId(), account2.getId(), externalKey, new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
+        entitlementApi.transferEntitlements(account.getId(), account2.getId(), externalKey, new LocalDate(clock.getUTCNow(), account.getTimeZone()), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         final List<SubscriptionBundle> bundles3 = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, callContext);
@@ -203,7 +206,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         // Create entitlement
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, callContext);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Get the phase event out of the way
@@ -212,13 +215,13 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertListenerStatus();
 
         final LocalDate pauseDate = new LocalDate(2013, 9, 17);
-        entitlementApi.pause(baseEntitlement.getBundleId(), pauseDate, callContext);
+        entitlementApi.pause(baseEntitlement.getBundleId(), pauseDate, ImmutableList.<PluginProperty>of(), callContext);
 
         final LocalDate resumeDate = new LocalDate(2013, 12, 24);
-        entitlementApi.resume(baseEntitlement.getBundleId(), resumeDate, callContext);
+        entitlementApi.resume(baseEntitlement.getBundleId(), resumeDate, ImmutableList.<PluginProperty>of(), callContext);
 
         final LocalDate cancelDate = new LocalDate(2013, 12, 27);
-        baseEntitlement.cancelEntitlementWithDate(cancelDate, true, callContext);
+        baseEntitlement.cancelEntitlementWithDate(cancelDate, true, ImmutableList.<PluginProperty>of(), callContext);
 
         testListener.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK, NextEvent.RESUME, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK);
         clock.setDay(cancelDate.plusDays(1));

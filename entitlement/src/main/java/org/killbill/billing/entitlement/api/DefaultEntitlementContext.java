@@ -34,12 +34,12 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
 
-import com.google.common.base.MoreObjects;
 
 public class DefaultEntitlementContext implements EntitlementContext {
 
     private final OperationType operationType;
     private final UUID accountId;
+    private final UUID destinationAccountId;
     private final UUID bundleId;
     private final PlanPhaseSpecifier spec;
     private final String externalKey;
@@ -61,6 +61,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      @Nullable final PriorEntitlementResult pluginResult) {
         this(prev.getOperationType(),
              prev.getAccountId(),
+             prev.getDestinationAccountId(),
              prev.getBundleId(),
              pluginResult != null && pluginResult.getAdjustedPlanPhaseSpecifier() != null ? pluginResult.getAdjustedPlanPhaseSpecifier() : prev.getPlanPhaseSpecifier(),
              prev.getExternalKey(),
@@ -72,6 +73,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
 
     public DefaultEntitlementContext(final OperationType operationType,
                                      final UUID accountId,
+                                     final UUID destinationAccountId,
                                      final UUID bundleId,
                                      final PlanPhaseSpecifier spec,
                                      final String externalKey,
@@ -79,7 +81,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      final LocalDate effectiveDate,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final CallContext callContext) {
-        this(operationType, accountId, bundleId, spec, externalKey, planPhasePriceOverrides, effectiveDate, pluginProperties,
+        this(operationType, accountId, destinationAccountId, bundleId, spec, externalKey, planPhasePriceOverrides, effectiveDate, pluginProperties,
              callContext.getUserToken(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(),
              callContext.getComments(), callContext.getCreatedDate(), callContext.getUpdatedDate(), callContext.getTenantId());
     }
@@ -87,6 +89,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
 
     public DefaultEntitlementContext(final OperationType operationType,
                                      final UUID accountId,
+                                     final UUID destinationAccountId,
                                      final UUID bundleId,
                                      final PlanPhaseSpecifier spec,
                                      final String externalKey,
@@ -104,6 +107,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      final UUID tenantId) {
         this.operationType = operationType;
         this.accountId = accountId;
+        this.destinationAccountId = destinationAccountId;
         this.bundleId = bundleId;
         this.spec = spec;
         this.externalKey = externalKey;
@@ -129,6 +133,11 @@ public class DefaultEntitlementContext implements EntitlementContext {
     @Override
     public UUID getAccountId() {
         return accountId;
+    }
+
+    @Override
+    public UUID getDestinationAccountId() {
+        return destinationAccountId;
     }
 
     @Override

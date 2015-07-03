@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -36,6 +37,8 @@ import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.junction.DefaultBlockingState;
+
+import com.google.common.collect.ImmutableList;
 
 public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -56,7 +59,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // See TestEntitlementUtils for a more comprehensive test
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, clock.getUTCToday(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         final BlockingStateType type = BlockingStateType.SUBSCRIPTION;

@@ -31,6 +31,7 @@ import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.entitlement.engine.core.BlockingTransitionNotificationKey;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKey;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -49,6 +50,7 @@ import org.killbill.notificationq.api.NotificationQueueService.NotificationQueue
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultEntitlementService implements EntitlementService {
@@ -132,9 +134,9 @@ public class DefaultEntitlementService implements EntitlementService {
                 EntitlementNotificationKeyAction.CANCEL.equals(entitlementNotificationKeyAction)) {
                 ((DefaultEntitlement) entitlement).blockAddOnsIfRequired(key.getEffectiveDate(), callContext, internalCallContext);
             } else if (EntitlementNotificationKeyAction.PAUSE.equals(entitlementNotificationKeyAction)) {
-                entitlementApi.pause(key.getBundleId(), key.getEffectiveDate().toLocalDate(), callContext);
+                entitlementApi.pause(key.getBundleId(), key.getEffectiveDate().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
             } else if (EntitlementNotificationKeyAction.RESUME.equals(entitlementNotificationKeyAction)) {
-                entitlementApi.resume(key.getBundleId(), key.getEffectiveDate().toLocalDate(), callContext);
+                entitlementApi.resume(key.getBundleId(), key.getEffectiveDate().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
             }
         } catch (final EntitlementApiException e) {
             log.error("Error processing event for entitlement {}" + entitlement.getId(), e);

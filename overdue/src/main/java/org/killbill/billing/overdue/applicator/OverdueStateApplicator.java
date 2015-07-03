@@ -57,6 +57,7 @@ import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.overdue.notification.OverdueCheckNotificationKey;
 import org.killbill.billing.overdue.notification.OverdueCheckNotifier;
 import org.killbill.billing.overdue.notification.OverduePoster;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -300,7 +301,7 @@ public class OverdueStateApplicator {
 
             for (final Entitlement cur : toBeCancelled) {
                 try {
-                    cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, callContext);
+                    cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, ImmutableList.<PluginProperty>of(), callContext);
                 } catch (final EntitlementApiException e) {
                     // If subscription has already been cancelled, there is nothing to do so we can ignore
                     if (e.getCode() != ErrorCode.SUB_CANCEL_BAD_STATE.getCode()) {

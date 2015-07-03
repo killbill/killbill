@@ -55,6 +55,7 @@ import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -198,16 +199,18 @@ public class BundleResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response pauseBundle(@PathParam(ID_PARAM_NAME) final String id,
                                 @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
 
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
         final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
-        entitlementApi.pause(bundleId, inputLocalDate, callContext);
+        entitlementApi.pause(bundleId, inputLocalDate, pluginProperties, callContext);
         return Response.status(Status.OK).build();
     }
 
@@ -221,16 +224,18 @@ public class BundleResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response resumeBundle(@PathParam(ID_PARAM_NAME) final String id,
                                  @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
 
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
         final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
-        entitlementApi.resume(bundleId, inputLocalDate, callContext);
+        entitlementApi.resume(bundleId, inputLocalDate, pluginProperties, callContext);
         return Response.status(Status.OK).build();
     }
 
@@ -310,6 +315,7 @@ public class BundleResource extends JaxRsResourceBase {
                                    @PathParam(ID_PARAM_NAME) final String id,
                                    @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                    @QueryParam(QUERY_BILLING_POLICY) @DefaultValue("END_OF_TERM") final String policyString,
+                                   @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
                                    @HeaderParam(HDR_COMMENT) final String comment,
@@ -318,6 +324,7 @@ public class BundleResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "BundleJson body should be specified");
         verifyNonNullOrEmpty(json.getAccountId(), "BundleJson accountId needs to be set");
 
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
@@ -326,7 +333,7 @@ public class BundleResource extends JaxRsResourceBase {
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
         final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
 
-        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, policy, callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, policy, pluginProperties, callContext);
         return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundleId, uriInfo.getBaseUri().toString());
     }
 

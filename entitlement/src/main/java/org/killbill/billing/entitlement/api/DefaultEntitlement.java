@@ -35,6 +35,10 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.EntitlementPluginExecution.WithEntitlementPlugin;
+import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
+import org.killbill.billing.entitlement.plugin.api.OperationType;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.EntitlementService;
@@ -66,6 +70,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     protected final Clock clock;
     protected final BlockingChecker checker;
     protected final EntitlementApi entitlementApi;
+    protected final EntitlementPluginExecution pluginExecution;
     protected final SubscriptionBaseInternalApi subscriptionInternalApi;
     protected final BlockingStateDao blockingStateDao;
     protected final NotificationQueueService notificationQueueService;
@@ -74,19 +79,20 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     // Refresh-able
     protected EventsStream eventsStream;
 
+
     public DefaultEntitlement(final UUID entitlementId, final EventsStreamBuilder eventsStreamBuilder,
-                              final EntitlementApi entitlementApi, final BlockingStateDao blockingStateDao,
+                              final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution, final BlockingStateDao blockingStateDao,
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
                               final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils,
                               final EntitlementDateHelper dateHelper, final Clock clock,
                               final InternalCallContextFactory internalCallContextFactory, final TenantContext tenantContext) throws EntitlementApiException {
         this(eventsStreamBuilder.buildForEntitlement(entitlementId, tenantContext), eventsStreamBuilder,
-             entitlementApi, blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
+             entitlementApi, pluginExecution, blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
              entitlementUtils, dateHelper, clock, internalCallContextFactory);
     }
 
     public DefaultEntitlement(final EventsStream eventsStream, final EventsStreamBuilder eventsStreamBuilder,
-                              final EntitlementApi entitlementApi, final BlockingStateDao blockingStateDao,
+                              final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution, final BlockingStateDao blockingStateDao,
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
                               final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils,
                               final EntitlementDateHelper dateHelper, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
@@ -95,6 +101,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         this.eventsStream = eventsStream;
         this.dateHelper = dateHelper;
         this.entitlementApi = entitlementApi;
+        this.pluginExecution = pluginExecution;
         this.subscriptionInternalApi = subscriptionInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
@@ -108,6 +115,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         this(in.getEventsStream(),
              in.getEventsStreamBuilder(),
              in.getEntitlementApi(),
+             in.getPluginExecution(),
              in.getBlockingStateDao(),
              in.getSubscriptionInternalApi(),
              in.getChecker(),
@@ -150,6 +158,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     public EntitlementApi getEntitlementApi() {
         return entitlementApi;
+    }
+
+    public EntitlementPluginExecution getPluginExecution() {
+        return pluginExecution;
     }
 
     public SubscriptionBaseInternalApi getSubscriptionInternalApi() {
@@ -242,16 +254,16 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk - required to have the latest CTD
         refresh(callContext);
 
         final LocalDate cancellationDate = getLocalDateFromEntitlementPolicy(entitlementPolicy);
-        return cancelEntitlementWithDate(cancellationDate, false, callContext);
+        return cancelEntitlementWithDate(cancellationDate, false, properties, callContext);
     }
 
     @Override
-    public Entitlement cancelEntitlementWithDate(final LocalDate localCancelDate, final boolean overrideBillingEffectiveDate, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement cancelEntitlementWithDate(final LocalDate localCancelDate, final boolean overrideBillingEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk
         refresh(callContext);
 
@@ -280,16 +292,16 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement cancelEntitlementWithPolicyOverrideBillingPolicy(final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement cancelEntitlementWithPolicyOverrideBillingPolicy(final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk - required to have the latest CTD
         refresh(callContext);
 
         final LocalDate cancellationDate = getLocalDateFromEntitlementPolicy(entitlementPolicy);
-        return cancelEntitlementWithDateOverrideBillingPolicy(cancellationDate, billingPolicy, callContext);
+        return cancelEntitlementWithDateOverrideBillingPolicy(cancellationDate, billingPolicy, properties, callContext);
     }
 
     @Override
-    public void uncancelEntitlement(final CallContext callContext) throws EntitlementApiException {
+    public void uncancelEntitlement(final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk
         refresh(callContext);
 
@@ -328,34 +340,52 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement cancelEntitlementWithDateOverrideBillingPolicy(final LocalDate localCancelDate, final BillingActionPolicy billingPolicy, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement cancelEntitlementWithDateOverrideBillingPolicy(final LocalDate localCancelDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
         // Get the latest state from disk
         refresh(callContext);
 
-        if (eventsStream.isEntitlementCancelled()) {
-            throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
-        }
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CANCEL_SUBSCRIPTION,
+                                                                               getAccountId(),
+                                                                               null,
+                                                                               getBundleId(),
+                                                                               null,
+                                                                               getExternalKey(),
+                                                                               null,
+                                                                               localCancelDate,
+                                                                               properties,
+                                                                               callContext);
 
-        // Make sure to compute the entitlement effective date first to avoid timing issues for IMM cancellations
-        // (we don't want an entitlement cancel date one second or so after the subscription cancel date or add-ons cancellations
-        // computations won't work).
-        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-        final LocalDate effectiveLocalDate = new LocalDate(localCancelDate, eventsStream.getAccountTimeZone());
-        final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(effectiveLocalDate, getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
+        final WithEntitlementPlugin<Entitlement> cancelEntitlementWithPlugin = new WithEntitlementPlugin<Entitlement>() {
+            @Override
+            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+                if (eventsStream.isEntitlementCancelled()) {
+                    throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
+                }
 
-        try {
-            // Cancel subscription base first, to correctly compute the add-ons entitlements we need to cancel (see below)
-            getSubscriptionBase().cancelWithPolicy(billingPolicy, callContext);
-        } catch (SubscriptionBaseApiException e) {
-            throw new EntitlementApiException(e);
-        }
+                // Make sure to compute the entitlement effective date first to avoid timing issues for IMM cancellations
+                // (we don't want an entitlement cancel date one second or so after the subscription cancel date or add-ons cancellations
+                // computations won't work).
+                final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+                final LocalDate effectiveLocalDate = new LocalDate(updatedPluginContext.getEffectiveDate(), eventsStream.getAccountTimeZone());
+                final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(effectiveLocalDate, getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
 
-        final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveDate);
-        entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(newBlockingState, contextWithValidAccountRecordId);
+                try {
+                    // Cancel subscription base first, to correctly compute the add-ons entitlements we need to cancel (see below)
+                    getSubscriptionBase().cancelWithPolicy(billingPolicy, callContext);
+                } catch (SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
+                }
 
-        blockAddOnsIfRequired(effectiveDate, callContext, contextWithValidAccountRecordId);
+                final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveDate);
+                entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(newBlockingState, contextWithValidAccountRecordId);
 
-        return entitlementApi.getEntitlementForId(getId(), callContext);
+                blockAddOnsIfRequired(effectiveDate, callContext, contextWithValidAccountRecordId);
+
+                return entitlementApi.getEntitlementForId(getId(), callContext);
+            }
+        };
+        return pluginExecution.executeWithPlugin(cancelEntitlementWithPlugin, pluginContext);
     }
 
     private LocalDate getLocalDateFromEntitlementPolicy(final EntitlementActionPolicy entitlementPolicy) {
@@ -374,87 +404,138 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk
         refresh(callContext);
 
-        if (!eventsStream.isEntitlementActive()) {
-            throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
-        }
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CHANGE_PLAN,
+                                                                               getAccountId(),
+                                                                               null,
+                                                                               getBundleId(),
+                                                                               null,
+                                                                               getExternalKey(),
+                                                                               null,
+                                                                               null,
+                                                                               properties,
+                                                                               callContext);
 
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-        try {
-            checker.checkBlockedChange(getSubscriptionBase(), context);
-        } catch (BlockingApiException e) {
-            throw new EntitlementApiException(e, e.getCode(), e.getMessage());
-        }
+        final WithEntitlementPlugin<Entitlement> changePlanWithPlugin = new WithEntitlementPlugin<Entitlement>() {
+            @Override
+            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+                if (!eventsStream.isEntitlementActive()) {
+                    throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
+                }
 
-        final DateTime effectiveChangeDate;
-        try {
-            effectiveChangeDate = getSubscriptionBase().changePlan(productName, billingPeriod, priceList, overrides, callContext);
-        } catch (SubscriptionBaseApiException e) {
-            throw new EntitlementApiException(e);
-        }
+                final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+                try {
+                    checker.checkBlockedChange(getSubscriptionBase(), context);
+                } catch (BlockingApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                }
 
-        blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
+                final DateTime effectiveChangeDate;
+                try {
+                    effectiveChangeDate = getSubscriptionBase().changePlan(productName, billingPeriod, priceList, overrides, callContext);
+                } catch (SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
+                }
 
-        return entitlementApi.getEntitlementForId(getId(), callContext);
+                blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
+
+                return entitlementApi.getEntitlementForId(getId(), callContext);
+            }
+        };
+        return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);
     }
 
     @Override
-    public Entitlement changePlanWithDate(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlanWithDate(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final LocalDate localDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk
         refresh(callContext);
 
-        if (!eventsStream.isEntitlementActive()) {
-            throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
-        }
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CHANGE_PLAN,
+                                                                               getAccountId(),
+                                                                               null,
+                                                                               getBundleId(),
+                                                                               null,
+                                                                               getExternalKey(),
+                                                                               null,
+                                                                               localDate,
+                                                                               properties,
+                                                                               callContext);
 
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-        try {
-            checker.checkBlockedChange(getSubscriptionBase(), context);
-        } catch (BlockingApiException e) {
-            throw new EntitlementApiException(e, e.getCode(), e.getMessage());
-        }
+        final WithEntitlementPlugin<Entitlement> changePlanWithPlugin = new WithEntitlementPlugin<Entitlement>() {
+            @Override
+            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+                if (!eventsStream.isEntitlementActive()) {
+                    throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
+                }
 
-        final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(localDate, getSubscriptionBase().getStartDate(), context);
-        try {
-            getSubscriptionBase().changePlanWithDate(productName, billingPeriod, priceList, overrides, effectiveChangeDate, callContext);
-        } catch (SubscriptionBaseApiException e) {
-            throw new EntitlementApiException(e);
-        }
+                final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+                try {
+                    checker.checkBlockedChange(getSubscriptionBase(), context);
+                } catch (BlockingApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                }
 
-        blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
+                final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), getSubscriptionBase().getStartDate(), context);
+                try {
+                    getSubscriptionBase().changePlanWithDate(productName, billingPeriod, priceList, overrides, effectiveChangeDate, callContext);
+                } catch (SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
+                }
 
-        return entitlementApi.getEntitlementForId(getId(), callContext);
+                blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
+
+                return entitlementApi.getEntitlementForId(getId(), callContext);
+            }
+        };
+        return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);
     }
 
     @Override
-    public Entitlement changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final LocalDate localDate, final BillingActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final LocalDate localDate, final BillingActionPolicy actionPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         // Get the latest state from disk
         refresh(callContext);
 
-        if (!eventsStream.isEntitlementActive()) {
-            throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
-        }
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CHANGE_PLAN,
+                                                                               getAccountId(),
+                                                                               null,
+                                                                               getBundleId(),
+                                                                               null,
+                                                                               getExternalKey(),
+                                                                               null,
+                                                                               localDate,
+                                                                               properties,
+                                                                               callContext);
 
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-        try {
-            checker.checkBlockedChange(getSubscriptionBase(), context);
-        } catch (BlockingApiException e) {
-            throw new EntitlementApiException(e, e.getCode(), e.getMessage());
-        }
+        final WithEntitlementPlugin<Entitlement> changePlanWithPlugin = new WithEntitlementPlugin<Entitlement>() {
+            @Override
+            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+                if (!eventsStream.isEntitlementActive()) {
+                    throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
+                }
 
-        final DateTime effectiveChangeDate;
-        try {
-            effectiveChangeDate = getSubscriptionBase().changePlanWithPolicy(productName, billingPeriod, priceList, overrides, actionPolicy, callContext);
-        } catch (SubscriptionBaseApiException e) {
-            throw new EntitlementApiException(e);
-        }
+                final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+                try {
+                    checker.checkBlockedChange(getSubscriptionBase(), context);
+                } catch (BlockingApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                }
 
-        blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
+                final DateTime effectiveChangeDate;
+                try {
+                    effectiveChangeDate = getSubscriptionBase().changePlanWithPolicy(productName, billingPeriod, priceList, overrides, actionPolicy, callContext);
+                } catch (SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
+                }
 
-        return entitlementApi.getEntitlementForId(getId(), callContext);
+                blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
+
+                return entitlementApi.getEntitlementForId(getId(), callContext);
+            }
+        };
+        return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);
     }
 
     private void refresh(final TenantContext context) throws EntitlementApiException {
