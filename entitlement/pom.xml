@@ -106,6 +106,10 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-osgi-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-platform-test</artifactId>
             <scope>test</scope>
         </dependency>
@@ -123,6 +127,10 @@
             <artifactId>killbill-util</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing.plugin</groupId>
+            <artifactId>killbill-plugin-api-entitlement</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>

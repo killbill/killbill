@@ -33,15 +33,23 @@ import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.entitlement.dao.ProxyBlockingStateDao;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
 import org.killbill.billing.entitlement.engine.core.EventsStreamBuilder;
+import org.killbill.billing.entitlement.plugin.api.EntitlementPluginApi;
 import org.killbill.billing.glue.EntitlementModule;
 import org.killbill.billing.junction.BlockingInternalApi;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
+
+import com.google.inject.TypeLiteral;
 
 public class DefaultEntitlementModule extends KillBillModule implements EntitlementModule {
 
     public DefaultEntitlementModule(final KillbillConfigSource configSource) {
         super(configSource);
+    }
+
+    protected void installEntitlementPluginApi() {
+        bind(new TypeLiteral<OSGIServiceRegistration<EntitlementPluginApi>>() {}).toProvider(DefaultEntitlementProviderPluginRegistryProvider.class).asEagerSingleton();
     }
 
     @Override
@@ -55,6 +63,7 @@ public class DefaultEntitlementModule extends KillBillModule implements Entitlem
         bind(EntitlementService.class).to(DefaultEntitlementService.class).asEagerSingleton();
         bind(EntitlementUtils.class).asEagerSingleton();
         bind(EventsStreamBuilder.class).asEagerSingleton();
+        installEntitlementPluginApi();
     }
 
     @Override
