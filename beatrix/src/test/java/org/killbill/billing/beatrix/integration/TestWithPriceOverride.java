@@ -34,7 +34,10 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class TestWithPriceOverride extends TestIntegrationBase {
 
@@ -123,7 +126,7 @@ public class TestWithPriceOverride extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CHANGE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        bpSubscription.changePlanOverrideBillingPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, overrides, new LocalDate(2012, 5, 1), BillingActionPolicy.IMMEDIATE, callContext);
+        bpSubscription.changePlanOverrideBillingPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, overrides, new LocalDate(2012, 5, 1), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,

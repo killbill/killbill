@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.ObjectType;
@@ -197,7 +198,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         clock.addDays(10);
 
         busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK, NextEvent.INVOICE);
-        entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
+        entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -216,7 +217,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         clock.addDays(23);
 
         busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT);
-        entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
+        entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -277,13 +278,13 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         clock.addDays(10);
 
         busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
-        entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
+        entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // 2012-6-4
         clock.addDays(23);
         busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
-        entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
+        entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
 

@@ -38,6 +38,7 @@ import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -282,7 +283,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final LocalDate transferDay = now.toLocalDate();
 
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.TRANSFER, NextEvent.TRANSFER, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        final UUID newBundleId = entitlementApi.transferEntitlements(account.getId(), newAccount.getId(), bundleExternalKey, transferDay, callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlements(account.getId(), newAccount.getId(), bundleExternalKey, transferDay, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Check the last 2 invoices on the old account

@@ -43,10 +43,13 @@ import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
@@ -545,7 +548,7 @@ public class TestIntegration extends TestIntegrationBase {
         final SubscriptionBundle initialBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey("bundleKey", callContext);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL);
-        baseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, callContext);
+        baseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         final String newProductName = "Pistol";
@@ -612,7 +615,7 @@ public class TestIntegration extends TestIntegrationBase {
         DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
         busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
+        entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -630,7 +633,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), callContext);
+        entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
