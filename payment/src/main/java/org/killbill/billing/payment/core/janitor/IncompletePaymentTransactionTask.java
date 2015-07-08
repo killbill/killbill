@@ -23,11 +23,14 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ErrorCode;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
@@ -46,6 +49,7 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLocker;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -65,8 +69,8 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     public IncompletePaymentTransactionTask(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                                             final PaymentDao paymentDao, final Clock clock,
                                             final PaymentStateMachineHelper paymentStateMachineHelper, final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                                            final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
-        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry);
+                                            final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final GlobalLocker locker) {
+        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry, locker);
     }
 
     @Override
@@ -80,44 +84,60 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
 
     @Override
     public void doIteration(final PaymentTransactionModelDao paymentTransaction) {
+
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(paymentTransaction.getTenantRecordId(), paymentTransaction.getAccountRecordId());
-        final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
-        final PaymentModelDao payment = paymentDao.getPayment(paymentTransaction.getPaymentId(), internalTenantContext);
+        doJanitorOperationWithAccountLock(new JanitorIterationCallback() {
+            @Override
+            public Void doIteration() {
+                final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
+                final PaymentModelDao payment = paymentDao.getPayment(paymentTransaction.getPaymentId(), internalTenantContext);
 
-        final PaymentMethodModelDao paymentMethod = paymentDao.getPaymentMethod(payment.getPaymentMethodId(), internalTenantContext);
-        final PaymentPluginApi paymentPluginApi = getPaymentPluginApi(payment, paymentMethod.getPluginName());
+                final PaymentMethodModelDao paymentMethod = paymentDao.getPaymentMethod(payment.getPaymentMethodId(), internalTenantContext);
+                final PaymentPluginApi paymentPluginApi = getPaymentPluginApi(payment, paymentMethod.getPluginName());
 
-        final PaymentTransactionInfoPlugin undefinedPaymentTransaction = new DefaultNoOpPaymentInfoPlugin(payment.getId(),
-                                                                                                          paymentTransaction.getId(),
-                                                                                                          paymentTransaction.getTransactionType(),
-                                                                                                          paymentTransaction.getAmount(),
-                                                                                                          paymentTransaction.getCurrency(),
-                                                                                                          paymentTransaction.getCreatedDate(),
-                                                                                                          paymentTransaction.getCreatedDate(),
-                                                                                                          PaymentPluginStatus.UNDEFINED,
-                                                                                                          null);
-        PaymentTransactionInfoPlugin paymentTransactionInfoPlugin;
-        try {
-            final List<PaymentTransactionInfoPlugin> result = paymentPluginApi.getPaymentInfo(payment.getAccountId(), payment.getId(), ImmutableList.<PluginProperty>of(), tenantContext);
-            paymentTransactionInfoPlugin = Iterables.tryFind(result, new Predicate<PaymentTransactionInfoPlugin>() {
-                @Override
-                public boolean apply(final PaymentTransactionInfoPlugin input) {
-                    return input.getKbTransactionPaymentId().equals(paymentTransaction.getId());
+                final PaymentTransactionInfoPlugin undefinedPaymentTransaction = new DefaultNoOpPaymentInfoPlugin(payment.getId(),
+                                                                                                                  paymentTransaction.getId(),
+                                                                                                                  paymentTransaction.getTransactionType(),
+                                                                                                                  paymentTransaction.getAmount(),
+                                                                                                                  paymentTransaction.getCurrency(),
+                                                                                                                  paymentTransaction.getCreatedDate(),
+                                                                                                                  paymentTransaction.getCreatedDate(),
+                                                                                                                  PaymentPluginStatus.UNDEFINED,
+                                                                                                                  null);
+                PaymentTransactionInfoPlugin paymentTransactionInfoPlugin;
+                try {
+                    final List<PaymentTransactionInfoPlugin> result = paymentPluginApi.getPaymentInfo(payment.getAccountId(), payment.getId(), ImmutableList.<PluginProperty>of(), tenantContext);
+                    paymentTransactionInfoPlugin = Iterables.tryFind(result, new Predicate<PaymentTransactionInfoPlugin>() {
+                        @Override
+                        public boolean apply(final PaymentTransactionInfoPlugin input) {
+                            return input.getKbTransactionPaymentId().equals(paymentTransaction.getId());
+                        }
+                    }).or(new Supplier<PaymentTransactionInfoPlugin>() {
+                        @Override
+                        public PaymentTransactionInfoPlugin get() {
+                            return undefinedPaymentTransaction;
+                        }
+                    });
+                } catch (final Exception e) {
+                    paymentTransactionInfoPlugin = undefinedPaymentTransaction;
                 }
-            }).or(new Supplier<PaymentTransactionInfoPlugin>() {
-                @Override
-                public PaymentTransactionInfoPlugin get() {
-                    return undefinedPaymentTransaction;
-                }
-            });
-        } catch (final Exception e) {
-            paymentTransactionInfoPlugin = undefinedPaymentTransaction;
-        }
+                updatePaymentAndTransactionIfNeeded(payment, paymentTransaction, paymentTransactionInfoPlugin, internalTenantContext);
+                return null;
+            }
+        }, paymentTransaction.getAccountRecordId(), internalTenantContext);
 
-        updatePaymentAndTransactionIfNeeded(payment, paymentTransaction, paymentTransactionInfoPlugin, internalTenantContext);
     }
 
-    public boolean updatePaymentAndTransactionIfNeeded(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin, final InternalTenantContext internalTenantContext) {
+    public Boolean updatePaymentAndTransactionIfNeededWithAccountLock(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin, final InternalTenantContext internalTenantContext) {
+        return doJanitorOperationWithAccountLock(new JanitorIterationCallback() {
+            @Override
+            public Boolean doIteration() {
+                return updatePaymentAndTransactionIfNeeded(payment, paymentTransaction, paymentTransactionInfoPlugin, internalTenantContext);
+            }
+        }, internalTenantContext.getAccountRecordId(), internalTenantContext);
+    }
+
+    private boolean updatePaymentAndTransactionIfNeeded(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin, final InternalTenantContext internalTenantContext) {
         final CallContext callContext = createCallContext("IncompletePaymentTransactionTask", internalTenantContext);
 
         // Can happen in the GET case, see PaymentProcessor#toPayment

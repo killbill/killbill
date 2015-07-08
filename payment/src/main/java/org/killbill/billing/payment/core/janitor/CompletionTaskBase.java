@@ -19,10 +19,13 @@ package org.killbill.billing.payment.core.janitor;
 
 import java.util.List;
 
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.core.ProcessorBase;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -34,7 +37,11 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLock;
+import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,13 +57,14 @@ abstract class CompletionTaskBase<T> implements Runnable {
     protected final PaymentControlStateMachineHelper retrySMHelper;
     protected final AccountInternalApi accountInternalApi;
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
+    protected final GlobalLocker locker;
 
     private volatile boolean isStopped;
 
     public CompletionTaskBase(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                               final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
                               final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                              final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
+                              final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final GlobalLocker locker) {
         this.internalCallContextFactory = internalCallContextFactory;
         this.paymentConfig = paymentConfig;
         this.paymentDao = paymentDao;
@@ -65,6 +73,7 @@ abstract class CompletionTaskBase<T> implements Runnable {
         this.retrySMHelper = retrySMHelper;
         this.accountInternalApi = accountInternalApi;
         this.pluginRegistry = pluginRegistry;
+        this.locker = locker;
         this.isStopped = false;
     }
 
@@ -95,6 +104,28 @@ abstract class CompletionTaskBase<T> implements Runnable {
     public abstract List<T> getItemsForIteration();
 
     public abstract void doIteration(final T item);
+
+    public interface JanitorIterationCallback {
+        public <T>  T doIteration();
+    }
+
+    protected <T> T doJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final Long accountRecordId, final InternalTenantContext internalTenantContext) {
+        GlobalLock lock = null;
+        try {
+            final Account account = accountInternalApi.getAccountByRecordId(accountRecordId, internalTenantContext);
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getExternalKey(), ProcessorBase.NB_LOCK_TRY);
+            return callback.doIteration();
+        } catch (AccountApiException e) {
+            log.warn(String.format("Janitor failed to retrieve account with recordId %s", accountRecordId), e);
+        } catch (LockFailedException e) {
+            log.warn(String.format("Janitor failed to grab account with recordId %s", accountRecordId), e);
+        } finally {
+            if (lock != null) {
+                lock.release();
+            }
+        }
+        return null;
+    }
 
     protected CallContext createCallContext(final String taskName, final InternalTenantContext internalTenantContext) {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);

@@ -67,7 +67,7 @@ import com.google.common.collect.Iterables;
 
 public abstract class ProcessorBase {
 
-    private static final int NB_LOCK_TRY = 5;
+    public static final int NB_LOCK_TRY = 5;
 
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final AccountInternalApi accountInternalApi;

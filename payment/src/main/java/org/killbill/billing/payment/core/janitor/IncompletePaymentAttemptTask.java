@@ -44,6 +44,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLocker;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -62,8 +63,9 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
     public IncompletePaymentAttemptTask(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                                         final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
                                         final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                                        final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
-        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry);
+                                        final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
+                                        final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final GlobalLocker locker) {
+        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry, locker);
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
     }
 
@@ -78,6 +80,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
 
     @Override
     public void doIteration(final PaymentAttemptModelDao attempt) {
+        // We don't grab account lock here as the lock will be taken when calling the completeRun API.
         final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(attempt.getTenantRecordId(), attempt.getAccountRecordId());
         final CallContext callContext = createCallContext("AttemptCompletionJanitorTask", tenantContext);
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(attempt.getAccountId(), callContext);
