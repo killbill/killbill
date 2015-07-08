@@ -17,6 +17,7 @@
 package org.killbill.billing.payment.dao;
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -50,7 +51,13 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDa
                                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentAttemptModelDao> getByStateNameAcrossTenants(@Bind("stateName") final String stateName,
-                                                             @Bind("createdBeforeDate") final Date createdBeforeDate);
+    Long getCountByStateNameAcrossTenants(@Bind("stateName") final String stateName,
+                                          @Bind("createdBeforeDate") final Date createdBeforeDate);
+
+    @SqlQuery
+    Iterator<PaymentAttemptModelDao> getByStateNameAcrossTenants(@Bind("stateName") final String stateName,
+                                                                 @Bind("createdBeforeDate") final Date createdBeforeDate,
+                                                                 @Bind("offset") final Long offset,
+                                                                 @Bind("rowCount") final Long rowCount);
 
 }

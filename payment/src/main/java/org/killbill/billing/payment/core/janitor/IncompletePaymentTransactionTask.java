@@ -48,6 +48,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
@@ -63,8 +64,6 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                                                                                                           .add(TransactionStatus.PENDING)
                                                                                                           .add(TransactionStatus.UNKNOWN)
                                                                                                           .build();
-    private static final int MAX_ITEMS_PER_LOOP = 100;
-
     @Inject
     public IncompletePaymentTransactionTask(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                                             final PaymentDao paymentDao, final Clock clock,
@@ -74,10 +73,10 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     }
 
     @Override
-    public List<PaymentTransactionModelDao> getItemsForIteration() {
-        final List<PaymentTransactionModelDao> result = paymentDao.getByTransactionStatusAcrossTenants(TRANSACTION_STATUSES_TO_CONSIDER, getCreatedDateBefore(), getCreatedDateAfter(), MAX_ITEMS_PER_LOOP);
-        if (!result.isEmpty()) {
-            log.info("Janitor IncompletePaymentTransactionTask start run: found {} pending/unknown payments", result.size());
+    public Iterable<PaymentTransactionModelDao> getItemsForIteration() {
+        final Pagination<PaymentTransactionModelDao> result = paymentDao.getByTransactionStatusAcrossTenants(TRANSACTION_STATUSES_TO_CONSIDER, getCreatedDateBefore(), getCreatedDateAfter(), 0L, Long.MAX_VALUE);
+        if (result.getTotalNbRecords() > 0) {
+            log.info("Janitor IncompletePaymentTransactionTask start run: found {} pending/unknown payments", result.getTotalNbRecords());
         }
         return result;
     }

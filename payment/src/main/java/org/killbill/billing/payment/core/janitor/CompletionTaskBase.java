@@ -83,7 +83,7 @@ abstract class CompletionTaskBase<T> implements Runnable {
             log.info("Janitor was requested to stop");
             return;
         }
-        final List<T> items = getItemsForIteration();
+        final Iterable<T> items = getItemsForIteration();
         for (final T item : items) {
             if (isStopped) {
                 log.info("Janitor was requested to stop");
@@ -101,7 +101,7 @@ abstract class CompletionTaskBase<T> implements Runnable {
         this.isStopped = true;
     }
 
-    public abstract List<T> getItemsForIteration();
+    public abstract Iterable<T> getItemsForIteration();
 
     public abstract void doIteration(final T item);
 

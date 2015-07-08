@@ -18,6 +18,7 @@ package org.killbill.billing.payment.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +33,7 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertyS
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.entity.Pagination;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -298,7 +300,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final List<PaymentTransactionModelDao> result = getPendingTransactions(paymentModelDao.getId());
         Assert.assertEquals(result.size(), 3);
 
-        final List<PaymentTransactionModelDao> transactions1 = paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.PENDING), newTime, initialTime, 3);
+        final Iterable<PaymentTransactionModelDao> transactions1 = paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.PENDING), newTime, initialTime, 0L, 3L);
         for (PaymentTransactionModelDao paymentTransaction : transactions1) {
             final String newPaymentState = "XXX_FAILED";
             paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, payment.getLastSuccessStateName(),
@@ -316,7 +318,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         }
         ;
 
-        final List<PaymentTransactionModelDao> transactions2 = paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.PENDING), clock.getUTCNow(), initialTime, 1);
+        final Iterable<PaymentTransactionModelDao> transactions2 = paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.PENDING), clock.getUTCNow(), initialTime, 0L, 1L);
         for (PaymentTransactionModelDao paymentTransaction : transactions2) {
             final String newPaymentState = "XXX_FAILED";
             paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, payment.getLastSuccessStateName(),
@@ -467,7 +469,46 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(result.size(), 2);
     }
 
+
     @Test(groups = "slow")
+    public void testPaginationForPaymentByStatesAcrossTenants() {
+        // Right before createdAfterDate, so should not be returned
+        final DateTime createdDate1 = clock.getUTCNow().minusHours(1);
+
+        final int NB_ENTRIES = 30;
+        for (int i = 0; i < NB_ENTRIES; i++) {
+            final PaymentModelDao paymentModelDao1 = new PaymentModelDao(createdDate1, createdDate1, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID().toString());
+            final PaymentTransactionModelDao transaction1 = new PaymentTransactionModelDao(createdDate1, createdDate1, null, UUID.randomUUID().toString(),
+                                                                                           paymentModelDao1.getId(), TransactionType.AUTHORIZE, createdDate1,
+                                                                                           TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
+                                                                                           "unknown", "");
+
+            final InternalCallContext context1 = new InternalCallContext(1L,
+                                                                         1L,
+                                                                         internalCallContext.getUserToken(),
+                                                                         internalCallContext.getCreatedBy(),
+                                                                         internalCallContext.getCallOrigin(),
+                                                                         internalCallContext.getContextUserType(),
+                                                                         internalCallContext.getReasonCode(),
+                                                                         internalCallContext.getComments(),
+                                                                         createdDate1,
+                                                                         createdDate1);
+            paymentDao.insertPaymentWithFirstTransaction(paymentModelDao1, transaction1, context1);
+        }
+
+        final Pagination<PaymentTransactionModelDao> result =  paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.UNKNOWN), clock.getUTCNow(), createdDate1, 0L, Long.MAX_VALUE);
+        Assert.assertEquals(result.getTotalNbRecords(), new Long(NB_ENTRIES));
+
+        final Iterator<PaymentTransactionModelDao> iterator = result.iterator();
+        for (int i = 0; i < NB_ENTRIES; i++) {
+            System.out.println("i = " + i);
+            Assert.assertTrue(iterator.hasNext());
+            final PaymentTransactionModelDao nextEntry = iterator.next();
+            Assert.assertEquals(nextEntry.getTransactionStatus(), TransactionStatus.UNKNOWN);
+        }
+    }
+
+        @Test(groups = "slow")
     public void testPaymentAttemptsByStateAcrossTenants() {
 
         final UUID paymentMethodId = UUID.randomUUID();
@@ -519,8 +560,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         paymentDao.insertPaymentAttemptWithProperties(attempt2, context2);
 
 
-        final List<PaymentAttemptModelDao> result = paymentDao.getPaymentAttemptsByStateAcrossTenants(stateName, createdBeforeDate);
-        Assert.assertEquals(result.size(), 2);
+        final Pagination<PaymentAttemptModelDao> result = paymentDao.getPaymentAttemptsByStateAcrossTenants(stateName, createdBeforeDate, 0L, 2L);
+        Assert.assertEquals(result.getTotalNbRecords().longValue(), 2L);
     }
 
 
