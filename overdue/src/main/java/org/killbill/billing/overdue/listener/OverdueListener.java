@@ -50,6 +50,7 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
@@ -73,6 +74,7 @@ public class OverdueListener {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void handle_OVERDUE_ENFORCEMENT_OFF_Insert(final ControlTagCreationInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
@@ -80,6 +82,7 @@ public class OverdueListener {
         }
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void handle_OVERDUE_ENFORCEMENT_OFF_Removal(final ControlTagDeletionInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
@@ -87,18 +90,21 @@ public class OverdueListener {
         }
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void handlePaymentInfoEvent(final PaymentInfoInternalEvent event) {
         log.debug("Received PaymentInfo event {}", event);
         insertBusEventIntoNotificationQueue(event.getAccountId(), event, OverdueAsyncBusNotificationAction.REFRESH, event.getSearchKey2());
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void handlePaymentErrorEvent(final PaymentErrorInternalEvent event) {
         log.debug("Received PaymentError event {}", event);
         insertBusEventIntoNotificationQueue(event.getAccountId(), event, OverdueAsyncBusNotificationAction.REFRESH, event.getSearchKey2());
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void handleInvoiceAdjustmentEvent(final InvoiceAdjustmentInternalEvent event) {
         log.debug("Received InvoiceAdjustment event {}", event);

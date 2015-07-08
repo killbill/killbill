@@ -31,6 +31,7 @@ import org.killbill.clock.Clock;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.util.tag.ControlTagType;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
@@ -51,6 +52,7 @@ public class InvoiceTagHandler {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void process_AUTO_INVOICING_OFF_removal(final ControlTagDeletionInternalEvent event) {
 

@@ -24,6 +24,7 @@ import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.util.userrequest.CompletionUserRequest;
 import org.killbill.billing.util.userrequest.CompletionUserRequestNotifier;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 
 public class KillbillEventHandler {
@@ -55,6 +56,7 @@ public class KillbillEventHandler {
     /*
      * Killbill server event handler
      */
+    @AllowConcurrentEvents
     @Subscribe
     public void handleSubscriptionevents(final BusInternalEvent event) {
         final List<CompletionUserRequestNotifier> runningWaiters = new ArrayList<CompletionUserRequestNotifier>();

@@ -42,6 +42,7 @@ import org.killbill.billing.util.config.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
@@ -65,6 +66,7 @@ public class InvoiceHandler {
         this.pluginRoutingPaymentProcessor = pluginRoutingPaymentProcessor;
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void processInvoiceEvent(final InvoiceCreationInternalEvent event) {
         log.info("Received invoice creation notification for account {} and invoice {}",
