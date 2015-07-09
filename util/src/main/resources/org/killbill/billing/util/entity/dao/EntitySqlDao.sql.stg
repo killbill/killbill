@@ -154,7 +154,7 @@ from <tableName()> t
 where <CHECK_TENANT("t.")>
 <andCheckSoftDeletionWithComma("t.")>
 order by t.<orderBy>
-limit :offset, :rowCount
+limit :rowCount offset :offset
 ;
 >>
 
@@ -270,7 +270,7 @@ from <tableName()> t
 where (<searchQuery("t.")>)
 <AND_CHECK_TENANT("t.")>
 order by <recordIdField("t.")> ASC
-limit :offset, :rowCount
+limit :rowCount offset :offset
 ;
 >>
 

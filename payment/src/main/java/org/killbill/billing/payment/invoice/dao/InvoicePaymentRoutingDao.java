@@ -91,7 +91,7 @@ public class InvoicePaymentRoutingDao {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("update _invoice_payment_control_plugin_auto_pay_off set is_active = 0 where account_id = ?", accountId.toString());
+                handle.execute("update _invoice_payment_control_plugin_auto_pay_off set is_active = false where account_id = ?", accountId.toString());
                 return null;
             }
         });

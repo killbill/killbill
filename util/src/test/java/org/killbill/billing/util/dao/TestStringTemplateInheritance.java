@@ -125,7 +125,7 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
                                                                                                                                                           "from kombucha t\r?\n" +
                                                                                                                                                           "where t.tenant_record_id = :tenantRecordId\r?\n" +
                                                                                                                                                           "order by t.record_id\r?\n" +
-                                                                                                                                                          "limit :offset, :rowCount\r?\n" +
+                                                                                                                                                          "limit :rowCount offset :offset\r?\n" +
                                                                                                                                                           ";");
         assertPattern(kombucha.getInstanceOf("test").toString(), "select\r?\n" +
                                                                  "  t.record_id\r?\n" +
