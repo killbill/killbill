@@ -496,7 +496,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
             paymentDao.insertPaymentWithFirstTransaction(paymentModelDao1, transaction1, context1);
         }
 
-        final Pagination<PaymentTransactionModelDao> result =  paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.UNKNOWN), clock.getUTCNow(), createdDate1, 0L, Long.MAX_VALUE);
+        final Pagination<PaymentTransactionModelDao> result =  paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.UNKNOWN), clock.getUTCNow(), createdDate1, 0L, new Long(NB_ENTRIES));
         Assert.assertEquals(result.getTotalNbRecords(), new Long(NB_ENTRIES));
 
         final Iterator<PaymentTransactionModelDao> iterator = result.iterator();

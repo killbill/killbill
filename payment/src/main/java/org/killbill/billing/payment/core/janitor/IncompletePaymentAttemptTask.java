@@ -58,6 +58,12 @@ import com.google.common.collect.Iterables;
  */
 public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttemptModelDao> {
 
+    //
+    // Each paymentAttempt *should* transition to a new state, so fetching a limited size will still allow us to progress (as opposed to fetching the same entries over and over)
+    // We also don't expect to see too many entries in the INIT state.
+    //
+    private final static long MAX_ATTEMPTS_PER_ITERATIONS = 1000L;
+
     private final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
 
     @Inject
@@ -72,7 +78,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
 
     @Override
     public Iterable<PaymentAttemptModelDao> getItemsForIteration() {
-        final Pagination<PaymentAttemptModelDao> incompleteAttempts = paymentDao.getPaymentAttemptsByStateAcrossTenants(retrySMHelper.getInitialState().getName(), getCreatedDateBefore(), 0L, Long.MAX_VALUE);
+        final Pagination<PaymentAttemptModelDao> incompleteAttempts = paymentDao.getPaymentAttemptsByStateAcrossTenants(retrySMHelper.getInitialState().getName(), getCreatedDateBefore(), 0L, MAX_ATTEMPTS_PER_ITERATIONS);
         if (incompleteAttempts.getTotalNbRecords() > 0) {
             log.info("Janitor AttemptCompletionTask start run: found {} incomplete attempts", incompleteAttempts.getTotalNbRecords());
         }

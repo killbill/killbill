@@ -109,16 +109,16 @@ abstract class CompletionTaskBase<T> implements Runnable {
         public <T>  T doIteration();
     }
 
-    protected <T> T doJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final Long accountRecordId, final InternalTenantContext internalTenantContext) {
+    protected <T> T doJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) {
         GlobalLock lock = null;
         try {
-            final Account account = accountInternalApi.getAccountByRecordId(accountRecordId, internalTenantContext);
+            final Account account = accountInternalApi.getAccountByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getExternalKey(), ProcessorBase.NB_LOCK_TRY);
             return callback.doIteration();
         } catch (AccountApiException e) {
-            log.warn(String.format("Janitor failed to retrieve account with recordId %s", accountRecordId), e);
+            log.warn(String.format("Janitor failed to retrieve account with recordId %s", internalTenantContext.getAccountRecordId()), e);
         } catch (LockFailedException e) {
-            log.warn(String.format("Janitor failed to grab account with recordId %s", accountRecordId), e);
+            log.warn(String.format("Janitor failed to lock account with recordId %s", internalTenantContext.getAccountRecordId()), e);
         } finally {
             if (lock != null) {
                 lock.release();
