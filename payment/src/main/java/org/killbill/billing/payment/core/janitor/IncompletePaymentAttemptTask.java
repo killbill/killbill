@@ -146,7 +146,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
     }
 
     @Override
-    public void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) throws IOException {
+    public void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) {
         // Nothing
     }
 

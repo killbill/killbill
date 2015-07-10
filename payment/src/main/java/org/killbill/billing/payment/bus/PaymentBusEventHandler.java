@@ -76,11 +76,7 @@ public class PaymentBusEventHandler {
     @AllowConcurrentEvents
     @Subscribe
     public void processPaymentEvent(final PaymentInternalEvent event) {
-        try {
             janitor.processPaymentEvent(event);
-        } catch (IOException e) {
-            log.error("Failed to process payment event {}", e.toString());
-        }
     }
 
     @AllowConcurrentEvents

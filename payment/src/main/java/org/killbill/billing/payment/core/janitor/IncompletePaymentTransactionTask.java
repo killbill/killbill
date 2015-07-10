@@ -151,7 +151,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     }
 
     @Override
-    public void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) throws IOException {
+    public void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) {
         if (!TRANSACTION_STATUSES_TO_CONSIDER.contains(event.getStatus())) {
             return;
         }
@@ -261,6 +261,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     private void insertNewNotificationForUnresolvedTransactionIfNeeded(final UUID paymentTransactionId, @Nullable final Integer attemptNumber, @Nullable final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         final NotificationEvent key = new JanitorNotificationKey(paymentTransactionId, IncompletePaymentTransactionTask.class.toString(), attemptNumber);
         final DateTime notificationTime = getNextNotificationTime(attemptNumber);
+        // Will be null in the GET path or when we run out opf attempts..
         if (notificationTime != null) {
             try {
                 janitorQueue.recordFutureNotification(notificationTime, key, userToken, accountRecordId, tenantRecordId);
