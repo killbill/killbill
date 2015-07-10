@@ -63,12 +63,6 @@ public abstract class DefaultPaymentInternalEvent extends BusEventBase implement
         this.effectiveDate = effectiveDate;
     }
 
-    @JsonIgnore
-    @Override
-    public BusInternalEventType getBusEventType() {
-        return BusInternalEventType.PAYMENT_INFO;
-    }
-
     @Override
     public UUID getAccountId() {
         return accountId;

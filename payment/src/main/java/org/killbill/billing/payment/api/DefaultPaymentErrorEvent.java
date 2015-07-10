@@ -24,6 +24,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DefaultPaymentErrorEvent extends DefaultPaymentInternalEvent implements PaymentErrorInternalEvent {
@@ -45,6 +46,12 @@ public class DefaultPaymentErrorEvent extends DefaultPaymentInternalEvent implem
                                     @JsonProperty("userToken") final UUID userToken) {
         super(accountId, paymentId, paymentTransactionId, amount, currency, status, transactionType, effectiveDate, searchKey1, searchKey2, userToken);
         this.message = message;
+    }
+
+    @JsonIgnore
+    @Override
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.PAYMENT_ERROR;
     }
 
     @Override
