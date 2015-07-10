@@ -16,40 +16,35 @@
 
 package org.killbill.billing.payment.api;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.killbill.billing.events.BusEventBase;
-import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
-
+import java.math.BigDecimal;
 import java.util.UUID;
 
-public class DefaultPaymentPluginErrorEvent extends BusEventBase implements PaymentPluginErrorInternalEvent {
+import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class DefaultPaymentPluginErrorEvent extends DefaultPaymentInternalEvent implements PaymentPluginErrorInternalEvent {
 
     private final String message;
-    private final UUID accountId;
-    private final UUID paymentId;
-    private final UUID paymentTransactionId;
-    private final TransactionStatus status;
-    private final TransactionType transactionType;
 
     @JsonCreator
     public DefaultPaymentPluginErrorEvent(@JsonProperty("accountId") final UUID accountId,
                                           @JsonProperty("paymentId") final UUID paymentId,
                                           @JsonProperty("paymentTransactionId") final UUID paymentTransactionId,
+                                          @JsonProperty("amount") final BigDecimal amount,
+                                          @JsonProperty("currency") final Currency currency,
                                           @JsonProperty("status") final TransactionStatus status,
-                                          @JsonProperty("transactionType")  final TransactionType transactionType,
+                                          @JsonProperty("transactionType") final TransactionType transactionType,
+                                          @JsonProperty("effectiveDate") final DateTime effectiveDate,
                                           @JsonProperty("message") final String message,
                                           @JsonProperty("searchKey1") final Long searchKey1,
                                           @JsonProperty("searchKey2") final Long searchKey2,
                                           @JsonProperty("userToken") final UUID userToken) {
-        super(searchKey1, searchKey2, userToken);
+        super(accountId, paymentId, paymentTransactionId, amount, currency, status, transactionType, effectiveDate, searchKey1, searchKey2, userToken);
         this.message = message;
-        this.accountId = accountId;
-        this.paymentId = paymentId;
-        this.paymentTransactionId = paymentTransactionId;
-        this.status = status;
-        this.transactionType = transactionType;
     }
 
     @Override
@@ -58,77 +53,7 @@ public class DefaultPaymentPluginErrorEvent extends BusEventBase implements Paym
     }
 
     @Override
-    public UUID getAccountId() {
-        return accountId;
-    }
-
-    @Override
-    public UUID getPaymentId() {
-        return paymentId;
-    }
-
-    @Override
-    public TransactionType getTransactionType() {
-        return transactionType;
-    }
-
-    @Override
-    public UUID getPaymentTransactionId() {
-        return paymentTransactionId;
-    }
-
-    @Override
-    public TransactionStatus getStatus() {
-        return status;
-    }
-
-    @JsonIgnore
-    @Override
-    public BusInternalEventType getBusEventType() {
-        return BusInternalEventType.PAYMENT_PLUGIN_ERROR;
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof DefaultPaymentPluginErrorEvent)) {
-            return false;
-        }
-
-        final DefaultPaymentPluginErrorEvent that = (DefaultPaymentPluginErrorEvent) o;
-
-        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
-            return false;
-        }
-        if (transactionType != null ? !transactionType.equals(that.transactionType) : that.transactionType != null) {
-            return false;
-        }
-        if (message != null ? !message.equals(that.message) : that.message != null) {
-            return false;
-        }
-        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
-            return false;
-        }
-        if (paymentTransactionId != null ? !paymentTransactionId.equals(that.paymentTransactionId) : that.paymentTransactionId != null) {
-            return false;
-        }
-        if (status != null ? !status.equals(that.status) : that.status != null) {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = message != null ? message.hashCode() : 0;
-        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
-        result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
-        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
-        result = 31 * result + (paymentTransactionId != null ? paymentTransactionId.hashCode() : 0);
-        result = 31 * result + (status != null ? status.hashCode() : 0);
-        return result;
+    protected Class getPaymentInternalEventClass() {
+        return DefaultPaymentPluginErrorEvent.class;
     }
 }

@@ -16,20 +16,5 @@
 
 package org.killbill.billing.events;
 
-import java.math.BigDecimal;
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.payment.api.TransactionStatus;
-import org.killbill.billing.payment.api.TransactionType;
-
 public interface PaymentInfoInternalEvent extends PaymentInternalEvent {
-
-    public BigDecimal getAmount();
-
-    public Currency getCurrency();
-
-    public DateTime getEffectiveDate();
-
 }

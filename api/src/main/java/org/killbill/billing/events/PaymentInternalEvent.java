@@ -17,8 +17,11 @@
 
 package org.killbill.billing.events;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 
@@ -30,8 +33,13 @@ public interface PaymentInternalEvent extends BusInternalEvent {
 
     public UUID getPaymentTransactionId();
 
-    public TransactionType getTransactionType();
+    public BigDecimal getAmount();
+
+    public Currency getCurrency();
 
     public TransactionStatus getStatus();
 
+    public TransactionType getTransactionType();
+
+    public DateTime getEffectiveDate();
 }
