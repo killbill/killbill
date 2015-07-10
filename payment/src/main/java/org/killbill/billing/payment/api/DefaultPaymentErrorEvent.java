@@ -30,11 +30,15 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
     private final String message;
     private final UUID accountId;
     private final UUID paymentId;
+    private final UUID paymentTransactionId;
+    private final TransactionStatus status;
     private final TransactionType transactionType;
 
     @JsonCreator
     public DefaultPaymentErrorEvent(@JsonProperty("accountId") final UUID accountId,
                                     @JsonProperty("paymentId") final UUID paymentId,
+                                    @JsonProperty("paymentTransactionId") final UUID paymentTransactionId,
+                                    @JsonProperty("status") final TransactionStatus status,
                                     @JsonProperty("transactionType")  final TransactionType transactionType,
                                     @JsonProperty("message") final String message,
                                     @JsonProperty("searchKey1") final Long searchKey1,
@@ -44,6 +48,8 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
         this.message = message;
         this.accountId = accountId;
         this.paymentId = paymentId;
+        this.paymentTransactionId = paymentTransactionId;
+        this.status = status;
         this.transactionType = transactionType;
     }
 
@@ -67,6 +73,16 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
         return transactionType;
     }
 
+    @Override
+    public UUID getPaymentTransactionId() {
+        return paymentTransactionId;
+    }
+
+    @Override
+    public TransactionStatus getStatus() {
+        return status;
+    }
+
     @JsonIgnore
     @Override
     public BusInternalEventType getBusEventType() {
@@ -79,6 +95,8 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
         sb.append("message='").append(message).append('\'');
         sb.append(", accountId=").append(accountId);
         sb.append(", paymentId=").append(paymentId);
+        sb.append(", paymentTransactionId=").append(paymentTransactionId);
+        sb.append(", status=").append(status);
         sb.append(", transactionType=").append(transactionType);
         sb.append('}');
         return sb.toString();
@@ -107,7 +125,12 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
-
+        if (paymentTransactionId != null ? !paymentTransactionId.equals(that.paymentTransactionId) : that.paymentTransactionId != null) {
+            return false;
+        }
+        if (status != null ? !status.equals(that.status) : that.status != null) {
+            return false;
+        }
         return true;
     }
 
@@ -117,6 +140,8 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (paymentTransactionId != null ? paymentTransactionId.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
         return result;
     }
 }

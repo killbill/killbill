@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,20 +17,21 @@
 
 package org.killbill.billing.events;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 
-public interface PaymentInfoInternalEvent extends PaymentInternalEvent {
+public interface PaymentInternalEvent extends BusInternalEvent {
 
-    public BigDecimal getAmount();
+    public UUID getAccountId();
 
-    public Currency getCurrency();
+    public UUID getPaymentId();
 
-    public DateTime getEffectiveDate();
+    public UUID getPaymentTransactionId();
+
+    public TransactionType getTransactionType();
+
+    public TransactionStatus getStatus();
 
 }

@@ -301,7 +301,7 @@ public class DefaultPaymentDao implements PaymentDao {
                 } else {
                     entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStateName(paymentId.toString(), currentPaymentStateName, context);
                 }
-                postPaymentEventFromTransaction(accountId, transactionStatus, transactionType, paymentId, processedAmount, processedCurrency, clock.getUTCNow(), gatewayErrorCode, entitySqlDaoWrapperFactory, context);
+                postPaymentEventFromTransaction(accountId, transactionStatus, transactionType, paymentId, transactionId, processedAmount, processedCurrency, clock.getUTCNow(), gatewayErrorCode, entitySqlDaoWrapperFactory, context);
                 return null;
             }
         });
@@ -561,6 +561,7 @@ public class DefaultPaymentDao implements PaymentDao {
                                                  final TransactionStatus transactionStatus,
                                                  final TransactionType transactionType,
                                                  final UUID paymentId,
+                                                 final UUID transactionId,
                                                  final BigDecimal processedAmount,
                                                  final Currency processedCurrency,
                                                  final DateTime effectiveDate,
@@ -574,6 +575,7 @@ public class DefaultPaymentDao implements PaymentDao {
             case PENDING:
                 event = new DefaultPaymentInfoEvent(accountId,
                                                     paymentId,
+                                                    transactionId,
                                                     processedAmount,
                                                     processedCurrency,
                                                     transactionStatus,
@@ -587,6 +589,8 @@ public class DefaultPaymentDao implements PaymentDao {
             case PAYMENT_FAILURE:
                 event = new DefaultPaymentErrorEvent(accountId,
                                                      paymentId,
+                                                     transactionId,
+                                                     transactionStatus,
                                                      transactionType,
                                                      gatewayErrorCode,
                                                      context.getAccountRecordId(),
@@ -598,6 +602,8 @@ public class DefaultPaymentDao implements PaymentDao {
             default:
                 event = new DefaultPaymentPluginErrorEvent(accountId,
                                                            paymentId,
+                                                           transactionId,
+                                                           transactionStatus,
                                                            transactionType,
                                                            gatewayErrorCode,
                                                            context.getAccountRecordId(),

@@ -44,10 +44,10 @@ import com.google.inject.Inject;
 public abstract class BaseRetryService implements RetryService {
 
     private static final Logger log = LoggerFactory.getLogger(BaseRetryService.class);
-    private static final String PAYMENT_RETRY_SERVICE = "PaymentRetryService";
 
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final String paymentRetryService;
 
     private NotificationQueue retryQueue;
 
@@ -55,11 +55,12 @@ public abstract class BaseRetryService implements RetryService {
                             final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.paymentRetryService = DefaultPaymentService.SERVICE_NAME + "-" + getQueueName();
     }
 
     @Override
-    public void initialize(final String svcName) throws NotificationQueueAlreadyExists {
-        retryQueue = notificationQueueService.createNotificationQueue(svcName,
+    public void initialize() throws NotificationQueueAlreadyExists {
+        retryQueue = notificationQueueService.createNotificationQueue(DefaultPaymentService.SERVICE_NAME,
                                                                       getQueueName(),
                                                                       new NotificationQueueHandler() {
                                                                           @Override
@@ -69,7 +70,7 @@ public abstract class BaseRetryService implements RetryService {
                                                                                   return;
                                                                               }
                                                                               final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
-                                                                              final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
+                                                                              final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, paymentRetryService, CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
                                                                               retryPaymentTransaction(key.getAttemptId(), key.getPaymentControlPluginNames(), callContext);
                                                                           }
                                                                       }
@@ -132,7 +133,8 @@ public abstract class BaseRetryService implements RetryService {
         }
 
         protected InternalCallContext createCallContextFromPaymentId(final ObjectType objectType, final UUID objectId, final Long tenantRecordId) {
-            return internalCallContextFactory.createInternalCallContext(objectId, objectType, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null, tenantRecordId);
+            final String paymentRetryService = DefaultPaymentService.SERVICE_NAME + "-" + getQueueName();
+            return internalCallContextFactory.createInternalCallContext(objectId, objectType, paymentRetryService, CallOrigin.INTERNAL, UserType.SYSTEM, null, tenantRecordId);
         }
 
         public abstract String getQueueName();

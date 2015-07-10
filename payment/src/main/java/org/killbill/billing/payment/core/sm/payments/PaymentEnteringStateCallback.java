@@ -65,6 +65,8 @@ public abstract class PaymentEnteringStateCallback implements EnteringStateCallb
             //
             final BusInternalEvent event = new DefaultPaymentErrorEvent(paymentStateContext.getAccount().getId(),
                                                                         null,
+                                                                        null,
+                                                                        null,
                                                                         paymentStateContext.getTransactionType(),
                                                                         "Early abortion of payment transaction",
                                                                         paymentStateContext.getInternalCallContext().getAccountRecordId(),

@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.janitor;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -27,6 +28,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -46,6 +48,7 @@ import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.notificationq.api.NotificationQueue;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -140,6 +143,11 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         } catch (final PaymentApiException e) {
             log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
         }
+    }
+
+    @Override
+    public void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) throws IOException {
+        // Nothing
     }
 
     private DateTime getCreatedDateBefore() {

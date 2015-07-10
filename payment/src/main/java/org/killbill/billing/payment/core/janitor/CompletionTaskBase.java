@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.janitor;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.killbill.billing.account.api.Account;
@@ -24,6 +25,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.core.ProcessorBase;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
@@ -42,6 +44,7 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
+import org.killbill.notificationq.api.NotificationQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +61,8 @@ abstract class CompletionTaskBase<T> implements Runnable {
     protected final AccountInternalApi accountInternalApi;
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final GlobalLocker locker;
+
+    protected NotificationQueue janitorQueue;
 
     private volatile boolean isStopped;
 
@@ -105,8 +110,14 @@ abstract class CompletionTaskBase<T> implements Runnable {
 
     public abstract void doIteration(final T item);
 
+    public abstract void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) throws IOException;
+
+    public void attachJanitorQueue(final NotificationQueue janitorQueue) {
+        this.janitorQueue = janitorQueue;
+    }
+
     public interface JanitorIterationCallback {
-        public <T>  T doIteration();
+        public <T> T doIteration();
     }
 
     protected <T> T doJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) {

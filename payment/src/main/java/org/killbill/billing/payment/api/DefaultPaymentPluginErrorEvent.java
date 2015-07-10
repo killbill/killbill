@@ -29,11 +29,15 @@ public class DefaultPaymentPluginErrorEvent extends BusEventBase implements Paym
     private final String message;
     private final UUID accountId;
     private final UUID paymentId;
+    private final UUID paymentTransactionId;
+    private final TransactionStatus status;
     private final TransactionType transactionType;
 
     @JsonCreator
     public DefaultPaymentPluginErrorEvent(@JsonProperty("accountId") final UUID accountId,
                                           @JsonProperty("paymentId") final UUID paymentId,
+                                          @JsonProperty("paymentTransactionId") final UUID paymentTransactionId,
+                                          @JsonProperty("status") final TransactionStatus status,
                                           @JsonProperty("transactionType")  final TransactionType transactionType,
                                           @JsonProperty("message") final String message,
                                           @JsonProperty("searchKey1") final Long searchKey1,
@@ -43,6 +47,8 @@ public class DefaultPaymentPluginErrorEvent extends BusEventBase implements Paym
         this.message = message;
         this.accountId = accountId;
         this.paymentId = paymentId;
+        this.paymentTransactionId = paymentTransactionId;
+        this.status = status;
         this.transactionType = transactionType;
     }
 
@@ -64,6 +70,16 @@ public class DefaultPaymentPluginErrorEvent extends BusEventBase implements Paym
     @Override
     public TransactionType getTransactionType() {
         return transactionType;
+    }
+
+    @Override
+    public UUID getPaymentTransactionId() {
+        return paymentTransactionId;
+    }
+
+    @Override
+    public TransactionStatus getStatus() {
+        return status;
     }
 
     @JsonIgnore
@@ -95,6 +111,12 @@ public class DefaultPaymentPluginErrorEvent extends BusEventBase implements Paym
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
+        if (paymentTransactionId != null ? !paymentTransactionId.equals(that.paymentTransactionId) : that.paymentTransactionId != null) {
+            return false;
+        }
+        if (status != null ? !status.equals(that.status) : that.status != null) {
+            return false;
+        }
 
         return true;
     }
@@ -105,6 +127,8 @@ public class DefaultPaymentPluginErrorEvent extends BusEventBase implements Paym
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (paymentTransactionId != null ? paymentTransactionId.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
         return result;
     }
 }

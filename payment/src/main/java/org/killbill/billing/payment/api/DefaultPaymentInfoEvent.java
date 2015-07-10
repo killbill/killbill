@@ -32,6 +32,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
 
     private final UUID accountId;
     private final UUID paymentId;
+    private final UUID paymentTransactionId;
     private final BigDecimal amount;
     private final Currency currency;
     private final TransactionStatus status;
@@ -41,6 +42,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
     @JsonCreator
     public DefaultPaymentInfoEvent(@JsonProperty("accountId") final UUID accountId,
                                    @JsonProperty("paymentId") final UUID paymentId,
+                                   @JsonProperty("paymentTransactionId") final UUID paymentTransactionId,
                                    @JsonProperty("amount") final BigDecimal amount,
                                    @JsonProperty("currency") final Currency currency,
                                    @JsonProperty("status") final TransactionStatus status,
@@ -54,6 +56,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         super(searchKey1, searchKey2, userToken);
         this.accountId = accountId;
         this.paymentId = paymentId;
+        this.paymentTransactionId = paymentTransactionId;
         this.amount = amount;
         this.currency = currency;
         this.status = status;
@@ -63,6 +66,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
 
     public DefaultPaymentInfoEvent(final UUID accountId,
                                    final UUID paymentId,
+                                   final UUID paymentTransactionId,
                                    final BigDecimal amount,
                                    final Currency currency,
                                    final TransactionStatus status,
@@ -71,7 +75,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
                                    final Long searchKey1,
                                    final Long searchKey2,
                                    final UUID userToken) {
-        this(accountId, paymentId, amount, currency, status, transactionType, null, null,
+        this(accountId, paymentId, paymentTransactionId, amount, currency, status, transactionType, null, null,
              effectiveDate, searchKey1, searchKey2, userToken);
     }
 
@@ -108,6 +112,11 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
     }
 
     @Override
+    public UUID getPaymentTransactionId() {
+        return paymentTransactionId;
+    }
+
+    @Override
     public TransactionType getTransactionType() {
         return transactionType;
     }
@@ -123,6 +132,7 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         sb.append("DefaultPaymentInfoEvent");
         sb.append("{accountId=").append(accountId);
         sb.append(", paymentId=").append(paymentId);
+        sb.append(", paymentTransactionId=").append(paymentTransactionId);
         sb.append(", amount=").append(amount);
         sb.append(", currency=").append(currency);
         sb.append(", status=").append(status);
@@ -143,6 +153,8 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
                  + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
         result = prime * result
                  + ((paymentId == null) ? 0 : paymentId.hashCode());
+        result = prime * result
+                 + ((paymentTransactionId == null) ? 0 : paymentTransactionId.hashCode());
         result = prime * result
                  + ((currency == null) ? 0 : currency.hashCode());
         result = prime * result + ((status == null) ? 0 : status.hashCode());
@@ -194,6 +206,13 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
                 return false;
             }
         } else if (!paymentId.equals(other.paymentId)) {
+            return false;
+        }
+        if (paymentTransactionId == null) {
+            if (other.paymentTransactionId != null) {
+                return false;
+            }
+        } else if (!paymentTransactionId.equals(other.paymentTransactionId)) {
             return false;
         }
         if (currency == null) {
