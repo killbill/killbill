@@ -53,7 +53,9 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
+import org.skife.config.TimeSpan;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
@@ -61,21 +63,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class IncompletePaymentTransactionTask extends CompletionTaskBase<PaymentTransactionModelDao> {
-
-    private final static long MILLIS_TO_SEC = 1000L;
-    private final static long SEC_TO_HOUR = 3600L;
-    private final static long HOURS_TO_DAY = 24L;
-
-    private final static List<Long> RETRY_ATTEMPTS = ImmutableList.<Long>of((3L * MILLIS_TO_SEC), // 3 min
-                                                                            (10L * MILLIS_TO_SEC), // 10 min
-                                                                            (1L * SEC_TO_HOUR * MILLIS_TO_SEC), // 1 hour
-                                                                            (HOURS_TO_DAY * SEC_TO_HOUR * MILLIS_TO_SEC), // 7 times every day
-                                                                            (HOURS_TO_DAY * SEC_TO_HOUR * MILLIS_TO_SEC),
-                                                                            (HOURS_TO_DAY * SEC_TO_HOUR * MILLIS_TO_SEC),
-                                                                            (HOURS_TO_DAY * SEC_TO_HOUR * MILLIS_TO_SEC),
-                                                                            (HOURS_TO_DAY * SEC_TO_HOUR * MILLIS_TO_SEC),
-                                                                            (HOURS_TO_DAY * SEC_TO_HOUR * MILLIS_TO_SEC),
-                                                                            (HOURS_TO_DAY * SEC_TO_HOUR * MILLIS_TO_SEC));
 
     private static final ImmutableList<TransactionStatus> TRANSACTION_STATUSES_TO_CONSIDER = ImmutableList.<TransactionStatus>builder()
                                                                                                           .add(TransactionStatus.PENDING)
@@ -250,12 +237,15 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         return pluginApi;
     }
 
-    private DateTime getNextNotificationTime(@Nullable final Integer attemptNumber) {
-        if (attemptNumber == null || attemptNumber > RETRY_ATTEMPTS.size()) {
+    @VisibleForTesting
+    DateTime getNextNotificationTime(@Nullable final Integer attemptNumber) {
+
+        final List<TimeSpan> retries = paymentConfig.getIncompleteTransactionsRetries();
+        if (attemptNumber == null || attemptNumber > retries.size()) {
             return null;
         }
-        final long nextDelay = RETRY_ATTEMPTS.get(attemptNumber - 1);
-        return clock.getUTCNow().plusMillis((int) nextDelay);
+        final TimeSpan nextDelay = retries.get(attemptNumber - 1);
+        return clock.getUTCNow().plusMillis((int) nextDelay.getMillis());
     }
 
     private void insertNewNotificationForUnresolvedTransactionIfNeeded(final UUID paymentTransactionId, @Nullable final Integer attemptNumber, @Nullable final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
@@ -269,15 +259,5 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                 log.warn("Janitor IncompletePaymentTransactionTask : Failed to insert future notification for paymentTransactionId = {}: {}", paymentTransactionId, e.getMessage());
             }
         }
-    }
-
-    private DateTime getCreatedDateBefore() {
-        final long delayBeforeNowMs = paymentConfig.getIncompleteTransactionsTimeSpanDelay().getMillis();
-        return clock.getUTCNow().minusMillis((int) delayBeforeNowMs);
-    }
-
-    private DateTime getCreatedDateAfter() {
-        final long delayBeforeNowMs = paymentConfig.getIncompleteTransactionsTimeSpanGiveup().getMillis();
-        return clock.getUTCNow().minusMillis((int) delayBeforeNowMs);
     }
 }

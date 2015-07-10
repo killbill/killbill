@@ -17,7 +17,6 @@
 
 package org.killbill.billing.payment.core.janitor;
 
-import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -26,12 +25,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.events.PaymentErrorInternalEvent;
-import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.glue.PaymentModule;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -57,7 +53,6 @@ public class Janitor {
     private final PaymentConfig paymentConfig;
     private final IncompletePaymentAttemptTask incompletePaymentAttemptTask;
     private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
-    private final InternalCallContextFactory internalCallContextFactory;
 
     private NotificationQueue janitorQueue;
 
@@ -68,14 +63,12 @@ public class Janitor {
                    final NotificationQueueService notificationQueueService,
                    @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
                    final IncompletePaymentAttemptTask incompletePaymentAttemptTask,
-                   final IncompletePaymentTransactionTask incompletePaymentTransactionTask,
-                   final InternalCallContextFactory internalCallContextFactory) {
+                   final IncompletePaymentTransactionTask incompletePaymentTransactionTask) {
         this.notificationQueueService = notificationQueueService;
         this.janitorExecutor = janitorExecutor;
         this.paymentConfig = paymentConfig;
         this.incompletePaymentAttemptTask = incompletePaymentAttemptTask;
         this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
-        this.internalCallContextFactory = internalCallContextFactory;
         this.isStopped = false;
     }
 
@@ -85,7 +78,7 @@ public class Janitor {
                                                                         new NotificationQueueHandler() {
                                                                             @Override
                                                                             public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-                                                                                if (! (notificationKey instanceof JanitorNotificationKey)) {
+                                                                                if (!(notificationKey instanceof JanitorNotificationKey)) {
                                                                                     log.error("Janitor service received an unexpected event type {}" + notificationKey.getClass().getName());
                                                                                     return;
 

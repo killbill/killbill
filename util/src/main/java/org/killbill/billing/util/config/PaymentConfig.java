@@ -66,16 +66,10 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Delay before which unresolved attempt should be retried")
     public TimeSpan getIncompleteAttemptsTimeSpanDelay();
 
-    @Config("org.killbill.payment.janitor.transactions.delay")
-    @Default("3m")
+    @Config("org.killbill.payment.janitor.transactions.retries")
+    @Default("15s,1m,3m,1h,1d,1d,1d,1d,1d")
     @Description("Delay before which unresolved transactions should be retried")
-    public TimeSpan getIncompleteTransactionsTimeSpanDelay();
-
-
-    @Config("org.killbill.payment.janitor.transactions.giveup")
-    @Default("7d")
-    @Description("Delay after which unresolved transactions should be abandoned")
-    public TimeSpan getIncompleteTransactionsTimeSpanGiveup();
+    public List<TimeSpan> getIncompleteTransactionsRetries();
 
     @Config("org.killbill.payment.janitor.rate")
     @Default("1h")
