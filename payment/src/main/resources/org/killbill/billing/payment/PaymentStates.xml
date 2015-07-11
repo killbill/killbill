@@ -184,6 +184,7 @@
         <stateMachine name="REFUND">
             <states>
                 <state name="REFUND_INIT"/>
+                <state name="REFUND_PENDING"/>
                 <state name="REFUND_SUCCESS"/>
                 <state name="REFUND_FAILED"/>
                 <state name="REFUND_ERRORED"/>
@@ -204,6 +205,30 @@
                 <transition>
                     <initialState>REFUND_INIT</initialState>
                     <operation>OP_REFUND</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>REFUND_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>REFUND_PENDING</initialState>
+                    <operation>OP_REFUND</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>REFUND_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>REFUND_PENDING</initialState>
+                    <operation>OP_REFUND</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>REFUND_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>REFUND_PENDING</initialState>
+                    <operation>OP_REFUND</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>REFUND_ERRORED</finalState>
+                </transition>
+                <transition>
+                    <initialState>REFUND_INIT</initialState>
+                    <operation>OP_REFUND</operation>
                     <operationResult>EXCEPTION</operationResult>
                     <finalState>REFUND_ERRORED</finalState>
                 </transition>
@@ -216,6 +241,7 @@
         <stateMachine name="CREDIT">
             <states>
                 <state name="CREDIT_INIT"/>
+                <state name="CREDIT_PENDING"/>
                 <state name="CREDIT_SUCCESS"/>
                 <state name="CREDIT_FAILED"/>
                 <state name="CREDIT_ERRORED"/>
@@ -232,6 +258,30 @@
                     <operation>OP_CREDIT</operation>
                     <operationResult>FAILURE</operationResult>
                     <finalState>CREDIT_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CREDIT_INIT</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>CREDIT_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>CREDIT_PENDING</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>CREDIT_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>CREDIT_PENDING</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>CREDIT_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CREDIT_PENDING</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>CREDIT_ERRORED</finalState>
                 </transition>
                 <transition>
                     <initialState>CREDIT_INIT</initialState>

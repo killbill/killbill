@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.janitor;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -27,6 +28,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -43,7 +45,10 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.notificationq.api.NotificationQueue;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -56,28 +61,36 @@ import com.google.common.collect.Iterables;
  */
 public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttemptModelDao> {
 
+    //
+    // Each paymentAttempt *should* transition to a new state, so fetching a limited size will still allow us to progress (as opposed to fetching the same entries over and over)
+    // We also don't expect to see too many entries in the INIT state.
+    //
+    private final static long MAX_ATTEMPTS_PER_ITERATIONS = 1000L;
+
     private final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
 
     @Inject
     public IncompletePaymentAttemptTask(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                                         final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
                                         final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                                        final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry) {
-        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry);
+                                        final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
+                                        final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final GlobalLocker locker) {
+        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry, locker);
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
     }
 
     @Override
-    public List<PaymentAttemptModelDao> getItemsForIteration() {
-        final List<PaymentAttemptModelDao> incompleteAttempts = paymentDao.getPaymentAttemptsByStateAcrossTenants(retrySMHelper.getInitialState().getName(), getCreatedDateBefore());
-        if (!incompleteAttempts.isEmpty()) {
-            log.info("Janitor AttemptCompletionTask start run: found {} incomplete attempts", incompleteAttempts.size());
+    public Iterable<PaymentAttemptModelDao> getItemsForIteration() {
+        final Pagination<PaymentAttemptModelDao> incompleteAttempts = paymentDao.getPaymentAttemptsByStateAcrossTenants(retrySMHelper.getInitialState().getName(), getCreatedDateBefore(), 0L, MAX_ATTEMPTS_PER_ITERATIONS);
+        if (incompleteAttempts.getTotalNbRecords() > 0) {
+            log.info("Janitor AttemptCompletionTask start run: found {} incomplete attempts", incompleteAttempts.getTotalNbRecords());
         }
         return incompleteAttempts;
     }
 
     @Override
     public void doIteration(final PaymentAttemptModelDao attempt) {
+        // We don't grab account lock here as the lock will be taken when calling the completeRun API.
         final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(attempt.getTenantRecordId(), attempt.getAccountRecordId());
         final CallContext callContext = createCallContext("AttemptCompletionJanitorTask", tenantContext);
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(attempt.getAccountId(), callContext);
@@ -130,6 +143,11 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         } catch (final PaymentApiException e) {
             log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
         }
+    }
+
+    @Override
+    public void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) {
+        // Nothing
     }
 
     private DateTime getCreatedDateBefore() {

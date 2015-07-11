@@ -19,6 +19,7 @@ package org.killbill.billing.payment.dao;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,10 +53,16 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
                                                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(@TransactionStatusCollectionBinder final Collection<String> statuses,
+    Long getCountByTransactionStatusPriorDateAcrossTenants(@TransactionStatusCollectionBinder final Collection<String> statuses,
+                                                           @Bind("createdBeforeDate") final Date createdBeforeDate,
+                                                           @Bind("createdAfterDate") final Date createdAfterDate);
+
+    @SqlQuery
+    Iterator<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(@TransactionStatusCollectionBinder final Collection<String> statuses,
                                                                                   @Bind("createdBeforeDate") final Date createdBeforeDate,
                                                                                   @Bind("createdAfterDate") final Date createdAfterDate,
-                                                                                  @Bind("limit") final int limit);
+                                                                                  @Bind("offset") final Long offset,
+                                                                                  @Bind("rowCount") final Long rowCount);
 
     @SqlQuery
     public List<PaymentTransactionModelDao> getByPaymentId(@Bind("paymentId") final UUID paymentId,

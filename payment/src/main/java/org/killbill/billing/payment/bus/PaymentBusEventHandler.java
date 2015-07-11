@@ -18,6 +18,7 @@
 
 package org.killbill.billing.payment.bus;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -29,9 +30,12 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
+import org.killbill.billing.events.PaymentInternalEvent;
+import org.killbill.billing.payment.api.DefaultPaymentInfoEvent;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
+import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -42,29 +46,40 @@ import org.killbill.billing.util.config.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
-public class InvoiceHandler {
+public class PaymentBusEventHandler {
 
     private final AccountInternalApi accountApi;
     private final InternalCallContextFactory internalCallContextFactory;
     private final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor;
     private final PaymentConfig paymentConfig;
+    private final Janitor janitor;
 
-    private static final Logger log = LoggerFactory.getLogger(InvoiceHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(PaymentBusEventHandler.class);
 
     @Inject
-    public InvoiceHandler(final PaymentConfig paymentConfig,
-                          final AccountInternalApi accountApi,
-                          final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor,
-                          final InternalCallContextFactory internalCallContextFactory) {
+    public PaymentBusEventHandler(final PaymentConfig paymentConfig,
+                                  final AccountInternalApi accountApi,
+                                  final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor,
+                                  final Janitor janitor,
+                                  final InternalCallContextFactory internalCallContextFactory) {
         this.paymentConfig = paymentConfig;
         this.accountApi = accountApi;
+        this.janitor = janitor;
         this.internalCallContextFactory = internalCallContextFactory;
         this.pluginRoutingPaymentProcessor = pluginRoutingPaymentProcessor;
     }
 
+    @AllowConcurrentEvents
+    @Subscribe
+    public void processPaymentEvent(final PaymentInternalEvent event) {
+            janitor.processPaymentEvent(event);
+    }
+
+    @AllowConcurrentEvents
     @Subscribe
     public void processInvoiceEvent(final InvoiceCreationInternalEvent event) {
         log.info("Received invoice creation notification for account {} and invoice {}",

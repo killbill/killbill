@@ -20,6 +20,7 @@ package org.killbill.billing.payment.glue;
 
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.account.glue.DefaultAccountModule;
+import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.clock.Clock;
@@ -35,7 +36,7 @@ public class TestPaymentModuleWithEmbeddedDB extends TestPaymentModule {
         install(new GuicyKillbillTestWithEmbeddedDBModule(configSource));
         install(new NonEntityDaoModule(configSource));
         install(new DefaultAccountModule(configSource));
-
+        bind(TestApiListener.class).asEagerSingleton();
         super.configure();
     }
 }

@@ -35,6 +35,7 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
@@ -63,6 +64,8 @@ public class PaymentTagHandler {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
+
+    @AllowConcurrentEvents
     @Subscribe
     public void process_AUTO_PAY_OFF_removal(final ControlTagDeletionInternalEvent event) {
 

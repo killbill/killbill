@@ -70,7 +70,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         ((MockPaymentDao) paymentDao).reset();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
         mockPaymentProviderPlugin.clear();
-        retryService.initialize(DefaultPaymentService.SERVICE_NAME);
+        retryService.initialize();
         retryService.start();
 
     }

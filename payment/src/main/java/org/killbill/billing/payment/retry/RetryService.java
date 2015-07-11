@@ -28,7 +28,7 @@ import org.killbill.notificationq.api.NotificationQueueService.NotificationQueue
 
 public interface RetryService {
 
-    public void initialize(final String svcName) throws NotificationQueueAlreadyExists;
+    public void initialize() throws NotificationQueueAlreadyExists;
 
     public void start();
 

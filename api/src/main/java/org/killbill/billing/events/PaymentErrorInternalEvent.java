@@ -13,19 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.killbill.billing.events;
 
-import java.util.UUID;
-
-import org.killbill.billing.payment.api.TransactionType;
-
-public interface PaymentErrorInternalEvent extends BusInternalEvent {
-
+public interface PaymentErrorInternalEvent extends PaymentInternalEvent {
     public String getMessage();
-
-    public UUID getAccountId();
-
-    public UUID getPaymentId();
-
-    public TransactionType getTransactionType();
 }

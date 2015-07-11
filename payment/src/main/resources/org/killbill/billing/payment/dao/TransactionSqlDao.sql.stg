@@ -90,7 +90,18 @@ created_date >= :createdAfterDate
 and created_date \< :createdBeforeDate
 and transaction_status in (<statuses: {status | :status_<i0>}; separator="," >)
 <defaultOrderBy()>
-limit :limit
+limit :offset, :rowCount
+;
+>>
+
+getCountByTransactionStatusPriorDateAcrossTenants(statuses) ::= <<
+select
+count(1) as count
+from <tableName()>
+where
+created_date >= :createdAfterDate
+and created_date \< :createdBeforeDate
+and transaction_status in (<statuses: {status | :status_<i0>}; separator="," >)
 ;
 >>
 

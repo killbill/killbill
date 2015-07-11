@@ -73,6 +73,17 @@ where state_name = :stateName
 and created_date \< :createdBeforeDate
 <andCheckSoftDeletionWithComma("")>
 <defaultOrderBy()>
+limit :offset, :rowCount
+;
+>>
+
+getCountByStateNameAcrossTenants() ::= <<
+select
+count(1) as count
+from <tableName()>
+where state_name = :stateName
+and created_date \< :createdBeforeDate
+<andCheckSoftDeletionWithComma("")>
 ;
 >>
 

@@ -18,6 +18,8 @@ package org.killbill.billing.util.entity.dao;
 
 import java.util.Iterator;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
@@ -35,7 +37,7 @@ public class DefaultPaginationSqlDaoHelper {
                                                                                                                      final PaginationIteratorBuilder<M, E, S> paginationIteratorBuilder,
                                                                                                                      final Long offset,
                                                                                                                      final Long limit,
-                                                                                                                     final InternalTenantContext context) {
+                                                                                                                     @Nullable final InternalTenantContext context) {
         // Note: the connection will be busy as we stream the results out: hence we cannot use
         // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
         // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
@@ -51,7 +53,7 @@ public class DefaultPaginationSqlDaoHelper {
         // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
         // Since we want to stream the results out, we don't want to auto-commit when this method returns.
         final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemandForStreamingResults(sqlDaoClazz);
-        final Long totalCount = sqlDao.getCount(context);
+        final Long totalCount = context !=  null ? sqlDao.getCount(context) : null;
         final Iterator<M> results = paginationIteratorBuilder.build((S) sqlDao, limit, context);
 
         return new DefaultPagination<M>(offset, limit, count, totalCount, results);

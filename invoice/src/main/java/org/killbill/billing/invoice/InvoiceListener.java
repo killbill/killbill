@@ -37,6 +37,7 @@ import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.RepairSubscriptionInternalEvent;
 import org.killbill.billing.util.config.InvoiceConfig;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
@@ -60,6 +61,7 @@ public class InvoiceListener {
         this.clock = clock;
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void handleRepairSubscriptionEvent(final RepairSubscriptionInternalEvent event) {
 
@@ -71,6 +73,7 @@ public class InvoiceListener {
         }
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void handleSubscriptionTransition(final EffectiveSubscriptionInternalEvent event) {
 
@@ -89,6 +92,7 @@ public class InvoiceListener {
         }
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void handleEntitlementTransition(final EffectiveEntitlementInternalEvent event) {
 
@@ -100,6 +104,7 @@ public class InvoiceListener {
         }
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void handleBlockingStateTransition(final BlockingTransitionInternalEvent event) {
 

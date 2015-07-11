@@ -20,7 +20,7 @@ package org.killbill.billing.payment.glue;
 
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentService;
-import org.killbill.billing.payment.bus.InvoiceHandler;
+import org.killbill.billing.payment.bus.PaymentBusEventHandler;
 import org.killbill.billing.payment.invoice.PaymentTagHandler;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.retry.DefaultRetryService;
@@ -40,7 +40,7 @@ public class DefaultPaymentService implements PaymentService {
 
     public static final String SERVICE_NAME = "payment-service";
 
-    private final InvoiceHandler invoiceHandler;
+    private final PaymentBusEventHandler paymentBusEventHandler;
     private final PaymentTagHandler tagHandler;
     private final PersistentBus eventBus;
     private final PaymentApi api;
@@ -48,13 +48,13 @@ public class DefaultPaymentService implements PaymentService {
     private final Janitor janitor;
 
     @Inject
-    public DefaultPaymentService(final InvoiceHandler invoiceHandler,
+    public DefaultPaymentService(final PaymentBusEventHandler paymentBusEventHandler,
                                  final PaymentTagHandler tagHandler,
                                  final PaymentApi api,
                                  final DefaultRetryService retryService,
                                  final PersistentBus eventBus,
                                  final Janitor janitor) {
-        this.invoiceHandler = invoiceHandler;
+        this.paymentBusEventHandler = paymentBusEventHandler;
         this.tagHandler = tagHandler;
         this.eventBus = eventBus;
         this.api = api;
@@ -70,12 +70,13 @@ public class DefaultPaymentService implements PaymentService {
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void initialize() throws NotificationQueueAlreadyExists {
         try {
-            eventBus.register(invoiceHandler);
+            eventBus.register(paymentBusEventHandler);
             eventBus.register(tagHandler);
         } catch (final PersistentBus.EventBusException e) {
             log.error("Unable to register with the EventBus!", e);
         }
-        retryService.initialize(SERVICE_NAME);
+        retryService.initialize();
+        janitor.initialize();
     }
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
@@ -87,7 +88,7 @@ public class DefaultPaymentService implements PaymentService {
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() throws NoSuchNotificationQueue {
         try {
-            eventBus.unregister(invoiceHandler);
+            eventBus.unregister(paymentBusEventHandler);
             eventBus.unregister(tagHandler);
         } catch (final PersistentBus.EventBusException e) {
             throw new RuntimeException("Unable to unregister to the EventBus!", e);

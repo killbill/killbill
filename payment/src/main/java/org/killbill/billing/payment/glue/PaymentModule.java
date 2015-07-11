@@ -36,7 +36,7 @@ import org.killbill.billing.payment.api.DefaultPaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentService;
-import org.killbill.billing.payment.bus.InvoiceHandler;
+import org.killbill.billing.payment.bus.PaymentBusEventHandler;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
@@ -182,7 +182,7 @@ public class PaymentModule extends KillBillModule {
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(PaymentGatewayApi.class).to(DefaultPaymentGatewayApi.class).asEagerSingleton();
         bind(AdminPaymentApi.class).to(DefaultAdminPaymentApi.class).asEagerSingleton();
-        bind(InvoiceHandler.class).asEagerSingleton();
+        bind(PaymentBusEventHandler.class).asEagerSingleton();
         bind(PaymentTagHandler.class).asEagerSingleton();
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();
         installPaymentProviderPlugins(paymentConfig);

@@ -44,6 +44,7 @@ import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 
 public class PushNotificationListener {
@@ -70,6 +71,7 @@ public class PushNotificationListener {
         this.mapper = mapper;
     }
 
+    @AllowConcurrentEvents
     @Subscribe
     public void triggerPushNotifications(final ExtBusEvent event) {
         final TenantContext context = contextFactory.createTenantContext(event.getTenantId());

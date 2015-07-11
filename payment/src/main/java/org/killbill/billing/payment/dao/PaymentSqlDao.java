@@ -70,8 +70,8 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
     public Iterator<PaymentModelDao> getByPluginName(@Bind("pluginName") final String pluginName,
-                                                           @Bind("offset") final Long offset,
-                                                           @Bind("rowCount") final Long rowCount,
+                                                     @Bind("offset") final Long offset,
+                                                     @Bind("rowCount") final Long rowCount,
                                                            @BindBean final InternalTenantContext context);
 
     @SqlQuery

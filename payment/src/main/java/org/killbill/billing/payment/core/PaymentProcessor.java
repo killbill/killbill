@@ -416,7 +416,7 @@ public class PaymentProcessor extends ProcessorBase {
             if (paymentTransactionInfoPlugin != null) {
                 // Make sure to invoke the Janitor task in case the plugin fixes its state on the fly
                 // See https://github.com/killbill/killbill/issues/341
-                final boolean hasChanged = incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeeded(newPaymentModelDao, newPaymentTransactionModelDao, paymentTransactionInfoPlugin, internalTenantContext);
+                final boolean hasChanged = incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeededWithAccountLock(newPaymentModelDao, newPaymentTransactionModelDao, paymentTransactionInfoPlugin, internalTenantContext);
                 if (hasChanged) {
                     newPaymentModelDao = paymentDao.getPayment(newPaymentModelDao.getId(), internalTenantContext);
                     newPaymentTransactionModelDao = paymentDao.getPaymentTransaction(newPaymentTransactionModelDao.getId(), internalTenantContext);
