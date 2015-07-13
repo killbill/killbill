@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -141,7 +141,7 @@ public class PaymentMethodJson extends JsonBase {
 
                     @Override
                     public String getExternalPaymentMethodId() {
-                        return pluginInfo != null ? pluginInfo.getExternalPaymentId() : null;
+                        return pluginInfo != null ? pluginInfo.getExternalPaymentMethodId() : null;
                     }
 
                     @Override
@@ -239,21 +239,21 @@ public class PaymentMethodJson extends JsonBase {
 
     public static class PaymentMethodPluginDetailJson {
 
-        private final String externalPaymentId;
+        private final String externalPaymentMethodId;
         private final Boolean isDefaultPaymentMethod;
         private final List<PluginPropertyJson> properties;
 
         @JsonCreator
-        public PaymentMethodPluginDetailJson(@JsonProperty("externalPaymentId") final String externalPaymentId,
+        public PaymentMethodPluginDetailJson(@JsonProperty("externalPaymentMethodId") final String externalPaymentMethodId,
                                              @JsonProperty("isDefaultPaymentMethod") final Boolean isDefaultPaymentMethod,
                                              @JsonProperty("properties") final List<PluginPropertyJson> properties) {
-            this.externalPaymentId = externalPaymentId;
+            this.externalPaymentMethodId = externalPaymentMethodId;
             this.isDefaultPaymentMethod = isDefaultPaymentMethod;
             this.properties = properties;
         }
 
-        public String getExternalPaymentId() {
-            return externalPaymentId;
+        public String getExternalPaymentMethodId() {
+            return externalPaymentMethodId;
         }
 
         public Boolean getIsDefaultPaymentMethod() {
@@ -267,7 +267,7 @@ public class PaymentMethodJson extends JsonBase {
         @Override
         public String toString() {
             final StringBuilder sb = new StringBuilder("PaymentMethodPluginDetailJson{");
-            sb.append("externalPaymentId='").append(externalPaymentId).append('\'');
+            sb.append("externalPaymentMethodId='").append(externalPaymentMethodId).append('\'');
             sb.append(", isDefaultPaymentMethod=").append(isDefaultPaymentMethod);
             sb.append(", properties=").append(properties);
             sb.append('}');
@@ -285,7 +285,7 @@ public class PaymentMethodJson extends JsonBase {
 
             final PaymentMethodPluginDetailJson that = (PaymentMethodPluginDetailJson) o;
 
-            if (externalPaymentId != null ? !externalPaymentId.equals(that.externalPaymentId) : that.externalPaymentId != null) {
+            if (externalPaymentMethodId != null ? !externalPaymentMethodId.equals(that.externalPaymentMethodId) : that.externalPaymentMethodId != null) {
                 return false;
             }
             if (isDefaultPaymentMethod != null ? !isDefaultPaymentMethod.equals(that.isDefaultPaymentMethod) : that.isDefaultPaymentMethod != null) {
@@ -299,7 +299,7 @@ public class PaymentMethodJson extends JsonBase {
 
         @Override
         public int hashCode() {
-            int result = externalPaymentId != null ? externalPaymentId.hashCode() : 0;
+            int result = externalPaymentMethodId != null ? externalPaymentMethodId.hashCode() : 0;
             result = 31 * result + (isDefaultPaymentMethod != null ? isDefaultPaymentMethod.hashCode() : 0);
             result = 31 * result + (properties != null ? properties.hashCode() : 0);
             return result;
