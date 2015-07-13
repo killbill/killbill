@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.sm.control;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.automaton.Operation.OperationCallback;
@@ -25,9 +26,14 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class DefaultControlCompleted implements EnteringStateCallback {
 
@@ -50,9 +56,31 @@ public class DefaultControlCompleted implements EnteringStateCallback {
                                    null;
         retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttempt(attempt.getId(), transactionId, state.getName(), paymentStateContext.getInternalCallContext());
 
-        if ("RETRIED".equals(state.getName())) {
+        if ("RETRIED".equals(state.getName()) && !isUnknownTransaction()) {
             retryServiceScheduler.scheduleRetry(ObjectType.PAYMENT_ATTEMPT, attempt.getId(), attempt.getId(), attempt.getTenantRecordId(),
                                                 paymentStateContext.getPaymentControlPluginNames(), paymentStateContext.getRetryDate());
+        }
+    }
+
+    //
+    // If we see an UNKNOWN transaction we prevent it to be rescheduled as the Janitor will *try* to fix it, and that could lead to infinite retries from a badly behaved plugin
+    // (In other words, plugin should ONLY retry 'known' transaction)
+    //
+    private boolean isUnknownTransaction() {
+        if (paymentStateContext.getCurrentTransaction() != null) {
+            return paymentStateContext.getCurrentTransaction().getTransactionStatus() == TransactionStatus.UNKNOWN;
+        } else {
+            final List<PaymentTransactionModelDao> transactions = retryablePaymentAutomatonRunner.getPaymentDao().getPaymentTransactionsByExternalKey(paymentStateContext.getPaymentTransactionExternalKey(), paymentStateContext.getInternalCallContext());
+            return Iterables.any(transactions, new Predicate<PaymentTransactionModelDao>() {
+                @Override
+                public boolean apply(final PaymentTransactionModelDao input) {
+                    return input.getTransactionStatus() == TransactionStatus.UNKNOWN &&
+                           // Not strictly required
+                           // (Note, we don't match on AttemptId as it is risky, the row on disk would match the first attempt, not necessarily the current one)
+                           input.getAccountRecordId() == paymentStateContext.getInternalCallContext().getAccountRecordId() &&
+                           input.getAmount() == paymentStateContext.getAmount();
+                }
+            });
         }
     }
 }

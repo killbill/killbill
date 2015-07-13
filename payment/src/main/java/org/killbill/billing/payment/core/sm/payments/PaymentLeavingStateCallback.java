@@ -17,16 +17,23 @@
 
 package org.killbill.billing.payment.core.sm.payments;
 
+import java.util.List;
+
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public abstract class PaymentLeavingStateCallback implements LeavingStateCallback {
 
@@ -51,16 +58,84 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
                 throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, paymentStateContext.getAccount().getId());
             }
 
-            // If the transactionId has been specified, it means this is an operation in several stage (INIT -> PENDING -> XXX), so we don't need to create the row,
-            // but we do need to set the transactionModelDao in the context so enteringState logic can take place.
-            if (paymentStateContext.getTransactionId() == null) {
-                daoHelper.createNewPaymentTransaction();
-            } else {
+            //
+            // Extract existing transaction matching the transactionId if specified (for e.g notifyPendingTransactionOfStateChanged), or based on transactionExternalKey
+            //
+            final List<PaymentTransactionModelDao> existingPaymentTransactions;
+            if (paymentStateContext.getTransactionId() != null) {
                 final PaymentTransactionModelDao transactionModelDao = daoHelper.getPaymentDao().getPaymentTransaction(paymentStateContext.getTransactionId(), paymentStateContext.getInternalCallContext());
-                paymentStateContext.setPaymentTransactionModelDao(transactionModelDao);
+                existingPaymentTransactions = ImmutableList.of(transactionModelDao);
+            } else {
+                existingPaymentTransactions = daoHelper.getPaymentDao().getPaymentTransactionsByExternalKey(paymentStateContext.getPaymentTransactionExternalKey(), paymentStateContext.getInternalCallContext());
             }
+
+            // Validate some constraints on the unicity of that paymentTransactionExternalKey
+            validateUniqueTransactionExternalKey(existingPaymentTransactions);
+
+            // Handle UNKNOWN cases, where we skip the whole state machine and let the getPayment logic refresh the state.
+            final PaymentTransactionModelDao unknownPaymentTransaction = getUnknownPaymentTransaction(existingPaymentTransactions);
+            if (unknownPaymentTransaction != null) {
+                // Reset the attemptId on the existing paymentTransaction row since it it is not accurate
+                unknownPaymentTransaction.setAttemptId(paymentStateContext.getAttemptId());
+                // Set the current paymentTransaction in the context (needed for the state machine logic)
+                paymentStateContext.setPaymentTransactionModelDao(unknownPaymentTransaction);
+                // Set special flag to bypass the state machine altogether (plugin will not be called, state will not be updated, no event will be sent)
+                paymentStateContext.setSkipOperationForUnknownTransaction(true);
+                return;
+            }
+
+            // Handle PENDING cases, where we want to re-use the same transaction
+            final PaymentTransactionModelDao pendingPaymentTransaction = getPendingPaymentTransaction(existingPaymentTransactions);
+            if (pendingPaymentTransaction != null) {
+                // Set the current paymentTransaction in the context (needed for the state machine logic)
+                paymentStateContext.setPaymentTransactionModelDao(pendingPaymentTransaction);
+                return;
+            }
+
+            // At this point we are left with PAYMENT_FAILURE, PLUGIN_FAILURE or nothing, and we validated the uniquess of the paymentTransactionExternalKey so we will create a new row
+            daoHelper.createNewPaymentTransaction();
+
         } catch (PaymentApiException e) {
             throw new OperationException(e);
+        }
+    }
+
+    protected PaymentTransactionModelDao getUnknownPaymentTransaction(final List<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
+        return Iterables.tryFind(existingPaymentTransactions, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionStatus() == TransactionStatus.UNKNOWN;
+            }
+        }).orNull();
+    }
+
+    protected PaymentTransactionModelDao getPendingPaymentTransaction(final List<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
+        return Iterables.tryFind(existingPaymentTransactions, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionStatus() == TransactionStatus.PENDING;
+            }
+        }).orNull();
+    }
+
+    protected void validateUniqueTransactionExternalKey(final List<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
+        // If no key specified, system will allocate a unique one later, there is nothing to check
+        if (paymentStateContext.getPaymentTransactionExternalKey() == null) {
+            return;
+        }
+
+        if (Iterables.any(existingPaymentTransactions, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                       // An existing transaction in a SUCCESS state
+                return input.getTransactionStatus() == TransactionStatus.SUCCESS ||
+                       // Or, an existing transaction for a different payment (to do really well, we should also check on paymentExternalKey which is not available here)
+                       (paymentStateContext.getPaymentId() != null && input.getPaymentId().compareTo(paymentStateContext.getPaymentId()) != 0) ||
+                       // Or, an existing transaction for a different account.
+                       (input.getAccountRecordId() != paymentStateContext.getInternalCallContext().getAccountRecordId());
+            }
+        })) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
         }
     }
 }

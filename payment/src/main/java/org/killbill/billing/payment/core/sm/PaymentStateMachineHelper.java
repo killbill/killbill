@@ -57,7 +57,7 @@ public class PaymentStateMachineHelper {
     private static final String VOID_SUCCESS = "VOID_SUCCESS";
     private static final String CHARGEBACK_SUCCESS = "CHARGEBACK_SUCCESS";
 
-    private static final String AUTHORIZE_PENDING = "AUTHORIZE_PENDING";
+    private static final String AUTHORIZE_PENDING = "AUTH_PENDING";
 
     private static final String AUTHORIZE_FAILED = "AUTH_FAILED";
     private static final String CAPTURE_FAILED = "CAPTURE_FAILED";

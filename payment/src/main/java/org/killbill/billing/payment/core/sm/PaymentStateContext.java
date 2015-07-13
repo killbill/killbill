@@ -50,6 +50,7 @@ public class PaymentStateContext {
     protected String paymentTransactionExternalKey;
     protected Currency currency;
     protected Iterable<PluginProperty> properties;
+    protected boolean skipOperationForUnknownTransaction;
 
     // Can be updated later via paymentTransactionModelDao (e.g. for auth or purchase)
     protected final UUID paymentId;
@@ -94,6 +95,7 @@ public class PaymentStateContext {
         this.internalCallContext = internalCallContext;
         this.callContext = callContext;
         this.onLeavingStateExistingTransactions = ImmutableList.of();
+        this.skipOperationForUnknownTransaction = false;
     }
 
     public boolean isApiPayment() {
@@ -198,5 +200,13 @@ public class PaymentStateContext {
 
     public CallContext getCallContext() {
         return callContext;
+    }
+
+    public boolean isSkipOperationForUnknownTransaction() {
+        return skipOperationForUnknownTransaction;
+    }
+
+    public void setSkipOperationForUnknownTransaction(final boolean skipOperationForUnknownTransaction) {
+        this.skipOperationForUnknownTransaction = skipOperationForUnknownTransaction;
     }
 }

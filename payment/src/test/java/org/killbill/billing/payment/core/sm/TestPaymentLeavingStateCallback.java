@@ -22,8 +22,10 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -72,6 +74,8 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         // Verify the payment has only one transaction
         Assert.assertEquals(paymentDao.getTransactionsForPayment(paymentId, internalCallContext).size(), 1);
 
+        // Reset paymentExternalKey to something else
+        paymentStateContext.setPaymentTransactionExternalKey(UUID.randomUUID().toString());
         callback.leavingState(state);
 
         // Verify a new transaction was created
@@ -80,6 +84,50 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         // Verify the payment has now two transactions
         Assert.assertEquals(paymentDao.getTransactionsForPayment(paymentId, internalCallContext).size(), 2);
     }
+
+    @Test(groups = "slow", expectedExceptions = OperationException.class)
+    public void testLeaveStateForConflictingPaymentTransactionExternalKey() throws Exception {
+        final UUID paymentId = UUID.randomUUID();
+        setUp(paymentId);
+
+        // Verify the payment has only one transaction
+        Assert.assertEquals(paymentDao.getTransactionsForPayment(paymentId, internalCallContext).size(), 1);
+
+        // Will validate the validateUniqueTransactionExternalKey logic for when we reuse the same payment transactionExternalKey
+        callback.leavingState(state);
+    }
+
+
+    @Test(groups = "slow", expectedExceptions = OperationException.class)
+    public void testLeaveStateForConflictingPaymentTransactionExternalKeyAcrossAccounts() throws Exception {
+        final UUID paymentId = UUID.randomUUID();
+        setUp(paymentId);
+
+        // Verify the payment has only one transaction
+        Assert.assertEquals(paymentDao.getTransactionsForPayment(paymentId, internalCallContext).size(), 1);
+
+        final InternalCallContext internalCallContextForOtherAccount =  new InternalCallContext(paymentStateContext.getInternalCallContext(), 123L);
+
+        paymentStateContext = new PaymentStateContext(true,
+                                                      paymentId,
+                                                      null,
+                                                      null,
+                                                      paymentStateContext.getPaymentExternalKey(),
+                                                      paymentStateContext.getPaymentTransactionExternalKey(),
+                                                      paymentStateContext.getTransactionType(),
+                                                      paymentStateContext.getAccount(),
+                                                      paymentStateContext.getPaymentMethodId(),
+                                                      paymentStateContext.getAmount(),
+                                                      paymentStateContext.getCurrency(),
+                                                      paymentStateContext.shouldLockAccountAndDispatch,
+                                                      paymentStateContext.overridePluginOperationResult,
+                                                      paymentStateContext.getProperties(),
+                                                      internalCallContextForOtherAccount,
+                                                      callContext);
+
+        callback.leavingState(state);
+    }
+
 
     private void verifyPaymentTransaction() {
         Assert.assertNotNull(paymentStateContext.getPaymentTransactionModelDao().getPaymentId());
@@ -98,7 +146,8 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         paymentStateContext = new PaymentStateContext(true,
                                                       paymentId,
-                                                      null, null,
+                                                      null,
+                                                      null,
                                                       UUID.randomUUID().toString(),
                                                       UUID.randomUUID().toString(),
                                                       TransactionType.CAPTURE,

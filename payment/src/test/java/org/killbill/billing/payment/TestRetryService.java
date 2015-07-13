@@ -87,19 +87,11 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         return payment;
     }
 
-    @Test(groups = "fast")
-    public void testFailedPluginWithOneSuccessfulRetry() throws Exception {
-        testSchedulesRetryInternal(1, true, FailureType.PLUGIN_EXCEPTION);
-    }
 
-    @Test(groups = "fast")
-    public void testFailedPluginWithLastRetrySuccess() throws Exception {
-        testSchedulesRetryInternal(paymentConfig.getPluginFailureRetryMaxAttempts(), true, FailureType.PLUGIN_EXCEPTION);
-    }
-
+    // PLUGIN_EXCEPTION will lead to UNKNOWN row that will not be retried by the plugin
     @Test(groups = "fast")
     public void testAbortedPlugin() throws Exception {
-        testSchedulesRetryInternal(paymentConfig.getPluginFailureRetryMaxAttempts(), false, FailureType.PLUGIN_EXCEPTION);
+        testSchedulesRetryInternal(0, false, FailureType.PLUGIN_EXCEPTION);
     }
 
     @Test(groups = "fast")
@@ -242,7 +234,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         if (failureType == FailureType.PAYMENT_FAILURE) {
             return paymentConfig.getPaymentFailureRetryDays().size();
         } else {
-            return paymentConfig.getPluginFailureRetryMaxAttempts();
+            return 0;
         }
     }
 

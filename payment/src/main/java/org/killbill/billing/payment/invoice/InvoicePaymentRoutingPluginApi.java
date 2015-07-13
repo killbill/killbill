@@ -354,10 +354,10 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
             case PAYMENT_FAILURE:
                 return getNextRetryDateForPaymentFailure(purchasedTransactions);
 
-            case UNKNOWN:
             case PLUGIN_FAILURE:
                 return getNextRetryDateForPluginFailure(purchasedTransactions);
 
+            case UNKNOWN:
             default:
                 return null;
         }
@@ -385,8 +385,7 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
     private DateTime getNextRetryDateForPluginFailure(final List<PaymentTransactionModelDao> purchasedTransactions) {
 
         DateTime result = null;
-        // Not clear whether or not we should really include TransactionStatus.UNKNOWN
-        final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, TransactionStatus.PLUGIN_FAILURE, TransactionStatus.UNKNOWN);
+        final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, TransactionStatus.PLUGIN_FAILURE);
         final int retryAttempt = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
 
         if (retryAttempt < paymentConfig.getPluginFailureRetryMaxAttempts()) {
