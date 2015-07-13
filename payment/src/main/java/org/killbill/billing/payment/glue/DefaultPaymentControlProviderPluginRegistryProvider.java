@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,26 +19,22 @@ package org.killbill.billing.payment.glue;
 
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
-import org.killbill.billing.payment.provider.DefaultPaymentRoutingProviderPlugin;
+import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.provider.DefaultPaymentControlProviderPlugin;
 import org.killbill.billing.payment.provider.DefaultPaymentRoutingProviderPluginRegistry;
 import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
-import org.killbill.billing.util.config.PaymentConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-public class DefaultPaymentRoutingProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<PaymentRoutingPluginApi>> {
+public class DefaultPaymentControlProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<PaymentRoutingPluginApi>> {
 
-    private final PaymentConfig paymentConfig;
-    private final DefaultPaymentRoutingProviderPlugin externalPaymentControlProviderPlugin;
-    private final InvoicePaymentRoutingPluginApi invoicePaymentControlPlugin;
+    private final DefaultPaymentControlProviderPlugin externalPaymentControlProviderPlugin;
+    private final InvoicePaymentControlPluginApi invoicePaymentControlPlugin;
 
     @Inject
-    public DefaultPaymentRoutingProviderPluginRegistryProvider(final PaymentConfig paymentConfig,
-                                                               final DefaultPaymentRoutingProviderPlugin externalPaymentControlProviderPlugin,
-                                                               final InvoicePaymentRoutingPluginApi invoicePaymentControlPlugin) {
-        this.paymentConfig = paymentConfig;
+    public DefaultPaymentControlProviderPluginRegistryProvider(final DefaultPaymentControlProviderPlugin externalPaymentControlProviderPlugin,
+                                                               final InvoicePaymentControlPluginApi invoicePaymentControlPlugin) {
         this.externalPaymentControlProviderPlugin = externalPaymentControlProviderPlugin;
         this.invoicePaymentControlPlugin = invoicePaymentControlPlugin;
     }
@@ -55,7 +52,7 @@ public class DefaultPaymentRoutingProviderPluginRegistryProvider implements Prov
 
             @Override
             public String getRegistrationName() {
-                return DefaultPaymentRoutingProviderPlugin.PLUGIN_NAME;
+                return DefaultPaymentControlProviderPlugin.PLUGIN_NAME;
             }
         };
         pluginRegistry.registerService(desc, externalPaymentControlProviderPlugin);
@@ -69,12 +66,11 @@ public class DefaultPaymentRoutingProviderPluginRegistryProvider implements Prov
 
             @Override
             public String getRegistrationName() {
-                return InvoicePaymentRoutingPluginApi.PLUGIN_NAME;
+                return InvoicePaymentControlPluginApi.PLUGIN_NAME;
             }
         };
         pluginRegistry.registerService(desc2, invoicePaymentControlPlugin);
 
         return pluginRegistry;
     }
-
 }

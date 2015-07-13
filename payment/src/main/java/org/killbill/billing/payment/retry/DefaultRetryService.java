@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
+import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.notificationq.api.NotificationQueueService;
 
@@ -30,10 +31,10 @@ public class DefaultRetryService extends BaseRetryService implements RetryServic
 
     public static final String QUEUE_NAME = "retry";
 
-    private final PluginRoutingPaymentProcessor processor;
+    private final PluginControlPaymentProcessor processor;
 
     @Inject
-    public DefaultRetryService(final NotificationQueueService notificationQueueService, final InternalCallContextFactory internalCallContextFactory, final PluginRoutingPaymentProcessor processor) {
+    public DefaultRetryService(final NotificationQueueService notificationQueueService, final InternalCallContextFactory internalCallContextFactory, final PluginControlPaymentProcessor processor) {
         super(notificationQueueService, internalCallContextFactory);
         this.processor = processor;
     }
@@ -42,7 +43,6 @@ public class DefaultRetryService extends BaseRetryService implements RetryServic
     public String getQueueName() {
         return QUEUE_NAME;
     }
-
 
     @Override
     public void retryPaymentTransaction(final UUID attemptId, final List<String> paymentControlPluginNames, final InternalCallContext context) {

@@ -17,7 +17,6 @@
 
 package org.killbill.billing.payment.core.janitor;
 
-import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -34,7 +33,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -65,15 +64,15 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
     // Each paymentAttempt *should* transition to a new state, so fetching a limited size will still allow us to progress (as opposed to fetching the same entries over and over)
     // We also don't expect to see too many entries in the INIT state.
     //
-    private final static long MAX_ATTEMPTS_PER_ITERATIONS = 1000L;
+    private static final long MAX_ATTEMPTS_PER_ITERATIONS = 1000L;
 
-    private final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
+    private final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
 
     @Inject
     public IncompletePaymentAttemptTask(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
                                         final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
                                         final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                                        final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
+                                        final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                                         final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final GlobalLocker locker) {
         super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry, locker);
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;

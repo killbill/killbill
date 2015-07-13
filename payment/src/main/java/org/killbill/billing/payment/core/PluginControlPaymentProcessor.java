@@ -39,8 +39,8 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
+import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -59,15 +59,15 @@ import com.google.inject.name.Named;
 
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
-public class PluginRoutingPaymentProcessor extends ProcessorBase {
+public class PluginControlPaymentProcessor extends ProcessorBase {
 
     private static final Joiner JOINER = Joiner.on(", ");
 
-    private final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
+    private final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     private final PaymentControlStateMachineHelper paymentControlStateMachineHelper;
 
     @Inject
-    public PluginRoutingPaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+    public PluginControlPaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                          final AccountInternalApi accountInternalApi,
                                          final InvoiceInternalApi invoiceApi,
                                          final TagInternalApi tagUserApi,
@@ -75,7 +75,7 @@ public class PluginRoutingPaymentProcessor extends ProcessorBase {
                                          final GlobalLocker locker,
                                          @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                                          final InternalCallContextFactory internalCallContextFactory,
-                                         final PluginRoutingPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
+                                         final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                                          final PaymentControlStateMachineHelper paymentControlStateMachineHelper,
                                          final Clock clock) {
         super(pluginRegistry, accountInternalApi, paymentDao, tagUserApi, locker, executor, internalCallContextFactory, invoiceApi, clock);
