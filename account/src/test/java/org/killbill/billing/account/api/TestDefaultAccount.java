@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,56 +21,85 @@ package org.killbill.billing.account.api;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.account.AccountTestSuiteNoDB;
+import org.killbill.billing.catalog.api.Currency;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.account.AccountTestSuiteNoDB;
-import org.killbill.billing.catalog.api.Currency;
-
 public class TestDefaultAccount extends AccountTestSuiteNoDB {
 
-    @Test(groups = "fast", description="Test if Account constructor can accept null values")
+    @Test(groups = "fast", description = "Test if Account constructor can accept null values")
     public void testConstructorAcceptsNullValues() throws Exception {
         final AccountData accountData = getNullAccountData();
         final Account account = new DefaultAccount(UUID.randomUUID(), accountData);
 
-        Assert.assertEquals(account.getExternalKey(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getEmail(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getName(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getFirstNameLength(), DefaultAccount.DEFAULT_INTEGER_VALUE);
-        Assert.assertEquals(account.getCurrency(), DefaultAccount.DEFAULT_CURRENCY_VALUE);
-        Assert.assertEquals(account.getBillCycleDayLocal(), DefaultAccount.DEFAULT_INTEGER_VALUE);
+        Assert.assertNull(account.getExternalKey());
+        Assert.assertNull(account.getEmail());
+        Assert.assertNull(account.getName());
+        Assert.assertNull(account.getFirstNameLength());
+        Assert.assertNull(account.getCurrency());
+        Assert.assertEquals(account.getBillCycleDayLocal(), (Integer) 0);
         Assert.assertNull(account.getPaymentMethodId());
-        Assert.assertEquals(account.getTimeZone(), DefaultAccount.DEFAULT_TIMEZONE_VALUE);
-        Assert.assertEquals(account.getLocale(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getAddress1(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getAddress2(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getCompanyName(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getCity(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getStateOrProvince(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getCountry(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getPostalCode(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.getPhone(), DefaultAccount.DEFAULT_STRING_VALUE);
-        Assert.assertEquals(account.isMigrated(), DefaultAccount.DEFAULT_MIGRATED_VALUE);
-        Assert.assertEquals(account.isNotifiedForInvoices(), DefaultAccount.DEFAULT_NOTIFIED_FOR_INVOICES_VALUE);
+        Assert.assertNull(account.getTimeZone());
+        Assert.assertNull(account.getLocale());
+        Assert.assertNull(account.getAddress1());
+        Assert.assertNull(account.getAddress2());
+        Assert.assertNull(account.getCompanyName());
+        Assert.assertNull(account.getCity());
+        Assert.assertNull(account.getStateOrProvince());
+        Assert.assertNull(account.getCountry());
+        Assert.assertNull(account.getPostalCode());
+        Assert.assertNull(account.getPhone());
+        Assert.assertNull(account.isMigrated());
+        Assert.assertNull(account.isNotifiedForInvoices());
     }
 
-    @Test(groups = "fast", description="Test mergeWithDelegate Account api")
+    @Test(groups = "fast", description = "Test mergeWithDelegate Account api")
     public void testMergeWithDelegate() throws Exception {
         final AccountData accountData = getNullAccountData();
         final Account account = new DefaultAccount(UUID.randomUUID(), accountData);
 
-        final AccountData secondAccountData = getAccountData();
-        final Account secondAccount = new DefaultAccount(UUID.randomUUID(), secondAccountData);
+        // Update all updatable fields
+        final AccountData accountDataUpdates1 = getAccountData(account.getBillCycleDayLocal(), account.getCurrency(), account.getExternalKey());
+        final Account accountUpdates1 = new DefaultAccount(UUID.randomUUID(), accountDataUpdates1);
 
-        final Account finalAccount = account.mergeWithDelegate(secondAccount);
-        checkAccountEquals(finalAccount, secondAccount);
+        final Account updatedAccount1 = accountUpdates1.mergeWithDelegate(account);
+        checkAccountEquals(updatedAccount1, accountUpdates1);
+
+        // Update some fields
+        final AccountData accountDataUpdates2 = Mockito.mock(AccountData.class);
+        Mockito.when(accountDataUpdates2.getEmail()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(accountDataUpdates2.getName()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(accountDataUpdates2.getFirstNameLength()).thenReturn(12);
+        Mockito.when(accountDataUpdates2.isNotifiedForInvoices()).thenReturn(true);
+        final Account accountUpdates2 = new DefaultAccount(UUID.randomUUID(), accountDataUpdates2);
+
+        final Account updatedAccount2 = accountUpdates2.mergeWithDelegate(updatedAccount1);
+        Assert.assertEquals(updatedAccount2.getEmail(), accountUpdates2.getEmail());
+        Assert.assertEquals(updatedAccount2.getName(), accountUpdates2.getName());
+        Assert.assertEquals(updatedAccount2.getFirstNameLength(), updatedAccount2.getFirstNameLength());
+        Assert.assertEquals(updatedAccount2.isNotifiedForInvoices(), updatedAccount2.isNotifiedForInvoices());
+        Assert.assertEquals(updatedAccount2.getExternalKey(), updatedAccount1.getExternalKey());
+        Assert.assertEquals(updatedAccount2.getCurrency(), updatedAccount1.getCurrency());
+        Assert.assertEquals(updatedAccount2.getBillCycleDayLocal(), updatedAccount1.getBillCycleDayLocal());
+        Assert.assertEquals(updatedAccount2.getPaymentMethodId(), updatedAccount1.getPaymentMethodId());
+        Assert.assertEquals(updatedAccount2.getTimeZone(), updatedAccount1.getTimeZone());
+        Assert.assertEquals(updatedAccount2.getLocale(), updatedAccount1.getLocale());
+        Assert.assertEquals(updatedAccount2.getAddress1(), updatedAccount1.getAddress1());
+        Assert.assertEquals(updatedAccount2.getAddress2(), updatedAccount1.getAddress2());
+        Assert.assertEquals(updatedAccount2.getCompanyName(), updatedAccount1.getCompanyName());
+        Assert.assertEquals(updatedAccount2.getCity(), updatedAccount1.getCity());
+        Assert.assertEquals(updatedAccount2.getStateOrProvince(), updatedAccount1.getStateOrProvince());
+        Assert.assertEquals(updatedAccount2.getCountry(), updatedAccount1.getCountry());
+        Assert.assertEquals(updatedAccount2.getPostalCode(), updatedAccount1.getPostalCode());
+        Assert.assertEquals(updatedAccount2.getPhone(), updatedAccount1.getPhone());
+        Assert.assertEquals(updatedAccount2.isMigrated(), updatedAccount1.isMigrated());
     }
 
-    @Test(groups = "fast", description="Test Account BCD merge")
+    @Test(groups = "fast", description = "Test Account BCD merge")
     public void testBCDMerges() throws Exception {
         final UUID accountId = UUID.randomUUID();
         final Currency currency = Currency.BRL;
@@ -97,7 +128,7 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
             // Different BCD
             Assert.assertEquals(accountWithAnotherBCD.mergeWithDelegate(accountWithRealBCD).getBillCycleDayLocal(), (Integer) 20);
             Assert.fail();
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             Assert.assertTrue(true);
         }
     }
@@ -124,10 +155,6 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
         Assert.assertEquals(finalAccount.isNotifiedForInvoices(), delegateAccount.isNotifiedForInvoices());
     }
 
-    private AccountData getAccountData() {
-        return getAccountData(Integer.MIN_VALUE, Currency.AUD, UUID.randomUUID().toString());
-    }
-
     private AccountData getAccountData(final Integer bcd, final Currency currency, final String externalKey) {
         final AccountData secondAccountData = Mockito.mock(AccountData.class);
         Mockito.when(secondAccountData.getExternalKey()).thenReturn(externalKey);
@@ -147,7 +174,7 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
         Mockito.when(secondAccountData.getCountry()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(secondAccountData.getPostalCode()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(secondAccountData.getPhone()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(secondAccountData.isMigrated()).thenReturn(true);
+        Mockito.when(secondAccountData.isMigrated()).thenReturn(false);
         Mockito.when(secondAccountData.isNotifiedForInvoices()).thenReturn(true);
         return secondAccountData;
     }

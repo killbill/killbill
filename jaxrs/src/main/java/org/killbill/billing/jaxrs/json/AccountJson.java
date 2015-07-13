@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -23,7 +25,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTimeZone;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.catalog.api.Currency;
@@ -31,7 +32,6 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -74,7 +74,7 @@ public class AccountJson extends JsonBase {
         this.billCycleDayLocal = account.getBillCycleDayLocal();
         this.currency = account.getCurrency() != null ? account.getCurrency().toString() : null;
         this.paymentMethodId = account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null;
-        this.timeZone = account.getTimeZone().toString();
+        this.timeZone = account.getTimeZone() != null ? account.getTimeZone().toString() : null;
         this.address1 = account.getAddress1();
         this.address2 = account.getAddress2();
         this.postalCode = account.getPostalCode();
@@ -141,7 +141,11 @@ public class AccountJson extends JsonBase {
         return new AccountData() {
             @Override
             public DateTimeZone getTimeZone() {
-                return (Strings.emptyToNull(timeZone) != null) ? DateTimeZone.forID(timeZone) : null;
+                if (Strings.emptyToNull(timeZone) == null) {
+                    return null;
+                } else {
+                    return DateTimeZone.forID(timeZone);
+                }
             }
 
             @Override
@@ -161,17 +165,21 @@ public class AccountJson extends JsonBase {
 
             @Override
             public Boolean isMigrated() {
-                return Objects.firstNonNull(isMigrated, false);
+                return isMigrated;
             }
 
             @Override
             public Boolean isNotifiedForInvoices() {
-                return Objects.firstNonNull(isNotifiedForInvoices, false);
+                return isNotifiedForInvoices;
             }
 
             @Override
             public UUID getPaymentMethodId() {
-                return paymentMethodId != null ? UUID.fromString(paymentMethodId) : null;
+                if (Strings.emptyToNull(paymentMethodId) == null) {
+                    return null;
+                } else {
+                    return UUID.fromString(paymentMethodId);
+                }
             }
 
             @Override
@@ -186,13 +194,7 @@ public class AccountJson extends JsonBase {
 
             @Override
             public Integer getFirstNameLength() {
-                if (firstNameLength == null && name == null) {
-                    return 0;
-                } else if (firstNameLength == null) {
-                    return name.length();
-                } else {
-                    return firstNameLength;
-                }
+                return firstNameLength;
             }
 
             @Override

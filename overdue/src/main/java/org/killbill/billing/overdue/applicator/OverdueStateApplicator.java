@@ -74,6 +74,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -336,6 +337,11 @@ public class OverdueStateApplicator {
 
         // If sending is not configured, skip
         if (nextOverdueState.getEmailNotification() == null) {
+            return;
+        }
+
+        if (Strings.emptyToNull(account.getEmail()) == null) {
+            log.warn("Unable to send overdue notification email for account {} and overdueable {}: no email specified", account.getId(), account.getId());
             return;
         }
 

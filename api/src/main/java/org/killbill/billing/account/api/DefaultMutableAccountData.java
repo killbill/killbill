@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,15 +21,17 @@ package org.killbill.billing.account.api;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
-
 import org.killbill.billing.catalog.api.Currency;
 
 public class DefaultMutableAccountData implements MutableAccountData {
 
+    // 0 has a special meaning in Junction
+    public static final int DEFAULT_BILLING_CYCLE_DAY_LOCAL = 0;
+
     private String externalKey;
     private String email;
     private String name;
-    private int firstNameLength;
+    private Integer firstNameLength;
     private Currency currency;
     private int billCycleDayLocal;
     private UUID paymentMethodId;
@@ -41,8 +45,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private String country;
     private String postalCode;
     private String phone;
-    private boolean isMigrated;
-    private boolean isNotifiedForInvoices;
+    private Boolean isMigrated;
+    private Boolean isNotifiedForInvoices;
 
     public DefaultMutableAccountData(final String externalKey, final String email, final String name,
                                      final int firstNameLength, final Currency currency, final int billCycleDayLocal,
@@ -78,7 +82,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.name = accountData.getName();
         this.firstNameLength = accountData.getFirstNameLength();
         this.currency = accountData.getCurrency();
-        this.billCycleDayLocal = accountData.getBillCycleDayLocal();
+        this.billCycleDayLocal = accountData.getBillCycleDayLocal() == null ? DEFAULT_BILLING_CYCLE_DAY_LOCAL : accountData.getBillCycleDayLocal();
         this.paymentMethodId = accountData.getPaymentMethodId();
         this.timeZone = accountData.getTimeZone();
         this.locale = accountData.getLocale();
@@ -100,8 +104,18 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
+    public void setExternalKey(final String externalKey) {
+        this.externalKey = externalKey;
+    }
+
+    @Override
     public String getEmail() {
         return email;
+    }
+
+    @Override
+    public void setEmail(final String email) {
+        this.email = email;
     }
 
     @Override
@@ -110,8 +124,18 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
+    public void setName(final String name) {
+        this.name = name;
+    }
+
+    @Override
     public Integer getFirstNameLength() {
         return firstNameLength;
+    }
+
+    @Override
+    public void setFirstNameLength(final int firstNameLength) {
+        this.firstNameLength = firstNameLength;
     }
 
     @Override
@@ -120,8 +144,18 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
+    }
+
+    @Override
     public Integer getBillCycleDayLocal() {
         return billCycleDayLocal;
+    }
+
+    @Override
+    public void setBillCycleDayLocal(final int billCycleDayLocal) {
+        this.billCycleDayLocal = billCycleDayLocal;
     }
 
     @Override
@@ -130,8 +164,18 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
+    public void setPaymentMethodId(final UUID paymentMethodId) {
+        this.paymentMethodId = paymentMethodId;
+    }
+
+    @Override
     public DateTimeZone getTimeZone() {
         return timeZone;
+    }
+
+    @Override
+    public void setTimeZone(final DateTimeZone timeZone) {
+        this.timeZone = timeZone;
     }
 
     @Override
@@ -140,8 +184,18 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
+    public void setLocale(final String locale) {
+        this.locale = locale;
+    }
+
+    @Override
     public String getAddress1() {
         return address1;
+    }
+
+    @Override
+    public void setAddress1(final String address1) {
+        this.address1 = address1;
     }
 
     @Override
@@ -150,8 +204,18 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
+    public void setAddress2(final String address2) {
+        this.address2 = address2;
+    }
+
+    @Override
     public String getCompanyName() {
         return companyName;
+    }
+
+    @Override
+    public void setCompanyName(final String companyName) {
+        this.companyName = companyName;
     }
 
     @Override
@@ -160,8 +224,18 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
+    public void setCity(final String city) {
+        this.city = city;
+    }
+
+    @Override
     public String getStateOrProvince() {
         return stateOrProvince;
+    }
+
+    @Override
+    public void setStateOrProvince(final String stateOrProvince) {
+        this.stateOrProvince = stateOrProvince;
     }
 
     @Override
@@ -170,13 +244,28 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
+    public void setCountry(final String country) {
+        this.country = country;
+    }
+
+    @Override
     public String getPostalCode() {
         return postalCode;
     }
 
     @Override
+    public void setPostalCode(final String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    @Override
     public String getPhone() {
         return phone;
+    }
+
+    @Override
+    public void setPhone(final String phone) {
+        this.phone = phone;
     }
 
     @Override
@@ -187,91 +276,6 @@ public class DefaultMutableAccountData implements MutableAccountData {
     @Override
     public Boolean isNotifiedForInvoices() {
         return isNotifiedForInvoices;
-    }
-
-    @Override
-    public void setExternalKey(final String externalKey) {
-        this.externalKey = externalKey;
-    }
-
-    @Override
-    public void setEmail(final String email) {
-        this.email = email;
-    }
-
-    @Override
-    public void setName(final String name) {
-        this.name = name;
-    }
-
-    @Override
-    public void setFirstNameLength(final int firstNameLength) {
-        this.firstNameLength = firstNameLength;
-    }
-
-    @Override
-    public void setCurrency(final Currency currency) {
-        this.currency = currency;
-    }
-
-    @Override
-    public void setBillCycleDayLocal(final int billCycleDayLocal) {
-        this.billCycleDayLocal = billCycleDayLocal;
-    }
-
-    @Override
-    public void setPaymentMethodId(final UUID paymentMethodId) {
-        this.paymentMethodId = paymentMethodId;
-    }
-
-    @Override
-    public void setTimeZone(final DateTimeZone timeZone) {
-        this.timeZone = timeZone;
-    }
-
-    @Override
-    public void setLocale(final String locale) {
-        this.locale = locale;
-    }
-
-    @Override
-    public void setAddress1(final String address1) {
-        this.address1 = address1;
-    }
-
-    @Override
-    public void setAddress2(final String address2) {
-        this.address2 = address2;
-    }
-
-    @Override
-    public void setCompanyName(final String companyName) {
-        this.companyName = companyName;
-    }
-
-    @Override
-    public void setCity(final String city) {
-        this.city = city;
-    }
-
-    @Override
-    public void setStateOrProvince(final String stateOrProvince) {
-        this.stateOrProvince = stateOrProvince;
-    }
-
-    @Override
-    public void setCountry(final String country) {
-        this.country = country;
-    }
-
-    @Override
-    public void setPostalCode(final String postalCode) {
-        this.postalCode = postalCode;
-    }
-
-    @Override
-    public void setPhone(final String phone) {
-        this.phone = phone;
     }
 
     @Override

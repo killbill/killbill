@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,11 +21,6 @@ package org.killbill.billing.account.api.user;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.AccountTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountEmail;
@@ -32,12 +29,16 @@ import org.killbill.billing.account.api.DefaultAccountEmail;
 import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.account.dao.MockAccountDao;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallContextFactory;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.bus.api.PersistentBus;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
 
@@ -52,10 +53,10 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         accountDao = new MockAccountDao(Mockito.mock(PersistentBus.class));
-        accountUserApi = new DefaultAccountUserApi(factory, internalFactory, accountDao);
+        accountUserApi = new DefaultAccountUserApi(internalFactory, accountDao);
     }
 
-    @Test(groups = "fast", description="Test Account create API")
+    @Test(groups = "fast", description = "Test Account create API")
     public void testCreateAccount() throws Exception {
         final UUID id = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
@@ -105,7 +106,7 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
         Assert.assertEquals(account.getIsNotifiedForInvoices(), isNotifiedForInvoices);
     }
 
-    @Test(groups = "fast", description="Test ability to add email to Account")
+    @Test(groups = "fast", description = "Test ability to add email to Account")
     public void testAddEmail() throws Exception {
         final UUID accountId = UUID.randomUUID();
 

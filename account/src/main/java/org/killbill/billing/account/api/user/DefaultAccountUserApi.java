@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -31,7 +33,6 @@ import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.dao.AccountEmailModelDao;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.callcontext.CallContextFactory;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
@@ -46,14 +47,11 @@ import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEn
 
 public class DefaultAccountUserApi implements AccountUserApi {
 
-    private final CallContextFactory callContextFactory;
     private final InternalCallContextFactory internalCallContextFactory;
     private final AccountDao accountDao;
 
     @Inject
-    public DefaultAccountUserApi(final CallContextFactory callContextFactory, final InternalCallContextFactory internalCallContextFactory,
-                                 final AccountDao accountDao) {
-        this.callContextFactory = callContextFactory;
+    public DefaultAccountUserApi(final InternalCallContextFactory internalCallContextFactory, final AccountDao accountDao) {
         this.internalCallContextFactory = internalCallContextFactory;
         this.accountDao = accountDao;
     }
@@ -158,11 +156,14 @@ public class DefaultAccountUserApi implements AccountUserApi {
     }
 
     private void updateAccount(final Account currentAccount, final AccountData accountData, final CallContext context) throws AccountApiException {
-        // Set unspecified (null) fields to their current values
         final Account updatedAccount = new DefaultAccount(currentAccount.getId(), accountData);
-        final AccountModelDao accountToUpdate = new AccountModelDao(currentAccount.getId(), updatedAccount.mergeWithDelegate(currentAccount));
 
-        accountDao.update(accountToUpdate, internalCallContextFactory.createInternalCallContext(accountToUpdate.getId(), context));
+        // Set unspecified (null) fields to their current values
+        final Account mergedAccount = updatedAccount.mergeWithDelegate(currentAccount);
+
+        final AccountModelDao updatedAccountModelDao = new AccountModelDao(currentAccount.getId(), mergedAccount);
+
+        accountDao.update(updatedAccountModelDao, internalCallContextFactory.createInternalCallContext(updatedAccountModelDao.getId(), context));
     }
 
     @Override

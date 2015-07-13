@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -30,7 +32,9 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
+
+import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
 
 public class AccountModelDao extends EntityModelDaoBase implements EntityModelDao<Account> {
 
@@ -63,7 +67,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
                            final String city, final String stateOrProvince, final String country, final String postalCode,
                            final String phone, final Boolean migrated, final Boolean notifiedForInvoices) {
         super(id, createdDate, updatedDate);
-        this.externalKey = Objects.firstNonNull(externalKey, id.toString());
+        this.externalKey = MoreObjects.firstNonNull(externalKey, id.toString());
         this.email = email;
         this.name = name;
         this.firstNameLength = firstNameLength;
@@ -85,11 +89,29 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
     }
 
     public AccountModelDao(final UUID id, @Nullable final DateTime createdDate, final DateTime updatedDate, final AccountData account) {
-        this(id, createdDate, updatedDate, account.getExternalKey(),
-             account.getEmail(), account.getName(), account.getFirstNameLength(), account.getCurrency(),
-             account.getBillCycleDayLocal() == null ? 0 : account.getBillCycleDayLocal(), account.getPaymentMethodId(), account.getTimeZone(), account.getLocale(), account.getAddress1(), account.getAddress2(),
-             account.getCompanyName(), account.getCity(), account.getStateOrProvince(), account.getCountry(), account.getPostalCode(),
-             account.getPhone(), account.isMigrated(), account.isNotifiedForInvoices());
+        this(id,
+             createdDate,
+             updatedDate,
+             account.getExternalKey(),
+             account.getEmail(),
+             account.getName(),
+             account.getFirstNameLength(),
+             account.getCurrency(),
+             MoreObjects.firstNonNull(account.getBillCycleDayLocal(), DEFAULT_BILLING_CYCLE_DAY_LOCAL),
+             account.getPaymentMethodId(),
+             account.getTimeZone(),
+             account.getLocale(),
+             account.getAddress1(),
+             account.getAddress2(),
+             account.getCompanyName(),
+             account.getCity(),
+             account.getStateOrProvince(),
+             account.getCountry(),
+             account.getPostalCode(),
+             account.getPhone(),
+             account.isMigrated(),
+             // There is a NOT NULL constraint on the is_notified_for_invoices column
+             MoreObjects.firstNonNull(account.isNotifiedForInvoices(), false));
     }
 
     public AccountModelDao(final UUID id, final AccountData account) {
@@ -104,150 +126,150 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         return externalKey;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Integer getFirstNameLength() {
-        return firstNameLength;
-    }
-
-    public Currency getCurrency() {
-        return currency;
-    }
-
-    public Integer getBillingCycleDayLocal() {
-        return billingCycleDayLocal;
-    }
-
-    public UUID getPaymentMethodId() {
-        return paymentMethodId;
-    }
-
-    public DateTimeZone getTimeZone() {
-        return timeZone;
-    }
-
-    public String getLocale() {
-        return locale;
-    }
-
-    public String getAddress1() {
-        return address1;
-    }
-
-    public String getAddress2() {
-        return address2;
-    }
-
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public String getStateOrProvince() {
-        return stateOrProvince;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public String getPostalCode() {
-        return postalCode;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public Boolean getMigrated() {
-        return migrated;
-    }
-
-    // TODO Required for making the BindBeanFactory with Introspector work
-    // see Introspector line 571; they look at public method.
-    public Boolean getIsNotifiedForInvoices() {
-        return isNotifiedForInvoices;
-    }
-
     public void setExternalKey(final String externalKey) {
         this.externalKey = externalKey;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public void setEmail(final String email) {
         this.email = email;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public void setName(final String name) {
         this.name = name;
+    }
+
+    public Integer getFirstNameLength() {
+        return firstNameLength;
     }
 
     public void setFirstNameLength(final Integer firstNameLength) {
         this.firstNameLength = firstNameLength;
     }
 
+    public Currency getCurrency() {
+        return currency;
+    }
+
     public void setCurrency(final Currency currency) {
         this.currency = currency;
     }
 
-    public void setBillingCycleDayLocal(final int billingCycleDayLocal) {
-        this.billingCycleDayLocal = billingCycleDayLocal;
+    public Integer getBillingCycleDayLocal() {
+        return billingCycleDayLocal;
+    }
+
+    public void setBillingCycleDayLocal(final Integer billingCycleDayLocal) {
+        this.billingCycleDayLocal = MoreObjects.firstNonNull(billingCycleDayLocal, DEFAULT_BILLING_CYCLE_DAY_LOCAL);
+    }
+
+    public UUID getPaymentMethodId() {
+        return paymentMethodId;
     }
 
     public void setPaymentMethodId(final UUID paymentMethodId) {
         this.paymentMethodId = paymentMethodId;
     }
 
+    public DateTimeZone getTimeZone() {
+        return timeZone;
+    }
+
     public void setTimeZone(final DateTimeZone timeZone) {
         this.timeZone = timeZone;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 
     public void setLocale(final String locale) {
         this.locale = locale;
     }
 
+    public String getAddress1() {
+        return address1;
+    }
+
     public void setAddress1(final String address1) {
         this.address1 = address1;
+    }
+
+    public String getAddress2() {
+        return address2;
     }
 
     public void setAddress2(final String address2) {
         this.address2 = address2;
     }
 
+    public String getCompanyName() {
+        return companyName;
+    }
+
     public void setCompanyName(final String companyName) {
         this.companyName = companyName;
+    }
+
+    public String getCity() {
+        return city;
     }
 
     public void setCity(final String city) {
         this.city = city;
     }
 
+    public String getStateOrProvince() {
+        return stateOrProvince;
+    }
+
     public void setStateOrProvince(final String stateOrProvince) {
         this.stateOrProvince = stateOrProvince;
+    }
+
+    public String getCountry() {
+        return country;
     }
 
     public void setCountry(final String country) {
         this.country = country;
     }
 
+    public String getPostalCode() {
+        return postalCode;
+    }
+
     public void setPostalCode(final String postalCode) {
         this.postalCode = postalCode;
+    }
+
+    public String getPhone() {
+        return phone;
     }
 
     public void setPhone(final String phone) {
         this.phone = phone;
     }
 
+    public Boolean getMigrated() {
+        return migrated;
+    }
+
     public void setMigrated(final Boolean migrated) {
         this.migrated = migrated;
+    }
+
+    // TODO Required for making the BindBeanFactory with Introspector work
+    // see Introspector line 571; they look at public method.
+    public Boolean getIsNotifiedForInvoices() {
+        return isNotifiedForInvoices;
     }
 
     public void setIsNotifiedForInvoices(final Boolean isNotifiedForInvoices) {

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,7 +21,6 @@ package org.killbill.billing.account.api.user;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
-
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
@@ -29,6 +30,7 @@ import org.killbill.billing.events.BusEventBase;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Strings;
 
 public class DefaultAccountCreationEvent extends BusEventBase implements AccountCreationInternalEvent {
 
@@ -45,7 +47,6 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
         this.id = id;
         this.data = data;
     }
-
 
     @JsonIgnore
     @Override
@@ -124,7 +125,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
         private final Boolean isNotifiedForInvoices;
 
         public DefaultAccountData(final AccountModelDao d) {
-            this(d.getExternalKey() != null ? d.getExternalKey() : null,
+            this(d.getExternalKey(),
                  d.getName(),
                  d.getFirstNameLength(),
                  d.getEmail(),
@@ -213,13 +214,21 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
 
         @Override
         public Currency getCurrency() {
-            return currency == null ? null : Currency.valueOf(currency);
+            if (Strings.emptyToNull(currency) == null) {
+                return null;
+            } else {
+                return Currency.valueOf(currency);
+            }
         }
 
         @JsonIgnore
         @Override
         public DateTimeZone getTimeZone() {
-            return DateTimeZone.forID(timeZone);
+            if (Strings.emptyToNull(timeZone) == null) {
+                return null;
+            } else {
+                return DateTimeZone.forID(timeZone);
+            }
         }
 
         @JsonProperty("timeZone")

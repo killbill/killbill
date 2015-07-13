@@ -49,6 +49,16 @@ import static org.testng.Assert.fail;
 
 public class TestAccount extends TestJaxrsBase {
 
+    @Test(groups = "slow", description = "Verify no PII data is required")
+    public void testEmptyAccount() throws Exception {
+        final Account emptyAccount = new Account();
+
+        final Account account = killBillClient.createAccount(emptyAccount, createdBy, reason, comment);
+        Assert.assertNotNull(account.getExternalKey());
+        Assert.assertNull(account.getName());
+        Assert.assertNull(account.getEmail());
+    }
+
     @Test(groups = "slow", description = "Verify external key is unique")
     public void testUniqueExternalKey() throws Exception {
         // Verify the external key is not mandatory
