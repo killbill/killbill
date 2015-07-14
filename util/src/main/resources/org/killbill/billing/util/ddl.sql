@@ -159,7 +159,7 @@ CREATE TABLE notifications (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    error_count int(11) /*! unsigned */ DEFAULT 0,
+    error_count int /*! unsigned */ DEFAULT 0,
     search_key1 bigint /*! unsigned */ not null,
     search_key2 bigint /*! unsigned */ not null default 0,
     queue_name char(64) NOT NULL,
@@ -183,7 +183,7 @@ CREATE TABLE notifications_history (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    error_count int(11) /*! unsigned */ DEFAULT 0,
+    error_count int /*! unsigned */ DEFAULT 0,
     search_key1 bigint /*! unsigned */ not null,
     search_key2 bigint /*! unsigned */ not null default 0,
     queue_name char(64) NOT NULL,
@@ -203,7 +203,7 @@ CREATE TABLE bus_events (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    error_count int(11) /*! unsigned */ DEFAULT 0,
+    error_count int /*! unsigned */ DEFAULT 0,
     search_key1 bigint /*! unsigned */ not null,
     search_key2 bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
@@ -222,7 +222,7 @@ CREATE TABLE bus_events_history (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    error_count int(11) /*! unsigned */ DEFAULT 0,
+    error_count int /*! unsigned */ DEFAULT 0,
     search_key1 bigint /*! unsigned */ not null,
     search_key2 bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
@@ -233,7 +233,7 @@ create table sessions (
   record_id serial unique
 , start_timestamp datetime not null
 , last_access_time datetime default null
-, timeout int(11)
+, timeout int
 , host varchar(100) default null
 , session_data mediumblob default null
 , primary key(record_id)
