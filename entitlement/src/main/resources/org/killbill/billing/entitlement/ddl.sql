@@ -2,7 +2,7 @@
 
 DROP TABLE IF EXISTS blocking_states;
 CREATE TABLE blocking_states (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     blockable_id char(36) NOT NULL,
     type varchar(20) NOT NULL,
@@ -17,8 +17,8 @@ CREATE TABLE blocking_states (
     created_by varchar(50) NOT NULL,
     updated_date datetime DEFAULT NULL,
     updated_by varchar(50) DEFAULT NULL,
-    account_record_id int(11) unsigned default null,
-    tenant_record_id int(11) unsigned default null,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX blocking_states_id ON blocking_states(blockable_id);

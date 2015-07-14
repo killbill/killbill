@@ -1,9 +1,8 @@
 /*! SET storage_engine=INNODB */;
 
-
 DROP TABLE IF EXISTS payment_attempts;
 CREATE TABLE payment_attempts (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     account_id char(36) NOT NULL,
     payment_method_id char(36) DEFAULT NULL,
@@ -20,8 +19,8 @@ CREATE TABLE payment_attempts (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned DEFAULT NULL,
-    tenant_record_id int(11) unsigned DEFAULT NULL,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX payment_attempts_id ON payment_attempts(id);
@@ -33,9 +32,9 @@ CREATE INDEX payment_attempts_tenant_account_record_id ON payment_attempts(tenan
 
 DROP TABLE IF EXISTS payment_attempt_history;
 CREATE TABLE payment_attempt_history (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
-    target_record_id int(11) unsigned NOT NULL,
+    target_record_id bigint unsigned not null,
     account_id char(36) NOT NULL,
     payment_method_id char(36) DEFAULT NULL,
     payment_external_key char(128) NOT NULL,
@@ -52,8 +51,8 @@ CREATE TABLE payment_attempt_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned DEFAULT NULL,
-    tenant_record_id int(11) unsigned DEFAULT NULL,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX payment_attempt_history_target_record_id ON payment_attempt_history(target_record_id);
@@ -61,7 +60,7 @@ CREATE INDEX payment_attempt_history_tenant_account_record_id ON payment_attempt
 
 DROP TABLE IF EXISTS payment_methods;
 CREATE TABLE payment_methods (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     external_key varchar(255) NOT NULL,
     account_id char(36) NOT NULL,
@@ -71,8 +70,8 @@ CREATE TABLE payment_methods (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned DEFAULT NULL,
-    tenant_record_id int(11) unsigned DEFAULT NULL,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX payment_methods_id ON payment_methods(id);
@@ -83,10 +82,10 @@ CREATE INDEX payment_methods_tenant_account_record_id ON payment_methods(tenant_
 
 DROP TABLE IF EXISTS payment_method_history;
 CREATE TABLE payment_method_history (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     external_key varchar(255) NOT NULL,
-    target_record_id int(11) unsigned NOT NULL,
+    target_record_id bigint unsigned not null,
     account_id char(36) NOT NULL,
     plugin_name varchar(50) NOT NULL,
     is_active bool DEFAULT true,
@@ -95,8 +94,8 @@ CREATE TABLE payment_method_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned DEFAULT NULL,
-    tenant_record_id int(11) unsigned DEFAULT NULL,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX payment_method_history_target_record_id ON payment_method_history(target_record_id);
@@ -105,7 +104,7 @@ CREATE INDEX payment_method_history_tenant_account_record_id ON payment_method_h
 
 DROP TABLE IF EXISTS payments;
 CREATE TABLE payments (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     account_id char(36) NOT NULL,
     payment_method_id char(36) NOT NULL,
@@ -116,8 +115,8 @@ CREATE TABLE payments (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned DEFAULT NULL,
-    tenant_record_id int(11) unsigned DEFAULT NULL,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX payments_id ON payments(id);
@@ -128,9 +127,9 @@ CREATE INDEX payments_tenant_account_record_id ON payments(tenant_record_id, acc
 
 DROP TABLE IF EXISTS payment_history;
 CREATE TABLE payment_history (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
-    target_record_id int(11) unsigned NOT NULL,
+    target_record_id bigint unsigned not null,
     account_id char(36) NOT NULL,
     payment_method_id char(36) NOT NULL,
     external_key varchar(255) NOT NULL,
@@ -141,8 +140,8 @@ CREATE TABLE payment_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned DEFAULT NULL,
-    tenant_record_id int(11) unsigned DEFAULT NULL,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX payment_history_target_record_id ON payment_history(target_record_id);
@@ -151,7 +150,7 @@ CREATE INDEX payment_history_tenant_account_record_id ON payment_history(tenant_
 
 DROP TABLE IF EXISTS payment_transactions;
 CREATE TABLE payment_transactions (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     attempt_id char(36) DEFAULT NULL,
     transaction_external_key varchar(255) NOT NULL,
@@ -169,8 +168,8 @@ CREATE TABLE payment_transactions (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned DEFAULT NULL,
-    tenant_record_id int(11) unsigned DEFAULT NULL,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX transactions_id ON payment_transactions(id);
@@ -181,11 +180,11 @@ CREATE INDEX transactions_tenant_account_record_id ON payment_transactions(tenan
 
 DROP TABLE IF EXISTS payment_transaction_history;
 CREATE TABLE payment_transaction_history (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     attempt_id char(36) DEFAULT NULL,
     transaction_external_key varchar(255) NOT NULL,
-    target_record_id int(11) unsigned NOT NULL,
+    target_record_id bigint unsigned not null,
     transaction_type varchar(32) NOT NULL,
     effective_date datetime NOT NULL,
     transaction_status varchar(50) NOT NULL,
@@ -201,8 +200,8 @@ CREATE TABLE payment_transaction_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned DEFAULT NULL,
-    tenant_record_id int(11) unsigned DEFAULT NULL,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX transaction_history_target_record_id ON payment_transaction_history(target_record_id);
@@ -212,7 +211,7 @@ CREATE INDEX transaction_history_tenant_account_record_id ON payment_transaction
 /*  PaymentControlPlugin lives  here until this becomes a first class citizen plugin */
 DROP TABLE IF EXISTS _invoice_payment_control_plugin_auto_pay_off;
 CREATE TABLE _invoice_payment_control_plugin_auto_pay_off (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     attempt_id char(36) NOT NULL,
     payment_external_key varchar(255) NOT NULL,
     transaction_external_key varchar(255) NOT NULL,

@@ -2,7 +2,7 @@
 
 DROP TABLE IF EXISTS accounts;
 CREATE TABLE accounts (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     external_key varchar(128) NULL,
     email varchar(128) DEFAULT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE accounts (
     created_by varchar(50) NOT NULL,
     updated_date datetime DEFAULT NULL,
     updated_by varchar(50) DEFAULT NULL,
-    tenant_record_id int(11) unsigned default null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX accounts_id ON accounts(id);
@@ -36,9 +36,9 @@ CREATE INDEX accounts_tenant_record_id ON accounts(tenant_record_id);
 
 DROP TABLE IF EXISTS account_history;
 CREATE TABLE account_history (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
-    target_record_id int(11) unsigned NOT NULL,
+    target_record_id bigint unsigned not null,
     external_key varchar(128) NULL,
     email varchar(128) DEFAULT NULL,
     name varchar(100) DEFAULT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE account_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    tenant_record_id int(11) unsigned default null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX account_history_target_record_id ON account_history(target_record_id);
@@ -71,7 +71,7 @@ CREATE INDEX account_history_tenant_record_id ON account_history(tenant_record_i
 
 DROP TABLE IF EXISTS account_emails;
 CREATE TABLE account_emails (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     account_id char(36) NOT NULL,
     email varchar(128) NOT NULL,
@@ -80,8 +80,8 @@ CREATE TABLE account_emails (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned default null,
-    tenant_record_id int(11) unsigned default null,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX account_email_id ON account_emails(id);
@@ -90,9 +90,9 @@ CREATE INDEX account_emails_tenant_account_record_id ON account_emails(tenant_re
 
 DROP TABLE IF EXISTS account_email_history;
 CREATE TABLE account_email_history (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
-    target_record_id int(11) unsigned NOT NULL,
+    target_record_id bigint unsigned not null,
     account_id char(36) NOT NULL,
     email varchar(128) NOT NULL,
     is_active bool DEFAULT true,
@@ -101,8 +101,8 @@ CREATE TABLE account_email_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id int(11) unsigned default null,
-    tenant_record_id int(11) unsigned default null,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX account_email_target_record_id ON account_email_history(target_record_id);

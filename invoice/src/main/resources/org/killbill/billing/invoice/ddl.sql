@@ -2,7 +2,7 @@
 
 DROP TABLE IF EXISTS invoice_items;
 CREATE TABLE invoice_items (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     type varchar(24) NOT NULL,
     invoice_id char(36) NOT NULL,
@@ -21,8 +21,8 @@ CREATE TABLE invoice_items (
     linked_item_id char(36),
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
-    account_record_id int(11) unsigned default null,
-    tenant_record_id int(11) unsigned default null,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoice_items_id ON invoice_items(id);
@@ -33,7 +33,7 @@ CREATE INDEX invoice_items_tenant_account_record_id ON invoice_items(tenant_reco
 
 DROP TABLE IF EXISTS invoices;
 CREATE TABLE invoices (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     account_id char(36) NOT NULL,
     invoice_date date NOT NULL,
@@ -42,8 +42,8 @@ CREATE TABLE invoices (
     migrated bool NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
-    account_record_id int(11) unsigned default null,
-    tenant_record_id int(11) unsigned default null,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoices_id ON invoices(id);
@@ -52,7 +52,7 @@ CREATE INDEX invoices_tenant_account_record_id ON invoices(tenant_record_id, acc
 
 DROP TABLE IF EXISTS invoice_payments;
 CREATE TABLE invoice_payments (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id serial unique,
     id char(36) NOT NULL,
     type varchar(24) NOT NULL,
     invoice_id char(36) NOT NULL,
@@ -65,8 +65,8 @@ CREATE TABLE invoice_payments (
     linked_invoice_payment_id char(36) DEFAULT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
-    account_record_id int(11) unsigned default null,
-    tenant_record_id int(11) unsigned default null,
+    account_record_id bigint unsigned not null,
+    tenant_record_id bigint unsigned not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoice_payments_id ON invoice_payments(id);
