@@ -31,7 +31,7 @@ and record_date >= :startDate
 and record_date \< :endDate
 and unit_type = :unitType
 <AND_CHECK_TENANT()>
-order by <recordIdField()> ASC
+<defaultOrderBy()>
 ;
 >>
 
@@ -43,7 +43,7 @@ where subscription_id = :subscriptionId
 and record_date >= :startDate
 and record_date \< :endDate
 <AND_CHECK_TENANT()>
-order by <recordIdField()> ASC
+<defaultOrderBy()>
 ;
 >>
 
@@ -55,7 +55,7 @@ where account_record_id = :accountRecordId
 and record_date >= :startDate
 and record_date \< :endDate
 <AND_CHECK_TENANT()>
-order by <recordIdField()> ASC
+<defaultOrderBy()>
 ;
 >>
 
