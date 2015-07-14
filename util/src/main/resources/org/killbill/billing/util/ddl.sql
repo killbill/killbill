@@ -167,9 +167,9 @@ CREATE TABLE notifications (
     future_user_token char(36),
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
-CREATE INDEX  `idx_comp_where` ON notifications (`effective_date`, `processing_state`,`processing_owner`,`processing_available_date`);
-CREATE INDEX  `idx_update` ON notifications (`processing_state`,`processing_owner`,`processing_available_date`);
-CREATE INDEX  `idx_get_ready` ON notifications (`effective_date`,`created_date`);
+CREATE INDEX idx_comp_where ON notifications (effective_date, processing_state, processing_owner, processing_available_date);
+CREATE INDEX idx_update ON notifications (processing_state, processing_owner, processing_available_date);
+CREATE INDEX idx_get_ready ON notifications (effective_date, created_date);
 CREATE INDEX notifications_tenant_account_record_id ON notifications(search_key2, search_key1);
 
 DROP TABLE IF EXISTS notifications_history;
@@ -208,7 +208,7 @@ CREATE TABLE bus_events (
     search_key2 bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
-CREATE INDEX  `idx_bus_where` ON bus_events (`processing_state`,`processing_owner`,`processing_available_date`);
+CREATE INDEX idx_bus_where ON bus_events (processing_state, processing_owner, processing_available_date);
 CREATE INDEX bus_events_tenant_account_record_id ON bus_events(search_key2, search_key1);
 
 DROP TABLE IF EXISTS bus_events_history;
