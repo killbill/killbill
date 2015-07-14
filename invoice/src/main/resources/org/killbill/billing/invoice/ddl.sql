@@ -21,8 +21,8 @@ CREATE TABLE invoice_items (
     linked_item_id char(36),
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoice_items_id ON invoice_items(id);
@@ -42,8 +42,8 @@ CREATE TABLE invoices (
     migrated bool NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoices_id ON invoices(id);
@@ -65,8 +65,8 @@ CREATE TABLE invoice_payments (
     linked_invoice_payment_id char(36) DEFAULT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoice_payments_id ON invoice_payments(id);

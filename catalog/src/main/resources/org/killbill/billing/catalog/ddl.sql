@@ -8,7 +8,7 @@ CREATE TABLE catalog_override_plan_definition (
     is_active bool DEFAULT 1,
     created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
-    tenant_record_id bigint unsigned not null default 0,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX catalog_override_plan_definition_tenant_record_id ON catalog_override_plan_definition(tenant_record_id);
@@ -24,7 +24,7 @@ CREATE TABLE catalog_override_phase_definition (
     effective_date datetime NOT NULL,
     created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
-    tenant_record_id bigint unsigned not null default 0,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX catalog_override_phase_definition_idx ON catalog_override_phase_definition(tenant_record_id, parent_phase_name, currency);
@@ -32,12 +32,12 @@ CREATE INDEX catalog_override_phase_definition_idx ON catalog_override_phase_def
 DROP TABLE IF EXISTS catalog_override_plan_phase;
 CREATE TABLE catalog_override_plan_phase (
     record_id serial unique,
-    phase_number tinyint(3) unsigned NOT NULL,
-    phase_def_record_id bigint unsigned not null,
-    target_plan_def_record_id bigint unsigned not null,
+    phase_number tinyint(3) /*! unsigned */ NOT NULL,
+    phase_def_record_id bigint /*! unsigned */ not null,
+    target_plan_def_record_id bigint /*! unsigned */ not null,
     created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
-    tenant_record_id bigint unsigned not null default 0,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX catalog_override_plan_phase_idx ON catalog_override_plan_phase(tenant_record_id, phase_number, phase_def_record_id);

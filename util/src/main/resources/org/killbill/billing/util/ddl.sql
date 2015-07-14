@@ -13,8 +13,8 @@ CREATE TABLE custom_fields (
     created_date datetime NOT NULL,
     updated_by varchar(50) DEFAULT NULL,
     updated_date datetime DEFAULT NULL,
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX custom_fields_id ON custom_fields(id);
@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS custom_field_history;
 CREATE TABLE custom_field_history (
     record_id serial unique,
     id char(36) NOT NULL,
-    target_record_id bigint unsigned not null,
+    target_record_id bigint /*! unsigned */ not null,
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
     is_active bool DEFAULT true,
@@ -36,8 +36,8 @@ CREATE TABLE custom_field_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX custom_field_history_target_record_id ON custom_field_history(target_record_id);
@@ -55,7 +55,7 @@ CREATE TABLE tag_definitions (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    tenant_record_id bigint unsigned not null default 0,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX tag_definitions_id ON tag_definitions(id);
@@ -65,7 +65,7 @@ DROP TABLE IF EXISTS tag_definition_history;
 CREATE TABLE tag_definition_history (
     record_id serial unique,
     id char(36) NOT NULL,
-    target_record_id bigint unsigned not null,
+    target_record_id bigint /*! unsigned */ not null,
     name varchar(30) NOT NULL,
     description varchar(200),
     is_active bool DEFAULT true,
@@ -74,8 +74,8 @@ CREATE TABLE tag_definition_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX tag_definition_history_id ON tag_definition_history(id);
@@ -95,8 +95,8 @@ CREATE TABLE tags (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX tags_id ON tags(id);
@@ -107,7 +107,7 @@ DROP TABLE IF EXISTS tag_history;
 CREATE TABLE tag_history (
     record_id serial unique,
     id char(36) NOT NULL,
-    target_record_id bigint unsigned not null,
+    target_record_id bigint /*! unsigned */ not null,
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
     tag_definition_id char(36) NOT NULL,
@@ -117,8 +117,8 @@ CREATE TABLE tag_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX tag_history_target_record_id ON tag_history(target_record_id);
@@ -129,7 +129,7 @@ DROP TABLE IF EXISTS audit_log;
 CREATE TABLE audit_log (
     record_id serial unique,
     id char(36) NOT NULL,
-    target_record_id bigint unsigned not null,
+    target_record_id bigint /*! unsigned */ not null,
     table_name varchar(50) NOT NULL,
     change_type char(6) NOT NULL,
     created_date datetime NOT NULL,
@@ -137,8 +137,8 @@ CREATE TABLE audit_log (
     reason_code varchar(255) DEFAULT NULL,
     comments varchar(255) DEFAULT NULL,
     user_token char(36),
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX audit_log_fetch_target_record_id ON audit_log(table_name, target_record_id);
@@ -159,9 +159,9 @@ CREATE TABLE notifications (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    error_count int(11) unsigned DEFAULT 0,
-    search_key1 bigint unsigned not null,
-    search_key2 bigint unsigned not null default 0,
+    error_count int(11) /*! unsigned */ DEFAULT 0,
+    search_key1 bigint /*! unsigned */ not null,
+    search_key2 bigint /*! unsigned */ not null default 0,
     queue_name char(64) NOT NULL,
     effective_date datetime NOT NULL,
     future_user_token char(36),
@@ -183,9 +183,9 @@ CREATE TABLE notifications_history (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    error_count int(11) unsigned DEFAULT 0,
-    search_key1 bigint unsigned not null,
-    search_key2 bigint unsigned not null default 0,
+    error_count int(11) /*! unsigned */ DEFAULT 0,
+    search_key1 bigint /*! unsigned */ not null,
+    search_key2 bigint /*! unsigned */ not null default 0,
     queue_name char(64) NOT NULL,
     effective_date datetime NOT NULL,
     future_user_token char(36),
@@ -203,9 +203,9 @@ CREATE TABLE bus_events (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    error_count int(11) unsigned DEFAULT 0,
-    search_key1 bigint unsigned not null,
-    search_key2 bigint unsigned not null default 0,
+    error_count int(11) /*! unsigned */ DEFAULT 0,
+    search_key1 bigint /*! unsigned */ not null,
+    search_key2 bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX  `idx_bus_where` ON bus_events (`processing_state`,`processing_owner`,`processing_available_date`);
@@ -222,9 +222,9 @@ CREATE TABLE bus_events_history (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    error_count int(11) unsigned DEFAULT 0,
-    search_key1 bigint unsigned not null,
-    search_key2 bigint unsigned not null default 0,
+    error_count int(11) /*! unsigned */ DEFAULT 0,
+    search_key1 bigint /*! unsigned */ not null,
+    search_key2 bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 

@@ -10,8 +10,8 @@ CREATE TABLE rolled_up_usage (
     amount bigint NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX rolled_up_usage_id ON rolled_up_usage(id);

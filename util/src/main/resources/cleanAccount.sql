@@ -3,8 +3,8 @@ DELIMITER //
 CREATE PROCEDURE cleanAccount(p_account_key char(36))
 BEGIN
 
-    DECLARE v_account_record_id int(11) unsigned; 
-    
+    DECLARE v_account_record_id int(11) /*! unsigned */;
+
     select record_id from accounts WHERE external_key = p_account_key into v_account_record_id;
 
     DELETE FROM analytics_account_fields WHERE account_record_id = v_account_record_id;

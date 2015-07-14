@@ -59,7 +59,7 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         // We always want the accounts and tenants table
         instance.executeScript("drop table if exists accounts;" +
                                "CREATE TABLE accounts (\n" +
-                               "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
+                               "    record_id int(11) /*! unsigned */ NOT NULL AUTO_INCREMENT,\n" +
                                "    id char(36) NOT NULL,\n" +
                                "    external_key varchar(128) NULL,\n" +
                                "    email varchar(128) NOT NULL,\n" +
@@ -85,12 +85,12 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    created_by varchar(50) NOT NULL,\n" +
                                "    updated_date datetime DEFAULT NULL,\n" +
                                "    updated_by varchar(50) DEFAULT NULL,\n" +
-                               "    tenant_record_id int(11) unsigned default null,\n" +
+                               "    tenant_record_id int(11) /*! unsigned */ default null,\n" +
                                "    PRIMARY KEY(record_id)\n" +
                                ");");
         instance.executeScript("DROP TABLE IF EXISTS tenants;\n" +
                                "CREATE TABLE tenants (\n" +
-                               "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
+                               "    record_id int(11) /*! unsigned */ NOT NULL AUTO_INCREMENT,\n" +
                                "    id char(36) NOT NULL,\n" +
                                "    external_key varchar(128) NULL,\n" +
                                "    api_key varchar(128) NULL,\n" +
@@ -106,7 +106,7 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         // We always want the basic tables when we do account_record_id lookups (e.g. for custom fields, tags or junction)
         instance.executeScript("DROP TABLE IF EXISTS bundles;\n" +
                                "CREATE TABLE bundles (\n" +
-                               "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
+                               "    record_id int(11) /*! unsigned */ NOT NULL AUTO_INCREMENT,\n" +
                                "    id char(36) NOT NULL,\n" +
                                "    external_key varchar(64) NOT NULL,\n" +
                                "    account_id char(36) NOT NULL,\n" +
@@ -115,13 +115,13 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    created_date datetime NOT NULL,\n" +
                                "    updated_by varchar(50) NOT NULL,\n" +
                                "    updated_date datetime NOT NULL,\n" +
-                               "    account_record_id int(11) unsigned default null,\n" +
-                               "    tenant_record_id int(11) unsigned default null,\n" +
+                               "    account_record_id int(11) /*! unsigned */ default null,\n" +
+                               "    tenant_record_id int(11) /*! unsigned */ default null,\n" +
                                "    PRIMARY KEY(record_id)\n" +
                                ");");
         instance.executeScript("DROP TABLE IF EXISTS subscriptions;\n" +
                                "CREATE TABLE subscriptions (\n" +
-                               "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
+                               "    record_id int(11) /*! unsigned */ NOT NULL AUTO_INCREMENT,\n" +
                                "    id char(36) NOT NULL,\n" +
                                "    bundle_id char(36) NOT NULL,\n" +
                                "    category varchar(32) NOT NULL,\n" +
@@ -134,15 +134,15 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    created_date datetime NOT NULL,\n" +
                                "    updated_by varchar(50) NOT NULL,\n" +
                                "    updated_date datetime NOT NULL,\n" +
-                               "    account_record_id int(11) unsigned default null,\n" +
-                               "    tenant_record_id int(11) unsigned default null,\n" +
+                               "    account_record_id int(11) /*! unsigned */ default null,\n" +
+                               "    tenant_record_id int(11) /*! unsigned */ default null,\n" +
                                "    PRIMARY KEY(record_id)\n" +
                                ");");
 
         // HACK (PIERRE): required by invoice tests which perform payments lookups to find the account record id for the internal callcontext
         instance.executeScript("DROP TABLE IF EXISTS payments;\n" +
                                "CREATE TABLE payments (\n" +
-                               "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
+                               "    record_id int(11) /*! unsigned */ NOT NULL AUTO_INCREMENT,\n" +
                                "    id char(36) NOT NULL,\n" +
                                "    account_id char(36) NOT NULL,\n" +
                                "    invoice_id char(36) NOT NULL,\n" +
@@ -155,8 +155,8 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    created_date datetime NOT NULL,\n" +
                                "    updated_by varchar(50) NOT NULL,\n" +
                                "    updated_date datetime NOT NULL,\n" +
-                               "    account_record_id int(11) unsigned default null,\n" +
-                               "    tenant_record_id int(11) unsigned default null,\n" +
+                               "    account_record_id int(11) /*! unsigned */ default null,\n" +
+                               "    tenant_record_id int(11) /*! unsigned */ default null,\n" +
                                "    PRIMARY KEY (record_id)\n" +
                                ");");
 

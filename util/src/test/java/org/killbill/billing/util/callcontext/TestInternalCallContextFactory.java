@@ -41,7 +41,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
             public Void withHandle(final Handle handle) throws Exception {
                 handle.execute("DROP TABLE IF EXISTS invoices;\n" +
                                "CREATE TABLE invoices (\n" +
-                               "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
+                               "    record_id int(11) /*! unsigned */ NOT NULL AUTO_INCREMENT,\n" +
                                "    id char(36) NOT NULL,\n" +
                                "    account_id char(36) NOT NULL,\n" +
                                "    invoice_date date NOT NULL,\n" +
@@ -50,8 +50,8 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
                                "    migrated bool NOT NULL,\n" +
                                "    created_by varchar(50) NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +
-                               "    account_record_id int(11) unsigned default null,\n" +
-                               "    tenant_record_id int(11) unsigned default null,\n" +
+                               "    account_record_id int(11) /*! unsigned */ default null,\n" +
+                               "    tenant_record_id int(11) /*! unsigned */ default null,\n" +
                                "    PRIMARY KEY(record_id)\n" +
                                ");");
                 handle.execute("insert into invoices (id, account_id, invoice_date, target_date, currency, migrated, created_by, created_date, account_record_id) values " +

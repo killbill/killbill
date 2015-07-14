@@ -54,16 +54,16 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 handle.execute("drop table if exists " + tableNameA);
-                handle.execute("create table " + tableNameA + "(record_id int(11) unsigned not null auto_increment," +
+                handle.execute("create table " + tableNameA + "(record_id int(11) /*! unsigned */ not null auto_increment," +
                                "a_column char default 'a'," +
-                               "account_record_id int(11) unsigned not null," +
-                               "tenant_record_id int(11) unsigned default 0," +
+                               "account_record_id int(11) /*! unsigned */ not null," +
+                               "tenant_record_id int(11) /*! unsigned */ default 0," +
                                "primary key(record_id));");
                 handle.execute("drop table if exists " + tableNameB);
-                handle.execute("create table " + tableNameB + "(record_id int(11) unsigned not null auto_increment," +
+                handle.execute("create table " + tableNameB + "(record_id int(11) /*! unsigned */ not null auto_increment," +
                                "b_column char default 'b'," +
-                               "account_record_id int(11) unsigned not null," +
-                               "tenant_record_id int(11) unsigned default 0," +
+                               "account_record_id int(11) /*! unsigned */ not null," +
+                               "tenant_record_id int(11) /*! unsigned */ default 0," +
                                "primary key(record_id));");
                 handle.execute("insert into " + tableNameA + " (account_record_id, tenant_record_id) values (?, ?)",
                                internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());

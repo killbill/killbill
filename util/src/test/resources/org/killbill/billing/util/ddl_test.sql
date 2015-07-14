@@ -9,7 +9,7 @@ CREATE TABLE dummy (
 
 DROP TABLE IF EXISTS dummy2;
 CREATE TABLE dummy2 (
-    id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id int(11) /*! unsigned */ NOT NULL AUTO_INCREMENT,
     dummy_id char(36) NOT NULL,
     PRIMARY KEY(id)
 );
@@ -24,19 +24,19 @@ CREATE TABLE validation_test (
 
 DROP TABLE IF EXISTS kombucha;
 CREATE TABLE kombucha (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id int(11) /*! unsigned */ NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
     tea varchar(50) NOT NULL,
     mushroom varchar(50) NOT NULL,
     sugar varchar(50) NOT NULL,
-    account_record_id int(11) unsigned default null,
-    tenant_record_id int(11) unsigned default null,
+    account_record_id int(11) /*! unsigned */ default null,
+    tenant_record_id int(11) /*! unsigned */ default null,
     PRIMARY KEY(record_id)
 );
 
 DROP TABLE IF EXISTS full_of_dates;
 CREATE TABLE full_of_dates (
-    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id int(11) /*! unsigned */ NOT NULL AUTO_INCREMENT,
     date1 date default NULL,
     datetime1 datetime default NULL,
     timestamp1 timestamp,

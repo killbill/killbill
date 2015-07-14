@@ -11,9 +11,9 @@ CREATE TABLE bus_ext_events (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    error_count int(11) unsigned DEFAULT 0,
-    search_key1 bigint unsigned not null,
-    search_key2 bigint unsigned not null default 0,
+    error_count int(11) /*! unsigned */ DEFAULT 0,
+    search_key1 bigint /*! unsigned */ not null,
+    search_key2 bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX  `idx_bus_ext_where` ON bus_ext_events (`processing_state`,`processing_owner`,`processing_available_date`);
@@ -30,8 +30,8 @@ CREATE TABLE bus_ext_events_history (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    error_count int(11) unsigned DEFAULT 0,
-    search_key1 bigint unsigned not null,
-    search_key2 bigint unsigned not null default 0,
+    error_count int(11) /*! unsigned */ DEFAULT 0,
+    search_key1 bigint /*! unsigned */ not null,
+    search_key2 bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
