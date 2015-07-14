@@ -60,8 +60,8 @@ select <allTableFields()>
 from <tableName()>
 where parent_phase_name = :parentPhaseName
 and currency = :currency
-and (fixed_price = :fixedPrice or (fixed_price is null and :fixedPrice is null))
-and (recurring_price = :recurringPrice or (recurring_price is null and :recurringPrice is null))
+and (fixed_price = :fixedPrice or coalesce(fixed_price, :fixedPrice) is null)
+and (recurring_price = :recurringPrice or coalesce(recurring_price, :recurringPrice) is null)
 and tenant_record_id = :tenantRecordId
 ;
 >>

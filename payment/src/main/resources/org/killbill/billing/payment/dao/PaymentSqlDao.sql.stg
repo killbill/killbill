@@ -89,7 +89,7 @@ from <tableName()> t
 join payment_methods pm on pm.id = t.payment_method_id
 where pm.plugin_name = :pluginName
 order by t.record_id asc
-limit :offset, :rowCount
+limit :rowCount offset :offset
 ;
 >>
 

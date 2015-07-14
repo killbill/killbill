@@ -32,7 +32,7 @@ tableValues() ::= <<
 
 markPaymentMethodAsDeleted(id) ::= <<
 update <tableName()>
-set is_active = 0
+set is_active = false
 , updated_by = :updatedBy
 , updated_date = :createdDate
 where  id = :id
@@ -42,7 +42,7 @@ where  id = :id
 
 unmarkPaymentMethodAsDeleted(id) ::= <<
 update <tableName()>
-set is_active = 1
+set is_active = true
 , updated_by = :updatedBy
 , updated_date = :createdDate
 where  id = :id
@@ -54,7 +54,7 @@ getByExternalKey() ::= <<
 select <allTableFields()>
 from <tableName()>
 where external_key = :externalKey
-and is_active = 1
+and is_active = true
 <AND_CHECK_TENANT()>
 ;
 >>
@@ -79,7 +79,7 @@ select
 <allTableFields()>
 from <tableName()>
 where account_id = :accountId
-and is_active = 1
+and is_active = true
 ;
 >>
 
@@ -103,9 +103,9 @@ select
 <allTableFields("t.")>
 from <tableName()> t
 where t.plugin_name = :pluginName
-and t.is_active = 1
+and t.is_active = true
 order by t.record_id
-limit :offset, :rowCount
+limit :rowCount offset :offset
 ;
 >>
 
@@ -114,6 +114,6 @@ select
   count(1) as count
 from <tableName()> t
 where t.plugin_name = :pluginName
-and t.is_active = 1
+and t.is_active = true
 ;
 >>

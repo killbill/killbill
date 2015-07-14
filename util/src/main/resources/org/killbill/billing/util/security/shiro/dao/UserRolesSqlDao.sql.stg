@@ -62,7 +62,7 @@ and is_active
 
 invalidate() ::= <<
 update <tableName()>
-set is_active = 0
+set is_active = false
 where
 username = :username
 and role_name = :roleName

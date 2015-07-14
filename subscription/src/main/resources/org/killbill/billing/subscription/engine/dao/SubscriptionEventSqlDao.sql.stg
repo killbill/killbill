@@ -63,7 +63,7 @@ id = :id
 unactiveEvent() ::= <<
 update <tableName()>
 set
-is_active = 0
+is_active = false
 , updated_by = :createdBy
 , updated_date = :createdDate
 where
@@ -75,7 +75,7 @@ id = :id
 reactiveEvent() ::= <<
 update <tableName()>
 set
-is_active = 1
+is_active = true
 , updated_by = :createdBy
 , updated_date = :createdDate
 where
@@ -92,7 +92,7 @@ select <allTableFields()>
 from <tableName()>
 where
 subscription_id = :subscriptionId
-and is_active = 1
+and is_active = true
 and effective_date > :now
 <AND_CHECK_TENANT()>
 <defaultOrderBy()>
@@ -105,7 +105,7 @@ select <allTableFields()>
 from <tableName()>
 where
 subscription_id = :subscriptionId
-and is_active = 1
+and is_active = true
 <AND_CHECK_TENANT()>
 <defaultOrderBy()>
 ;
@@ -117,7 +117,7 @@ select <allTableFields()>
 from <tableName()>
 where
 account_record_id = :accountRecordId
-and is_active = 1
+and is_active = true
 and effective_date > :now
 <AND_CHECK_TENANT()>
 <defaultOrderBy()>

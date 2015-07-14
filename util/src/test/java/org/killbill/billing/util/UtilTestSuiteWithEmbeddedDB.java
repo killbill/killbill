@@ -38,6 +38,7 @@ import org.killbill.commons.embeddeddb.EmbeddedDB.DBEngine;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.killbill.commons.locker.mysql.MySqlGlobalLocker;
+import org.killbill.commons.locker.postgresql.PostgreSQLGlobalLocker;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
@@ -93,6 +94,8 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
         if (DBEngine.MYSQL.equals(helper.getDBEngine())) {
             Assert.assertTrue(locker instanceof MySqlGlobalLocker);
+        } else if (DBEngine.POSTGRESQL.equals(helper.getDBEngine())) {
+            Assert.assertTrue(locker instanceof PostgreSQLGlobalLocker);
         } else {
             Assert.assertTrue(locker instanceof MemoryGlobalLocker);
         }

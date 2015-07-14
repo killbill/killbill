@@ -27,6 +27,7 @@ import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.killbill.commons.locker.mysql.MySqlGlobalLocker;
+import org.killbill.commons.locker.postgresql.PostgreSQLGlobalLocker;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -43,6 +44,8 @@ public class GlobalLockerModule extends KillBillModule {
     protected GlobalLocker provideGlobalLocker(final DataSource dataSource, final EmbeddedDB embeddedDB) throws IOException {
         if (EmbeddedDB.DBEngine.MYSQL.equals(embeddedDB.getDBEngine())) {
             return new MySqlGlobalLocker(dataSource);
+        } else if (EmbeddedDB.DBEngine.POSTGRESQL.equals(embeddedDB.getDBEngine())) {
+            return new PostgreSQLGlobalLocker(dataSource);
         } else {
             return new MemoryGlobalLocker();
         }

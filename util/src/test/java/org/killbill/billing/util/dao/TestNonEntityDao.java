@@ -121,7 +121,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
                 handle.execute("insert into tag_definitions (record_id, id, name, description, is_active, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               tagDefinitionRecordId, tagDefinitionId.toString(), "tagdef", "nothing", 1, new Date(), "i", new Date(), "j", 0);
+                               tagDefinitionRecordId, tagDefinitionId.toString(), "tagdef", "nothing", true, new Date(), "i", new Date(), "j", 0);
                 return null;
             }
         });
@@ -133,7 +133,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
                 handle.execute("insert into tags (record_id, id, tag_definition_id, object_id, object_type, is_active, created_date, created_by, updated_date, updated_by, account_record_id, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               tagRecordId, tagId.toString(), tagDefinitionId.toString(), accountId.toString(), "ACCOUNT", 1, new Date(), "i", new Date(), "j", accountRecordId, 0);
+                               tagRecordId, tagId.toString(), tagDefinitionId.toString(), accountId.toString(), "ACCOUNT", true, new Date(), "i", new Date(), "j", accountRecordId, 0);
                 return null;
             }
         });

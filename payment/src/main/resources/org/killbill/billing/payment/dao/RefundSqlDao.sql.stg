@@ -72,7 +72,7 @@ join payments p on p.id = t.payment_id
 join payment_methods pm on pm.id = p.payment_method_id
 where pm.plugin_name = :pluginName
 order by record_id
-limit :offset, :rowCount
+limit :rowCount offset :offset
 ;
 >>
 
