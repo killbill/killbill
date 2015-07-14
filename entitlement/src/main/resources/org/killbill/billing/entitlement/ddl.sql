@@ -12,7 +12,7 @@ CREATE TABLE blocking_states (
     block_entitlement bool NOT NULL,
     block_billing bool NOT NULL,
     effective_date datetime NOT NULL,
-    is_active bool DEFAULT 1,
+    is_active boolean default true,
     created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
     updated_date datetime DEFAULT NULL,

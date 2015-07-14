@@ -5,7 +5,7 @@ CREATE TABLE catalog_override_plan_definition (
     record_id serial unique,
     parent_plan_name varchar(255) NOT NULL,
     effective_date datetime NOT NULL,
-    is_active bool DEFAULT 1,
+    is_active boolean default true,
     created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
     tenant_record_id bigint /*! unsigned */ not null default 0,

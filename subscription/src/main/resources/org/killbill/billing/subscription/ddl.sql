@@ -13,7 +13,7 @@ CREATE TABLE subscription_events (
     phase_name varchar(128) DEFAULT NULL,
     price_list_name varchar(64) DEFAULT NULL,
     current_version int DEFAULT 1,
-    is_active bool DEFAULT 1,
+    is_active boolean default true,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,

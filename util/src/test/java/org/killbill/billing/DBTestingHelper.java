@@ -79,7 +79,7 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    country varchar(50) DEFAULT NULL,\n" +
                                "    postal_code varchar(16) DEFAULT NULL,\n" +
                                "    phone varchar(25) DEFAULT NULL,\n" +
-                               "    migrated bool DEFAULT false,\n" +
+                               "    migrated boolean default false,\n" +
                                "    is_notified_for_invoices boolean NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +
                                "    created_by varchar(50) NOT NULL,\n" +
