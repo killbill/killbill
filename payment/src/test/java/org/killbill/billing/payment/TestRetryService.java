@@ -32,11 +32,10 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
 import org.killbill.billing.payment.dao.MockPaymentDao;
-import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
-import org.killbill.billing.payment.glue.DefaultPaymentService;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
+import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -87,7 +86,6 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         return payment;
     }
 
-
     // PLUGIN_EXCEPTION will lead to UNKNOWN row that will not be retried by the plugin
     @Test(groups = "fast")
     public void testAbortedPlugin() throws Exception {
@@ -136,7 +134,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final String transactionExternalKey = UUID.randomUUID().toString();
         try {
             pluginRoutingPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amount, Currency.USD, paymentExternalKey, transactionExternalKey,
-                                                            createPropertiesForInvoice(invoice), ImmutableList.<String>of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME), callContext, internalCallContext);
+                                                         createPropertiesForInvoice(invoice), ImmutableList.<String>of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME), callContext, internalCallContext);
         } catch (final PaymentApiException e) {
             failed = true;
         }
@@ -149,7 +147,6 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(payment.getId(), internalCallContext);
         assertEquals(transactions.size(), 1);
 
-
         for (int curFailure = 0; curFailure < maxTries; curFailure++) {
 
             // Set plugin to fail with specific type unless this is the last attempt and we want a success
@@ -157,10 +154,9 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
                 setPaymentFailure(failureType);
             }
 
+
             moveClockForFailureType(failureType, curFailure);
             final int curFailureCondition = curFailure;
-
-
 
             try {
                 await().atMost(5, SECONDS).until(new Callable<Boolean>() {
