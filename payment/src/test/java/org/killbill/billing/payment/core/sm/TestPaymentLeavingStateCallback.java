@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -47,6 +48,7 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
 
     private PaymentStateContext paymentStateContext;
     private PaymentLeavingStateTestCallback callback;
+    private Account account;
 
     @Test(groups = "slow")
     public void testLeaveStateForNewPayment() throws Exception {
@@ -72,7 +74,8 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         setUp(paymentId);
 
         // Verify the payment has only one transaction
-        Assert.assertEquals(paymentDao.getTransactionsForPayment(paymentId, internalCallContext).size(), 1);
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(paymentId, internalCallContext);
+        Assert.assertEquals(transactions.size(), 1);
 
         // Reset paymentExternalKey to something else
         paymentStateContext.setPaymentTransactionExternalKey(UUID.randomUUID().toString());
@@ -91,12 +94,18 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         setUp(paymentId);
 
         // Verify the payment has only one transaction
-        Assert.assertEquals(paymentDao.getTransactionsForPayment(paymentId, internalCallContext).size(), 1);
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(paymentId, internalCallContext);
+        Assert.assertEquals(transactions.size(), 1);
+
+        final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.CAPTURE).toString();
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), paymentId, TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+                                                           transactions.get(0).getId(), TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.BRL,
+                                                           "foo", "bar", internalCallContext);
 
         // Will validate the validateUniqueTransactionExternalKey logic for when we reuse the same payment transactionExternalKey
         callback.leavingState(state);
-    }
 
+    }
 
     @Test(groups = "slow", expectedExceptions = OperationException.class)
     public void testLeaveStateForConflictingPaymentTransactionExternalKeyAcrossAccounts() throws Exception {
@@ -104,9 +113,15 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         setUp(paymentId);
 
         // Verify the payment has only one transaction
-        Assert.assertEquals(paymentDao.getTransactionsForPayment(paymentId, internalCallContext).size(), 1);
+        final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(paymentId, internalCallContext);
+        Assert.assertEquals(transactions.size(), 1);
 
-        final InternalCallContext internalCallContextForOtherAccount =  new InternalCallContext(paymentStateContext.getInternalCallContext(), 123L);
+        final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.CAPTURE).toString();
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), paymentId, TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+                                                           transactions.get(0).getId(), TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.BRL,
+                                                           "foo", "bar", internalCallContext);
+
+        final InternalCallContext internalCallContextForOtherAccount = new InternalCallContext(paymentStateContext.getInternalCallContext(), 123L);
 
         paymentStateContext = new PaymentStateContext(true,
                                                       paymentId,
@@ -128,7 +143,6 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         callback.leavingState(state);
     }
 
-
     private void verifyPaymentTransaction() {
         Assert.assertNotNull(paymentStateContext.getPaymentTransactionModelDao().getPaymentId());
         Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getTransactionExternalKey(), paymentStateContext.getPaymentTransactionExternalKey());
@@ -142,7 +156,7 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
     }
 
     private void setUp(@Nullable final UUID paymentId) throws Exception {
-        final Account account = Mockito.mock(Account.class);
+        account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         paymentStateContext = new PaymentStateContext(true,
                                                       paymentId,

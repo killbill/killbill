@@ -137,6 +137,7 @@ public class TestPaymentHelper {
             Mockito.when(accountInternalApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
             Mockito.when(accountInternalApi.getAccountByKey(Mockito.anyString(), Mockito.<InternalTenantContext>any())).thenReturn(account);
             mockNonEntityDao.addTenantRecordIdMapping(account.getId(), internalCallContext);
+            mockNonEntityDao.addAccountRecordIdMapping(account.getId(), internalCallContext);
         } else {
             account = accountApi.createAccount(accountData, context);
         }
