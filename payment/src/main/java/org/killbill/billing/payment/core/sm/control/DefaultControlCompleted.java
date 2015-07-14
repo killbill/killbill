@@ -40,11 +40,13 @@ public class DefaultControlCompleted implements EnteringStateCallback {
     private PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner;
     private final PaymentStateControlContext paymentStateContext;
     private final RetryServiceScheduler retryServiceScheduler;
+    private final State retriedState;
 
     public DefaultControlCompleted(final PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner, final PaymentStateControlContext paymentStateContext,
-                                   final RetryServiceScheduler retryServiceScheduler) {
+                                   final State retriedState, final RetryServiceScheduler retryServiceScheduler) {
         this.retryablePaymentAutomatonRunner = retryablePaymentAutomatonRunner;
         this.paymentStateContext = paymentStateContext;
+        this.retriedState = retriedState;
         this.retryServiceScheduler = retryServiceScheduler;
     }
 
@@ -56,7 +58,7 @@ public class DefaultControlCompleted implements EnteringStateCallback {
                                    null;
         retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttempt(attempt.getId(), transactionId, state.getName(), paymentStateContext.getInternalCallContext());
 
-        if ("RETRIED".equals(state.getName()) && !isUnknownTransaction()) {
+        if (retriedState.getName().equals(state.getName()) && !isUnknownTransaction()) {
             retryServiceScheduler.scheduleRetry(ObjectType.PAYMENT_ATTEMPT, attempt.getId(), attempt.getId(), attempt.getTenantRecordId(),
                                                 paymentStateContext.getPaymentControlPluginNames(), paymentStateContext.getRetryDate());
         }
@@ -77,8 +79,7 @@ public class DefaultControlCompleted implements EnteringStateCallback {
                     return input.getTransactionStatus() == TransactionStatus.UNKNOWN &&
                            // Not strictly required
                            // (Note, we don't match on AttemptId as it is risky, the row on disk would match the first attempt, not necessarily the current one)
-                           input.getAccountRecordId() == paymentStateContext.getInternalCallContext().getAccountRecordId() &&
-                           input.getAmount() == paymentStateContext.getAmount();
+                           input.getAccountRecordId().equals(paymentStateContext.getInternalCallContext().getAccountRecordId());
                 }
             });
         }

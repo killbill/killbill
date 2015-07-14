@@ -65,21 +65,23 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
             if (paymentStateContext.getTransactionId() != null) {
                 final PaymentTransactionModelDao transactionModelDao = daoHelper.getPaymentDao().getPaymentTransaction(paymentStateContext.getTransactionId(), paymentStateContext.getInternalCallContext());
                 existingPaymentTransactions = ImmutableList.of(transactionModelDao);
-            } else {
+            } else if (paymentStateContext.getPaymentTransactionExternalKey() != null) {
                 existingPaymentTransactions = daoHelper.getPaymentDao().getPaymentTransactionsByExternalKey(paymentStateContext.getPaymentTransactionExternalKey(), paymentStateContext.getInternalCallContext());
+            } else {
+                existingPaymentTransactions = ImmutableList.of();
             }
 
             // Validate some constraints on the unicity of that paymentTransactionExternalKey
             validateUniqueTransactionExternalKey(existingPaymentTransactions);
 
-            // Handle UNKNOWN cases, where we skip the whole state machine and let the getPayment logic refresh the state.
+            // Handle UNKNOWN cases, where we skip the whole state machine and let the getPayment (through Janitor) logic refresh the state.
             final PaymentTransactionModelDao unknownPaymentTransaction = getUnknownPaymentTransaction(existingPaymentTransactions);
             if (unknownPaymentTransaction != null) {
-                // Reset the attemptId on the existing paymentTransaction row since it it is not accurate
+                // Reset the attemptId on the existing paymentTransaction row since it is not accurate
                 unknownPaymentTransaction.setAttemptId(paymentStateContext.getAttemptId());
                 // Set the current paymentTransaction in the context (needed for the state machine logic)
                 paymentStateContext.setPaymentTransactionModelDao(unknownPaymentTransaction);
-                // Set special flag to bypass the state machine altogether (plugin will not be called, state will not be updated, no event will be sent)
+                // Set special flag to bypass the state machine altogether (plugin will not be called, state will not be updated, no event will be sent unless state is fixed)
                 paymentStateContext.setSkipOperationForUnknownTransaction(true);
                 return;
             }
@@ -127,12 +129,13 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
         if (Iterables.any(existingPaymentTransactions, new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {
-                       // An existing transaction in a SUCCESS state
+                // An existing transaction in a SUCCESS state
                 return input.getTransactionStatus() == TransactionStatus.SUCCESS ||
                        // Or, an existing transaction for a different payment (to do really well, we should also check on paymentExternalKey which is not available here)
                        (paymentStateContext.getPaymentId() != null && input.getPaymentId().compareTo(paymentStateContext.getPaymentId()) != 0) ||
                        // Or, an existing transaction for a different account.
-                       (input.getAccountRecordId() != paymentStateContext.getInternalCallContext().getAccountRecordId());
+                       (!input.getAccountRecordId().equals(paymentStateContext.getInternalCallContext().getAccountRecordId()));
+
             }
         })) {
             throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
