@@ -40,7 +40,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -55,8 +55,12 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
     protected UUID newAccountId;
     protected UUID finalNewAccountId;
 
-    @BeforeClass(groups = "slow")
-    public void setUp() throws Exception {
+    @Override
+    @BeforeMethod(groups = "slow")
+    public void beforeMethod() throws Exception {
+        // Note: this will cleanup all tables
+        super.beforeMethod();
+
         final AccountData accountData = subscriptionTestInitializer.initAccountData();
         final Account account = accountUserApi.createAccount(accountData, callContext);
         newAccountId = account.getId();
