@@ -255,7 +255,7 @@ public class AuditChecker {
             public Integer withHandle(final Handle handle) throws Exception {
 
                 List<Map<String, Object>> res = handle.select("select target_record_id from audit_log where id = '" + auditLogId.toString() + "';");
-                return (Integer) res.get(0).get("target_record_id");
+                return Integer.valueOf(res.get(0).get("target_record_id").toString());
             }
         });
 
