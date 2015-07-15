@@ -86,7 +86,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         // We need to re-hydrate the callcontext with the account record id
         final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(recordId, context);
         final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(new DefaultAccountData(savedAccount), savedAccount.getId(),
-                                                                                           context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+                                                                                           rehydratedContext.getAccountRecordId(), rehydratedContext.getTenantRecordId(), rehydratedContext.getUserToken());
         try {
             eventBus.postFromTransaction(creationEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {

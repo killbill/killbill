@@ -24,17 +24,26 @@ import javax.annotation.Nullable;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.cache.CacheController;
+import org.skife.jdbi.v2.Handle;
 
 // This should only be used for internal operations (trusted code, not API), because the context will not be validated!
 public interface NonEntityDao {
 
     public Long retrieveRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache);
 
+    public Long retrieveRecordIdFromObjectInTransaction(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle);
+
     public Long retrieveAccountRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache);
+
+    public Long retrieveAccountRecordIdFromObjectInTransaction(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle);
 
     public Long retrieveTenantRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache);
 
+    public Long retrieveTenantRecordIdFromObjectInTransaction(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle);
+
     public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache);
+
+    public UUID retrieveIdFromObjectInTransaction(final Long recordId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle);
 
     // This retrieves from the history table the latest record for which targetId matches the one we are passing
     public Long retrieveLastHistoryRecordIdFromTransaction(final Long targetRecordId, final TableName tableName, final NonEntitySqlDao transactional);

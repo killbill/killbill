@@ -22,21 +22,28 @@ import javax.annotation.Nullable;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.skife.jdbi.v2.Handle;
 
 public class CacheLoaderArgument {
 
     private final ObjectType objectType;
     private final Object[] args;
     private final InternalTenantContext internalTenantContext;
+    private final Handle handle;
 
     public CacheLoaderArgument(final ObjectType objectType) {
         this(objectType, new Object[]{}, null);
     }
 
     public CacheLoaderArgument(final ObjectType objectType, final Object[] args, @Nullable final InternalTenantContext internalTenantContext) {
+        this(objectType, args, internalTenantContext, null);
+    }
+
+    public CacheLoaderArgument(final ObjectType objectType, final Object[] args, @Nullable final InternalTenantContext internalTenantContext, @Nullable final Handle handle) {
         this.objectType = objectType;
         this.args = args;
         this.internalTenantContext = internalTenantContext;
+        this.handle = handle;
     }
 
     public ObjectType getObjectType() {
@@ -49,5 +56,9 @@ public class CacheLoaderArgument {
 
     public InternalTenantContext getInternalTenantContext() {
         return internalTenantContext;
+    }
+
+    public Handle getHandle() {
+        return handle;
     }
 }

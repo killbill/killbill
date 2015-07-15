@@ -19,8 +19,7 @@ package org.killbill.billing.util.cache;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.dao.NonEntityDao;
-import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Handle;
 
 public abstract class BaseIdCacheLoader extends BaseCacheLoader {
 
@@ -31,8 +30,7 @@ public abstract class BaseIdCacheLoader extends BaseCacheLoader {
     @Override
     public abstract CacheType getCacheType();
 
-
-    protected abstract Object doRetrieveOperation(final String rawKey, final ObjectType objectType);
+    protected abstract Object doRetrieveOperation(final String rawKey, final ObjectType objectType, final Handle handle);
 
     @Override
     public Object load(final Object key, final Object argument) {
@@ -47,12 +45,13 @@ public abstract class BaseIdCacheLoader extends BaseCacheLoader {
 
         final String rawKey;
         if (getCacheType().isKeyPrefixedWithTableName()) {
-            String [] parts = ((String) key).split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
+            final String[] parts = ((String) key).split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
             rawKey = parts[1];
         } else {
             rawKey = (String) key;
         }
         final ObjectType objectType = ((CacheLoaderArgument) argument).getObjectType();
-        return doRetrieveOperation(rawKey, objectType);
+        final Handle handle = ((CacheLoaderArgument) argument).getHandle();
+        return doRetrieveOperation(rawKey, objectType, handle);
     }
 }
