@@ -243,7 +243,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                     return input instanceof InternalTenantContext;
                 }
             }, null);
-            final CacheLoaderArgument cacheLoaderArgument = new CacheLoaderArgument(objectType, args, internalTenantContext);
+            final CacheLoaderArgument cacheLoaderArgument = new CacheLoaderArgument(objectType, args, internalTenantContext, handle);
             return cache.get(cacheKey, cacheLoaderArgument);
         }
         if (result == null) {

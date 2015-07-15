@@ -23,9 +23,8 @@ import javax.inject.Singleton;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Handle;
 
-import net.sf.ehcache.CacheException;
 import net.sf.ehcache.loader.CacheLoader;
 
 @Singleton
@@ -45,8 +44,8 @@ public class ObjectIdCacheLoader extends BaseIdCacheLoader implements CacheLoade
     }
 
     @Override
-    protected Object doRetrieveOperation(final String rawKey, final ObjectType objectType) {
+    protected Object doRetrieveOperation(final String rawKey, final ObjectType objectType, final Handle handle) {
         final Long recordId = Long.valueOf(rawKey);
-        return nonEntityDao.retrieveIdFromObject(recordId, objectType, null);
+        return nonEntityDao.retrieveIdFromObjectInTransaction(recordId, objectType, null, handle);
     }
 }

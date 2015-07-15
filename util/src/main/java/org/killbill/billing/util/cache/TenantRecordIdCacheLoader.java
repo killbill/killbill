@@ -26,6 +26,7 @@ import javax.inject.Singleton;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.skife.jdbi.v2.Handle;
 
 import net.sf.ehcache.loader.CacheLoader;
 
@@ -46,7 +47,7 @@ public class TenantRecordIdCacheLoader extends BaseIdCacheLoader implements Cach
     }
 
     @Override
-    protected Object doRetrieveOperation(final String rawKey, final ObjectType objectType) {
-        return nonEntityDao.retrieveTenantRecordIdFromObject(UUID.fromString(rawKey), objectType, null);
+    protected Object doRetrieveOperation(final String rawKey, final ObjectType objectType, final Handle handle) {
+        return nonEntityDao.retrieveTenantRecordIdFromObjectInTransaction(UUID.fromString(rawKey), objectType, null, handle);
     }
 }
