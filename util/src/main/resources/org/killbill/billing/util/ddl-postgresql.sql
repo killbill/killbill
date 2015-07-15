@@ -9,6 +9,7 @@ DROP DOMAIN IF EXISTS mediumblob CASCADE;
 CREATE DOMAIN mediumblob AS bytea;
 
 CREATE OR REPLACE LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION last_insert_id() RETURNS BIGINT AS $$
     DECLARE
         result BIGINT;
@@ -20,3 +21,27 @@ CREATE OR REPLACE FUNCTION last_insert_id() RETURNS BIGINT AS $$
         RETURN result;
     END;
 $$ LANGUAGE plpgsql VOLATILE;
+
+CREATE OR REPLACE FUNCTION schema() RETURNS VARCHAR AS $$
+    DECLARE
+        result VARCHAR;
+    BEGIN
+        SELECT current_schema() INTO result;
+        RETURN result;
+    EXCEPTION WHEN OTHERS THEN
+        SELECT NULL INTO result;
+        RETURN result;
+    END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION hour(ts TIMESTAMP WITH TIME ZONE) RETURNS INTEGER AS $$
+    DECLARE
+        result INTEGER;
+    BEGIN
+        SELECT EXTRACT(HOUR FROM ts) INTO result;
+        RETURN result;
+    EXCEPTION WHEN OTHERS THEN
+        SELECT NULL INTO result;
+        RETURN result;
+    END;
+$$ LANGUAGE plpgsql IMMUTABLE;

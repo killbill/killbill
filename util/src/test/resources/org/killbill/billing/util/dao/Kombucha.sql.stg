@@ -17,5 +17,5 @@ tableValues() ::= <<
 >>
 
 isIsTimeForKombucha() ::= <<
-select hour(current_timestamp()) = 17 as is_time;
+select hour(current_timestamp(0)) = 17 as is_time;
 >>

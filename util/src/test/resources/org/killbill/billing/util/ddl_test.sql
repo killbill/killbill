@@ -29,8 +29,8 @@ CREATE TABLE kombucha (
     tea varchar(50) NOT NULL,
     mushroom varchar(50) NOT NULL,
     sugar varchar(50) NOT NULL,
-    account_record_id bigint unsigned not null,
-    tenant_record_id bigint unsigned not null default 0,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 );
 

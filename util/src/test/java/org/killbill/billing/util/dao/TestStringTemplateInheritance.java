@@ -63,7 +63,7 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
         final StringTemplateGroup kombucha = new StringTemplateGroup(new InputStreamReader(kombuchaStream));
 
         // Verify non inherited template
-        Assert.assertEquals(kombucha.getInstanceOf("isIsTimeForKombucha").toString(), "select hour(current_timestamp()) = 17 as is_time;");
+        Assert.assertEquals(kombucha.getInstanceOf("isIsTimeForKombucha").toString(), "select hour(current_timestamp(0)) = 17 as is_time;");
 
         // Verify inherited templates
         assertPattern(kombucha.getInstanceOf("getById").toString(), "select\r?\n" +

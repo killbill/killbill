@@ -55,7 +55,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
                                "    PRIMARY KEY(record_id)\n" +
                                ");");
                 handle.execute("insert into invoices (id, account_id, invoice_date, target_date, currency, migrated, created_by, created_date, account_record_id) values " +
-                               "(?, ?, now(), now(), 'USD', 0, 'test', now(), ?)", invoiceId.toString(), UUID.randomUUID().toString(), accountRecordId);
+                               "(?, ?, now(), now(), 'USD', false, 'test', now(), ?)", invoiceId.toString(), UUID.randomUUID().toString(), accountRecordId);
                 return null;
             }
         });
