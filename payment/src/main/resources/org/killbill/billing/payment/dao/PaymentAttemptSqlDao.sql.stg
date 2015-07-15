@@ -73,7 +73,7 @@ where state_name = :stateName
 and created_date \< :createdBeforeDate
 <andCheckSoftDeletionWithComma("")>
 <defaultOrderBy()>
-limit :offset, :rowCount
+limit :rowCount offset :offset
 ;
 >>
 
