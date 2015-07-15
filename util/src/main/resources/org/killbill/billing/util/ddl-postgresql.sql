@@ -1,8 +1,14 @@
 /* We cannot use timestamp in MySQL because of the implicit TimeZone conversions it does behind the scenes */
+DROP DOMAIN IF EXISTS datetime CASCADE;
 CREATE DOMAIN datetime AS timestamp without time zone;
 /* TEXT in MySQL is smaller then MEDIUMTEXT */
+DROP DOMAIN IF EXISTS mediumtext CASCADE;
 CREATE DOMAIN mediumtext AS text;
+/* PostgreSQL uses BYTEA to manage all BLOB types */
+DROP DOMAIN IF EXISTS mediumblob CASCADE;
+CREATE DOMAIN mediumblob AS bytea;
 
+CREATE OR REPLACE LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION last_insert_id() RETURNS BIGINT AS $$
     DECLARE
         result BIGINT;
