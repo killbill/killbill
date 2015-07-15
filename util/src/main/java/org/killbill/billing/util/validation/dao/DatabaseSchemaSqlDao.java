@@ -22,14 +22,13 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.util.validation.DefaultColumnInfo;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
-import org.killbill.billing.util.validation.DefaultColumnInfo;
 
 @UseStringTemplate3StatementLocator
 @RegisterMapper(DatabaseSchemaSqlDao.ColumnInfoMapper.class)
@@ -46,7 +45,18 @@ public interface DatabaseSchemaSqlDao {
             final String columnName = r.getString("column_name");
             final Integer scale = r.getInt("numeric_scale");
             final Integer precision = r.getInt("numeric_precision");
-            final boolean isNullable = r.getBoolean("is_nullable");
+
+            // Special handling for PostgreSQL - the implementation of AbstractJdbc2ResultSet#getBoolean doesn't support YES/NO
+            final String isNullableString = r.getString("is_nullable");
+            final boolean isNullable;
+            if ("YES".equalsIgnoreCase(isNullableString)) {
+                isNullable = true;
+            } else if ("NO".equalsIgnoreCase(isNullableString)) {
+                isNullable = false;
+            } else {
+                isNullable = r.getBoolean("is_nullable");
+            }
+
             final Integer maximumLength = r.getInt("character_maximum_length");
             final String dataType = r.getString("data_type");
 
