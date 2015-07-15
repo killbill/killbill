@@ -1,5 +1,6 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,16 +22,11 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.UsageTestSuiteWithEmbeddedDB;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 
 public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
-
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-    }
 
     @Test(groups = "slow")
     public void testSimple() {
@@ -55,7 +51,6 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         assertEquals(result.get(1).getUnitType(), unitType);
         assertEquals(result.get(1).getAmount().compareTo(amount2), 0);
     }
-
 
     @Test(groups = "slow")
     public void testMultipleUnits() {
@@ -89,8 +84,6 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         assertEquals(result.get(2).getAmount().compareTo(amount3), 0);
     }
 
-
-
     @Test(groups = "slow")
     public void testNoEntries() {
         final UUID subscriptionId = UUID.randomUUID();
@@ -103,5 +96,4 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final List<RolledUpUsageModelDao> result = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContext);
         assertEquals(result.size(), 0);
     }
-
 }
