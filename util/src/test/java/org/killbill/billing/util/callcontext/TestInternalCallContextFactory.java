@@ -42,11 +42,11 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
                 handle.execute("DROP TABLE IF EXISTS invoices;\n" +
                                "CREATE TABLE invoices (\n" +
                                "    record_id serial unique,\n" +
-                               "    id char(36) NOT NULL,\n" +
-                               "    account_id char(36) NOT NULL,\n" +
+                               "    id varchar(36) NOT NULL,\n" +
+                               "    account_id varchar(36) NOT NULL,\n" +
                                "    invoice_date date NOT NULL,\n" +
                                "    target_date date NOT NULL,\n" +
-                               "    currency char(3) NOT NULL,\n" +
+                               "    currency varchar(3) NOT NULL,\n" +
                                "    migrated bool NOT NULL,\n" +
                                "    created_by varchar(50) NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +

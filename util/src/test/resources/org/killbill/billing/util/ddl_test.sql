@@ -2,7 +2,7 @@
 
 DROP TABLE IF EXISTS dummy;
 CREATE TABLE dummy (
-    dummy_id char(36) NOT NULL,
+    dummy_id varchar(36) NOT NULL,
     value varchar(256) NOT NULL,
     PRIMARY KEY(dummy_id)
 );
@@ -10,7 +10,7 @@ CREATE TABLE dummy (
 DROP TABLE IF EXISTS dummy2;
 CREATE TABLE dummy2 (
     id serial unique,
-    dummy_id char(36) NOT NULL,
+    dummy_id varchar(36) NOT NULL,
     PRIMARY KEY(id)
 );
 
@@ -25,7 +25,7 @@ CREATE TABLE validation_test (
 DROP TABLE IF EXISTS kombucha;
 CREATE TABLE kombucha (
     record_id serial unique,
-    id char(36) NOT NULL,
+    id varchar(36) NOT NULL,
     tea varchar(50) NOT NULL,
     mushroom varchar(50) NOT NULL,
     sugar varchar(50) NOT NULL,

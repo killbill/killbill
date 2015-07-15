@@ -60,14 +60,14 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         instance.executeScript("drop table if exists accounts;" +
                                "CREATE TABLE accounts (\n" +
                                "    record_id serial unique,\n" +
-                               "    id char(36) NOT NULL,\n" +
+                               "    id varchar(36) NOT NULL,\n" +
                                "    external_key varchar(128) NULL,\n" +
                                "    email varchar(128) NOT NULL,\n" +
                                "    name varchar(100) NOT NULL,\n" +
                                "    first_name_length int NOT NULL,\n" +
-                               "    currency char(3) DEFAULT NULL,\n" +
+                               "    currency varchar(3) DEFAULT NULL,\n" +
                                "    billing_cycle_day_local int DEFAULT NULL,\n" +
-                               "    payment_method_id char(36) DEFAULT NULL,\n" +
+                               "    payment_method_id varchar(36) DEFAULT NULL,\n" +
                                "    time_zone varchar(50) DEFAULT NULL,\n" +
                                "    locale varchar(5) DEFAULT NULL,\n" +
                                "    address1 varchar(100) DEFAULT NULL,\n" +
@@ -90,7 +90,7 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         instance.executeScript("DROP TABLE IF EXISTS tenants;\n" +
                                "CREATE TABLE tenants (\n" +
                                "    record_id serial unique,\n" +
-                               "    id char(36) NOT NULL,\n" +
+                               "    id varchar(36) NOT NULL,\n" +
                                "    external_key varchar(128) NULL,\n" +
                                "    api_key varchar(128) NULL,\n" +
                                "    api_secret varchar(128) NULL,\n" +
@@ -106,9 +106,9 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         instance.executeScript("DROP TABLE IF EXISTS bundles;\n" +
                                "CREATE TABLE bundles (\n" +
                                "    record_id serial unique,\n" +
-                               "    id char(36) NOT NULL,\n" +
+                               "    id varchar(36) NOT NULL,\n" +
                                "    external_key varchar(64) NOT NULL,\n" +
-                               "    account_id char(36) NOT NULL,\n" +
+                               "    account_id varchar(36) NOT NULL,\n" +
                                "    last_sys_update_date datetime,\n" +
                                "    created_by varchar(50) NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +
@@ -121,8 +121,8 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         instance.executeScript("DROP TABLE IF EXISTS subscriptions;\n" +
                                "CREATE TABLE subscriptions (\n" +
                                "    record_id serial unique,\n" +
-                               "    id char(36) NOT NULL,\n" +
-                               "    bundle_id char(36) NOT NULL,\n" +
+                               "    id varchar(36) NOT NULL,\n" +
+                               "    bundle_id varchar(36) NOT NULL,\n" +
                                "    category varchar(32) NOT NULL,\n" +
                                "    start_date datetime NOT NULL,\n" +
                                "    bundle_start_date datetime NOT NULL,\n" +
@@ -142,12 +142,12 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         instance.executeScript("DROP TABLE IF EXISTS payments;\n" +
                                "CREATE TABLE payments (\n" +
                                "    record_id serial unique,\n" +
-                               "    id char(36) NOT NULL,\n" +
-                               "    account_id char(36) NOT NULL,\n" +
-                               "    invoice_id char(36) NOT NULL,\n" +
-                               "    payment_method_id char(36) NOT NULL,\n" +
+                               "    id varchar(36) NOT NULL,\n" +
+                               "    account_id varchar(36) NOT NULL,\n" +
+                               "    invoice_id varchar(36) NOT NULL,\n" +
+                               "    payment_method_id varchar(36) NOT NULL,\n" +
                                "    amount numeric(15,9),\n" +
-                               "    currency char(3),\n" +
+                               "    currency varchar(3),\n" +
                                "    effective_date datetime,\n" +
                                "    payment_status varchar(50),\n" +
                                "    created_by varchar(50) NOT NULL,\n" +

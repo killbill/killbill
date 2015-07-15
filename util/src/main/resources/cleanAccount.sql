@@ -1,6 +1,6 @@
 drop procedure if exists cleanAccount;
 DELIMITER //
-CREATE PROCEDURE cleanAccount(p_account_key char(36))
+CREATE PROCEDURE cleanAccount(p_account_key varchar(36))
 BEGIN
 
     DECLARE v_account_record_id bigint /*! unsigned */;

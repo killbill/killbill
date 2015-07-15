@@ -3,12 +3,12 @@
 DROP TABLE IF EXISTS subscription_events;
 CREATE TABLE subscription_events (
     record_id serial unique,
-    id char(36) NOT NULL,
+    id varchar(36) NOT NULL,
     event_type varchar(9) NOT NULL,
     user_type varchar(25) DEFAULT NULL,
     requested_date datetime NOT NULL,
     effective_date datetime NOT NULL,
-    subscription_id char(36) NOT NULL,
+    subscription_id varchar(36) NOT NULL,
     plan_name varchar(64) DEFAULT NULL,
     phase_name varchar(128) DEFAULT NULL,
     price_list_name varchar(64) DEFAULT NULL,
@@ -30,8 +30,8 @@ CREATE INDEX subscription_events_tenant_account_record_id ON subscription_events
 DROP TABLE IF EXISTS subscriptions;
 CREATE TABLE subscriptions (
     record_id serial unique,
-    id char(36) NOT NULL,
-    bundle_id char(36) NOT NULL,
+    id varchar(36) NOT NULL,
+    bundle_id varchar(36) NOT NULL,
     category varchar(32) NOT NULL,
     start_date datetime NOT NULL,
     bundle_start_date datetime NOT NULL,
@@ -52,9 +52,9 @@ CREATE INDEX subscriptions_tenant_account_record_id ON subscriptions(tenant_reco
 DROP TABLE IF EXISTS bundles;
 CREATE TABLE bundles (
     record_id serial unique,
-    id char(36) NOT NULL,
+    id varchar(36) NOT NULL,
     external_key varchar(64) NOT NULL,
-    account_id char(36) NOT NULL,
+    account_id varchar(36) NOT NULL,
     last_sys_update_date datetime,
     original_created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,

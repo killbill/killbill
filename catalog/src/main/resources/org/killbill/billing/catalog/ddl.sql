@@ -18,7 +18,7 @@ DROP TABLE IF EXISTS catalog_override_phase_definition;
 CREATE TABLE catalog_override_phase_definition (
     record_id serial unique,
     parent_phase_name varchar(255) NOT NULL,
-    currency char(3) NOT NULL,
+    currency varchar(3) NOT NULL,
     fixed_price numeric(15,9) NULL,
     recurring_price numeric(15,9) NULL,
     effective_date datetime NOT NULL,

@@ -3,8 +3,8 @@
 DROP TABLE IF EXISTS blocking_states;
 CREATE TABLE blocking_states (
     record_id serial unique,
-    id char(36) NOT NULL,
-    blockable_id char(36) NOT NULL,
+    id varchar(36) NOT NULL,
+    blockable_id varchar(36) NOT NULL,
     type varchar(20) NOT NULL,
     state varchar(50) NOT NULL,
     service varchar(20) NOT NULL,
