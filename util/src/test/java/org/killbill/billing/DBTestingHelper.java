@@ -67,7 +67,6 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    first_name_length int NOT NULL,\n" +
                                "    currency char(3) DEFAULT NULL,\n" +
                                "    billing_cycle_day_local int DEFAULT NULL,\n" +
-                               "    billing_cycle_day_utc int DEFAULT NULL,\n" +
                                "    payment_method_id char(36) DEFAULT NULL,\n" +
                                "    time_zone varchar(50) DEFAULT NULL,\n" +
                                "    locale varchar(5) DEFAULT NULL,\n" +
