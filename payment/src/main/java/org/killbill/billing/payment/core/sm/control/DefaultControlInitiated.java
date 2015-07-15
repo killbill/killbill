@@ -36,16 +36,16 @@ import com.google.common.base.Preconditions;
 
 public class DefaultControlInitiated implements LeavingStateCallback {
 
-    private final PluginControlPaymentAutomatonRunner retryablePaymentAutomatonRunner;
+    private final PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner;
     private final PaymentStateControlContext stateContext;
     private final State initialState;
     private final State retriedState;
     private final TransactionType transactionType;
     private final PaymentDao paymentDao;
 
-    public DefaultControlInitiated(final PluginControlPaymentAutomatonRunner retryablePaymentAutomatonRunner, final PaymentStateContext stateContext, final PaymentDao paymentDao,
+    public DefaultControlInitiated(final PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner, final PaymentStateContext stateContext, final PaymentDao paymentDao,
                                    final State initialState, final State retriedState, final TransactionType transactionType) {
-        this.retryablePaymentAutomatonRunner = retryablePaymentAutomatonRunner;
+        this.pluginControlPaymentAutomatonRunner = pluginControlPaymentAutomatonRunner;
         this.paymentDao = paymentDao;
         this.initialState = initialState;
         this.retriedState = retriedState;
@@ -55,7 +55,7 @@ public class DefaultControlInitiated implements LeavingStateCallback {
 
     @Override
     public void leavingState(final State state) throws OperationException {
-        final DateTime utcNow = retryablePaymentAutomatonRunner.getClock().getUTCNow();
+        final DateTime utcNow = pluginControlPaymentAutomatonRunner.getClock().getUTCNow();
 
         if (stateContext.getPaymentId() != null && stateContext.getPaymentExternalKey() == null) {
             final PaymentModelDao payment = paymentDao.getPayment(stateContext.getPaymentId(), stateContext.getInternalCallContext());
@@ -82,7 +82,7 @@ public class DefaultControlInitiated implements LeavingStateCallback {
                                                                                   stateContext.getAmount(), stateContext.getCurrency(),
                                                                                   stateContext.getPaymentControlPluginNames(), serializedProperties);
 
-                retryablePaymentAutomatonRunner.getPaymentDao().insertPaymentAttemptWithProperties(attempt, stateContext.getInternalCallContext());
+                pluginControlPaymentAutomatonRunner.getPaymentDao().insertPaymentAttemptWithProperties(attempt, stateContext.getInternalCallContext());
 
                 stateContext.setAttemptId(attempt.getId());
             } catch (final PluginPropertySerializerException e) {
