@@ -67,37 +67,37 @@ userAndSystemTagDefinitions() ::= <<
   union
   select
     \'00000000-0000-0000-0000-000000000001\' id
-  , \'AUTO_PAY_OFF\' name
+  , \'AUTO_PAY_OFF\' as name
   , \'Suspends payments until removed.\' description
   union
   select
     \'00000000-0000-0000-0000-000000000002\' id
-  , \'AUTO_INVOICING_OFF\' name
+  , \'AUTO_INVOICING_OFF\' as name
   , \'Suspends invoicing until removed.\' description
   union
   select
     \'00000000-0000-0000-0000-000000000003\' id
-  , \'OVERDUE_ENFORCEMENT_OFF\' name
+  , \'OVERDUE_ENFORCEMENT_OFF\' as name
   , \'Suspends overdue enforcement behaviour until removed.\' description
   union
   select
     \'00000000-0000-0000-0000-000000000004\' id
-  , \'WRITTEN_OFF\' name
+  , \'WRITTEN_OFF\' as name
   , \'Indicates that an invoice is written off. No billing or payment effect.\' description
   union
   select
     \'00000000-0000-0000-0000-000000000005\' id
-  , \'MANUAL_PAY\' name
+  , \'MANUAL_PAY\' as name
   , \'Indicates that Killbill doesn\\'\\'t process payments for that account (external payments only)\' description
   union
   select
     \'00000000-0000-0000-0000-000000000006\' id
-  , \'TEST\' name
+  , \'TEST\' as name
   , \'Indicates that this is a test account\' description
   union
   select
     \'00000000-0000-0000-0000-000000000007\' id
-  , \'PARTNER\' name
+  , \'PARTNER\' as name
   , \'Indicates that this is a partner account\' description
 >>
 
