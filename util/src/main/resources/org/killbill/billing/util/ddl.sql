@@ -74,7 +74,8 @@ CREATE TABLE tag_definition_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
-    account_record_id bigint /*! unsigned */ not null,
+    /* Note: there is no account_record_id to populate */
+    account_record_id bigint /*! unsigned */ default null,
     tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
