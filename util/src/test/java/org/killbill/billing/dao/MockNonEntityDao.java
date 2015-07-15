@@ -34,9 +34,14 @@ import org.killbill.billing.util.dao.TableName;
 public class MockNonEntityDao implements NonEntityDao {
 
     private final Map<UUID, Long> tenantRecordIdMappings = new HashMap<UUID, Long>();
+    private final Map<UUID, Long> accountRecordIdMappings = new HashMap<UUID, Long>();
 
     public void addTenantRecordIdMapping(final UUID objectId, final InternalTenantContext context) {
         tenantRecordIdMappings.put(objectId, context.getTenantRecordId());
+    }
+
+    public void addAccountRecordIdMapping(final UUID objectId, final InternalTenantContext context) {
+        accountRecordIdMappings.put(objectId, context.getAccountRecordId());
     }
 
     @Override
@@ -46,7 +51,7 @@ public class MockNonEntityDao implements NonEntityDao {
 
     @Override
     public Long retrieveAccountRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
-        return null;
+        return accountRecordIdMappings.get(objectId);
     }
 
     @Override

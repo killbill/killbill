@@ -112,7 +112,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
         try {
             final OperationCallback callback = createOperationCallback(transactionType, paymentStateContext);
             final LeavingStateCallback leavingStateCallback = new DefaultControlInitiated(this, paymentStateContext, paymentDao, paymentControlStateMachineHelper.getInitialState(), paymentControlStateMachineHelper.getRetriedState(), transactionType);
-            final EnteringStateCallback enteringStateCallback = new DefaultControlCompleted(this, paymentStateContext, retryServiceScheduler);
+            final EnteringStateCallback enteringStateCallback = new DefaultControlCompleted(this, paymentStateContext, paymentControlStateMachineHelper.getRetriedState(), retryServiceScheduler);
 
             state.runOperation(paymentControlStateMachineHelper.getOperation(), callback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {
@@ -134,7 +134,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
         try {
             final OperationCallback callback = new CompletionControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
             final LeavingStateCallback leavingStateCallback = new NoopControlInitiated();
-            final EnteringStateCallback enteringStateCallback = new DefaultControlCompleted(this, paymentStateContext, retryServiceScheduler);
+            final EnteringStateCallback enteringStateCallback = new DefaultControlCompleted(this, paymentStateContext, paymentControlStateMachineHelper.getRetriedState(), retryServiceScheduler);
 
             paymentControlStateMachineHelper.getInitialState().runOperation(paymentControlStateMachineHelper.getOperation(), callback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {

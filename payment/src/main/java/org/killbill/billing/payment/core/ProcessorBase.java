@@ -164,27 +164,8 @@ public abstract class ProcessorBase {
         return internalCallContextFactory.createCallContext(context);
     }
 
-    protected void validateUniqueTransactionExternalKey(@Nullable final String transactionExternalKey, final InternalTenantContext tenantContext) throws PaymentApiException {
-        // If no key specified, system will allocate a unique one later.
-        if (transactionExternalKey == null) {
-            return;
-        }
-
-        final List<PaymentTransactionModelDao> transactions = paymentDao.getPaymentTransactionsByExternalKey(transactionExternalKey, tenantContext);
-        final PaymentTransactionModelDao transactionAlreadyExists = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
-            @Override
-            public boolean apply(final PaymentTransactionModelDao input) {
-                return input.getTransactionStatus() == TransactionStatus.SUCCESS;
-            }
-        }).orNull();
-        if (transactionAlreadyExists != null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, transactionExternalKey);
-        }
-    }
-
     // TODO Rename - there is no lock!
     public interface WithAccountLockCallback<PluginDispatcherReturnType, ExceptionType extends Exception> {
-
         public PluginDispatcherReturnType doOperation() throws ExceptionType;
     }
 

@@ -83,10 +83,12 @@ public class MockPaymentDao implements PaymentDao {
     @Override
     public PaymentAttemptModelDao insertPaymentAttemptWithProperties(final PaymentAttemptModelDao attempt, final InternalCallContext context) {
         attempt.setTenantRecordId(context.getTenantRecordId());
+        attempt.setAccountRecordId(context.getAccountRecordId());
 
         synchronized (this) {
             attempts.put(attempt.getId(), attempt);
             mockNonEntityDao.addTenantRecordIdMapping(attempt.getId(), context);
+            mockNonEntityDao.addAccountRecordIdMapping(attempt.getId(), context);
             return attempt;
         }
     }
@@ -177,15 +179,20 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public PaymentModelDao insertPaymentWithFirstTransaction(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final InternalCallContext context) {
+
         payment.setTenantRecordId(context.getTenantRecordId());
         paymentTransaction.setTenantRecordId(context.getTenantRecordId());
+        payment.setAccountRecordId(context.getAccountRecordId());
+        paymentTransaction.setAccountRecordId(context.getAccountRecordId());
 
         synchronized (this) {
             payments.put(payment.getId(), payment);
             mockNonEntityDao.addTenantRecordIdMapping(payment.getId(), context);
+            mockNonEntityDao.addAccountRecordIdMapping((payment.getId()), context);
 
             transactions.put(paymentTransaction.getId(), paymentTransaction);
             mockNonEntityDao.addTenantRecordIdMapping(paymentTransaction.getId(), context);
+            mockNonEntityDao.addAccountRecordIdMapping((paymentTransaction.getId()), context);
         }
         return payment;
     }
@@ -193,10 +200,12 @@ public class MockPaymentDao implements PaymentDao {
     @Override
     public PaymentTransactionModelDao updatePaymentWithNewTransaction(final UUID paymentId, final PaymentTransactionModelDao paymentTransaction, final InternalCallContext context) {
         paymentTransaction.setTenantRecordId(context.getTenantRecordId());
+        paymentTransaction.setAccountRecordId(context.getAccountRecordId());
 
         synchronized (this) {
             transactions.put(paymentTransaction.getId(), paymentTransaction);
             mockNonEntityDao.addTenantRecordIdMapping(paymentId, context);
+            mockNonEntityDao.addAccountRecordIdMapping((paymentTransaction.getId()), context);
         }
         return paymentTransaction;
     }

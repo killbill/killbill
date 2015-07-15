@@ -524,7 +524,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         final Payment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
                                                                       UUID.randomUUID().toString(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
-
         try {
             paymentApi.createCapture(account, UUID.randomUUID(), requestedAmount, account.getCurrency(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
             Assert.fail("Expected capture to fail...");
@@ -577,6 +576,62 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
         }
+    }
+
+    @Test(groups = "slow")
+    public void testApiRetryWithUnknownPaymentTransaction() throws Exception {
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+
+        final Payment badPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+                                                                  paymentExternalKey, paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+
+        final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), badPayment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+                                                           badPayment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
+                                                           "eroor 64", "bad something happened", internalCallContext);
+
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+                                                               paymentExternalKey, paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+
+        Assert.assertEquals(payment.getId(), badPayment.getId());
+        Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
+
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+    }
+
+    // Example of a 3D secure payment for instance
+    @Test(groups = "slow")
+    public void testApiWithPendingPaymentTransaction() throws Exception {
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+
+        final Payment pendingPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
+                                                                      paymentExternalKey, paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+
+        final String paymentStateName = paymentSMHelper.getPendingStateForTransaction(TransactionType.AUTHORIZE).toString();
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), pendingPayment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+                                                           pendingPayment.getTransactions().get(0).getId(), TransactionStatus.PENDING, requestedAmount, account.getCurrency(),
+                                                           null, null, internalCallContext);
+
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), pendingPayment.getId(), requestedAmount, account.getCurrency(),
+                                                               paymentExternalKey, paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+
+        Assert.assertEquals(payment.getId(), pendingPayment.getId());
+        Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
+
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+
     }
 
     private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {

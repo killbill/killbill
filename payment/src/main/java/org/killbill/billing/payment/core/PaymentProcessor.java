@@ -322,7 +322,6 @@ public class PaymentProcessor extends ProcessorBase {
                                      final boolean shouldLockAccountAndDispatch, @Nullable final OperationResult overridePluginOperationResult,
                                      final Iterable<PluginProperty> properties,
                                      final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        validateUniqueTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
         final UUID nonNullPaymentId = paymentAutomatonRunner.run(isApiPayment,
                                                                  transactionType,
                                                                  account,
