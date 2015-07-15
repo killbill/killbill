@@ -138,7 +138,8 @@ CREATE TABLE audit_log (
     reason_code varchar(255) DEFAULT NULL,
     comments varchar(255) DEFAULT NULL,
     user_token varchar(36),
-    account_record_id bigint /*! unsigned */ not null,
+    /* Note: can be NULL (e.g. tenant_kvs audits) */
+    account_record_id bigint /*! unsigned */ default null,
     tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
