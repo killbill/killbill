@@ -26,24 +26,23 @@ import org.apache.shiro.crypto.RandomNumberGenerator;
 import org.apache.shiro.crypto.SecureRandomNumberGenerator;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.util.ByteSource;
-import org.killbill.billing.entity.EntityPersistenceException;
-import org.killbill.billing.tenant.api.TenantKV.TenantKey;
-import org.skife.jdbi.v2.IDBI;
-
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.tenant.api.Tenant;
-import org.killbill.billing.tenant.api.TenantApiException;
-import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
+import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.tenant.api.Tenant;
+import org.killbill.billing.tenant.api.TenantApiException;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
+import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -145,7 +144,6 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
             }
         });
     }
-
 
     @Override
     public void deleteTenantKey(final String key, final InternalCallContext context) {
