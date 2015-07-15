@@ -32,7 +32,7 @@ CREATE INDEX catalog_override_phase_definition_idx ON catalog_override_phase_def
 DROP TABLE IF EXISTS catalog_override_plan_phase;
 CREATE TABLE catalog_override_plan_phase (
     record_id serial unique,
-    phase_number tinyint(3) /*! unsigned */ NOT NULL,
+    phase_number smallint /*! unsigned */ NOT NULL,
     phase_def_record_id bigint /*! unsigned */ not null,
     target_plan_def_record_id bigint /*! unsigned */ not null,
     created_date datetime NOT NULL,
