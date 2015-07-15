@@ -39,7 +39,8 @@ DROP TABLE IF EXISTS tenant_broadcasts;
 CREATE TABLE tenant_broadcasts (
    record_id serial unique,
    id varchar(36) NOT NULL,
-   target_record_id bigint /*! unsigned */ not null,
+   /* Note: can be NULL in case of delete */
+   target_record_id bigint /*! unsigned */ default null,
    target_table_name varchar(50) NOT NULL,
    tenant_record_id bigint /*! unsigned */ not null default 0,
    type varchar(64) NOT NULL,
