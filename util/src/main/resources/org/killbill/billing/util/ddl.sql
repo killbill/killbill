@@ -206,7 +206,8 @@ CREATE TABLE bus_events (
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
     error_count int /*! unsigned */ DEFAULT 0,
-    search_key1 bigint /*! unsigned */ not null,
+    /* Note: account_record_id can be NULL (e.g. TagDefinition events) */
+    search_key1 bigint /*! unsigned */ default null,
     search_key2 bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
@@ -225,7 +226,8 @@ CREATE TABLE bus_events_history (
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
     error_count int /*! unsigned */ DEFAULT 0,
-    search_key1 bigint /*! unsigned */ not null,
+    /* Note: account_record_id can be NULL (e.g. TagDefinition events) */
+    search_key1 bigint /*! unsigned */ default null,
     search_key2 bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
