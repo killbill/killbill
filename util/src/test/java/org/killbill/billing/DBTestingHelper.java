@@ -19,6 +19,8 @@
 package org.killbill.billing;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.Enumeration;
 
 import org.killbill.billing.platform.test.PlatformDBTestingHelper;
 import org.killbill.billing.util.dao.AuditLogModelDaoMapper;
@@ -29,7 +31,7 @@ import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.common.io.Resources;
+import com.google.common.base.MoreObjects;
 
 public class DBTestingHelper extends PlatformDBTestingHelper {
 
@@ -56,6 +58,9 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
     }
 
     protected synchronized void executePostStartupScripts() throws IOException {
+        final String databaseSpecificDDL = "org/killbill/billing/util/" + "ddl-" + instance.getDBEngine().name().toLowerCase() + ".sql";
+        installDDLSilently(databaseSpecificDDL);
+
         // We always want the accounts and tenants table
         instance.executeScript("drop table if exists accounts;" +
                                "CREATE TABLE accounts (\n" +
@@ -161,14 +166,24 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
 
         for (final String pack : new String[]{"catalog", "account", "analytics", "beatrix", "subscription", "util", "payment", "invoice", "entitlement", "usage", "meter", "tenant"}) {
             for (final String ddlFile : new String[]{"ddl.sql", "ddl_test.sql"}) {
-                final String ddl;
-                try {
-                    ddl = IOUtils.toString(Resources.getResource("org/killbill/billing/" + pack + "/" + ddlFile).openStream());
-                } catch (final IllegalArgumentException ignored) {
-                    // The test doesn't have this module ddl in the classpath - that's fine
-                    continue;
-                }
+                final String resourceName = "org/killbill/billing/" + pack + "/" + ddlFile;
+                installDDLSilently(resourceName);
+            }
+        }
+    }
+
+    private void installDDLSilently(final String resourceName) throws IOException {
+        final ClassLoader classLoader = MoreObjects.firstNonNull(Thread.currentThread().getContextClassLoader(), DBTestingHelper.class.getClassLoader());
+        final Enumeration<URL> resources = classLoader.getResources(resourceName);
+        while (resources.hasMoreElements()) {
+            final URL inputStream = resources.nextElement();
+
+            final String ddl;
+            try {
+                ddl = IOUtils.toString(inputStream.openStream());
                 instance.executeScript(ddl);
+            } catch (final Exception ignored) {
+                // The test doesn't have this module ddl in the classpath - that's fine
             }
         }
     }
