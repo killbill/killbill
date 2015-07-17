@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -25,13 +27,11 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.tag.ControlTagType;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,32 +43,22 @@ public class PaymentTagHandler {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentTagHandler.class);
 
-    private final Clock clock;
     private final AccountInternalApi accountApi;
-    private final PaymentProcessor paymentProcessor;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry;
     private final PaymentRoutingPluginApi invoicePaymentControlPlugin;
 
     @Inject
-    public PaymentTagHandler(final Clock clock,
-                             final AccountInternalApi accountApi,
-                             final PaymentProcessor paymentProcessor,
+    public PaymentTagHandler(final AccountInternalApi accountApi,
                              final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry,
                              final InternalCallContextFactory internalCallContextFactory) {
-        this.clock = clock;
         this.accountApi = accountApi;
-        this.paymentProcessor = paymentProcessor;
-        this.paymentControlPluginRegistry = paymentControlPluginRegistry;
-        this.invoicePaymentControlPlugin = paymentControlPluginRegistry.getServiceForName(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
+        this.invoicePaymentControlPlugin = paymentControlPluginRegistry.getServiceForName(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         this.internalCallContextFactory = internalCallContextFactory;
     }
-
 
     @AllowConcurrentEvents
     @Subscribe
     public void process_AUTO_PAY_OFF_removal(final ControlTagDeletionInternalEvent event) {
-
         if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_PAY_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
             final UUID accountId = event.getObjectId();
             processUnpaid_AUTO_PAY_OFF_payments(accountId, event.getSearchKey1(), event.getSearchKey2(), event.getUserToken());
@@ -80,9 +70,9 @@ public class PaymentTagHandler {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId,
                                                                                                                  "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
             final Account account = accountApi.getAccountById(accountId, internalCallContext);
-            ((InvoicePaymentRoutingPluginApi) invoicePaymentControlPlugin).process_AUTO_PAY_OFF_removal(account, internalCallContext);
+            ((InvoicePaymentControlPluginApi) invoicePaymentControlPlugin).process_AUTO_PAY_OFF_removal(account, internalCallContext);
 
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             log.warn(String.format("Failed to process process  removal AUTO_PAY_OFF for account %s", accountId), e);
         }
     }

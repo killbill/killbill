@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,7 +23,7 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
-import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -35,16 +36,16 @@ import com.google.common.base.Preconditions;
 
 public class DefaultControlInitiated implements LeavingStateCallback {
 
-    private final PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner;
+    private final PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner;
     private final PaymentStateControlContext stateContext;
     private final State initialState;
     private final State retriedState;
     private final TransactionType transactionType;
     private final PaymentDao paymentDao;
 
-    public DefaultControlInitiated(final PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner, final PaymentStateContext stateContext, final PaymentDao paymentDao,
+    public DefaultControlInitiated(final PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner, final PaymentStateContext stateContext, final PaymentDao paymentDao,
                                    final State initialState, final State retriedState, final TransactionType transactionType) {
-        this.retryablePaymentAutomatonRunner = retryablePaymentAutomatonRunner;
+        this.pluginControlPaymentAutomatonRunner = pluginControlPaymentAutomatonRunner;
         this.paymentDao = paymentDao;
         this.initialState = initialState;
         this.retriedState = retriedState;
@@ -54,7 +55,7 @@ public class DefaultControlInitiated implements LeavingStateCallback {
 
     @Override
     public void leavingState(final State state) throws OperationException {
-        final DateTime utcNow = retryablePaymentAutomatonRunner.getClock().getUTCNow();
+        final DateTime utcNow = pluginControlPaymentAutomatonRunner.getClock().getUTCNow();
 
         if (stateContext.getPaymentId() != null && stateContext.getPaymentExternalKey() == null) {
             final PaymentModelDao payment = paymentDao.getPayment(stateContext.getPaymentId(), stateContext.getInternalCallContext());
@@ -81,7 +82,7 @@ public class DefaultControlInitiated implements LeavingStateCallback {
                                                                                   stateContext.getAmount(), stateContext.getCurrency(),
                                                                                   stateContext.getPaymentControlPluginNames(), serializedProperties);
 
-                retryablePaymentAutomatonRunner.getPaymentDao().insertPaymentAttemptWithProperties(attempt, stateContext.getInternalCallContext());
+                pluginControlPaymentAutomatonRunner.getPaymentDao().insertPaymentAttemptWithProperties(attempt, stateContext.getInternalCallContext());
 
                 stateContext.setAttemptId(attempt.getId());
             } catch (final PluginPropertySerializerException e) {

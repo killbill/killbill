@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -53,7 +54,7 @@ import org.killbill.commons.locker.GlobalLocker;
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 
-public class MockRetryablePaymentAutomatonRunner extends PluginRoutingPaymentAutomatonRunner {
+public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAutomatonRunner {
 
     private OperationCallback operationCallback;
     private PaymentStateControlContext context;
@@ -76,10 +77,10 @@ public class MockRetryablePaymentAutomatonRunner extends PluginRoutingPaymentAut
 
     @Override
     PaymentStateControlContext createContext(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
-                                                     @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
-                                                     @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                                                     final Iterable<PluginProperty> properties,
-                                                     final List<String> pluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                                             @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
+                                             @Nullable final BigDecimal amount, @Nullable final Currency currency,
+                                             final Iterable<PluginProperty> properties,
+                                             final List<String> pluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         if (context == null) {
             return super.createContext(isApiPayment, transactionType, account, paymentMethodId, paymentId, paymentExternalKey, paymentTransactionExternalKey,
                                        amount, currency, properties, pluginNames, callContext, internalCallContext);

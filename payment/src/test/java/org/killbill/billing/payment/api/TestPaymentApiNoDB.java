@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,7 +29,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
-import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
+import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.mockito.Mockito;
@@ -49,19 +49,19 @@ import static org.testng.Assert.fail;
 public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApiNoDB.class);
-
-    private final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
-    private final static PaymentOptions PAYMENT_OPTIONS = new PaymentOptions() {
+    private static final PaymentOptions PAYMENT_OPTIONS = new PaymentOptions() {
         @Override
         public boolean isExternalPayment() {
             return false;
         }
+
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.<String>of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
+            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
 
+    private final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
     private Account account;
 
     @BeforeClass(groups = "fast")
@@ -133,11 +133,11 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
         try {
 
             final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-            final PluginProperty prop1 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
+            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
             properties.add(prop1);
 
             final Payment paymentInfo = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
-                                                                                          invoice.getId().toString(), UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
+                                                                                    invoice.getId().toString(), UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
             if (expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }

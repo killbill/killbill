@@ -84,7 +84,7 @@ import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
-import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
+import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
@@ -123,11 +123,10 @@ import static org.testng.Assert.fail;
 public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     protected static final DateTimeZone testTimeZone = DateTimeZone.UTC;
-
     protected static final Logger log = LoggerFactory.getLogger(TestIntegrationBase.class);
     protected static long AT_LEAST_ONE_MONTH_MS = 32L * 24L * 3600L * 1000L;
 
-    protected final static PaymentOptions PAYMENT_OPTIONS = new PaymentOptions() {
+    protected static final PaymentOptions PAYMENT_OPTIONS = new PaymentOptions() {
         @Override
         public boolean isExternalPayment() {
             return false;
@@ -135,11 +134,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.<String>of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
+            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
-
-    protected final static PaymentOptions EXTERNAL_PAYMENT_OPTIONS = new PaymentOptions() {
+    protected static final PaymentOptions EXTERNAL_PAYMENT_OPTIONS = new PaymentOptions() {
         @Override
         public boolean isExternalPayment() {
             return true;
@@ -147,7 +145,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.<String>of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
+            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
 
@@ -257,7 +255,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     @Inject
     protected TenantUserApi tenantUserApi;
 
-
     protected void assertListenerStatus() {
         busHandler.assertListenerStatus();
     }
@@ -356,17 +353,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         return accountUserApi.getAccountById(account.getId(), callContext);
     }
 
-    private class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase {
-
-        @Override
-        public List<PluginProperty> getProperties() {
-            final PluginProperty prop = new PluginProperty("whatever", "cool", Boolean.TRUE);
-            final List<PluginProperty> res = new ArrayList<PluginProperty>();
-            res.add(prop);
-            return res;
-        }
-    }
-
     protected PaymentMethodPlugin createPaymentMethodPlugin() {
         return new TestPaymentMethodPlugin();
     }
@@ -429,7 +415,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 try {
 
                     final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
+                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
                     properties.add(prop1);
                     return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amount, currency, UUID.randomUUID().toString(),
                                                                        UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
@@ -447,7 +433,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Payment apply(@Nullable final Void input) {
                 try {
                     final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
+                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
                     properties.add(prop1);
 
                     return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
@@ -467,7 +453,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 try {
 
                     final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
+                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
                     properties.add(prop1);
 
                     return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
@@ -501,7 +487,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Payment apply(@Nullable final Void input) {
 
                 final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                final PluginProperty prop1 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
+                final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
                 properties.add(prop1);
                 try {
                     return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
@@ -520,9 +506,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Payment apply(@Nullable final Void input) {
 
                 final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                final PluginProperty prop1 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
+                final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
                 properties.add(prop1);
-                final PluginProperty prop2 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, iias, false);
+                final PluginProperty prop2 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, iias, false);
                 properties.add(prop2);
 
                 try {
@@ -553,12 +539,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     }
 
     protected DefaultEntitlement createBaseEntitlementWithPriceOverrideAndCheckForCompletion(final UUID accountId,
-                                                                            final String bundleExternalKey,
-                                                                            final String productName,
-                                                                            final ProductCategory productCategory,
-                                                                            final BillingPeriod billingPeriod,
-                                                                            final List<PlanPhasePriceOverride> overrides,
-                                                                            final NextEvent... events) {
+                                                                                             final String bundleExternalKey,
+                                                                                             final String productName,
+                                                                                             final ProductCategory productCategory,
+                                                                                             final BillingPeriod billingPeriod,
+                                                                                             final List<PlanPhasePriceOverride> overrides,
+                                                                                             final NextEvent... events) {
         if (productCategory == ProductCategory.ADD_ON) {
             throw new RuntimeException("Unxepected Call for creating ADD_ON");
         }
@@ -579,7 +565,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             }
         }, events);
     }
-
 
     protected DefaultEntitlement createBaseEntitlementAndCheckForCompletion(final UUID accountId,
                                                                             final String bundleExternalKey,
@@ -797,6 +782,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         @Override
         public List<PlanPhasePriceOverride> getPlanPhasePriceoverrides() {
             return null;
+        }
+    }
+
+    private class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase {
+
+        @Override
+        public List<PluginProperty> getProperties() {
+            final PluginProperty prop = new PluginProperty("whatever", "cool", Boolean.TRUE);
+            final List<PluginProperty> res = new ArrayList<PluginProperty>();
+            res.add(prop);
+            return res;
         }
     }
 }

@@ -26,8 +26,8 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.api.TransactionStatus;
-import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
@@ -37,12 +37,12 @@ import com.google.common.collect.Iterables;
 
 public class DefaultControlCompleted implements EnteringStateCallback {
 
-    private PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner;
     private final PaymentStateControlContext paymentStateContext;
     private final RetryServiceScheduler retryServiceScheduler;
     private final State retriedState;
+    private final PluginControlPaymentAutomatonRunner retryablePaymentAutomatonRunner;
 
-    public DefaultControlCompleted(final PluginRoutingPaymentAutomatonRunner retryablePaymentAutomatonRunner, final PaymentStateControlContext paymentStateContext,
+    public DefaultControlCompleted(final PluginControlPaymentAutomatonRunner retryablePaymentAutomatonRunner, final PaymentStateControlContext paymentStateContext,
                                    final State retriedState, final RetryServiceScheduler retryServiceScheduler) {
         this.retryablePaymentAutomatonRunner = retryablePaymentAutomatonRunner;
         this.paymentStateContext = paymentStateContext;

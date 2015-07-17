@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -40,17 +40,17 @@ import org.killbill.billing.payment.bus.PaymentBusEventHandler;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
-import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
+import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
 import org.killbill.billing.payment.core.janitor.IncompletePaymentAttemptTask;
 import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PluginRoutingPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.DefaultPaymentDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.invoice.PaymentTagHandler;
-import org.killbill.billing.payment.invoice.dao.InvoicePaymentRoutingDao;
+import org.killbill.billing.payment.invoice.dao.InvoicePaymentControlDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.payment.retry.DefaultRetryService;
@@ -93,7 +93,7 @@ public class PaymentModule extends KillBillModule {
     protected void installPaymentDao() {
         bind(PaymentDao.class).to(DefaultPaymentDao.class).asEagerSingleton();
         // Payment Control Plugin Dao
-        bind(InvoicePaymentRoutingDao.class).asEagerSingleton();
+        bind(InvoicePaymentControlDao.class).asEagerSingleton();
     }
 
     protected void installPaymentProviderPlugins(final PaymentConfig config) {
@@ -127,26 +127,8 @@ public class PaymentModule extends KillBillModule {
         bind(PaymentStateMachineHelper.class).asEagerSingleton();
     }
 
-    public static final class StateMachineProvider implements Provider<StateMachineConfig> {
-
-        private final String stateMachineConfig;
-
-        public StateMachineProvider(final String stateMachineConfig) {
-            this.stateMachineConfig = stateMachineConfig;
-        }
-
-        @Override
-        public StateMachineConfig get() {
-            try {
-                return XMLLoader.getObjectFromString(Resources.getResource(stateMachineConfig).toExternalForm(), DefaultStateMachineConfig.class);
-            } catch (final Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
-    }
-
     protected void installAutomatonRunner() {
-        bind(PluginRoutingPaymentAutomatonRunner.class).asEagerSingleton();
+        bind(PluginControlPaymentAutomatonRunner.class).asEagerSingleton();
     }
 
     protected void installProcessors(final PaymentConfig paymentConfig) {
@@ -165,7 +147,7 @@ public class PaymentModule extends KillBillModule {
                                                                                           });
         bind(ExecutorService.class).annotatedWith(Names.named(PLUGIN_EXECUTOR_NAMED)).toInstance(pluginExecutorService);
         bind(PaymentProcessor.class).asEagerSingleton();
-        bind(PluginRoutingPaymentProcessor.class).asEagerSingleton();
+        bind(PluginControlPaymentProcessor.class).asEagerSingleton();
         bind(PaymentGatewayProcessor.class).asEagerSingleton();
         bind(PaymentMethodProcessor.class).asEagerSingleton();
     }
@@ -177,7 +159,7 @@ public class PaymentModule extends KillBillModule {
 
         bind(PaymentConfig.class).toInstance(paymentConfig);
         bind(new TypeLiteral<OSGIServiceRegistration<PaymentPluginApi>>() {}).toProvider(DefaultPaymentProviderPluginRegistryProvider.class).asEagerSingleton();
-        bind(new TypeLiteral<OSGIServiceRegistration<PaymentRoutingPluginApi>>() {}).toProvider(DefaultPaymentRoutingProviderPluginRegistryProvider.class).asEagerSingleton();
+        bind(new TypeLiteral<OSGIServiceRegistration<PaymentRoutingPluginApi>>() {}).toProvider(DefaultPaymentControlProviderPluginRegistryProvider.class).asEagerSingleton();
 
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(PaymentGatewayApi.class).to(DefaultPaymentGatewayApi.class).asEagerSingleton();
@@ -192,5 +174,23 @@ public class PaymentModule extends KillBillModule {
         installAutomatonRunner();
         installRetryEngines();
         installJanitor();
+    }
+
+    public static final class StateMachineProvider implements Provider<StateMachineConfig> {
+
+        private final String stateMachineConfig;
+
+        public StateMachineProvider(final String stateMachineConfig) {
+            this.stateMachineConfig = stateMachineConfig;
+        }
+
+        @Override
+        public StateMachineConfig get() {
+            try {
+                return XMLLoader.getObjectFromString(Resources.getResource(stateMachineConfig).toExternalForm(), DefaultStateMachineConfig.class);
+            } catch (final Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
     }
 }

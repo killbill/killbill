@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,8 +31,8 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
-import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
-import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
+import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
+import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -55,15 +55,15 @@ public class DefaultPaymentApi implements PaymentApi {
     private final PaymentConfig paymentConfig;
     private final PaymentProcessor paymentProcessor;
     private final PaymentMethodProcessor paymentMethodProcessor;
-    private final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor;
+    private final PluginControlPaymentProcessor pluginControlPaymentProcessor;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultPaymentApi(final PaymentConfig paymentConfig, final PaymentProcessor paymentProcessor, final PaymentMethodProcessor paymentMethodProcessor, final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultPaymentApi(final PaymentConfig paymentConfig, final PaymentProcessor paymentProcessor, final PaymentMethodProcessor paymentMethodProcessor, final PluginControlPaymentProcessor pluginControlPaymentProcessor, final InternalCallContextFactory internalCallContextFactory) {
         this.paymentConfig = paymentConfig;
         this.paymentProcessor = paymentProcessor;
         this.paymentMethodProcessor = paymentMethodProcessor;
-        this.pluginRoutingPaymentProcessor = pluginRoutingPaymentProcessor;
+        this.pluginControlPaymentProcessor = pluginControlPaymentProcessor;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -103,7 +103,7 @@ public class DefaultPaymentApi implements PaymentApi {
         logAPICall(TransactionType.AUTHORIZE.name(), account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return pluginRoutingPaymentProcessor.createAuthorization(IS_API_PAYMENT, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
+        return pluginControlPaymentProcessor.createAuthorization(IS_API_PAYMENT, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                  properties, paymentControlPluginNames, callContext, internalCallContext);
     }
 
@@ -139,8 +139,8 @@ public class DefaultPaymentApi implements PaymentApi {
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return pluginRoutingPaymentProcessor.createCapture(IS_API_PAYMENT, account, paymentId, amount, currency, paymentTransactionExternalKey,
-                                              properties, paymentControlPluginNames, callContext, internalCallContext);
+        return pluginControlPaymentProcessor.createCapture(IS_API_PAYMENT, account, paymentId, amount, currency, paymentTransactionExternalKey,
+                                                           properties, paymentControlPluginNames, callContext, internalCallContext);
     }
 
     @Override
@@ -187,7 +187,7 @@ public class DefaultPaymentApi implements PaymentApi {
         final UUID nonNulPaymentMethodId = (paymentMethodId != null) ?
                                            paymentMethodId :
                                            paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, properties, callContext, internalCallContext);
-        return pluginRoutingPaymentProcessor.createPurchase(IS_API_PAYMENT, account, nonNulPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
+        return pluginControlPaymentProcessor.createPurchase(IS_API_PAYMENT, account, nonNulPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                             properties, paymentControlPluginNames, callContext, internalCallContext);
 
     }
@@ -222,8 +222,8 @@ public class DefaultPaymentApi implements PaymentApi {
         logAPICall(TransactionType.VOID.name(), account, null, paymentId, null, null, null, null, paymentTransactionExternalKey);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return pluginRoutingPaymentProcessor.createVoid(IS_API_PAYMENT, account, paymentId, paymentTransactionExternalKey,
-                                           properties, paymentControlPluginNames, callContext, internalCallContext);
+        return pluginControlPaymentProcessor.createVoid(IS_API_PAYMENT, account, paymentId, paymentTransactionExternalKey,
+                                                        properties, paymentControlPluginNames, callContext, internalCallContext);
     }
 
     @Override
@@ -264,7 +264,7 @@ public class DefaultPaymentApi implements PaymentApi {
         logAPICall(TransactionType.REFUND.name(), account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return pluginRoutingPaymentProcessor.createRefund(IS_API_PAYMENT, account, paymentId, amount, currency, paymentTransactionExternalKey,
+        return pluginControlPaymentProcessor.createRefund(IS_API_PAYMENT, account, paymentId, amount, currency, paymentTransactionExternalKey,
                                                           properties, paymentControlPluginNames, callContext, internalCallContext);
 
     }
@@ -307,7 +307,7 @@ public class DefaultPaymentApi implements PaymentApi {
         logAPICall(TransactionType.CREDIT.name(), account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return pluginRoutingPaymentProcessor.createCredit(IS_API_PAYMENT, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
+        return pluginControlPaymentProcessor.createCredit(IS_API_PAYMENT, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                           properties, paymentControlPluginNames, callContext, internalCallContext);
     }
 
@@ -357,7 +357,7 @@ public class DefaultPaymentApi implements PaymentApi {
         checkPositiveAmount(amount);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        return pluginRoutingPaymentProcessor.createChargeback(IS_API_PAYMENT, account, paymentId, paymentTransactionExternalKey, amount, currency,
+        return pluginControlPaymentProcessor.createChargeback(IS_API_PAYMENT, account, paymentId, paymentTransactionExternalKey, amount, currency,
                                                               paymentControlPluginNames, callContext, internalCallContext);
     }
 
@@ -527,7 +527,7 @@ public class DefaultPaymentApi implements PaymentApi {
         if (paymentConfig.getPaymentControlPluginNames() != null &&
             paymentOptions.getPaymentControlPluginNames() != null &&
             paymentOptions.getPaymentControlPluginNames().size() == 1 &&
-            InvoicePaymentRoutingPluginApi.PLUGIN_NAME.equals(paymentOptions.getPaymentControlPluginNames().get(0))) {
+            InvoicePaymentControlPluginApi.PLUGIN_NAME.equals(paymentOptions.getPaymentControlPluginNames().get(0))) {
             final List<String> paymentControlPluginNames = new LinkedList<String>(paymentOptions.getPaymentControlPluginNames());
             paymentControlPluginNames.addAll(paymentConfig.getPaymentControlPluginNames());
             return paymentControlPluginNames;

@@ -18,7 +18,6 @@
 
 package org.killbill.billing.payment.bus;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -31,12 +30,11 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.PaymentInternalEvent;
-import org.killbill.billing.payment.api.DefaultPaymentInfoEvent;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.core.PluginRoutingPaymentProcessor;
+import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
 import org.killbill.billing.payment.core.janitor.Janitor;
-import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
+import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -52,31 +50,31 @@ import com.google.inject.Inject;
 
 public class PaymentBusEventHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentBusEventHandler.class);
+
     private final AccountInternalApi accountApi;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor;
+    private final PluginControlPaymentProcessor pluginControlPaymentProcessor;
     private final PaymentConfig paymentConfig;
     private final Janitor janitor;
-
-    private static final Logger log = LoggerFactory.getLogger(PaymentBusEventHandler.class);
 
     @Inject
     public PaymentBusEventHandler(final PaymentConfig paymentConfig,
                                   final AccountInternalApi accountApi,
-                                  final PluginRoutingPaymentProcessor pluginRoutingPaymentProcessor,
+                                  final PluginControlPaymentProcessor pluginControlPaymentProcessor,
                                   final Janitor janitor,
                                   final InternalCallContextFactory internalCallContextFactory) {
         this.paymentConfig = paymentConfig;
         this.accountApi = accountApi;
         this.janitor = janitor;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.pluginRoutingPaymentProcessor = pluginRoutingPaymentProcessor;
+        this.pluginControlPaymentProcessor = pluginControlPaymentProcessor;
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void processPaymentEvent(final PaymentInternalEvent event) {
-            janitor.processPaymentEvent(event);
+        janitor.processPaymentEvent(event);
     }
 
     @AllowConcurrentEvents
@@ -91,15 +89,15 @@ public class PaymentBusEventHandler {
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
 
             final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-            final PluginProperty prop1 = new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, event.getInvoiceId().toString(), false);
+            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, event.getInvoiceId().toString(), false);
             properties.add(prop1);
 
             final CallContext callContext = internalCallContextFactory.createCallContext(internalContext);
 
             final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
             final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames() != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames()) : new LinkedList<String>();
-            paymentControlPluginNames.add(InvoicePaymentRoutingPluginApi.PLUGIN_NAME);
-            pluginRoutingPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(),
+            paymentControlPluginNames.add(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+            pluginControlPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(),
                                                          properties, paymentControlPluginNames, callContext, internalContext);
         } catch (final AccountApiException e) {
             log.error("Failed to process invoice payment", e);

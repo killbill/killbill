@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.provider;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentRoutingResult;
@@ -27,22 +28,35 @@ import org.killbill.billing.routing.plugin.api.PaymentRoutingContext;
 import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
 import org.killbill.billing.routing.plugin.api.PriorPaymentRoutingResult;
 
-public class DefaultPaymentRoutingProviderPlugin implements PaymentRoutingPluginApi {
+public class MockPaymentControlProviderPlugin implements PaymentRoutingPluginApi {
 
-    public static final String PLUGIN_NAME = "__DEFAULT_PAYMENT_CONTROL__";
+    public static final String PLUGIN_NAME = "MOCK_RETRY_PLUGIN";
 
-    @Override
-    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
-        return new DefaultPriorPaymentRoutingResult(false);
+    private boolean isAborted;
+    private DateTime nextRetryDate;
+
+    public MockPaymentControlProviderPlugin setAborted(final boolean isAborted) {
+        this.isAborted = isAborted;
+        return this;
+    }
+
+    public MockPaymentControlProviderPlugin setNextRetryDate(final DateTime nextRetryDate) {
+        this.nextRetryDate = nextRetryDate;
+        return this;
     }
 
     @Override
-    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) {
+    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        return new DefaultPriorPaymentRoutingResult(isAborted);
+    }
+
+    @Override
+    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
         return null;
     }
 
     @Override
-    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) {
-        return new DefaultFailureCallResult(null);
+    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        return new DefaultFailureCallResult(nextRetryDate);
     }
 }

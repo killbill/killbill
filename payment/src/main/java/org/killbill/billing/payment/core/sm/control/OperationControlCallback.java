@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -57,11 +58,9 @@ import org.slf4j.LoggerFactory;
 
 public abstract class OperationControlCallback extends OperationCallbackBase<Payment, PaymentApiException> implements OperationCallback {
 
-    private final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry;
-
     protected final PaymentProcessor paymentProcessor;
     protected final PaymentStateControlContext paymentStateControlContext;
-
+    private final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry;
     private final Logger logger = LoggerFactory.getLogger(OperationControlCallback.class);
 
     protected OperationControlCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry) {
@@ -82,7 +81,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
 
-                final PaymentRoutingContext paymentControlContext = new DefaultPaymentRoutingContext(paymentStateContext.getAccount(),
+                final PaymentRoutingContext paymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                      paymentStateContext.getPaymentMethodId(),
                                                                                                      paymentStateControlContext.getAttemptId(),
                                                                                                      paymentStateContext.getPaymentId(),
@@ -118,7 +117,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
                     success = transaction.getTransactionStatus() == TransactionStatus.SUCCESS || transaction.getTransactionStatus() == TransactionStatus.PENDING;
                     if (success) {
-                        final PaymentRoutingContext updatedPaymentRoutingContext = new DefaultPaymentRoutingContext(paymentStateContext.getAccount(),
+                        final PaymentRoutingContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                                     paymentStateContext.getPaymentMethodId(),
                                                                                                                     paymentStateControlContext.getAttemptId(),
                                                                                                                     result.getId(),
@@ -134,7 +133,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                                     paymentStateControlContext.isApiPayment(),
                                                                                                                     paymentStateContext.getCallContext());
 
-                        executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentRoutingContext);
+                        executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
                     } else {
                         throw new OperationException(null, executePluginOnFailureCallsAndSetRetryDate(paymentStateControlContext, paymentControlContext));
@@ -220,7 +219,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         // Return as soon as the first plugin aborts, or the last result for the last plugin
         PriorPaymentRoutingResult prevResult = null;
 
-        PaymentRoutingContext inputPaymentRoutingContext = paymentControlContextArg;
+        PaymentRoutingContext inputPaymentControlContext = paymentControlContextArg;
 
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentRoutingPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
@@ -229,20 +228,20 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                 logger.warn("Skipping unknown payment control plugin {} when fetching results", pluginName);
                 continue;
             }
-            prevResult = plugin.priorCall(inputPaymentRoutingContext, paymentStateContext.getProperties());
+            prevResult = plugin.priorCall(inputPaymentControlContext, paymentStateContext.getProperties());
             if (prevResult.isAborted()) {
                 break;
             }
-            inputPaymentRoutingContext = new DefaultPaymentRoutingContext(paymentStateContext.getAccount(),
-                                                                          prevResult.getAdjustedPaymentMethodId() != null ? prevResult.getAdjustedPaymentMethodId() : inputPaymentRoutingContext.getPaymentMethodId(),
+            inputPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                                                                          prevResult.getAdjustedPaymentMethodId() != null ? prevResult.getAdjustedPaymentMethodId() : inputPaymentControlContext.getPaymentMethodId(),
                                                                           paymentStateControlContext.getAttemptId(),
                                                                           paymentStateContext.getPaymentId(),
                                                                           paymentStateContext.getPaymentExternalKey(),
                                                                           paymentStateContext.getPaymentTransactionExternalKey(),
                                                                           paymentStateContext.getTransactionType(),
-                                                                          prevResult.getAdjustedAmount() != null ? prevResult.getAdjustedAmount() : inputPaymentRoutingContext.getAmount(),
-                                                                          prevResult.getAdjustedCurrency() != null ? prevResult.getAdjustedCurrency() : inputPaymentRoutingContext.getCurrency(),
-                                                                          prevResult.getAdjustedPluginProperties() != null ? prevResult.getAdjustedPluginProperties() : inputPaymentRoutingContext.getPluginProperties(),
+                                                                          prevResult.getAdjustedAmount() != null ? prevResult.getAdjustedAmount() : inputPaymentControlContext.getAmount(),
+                                                                          prevResult.getAdjustedCurrency() != null ? prevResult.getAdjustedCurrency() : inputPaymentControlContext.getCurrency(),
+                                                                          prevResult.getAdjustedPluginProperties() != null ? prevResult.getAdjustedPluginProperties() : inputPaymentControlContext.getPluginProperties(),
                                                                           paymentStateControlContext.isApiPayment(),
                                                                           paymentStateContext.getCallContext());
 
@@ -281,7 +280,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         return candidate;
     }
 
-    public static class DefaultPaymentRoutingContext extends DefaultCallContext implements PaymentRoutingContext {
+    public static class DefaultPaymentControlContext extends DefaultCallContext implements PaymentRoutingContext {
 
         private final Account account;
         private final UUID paymentMethodId;
@@ -298,12 +297,12 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         private final boolean isApiPayment;
         private final Iterable<PluginProperty> properties;
 
-        public DefaultPaymentRoutingContext(final Account account, final UUID paymentMethodId, final UUID attemptId, @Nullable final UUID paymentId, final String paymentExternalKey, final String transactionExternalKey, final TransactionType transactionType, final BigDecimal amount, final Currency currency,
+        public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, final UUID attemptId, @Nullable final UUID paymentId, final String paymentExternalKey, final String transactionExternalKey, final TransactionType transactionType, final BigDecimal amount, final Currency currency,
                                             final Iterable<PluginProperty> properties, final boolean isApiPayment, final CallContext callContext) {
             this(account, paymentMethodId, attemptId, paymentId, paymentExternalKey, null, transactionExternalKey, transactionType, amount, currency, null, null, properties, isApiPayment, callContext);
         }
 
-        public DefaultPaymentRoutingContext(final Account account, final UUID paymentMethodId, final UUID attemptId, @Nullable final UUID paymentId, final String paymentExternalKey, @Nullable final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
+        public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, final UUID attemptId, @Nullable final UUID paymentId, final String paymentExternalKey, @Nullable final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
                                             final BigDecimal amount, final Currency currency, @Nullable final BigDecimal processedAmount, @Nullable final Currency processedCurrency, final Iterable<PluginProperty> properties, final boolean isApiPayment, final CallContext callContext) {
             super(callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getUserToken(), callContext.getCreatedDate(), callContext.getUpdatedDate());
             this.account = account;
@@ -393,7 +392,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
         @Override
         public String toString() {
-            return "DefaultPaymentRoutingContext{" +
+            return "DefaultPaymentControlContext{" +
                    "account=" + account +
                    ", paymentMethodId=" + paymentMethodId +
                    ", attemptId=" + attemptId +

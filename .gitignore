@@ -30,3 +30,4 @@ killbill.lock.db
 killbill.trace.db
 server/test.db
 .idea/dictionaries/
+.idea/dbnavigator.xml

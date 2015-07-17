@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -35,7 +37,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.dao.MockPaymentDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.invoice.InvoicePaymentRoutingPluginApi;
+import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -133,8 +135,8 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String transactionExternalKey = UUID.randomUUID().toString();
         try {
-            pluginRoutingPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amount, Currency.USD, paymentExternalKey, transactionExternalKey,
-                                                         createPropertiesForInvoice(invoice), ImmutableList.<String>of(InvoicePaymentRoutingPluginApi.PLUGIN_NAME), callContext, internalCallContext);
+            pluginControlPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amount, Currency.USD, paymentExternalKey, transactionExternalKey,
+                                                         createPropertiesForInvoice(invoice), ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME), callContext, internalCallContext);
         } catch (final PaymentApiException e) {
             failed = true;
         }
@@ -203,11 +205,6 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         }
     }
 
-    private enum FailureType {
-        PLUGIN_EXCEPTION,
-        PAYMENT_FAILURE
-    }
-
     private void setPaymentFailure(final FailureType failureType) {
         if (failureType == FailureType.PAYMENT_FAILURE) {
             mockPaymentProviderPlugin.makeNextPaymentFailWithError();
@@ -236,8 +233,12 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
     private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
         final List<PluginProperty> result = new ArrayList<PluginProperty>();
-        result.add(new PluginProperty(InvoicePaymentRoutingPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
+        result.add(new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
         return result;
     }
 
+    private enum FailureType {
+        PLUGIN_EXCEPTION,
+        PAYMENT_FAILURE
+    }
 }

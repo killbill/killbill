@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -50,10 +51,10 @@ import org.killbill.billing.payment.core.sm.control.CreditControlOperation;
 import org.killbill.billing.payment.core.sm.control.DefaultControlCompleted;
 import org.killbill.billing.payment.core.sm.control.DefaultControlInitiated;
 import org.killbill.billing.payment.core.sm.control.NoopControlInitiated;
+import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.core.sm.control.PurchaseControlOperation;
 import org.killbill.billing.payment.core.sm.control.RefundControlOperation;
 import org.killbill.billing.payment.core.sm.control.VoidControlOperation;
-import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -71,19 +72,17 @@ import com.google.common.base.Objects;
 import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 
-public class PluginRoutingPaymentAutomatonRunner extends PaymentAutomatonRunner {
-
-    private final PaymentProcessor paymentProcessor;
-    private final RetryServiceScheduler retryServiceScheduler;
-
-    private final PaymentControlStateMachineHelper paymentControlStateMachineHelper;
+public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner {
 
     protected final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry;
+    private final PaymentProcessor paymentProcessor;
+    private final RetryServiceScheduler retryServiceScheduler;
+    private final PaymentControlStateMachineHelper paymentControlStateMachineHelper;
 
     @Inject
-    public PluginRoutingPaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+    public PluginControlPaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                                final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry, final Clock clock, final PaymentProcessor paymentProcessor, @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
-                                               final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor, final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper paymentControlStateMachineHelper, final PersistentBus eventBus) {
+                                               final PaymentConfig paymentConfig, @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor, final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper paymentControlStateMachineHelper, final PersistentBus eventBus) {
         super(stateMachineConfig, paymentConfig, paymentDao, locker, pluginRegistry, clock, executor, eventBus, paymentSMHelper);
         this.paymentProcessor = paymentProcessor;
         this.paymentControlPluginRegistry = paymentControlPluginRegistry;
@@ -106,10 +105,10 @@ public class PluginRoutingPaymentAutomatonRunner extends PaymentAutomatonRunner 
                        final Iterable<PluginProperty> properties, @Nullable final List<String> paymentControlPluginNames,
                        final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         final PaymentStateControlContext paymentStateContext = createContext(isApiPayment, transactionType, account, paymentMethodId,
-                                                                               paymentId, paymentExternalKey,
-                                                                               paymentTransactionExternalKey,
-                                                                               amount, currency,
-                                                                               properties, paymentControlPluginNames, callContext, internalCallContext);
+                                                                             paymentId, paymentExternalKey,
+                                                                             paymentTransactionExternalKey,
+                                                                             amount, currency,
+                                                                             properties, paymentControlPluginNames, callContext, internalCallContext);
         try {
             final OperationCallback callback = createOperationCallback(transactionType, paymentStateContext);
             final LeavingStateCallback leavingStateCallback = new DefaultControlInitiated(this, paymentStateContext, paymentDao, paymentControlStateMachineHelper.getInitialState(), paymentControlStateMachineHelper.getRetriedState(), transactionType);
@@ -154,11 +153,11 @@ public class PluginRoutingPaymentAutomatonRunner extends PaymentAutomatonRunner 
 
     @VisibleForTesting
     PaymentStateControlContext createContext(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
-                                               @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
-                                               @Nullable final BigDecimal amount, @Nullable final Currency currency, final Iterable<PluginProperty> properties,
-                                               final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+                                             @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
+                                             @Nullable final BigDecimal amount, @Nullable final Currency currency, final Iterable<PluginProperty> properties,
+                                             final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return new PaymentStateControlContext(paymentControlPluginNames, isApiPayment, paymentId, paymentExternalKey, paymentTransactionExternalKey, transactionType, account,
-                                                paymentMethodId, amount, currency, properties, internalCallContext, callContext);
+                                              paymentMethodId, amount, currency, properties, internalCallContext, callContext);
     }
 
     @VisibleForTesting
@@ -191,5 +190,4 @@ public class PluginRoutingPaymentAutomatonRunner extends PaymentAutomatonRunner 
         }
         return callback;
     }
-
 }

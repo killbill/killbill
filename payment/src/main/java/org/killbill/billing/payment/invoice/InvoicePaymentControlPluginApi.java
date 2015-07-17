@@ -45,7 +45,7 @@ import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.glue.PaymentModule;
-import org.killbill.billing.payment.invoice.dao.InvoicePaymentRoutingDao;
+import org.killbill.billing.payment.invoice.dao.InvoicePaymentControlDao;
 import org.killbill.billing.payment.invoice.dao.PluginAutoPayOffModelDao;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
@@ -75,9 +75,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
-public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPluginApi {
+public final class InvoicePaymentControlPluginApi implements PaymentRoutingPluginApi {
 
-    public static final String CREATED_BY = "InvoicePaymentRoutingPluginApi";
+    public static final String CREATED_BY = "InvoicePaymentControlPluginApi";
 
     /* Don't change value String for properties as they are referenced from jaxrs without the constants which are not accessible */
     public static final String PLUGIN_NAME = "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
@@ -89,95 +89,93 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
     private final InvoiceInternalApi invoiceApi;
     private final TagUserApi tagApi;
     private final PaymentDao paymentDao;
-    private final InvoicePaymentRoutingDao controlDao;
+    private final InvoicePaymentControlDao controlDao;
     private final RetryServiceScheduler retryServiceScheduler;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Clock clock;
 
-    private final Logger log = LoggerFactory.getLogger(InvoicePaymentRoutingPluginApi.class);
+    private final Logger log = LoggerFactory.getLogger(InvoicePaymentControlPluginApi.class);
 
     @Inject
-    public InvoicePaymentRoutingPluginApi(final PaymentConfig paymentConfig, final InvoiceInternalApi invoiceApi, final TagUserApi tagApi, final PaymentDao paymentDao,
-                                          final InvoicePaymentRoutingDao invoicePaymentRoutingDao,
+    public InvoicePaymentControlPluginApi(final PaymentConfig paymentConfig, final InvoiceInternalApi invoiceApi, final TagUserApi tagApi, final PaymentDao paymentDao,
+                                          final InvoicePaymentControlDao invoicePaymentControlDao,
                                           @Named(PaymentModule.RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
                                           final InternalCallContextFactory internalCallContextFactory, final Clock clock) {
         this.paymentConfig = paymentConfig;
         this.invoiceApi = invoiceApi;
         this.tagApi = tagApi;
         this.paymentDao = paymentDao;
-        this.controlDao = invoicePaymentRoutingDao;
+        this.controlDao = invoicePaymentControlDao;
         this.retryServiceScheduler = retryServiceScheduler;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
     }
 
     @Override
-    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentRoutingContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
-
-        final TransactionType transactionType = paymentRoutingContext.getTransactionType();
+    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
                                     transactionType == TransactionType.REFUND ||
                                     transactionType == TransactionType.CHARGEBACK);
 
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentRoutingContext.getAccountId(), paymentRoutingContext);
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         switch (transactionType) {
             case PURCHASE:
-                return getPluginPurchaseResult(paymentRoutingContext, internalContext);
+                return getPluginPurchaseResult(paymentControlContext, internalContext);
             case REFUND:
-                return getPluginRefundResult(paymentRoutingContext, internalContext);
+                return getPluginRefundResult(paymentControlContext, internalContext);
             case CHARGEBACK:
-                return new DefaultPriorPaymentRoutingResult(false, paymentRoutingContext.getAmount());
+                return new DefaultPriorPaymentRoutingResult(false, paymentControlContext.getAmount());
             default:
                 throw new IllegalStateException("Unexpected transactionType " + transactionType);
         }
     }
 
     @Override
-    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentRoutingContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
-
-        final TransactionType transactionType = paymentRoutingContext.getTransactionType();
+    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
                                     transactionType == TransactionType.REFUND ||
                                     transactionType == TransactionType.CHARGEBACK);
 
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentRoutingContext.getAccountId(), paymentRoutingContext);
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         try {
             final InvoicePayment existingInvoicePayment;
             switch (transactionType) {
                 case PURCHASE:
-                    final UUID invoiceId = getInvoiceId(paymentRoutingContext);
-                    existingInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentRoutingContext.getPaymentId(), internalContext);
+                    final UUID invoiceId = getInvoiceId(paymentControlContext);
+                    existingInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
-                        log.info("onSuccessCall was already completed for payment purchase :" + paymentRoutingContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for payment purchase :" + paymentControlContext.getPaymentId());
                     } else {
                         invoiceApi.notifyOfPayment(invoiceId,
-                                                   paymentRoutingContext.getAmount(),
-                                                   paymentRoutingContext.getCurrency(),
-                                                   paymentRoutingContext.getProcessedCurrency(),
-                                                   paymentRoutingContext.getPaymentId(),
-                                                   paymentRoutingContext.getCreatedDate(),
+                                                   paymentControlContext.getAmount(),
+                                                   paymentControlContext.getCurrency(),
+                                                   paymentControlContext.getProcessedCurrency(),
+                                                   paymentControlContext.getPaymentId(),
+                                                   paymentControlContext.getCreatedDate(),
                                                    internalContext);
                     }
                     break;
 
                 case REFUND:
-                    existingInvoicePayment = invoiceApi.getInvoicePaymentForRefund(paymentRoutingContext.getPaymentId(), internalContext);
+                    existingInvoicePayment = invoiceApi.getInvoicePaymentForRefund(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
-                        log.info("onSuccessCall was already completed for payment refund :" + paymentRoutingContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for payment refund :" + paymentControlContext.getPaymentId());
                     } else {
-                        final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentRoutingContext.getPluginProperties());
-                        final PluginProperty prop = getPluginProperty(paymentRoutingContext.getPluginProperties(), PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
+                        final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentControlContext.getPluginProperties());
+                        final PluginProperty prop = getPluginProperty(paymentControlContext.getPluginProperties(), PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
                         final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
-                        invoiceApi.createRefund(paymentRoutingContext.getPaymentId(), paymentRoutingContext.getAmount(), isAdjusted, idWithAmount, paymentRoutingContext.getTransactionExternalKey(), internalContext);
+                        invoiceApi.createRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
                     }
                     break;
 
                 case CHARGEBACK:
-                    existingInvoicePayment = invoiceApi.getInvoicePaymentForChargeback(paymentRoutingContext.getPaymentId(), internalContext);
+                    existingInvoicePayment = invoiceApi.getInvoicePaymentForChargeback(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
-                        log.info("onSuccessCall was already completed for payment chargeback :" + paymentRoutingContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for payment chargeback :" + paymentControlContext.getPaymentId());
                     } else {
-                        invoiceApi.createChargeback(paymentRoutingContext.getPaymentId(), paymentRoutingContext.getProcessedAmount(), paymentRoutingContext.getProcessedCurrency(), internalContext);
+                        invoiceApi.createChargeback(paymentControlContext.getPaymentId(), paymentControlContext.getProcessedAmount(), paymentControlContext.getProcessedCurrency(), internalContext);
                     }
                     break;
 
@@ -185,20 +183,18 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
                     throw new IllegalStateException("Unexpected transactionType " + transactionType);
             }
         } catch (final InvoiceApiException e) {
-            log.error("InvoicePaymentRoutingPluginApi onSuccessCall failed for attemptId = " + paymentRoutingContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
+            log.error("InvoicePaymentControlPluginApi onSuccessCall failed for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
         }
         return null;
     }
 
     @Override
-    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentRoutingContext, final Iterable<PluginProperty> properties) throws
-                                                                                                                                                     PaymentRoutingApiException {
-
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentRoutingContext.getAccountId(), paymentRoutingContext);
-        final TransactionType transactionType = paymentRoutingContext.getTransactionType();
+    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
+        final TransactionType transactionType = paymentControlContext.getTransactionType();
         switch (transactionType) {
             case PURCHASE:
-                final DateTime nextRetryDate = computeNextRetryDate(paymentRoutingContext.getPaymentExternalKey(), paymentRoutingContext.isApiPayment(), internalContext);
+                final DateTime nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
                 return new DefaultFailureCallResult(nextRetryDate);
             case REFUND:
             case CHARGEBACK:
@@ -218,8 +214,8 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
         controlDao.removeAutoPayOffEntry(account.getId());
     }
 
-    private UUID getInvoiceId(final PaymentRoutingContext paymentRoutingContext) throws PaymentRoutingApiException {
-        final PluginProperty invoiceProp = getPluginProperty(paymentRoutingContext.getPluginProperties(), PROP_IPCD_INVOICE_ID);
+    private UUID getInvoiceId(final PaymentRoutingContext paymentControlContext) throws PaymentRoutingApiException {
+        final PluginProperty invoiceProp = getPluginProperty(paymentControlContext.getPluginProperties(), PROP_IPCD_INVOICE_ID);
         if (invoiceProp == null ||
             !(invoiceProp.getValue() instanceof String)) {
             throw new PaymentRoutingApiException("Need to specify a valid invoiceId in property " + PROP_IPCD_INVOICE_ID);
@@ -227,22 +223,21 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
         return UUID.fromString((String) invoiceProp.getValue());
     }
 
-    private PriorPaymentRoutingResult getPluginPurchaseResult(final PaymentRoutingContext paymentRoutingPluginContext, final InternalCallContext internalContext) throws PaymentRoutingApiException {
-
+    private PriorPaymentRoutingResult getPluginPurchaseResult(final PaymentRoutingContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentRoutingApiException {
         try {
-            final UUID invoiceId = getInvoiceId(paymentRoutingPluginContext);
+            final UUID invoiceId = getInvoiceId(paymentControlPluginContext);
             final Invoice invoice = rebalanceAndGetInvoice(invoiceId, internalContext);
-            final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentRoutingPluginContext.getAmount(), paymentRoutingPluginContext.isApiPayment());
+            final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
 
             final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
-            if (!isAborted && insert_AUTO_PAY_OFF_ifRequired(paymentRoutingPluginContext, requestedAmount)) {
+            if (!isAborted && insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
                 return new DefaultPriorPaymentRoutingResult(true);
             }
 
-            if (paymentRoutingPluginContext.isApiPayment() && isAborted) {
+            if (paymentControlPluginContext.isApiPayment() && isAborted) {
                 throw new PaymentRoutingApiException("Payment for invoice " + invoice.getId() +
                                                      " aborted : invoice balance is = " + invoice.getBalance() +
-                                                     ", requested payment amount is = " + paymentRoutingPluginContext.getAmount());
+                                                     ", requested payment amount is = " + paymentControlPluginContext.getAmount());
             } else {
                 return new DefaultPriorPaymentRoutingResult(isAborted, requestedAmount);
             }
@@ -253,29 +248,28 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
         }
     }
 
-    private PriorPaymentRoutingResult getPluginRefundResult(final PaymentRoutingContext paymentRoutingPluginContext, final InternalCallContext internalContext) throws PaymentRoutingApiException {
-
-        final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentRoutingPluginContext.getPluginProperties());
-        if ((paymentRoutingPluginContext.getAmount() == null || paymentRoutingPluginContext.getAmount().compareTo(BigDecimal.ZERO) == 0) &&
+    private PriorPaymentRoutingResult getPluginRefundResult(final PaymentRoutingContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentRoutingApiException {
+        final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentControlPluginContext.getPluginProperties());
+        if ((paymentControlPluginContext.getAmount() == null || paymentControlPluginContext.getAmount().compareTo(BigDecimal.ZERO) == 0) &&
             idWithAmount.size() == 0) {
-            throw new PaymentRoutingApiException("Refund for payment, key = " + paymentRoutingPluginContext.getPaymentExternalKey() +
-                                                 " aborted: requested refund amount is = " + paymentRoutingPluginContext.getAmount());
+            throw new PaymentRoutingApiException("Refund for payment, key = " + paymentControlPluginContext.getPaymentExternalKey() +
+                                                 " aborted: requested refund amount is = " + paymentControlPluginContext.getAmount());
         }
 
-        final PaymentModelDao payment = paymentDao.getPayment(paymentRoutingPluginContext.getPaymentId(), internalContext);
+        final PaymentModelDao payment = paymentDao.getPayment(paymentControlPluginContext.getPaymentId(), internalContext);
         if (payment == null) {
             throw new PaymentRoutingApiException();
         }
         // This will calculate the upper bound on the refund amount based on the invoice items associated with that payment.
         // Note that we are not checking that other (partial) refund occurred, but if the refund ends up being greater than waht is allowed
         // the call to the gateway would fail; it would need noce to validate on our side though...
-        final BigDecimal amountToBeRefunded = computeRefundAmount(payment.getId(), paymentRoutingPluginContext.getAmount(), idWithAmount, internalContext);
+        final BigDecimal amountToBeRefunded = computeRefundAmount(payment.getId(), paymentControlPluginContext.getAmount(), idWithAmount, internalContext);
         final boolean isAborted = amountToBeRefunded.compareTo(BigDecimal.ZERO) == 0;
 
-        if (paymentRoutingPluginContext.isApiPayment() && isAborted) {
+        if (paymentControlPluginContext.isApiPayment() && isAborted) {
             throw new PaymentRoutingApiException("Refund for payment " + payment.getId() +
                                                  " aborted : invoice item sum amount is " + amountToBeRefunded +
-                                                 ", requested refund amount is = " + paymentRoutingPluginContext.getAmount());
+                                                 ", requested refund amount is = " + paymentControlPluginContext.getAmount());
         } else {
             return new DefaultPriorPaymentRoutingResult(isAborted, amountToBeRefunded);
         }
@@ -461,15 +455,14 @@ public final class InvoicePaymentRoutingPluginApi implements PaymentRoutingPlugi
         }
     }
 
-    private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentRoutingContext paymentRoutingContext, final BigDecimal computedAmount) {
-
-        if (paymentRoutingContext.isApiPayment() || !isAccountAutoPayOff(paymentRoutingContext.getAccountId(), paymentRoutingContext)) {
+    private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentRoutingContext paymentControlContext, final BigDecimal computedAmount) {
+        if (paymentControlContext.isApiPayment() || !isAccountAutoPayOff(paymentControlContext.getAccountId(), paymentControlContext)) {
             return false;
         }
-        final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentRoutingContext.getAttemptPaymentId(), paymentRoutingContext.getPaymentExternalKey(), paymentRoutingContext.getTransactionExternalKey(),
-                                                                           paymentRoutingContext.getAccountId(), PLUGIN_NAME,
-                                                                           paymentRoutingContext.getPaymentId(), paymentRoutingContext.getPaymentMethodId(),
-                                                                           computedAmount, paymentRoutingContext.getCurrency(), CREATED_BY, clock.getUTCNow());
+        final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getAttemptPaymentId(), paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(),
+                                                                           paymentControlContext.getAccountId(), PLUGIN_NAME,
+                                                                           paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(),
+                                                                           computedAmount, paymentControlContext.getCurrency(), CREATED_BY, clock.getUTCNow());
         controlDao.insertAutoPayOff(data);
         return true;
     }
