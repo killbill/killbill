@@ -30,10 +30,13 @@ import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Payments;
+import org.killbill.billing.client.model.PluginProperty;
+import org.killbill.billing.jaxrs.json.PluginPropertyJson;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class TestPayment extends TestJaxrsBase {
@@ -66,7 +69,7 @@ public class TestPayment extends TestJaxrsBase {
         authTransactionJson.setTransactionExternalKey(authTransactionExternalKey);
         authTransactionJson.setTransactionType("AUTHORIZE");
 
-        final ComboPaymentTransaction comboPaymentTransaction = new ComboPaymentTransaction(accountJson, paymentMethodJson, authTransactionJson);
+        final ComboPaymentTransaction comboPaymentTransaction = new ComboPaymentTransaction(accountJson, paymentMethodJson, authTransactionJson, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of());
 
         final Payment payment = killBillClient.createPayment(comboPaymentTransaction, ImmutableMap.<String, String>of(), createdBy, reason, comment);
         verifyComboPayment(payment, paymentExternalKey,

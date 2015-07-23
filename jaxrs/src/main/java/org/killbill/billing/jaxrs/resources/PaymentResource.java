@@ -51,6 +51,7 @@ import org.killbill.billing.jaxrs.json.ComboPaymentTransactionJson;
 import org.killbill.billing.jaxrs.json.PaymentJson;
 import org.killbill.billing.jaxrs.json.PaymentMethodJson;
 import org.killbill.billing.jaxrs.json.PaymentTransactionJson;
+import org.killbill.billing.jaxrs.json.PluginPropertyJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
@@ -74,6 +75,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
@@ -471,7 +473,6 @@ public class PaymentResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
     public Response createPayment(final ComboPaymentTransactionJson json,
                                   @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
-                                  @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
                                   @HeaderParam(HDR_COMMENT) final String comment,
@@ -483,30 +484,48 @@ public class PaymentResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Account account = getOrCreateAccount(json.getAccount(), callContext);
 
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final UUID paymentMethodId = getOrCreatePaymentMethod(account, json.getPaymentMethod(), pluginProperties, callContext);
+        final Iterable paymentMethodPluginProperties = Iterables.<PluginPropertyJson, PluginProperty>transform(json.getPaymentMethodPluginProperties(),
+                                                                                                               new Function<PluginPropertyJson, PluginProperty>() {
+                                                                                                                   @Override
+                                                                                                                   public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
+                                                                                                                       return pluginPropertyJson.toPluginProperty();
+                                                                                                                   }
+                                                                                                               }
+                                                                                                              );
+
+        final UUID paymentMethodId = getOrCreatePaymentMethod(account, json.getPaymentMethod(), paymentMethodPluginProperties, callContext);
 
         final PaymentTransactionJson paymentTransactionJson = json.getTransaction();
         final TransactionType transactionType = TransactionType.valueOf(paymentTransactionJson.getTransactionType());
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
 
+
+        final Iterable transactionPluginProperties = Iterables.<PluginPropertyJson, PluginProperty>transform(json.getTransactionPluginProperties(),
+                                                                                                               new Function<PluginPropertyJson, PluginProperty>() {
+                                                                                                                   @Override
+                                                                                                                   public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
+                                                                                                                       return pluginPropertyJson.toPluginProperty();
+                                                                                                                   }
+                                                                                                               }
+                                                                                                              );
+
         final UUID paymentId = null; // If we need to specify a paymentId (e.g 3DS authorization, we can use regular API, no need for combo call)
         switch (transactionType) {
             case AUTHORIZE:
                 result = paymentApi.createAuthorizationWithPaymentControl(account, paymentMethodId, paymentId, paymentTransactionJson.getAmount(), account.getCurrency(),
                                                                           paymentTransactionJson.getPaymentExternalKey(), paymentTransactionJson.getTransactionExternalKey(),
-                                                                          pluginProperties, paymentOptions, callContext);
+                                                                          transactionPluginProperties, paymentOptions, callContext);
                 break;
             case PURCHASE:
                 result = paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, paymentId, paymentTransactionJson.getAmount(), account.getCurrency(),
                                                                      paymentTransactionJson.getPaymentExternalKey(), paymentTransactionJson.getTransactionExternalKey(),
-                                                                     pluginProperties, paymentOptions, callContext);
+                                                                     transactionPluginProperties, paymentOptions, callContext);
                 break;
             case CREDIT:
                 result = paymentApi.createCreditWithPaymentControl(account, paymentMethodId, paymentId, paymentTransactionJson.getAmount(), account.getCurrency(),
                                                                    paymentTransactionJson.getPaymentExternalKey(), paymentTransactionJson.getTransactionExternalKey(),
-                                                                   pluginProperties, paymentOptions, callContext);
+                                                                   transactionPluginProperties, paymentOptions, callContext);
                 break;
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
