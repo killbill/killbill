@@ -115,7 +115,25 @@ public class PaymentResource extends JaxRsResourceBase {
         final Payment payment = paymentApi.getPayment(paymentIdId, withPluginInfo, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
         final PaymentJson result = new PaymentJson(payment, accountAuditLogs);
+        return Response.status(Response.Status.OK).entity(result).build();
+    }
 
+    @Timed
+    @GET
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a payment by id", response = PaymentJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Payment not found")})
+    public Response getPaymentByExternalKey(@QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                            @QueryParam(QUERY_EXTERNAL_KEY) final String paymentExternalKey,
+                                            @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                            @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        verifyNonNullOrEmpty(paymentExternalKey, "Payment externalKey needs to be specified");
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final TenantContext tenantContext = context.createContext(request);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, withPluginInfo, pluginProperties, tenantContext);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
+        final PaymentJson result = new PaymentJson(payment, accountAuditLogs);
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
