@@ -328,12 +328,12 @@ public class PaymentResource extends JaxRsResourceBase {
 
     private Response refundPaymentInternal(final PaymentTransactionJson json,
                                            @Nullable final String paymentIdStr,
-                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                           @HeaderParam(HDR_REASON) final String reason,
-                                           @HeaderParam(HDR_COMMENT) final String comment,
-                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+                                           final List<String> pluginPropertiesString,
+                                           final String createdBy,
+                                           final String reason,
+                                           final String comment,
+                                           final UriInfo uriInfo,
+                                           final HttpServletRequest request) throws PaymentApiException, AccountApiException {
 
         verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
         verifyNonNullOrEmpty(json.getAmount(), "PaymentTransactionJson amount needs to be set");
@@ -377,7 +377,6 @@ public class PaymentResource extends JaxRsResourceBase {
     @ApiOperation(value = "Void an existing payment")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account or payment not found")})
     public Response voidPaymentByExternalKey(final PaymentTransactionJson json,
-                                             @PathParam("paymentId") final String paymentIdStr,
                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
@@ -388,7 +387,7 @@ public class PaymentResource extends JaxRsResourceBase {
     }
 
     private Response voidPaymentInternal(final PaymentTransactionJson json,
-                                         final String paymentIdStr,
+                                         @Nullable final String paymentIdStr,
                                          final List<String> pluginPropertiesString,
                                          final String createdBy,
                                          final String reason,

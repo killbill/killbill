@@ -73,11 +73,20 @@ public class TestPayment extends TestJaxrsBase {
 
         final Payment payment = killBillClient.createPayment(comboPaymentTransaction, ImmutableMap.<String, String>of(), createdBy, reason, comment);
         verifyComboPayment(payment, paymentExternalKey,
-                      BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, 1, 1);
+                           BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, 1, 1);
+
+
+        // Void payment using externalKey
+        final String voidTransactionExternalKey = UUID.randomUUID().toString();
+        final Payment voidPayment = killBillClient.voidPayment(null, paymentExternalKey, voidTransactionExternalKey, ImmutableMap.<String, String>of(), createdBy, reason, comment);
+        verifyPaymentTransaction(voidPayment.getPaymentId(), voidPayment.getTransactions().get(1),
+                                 paymentExternalKey, voidTransactionExternalKey,
+                                 accountJson, null, "VOID");
+
 
     }
 
-    public void testCreateRetrievePayment(final Account account, @Nullable final UUID paymentMethodId,
+    private void testCreateRetrievePayment(final Account account, @Nullable final UUID paymentMethodId,
                                           final String PaymentExternalKey, final int PaymentNb) throws Exception {
         // Authorization
         final String authTransactionExternalKey = UUID.randomUUID().toString();
@@ -99,6 +108,7 @@ public class TestPayment extends TestJaxrsBase {
         captureTransaction.setCurrency(account.getCurrency());
         captureTransaction.setPaymentExternalKey(PaymentExternalKey);
         captureTransaction.setTransactionExternalKey(capture1TransactionExternalKey);
+        // captureAuthorization is using paymentId
         final Payment capturedPayment1 = killBillClient.captureAuthorization(captureTransaction, createdBy, reason, comment);
         verifyPayment(account, paymentMethodId, capturedPayment1, PaymentExternalKey, authTransactionExternalKey,
                       BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ZERO, 2, PaymentNb);
@@ -109,6 +119,8 @@ public class TestPayment extends TestJaxrsBase {
         // Capture 2
         final String capture2TransactionExternalKey = UUID.randomUUID().toString();
         captureTransaction.setTransactionExternalKey(capture2TransactionExternalKey);
+        // captureAuthorization is using externalKey
+        captureTransaction.setPaymentId(null);
         final Payment capturedPayment2 = killBillClient.captureAuthorization(captureTransaction, createdBy, reason, comment);
         verifyPayment(account, paymentMethodId, capturedPayment2, PaymentExternalKey, authTransactionExternalKey,
                       BigDecimal.TEN, new BigDecimal("2"), BigDecimal.ZERO, 3, PaymentNb);
