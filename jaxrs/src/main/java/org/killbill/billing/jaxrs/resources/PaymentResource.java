@@ -235,7 +235,6 @@ public class PaymentResource extends JaxRsResourceBase {
     @ApiOperation(value = "Capture an existing authorization")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account or payment not found")})
     public Response captureAuthorizationByExternalKey(final PaymentTransactionJson json,
-                                                      @PathParam("paymentId") final String paymentIdStr,
                                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                       @HeaderParam(HDR_REASON) final String reason,
