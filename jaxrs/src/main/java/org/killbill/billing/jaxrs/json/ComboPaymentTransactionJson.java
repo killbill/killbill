@@ -29,17 +29,24 @@ public class ComboPaymentTransactionJson extends JsonBase {
     private final AccountJson account;
     private final PaymentMethodJson paymentMethod;
     private final PaymentTransactionJson transaction;
+    private final Iterable<PluginPropertyJson> paymentMethodPluginProperties;
+    private final Iterable<PluginPropertyJson> transactionPluginProperties;
 
     @JsonCreator
     public ComboPaymentTransactionJson(@JsonProperty("account") final AccountJson account,
                                        @JsonProperty("paymentMethod") final PaymentMethodJson paymentMethod,
                                        @JsonProperty("transaction") final PaymentTransactionJson transaction,
+                                       @JsonProperty("paymentMethodPluginProperties") final Iterable<PluginPropertyJson> paymentMethodPluginProperties,
+                                       @JsonProperty("transactionPluginProperties") final Iterable<PluginPropertyJson> transactionPluginProperties,
                                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.account = account;
         this.paymentMethod = paymentMethod;
         this.transaction = transaction;
+        this.paymentMethodPluginProperties = paymentMethodPluginProperties;
+        this.transactionPluginProperties = transactionPluginProperties;
     }
+
 
     public AccountJson getAccount() {
         return account;
@@ -53,12 +60,22 @@ public class ComboPaymentTransactionJson extends JsonBase {
         return transaction;
     }
 
+    public Iterable<PluginPropertyJson> getPaymentMethodPluginProperties() {
+        return paymentMethodPluginProperties;
+    }
+
+    public Iterable<PluginPropertyJson> getTransactionPluginProperties() {
+        return transactionPluginProperties;
+    }
+
     @Override
     public String toString() {
         return "ComboPaymentTransactionJson{" +
                "account=" + account +
                ", paymentMethod=" + paymentMethod +
                ", transaction=" + transaction +
+               ", paymentMethodPluginProperties=" + paymentMethodPluginProperties +
+               ", transactionPluginProperties=" + transactionPluginProperties +
                '}';
     }
 
@@ -79,7 +96,13 @@ public class ComboPaymentTransactionJson extends JsonBase {
         if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null) {
             return false;
         }
-        return !(transaction != null ? !transaction.equals(that.transaction) : that.transaction != null);
+        if (transaction != null ? !transaction.equals(that.transaction) : that.transaction != null) {
+            return false;
+        }
+        if (paymentMethodPluginProperties != null ? !paymentMethodPluginProperties.equals(that.paymentMethodPluginProperties) : that.paymentMethodPluginProperties != null) {
+            return false;
+        }
+        return !(transactionPluginProperties != null ? !transactionPluginProperties.equals(that.transactionPluginProperties) : that.transactionPluginProperties != null);
 
     }
 
@@ -88,6 +111,8 @@ public class ComboPaymentTransactionJson extends JsonBase {
         int result = account != null ? account.hashCode() : 0;
         result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
         result = 31 * result + (transaction != null ? transaction.hashCode() : 0);
+        result = 31 * result + (paymentMethodPluginProperties != null ? paymentMethodPluginProperties.hashCode() : 0);
+        result = 31 * result + (transactionPluginProperties != null ? transactionPluginProperties.hashCode() : 0);
         return result;
     }
 }
