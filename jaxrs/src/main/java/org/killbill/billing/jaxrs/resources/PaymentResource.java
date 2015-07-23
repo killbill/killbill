@@ -71,7 +71,6 @@ import org.killbill.clock.Clock;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -228,7 +227,7 @@ public class PaymentResource extends JaxRsResourceBase {
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID paymentId = getPaymentId(json, callContext);
+        final UUID paymentId = UUID.fromString(paymentIdStr);
         final Payment initialPayment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
@@ -238,7 +237,6 @@ public class PaymentResource extends JaxRsResourceBase {
                                                          json.getTransactionExternalKey(), pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
     }
-
 
     @Timed
     @POST
@@ -261,7 +259,7 @@ public class PaymentResource extends JaxRsResourceBase {
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID paymentId = getPaymentId(json, callContext);
+        final UUID paymentId = UUID.fromString(paymentIdStr);
         final Payment initialPayment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
@@ -341,7 +339,7 @@ public class PaymentResource extends JaxRsResourceBase {
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID paymentId = getPaymentId(json, callContext);
+        final UUID paymentId = UUID.fromString(paymentIdStr);
         final Payment initialPayment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
@@ -372,7 +370,7 @@ public class PaymentResource extends JaxRsResourceBase {
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID paymentId = getPaymentId(json, callContext);
+        final UUID paymentId = UUID.fromString(paymentIdStr);
         final Payment initialPayment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
@@ -426,14 +424,5 @@ public class PaymentResource extends JaxRsResourceBase {
         // Finally create if does not exist
         return paymentApi.addPaymentMethod(account, paymentMethodJson.getExternalKey(), paymentMethodJson.getPluginName(), paymentMethodJson.isDefault(),
                                            paymentData.getPluginDetail(), pluginProperties, callContext);
-    }
-
-    private UUID getPaymentId(final PaymentTransactionJson json, final TenantContext tenantContext) throws PaymentApiException {
-        if (json.getPaymentId() != null) {
-            return UUID.fromString(json.getPaymentId());
-        }
-
-        verifyNonNullOrEmpty(json.getPaymentExternalKey(), "Payment ExternalKey should not be null");
-        return paymentApi.getPaymentByExternalKey(json.getPaymentExternalKey(), false, ImmutableList.<PluginProperty>of(), tenantContext).getId();
     }
 }
