@@ -159,7 +159,7 @@ public class TestPayment extends TestJaxrsBase {
         Assert.assertEquals(paymentsForAccount.get(PaymentNb - 1), Payment);
     }
 
-    private void verifyComboPayment(final Payment Payment,
+    private void verifyComboPayment(final Payment payment,
                                     final String paymentExternalKey,
                                     final BigDecimal authAmount,
                                     final BigDecimal capturedAmount,
@@ -167,17 +167,16 @@ public class TestPayment extends TestJaxrsBase {
                                     final int nbTransactions,
                                     final int PaymentNb) throws KillBillClientException {
 
-        Assert.assertNotNull(Payment.getPaymentId());
-        Assert.assertNotNull(Payment.getPaymentNumber());
-        Assert.assertEquals(Payment.getPaymentExternalKey(), paymentExternalKey);
-        Assert.assertEquals(Payment.getAuthAmount().compareTo(authAmount), 0);
-        Assert.assertEquals(Payment.getCapturedAmount().compareTo(capturedAmount), 0);
-        Assert.assertEquals(Payment.getRefundedAmount().compareTo(refundedAmount), 0);
-        Assert.assertEquals(Payment.getTransactions().size(), nbTransactions);
+        Assert.assertNotNull(payment.getPaymentNumber());
+        Assert.assertEquals(payment.getPaymentExternalKey(), paymentExternalKey);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(authAmount), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(capturedAmount), 0);
+        Assert.assertEquals(payment.getRefundedAmount().compareTo(refundedAmount), 0);
+        Assert.assertEquals(payment.getTransactions().size(), nbTransactions);
 
         final Payments Payments = killBillClient.getPayments();
         Assert.assertEquals(Payments.size(), PaymentNb);
-        Assert.assertEquals(Payments.get(PaymentNb - 1), Payment);
+        Assert.assertEquals(Payments.get(PaymentNb - 1), payment);
 
     }
 

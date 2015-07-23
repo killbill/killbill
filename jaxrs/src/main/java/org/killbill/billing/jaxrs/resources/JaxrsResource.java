@@ -223,4 +223,6 @@ public interface JaxrsResource {
 
     public static final String UPCOMING_INVOICE_TARGET_DATE = "upcomingInvoiceTargetDate";
 
+    public static final String COMBO = "combo";
+
 }
