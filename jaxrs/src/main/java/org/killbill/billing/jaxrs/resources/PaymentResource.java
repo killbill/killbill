@@ -484,14 +484,16 @@ public class PaymentResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Account account = getOrCreateAccount(json.getAccount(), callContext);
 
-        final Iterable paymentMethodPluginProperties = Iterables.<PluginPropertyJson, PluginProperty>transform(json.getPaymentMethodPluginProperties(),
-                                                                                                               new Function<PluginPropertyJson, PluginProperty>() {
-                                                                                                                   @Override
-                                                                                                                   public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
-                                                                                                                       return pluginPropertyJson.toPluginProperty();
-                                                                                                                   }
-                                                                                                               }
-                                                                                                              );
+        final Iterable<PluginProperty> paymentMethodPluginProperties = json.getPaymentMethodPluginProperties() != null ?
+                                                                       Iterables.<PluginPropertyJson, PluginProperty>transform(json.getPaymentMethodPluginProperties(),
+                                                                                                                               new Function<PluginPropertyJson, PluginProperty>() {
+                                                                                                                                   @Override
+                                                                                                                                   public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
+                                                                                                                                       return pluginPropertyJson.toPluginProperty();
+                                                                                                                                   }
+                                                                                                                               }
+                                                                                                                              ) :
+                                                                       ImmutableList.<PluginProperty>of();
 
         final UUID paymentMethodId = getOrCreatePaymentMethod(account, json.getPaymentMethod(), paymentMethodPluginProperties, callContext);
 
@@ -500,15 +502,16 @@ public class PaymentResource extends JaxRsResourceBase {
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
 
-
-        final Iterable transactionPluginProperties = Iterables.<PluginPropertyJson, PluginProperty>transform(json.getTransactionPluginProperties(),
-                                                                                                               new Function<PluginPropertyJson, PluginProperty>() {
-                                                                                                                   @Override
-                                                                                                                   public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
-                                                                                                                       return pluginPropertyJson.toPluginProperty();
-                                                                                                                   }
-                                                                                                               }
-                                                                                                              );
+        final Iterable<PluginProperty> transactionPluginProperties = json.getTransactionPluginProperties() != null ?
+                                                                     Iterables.<PluginPropertyJson, PluginProperty>transform(json.getTransactionPluginProperties(),
+                                                                                                                             new Function<PluginPropertyJson, PluginProperty>() {
+                                                                                                                                 @Override
+                                                                                                                                 public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
+                                                                                                                                     return pluginPropertyJson.toPluginProperty();
+                                                                                                                                 }
+                                                                                                                             }
+                                                                                                                            ) :
+                                                                     ImmutableList.<PluginProperty>of();
 
         final Currency currency = paymentTransactionJson.getCurrency() == null ? account.getCurrency() : Currency.valueOf(paymentTransactionJson.getCurrency());
         final UUID paymentId = null; // If we need to specify a paymentId (e.g 3DS authorization, we can use regular API, no need for combo call)
@@ -542,17 +545,12 @@ public class PaymentResource extends JaxRsResourceBase {
     private Account getOrCreateAccount(final AccountJson accountJson, final CallContext callContext) throws AccountApiException {
         // Attempt to retrieve by accountId if specified
         if (accountJson.getAccountId() != null) {
-            try {
-                return accountUserApi.getAccountById(UUID.fromString(accountJson.getAccountId()), callContext);
-            } catch (AccountApiException ignore) {
-            }
+            return accountUserApi.getAccountById(UUID.fromString(accountJson.getAccountId()), callContext);
         }
 
-        verifyNonNullOrEmpty(accountJson.getExternalKey(), "Account externalKey should be specified");
-        try {
+        if (accountJson.getExternalKey() != null) {
             // Attempt to retrieve by account externalKey
             return accountUserApi.getAccountByKey(accountJson.getExternalKey(), callContext);
-        } catch (AccountApiException ignore) {
         }
         // Finally create if does not exist
         return accountUserApi.createAccount(accountJson.toAccountData(), callContext);
