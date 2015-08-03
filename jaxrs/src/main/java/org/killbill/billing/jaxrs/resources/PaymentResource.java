@@ -549,8 +549,10 @@ public class PaymentResource extends JaxRsResourceBase {
         }
 
         if (accountJson.getExternalKey() != null) {
-            // Attempt to retrieve by account externalKey
-            return accountUserApi.getAccountByKey(accountJson.getExternalKey(), callContext);
+            // Attempt to retrieve by account externalKey, ignore if does not exist so we can create it with the key specified.
+            try {
+                return accountUserApi.getAccountByKey(accountJson.getExternalKey(), callContext);
+            } catch (final AccountApiException ignore) {}
         }
         // Finally create if does not exist
         return accountUserApi.createAccount(accountJson.toAccountData(), callContext);

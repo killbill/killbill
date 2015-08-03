@@ -54,6 +54,8 @@ public class TestPayment extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testComboAuthorization() throws Exception {
         final Account accountJson = getAccount();
+        accountJson.setAccountId(null);
+
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         info.setProperties(null);
 
