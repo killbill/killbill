@@ -269,7 +269,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
                                                                                        "pending", "");
 
-        final PaymentModelDao payment  = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, transaction1, internalCallContext);
+        final PaymentModelDao payment = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, transaction1, internalCallContext);
 
         final PaymentTransactionModelDao transaction2 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey2,
                                                                                        paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,
@@ -375,7 +375,6 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                      createdDate1);
         paymentDao.insertPaymentWithFirstTransaction(paymentModelDao1, transaction1, context1);
 
-
         // Right after createdAfterDate, so it should  be returned
         final DateTime createdDate2 = createdAfterDate.plusHours(1);
         final PaymentModelDao paymentModelDao2 = new PaymentModelDao(createdDate2, createdDate2, accountId, paymentMethodId, externalKey2);
@@ -418,7 +417,6 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                      createdDate3);
 
         paymentDao.insertPaymentWithFirstTransaction(paymentModelDao3, transaction3, context3);
-
 
         // Right before createdBeforeDate but with a SUCCESS state so it should NOT be returned
         final DateTime createdDate4 = createdBeforeDate.minusDays(1);
@@ -469,7 +467,6 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(result.size(), 2);
     }
 
-
     @Test(groups = "slow")
     public void testPaginationForPaymentByStatesAcrossTenants() {
         // Right before createdAfterDate, so should not be returned
@@ -496,7 +493,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
             paymentDao.insertPaymentWithFirstTransaction(paymentModelDao1, transaction1, context1);
         }
 
-        final Pagination<PaymentTransactionModelDao> result =  paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.UNKNOWN), clock.getUTCNow(), createdDate1, 0L, new Long(NB_ENTRIES));
+        final Pagination<PaymentTransactionModelDao> result = paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.UNKNOWN), clock.getUTCNow(), createdDate1, 0L, new Long(NB_ENTRIES));
         Assert.assertEquals(result.getTotalNbRecords(), new Long(NB_ENTRIES));
 
         final Iterator<PaymentTransactionModelDao> iterator = result.iterator();
@@ -508,7 +505,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         }
     }
 
-        @Test(groups = "slow")
+    @Test(groups = "slow")
     public void testPaymentAttemptsByStateAcrossTenants() {
 
         final UUID paymentMethodId = UUID.randomUUID();
@@ -526,13 +523,12 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final String pluginName = "miraculous";
 
         final PaymentAttemptModelDao attempt1 = new PaymentAttemptModelDao(accountId, paymentMethodId, createdAfterDate, createdAfterDate, externalKey1,
-                                                                     UUID.randomUUID(), transactionExternalKey1, TransactionType.AUTHORIZE, stateName, BigDecimal.ONE, Currency.USD,
-                                                                     ImmutableList.<String>of(pluginName), null);
-
+                                                                           UUID.randomUUID(), transactionExternalKey1, TransactionType.AUTHORIZE, stateName, BigDecimal.ONE, Currency.USD,
+                                                                           ImmutableList.<String>of(pluginName), null);
 
         final PaymentAttemptModelDao attempt2 = new PaymentAttemptModelDao(accountId, paymentMethodId, createdAfterDate, createdAfterDate, externalKey2,
-                                                                     UUID.randomUUID(), transactionExternalKey2, TransactionType.AUTHORIZE, stateName, BigDecimal.ONE, Currency.USD,
-                                                                     ImmutableList.<String>of(pluginName), null);
+                                                                           UUID.randomUUID(), transactionExternalKey2, TransactionType.AUTHORIZE, stateName, BigDecimal.ONE, Currency.USD,
+                                                                           ImmutableList.<String>of(pluginName), null);
 
         final InternalCallContext context1 = new InternalCallContext(1L,
                                                                      1L,
@@ -546,7 +542,6 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                      createdAfterDate);
         paymentDao.insertPaymentAttemptWithProperties(attempt1, context1);
 
-
         final InternalCallContext context2 = new InternalCallContext(2L,
                                                                      2L,
                                                                      internalCallContext.getUserToken(),
@@ -559,11 +554,64 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                      createdAfterDate);
         paymentDao.insertPaymentAttemptWithProperties(attempt2, context2);
 
-
         final Pagination<PaymentAttemptModelDao> result = paymentDao.getPaymentAttemptsByStateAcrossTenants(stateName, createdBeforeDate, 0L, 2L);
         Assert.assertEquals(result.getTotalNbRecords().longValue(), 2L);
     }
 
+    @Test(groups = "slow")
+    public void testUpdatePaymentAttempt() throws PluginPropertySerializerException {
+
+        final UUID paymentMethodId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
+        final String externalKey1 = "2354";
+        final String transactionExternalKey1 = "jkjkjk";
+
+        final DateTime createdAfterDate = clock.getUTCNow().minusDays(10);
+
+        final String stateName = "RRRRR";
+        final String pluginName = "elated";
+
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, paymentMethodId, createdAfterDate, createdAfterDate, externalKey1,
+                                                                          UUID.randomUUID(), transactionExternalKey1, TransactionType.AUTHORIZE, stateName, BigDecimal.ONE, Currency.USD,
+                                                                          ImmutableList.<String>of(pluginName), null);
+
+        final PaymentAttemptModelDao rehydratedAttempt = paymentDao.insertPaymentAttemptWithProperties(attempt, internalCallContext);
+
+        final UUID transactionId = UUID.randomUUID();
+        final String newStateName = "YYYYYYY";
+        paymentDao.updatePaymentAttempt(rehydratedAttempt.getId(), transactionId, newStateName, internalCallContext);
+
+        final PaymentAttemptModelDao attempt1 = paymentDao.getPaymentAttempt(rehydratedAttempt.getId(), internalCallContext);
+        assertEquals(attempt1.getStateName(), newStateName);
+        assertEquals(attempt1.getTransactionId(), transactionId);
+
+        final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+        properties.add(new PluginProperty("prop1", "value1", false));
+        properties.add(new PluginProperty("prop2", "value2", false));
+
+
+        final byte [] serializedProperties = PluginPropertySerializer.serialize(properties);
+        paymentDao.updatePaymentAttemptWithProperties(rehydratedAttempt.getId(), transactionId, newStateName, serializedProperties, internalCallContext);
+        final PaymentAttemptModelDao attempt2 = paymentDao.getPaymentAttempt(rehydratedAttempt.getId(), internalCallContext);
+        assertEquals(attempt2.getStateName(), newStateName);
+        assertEquals(attempt2.getTransactionId(), transactionId);
+
+        final Iterable<PluginProperty> properties2 = PluginPropertySerializer.deserialize(attempt2.getPluginProperties());
+        checkProperty(properties2, new PluginProperty("prop1", "value1", false));
+        checkProperty(properties2, new PluginProperty("prop2", "value2", false));
+
+    }
+
+    private void checkProperty(final Iterable<PluginProperty> properties, final PluginProperty expected) {
+        final PluginProperty found = Iterables.tryFind(properties, new Predicate<PluginProperty>() {
+            @Override
+            public boolean apply(final PluginProperty input) {
+                return input.getKey().equals(expected.getKey());
+            }
+        }).orNull();
+        assertNotNull(found, "Did not find property key = " + expected.getKey());
+        assertEquals(found.getValue(), expected.getValue());
+    }
 
     private List<PaymentTransactionModelDao> getPendingTransactions(final UUID paymentId) {
         final List<PaymentTransactionModelDao> total = paymentDao.getTransactionsForPayment(paymentId, internalCallContext);

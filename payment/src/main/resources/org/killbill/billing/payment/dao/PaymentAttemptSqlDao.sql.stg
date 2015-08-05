@@ -99,6 +99,18 @@ where id = :id
 ;
 >>
 
+updateAttemptWithProperties() ::= <<
+update <tableName()>
+set state_name = :stateName
+, transaction_id = :transactionId
+, plugin_properties = :pluginProperties
+, updated_by = :updatedBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
 
 
 

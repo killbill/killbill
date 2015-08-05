@@ -21,6 +21,7 @@ import org.joda.time.DateTime;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
@@ -33,6 +34,7 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertyS
 import org.killbill.billing.util.UUIDs;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class DefaultControlInitiated implements LeavingStateCallback {
 
@@ -74,8 +76,13 @@ public class DefaultControlInitiated implements LeavingStateCallback {
 
         if (state.getName().equals(initialState.getName()) || state.getName().equals(retriedState.getName())) {
             try {
-                final byte[] serializedProperties = PluginPropertySerializer.serialize(stateContext.getProperties());
-
+                //
+                // We don't serialize any properties at this stage to avoid serializing sensitive information.
+                // However, if after going through the control plugins, the attempt end up in RETRIED state,
+                // the properties will be serialized in the enteringState() callback (any plugin that sets a
+                // retried date is responsible to correctly remove sensitive information such as CVV, ...)
+                //
+                final byte[] serializedProperties = PluginPropertySerializer.serialize(ImmutableList.<PluginProperty>of());
                 final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
                                                                                   utcNow, utcNow, stateContext.getPaymentExternalKey(), stateContext.getTransactionId(),
                                                                                   stateContext.getPaymentTransactionExternalKey(), transactionType, initialState.getName(),

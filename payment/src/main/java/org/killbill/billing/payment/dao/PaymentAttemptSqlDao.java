@@ -42,6 +42,14 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDa
                        @Bind("stateName") final String stateName,
                        @BindBean final InternalCallContext context);
 
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    void updateAttemptWithProperties(@Bind("id") final String attemptId,
+                                     @Bind("transactionId") final String transactionId,
+                                     @Bind("stateName") final String stateName,
+                                     @Bind("pluginProperties") final byte[] pluginProperties,
+                                     @BindBean final InternalCallContext context);
+
     @SqlQuery
     List<PaymentAttemptModelDao> getByTransactionExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,
                                                              @BindBean final InternalTenantContext context);

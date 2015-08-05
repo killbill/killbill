@@ -26,13 +26,17 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
+import org.killbill.billing.payment.dao.PluginPropertySerializer;
+import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class DefaultControlCompleted implements EnteringStateCallback {
@@ -56,13 +60,25 @@ public class DefaultControlCompleted implements EnteringStateCallback {
         final UUID transactionId = paymentStateContext.getCurrentTransaction() != null ?
                                    paymentStateContext.getCurrentTransaction().getId() :
                                    null;
-        retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttempt(attempt.getId(), transactionId, state.getName(), paymentStateContext.getInternalCallContext());
+
 
         if (retriedState.getName().equals(state.getName()) && !isUnknownTransaction()) {
+            retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttemptWithProperties(attempt.getId(), transactionId, state.getName(), getSerializedProperties(), paymentStateContext.getInternalCallContext());
             retryServiceScheduler.scheduleRetry(ObjectType.PAYMENT_ATTEMPT, attempt.getId(), attempt.getId(), attempt.getTenantRecordId(),
                                                 paymentStateContext.getPaymentControlPluginNames(), paymentStateContext.getRetryDate());
+        } else {
+            retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttempt(attempt.getId(), transactionId, state.getName(), paymentStateContext.getInternalCallContext());
         }
     }
+
+    private byte[] getSerializedProperties() {
+        try {
+            return PluginPropertySerializer.serialize(paymentStateContext.getProperties());
+        } catch (final PluginPropertySerializerException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
 
     //
     // If we see an UNKNOWN transaction we prevent it to be rescheduled as the Janitor will *try* to fix it, and that could lead to infinite retries from a badly behaved plugin

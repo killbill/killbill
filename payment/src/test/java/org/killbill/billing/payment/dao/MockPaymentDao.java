@@ -112,6 +112,11 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
+    public void updatePaymentAttemptWithProperties(final UUID paymentAttemptId, final UUID transactionId, final String state, final byte[] pluginProperties, final InternalCallContext context) {
+        updatePaymentAttempt(paymentAttemptId, transactionId, state, context);
+    }
+
+    @Override
     public Pagination<PaymentAttemptModelDao> getPaymentAttemptsByStateAcrossTenants(final String stateName, final DateTime createdBeforeDate, final Long offset, final Long limit) {
         return null;
     }

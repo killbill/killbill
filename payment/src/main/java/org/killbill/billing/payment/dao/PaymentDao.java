@@ -36,6 +36,8 @@ public interface PaymentDao {
 
     public void updatePaymentAttempt(UUID paymentAttemptId, UUID transactionId, String state, InternalCallContext context);
 
+    public void updatePaymentAttemptWithProperties(UUID paymentAttemptId, UUID transactionId, String state, final byte[] pluginProperties, InternalCallContext context);
+
     public Pagination<PaymentAttemptModelDao> getPaymentAttemptsByStateAcrossTenants(String stateName, DateTime createdBeforeDate, final Long offset, final Long limit);
 
     public List<PaymentAttemptModelDao> getPaymentAttempts(String paymentExternalKey, InternalTenantContext context);
