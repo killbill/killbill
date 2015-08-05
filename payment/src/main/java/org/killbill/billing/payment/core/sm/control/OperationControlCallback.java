@@ -32,6 +32,7 @@ import org.killbill.automaton.OperationResult;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -50,6 +51,7 @@ import org.killbill.billing.control.plugin.api.PaymentControlApiException;
 import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
+import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
@@ -92,7 +94,6 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                      paymentStateContext.getTransactionType(),
                                                                                                      paymentStateContext.getAmount(),
                                                                                                      paymentStateContext.getCurrency(),
-                                                                                                     paymentStateContext.getProperties(),
                                                                                                      paymentStateControlContext.isApiPayment(),
                                                                                                      paymentStateContext.getCallContext());
 
@@ -110,9 +111,6 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
                 final boolean success;
                 try {
-                    // Adjust amount with value returned by plugin if necessary
-                    adjustStateContextValues(paymentStateContext, pluginResult);
-
                     final Payment result = doCallSpecificOperationCallback();
                     ((PaymentStateControlContext) paymentStateContext).setResult(result);
                     final PaymentTransaction transaction = ((PaymentStateControlContext) paymentStateContext).getCurrentTransaction();
@@ -131,7 +129,6 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                                     transaction.getCurrency(),
                                                                                                                     transaction.getProcessedAmount(),
                                                                                                                     transaction.getProcessedCurrency(),
-                                                                                                                    paymentStateContext.getProperties(),
                                                                                                                     paymentStateControlContext.isApiPayment(),
                                                                                                                     paymentStateContext.getCallContext());
 
@@ -173,21 +170,112 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         return new OperationException(e, getOperationResultOnException(paymentStateContext));
     }
 
+    private OperationResult getOperationResultOnException(final PaymentStateContext paymentStateContext) {
+        final PaymentStateControlContext paymentStateControlContext = (PaymentStateControlContext) paymentStateContext;
+        final OperationResult operationResult = paymentStateControlContext.getRetryDate() != null ? OperationResult.FAILURE : OperationResult.EXCEPTION;
+        return operationResult;
+    }
+
+    private PriorPaymentControlResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContextArg) throws PaymentControlApiException {
+        // Return as soon as the first plugin aborts, or the last result for the last plugin
+        PriorPaymentControlResult prevResult = null;
+
+        // Those values are adjusted prior each call with the result of what previous call to plugin returned
+        PaymentControlContext inputPaymentControlContext = paymentControlContextArg;
+        Iterable<PluginProperty> inputPluginProperties = paymentStateContext.getProperties();
+
+        for (final String pluginName : paymentControlPluginNames) {
+            final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
+            if (plugin == null) {
+                // First call to plugin, we log warn, if plugin is not registered
+                logger.warn("Skipping unknown payment control plugin {} when fetching results", pluginName);
+                continue;
+            }
+            prevResult = plugin.priorCall(inputPaymentControlContext, inputPluginProperties);
+            if (prevResult.getAdjustedPluginProperties() != null) {
+                inputPluginProperties = prevResult.getAdjustedPluginProperties();
+            }
+            if (prevResult.isAborted()) {
+                break;
+            }
+            inputPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                                                                          prevResult.getAdjustedPaymentMethodId() != null ? prevResult.getAdjustedPaymentMethodId() : inputPaymentControlContext.getPaymentMethodId(),
+                                                                          paymentStateControlContext.getAttemptId(),
+                                                                          paymentStateContext.getPaymentId(),
+                                                                          paymentStateContext.getPaymentExternalKey(),
+                                                                          paymentStateContext.getPaymentTransactionExternalKey(),
+                                                                          paymentStateContext.getTransactionType(),
+                                                                          prevResult.getAdjustedAmount() != null ? prevResult.getAdjustedAmount() : inputPaymentControlContext.getAmount(),
+                                                                          prevResult.getAdjustedCurrency() != null ? prevResult.getAdjustedCurrency() : inputPaymentControlContext.getCurrency(),
+                                                                          paymentStateControlContext.isApiPayment(),
+                                                                          paymentStateContext.getCallContext());
+
+        }
+        // Rebuild latest result to include inputPluginProperties
+        prevResult = new DefaultPriorPaymentControlResult(prevResult, inputPluginProperties);
+        // Adjust context with all values if necessary
+        adjustStateContextForPriorCall(paymentStateContext, prevResult);
+        return prevResult;
+    }
 
     protected void executePluginOnSuccessCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
+
+        Iterable<PluginProperty> inputPluginProperties = paymentStateContext.getProperties();
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
-                    plugin.onSuccessCall(paymentControlContext, paymentStateContext.getProperties());
+                    final OnSuccessPaymentControlResult result = plugin.onSuccessCall(paymentControlContext, inputPluginProperties);
+                    if (result.getAdjustedPluginProperties() != null) {
+                        inputPluginProperties = result.getAdjustedPluginProperties();
+                    }
                 } catch (final PaymentControlApiException e) {
                     logger.warn("Plugin " + pluginName + " failed to complete executePluginOnSuccessCalls call for " + paymentControlContext.getPaymentExternalKey(), e);
                 }
             }
         }
+        adjustStateContextPluginProperties(paymentStateContext, inputPluginProperties);
     }
 
-    private void adjustStateContextValues(final PaymentStateContext inputContext, @Nullable final PriorPaymentControlResult pluginResult) {
+    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentStateControlContext paymentStateControlContext, final PaymentControlContext paymentControlContext) {
+        final DateTime retryDate = executePluginOnFailureCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
+        if (retryDate != null) {
+            ((PaymentStateControlContext) paymentStateContext).setRetryDate(retryDate);
+        }
+        return getOperationResultOnException(paymentStateContext);
+    }
+
+    private DateTime executePluginOnFailureCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
+
+        DateTime candidate = null;
+        Iterable<PluginProperty> inputPluginProperties = paymentStateContext.getProperties();
+
+        for (final String pluginName : paymentControlPluginNames) {
+            final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
+            if (plugin != null) {
+                try {
+                    final OnFailurePaymentControlResult result = plugin.onFailureCall(paymentControlContext, inputPluginProperties);
+                    if (candidate == null) {
+                        candidate = result.getNextRetryDate();
+                    } else if (result.getNextRetryDate() != null) {
+                        candidate = candidate.compareTo(result.getNextRetryDate()) > 0 ? result.getNextRetryDate() : candidate;
+                    }
+
+                    if (result.getAdjustedPluginProperties() != null) {
+                        inputPluginProperties = result.getAdjustedPluginProperties();
+                    }
+
+                } catch (final PaymentControlApiException e) {
+                    logger.warn("Plugin " + pluginName + " failed to return next retryDate for payment " + paymentControlContext.getPaymentExternalKey(), e);
+                    return candidate;
+                }
+            }
+        }
+        adjustStateContextPluginProperties(paymentStateContext, inputPluginProperties);
+        return candidate;
+    }
+
+    private void adjustStateContextForPriorCall(final PaymentStateContext inputContext, @Nullable final PriorPaymentControlResult pluginResult) {
         if (pluginResult == null) {
             return;
         }
@@ -202,78 +290,15 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         if (pluginResult.getAdjustedPaymentMethodId() != null) {
             input.setPaymentMethodId(pluginResult.getAdjustedPaymentMethodId());
         }
-        if (pluginResult.getAdjustedPluginProperties() != null) {
-            input.setProperties(pluginResult.getAdjustedPluginProperties());
-        }
+        adjustStateContextPluginProperties(inputContext, pluginResult.getAdjustedPluginProperties());
     }
 
-    private OperationResult getOperationResultOnException(final PaymentStateContext paymentStateContext) {
-        final PaymentStateControlContext paymentStateControlContext = (PaymentStateControlContext) paymentStateContext;
-        final OperationResult operationResult = paymentStateControlContext.getRetryDate() != null ? OperationResult.FAILURE : OperationResult.EXCEPTION;
-        return operationResult;
-    }
-
-    private PriorPaymentControlResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContextArg) throws PaymentControlApiException {
-        // Return as soon as the first plugin aborts, or the last result for the last plugin
-        PriorPaymentControlResult prevResult = null;
-
-        PaymentControlContext inputPaymentControlContext = paymentControlContextArg;
-
-        for (final String pluginName : paymentControlPluginNames) {
-            final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
-            if (plugin == null) {
-                // First call to plugin, we log warn, if plugin is not registered
-                logger.warn("Skipping unknown payment control plugin {} when fetching results", pluginName);
-                continue;
-            }
-            prevResult = plugin.priorCall(inputPaymentControlContext, paymentStateContext.getProperties());
-            if (prevResult.isAborted()) {
-                break;
-            }
-            inputPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
-                                                                          prevResult.getAdjustedPaymentMethodId() != null ? prevResult.getAdjustedPaymentMethodId() : inputPaymentControlContext.getPaymentMethodId(),
-                                                                          paymentStateControlContext.getAttemptId(),
-                                                                          paymentStateContext.getPaymentId(),
-                                                                          paymentStateContext.getPaymentExternalKey(),
-                                                                          paymentStateContext.getPaymentTransactionExternalKey(),
-                                                                          paymentStateContext.getTransactionType(),
-                                                                          prevResult.getAdjustedAmount() != null ? prevResult.getAdjustedAmount() : inputPaymentControlContext.getAmount(),
-                                                                          prevResult.getAdjustedCurrency() != null ? prevResult.getAdjustedCurrency() : inputPaymentControlContext.getCurrency(),
-                                                                          prevResult.getAdjustedPluginProperties() != null ? prevResult.getAdjustedPluginProperties() : inputPaymentControlContext.getPluginProperties(),
-                                                                          paymentStateControlContext.isApiPayment(),
-                                                                          paymentStateContext.getCallContext());
-
+    private void adjustStateContextPluginProperties(final PaymentStateContext inputContext, @Nullable Iterable<PluginProperty> pluginProperties) {
+        if (pluginProperties == null) {
+            return;
         }
-        return prevResult;
-    }
-
-    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentStateControlContext paymentStateControlContext, final PaymentControlContext paymentControlContext) {
-        final DateTime retryDate = executePluginOnFailureCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
-        if (retryDate != null) {
-            ((PaymentStateControlContext) paymentStateContext).setRetryDate(retryDate);
-        }
-        return getOperationResultOnException(paymentStateContext);
-    }
-
-    private DateTime executePluginOnFailureCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
-        DateTime candidate = null;
-        for (final String pluginName : paymentControlPluginNames) {
-            final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
-            if (plugin != null) {
-                try {
-                    final OnFailurePaymentControlResult result = plugin.onFailureCall(paymentControlContext, paymentStateContext.getProperties());
-                    if (candidate == null) {
-                        candidate = result.getNextRetryDate();
-                    } else if (result.getNextRetryDate() != null) {
-                        candidate = candidate.compareTo(result.getNextRetryDate()) > 0 ? result.getNextRetryDate() : candidate;
-                    }
-                } catch (final PaymentControlApiException e) {
-                    logger.warn("Plugin " + pluginName + " failed to return next retryDate for payment " + paymentControlContext.getPaymentExternalKey(), e);
-                    return candidate;
-                }
-            }
-        }
-        return candidate;
+        final PaymentStateControlContext input = (PaymentStateControlContext) inputContext;
+        input.setProperties(pluginProperties);
     }
 
     public static class DefaultPaymentControlContext extends DefaultCallContext implements PaymentControlContext {
@@ -291,15 +316,14 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         private final BigDecimal processedAmount;
         private final Currency processedCurrency;
         private final boolean isApiPayment;
-        private final Iterable<PluginProperty> properties;
 
         public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, final UUID attemptId, @Nullable final UUID paymentId, final String paymentExternalKey, final String transactionExternalKey, final TransactionType transactionType, final BigDecimal amount, final Currency currency,
-                                            final Iterable<PluginProperty> properties, final boolean isApiPayment, final CallContext callContext) {
-            this(account, paymentMethodId, attemptId, paymentId, paymentExternalKey, null, transactionExternalKey, transactionType, amount, currency, null, null, properties, isApiPayment, callContext);
+                                            final boolean isApiPayment, final CallContext callContext) {
+            this(account, paymentMethodId, attemptId, paymentId, paymentExternalKey, null, transactionExternalKey, transactionType, amount, currency, null, null, isApiPayment, callContext);
         }
 
         public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, final UUID attemptId, @Nullable final UUID paymentId, final String paymentExternalKey, @Nullable final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
-                                            final BigDecimal amount, final Currency currency, @Nullable final BigDecimal processedAmount, @Nullable final Currency processedCurrency, final Iterable<PluginProperty> properties, final boolean isApiPayment, final CallContext callContext) {
+                                            final BigDecimal amount, final Currency currency, @Nullable final BigDecimal processedAmount, @Nullable final Currency processedCurrency, final boolean isApiPayment, final CallContext callContext) {
             super(callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getUserToken(), callContext.getCreatedDate(), callContext.getUpdatedDate());
             this.account = account;
             this.paymentMethodId = paymentMethodId;
@@ -313,7 +337,6 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
             this.currency = currency;
             this.processedAmount = processedAmount;
             this.processedCurrency = processedCurrency;
-            this.properties = properties;
             this.isApiPayment = isApiPayment;
         }
 
@@ -382,11 +405,6 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         }
 
         @Override
-        public Iterable<PluginProperty> getPluginProperties() {
-            return properties;
-        }
-
-        @Override
         public String toString() {
             return "DefaultPaymentControlContext{" +
                    "account=" + account +
@@ -402,7 +420,6 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                    ", processedAmount=" + processedAmount +
                    ", processedCurrency=" + processedCurrency +
                    ", isApiPayment=" + isApiPayment +
-                   ", properties=" + properties +
                    '}';
         }
     }

@@ -112,7 +112,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     @Override
-    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> pluginProperties) throws PaymentControlApiException {
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
                                     transactionType == TransactionType.REFUND ||
@@ -121,9 +121,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         switch (transactionType) {
             case PURCHASE:
-                return getPluginPurchaseResult(paymentControlContext, internalContext);
+                return getPluginPurchaseResult(paymentControlContext, pluginProperties, internalContext);
             case REFUND:
-                return getPluginRefundResult(paymentControlContext, internalContext);
+                return getPluginRefundResult(paymentControlContext, pluginProperties, internalContext);
             case CHARGEBACK:
                 return new DefaultPriorPaymentControlResult(false, paymentControlContext.getAmount());
             default:
@@ -132,7 +132,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     @Override
-    public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+    public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> pluginProperties) throws PaymentControlApiException {
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
                                     transactionType == TransactionType.REFUND ||
@@ -143,7 +143,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             final InvoicePayment existingInvoicePayment;
             switch (transactionType) {
                 case PURCHASE:
-                    final UUID invoiceId = getInvoiceId(paymentControlContext);
+                    final UUID invoiceId = getInvoiceId(pluginProperties);
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
                         log.info("onSuccessCall was already completed for payment purchase :" + paymentControlContext.getPaymentId());
@@ -163,8 +163,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     if (existingInvoicePayment != null) {
                         log.info("onSuccessCall was already completed for payment refund :" + paymentControlContext.getPaymentId());
                     } else {
-                        final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentControlContext.getPluginProperties());
-                        final PluginProperty prop = getPluginProperty(paymentControlContext.getPluginProperties(), PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
+                        final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
+                        final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
                         final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
                         invoiceApi.createRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
                     }
@@ -214,8 +214,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         controlDao.removeAutoPayOffEntry(account.getId());
     }
 
-    private UUID getInvoiceId(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
-        final PluginProperty invoiceProp = getPluginProperty(paymentControlContext.getPluginProperties(), PROP_IPCD_INVOICE_ID);
+    private UUID getInvoiceId(final Iterable<PluginProperty> pluginProperties) throws PaymentControlApiException {
+        final PluginProperty invoiceProp = getPluginProperty(pluginProperties, PROP_IPCD_INVOICE_ID);
         if (invoiceProp == null ||
             !(invoiceProp.getValue() instanceof String)) {
             throw new PaymentControlApiException("Need to specify a valid invoiceId in property " + PROP_IPCD_INVOICE_ID);
@@ -223,9 +223,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         return UUID.fromString((String) invoiceProp.getValue());
     }
 
-    private PriorPaymentControlResult getPluginPurchaseResult(final PaymentControlContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentControlApiException {
+    private PriorPaymentControlResult getPluginPurchaseResult(final PaymentControlContext paymentControlPluginContext, final Iterable<PluginProperty> pluginProperties, final InternalCallContext internalContext) throws PaymentControlApiException {
         try {
-            final UUID invoiceId = getInvoiceId(paymentControlPluginContext);
+            final UUID invoiceId = getInvoiceId(pluginProperties);
             final Invoice invoice = rebalanceAndGetInvoice(invoiceId, internalContext);
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
 
@@ -248,8 +248,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
     }
 
-    private PriorPaymentControlResult getPluginRefundResult(final PaymentControlContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentControlApiException {
-        final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentControlPluginContext.getPluginProperties());
+    private PriorPaymentControlResult getPluginRefundResult(final PaymentControlContext paymentControlPluginContext, final Iterable<PluginProperty> pluginProperties, final InternalCallContext internalContext) throws PaymentControlApiException {
+        final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
         if ((paymentControlPluginContext.getAmount() == null || paymentControlPluginContext.getAmount().compareTo(BigDecimal.ZERO) == 0) &&
             idWithAmount.size() == 0) {
             throw new PaymentControlApiException("Refund for payment, key = " + paymentControlPluginContext.getPaymentExternalKey() +

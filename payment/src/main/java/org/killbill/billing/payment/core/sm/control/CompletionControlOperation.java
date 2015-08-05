@@ -59,7 +59,6 @@ public class CompletionControlOperation extends OperationControlCallback {
                                                                                                             transaction.getCurrency(),
                                                                                                             transaction.getProcessedAmount(),
                                                                                                             transaction.getProcessedCurrency(),
-                                                                                                            paymentStateContext.getProperties(),
                                                                                                             paymentStateControlContext.isApiPayment(),
                                                                                                             paymentStateContext.getCallContext());
 

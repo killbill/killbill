@@ -52,6 +52,11 @@ public class DefaultPriorPaymentControlResult implements PriorPaymentControlResu
         this(isAborted, null);
     }
 
+
+    public DefaultPriorPaymentControlResult(final PriorPaymentControlResult input, final Iterable<PluginProperty> adjustedPluginProperties) {
+        this(input.isAborted(), input.getAdjustedAmount(), input.getAdjustedCurrency(), input.getAdjustedPaymentMethodId(), adjustedPluginProperties);
+    }
+
     @Override
     public boolean isAborted() {
         return isAborted;
