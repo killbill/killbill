@@ -297,6 +297,11 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
+        // We need to add a 1s delay before invoking the eventsStreamBuilder in the checks below, because
+        // the ClockMock truncates milliseconds. Otherwise, utcNow is equal to the changeDateTime, and
+        // the change is considered as pending (see DefaultEventsStream#getPendingSubscriptionEvents)
+        clock.addDeltaFromReality(1000);
+
         // Refresh the add-on state
         final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
 
