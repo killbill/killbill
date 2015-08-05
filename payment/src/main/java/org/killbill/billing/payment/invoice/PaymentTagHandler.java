@@ -27,7 +27,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -45,11 +45,11 @@ public class PaymentTagHandler {
 
     private final AccountInternalApi accountApi;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final PaymentRoutingPluginApi invoicePaymentControlPlugin;
+    private final PaymentControlPluginApi invoicePaymentControlPlugin;
 
     @Inject
     public PaymentTagHandler(final AccountInternalApi accountApi,
-                             final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry,
+                             final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.accountApi = accountApi;
         this.invoicePaymentControlPlugin = paymentControlPluginRegistry.getServiceForName(InvoicePaymentControlPluginApi.PLUGIN_NAME);

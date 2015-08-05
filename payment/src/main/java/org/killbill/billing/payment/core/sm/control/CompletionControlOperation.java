@@ -27,8 +27,8 @@ import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingContext;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
+import org.killbill.billing.control.plugin.api.PaymentControlContext;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.commons.locker.GlobalLocker;
 
 //
@@ -36,7 +36,7 @@ import org.killbill.commons.locker.GlobalLocker;
 //
 public class CompletionControlOperation extends OperationControlCallback {
 
-    public CompletionControlOperation(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry) {
+    public CompletionControlOperation(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry) {
         super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, retryPluginRegistry);
     }
 
@@ -47,7 +47,7 @@ public class CompletionControlOperation extends OperationControlCallback {
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
                 final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();
-                final PaymentRoutingContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                             paymentStateContext.getPaymentMethodId(),
                                                                                                             paymentStateControlContext.getAttemptId(),
                                                                                                             transaction.getPaymentId(),

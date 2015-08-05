@@ -36,7 +36,7 @@ import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingApiException;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -296,7 +296,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                         createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
             Assert.fail("Unexpected success");
         } catch (final PaymentApiException e) {
-            assertTrue(e.getCause() instanceof PaymentRoutingApiException);
+            assertTrue(e.getCause() instanceof PaymentControlApiException);
         }
     }
 
@@ -377,7 +377,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             paymentApi.createRefundWithPaymentControl(account, payment.getId(), BigDecimal.TEN, Currency.USD, transactionExternalKey2,
                                                       refundProperties, INVOICE_PAYMENT, callContext);
         } catch (final PaymentApiException e) {
-            assertTrue(e.getCause() instanceof PaymentRoutingApiException);
+            assertTrue(e.getCause() instanceof PaymentControlApiException);
         }
     }
 

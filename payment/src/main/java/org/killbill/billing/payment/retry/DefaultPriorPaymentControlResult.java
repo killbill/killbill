@@ -22,9 +22,9 @@ import java.util.UUID;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.routing.plugin.api.PriorPaymentRoutingResult;
+import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 
-public class DefaultPriorPaymentRoutingResult implements PriorPaymentRoutingResult {
+public class DefaultPriorPaymentControlResult implements PriorPaymentControlResult {
 
     private final boolean isAborted;
     private final BigDecimal adjustedRetryAmount;
@@ -32,7 +32,7 @@ public class DefaultPriorPaymentRoutingResult implements PriorPaymentRoutingResu
     private final UUID adjustedPaymentMethodId;
     private final Iterable<PluginProperty> adjustedPluginProperties;
 
-    public DefaultPriorPaymentRoutingResult(final boolean isAborted,
+    public DefaultPriorPaymentControlResult(final boolean isAborted,
                                             final BigDecimal adjustedRetryAmount,
                                             final Currency adjustedCurrency,
                                             final UUID adjustedPaymentMethodId,
@@ -44,11 +44,11 @@ public class DefaultPriorPaymentRoutingResult implements PriorPaymentRoutingResu
         this.adjustedPluginProperties = adjustedPluginProperties;
     }
 
-    public DefaultPriorPaymentRoutingResult(final boolean isAborted, final BigDecimal adjustedRetryAmount) {
+    public DefaultPriorPaymentControlResult(final boolean isAborted, final BigDecimal adjustedRetryAmount) {
         this(isAborted, adjustedRetryAmount, null, null, null);
     }
 
-    public DefaultPriorPaymentRoutingResult(final boolean isAborted) {
+    public DefaultPriorPaymentControlResult(final boolean isAborted) {
         this(isAborted, null);
     }
 

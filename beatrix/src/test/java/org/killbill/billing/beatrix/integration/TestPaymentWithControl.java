@@ -36,12 +36,12 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.routing.plugin.api.OnFailurePaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.OnSuccessPaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingApiException;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingContext;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
-import org.killbill.billing.routing.plugin.api.PriorPaymentRoutingResult;
+import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
+import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
+import org.killbill.billing.control.plugin.api.PaymentControlContext;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -55,18 +55,18 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
     private final static String TEST_PAYMENT_WITH_CONTROL = "TestPaymentWithControl";
 
-    private TestPaymentRoutingPluginApi testPaymentRoutingWithControl;
+    private TestPaymentControlPluginApi testPaymentControlWithControl;
     private List<PluginProperty> properties;
     private PaymentOptions paymentOptions;
 
     @Inject
-    private OSGIServiceRegistration<PaymentRoutingPluginApi> pluginRegistry;
+    private OSGIServiceRegistration<PaymentControlPluginApi> pluginRegistry;
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
         super.beforeClass();
 
-        this.testPaymentRoutingWithControl = new TestPaymentRoutingPluginApi();
+        this.testPaymentControlWithControl = new TestPaymentControlPluginApi();
         pluginRegistry.registerService(new OSGIServiceDescriptor() {
             @Override
             public String getPluginSymbolicName() {
@@ -77,7 +77,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
             public String getRegistrationName() {
                 return TEST_PAYMENT_WITH_CONTROL;
             }
-        }, testPaymentRoutingWithControl);
+        }, testPaymentControlWithControl);
 
         properties = new ArrayList<PluginProperty>();
         paymentOptions = new PaymentOptions() {
@@ -99,7 +99,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        testPaymentRoutingWithControl.reset();
+        testPaymentControlWithControl.reset();
     }
 
     @Test(groups = "slow")
@@ -117,9 +117,9 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         paymentApi.createCaptureWithPaymentControl(account, payment.getId(), BigDecimal.ONE, account.getCurrency(), null, properties, paymentOptions, callContext);
         assertListenerStatus();
 
-        Assert.assertEquals(testPaymentRoutingWithControl.getCalls().size(), 2);
-        Assert.assertEquals(testPaymentRoutingWithControl.getCalls().get(TransactionType.AUTHORIZE.toString()), new Integer(1));
-        Assert.assertEquals(testPaymentRoutingWithControl.getCalls().get(TransactionType.CAPTURE.toString()), new Integer(1));
+        Assert.assertEquals(testPaymentControlWithControl.getCalls().size(), 2);
+        Assert.assertEquals(testPaymentControlWithControl.getCalls().get(TransactionType.AUTHORIZE.toString()), new Integer(1));
+        Assert.assertEquals(testPaymentControlWithControl.getCalls().get(TransactionType.CAPTURE.toString()), new Integer(1));
     }
 
     @Test(groups = "slow")
@@ -135,16 +135,16 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
         paymentApi.createVoidWithPaymentControl(account, payment.getId(), null, properties, paymentOptions, callContext);
         assertListenerStatus();
-        Assert.assertEquals(testPaymentRoutingWithControl.getCalls().size(), 2);
-        Assert.assertEquals(testPaymentRoutingWithControl.getCalls().get(TransactionType.AUTHORIZE.toString()), new Integer(1));
-        Assert.assertEquals(testPaymentRoutingWithControl.getCalls().get(TransactionType.VOID.toString()), new Integer(1));
+        Assert.assertEquals(testPaymentControlWithControl.getCalls().size(), 2);
+        Assert.assertEquals(testPaymentControlWithControl.getCalls().get(TransactionType.AUTHORIZE.toString()), new Integer(1));
+        Assert.assertEquals(testPaymentControlWithControl.getCalls().get(TransactionType.VOID.toString()), new Integer(1));
     }
 
-    public class TestPaymentRoutingPluginApi implements PaymentRoutingPluginApi {
+    public class TestPaymentControlPluginApi implements PaymentControlPluginApi {
 
         private final Map<String, Integer> calls;
 
-        public TestPaymentRoutingPluginApi() {
+        public TestPaymentControlPluginApi() {
             calls = new HashMap<String, Integer>();
         }
 
@@ -157,8 +157,8 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         }
 
         @Override
-        public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentRoutingContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
-            return new PriorPaymentRoutingResult() {
+        public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+            return new PriorPaymentControlResult() {
                 @Override
                 public boolean isAborted() {
                     return false;
@@ -183,7 +183,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         }
 
         @Override
-        public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentRoutingContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
             final PluginProperty nameProperty = Iterables.tryFind(properties, new Predicate<PluginProperty>() {
                 @Override
                 public boolean apply(final PluginProperty input) {
@@ -191,14 +191,19 @@ public class TestPaymentWithControl extends TestIntegrationBase {
                 }
             }).orNull();
             if (nameProperty != null && nameProperty.getValue().equals(TEST_PAYMENT_WITH_CONTROL)) {
-                final Integer result = calls.get(paymentRoutingContext.getTransactionType());
-                calls.put(paymentRoutingContext.getTransactionType().toString(), result == null ? new Integer(1) : new Integer(result.intValue() + 1));
+                final Integer result = calls.get(paymentControlContext.getTransactionType());
+                calls.put(paymentControlContext.getTransactionType().toString(), result == null ? new Integer(1) : new Integer(result.intValue() + 1));
             }
-            return new OnSuccessPaymentRoutingResult() {};
+            return new OnSuccessPaymentControlResult() {
+                @Override
+                public Iterable<PluginProperty> getAdjustedPluginProperties() {
+                    return null;
+                }
+            };
         }
 
         @Override
-        public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentRoutingContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
             return null;
         }
     }

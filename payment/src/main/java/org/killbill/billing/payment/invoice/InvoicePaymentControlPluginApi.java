@@ -49,13 +49,13 @@ import org.killbill.billing.payment.invoice.dao.InvoicePaymentControlDao;
 import org.killbill.billing.payment.invoice.dao.PluginAutoPayOffModelDao;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
-import org.killbill.billing.payment.retry.DefaultPriorPaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.OnFailurePaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.OnSuccessPaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingApiException;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingContext;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
-import org.killbill.billing.routing.plugin.api.PriorPaymentRoutingResult;
+import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
+import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
+import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
+import org.killbill.billing.control.plugin.api.PaymentControlContext;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -75,7 +75,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
-public final class InvoicePaymentControlPluginApi implements PaymentRoutingPluginApi {
+public final class InvoicePaymentControlPluginApi implements PaymentControlPluginApi {
 
     public static final String CREATED_BY = "InvoicePaymentControlPluginApi";
 
@@ -112,7 +112,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
     }
 
     @Override
-    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
                                     transactionType == TransactionType.REFUND ||
@@ -125,14 +125,14 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
             case REFUND:
                 return getPluginRefundResult(paymentControlContext, internalContext);
             case CHARGEBACK:
-                return new DefaultPriorPaymentRoutingResult(false, paymentControlContext.getAmount());
+                return new DefaultPriorPaymentControlResult(false, paymentControlContext.getAmount());
             default:
                 throw new IllegalStateException("Unexpected transactionType " + transactionType);
         }
     }
 
     @Override
-    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+    public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
                                     transactionType == TransactionType.REFUND ||
@@ -189,7 +189,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
     }
 
     @Override
-    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+    public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         switch (transactionType) {
@@ -214,16 +214,16 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
         controlDao.removeAutoPayOffEntry(account.getId());
     }
 
-    private UUID getInvoiceId(final PaymentRoutingContext paymentControlContext) throws PaymentRoutingApiException {
+    private UUID getInvoiceId(final PaymentControlContext paymentControlContext) throws PaymentControlApiException {
         final PluginProperty invoiceProp = getPluginProperty(paymentControlContext.getPluginProperties(), PROP_IPCD_INVOICE_ID);
         if (invoiceProp == null ||
             !(invoiceProp.getValue() instanceof String)) {
-            throw new PaymentRoutingApiException("Need to specify a valid invoiceId in property " + PROP_IPCD_INVOICE_ID);
+            throw new PaymentControlApiException("Need to specify a valid invoiceId in property " + PROP_IPCD_INVOICE_ID);
         }
         return UUID.fromString((String) invoiceProp.getValue());
     }
 
-    private PriorPaymentRoutingResult getPluginPurchaseResult(final PaymentRoutingContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentRoutingApiException {
+    private PriorPaymentControlResult getPluginPurchaseResult(final PaymentControlContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentControlApiException {
         try {
             final UUID invoiceId = getInvoiceId(paymentControlPluginContext);
             final Invoice invoice = rebalanceAndGetInvoice(invoiceId, internalContext);
@@ -231,34 +231,34 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
 
             final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
             if (!isAborted && insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
-                return new DefaultPriorPaymentRoutingResult(true);
+                return new DefaultPriorPaymentControlResult(true);
             }
 
             if (paymentControlPluginContext.isApiPayment() && isAborted) {
-                throw new PaymentRoutingApiException("Payment for invoice " + invoice.getId() +
+                throw new PaymentControlApiException("Payment for invoice " + invoice.getId() +
                                                      " aborted : invoice balance is = " + invoice.getBalance() +
                                                      ", requested payment amount is = " + paymentControlPluginContext.getAmount());
             } else {
-                return new DefaultPriorPaymentRoutingResult(isAborted, requestedAmount);
+                return new DefaultPriorPaymentControlResult(isAborted, requestedAmount);
             }
         } catch (final InvoiceApiException e) {
-            throw new PaymentRoutingApiException(e);
+            throw new PaymentControlApiException(e);
         } catch (final IllegalArgumentException e) {
-            throw new PaymentRoutingApiException(e);
+            throw new PaymentControlApiException(e);
         }
     }
 
-    private PriorPaymentRoutingResult getPluginRefundResult(final PaymentRoutingContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentRoutingApiException {
+    private PriorPaymentControlResult getPluginRefundResult(final PaymentControlContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentControlApiException {
         final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(paymentControlPluginContext.getPluginProperties());
         if ((paymentControlPluginContext.getAmount() == null || paymentControlPluginContext.getAmount().compareTo(BigDecimal.ZERO) == 0) &&
             idWithAmount.size() == 0) {
-            throw new PaymentRoutingApiException("Refund for payment, key = " + paymentControlPluginContext.getPaymentExternalKey() +
+            throw new PaymentControlApiException("Refund for payment, key = " + paymentControlPluginContext.getPaymentExternalKey() +
                                                  " aborted: requested refund amount is = " + paymentControlPluginContext.getAmount());
         }
 
         final PaymentModelDao payment = paymentDao.getPayment(paymentControlPluginContext.getPaymentId(), internalContext);
         if (payment == null) {
-            throw new PaymentRoutingApiException();
+            throw new PaymentControlApiException();
         }
         // This will calculate the upper bound on the refund amount based on the invoice items associated with that payment.
         // Note that we are not checking that other (partial) refund occurred, but if the refund ends up being greater than waht is allowed
@@ -267,11 +267,11 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
         final boolean isAborted = amountToBeRefunded.compareTo(BigDecimal.ZERO) == 0;
 
         if (paymentControlPluginContext.isApiPayment() && isAborted) {
-            throw new PaymentRoutingApiException("Refund for payment " + payment.getId() +
+            throw new PaymentControlApiException("Refund for payment " + payment.getId() +
                                                  " aborted : invoice item sum amount is " + amountToBeRefunded +
                                                  ", requested refund amount is = " + paymentControlPluginContext.getAmount());
         } else {
-            return new DefaultPriorPaymentRoutingResult(isAborted, amountToBeRefunded);
+            return new DefaultPriorPaymentControlResult(isAborted, amountToBeRefunded);
         }
     }
 
@@ -294,11 +294,11 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
 
     private BigDecimal computeRefundAmount(final UUID paymentId, @Nullable final BigDecimal specifiedRefundAmount,
                                            final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final InternalTenantContext context)
-            throws PaymentRoutingApiException {
+            throws PaymentControlApiException {
 
         if (invoiceItemIdsWithAmounts.size() == 0) {
             if (specifiedRefundAmount == null || specifiedRefundAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new PaymentRoutingApiException("You need to specify positive a refund amount");
+                throw new PaymentControlApiException("You need to specify positive a refund amount");
             }
             return specifiedRefundAmount;
         }
@@ -313,23 +313,23 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
                 final BigDecimal itemAmount = getAmountFromItem(items, itemId);
                 if (specifiedItemAmount != null &&
                     (specifiedItemAmount.compareTo(BigDecimal.ZERO) <= 0 || specifiedItemAmount.compareTo(itemAmount) > 0)) {
-                    throw new PaymentRoutingApiException("You need to specify valid invoice item amount ");
+                    throw new PaymentControlApiException("You need to specify valid invoice item amount ");
                 }
                 amountFromItems = amountFromItems.add(Objects.firstNonNull(specifiedItemAmount, itemAmount));
             }
             return amountFromItems;
         } catch (final InvoiceApiException e) {
-            throw new PaymentRoutingApiException(e);
+            throw new PaymentControlApiException(e);
         }
     }
 
-    private BigDecimal getAmountFromItem(final List<InvoiceItem> items, final UUID itemId) throws PaymentRoutingApiException {
+    private BigDecimal getAmountFromItem(final List<InvoiceItem> items, final UUID itemId) throws PaymentControlApiException {
         for (final InvoiceItem item : items) {
             if (item.getId().equals(itemId)) {
                 return item.getAmount();
             }
         }
-        throw new PaymentRoutingApiException("Unable to find invoice item for id " + itemId);
+        throw new PaymentControlApiException("Unable to find invoice item for id " + itemId);
     }
 
     private DateTime computeNextRetryDate(final String paymentExternalKey, final boolean isApiAPayment, final InternalCallContext internalContext) {
@@ -455,7 +455,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
         }
     }
 
-    private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentRoutingContext paymentControlContext, final BigDecimal computedAmount) {
+    private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentControlContext paymentControlContext, final BigDecimal computedAmount) {
         if (paymentControlContext.isApiPayment() || !isAccountAutoPayOff(paymentControlContext.getAccountId(), paymentControlContext)) {
             return false;
         }

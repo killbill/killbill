@@ -23,23 +23,125 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="currency" />
-        <module name="killbill-account" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-beatrix" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
         <module name="killbill-beatrix" />
-        <module name="killbill-catalog" />
-        <module name="killbill-currency" />
-        <module name="killbill-entitlement" />
-        <module name="killbill-internal-api" />
-        <module name="killbill-invoice" />
-        <module name="killbill-jaxrs" />
-        <module name="killbill-junction" />
-        <module name="killbill-overdue" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-payment" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
         <module name="killbill-payment" />
-        <module name="killbill-profiles-killbill" />
-        <module name="killbill-profiles-killpay" />
-        <module name="killbill-subscription" />
-        <module name="killbill-tenant" />
-        <module name="killbill-usage" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-invoice" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-invoice" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-util" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
         <module name="killbill-util" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-internal-api" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-internal-api" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-account" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-account" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-currency" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-currency" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-subscription" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-subscription" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-overdue" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-overdue" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-junction" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-junction" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-tenant" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-tenant" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-jaxrs" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-jaxrs" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-profiles-killpay" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-profiles-killpay" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-profiles-killbill" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-profiles-killbill" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-usage" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-usage" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-catalog" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-catalog" />
+      </profile>
+      <profile default="false" name="Annotation profile for killbill-entitlement" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-entitlement" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -80,4 +182,3 @@
     </bytecodeTargetLevel>
   </component>
 </project>
-

@@ -57,7 +57,7 @@ import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.DefaultRetryService.DefaultRetryServiceScheduler;
 import org.killbill.billing.payment.retry.RetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.commons.concurrent.WithProfilingThreadPoolExecutor;
@@ -159,7 +159,7 @@ public class PaymentModule extends KillBillModule {
 
         bind(PaymentConfig.class).toInstance(paymentConfig);
         bind(new TypeLiteral<OSGIServiceRegistration<PaymentPluginApi>>() {}).toProvider(DefaultPaymentProviderPluginRegistryProvider.class).asEagerSingleton();
-        bind(new TypeLiteral<OSGIServiceRegistration<PaymentRoutingPluginApi>>() {}).toProvider(DefaultPaymentControlProviderPluginRegistryProvider.class).asEagerSingleton();
+        bind(new TypeLiteral<OSGIServiceRegistration<PaymentControlPluginApi>>() {}).toProvider(DefaultPaymentControlProviderPluginRegistryProvider.class).asEagerSingleton();
 
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(PaymentGatewayApi.class).to(DefaultPaymentGatewayApi.class).asEagerSingleton();

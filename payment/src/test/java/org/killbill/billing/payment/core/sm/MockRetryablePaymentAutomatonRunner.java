@@ -43,7 +43,7 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.PaymentConfig;
@@ -60,7 +60,7 @@ public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAut
     private PaymentStateControlContext context;
 
     @Inject
-    public MockRetryablePaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, @Named(PaymentModule.STATE_MACHINE_RETRY) final StateMachineConfig retryStateMachine, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final PaymentProcessor paymentProcessor,
+    public MockRetryablePaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, @Named(PaymentModule.STATE_MACHINE_RETRY) final StateMachineConfig retryStateMachine, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final PaymentProcessor paymentProcessor,
                                                @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler, final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                                                final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper retrySMHelper, final PersistentBus eventBus) {
         super(stateMachineConfig, paymentDao, locker, pluginRegistry, retryPluginRegistry, clock, paymentProcessor, retryServiceScheduler, paymentConfig, executor, paymentSMHelper, retrySMHelper, eventBus);
@@ -103,7 +103,7 @@ public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAut
         return paymentPluginDispatcher;
     }
 
-    public OSGIServiceRegistration<PaymentRoutingPluginApi> getRetryPluginRegistry() {
+    public OSGIServiceRegistration<PaymentControlPluginApi> getRetryPluginRegistry() {
         return paymentControlPluginRegistry;
     }
 }

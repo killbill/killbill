@@ -59,7 +59,7 @@ import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
@@ -74,14 +74,14 @@ import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 
 public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner {
 
-    protected final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry;
+    protected final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry;
     private final PaymentProcessor paymentProcessor;
     private final RetryServiceScheduler retryServiceScheduler;
     private final PaymentControlStateMachineHelper paymentControlStateMachineHelper;
 
     @Inject
     public PluginControlPaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
-                                               final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry, final Clock clock, final PaymentProcessor paymentProcessor, @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
+                                               final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry, final Clock clock, final PaymentProcessor paymentProcessor, @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
                                                final PaymentConfig paymentConfig, @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor, final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper paymentControlStateMachineHelper, final PersistentBus eventBus) {
         super(stateMachineConfig, paymentConfig, paymentDao, locker, pluginRegistry, clock, executor, eventBus, paymentSMHelper);
         this.paymentProcessor = paymentProcessor;

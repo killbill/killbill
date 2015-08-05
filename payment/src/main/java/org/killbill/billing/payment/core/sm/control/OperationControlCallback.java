@@ -45,11 +45,11 @@ import org.killbill.billing.payment.core.sm.OperationCallbackBase;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
-import org.killbill.billing.routing.plugin.api.OnFailurePaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingApiException;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingContext;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
-import org.killbill.billing.routing.plugin.api.PriorPaymentRoutingResult;
+import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
+import org.killbill.billing.control.plugin.api.PaymentControlContext;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
@@ -62,10 +62,10 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
     protected final PaymentProcessor paymentProcessor;
     protected final PaymentStateControlContext paymentStateControlContext;
-    private final OSGIServiceRegistration<PaymentRoutingPluginApi> paymentControlPluginRegistry;
+    private final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry;
     private final Logger logger = LoggerFactory.getLogger(OperationControlCallback.class);
 
-    protected OperationControlCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry) {
+    protected OperationControlCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry) {
         super(locker, paymentPluginDispatcher, paymentStateContext);
         this.paymentProcessor = paymentProcessor;
         this.paymentControlPluginRegistry = retryPluginRegistry;
@@ -83,7 +83,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
 
-                final PaymentRoutingContext paymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                final PaymentControlContext paymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                      paymentStateContext.getPaymentMethodId(),
                                                                                                      paymentStateControlContext.getAttemptId(),
                                                                                                      paymentStateContext.getPaymentId(),
@@ -96,14 +96,14 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                      paymentStateControlContext.isApiPayment(),
                                                                                                      paymentStateContext.getCallContext());
 
-                final PriorPaymentRoutingResult pluginResult;
+                final PriorPaymentControlResult pluginResult;
                 try {
                     pluginResult = executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
                     if (pluginResult != null && pluginResult.isAborted()) {
                         // Transition to ABORTED
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.EXCEPTION);
                     }
-                } catch (final PaymentRoutingApiException e) {
+                } catch (final PaymentControlApiException e) {
                     // Transition to ABORTED and throw PaymentControlApiException to caller.
                     throw new OperationException(e, OperationResult.EXCEPTION);
                 }
@@ -119,7 +119,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
                     success = transaction.getTransactionStatus() == TransactionStatus.SUCCESS || transaction.getTransactionStatus() == TransactionStatus.PENDING;
                     if (success) {
-                        final PaymentRoutingContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                        final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                                     paymentStateContext.getPaymentMethodId(),
                                                                                                                     paymentStateControlContext.getAttemptId(),
                                                                                                                     result.getId(),
@@ -174,20 +174,20 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
     }
 
 
-    protected void executePluginOnSuccessCalls(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContext) {
+    protected void executePluginOnSuccessCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
         for (final String pluginName : paymentControlPluginNames) {
-            final PaymentRoutingPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
+            final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
                     plugin.onSuccessCall(paymentControlContext, paymentStateContext.getProperties());
-                } catch (final PaymentRoutingApiException e) {
+                } catch (final PaymentControlApiException e) {
                     logger.warn("Plugin " + pluginName + " failed to complete executePluginOnSuccessCalls call for " + paymentControlContext.getPaymentExternalKey(), e);
                 }
             }
         }
     }
 
-    private void adjustStateContextValues(final PaymentStateContext inputContext, @Nullable final PriorPaymentRoutingResult pluginResult) {
+    private void adjustStateContextValues(final PaymentStateContext inputContext, @Nullable final PriorPaymentControlResult pluginResult) {
         if (pluginResult == null) {
             return;
         }
@@ -213,14 +213,14 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         return operationResult;
     }
 
-    private PriorPaymentRoutingResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContextArg) throws PaymentRoutingApiException {
+    private PriorPaymentControlResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContextArg) throws PaymentControlApiException {
         // Return as soon as the first plugin aborts, or the last result for the last plugin
-        PriorPaymentRoutingResult prevResult = null;
+        PriorPaymentControlResult prevResult = null;
 
-        PaymentRoutingContext inputPaymentControlContext = paymentControlContextArg;
+        PaymentControlContext inputPaymentControlContext = paymentControlContextArg;
 
         for (final String pluginName : paymentControlPluginNames) {
-            final PaymentRoutingPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
+            final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin == null) {
                 // First call to plugin, we log warn, if plugin is not registered
                 logger.warn("Skipping unknown payment control plugin {} when fetching results", pluginName);
@@ -247,7 +247,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         return prevResult;
     }
 
-    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentStateControlContext paymentStateControlContext, final PaymentRoutingContext paymentControlContext) {
+    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentStateControlContext paymentStateControlContext, final PaymentControlContext paymentControlContext) {
         final DateTime retryDate = executePluginOnFailureCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
         if (retryDate != null) {
             ((PaymentStateControlContext) paymentStateContext).setRetryDate(retryDate);
@@ -255,19 +255,19 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         return getOperationResultOnException(paymentStateContext);
     }
 
-    private DateTime executePluginOnFailureCalls(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContext) {
+    private DateTime executePluginOnFailureCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
         DateTime candidate = null;
         for (final String pluginName : paymentControlPluginNames) {
-            final PaymentRoutingPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
+            final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
-                    final OnFailurePaymentRoutingResult result = plugin.onFailureCall(paymentControlContext, paymentStateContext.getProperties());
+                    final OnFailurePaymentControlResult result = plugin.onFailureCall(paymentControlContext, paymentStateContext.getProperties());
                     if (candidate == null) {
                         candidate = result.getNextRetryDate();
                     } else if (result.getNextRetryDate() != null) {
                         candidate = candidate.compareTo(result.getNextRetryDate()) > 0 ? result.getNextRetryDate() : candidate;
                     }
-                } catch (final PaymentRoutingApiException e) {
+                } catch (final PaymentControlApiException e) {
                     logger.warn("Plugin " + pluginName + " failed to return next retryDate for payment " + paymentControlContext.getPaymentExternalKey(), e);
                     return candidate;
                 }
@@ -276,7 +276,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         return candidate;
     }
 
-    public static class DefaultPaymentControlContext extends DefaultCallContext implements PaymentRoutingContext {
+    public static class DefaultPaymentControlContext extends DefaultCallContext implements PaymentControlContext {
 
         private final Account account;
         private final UUID paymentMethodId;

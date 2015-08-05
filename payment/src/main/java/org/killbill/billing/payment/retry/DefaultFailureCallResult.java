@@ -17,9 +17,10 @@
 package org.killbill.billing.payment.retry;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.routing.plugin.api.OnFailurePaymentRoutingResult;
+import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
+import org.killbill.billing.payment.api.PluginProperty;
 
-public class DefaultFailureCallResult implements OnFailurePaymentRoutingResult {
+public class DefaultFailureCallResult implements OnFailurePaymentControlResult {
 
     private final DateTime nextRetryDate;
 
@@ -30,5 +31,10 @@ public class DefaultFailureCallResult implements OnFailurePaymentRoutingResult {
     @Override
     public DateTime getNextRetryDate() {
         return nextRetryDate;
+    }
+
+    @Override
+    public Iterable<PluginProperty> getAdjustedPluginProperties() {
+        return null;
     }
 }

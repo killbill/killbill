@@ -19,30 +19,30 @@ package org.killbill.billing.payment.provider;
 
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
-import org.killbill.billing.payment.retry.DefaultPriorPaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.OnFailurePaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.OnSuccessPaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingApiException;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingContext;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
-import org.killbill.billing.routing.plugin.api.PriorPaymentRoutingResult;
+import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
+import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
+import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
+import org.killbill.billing.control.plugin.api.PaymentControlContext;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 
-public class DefaultPaymentControlProviderPlugin implements PaymentRoutingPluginApi {
+public class DefaultPaymentControlProviderPlugin implements PaymentControlPluginApi {
 
     public static final String PLUGIN_NAME = "__DEFAULT_PAYMENT_CONTROL__";
 
     @Override
-    public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
-        return new DefaultPriorPaymentRoutingResult(false);
+    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+        return new DefaultPriorPaymentControlResult(false);
     }
 
     @Override
-    public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) {
+    public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) {
         return null;
     }
 
     @Override
-    public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext paymentControlContext, final Iterable<PluginProperty> properties) {
+    public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) {
         return new DefaultFailureCallResult(null);
     }
 }

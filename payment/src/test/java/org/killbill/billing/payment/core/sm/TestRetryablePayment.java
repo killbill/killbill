@@ -52,7 +52,7 @@ import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -93,7 +93,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
     @Inject
     private OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     @Inject
-    private OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry;
+    private OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry;
     @Inject
     private TagInternalApi tagApi;
     @Inject

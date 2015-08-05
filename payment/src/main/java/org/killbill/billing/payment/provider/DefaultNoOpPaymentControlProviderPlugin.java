@@ -28,26 +28,15 @@ import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 
-public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi {
+public class DefaultNoOpPaymentControlProviderPlugin implements PaymentControlPluginApi {
 
-    public static final String PLUGIN_NAME = "MOCK_RETRY_PLUGIN";
-
-    private boolean isAborted;
+    private PaymentControlApiException paymentControlPluginApiException;
+    private boolean isRetryAborted;
     private DateTime nextRetryDate;
 
-    public MockPaymentControlProviderPlugin setAborted(final boolean isAborted) {
-        this.isAborted = isAborted;
-        return this;
-    }
-
-    public MockPaymentControlProviderPlugin setNextRetryDate(final DateTime nextRetryDate) {
-        this.nextRetryDate = nextRetryDate;
-        return this;
-    }
-
     @Override
-    public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
-        return new DefaultPriorPaymentControlResult(isAborted);
+    public PriorPaymentControlResult priorCall(final PaymentControlContext retryPluginContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+        return new DefaultPriorPaymentControlResult(isRetryAborted);
     }
 
     @Override
@@ -58,5 +47,20 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
     @Override
     public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
         return new DefaultFailureCallResult(nextRetryDate);
+    }
+
+    public DefaultNoOpPaymentControlProviderPlugin setPaymentControlPluginApiException(final PaymentControlApiException paymentControlPluginApiException) {
+        this.paymentControlPluginApiException = paymentControlPluginApiException;
+        return this;
+    }
+
+    public DefaultNoOpPaymentControlProviderPlugin setRetryAborted(final boolean isRetryAborted) {
+        this.isRetryAborted = isRetryAborted;
+        return this;
+    }
+
+    public DefaultNoOpPaymentControlProviderPlugin setNextRetryDate(final DateTime nextRetryDate) {
+        this.nextRetryDate = nextRetryDate;
+        return this;
     }
 }

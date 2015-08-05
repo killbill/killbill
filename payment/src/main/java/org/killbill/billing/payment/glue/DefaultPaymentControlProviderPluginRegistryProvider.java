@@ -21,13 +21,13 @@ import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.DefaultPaymentControlProviderPlugin;
-import org.killbill.billing.payment.provider.DefaultPaymentRoutingProviderPluginRegistry;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
+import org.killbill.billing.payment.provider.DefaultPaymentControlProviderPluginRegistry;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-public class DefaultPaymentControlProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<PaymentRoutingPluginApi>> {
+public class DefaultPaymentControlProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<PaymentControlPluginApi>> {
 
     private final DefaultPaymentControlProviderPlugin externalPaymentControlProviderPlugin;
     private final InvoicePaymentControlPluginApi invoicePaymentControlPlugin;
@@ -40,8 +40,8 @@ public class DefaultPaymentControlProviderPluginRegistryProvider implements Prov
     }
 
     @Override
-    public OSGIServiceRegistration<PaymentRoutingPluginApi> get() {
-        final DefaultPaymentRoutingProviderPluginRegistry pluginRegistry = new DefaultPaymentRoutingProviderPluginRegistry();
+    public OSGIServiceRegistration<PaymentControlPluginApi> get() {
+        final DefaultPaymentControlProviderPluginRegistry pluginRegistry = new DefaultPaymentControlProviderPluginRegistry();
 
         // Make the external payment provider plugin available by default
         final OSGIServiceDescriptor desc = new OSGIServiceDescriptor() {

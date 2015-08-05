@@ -28,12 +28,12 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
-import org.killbill.billing.routing.plugin.api.OnFailurePaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.OnSuccessPaymentRoutingResult;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingApiException;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingContext;
-import org.killbill.billing.routing.plugin.api.PaymentRoutingPluginApi;
-import org.killbill.billing.routing.plugin.api.PriorPaymentRoutingResult;
+import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
+import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
+import org.killbill.billing.control.plugin.api.PaymentControlContext;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -44,7 +44,7 @@ import com.google.inject.Inject;
 public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
     @Inject
-    private OSGIServiceRegistration<PaymentRoutingPluginApi> retryPluginRegistry;
+    private OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry;
 
     private Account account;
     private UUID newPaymentMethodId;
@@ -64,25 +64,25 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
             @Override
             public String getRegistrationName() {
-                return TestPaymentRoutingPluginApi.PLUGIN_NAME;
+                return TestPaymentControlPluginApi.PLUGIN_NAME;
             }
-        }, new TestPaymentRoutingPluginApi(newPaymentMethodId));
+        }, new TestPaymentControlPluginApi(newPaymentMethodId));
 
     }
 
-    public static class TestPaymentRoutingPluginApi implements PaymentRoutingPluginApi {
+    public static class TestPaymentControlPluginApi implements PaymentControlPluginApi {
 
-        public static final String PLUGIN_NAME = "TEST_ROUTING_API_PLUGIN_NAME";
+        public static final String PLUGIN_NAME = "TEST_CONTROL_API_PLUGIN_NAME";
 
         private final UUID newPaymentMethodId;
 
-        public TestPaymentRoutingPluginApi(final UUID newPaymentMethodId) {
+        public TestPaymentControlPluginApi(final UUID newPaymentMethodId) {
             this.newPaymentMethodId = newPaymentMethodId;
         }
 
         @Override
-        public PriorPaymentRoutingResult priorCall(final PaymentRoutingContext context, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
-            return new PriorPaymentRoutingResult() {
+        public PriorPaymentControlResult priorCall(final PaymentControlContext context, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+            return new PriorPaymentControlResult() {
                 @Override
                 public boolean isAborted() {
                     return false;
@@ -111,12 +111,12 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public OnSuccessPaymentRoutingResult onSuccessCall(final PaymentRoutingContext context, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext context, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
             return null;
         }
 
         @Override
-        public OnFailurePaymentRoutingResult onFailureCall(final PaymentRoutingContext context, final Iterable<PluginProperty> properties) throws PaymentRoutingApiException {
+        public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext context, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
             return null;
         }
     }
@@ -138,7 +138,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
             @Override
             public List<String> getPaymentControlPluginNames() {
-                return ImmutableList.of(TestPaymentRoutingPluginApi.PLUGIN_NAME);
+                return ImmutableList.of(TestPaymentControlPluginApi.PLUGIN_NAME);
             }
         };
 
