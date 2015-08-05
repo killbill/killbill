@@ -19,10 +19,13 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
@@ -32,8 +35,17 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationInvoice extends TestIntegrationBase {
 
@@ -187,8 +199,66 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 14), new LocalDate(2015, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, dryRun, callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+    }
 
 
+    @Test(groups = "slow")
+    public void testApplyCreditOnExistingBalance() throws Exception {
+
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+
+        log.info("Beginning test with BCD of " + billingDay);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+
+        add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+
+        // Move through time and verify we get the same invoice
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
+        assertEquals(invoices.size(), 1);
+
+        final UUID unpaidInvoiceId = invoices.iterator().next().getId();
+        final Invoice unpaidInvoice = invoiceUserApi.getInvoice(unpaidInvoiceId, callContext);
+        assertTrue(unpaidInvoice.getBalance().compareTo(new BigDecimal("249.95")) == 0);
+
+        final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("300"), new LocalDate(clock.getUTCNow(), account.getTimeZone()), account.getCurrency(), callContext);
+        assertListenerStatus();
+
+        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance2.compareTo(new BigDecimal("-50.05")) == 0);
+
+        final Invoice unpaidInvoice2 = invoiceUserApi.getInvoice(unpaidInvoiceId, callContext);
+        assertTrue(unpaidInvoice2.getBalance().compareTo(BigDecimal.ZERO) == 0);
+
+        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        clock.addDays(31);
+        assertListenerStatus();
+
+        final BigDecimal accountBalance3 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance3.compareTo(BigDecimal.ZERO) == 0);
+
+
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(payments.size(), 1);
+
+        final Payment payment = payments.get(0);
+        assertTrue(payment.getPurchasedAmount().compareTo(new BigDecimal("199.90")) == 0);
     }
 
 }
