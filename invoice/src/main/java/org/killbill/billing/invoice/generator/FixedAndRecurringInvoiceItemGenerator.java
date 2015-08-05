@@ -165,20 +165,21 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
                     if (rate != null) {
                         final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
+                        if (BigDecimal.ZERO.compareTo(amount) != 0) {
+                            final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
+                                                                                                accountId,
+                                                                                                thisEvent.getSubscription().getBundleId(),
+                                                                                                thisEvent.getSubscription().getId(),
+                                                                                                thisEvent.getPlan().getName(),
+                                                                                                thisEvent.getPlanPhase().getName(),
+                                                                                                itemDatum.getStartDate(), itemDatum.getEndDate(),
+                                                                                                amount, rate, currency);
+                            items.add(recurringItem);
 
-                        final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
-                                                                                            accountId,
-                                                                                            thisEvent.getSubscription().getBundleId(),
-                                                                                            thisEvent.getSubscription().getId(),
-                                                                                            thisEvent.getPlan().getName(),
-                                                                                            thisEvent.getPlanPhase().getName(),
-                                                                                            itemDatum.getStartDate(), itemDatum.getEndDate(),
-                                                                                            amount, rate, currency);
-                        items.add(recurringItem);
+                        }
                     }
                 }
                 updatePerSubscriptionNextNotificationDate(thisEvent.getSubscription().getId(), itemDataWithNextBillingCycleDate.getNextBillingCycleDate(), items, billingMode, perSubscriptionFutureNotificationDate);
-
             }
         }
 
