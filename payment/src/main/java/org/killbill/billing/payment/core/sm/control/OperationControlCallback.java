@@ -56,6 +56,8 @@ import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.MoreObjects;
+
 public abstract class OperationControlCallback extends OperationCallbackBase<Payment, PaymentApiException> implements OperationCallback {
 
     protected final PaymentProcessor paymentProcessor;
@@ -151,30 +153,26 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
     }
 
     @Override
-    protected OperationException rewrapExecutionException(final PaymentStateContext paymentStateContext, final ExecutionException e) {
-        if (e.getCause() instanceof OperationException) {
-            return (OperationException) e.getCause();
-        } else if (e.getCause() instanceof LockFailedException) {
+    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e) {
+
+        // If this is an ExecutionException we attempt to extract the cause first
+        final Throwable originalExceptionOrCause = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
+
+        if (originalExceptionOrCause instanceof OperationException) {
+            return (OperationException) originalExceptionOrCause;
+        } else if (originalExceptionOrCause instanceof LockFailedException) {
             final String format = String.format("Failed to lock account %s", paymentStateContext.getAccount().getExternalKey());
             logger.error(String.format(format));
-            return new OperationException(e, getOperationResultOnException(paymentStateContext));
+        } else if (originalExceptionOrCause instanceof TimeoutException) {
+            logger.warn("RetryOperationCallback call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
+        } else if (originalExceptionOrCause instanceof InterruptedException) {
+            logger.error("RetryOperationCallback call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
         } else /* most probably RuntimeException */ {
             logger.warn("RetryOperationCallback failed for account {}", paymentStateContext.getAccount().getExternalKey(), e);
-            return new OperationException(e, getOperationResultOnException(paymentStateContext));
         }
-    }
-
-    @Override
-    protected OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e) {
-        logger.warn("RetryOperationCallback call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
         return new OperationException(e, getOperationResultOnException(paymentStateContext));
     }
 
-    @Override
-    protected OperationException wrapInterruptedException(final PaymentStateContext paymentStateContext, final InterruptedException e) {
-        logger.error("RetryOperationCallback call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
-        return new OperationException(e, getOperationResultOnException(paymentStateContext));
-    }
 
     protected void executePluginOnSuccessCalls(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContext) {
         for (final String pluginName : paymentControlPluginNames) {
@@ -253,10 +251,8 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         final DateTime retryDate = executePluginOnFailureCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
         if (retryDate != null) {
             ((PaymentStateControlContext) paymentStateContext).setRetryDate(retryDate);
-            return OperationResult.FAILURE;
-        } else {
-            return OperationResult.EXCEPTION;
         }
+        return getOperationResultOnException(paymentStateContext);
     }
 
     private DateTime executePluginOnFailureCalls(final List<String> paymentControlPluginNames, final PaymentRoutingContext paymentControlContext) {

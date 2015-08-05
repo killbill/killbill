@@ -233,7 +233,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
 
     private PaymentPluginApi getPaymentPluginApi(final PaymentModelDao item, final String pluginName) {
         final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(pluginName);
-        Preconditions.checkState(pluginApi != null, "Janitor IncompletePaymentTransactionTask cannot retrieve PaymentPluginApi " + item.getId() + ", skipping");
+        Preconditions.checkState(pluginApi != null, "Janitor IncompletePaymentTransactionTask cannot retrieve PaymentPluginApi for plugin %s (payment id %s), skipping", pluginName, item.getId());
         return pluginApi;
     }
 

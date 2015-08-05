@@ -66,12 +66,12 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
             logger.debug("Successful plugin call for account {} with result {}", account.getExternalKey(), operationResult);
             return operationResult;
         } catch (final ExecutionException e) {
-            throw rewrapExecutionException(paymentStateContext, e);
+            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         } catch (final TimeoutException e) {
-            throw wrapTimeoutException(paymentStateContext, e);
+            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw wrapInterruptedException(paymentStateContext, e);
+            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         }
     }
 
@@ -83,12 +83,5 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
     //
     protected abstract CallbackOperationResult doCallSpecificOperationCallback() throws CallbackOperationException;
 
-    //
-    // The methods below allow to convert the exceptions thrown back by the Executor into an appropriate  OperationException
-    //
-    protected abstract OperationException rewrapExecutionException(final PaymentStateContext paymentStateContext, final ExecutionException e);
-
-    protected abstract OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e);
-
-    protected abstract OperationException wrapInterruptedException(final PaymentStateContext paymentStateContext, final InterruptedException e);
+    protected abstract OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e);
 }

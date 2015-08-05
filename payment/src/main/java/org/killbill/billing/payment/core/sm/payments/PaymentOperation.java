@@ -85,24 +85,26 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     }
 
     @Override
-    protected OperationException rewrapExecutionException(final PaymentStateContext paymentStateContext, final ExecutionException e) {
+    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e) {
+
+        // If this is an ExecutionException we attempt to extract the cause first
+        final Throwable originalExceptionOrCause = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
+
         //
         // Any case of exception (checked or runtime) should lead to a TransactionStatus.UNKNOWN (and a XXX_ERRORED payment state).
         // In order to reach that state we create PaymentTransactionInfoPlugin with an PaymentPluginStatus.UNDEFINED status (and an OperationResult.EXCEPTION).
         //
-        final Throwable originalExceptionOrCause = MoreObjects.firstNonNull(e.getCause(), e);
         if (originalExceptionOrCause instanceof LockFailedException) {
             logger.warn("Failed to lock account {}", paymentStateContext.getAccount().getExternalKey());
+        } else if (originalExceptionOrCause instanceof TimeoutException) {
+            logger.error("Plugin call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
+        } else if (originalExceptionOrCause instanceof InterruptedException) {
+            logger.error("Plugin call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
         } else {
             logger.warn("Payment plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), originalExceptionOrCause);
         }
         return convertToUnknownTransactionStatusAndErroredPaymentState(originalExceptionOrCause);
-    }
 
-    @Override
-    protected OperationException wrapTimeoutException(final PaymentStateContext paymentStateContext, final TimeoutException e) {
-        logger.error("Plugin call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
-        return convertToUnknownTransactionStatusAndErroredPaymentState(e);
     }
 
     //
@@ -122,16 +124,10 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                 paymentStateContext.getCallContext().getCreatedDate(),
                                                                                                 PaymentPluginStatus.UNDEFINED,
                                                                                                 null);
-
         paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
         return new OperationException(e, OperationResult.EXCEPTION);
     }
 
-    @Override
-    protected OperationException wrapInterruptedException(final PaymentStateContext paymentStateContext, final InterruptedException e) {
-        logger.error("Plugin call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
-        return new OperationException(e, OperationResult.EXCEPTION);
-    }
 
     @Override
     protected abstract PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException;
