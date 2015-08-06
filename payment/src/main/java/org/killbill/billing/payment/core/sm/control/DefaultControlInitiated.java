@@ -79,7 +79,7 @@ public class DefaultControlInitiated implements LeavingStateCallback {
                 //
                 // We don't serialize any properties at this stage to avoid serializing sensitive information.
                 // However, if after going through the control plugins, the attempt end up in RETRIED state,
-                // the properties will be serialized in the enteringState() callback (any plugin that sets a
+                // the properties will be serialized in the enteringState( callback (any plugin that sets a
                 // retried date is responsible to correctly remove sensitive information such as CVV, ...)
                 //
                 final byte[] serializedProperties = PluginPropertySerializer.serialize(ImmutableList.<PluginProperty>of());

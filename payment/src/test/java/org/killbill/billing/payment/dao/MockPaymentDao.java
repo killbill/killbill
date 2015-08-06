@@ -95,12 +95,20 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public void updatePaymentAttempt(final UUID paymentAttemptId, final UUID transactionId, final String state, final InternalCallContext context) {
+        updatePaymentAttemptWithProperties(paymentAttemptId, transactionId, state, null, context);
+    }
+
+    @Override
+    public void updatePaymentAttemptWithProperties(final UUID paymentAttemptId, final UUID transactionId, final String state, final byte[] pluginProperties, final InternalCallContext context) {
         boolean success = false;
         synchronized (this) {
             for (PaymentAttemptModelDao cur : attempts.values()) {
                 if (cur.getId().equals(paymentAttemptId)) {
                     cur.setStateName(state);
                     cur.setTransactionId(transactionId);
+                    if (pluginProperties != null) {
+                        cur.setPluginProperties(pluginProperties);
+                    }
                     success = true;
                     break;
                 }
@@ -109,11 +117,6 @@ public class MockPaymentDao implements PaymentDao {
         if (!success) {
             throw new RuntimeException("Could not find attempt " + paymentAttemptId);
         }
-    }
-
-    @Override
-    public void updatePaymentAttemptWithProperties(final UUID paymentAttemptId, final UUID transactionId, final String state, final byte[] pluginProperties, final InternalCallContext context) {
-        updatePaymentAttempt(paymentAttemptId, transactionId, state, context);
     }
 
     @Override

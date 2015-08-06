@@ -49,6 +49,7 @@ import org.killbill.billing.payment.invoice.dao.InvoicePaymentControlDao;
 import org.killbill.billing.payment.invoice.dao.PluginAutoPayOffModelDao;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
+import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
@@ -185,7 +186,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         } catch (final InvoiceApiException e) {
             log.error("InvoicePaymentControlPluginApi onSuccessCall failed for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
         }
-        return null;
+        return new DefaultOnSuccessPaymentControlResult();
     }
 
     @Override
