@@ -61,13 +61,12 @@ public class DefaultControlCompleted implements EnteringStateCallback {
                                    paymentStateContext.getCurrentTransaction().getId() :
                                    null;
 
+        // At this stage we can update the paymentAttempt state AND serialize the plugin properties. Control plugins will have had the opportunity to erase sensitive data if required.
+        retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttemptWithProperties(attempt.getId(), transactionId, state.getName(), getSerializedProperties(), paymentStateContext.getInternalCallContext());
 
         if (retriedState.getName().equals(state.getName()) && !isUnknownTransaction()) {
-            retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttemptWithProperties(attempt.getId(), transactionId, state.getName(), getSerializedProperties(), paymentStateContext.getInternalCallContext());
             retryServiceScheduler.scheduleRetry(ObjectType.PAYMENT_ATTEMPT, attempt.getId(), attempt.getId(), attempt.getTenantRecordId(),
                                                 paymentStateContext.getPaymentControlPluginNames(), paymentStateContext.getRetryDate());
-        } else {
-            retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttempt(attempt.getId(), transactionId, state.getName(), paymentStateContext.getInternalCallContext());
         }
     }
 

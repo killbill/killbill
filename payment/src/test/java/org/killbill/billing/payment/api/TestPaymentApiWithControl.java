@@ -34,6 +34,8 @@ import org.killbill.billing.control.plugin.api.PaymentControlApiException;
 import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
+import org.killbill.billing.payment.retry.DefaultFailureCallResult;
+import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -112,12 +114,12 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         @Override
         public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext context, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
-            return null;
+            return new DefaultOnSuccessPaymentControlResult();
         }
 
         @Override
         public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext context, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
-            return null;
+            return new DefaultFailureCallResult(null);
         }
     }
 
