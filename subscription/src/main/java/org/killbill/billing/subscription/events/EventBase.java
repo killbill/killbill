@@ -24,7 +24,6 @@ import org.killbill.billing.subscription.events.user.ApiEvent;
 
 public abstract class EventBase implements SubscriptionBaseEvent {
 
-    private final long totalOrdering;
     private final UUID uuid;
     private final UUID subscriptionId;
     private final DateTime createdDate;
@@ -33,6 +32,7 @@ public abstract class EventBase implements SubscriptionBaseEvent {
     private final DateTime effectiveDate;
     private final DateTime processedDate;
 
+    private long totalOrdering;
     private long activeVersion;
     private boolean isActive;
 
@@ -112,6 +112,11 @@ public abstract class EventBase implements SubscriptionBaseEvent {
     @Override
     public void reactivate() {
         this.isActive = true;
+    }
+
+    @Override
+    public void setTotalOrdering(final long totalOrdering) {
+        this.totalOrdering = totalOrdering;
     }
 
     //
