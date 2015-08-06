@@ -20,6 +20,7 @@ package org.killbill.billing.payment.provider;
 import org.joda.time.DateTime;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
+import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
@@ -52,7 +53,7 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
 
     @Override
     public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
-        return null;
+        return new DefaultOnSuccessPaymentControlResult();
     }
 
     @Override
