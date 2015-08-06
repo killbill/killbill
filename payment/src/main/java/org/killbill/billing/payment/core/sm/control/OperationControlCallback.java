@@ -32,7 +32,12 @@ import org.killbill.automaton.OperationResult;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
+import org.killbill.billing.control.plugin.api.PaymentControlContext;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -46,11 +51,6 @@ import org.killbill.billing.payment.core.sm.OperationCallbackBase;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
-import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
-import org.killbill.billing.control.plugin.api.PaymentControlApiException;
-import org.killbill.billing.control.plugin.api.PaymentControlContext;
-import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
-import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.locker.GlobalLocker;
@@ -229,7 +229,10 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                     if (result.getAdjustedPluginProperties() != null) {
                         inputPluginProperties = result.getAdjustedPluginProperties();
                     }
+                    // Exceptions form the control plugins are ignored (and logged) because the semantics on what to do are undefined.
                 } catch (final PaymentControlApiException e) {
+                    logger.warn("Plugin " + pluginName + " failed to complete executePluginOnSuccessCalls call for " + paymentControlContext.getPaymentExternalKey(), e);
+                } catch (final RuntimeException e) {
                     logger.warn("Plugin " + pluginName + " failed to complete executePluginOnSuccessCalls call for " + paymentControlContext.getPaymentExternalKey(), e);
                 }
             }

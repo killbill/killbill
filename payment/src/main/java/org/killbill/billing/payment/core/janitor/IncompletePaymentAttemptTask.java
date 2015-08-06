@@ -98,49 +98,67 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         final PaymentTransactionModelDao transaction = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {
-                return input.getAttemptId().equals(attempt.getId()) &&
-                       input.getTransactionStatus() == TransactionStatus.SUCCESS;
+                return input.getAttemptId().equals(attempt.getId());
             }
         }).orNull();
 
-        if (transaction == null) {
+        // UNKNOWN transaction are handled by the Janitor IncompletePaymentTransactionTask  and should eventually transition to something else,
+        // at which point the attempt can also be transition to a different state.
+        if (transaction.getTransactionStatus() == TransactionStatus.UNKNOWN) {
+            return;
+        }
+
+        // In those 3 case null transaction, PLUGIN_FAILURE and PAYMENT_FAILURE, we are taking a *shortcut* but this is incorrect; ideally we should call back the priorCall
+        // control plugins to decide what to do:
+        // * For null transaction and PLUGIN_FAILURE something went wrong before we could even make the payment, so possibly we should inform the control plugin
+        //   and retry
+        // * For PAYMENT_FAILURE, the payment went through but was denied byt the gateway, and so this is a different case where a control plugin may want to retry
+        //
+        if (transaction == null ||
+            transaction.getTransactionStatus() == TransactionStatus.PLUGIN_FAILURE ||
+            transaction.getTransactionStatus() == TransactionStatus.PAYMENT_FAILURE) {
             log.info("Janitor AttemptCompletionTask moving attempt " + attempt.getId() + " -> ABORTED");
             paymentDao.updatePaymentAttempt(attempt.getId(), attempt.getTransactionId(), "ABORTED", internalCallContext);
             return;
         }
 
-        try {
-            log.info("Janitor AttemptCompletionTask completing attempt " + attempt.getId() + " -> SUCCESS");
+        // On SUCCESS, PENDING state we complete the payment control state machine, allowing to call the control plugin onSuccessCall API.
+        if (transaction.getTransactionStatus() == TransactionStatus.SUCCESS ||
+            transaction.getTransactionStatus() == TransactionStatus.PENDING) {
 
-            final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
-            final boolean isApiPayment = true; // unclear
-            final PaymentStateControlContext paymentStateContext = new PaymentStateControlContext(attempt.toPaymentControlPluginNames(),
-                                                                                                  isApiPayment,
-                                                                                                  transaction.getPaymentId(),
-                                                                                                  attempt.getPaymentExternalKey(),
-                                                                                                  transaction.getTransactionExternalKey(),
-                                                                                                  transaction.getTransactionType(),
-                                                                                                  account,
-                                                                                                  attempt.getPaymentMethodId(),
-                                                                                                  transaction.getAmount(),
-                                                                                                  transaction.getCurrency(),
-                                                                                                  PluginPropertySerializer.deserialize(attempt.getPluginProperties()),
-                                                                                                  internalCallContext,
-                                                                                                  callContext);
+            try {
+                log.info("Janitor AttemptCompletionTask completing attempt " + attempt.getId() + " -> SUCCESS");
 
-            paymentStateContext.setAttemptId(attempt.getId()); // Normally set by leavingState Callback
-            paymentStateContext.setPaymentTransactionModelDao(transaction); // Normally set by raw state machine
-            //
-            // Will rerun the state machine with special callbacks to only make the executePluginOnSuccessCalls call
-            // to the PaymentControlPluginApi plugin and transition the state.
-            //
-            pluginControlledPaymentAutomatonRunner.completeRun(paymentStateContext);
-        } catch (final AccountApiException e) {
-            log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
-        } catch (final PluginPropertySerializerException e) {
-            log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
-        } catch (final PaymentApiException e) {
-            log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
+                final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
+                final boolean isApiPayment = true; // unclear
+                final PaymentStateControlContext paymentStateContext = new PaymentStateControlContext(attempt.toPaymentControlPluginNames(),
+                                                                                                      isApiPayment,
+                                                                                                      transaction.getPaymentId(),
+                                                                                                      attempt.getPaymentExternalKey(),
+                                                                                                      transaction.getTransactionExternalKey(),
+                                                                                                      transaction.getTransactionType(),
+                                                                                                      account,
+                                                                                                      attempt.getPaymentMethodId(),
+                                                                                                      transaction.getAmount(),
+                                                                                                      transaction.getCurrency(),
+                                                                                                      PluginPropertySerializer.deserialize(attempt.getPluginProperties()),
+                                                                                                      internalCallContext,
+                                                                                                      callContext);
+
+                paymentStateContext.setAttemptId(attempt.getId()); // Normally set by leavingState Callback
+                paymentStateContext.setPaymentTransactionModelDao(transaction); // Normally set by raw state machine
+                //
+                // Will rerun the state machine with special callbacks to only make the executePluginOnSuccessCalls call
+                // to the PaymentControlPluginApi plugin and transition the state.
+                //
+                pluginControlledPaymentAutomatonRunner.completeRun(paymentStateContext);
+            } catch (final AccountApiException e) {
+                log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
+            } catch (final PluginPropertySerializerException e) {
+                log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
+            } catch (final PaymentApiException e) {
+                log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
+            }
         }
     }
 
