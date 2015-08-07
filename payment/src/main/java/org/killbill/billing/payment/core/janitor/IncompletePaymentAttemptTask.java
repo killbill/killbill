@@ -102,13 +102,13 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
             }
         }).orNull();
 
-        // UNKNOWN transaction are handled by the Janitor IncompletePaymentTransactionTask  and should eventually transition to something else,
-        // at which point the attempt can also be transition to a different state.
+        // UNKNOWN transactions are handled by the Janitor IncompletePaymentTransactionTask and should eventually transition to something else,
+        // at which point the attempt can also be transitioned to a different state.
         if (transaction.getTransactionStatus() == TransactionStatus.UNKNOWN) {
             return;
         }
 
-        // In those 3 case null transaction, PLUGIN_FAILURE and PAYMENT_FAILURE, we are taking a *shortcut* but this is incorrect; ideally we should call back the priorCall
+        // In those 3 cases (null transaction, PLUGIN_FAILURE and PAYMENT_FAILURE), we are taking a *shortcut* but this is incorrect; ideally we should call back the priorCall
         // control plugins to decide what to do:
         // * For null transaction and PLUGIN_FAILURE something went wrong before we could even make the payment, so possibly we should inform the control plugin
         //   and retry
