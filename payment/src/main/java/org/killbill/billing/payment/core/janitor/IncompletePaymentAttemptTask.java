@@ -112,7 +112,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         // control plugins to decide what to do:
         // * For null transaction and PLUGIN_FAILURE something went wrong before we could even make the payment, so possibly we should inform the control plugin
         //   and retry
-        // * For PAYMENT_FAILURE, the payment went through but was denied byt the gateway, and so this is a different case where a control plugin may want to retry
+        // * For PAYMENT_FAILURE, the payment went through but was denied by the gateway, and so this is a different case where a control plugin may want to retry
         //
         if (transaction == null ||
             transaction.getTransactionStatus() == TransactionStatus.PLUGIN_FAILURE ||
