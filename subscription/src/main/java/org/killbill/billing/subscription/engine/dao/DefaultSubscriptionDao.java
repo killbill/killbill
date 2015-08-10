@@ -947,7 +947,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     }
                 }
                 // Set total ordering value of the fake dryRun event to make sure billing events are correctly ordererd
-                curDryRun.setTotalOrdering(events.get(events.size() - 1).getTotalOrdering() + 1);
+                if (!events.isEmpty()) {
+                    curDryRun.setTotalOrdering(events.get(events.size() - 1).getTotalOrdering() + 1);
+                }
                 events.add(curDryRun);
             }
         }
