@@ -110,11 +110,11 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         final PaymentTransactionModelDao transaction = filteredTransactions.isEmpty() ? null : filteredTransactions.get(0);
 
 
-        // In those 3 case null transaction, PLUGIN_FAILURE and PAYMENT_FAILURE, we are taking a *shortcut* but this is incorrect; ideally we should call back the priorCall
+        // In those 3 cases (null transaction, PLUGIN_FAILURE and PAYMENT_FAILURE), we are taking a *shortcut* but this is incorrect; ideally we should call back the priorCall
         // control plugins to decide what to do:
         // * For null transaction and PLUGIN_FAILURE something went wrong before we could even make the payment, so possibly we should inform the control plugin
         //   and retry
-        // * For PAYMENT_FAILURE, the payment went through but was denied byt the gateway, and so this is a different case where a control plugin may want to retry
+        // * For PAYMENT_FAILURE, the payment went through but was denied by the gateway, and so this is a different case where a control plugin may want to retry
         //
         if (transaction == null ||
             transaction.getTransactionStatus() == TransactionStatus.PLUGIN_FAILURE ||

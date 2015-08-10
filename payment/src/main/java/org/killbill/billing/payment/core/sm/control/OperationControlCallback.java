@@ -229,7 +229,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                     if (result.getAdjustedPluginProperties() != null) {
                         inputPluginProperties = result.getAdjustedPluginProperties();
                     }
-                    // Exceptions form the control plugins are ignored (and logged) because the semantics on what to do are undefined.
+                    // Exceptions from the control plugins are ignored (and logged) because the semantics on what to do are undefined.
                 } catch (final PaymentControlApiException e) {
                     logger.warn("Plugin " + pluginName + " failed to complete executePluginOnSuccessCalls call for " + paymentControlContext.getPaymentExternalKey(), e);
                 } catch (final RuntimeException e) {
