@@ -17,11 +17,12 @@
 
 package org.killbill.billing.payment.core;
 
-import javax.annotation.Nullable;
-
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+
+import com.google.common.base.MoreObjects;
 
 //
 // Conversion between the plugin result to the payment state and transaction status
@@ -30,7 +31,8 @@ public class PaymentTransactionInfoPluginConverter {
 
 
     public static TransactionStatus toTransactionStatus(final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
-        switch (paymentTransactionInfoPlugin.getStatus()) {
+        final PaymentPluginStatus status = MoreObjects.firstNonNull(paymentTransactionInfoPlugin.getStatus(), PaymentPluginStatus.UNDEFINED);
+        switch (status) {
             case PROCESSED:
                 return TransactionStatus.SUCCESS;
             case PENDING:
@@ -54,7 +56,8 @@ public class PaymentTransactionInfoPluginConverter {
     }
 
     public static OperationResult toOperationResult(final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
-        switch (paymentTransactionInfoPlugin.getStatus()) {
+        final PaymentPluginStatus status = MoreObjects.firstNonNull(paymentTransactionInfoPlugin.getStatus(), PaymentPluginStatus.UNDEFINED);
+        switch (status) {
             case PROCESSED:
                 return OperationResult.SUCCESS;
             case PENDING:
