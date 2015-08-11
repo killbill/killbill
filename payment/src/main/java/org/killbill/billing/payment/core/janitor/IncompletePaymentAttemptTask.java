@@ -50,6 +50,7 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationQueue;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 /**
@@ -95,18 +96,19 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(attempt.getAccountId(), callContext);
 
         final List<PaymentTransactionModelDao> transactions = paymentDao.getPaymentTransactionsByExternalKey(attempt.getTransactionExternalKey(), tenantContext);
-        final PaymentTransactionModelDao transaction = Iterables.tryFind(transactions, new Predicate<PaymentTransactionModelDao>() {
+        final List<PaymentTransactionModelDao> filteredTransactions = ImmutableList.copyOf(Iterables.filter(transactions, new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {
                 return input.getAttemptId().equals(attempt.getId());
             }
-        }).orNull();
+        }));
 
-        // UNKNOWN transactions are handled by the Janitor IncompletePaymentTransactionTask and should eventually transition to something else,
-        // at which point the attempt can also be transitioned to a different state.
-        if (transaction.getTransactionStatus() == TransactionStatus.UNKNOWN) {
-            return;
+        // We only expect at most one transaction for a given attempt, but as a precaution we check for more; if this is the case we log a warn and continue processing the first one.
+        if (filteredTransactions.size() > 1) {
+            log.warn("Found {} transactions for paymentAttempt {}", filteredTransactions.size(), attempt.getId());
         }
+        final PaymentTransactionModelDao transaction = filteredTransactions.isEmpty() ? null : filteredTransactions.get(0);
+
 
         // In those 3 cases (null transaction, PLUGIN_FAILURE and PAYMENT_FAILURE), we are taking a *shortcut* but this is incorrect; ideally we should call back the priorCall
         // control plugins to decide what to do:
@@ -119,6 +121,12 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
             transaction.getTransactionStatus() == TransactionStatus.PAYMENT_FAILURE) {
             log.info("Janitor AttemptCompletionTask moving attempt " + attempt.getId() + " -> ABORTED");
             paymentDao.updatePaymentAttempt(attempt.getId(), attempt.getTransactionId(), "ABORTED", internalCallContext);
+            return;
+        }
+
+        // UNKNOWN transaction are handled by the Janitor IncompletePaymentTransactionTask  and should eventually transition to something else,
+        // at which point the attempt can also be transition to a different state.
+        if (transaction.getTransactionStatus() == TransactionStatus.UNKNOWN) {
             return;
         }
 
