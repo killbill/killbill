@@ -103,7 +103,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
             }
         }));
 
-        // We only expect at most one transaction for a given attempt, but as a precaution we check for more; if this is the case we log a warn and continue processing rhe first one.
+        // We only expect at most one transaction for a given attempt, but as a precaution we check for more; if this is the case we log a warn and continue processing the first one.
         if (filteredTransactions.size() > 1) {
             log.warn("Found {} transactions for paymentAttempt {}", filteredTransactions.size(), attempt.getId());
         }
