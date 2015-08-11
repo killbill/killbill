@@ -171,11 +171,13 @@ public class PaymentStateContext {
     }
 
     public BigDecimal getAmount() {
-        return amount;
+        // For a complete operation, if the amount isn't specified, take the original amount on the transaction
+        return amount == null && paymentTransactionModelDao != null ? paymentTransactionModelDao.getAmount() : amount;
     }
 
     public Currency getCurrency() {
-        return currency;
+        // For a complete operation, if the currency isn't specified, take the original currency on the transaction
+        return currency == null && paymentTransactionModelDao != null ? paymentTransactionModelDao.getCurrency() : currency;
     }
 
     public TransactionType getTransactionType() {

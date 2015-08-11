@@ -24,10 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -36,7 +39,8 @@ import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
-import org.killbill.billing.control.plugin.api.PaymentControlApiException;
+import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -608,30 +612,166 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     // Example of a 3D secure payment for instance
     @Test(groups = "slow")
     public void testApiWithPendingPaymentTransaction() throws Exception {
-        final BigDecimal requestedAmount = BigDecimal.TEN;
+        for (final TransactionType transactionType : ImmutableList.<TransactionType>of(TransactionType.AUTHORIZE, TransactionType.PURCHASE, TransactionType.CREDIT)) {
+            testApiWithPendingPaymentTransaction(transactionType, BigDecimal.TEN, BigDecimal.TEN);
+            testApiWithPendingPaymentTransaction(transactionType, BigDecimal.TEN, BigDecimal.ONE);
+            testApiWithPendingPaymentTransaction(transactionType, BigDecimal.TEN, null);
+        }
+    }
 
+    @Test(groups = "slow")
+    public void testApiWithPendingRefundPaymentTransaction() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+        final String refundTransactionExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final BigDecimal refundAmount = BigDecimal.ONE;
+        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, TransactionStatus.PENDING.toString(), false));
+
+        final Payment payment = createPayment(TransactionType.PURCHASE, null, paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+        Assert.assertNotNull(payment);
+        Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertEquals(payment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(payment.getTransactions().get(0).getCurrency(), account.getCurrency());
+        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        final Payment pendingRefund = paymentApi.createRefund(account,
+                                                              payment.getId(),
+                                                              requestedAmount,
+                                                              account.getCurrency(),
+                                                              refundTransactionExternalKey,
+                                                              pendingPluginProperties,
+                                                              callContext);
+        verifyRefund(pendingRefund, paymentExternalKey, paymentTransactionExternalKey, refundTransactionExternalKey, requestedAmount, requestedAmount, TransactionStatus.PENDING);
+
+        final Payment pendingRefund2 = paymentApi.createRefund(account,
+                                                               payment.getId(),
+                                                               null,
+                                                               null,
+                                                               refundTransactionExternalKey,
+                                                               pendingPluginProperties,
+                                                               callContext);
+        verifyRefund(pendingRefund2, paymentExternalKey, paymentTransactionExternalKey, refundTransactionExternalKey, requestedAmount, requestedAmount, TransactionStatus.PENDING);
+
+        // Note: we change the refund amount
+        final Payment pendingRefund3 = paymentApi.createRefund(account,
+                                                               payment.getId(),
+                                                               refundAmount,
+                                                               account.getCurrency(),
+                                                               refundTransactionExternalKey,
+                                                               pendingPluginProperties,
+                                                               callContext);
+        verifyRefund(pendingRefund3, paymentExternalKey, paymentTransactionExternalKey, refundTransactionExternalKey, requestedAmount, refundAmount, TransactionStatus.PENDING);
+
+        // Pass null, we revert back to the original refund amount
+        final Payment pendingRefund4 = paymentApi.createRefund(account,
+                                                               payment.getId(),
+                                                               null,
+                                                               null,
+                                                               refundTransactionExternalKey,
+                                                               ImmutableList.<PluginProperty>of(),
+                                                               callContext);
+        verifyRefund(pendingRefund4, paymentExternalKey, paymentTransactionExternalKey, refundTransactionExternalKey, requestedAmount, requestedAmount, TransactionStatus.SUCCESS);
+
+    }
+
+    private void verifyRefund(final Payment refund, final String paymentExternalKey, final String paymentTransactionExternalKey, final String refundTransactionExternalKey, final BigDecimal requestedAmount, final BigDecimal refundAmount, final TransactionStatus transactionStatus) {
+        Assert.assertEquals(refund.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(refund.getTransactions().size(), 2);
+        Assert.assertEquals(refund.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(refund.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(refund.getTransactions().get(0).getCurrency(), account.getCurrency());
+        Assert.assertEquals(refund.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(refund.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(refund.getTransactions().get(1).getAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(refund.getTransactions().get(1).getProcessedAmount().compareTo(refundAmount), 0);
+        Assert.assertEquals(refund.getTransactions().get(1).getCurrency(), account.getCurrency());
+        Assert.assertEquals(refund.getTransactions().get(1).getExternalKey(), refundTransactionExternalKey);
+        Assert.assertEquals(refund.getTransactions().get(1).getTransactionStatus(), transactionStatus);
+    }
+
+    private Payment testApiWithPendingPaymentTransaction(final TransactionType transactionType, final BigDecimal requestedAmount, @Nullable final BigDecimal pendingAmount) throws PaymentApiException {
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
 
-        final Payment pendingPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
-                                                                      paymentExternalKey, paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment pendingPayment = createPayment(transactionType, null, paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
+        Assert.assertNotNull(pendingPayment);
+        Assert.assertEquals(pendingPayment.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 1);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getCurrency(), account.getCurrency());
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
 
-        final String paymentStateName = paymentSMHelper.getPendingStateForTransaction(TransactionType.AUTHORIZE).toString();
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), pendingPayment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
-                                                           pendingPayment.getTransactions().get(0).getId(), TransactionStatus.PENDING, requestedAmount, account.getCurrency(),
-                                                           null, null, internalCallContext);
+        final Payment pendingPayment2 = createPayment(transactionType, pendingPayment.getId(), paymentExternalKey, paymentTransactionExternalKey, pendingAmount, PaymentPluginStatus.PENDING);
+        Assert.assertNotNull(pendingPayment2);
+        Assert.assertEquals(pendingPayment2.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(pendingPayment2.getTransactions().size(), 1);
+        Assert.assertEquals(pendingPayment2.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(pendingPayment2.getTransactions().get(0).getProcessedAmount().compareTo(pendingAmount == null ? requestedAmount : pendingAmount), 0);
+        Assert.assertEquals(pendingPayment2.getTransactions().get(0).getCurrency(), account.getCurrency());
+        Assert.assertEquals(pendingPayment2.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(pendingPayment2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
 
-        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), pendingPayment.getId(), requestedAmount, account.getCurrency(),
-                                                               paymentExternalKey, paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment completedPayment = createPayment(transactionType, pendingPayment.getId(), paymentExternalKey, paymentTransactionExternalKey, pendingAmount, PaymentPluginStatus.PROCESSED);
+        Assert.assertNotNull(completedPayment);
+        Assert.assertEquals(completedPayment.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(completedPayment.getTransactions().size(), 1);
+        Assert.assertEquals(completedPayment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(completedPayment.getTransactions().get(0).getProcessedAmount().compareTo(pendingAmount == null ? requestedAmount : pendingAmount), 0);
+        Assert.assertEquals(completedPayment.getTransactions().get(0).getCurrency(), account.getCurrency());
+        Assert.assertEquals(completedPayment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(completedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
 
-        Assert.assertEquals(payment.getId(), pendingPayment.getId());
-        Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
-        Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
+        return completedPayment;
+    }
 
-        Assert.assertEquals(payment.getTransactions().size(), 1);
-        Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
-        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
-
+    private Payment createPayment(final TransactionType transactionType,
+                                  @Nullable final UUID paymentId,
+                                  @Nullable final String paymentExternalKey,
+                                  @Nullable final String paymentTransactionExternalKey,
+                                  @Nullable final BigDecimal amount,
+                                  final PaymentPluginStatus paymentPluginStatus) throws PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, paymentPluginStatus.toString(), false));
+        switch (transactionType) {
+            case AUTHORIZE:
+                return paymentApi.createAuthorization(account,
+                                                      account.getPaymentMethodId(),
+                                                      paymentId,
+                                                      amount,
+                                                      amount == null ? null : account.getCurrency(),
+                                                      paymentExternalKey,
+                                                      paymentTransactionExternalKey,
+                                                      pluginProperties,
+                                                      callContext);
+            case PURCHASE:
+                return paymentApi.createPurchase(account,
+                                                 account.getPaymentMethodId(),
+                                                 paymentId,
+                                                 amount,
+                                                 amount == null ? null : account.getCurrency(),
+                                                 paymentExternalKey,
+                                                 paymentTransactionExternalKey,
+                                                 pluginProperties,
+                                                 callContext);
+            case CREDIT:
+                return paymentApi.createCredit(account,
+                                               account.getPaymentMethodId(),
+                                               paymentId,
+                                               amount,
+                                               amount == null ? null : account.getCurrency(),
+                                               paymentExternalKey,
+                                               paymentTransactionExternalKey,
+                                               pluginProperties,
+                                               callContext);
+            default:
+                Assert.fail();
+                return null;
+        }
     }
 
     private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
