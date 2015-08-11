@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,6 +33,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -220,6 +221,91 @@ public class PaymentResource extends ComboPaymentResource {
                                                 },
                                                 nextPageUri
                                                );
+    }
+
+    @Timed
+    @PUT
+    @Path("/{paymentId:" + UUID_PATTERN + "}")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Complete an existing transaction")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found")})
+    public Response completeTransaction(final PaymentTransactionJson json,
+                                        @PathParam("paymentId") final String paymentIdStr,
+                                        @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
+                                        @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                        @HeaderParam(HDR_REASON) final String reason,
+                                        @HeaderParam(HDR_COMMENT) final String comment,
+                                        @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        return completeTransactionInternal(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+    }
+
+    @Timed
+    @PUT
+    @Path("/")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Complete an existing transaction")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account or payment not found")})
+    public Response completeTransactionByExternalKey(final PaymentTransactionJson json,
+                                                     @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
+                                                     @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                     @HeaderParam(HDR_REASON) final String reason,
+                                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                                     @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        return completeTransactionInternal(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+    }
+
+    private Response completeTransactionInternal(final PaymentTransactionJson json,
+                                                 @Nullable final String paymentIdStr,
+                                                 final List<String> paymentControlPluginNames,
+                                                 final Iterable<String> pluginPropertiesString,
+                                                 final String createdBy,
+                                                 final String reason,
+                                                 final String comment,
+                                                 final UriInfo uriInfo,
+                                                 final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
+        verifyNonNullOrEmpty(json.getTransactionType(), "PaymentTransactionJson transactionType needs to be set");
+        if (paymentIdStr == null) {
+            verifyNonNullOrEmpty(json.getPaymentExternalKey(), "PaymentTransactionJson externalKey needs to be set");
+        }
+
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
+
+        final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+
+        final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
+        final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
+        switch (transactionType) {
+            case AUTHORIZE:
+                paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), json.getAmount(), currency,
+                                                                 json.getPaymentExternalKey(), json.getTransactionExternalKey(),
+                                                                 pluginProperties, paymentOptions, callContext);
+                break;
+            case PURCHASE:
+                paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), json.getAmount(), currency,
+                                                            json.getPaymentExternalKey(), json.getTransactionExternalKey(),
+                                                            pluginProperties, paymentOptions, callContext);
+                break;
+            case CREDIT:
+                paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), json.getAmount(), currency,
+                                                          json.getPaymentExternalKey(), json.getTransactionExternalKey(),
+                                                          pluginProperties, paymentOptions, callContext);
+                break;
+            default:
+                // It looks like we need at least REFUND? See https://github.com/killbill/killbill/issues/371
+                return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " cannot be completed").build();
+        }
+        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", initialPayment.getId());
     }
 
     @Timed
