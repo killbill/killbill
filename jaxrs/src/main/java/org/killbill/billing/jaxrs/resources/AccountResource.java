@@ -707,6 +707,30 @@ public class AccountResource extends JaxRsResourceBase {
 
     @Timed
     @POST
+    @Path("/" + PAYMENTS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Trigger a payment using the account external key (authorization, purchase or credit)")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account external key supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response processPaymentByExternalKey(final PaymentTransactionJson json,
+                                                @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
+                                                @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
+                                                @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
+                                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                @HeaderParam(HDR_REASON) final String reason,
+                                                @HeaderParam(HDR_COMMENT) final String comment,
+                                                @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final Account account = accountUserApi.getAccountByKey(externalKey, callContext);
+
+        return processPayment(json, account, paymentMethodIdStr, paymentControlPluginNames, pluginPropertiesString, uriInfo, callContext);
+    }
+
+    @Timed
+    @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -723,19 +747,30 @@ public class AccountResource extends JaxRsResourceBase {
                                    @HeaderParam(HDR_COMMENT) final String comment,
                                    @javax.ws.rs.core.Context final UriInfo uriInfo,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final Account account = accountUserApi.getAccountById(accountId, callContext);
+
+        return processPayment(json, account, paymentMethodIdStr, paymentControlPluginNames, pluginPropertiesString, uriInfo, callContext);
+    }
+
+    private Response processPayment(final PaymentTransactionJson json,
+                                    final Account account,
+                                    final String paymentMethodIdStr,
+                                    final List<String> paymentControlPluginNames,
+                                    final List<String> pluginPropertiesString,
+                                    final UriInfo uriInfo,
+                                    final CallContext callContext) throws PaymentApiException {
         verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
         verifyNonNullOrEmpty(json.getTransactionType(), "PaymentTransactionJson transactionType needs to be set",
                              json.getAmount(), "PaymentTransactionJson amount needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID accountId = UUID.fromString(accountIdStr);
-        final Account account = accountUserApi.getAccountById(accountId, callContext);
         final UUID paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
         final UUID paymentId = json.getPaymentId() == null ? null : UUID.fromString(json.getPaymentId());
 
-        validatePaymentMethodForAccount(accountId, paymentMethodId, callContext);
+        validatePaymentMethodForAccount(account.getId(), paymentMethodId, callContext);
 
         final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
