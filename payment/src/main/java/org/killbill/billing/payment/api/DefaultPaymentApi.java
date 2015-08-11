@@ -72,10 +72,12 @@ public class DefaultPaymentApi implements PaymentApi {
                                        final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
+        if (paymentId == null) {
+            checkNotNullParameter(amount, "amount");
+            checkPositiveAmount(amount);
+            checkNotNullParameter(currency, "currency");
+        }
         checkNotNullParameter(properties, "plugin properties");
-        checkPositiveAmount(amount);
 
         logAPICall(TransactionType.AUTHORIZE.name(), account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey);
 
@@ -95,10 +97,12 @@ public class DefaultPaymentApi implements PaymentApi {
 
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
+        if (paymentId == null) {
+            checkNotNullParameter(amount, "amount");
+            checkPositiveAmount(amount);
+            checkNotNullParameter(currency, "currency");
+        }
         checkNotNullParameter(properties, "plugin properties");
-        checkPositiveAmount(amount);
 
         logAPICall(TransactionType.AUTHORIZE.name(), account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey);
 
@@ -148,10 +152,12 @@ public class DefaultPaymentApi implements PaymentApi {
                                   final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
+        if (paymentId == null) {
+            checkNotNullParameter(amount, "amount");
+            checkPositiveAmount(amount);
+            checkNotNullParameter(currency, "currency");
+        }
         checkNotNullParameter(properties, "plugin properties");
-        checkPositiveAmount(amount);
 
         logAPICall(TransactionType.PURCHASE.name(), account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey);
 
@@ -169,12 +175,14 @@ public class DefaultPaymentApi implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
+        if (paymentId == null) {
+            checkNotNullParameter(amount, "amount");
+            checkPositiveAmount(amount);
+            checkNotNullParameter(currency, "currency");
+        }
         checkNotNullParameter(paymentExternalKey, "paymentExternalKey");
         checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
         checkNotNullParameter(properties, "plugin properties");
-        checkPositiveAmount(amount);
 
         logAPICall(TransactionType.PURCHASE.name(), account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey);
 
@@ -227,15 +235,17 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Payment createRefund(final Account account, final UUID paymentId, final BigDecimal amount, final Currency currency, @Nullable final String paymentTransactionExternalKey, final Iterable<PluginProperty> properties,
+    public Payment createRefund(final Account account, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency, @Nullable final String paymentTransactionExternalKey, final Iterable<PluginProperty> properties,
                                 final CallContext callContext) throws PaymentApiException {
-
         checkNotNullParameter(account, "account");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
+        if (paymentId == null) {
+            checkNotNullParameter(currency, "currency");
+        }
         checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(properties, "plugin properties");
-        checkPositiveAmount(amount);
+        if (amount != null) {
+            checkPositiveAmount(amount);
+        }
 
         logAPICall(TransactionType.REFUND.name(), account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey);
 
@@ -245,7 +255,7 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Payment createRefundWithPaymentControl(final Account account, final UUID paymentId, @Nullable final BigDecimal amount, final Currency currency, final String paymentTransactionExternalKey, final Iterable<PluginProperty> properties,
+    public Payment createRefundWithPaymentControl(final Account account, @Nullable final UUID paymentId, @Nullable final BigDecimal amount, final Currency currency, final String paymentTransactionExternalKey, final Iterable<PluginProperty> properties,
                                                   final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
         final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
         if (paymentControlPluginNames.isEmpty()) {
@@ -253,7 +263,9 @@ public class DefaultPaymentApi implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        checkNotNullParameter(currency, "currency");
+        if (paymentId == null) {
+            checkNotNullParameter(currency, "currency");
+        }
         checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
         checkNotNullParameter(properties, "plugin properties");
@@ -275,10 +287,12 @@ public class DefaultPaymentApi implements PaymentApi {
                                 final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
+        if (paymentId == null) {
+            checkNotNullParameter(amount, "amount");
+            checkPositiveAmount(amount);
+            checkNotNullParameter(currency, "currency");
+        }
         checkNotNullParameter(properties, "plugin properties");
-        checkPositiveAmount(amount);
 
         logAPICall(TransactionType.CREDIT.name(), account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey);
 
@@ -299,10 +313,12 @@ public class DefaultPaymentApi implements PaymentApi {
 
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
+        if (paymentId == null) {
+            checkNotNullParameter(amount, "amount");
+            checkPositiveAmount(amount);
+            checkNotNullParameter(currency, "currency");
+        }
         checkNotNullParameter(properties, "plugin properties");
-        checkPositiveAmount(amount);
 
         logAPICall(TransactionType.CREDIT.name(), account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey);
 
