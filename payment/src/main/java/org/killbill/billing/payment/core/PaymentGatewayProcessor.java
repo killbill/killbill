@@ -39,6 +39,8 @@ import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
+import org.killbill.billing.payment.provider.DefaultNoOpGatewayNotification;
+import org.killbill.billing.payment.provider.DefaultNoOpHostedPaymentPageFormDescriptor;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -90,7 +92,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                                      final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
                                                      try {
                                                          final GatewayNotification result = plugin.processNotification(notification, properties, callContext);
-                                                         return PluginDispatcher.createPluginDispatcherReturnType(result);
+                                                         return PluginDispatcher.createPluginDispatcherReturnType(result == null ? new DefaultNoOpGatewayNotification() : result);
                                                      } catch (final PaymentPluginApiException e) {
                                                          throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
                                                      }
@@ -107,7 +109,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
 
                                                      try {
                                                          final HostedPaymentPageFormDescriptor result = plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
-                                                         return PluginDispatcher.createPluginDispatcherReturnType(result);
+                                                         return PluginDispatcher.createPluginDispatcherReturnType(result == null ? new DefaultNoOpHostedPaymentPageFormDescriptor(account.getId()) : result);
                                                      } catch (final RuntimeException e) {
                                                          throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
                                                      } catch (final PaymentPluginApiException e) {

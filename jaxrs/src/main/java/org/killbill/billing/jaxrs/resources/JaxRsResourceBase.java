@@ -54,6 +54,7 @@ import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.JsonBase;
+import org.killbill.billing.jaxrs.json.PluginPropertyJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -338,6 +339,20 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             }
         }
         return null;
+    }
+
+    protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<PluginPropertyJson> pluginProperties) {
+        return pluginProperties != null ?
+               Iterables.<PluginPropertyJson, PluginProperty>transform(pluginProperties,
+                                                                       new Function<PluginPropertyJson, PluginProperty>() {
+                                                                           @Override
+                                                                           public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
+                                                                               return pluginPropertyJson.toPluginProperty();
+                                                                           }
+                                                                       }
+                                                                      ) :
+               ImmutableList.<PluginProperty>of();
+
     }
 
     protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<String> pluginProperties, final PluginProperty... additionalProperties) {

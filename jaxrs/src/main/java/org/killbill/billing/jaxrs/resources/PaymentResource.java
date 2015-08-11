@@ -46,18 +46,14 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.jaxrs.json.AccountJson;
 import org.killbill.billing.jaxrs.json.ComboPaymentTransactionJson;
 import org.killbill.billing.jaxrs.json.PaymentJson;
-import org.killbill.billing.jaxrs.json.PaymentMethodJson;
 import org.killbill.billing.jaxrs.json.PaymentTransactionJson;
-import org.killbill.billing.jaxrs.json.PluginPropertyJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
@@ -72,12 +68,8 @@ import org.killbill.clock.Clock;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
@@ -87,7 +79,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PAYMENTS_PATH)
 @Api(value = JaxrsResource.PAYMENTS_PATH, description = "Operations on payments")
-public class PaymentResource extends JaxRsResourceBase {
+public class PaymentResource extends ComboPaymentResource {
 
     @Inject
     public PaymentResource(final JaxrsUriBuilder uriBuilder,
@@ -484,17 +476,7 @@ public class PaymentResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Account account = getOrCreateAccount(json.getAccount(), callContext);
 
-        final Iterable<PluginProperty> paymentMethodPluginProperties = json.getPaymentMethodPluginProperties() != null ?
-                                                                       Iterables.<PluginPropertyJson, PluginProperty>transform(json.getPaymentMethodPluginProperties(),
-                                                                                                                               new Function<PluginPropertyJson, PluginProperty>() {
-                                                                                                                                   @Override
-                                                                                                                                   public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
-                                                                                                                                       return pluginPropertyJson.toPluginProperty();
-                                                                                                                                   }
-                                                                                                                               }
-                                                                                                                              ) :
-                                                                       ImmutableList.<PluginProperty>of();
-
+        final Iterable<PluginProperty> paymentMethodPluginProperties = extractPluginProperties(json.getPaymentMethodPluginProperties());
         final UUID paymentMethodId = getOrCreatePaymentMethod(account, json.getPaymentMethod(), paymentMethodPluginProperties, callContext);
 
         final PaymentTransactionJson paymentTransactionJson = json.getTransaction();
@@ -502,16 +484,7 @@ public class PaymentResource extends JaxRsResourceBase {
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
 
-        final Iterable<PluginProperty> transactionPluginProperties = json.getTransactionPluginProperties() != null ?
-                                                                     Iterables.<PluginPropertyJson, PluginProperty>transform(json.getTransactionPluginProperties(),
-                                                                                                                             new Function<PluginPropertyJson, PluginProperty>() {
-                                                                                                                                 @Override
-                                                                                                                                 public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
-                                                                                                                                     return pluginPropertyJson.toPluginProperty();
-                                                                                                                                 }
-                                                                                                                             }
-                                                                                                                            ) :
-                                                                     ImmutableList.<PluginProperty>of();
+        final Iterable<PluginProperty> transactionPluginProperties = extractPluginProperties(json.getTransactionPluginProperties());
 
         final Currency currency = paymentTransactionJson.getCurrency() == null ? account.getCurrency() : Currency.valueOf(paymentTransactionJson.getCurrency());
         final UUID paymentId = null; // If we need to specify a paymentId (e.g 3DS authorization, we can use regular API, no need for combo call)
@@ -541,70 +514,4 @@ public class PaymentResource extends JaxRsResourceBase {
     protected ObjectType getObjectType() {
         return ObjectType.PAYMENT;
     }
-
-    private Account getOrCreateAccount(final AccountJson accountJson, final CallContext callContext) throws AccountApiException {
-        // Attempt to retrieve by accountId if specified
-        if (accountJson.getAccountId() != null) {
-            return accountUserApi.getAccountById(UUID.fromString(accountJson.getAccountId()), callContext);
-        }
-
-        if (accountJson.getExternalKey() != null) {
-            // Attempt to retrieve by account externalKey, ignore if does not exist so we can create it with the key specified.
-            try {
-                return accountUserApi.getAccountByKey(accountJson.getExternalKey(), callContext);
-            } catch (final AccountApiException ignore) {}
-        }
-        // Finally create if does not exist
-        return accountUserApi.createAccount(accountJson.toAccountData(), callContext);
-    }
-
-    private UUID getOrCreatePaymentMethod(final Account account, final PaymentMethodJson paymentMethodJson, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
-
-        // Get all payment methods for account
-        final List<PaymentMethod> accountPaymentMethods = paymentApi.getAccountPaymentMethods(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
-
-        // If we were specified a paymentMethod id and we find it, we return it
-        if (paymentMethodJson.getPaymentMethodId() != null) {
-            final UUID match = UUID.fromString(paymentMethodJson.getPaymentMethodId());
-            if (Iterables.any(accountPaymentMethods, new Predicate<PaymentMethod>() {
-                @Override
-                public boolean apply(final PaymentMethod input) {
-                    return input.getId().equals(match);
-                }
-            })) {
-                return match;
-            }
-        }
-
-        // If we were specified a paymentMethod externalKey and we find it, we return it
-        if (paymentMethodJson.getExternalKey() != null) {
-            final PaymentMethod match = Iterables.tryFind(accountPaymentMethods, new Predicate<PaymentMethod>() {
-                @Override
-                public boolean apply(final PaymentMethod input) {
-                    return input.getExternalKey().equals(paymentMethodJson.getExternalKey());
-                }
-            }).orNull();
-            if (match != null) {
-                return match.getId();
-            }
-        }
-
-        // Only set as default if this is the first paymentMethod on the account
-        final boolean isDefault = accountPaymentMethods.isEmpty();
-        final PaymentMethod paymentData = paymentMethodJson.toPaymentMethod(account.getId().toString());
-        return paymentApi.addPaymentMethod(account, paymentMethodJson.getExternalKey(), paymentMethodJson.getPluginName(), isDefault,
-                                           paymentData.getPluginDetail(), pluginProperties, callContext);
-    }
-
-    private Payment getPaymentByIdOrKey(@Nullable final String paymentIdStr, @Nullable final String externalKey, final Iterable<PluginProperty> pluginProperties, final TenantContext tenantContext) throws PaymentApiException {
-
-        Preconditions.checkArgument(paymentIdStr != null || externalKey != null, "Need to set either paymentId or payment externalKey");
-        if (paymentIdStr != null) {
-            final UUID paymentId = UUID.fromString(paymentIdStr);
-            return paymentApi.getPayment(paymentId, false, pluginProperties, tenantContext);
-        } else {
-            return paymentApi.getPaymentByExternalKey(externalKey, false, pluginProperties, tenantContext);
-        }
-    }
-
 }

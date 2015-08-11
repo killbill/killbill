@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,20 +32,18 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.jaxrs.json.ComboHostedPaymentPageJson;
 import org.killbill.billing.jaxrs.json.GatewayNotificationJson;
 import org.killbill.billing.jaxrs.json.HostedPaymentPageFieldsJson;
 import org.killbill.billing.jaxrs.json.HostedPaymentPageFormDescriptorJson;
-import org.killbill.billing.jaxrs.json.PluginPropertyJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
-import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
@@ -56,10 +54,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.clock.Clock;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Function;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.inject.Singleton;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -72,7 +67,7 @@ import static javax.ws.rs.core.MediaType.WILDCARD;
 @Singleton
 @Path(JaxrsResource.PAYMENT_GATEWAYS_PATH)
 @Api(value = JaxrsResource.PAYMENT_GATEWAYS_PATH, description = "HPP endpoints")
-public class PaymentGatewayResource extends JaxRsResourceBase {
+public class PaymentGatewayResource extends ComboPaymentResource {
 
     private final PaymentGatewayApi paymentGatewayApi;
 
@@ -88,6 +83,40 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
                                   final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.paymentGatewayApi = paymentGatewayApi;
+    }
+
+    @Timed
+    @POST
+    @Path("/" + HOSTED + "/" + FORM)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Combo API to generate form data to redirect the customer to the gateway", response = HostedPaymentPageFormDescriptorJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
+    public Response buildComboFormDescriptor(final ComboHostedPaymentPageJson json,
+                                             @PathParam("accountId") final String accountIdString,
+                                             @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "ComboHostedPaymentPageJson body should be specified");
+
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final Account account = getOrCreateAccount(json.getAccount(), callContext);
+
+        final Iterable<PluginProperty> paymentMethodPluginProperties = extractPluginProperties(json.getPaymentMethodPluginProperties());
+        final UUID paymentMethodId = getOrCreatePaymentMethod(account, json.getPaymentMethod(), paymentMethodPluginProperties, callContext);
+
+        final HostedPaymentPageFieldsJson hostedPaymentPageFields = json.getHostedPaymentPageFieldsJson();
+        final Iterable<PluginProperty> customFields = extractPluginProperties(hostedPaymentPageFields != null ? hostedPaymentPageFields.getCustomFields() : null);
+
+        final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptor(account, paymentMethodId, customFields, pluginProperties, callContext);
+        final HostedPaymentPageFormDescriptorJson result = new HostedPaymentPageFormDescriptorJson(descriptor);
+
+        return Response.status(Response.Status.OK).entity(result).build();
     }
 
     @Timed
@@ -115,25 +144,13 @@ public class PaymentGatewayResource extends JaxRsResourceBase {
 
         validatePaymentMethodForAccount(accountId, paymentMethodId, callContext);
 
-        final Iterable<PluginProperty> customFields;
-        if (json == null) {
-            customFields = ImmutableList.<PluginProperty>of();
-        } else {
-            customFields = Iterables.<PluginPropertyJson, PluginProperty>transform(json.getCustomFields(),
-                                                                                   new Function<PluginPropertyJson, PluginProperty>() {
-                                                                                       @Override
-                                                                                       public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
-                                                                                           return pluginPropertyJson.toPluginProperty();
-                                                                                       }
-                                                                                   }
-                                                                                  );
-        }
+        final Iterable<PluginProperty> customFields = extractPluginProperties(json.getCustomFields());
+
         final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptor(account, paymentMethodId, customFields, pluginProperties, callContext);
         final HostedPaymentPageFormDescriptorJson result = new HostedPaymentPageFormDescriptorJson(descriptor);
 
         return Response.status(Response.Status.OK).entity(result).build();
     }
-
 
     @Timed
     @POST

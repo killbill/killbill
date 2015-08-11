@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2015 Groupon, Inc
+ * Copyright 2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,12 +24,9 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class ComboPaymentTransactionJson extends JsonBase {
+public class ComboPaymentTransactionJson extends ComboPaymentJson {
 
-    private final AccountJson account;
-    private final PaymentMethodJson paymentMethod;
     private final PaymentTransactionJson transaction;
-    private final Iterable<PluginPropertyJson> paymentMethodPluginProperties;
     private final Iterable<PluginPropertyJson> transactionPluginProperties;
 
     @JsonCreator
@@ -39,29 +36,13 @@ public class ComboPaymentTransactionJson extends JsonBase {
                                        @JsonProperty("paymentMethodPluginProperties") final Iterable<PluginPropertyJson> paymentMethodPluginProperties,
                                        @JsonProperty("transactionPluginProperties") final Iterable<PluginPropertyJson> transactionPluginProperties,
                                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(auditLogs);
-        this.account = account;
-        this.paymentMethod = paymentMethod;
+        super(account, paymentMethod, paymentMethodPluginProperties, auditLogs);
         this.transaction = transaction;
-        this.paymentMethodPluginProperties = paymentMethodPluginProperties;
         this.transactionPluginProperties = transactionPluginProperties;
-    }
-
-
-    public AccountJson getAccount() {
-        return account;
-    }
-
-    public PaymentMethodJson getPaymentMethod() {
-        return paymentMethod;
     }
 
     public PaymentTransactionJson getTransaction() {
         return transaction;
-    }
-
-    public Iterable<PluginPropertyJson> getPaymentMethodPluginProperties() {
-        return paymentMethodPluginProperties;
     }
 
     public Iterable<PluginPropertyJson> getTransactionPluginProperties() {
@@ -70,13 +51,11 @@ public class ComboPaymentTransactionJson extends JsonBase {
 
     @Override
     public String toString() {
-        return "ComboPaymentTransactionJson{" +
-               "account=" + account +
-               ", paymentMethod=" + paymentMethod +
-               ", transaction=" + transaction +
-               ", paymentMethodPluginProperties=" + paymentMethodPluginProperties +
-               ", transactionPluginProperties=" + transactionPluginProperties +
-               '}';
+        final StringBuilder sb = new StringBuilder("ComboPaymentTransactionJson{");
+        sb.append("transaction=").append(transaction);
+        sb.append(", transactionPluginProperties=").append(transactionPluginProperties);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
@@ -84,34 +63,25 @@ public class ComboPaymentTransactionJson extends JsonBase {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof ComboPaymentTransactionJson)) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
             return false;
         }
 
         final ComboPaymentTransactionJson that = (ComboPaymentTransactionJson) o;
 
-        if (account != null ? !account.equals(that.account) : that.account != null) {
-            return false;
-        }
-        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null) {
-            return false;
-        }
         if (transaction != null ? !transaction.equals(that.transaction) : that.transaction != null) {
             return false;
         }
-        if (paymentMethodPluginProperties != null ? !paymentMethodPluginProperties.equals(that.paymentMethodPluginProperties) : that.paymentMethodPluginProperties != null) {
-            return false;
-        }
         return !(transactionPluginProperties != null ? !transactionPluginProperties.equals(that.transactionPluginProperties) : that.transactionPluginProperties != null);
-
     }
 
     @Override
     public int hashCode() {
-        int result = account != null ? account.hashCode() : 0;
-        result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
+        int result = super.hashCode();
         result = 31 * result + (transaction != null ? transaction.hashCode() : 0);
-        result = 31 * result + (paymentMethodPluginProperties != null ? paymentMethodPluginProperties.hashCode() : 0);
         result = 31 * result + (transactionPluginProperties != null ? transactionPluginProperties.hashCode() : 0);
         return result;
     }
