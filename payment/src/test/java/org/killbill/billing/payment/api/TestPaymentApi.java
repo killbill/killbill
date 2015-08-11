@@ -615,6 +615,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         for (final TransactionType transactionType : ImmutableList.<TransactionType>of(TransactionType.AUTHORIZE, TransactionType.PURCHASE, TransactionType.CREDIT)) {
             testApiWithPendingPaymentTransaction(transactionType, BigDecimal.TEN, BigDecimal.TEN);
             testApiWithPendingPaymentTransaction(transactionType, BigDecimal.TEN, BigDecimal.ONE);
+            // See https://github.com/killbill/killbill/issues/372
             testApiWithPendingPaymentTransaction(transactionType, BigDecimal.TEN, null);
         }
     }
@@ -647,6 +648,10 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                               callContext);
         verifyRefund(pendingRefund, paymentExternalKey, paymentTransactionExternalKey, refundTransactionExternalKey, requestedAmount, requestedAmount, TransactionStatus.PENDING);
 
+        // Test Janitor path (regression test for https://github.com/killbill/killbill/issues/363)
+        verifyPaymentViaGetPath(pendingRefund);
+
+        // See https://github.com/killbill/killbill/issues/372
         final Payment pendingRefund2 = paymentApi.createRefund(account,
                                                                payment.getId(),
                                                                null,
@@ -655,6 +660,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                pendingPluginProperties,
                                                                callContext);
         verifyRefund(pendingRefund2, paymentExternalKey, paymentTransactionExternalKey, refundTransactionExternalKey, requestedAmount, requestedAmount, TransactionStatus.PENDING);
+
+        verifyPaymentViaGetPath(pendingRefund2);
 
         // Note: we change the refund amount
         final Payment pendingRefund3 = paymentApi.createRefund(account,
@@ -666,6 +673,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                callContext);
         verifyRefund(pendingRefund3, paymentExternalKey, paymentTransactionExternalKey, refundTransactionExternalKey, requestedAmount, refundAmount, TransactionStatus.PENDING);
 
+        verifyPaymentViaGetPath(pendingRefund3);
+
         // Pass null, we revert back to the original refund amount
         final Payment pendingRefund4 = paymentApi.createRefund(account,
                                                                payment.getId(),
@@ -676,6 +685,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                callContext);
         verifyRefund(pendingRefund4, paymentExternalKey, paymentTransactionExternalKey, refundTransactionExternalKey, requestedAmount, requestedAmount, TransactionStatus.SUCCESS);
 
+        verifyPaymentViaGetPath(pendingRefund4);
     }
 
     private void verifyRefund(final Payment refund, final String paymentExternalKey, final String paymentTransactionExternalKey, final String refundTransactionExternalKey, final BigDecimal requestedAmount, final BigDecimal refundAmount, final TransactionStatus transactionStatus) {
@@ -707,6 +717,9 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(pendingPayment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
         Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
 
+        // Test Janitor path (regression test for https://github.com/killbill/killbill/issues/363)
+        verifyPaymentViaGetPath(pendingPayment);
+
         final Payment pendingPayment2 = createPayment(transactionType, pendingPayment.getId(), paymentExternalKey, paymentTransactionExternalKey, pendingAmount, PaymentPluginStatus.PENDING);
         Assert.assertNotNull(pendingPayment2);
         Assert.assertEquals(pendingPayment2.getExternalKey(), paymentExternalKey);
@@ -716,6 +729,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(pendingPayment2.getTransactions().get(0).getCurrency(), account.getCurrency());
         Assert.assertEquals(pendingPayment2.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
         Assert.assertEquals(pendingPayment2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
+
+        verifyPaymentViaGetPath(pendingPayment2);
 
         final Payment completedPayment = createPayment(transactionType, pendingPayment.getId(), paymentExternalKey, paymentTransactionExternalKey, pendingAmount, PaymentPluginStatus.PROCESSED);
         Assert.assertNotNull(completedPayment);
@@ -727,7 +742,36 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(completedPayment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
         Assert.assertEquals(completedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
 
+        verifyPaymentViaGetPath(completedPayment);
+
         return completedPayment;
+    }
+
+    private void verifyPaymentViaGetPath(final Payment payment) throws PaymentApiException {
+        // We can't use Assert.assertEquals because the updateDate may have been updated by the Janitor
+        final Payment refreshedPayment = paymentApi.getPayment(payment.getId(), true, ImmutableList.<PluginProperty>of(), callContext);
+
+        Assert.assertEquals(refreshedPayment.getAccountId(), payment.getAccountId());
+
+        Assert.assertEquals(refreshedPayment.getTransactions().size(), payment.getTransactions().size());
+        Assert.assertEquals(refreshedPayment.getExternalKey(), payment.getExternalKey());
+        Assert.assertEquals(refreshedPayment.getPaymentMethodId(), payment.getPaymentMethodId());
+        Assert.assertEquals(refreshedPayment.getAccountId(), payment.getAccountId());
+        Assert.assertEquals(refreshedPayment.getAuthAmount().compareTo(payment.getAuthAmount()), 0);
+        Assert.assertEquals(refreshedPayment.getCapturedAmount().compareTo(payment.getCapturedAmount()), 0);
+        Assert.assertEquals(refreshedPayment.getPurchasedAmount().compareTo(payment.getPurchasedAmount()), 0);
+        Assert.assertEquals(refreshedPayment.getRefundedAmount().compareTo(payment.getRefundedAmount()), 0);
+        Assert.assertEquals(refreshedPayment.getCurrency(), payment.getCurrency());
+
+        for (int i = 0; i < refreshedPayment.getTransactions().size(); i++) {
+            final PaymentTransaction refreshedPaymentTransaction = refreshedPayment.getTransactions().get(i);
+            final PaymentTransaction paymentTransaction = payment.getTransactions().get(i);
+            Assert.assertEquals(refreshedPaymentTransaction.getAmount().compareTo(paymentTransaction.getAmount()), 0);
+            Assert.assertEquals(refreshedPaymentTransaction.getProcessedAmount().compareTo(paymentTransaction.getProcessedAmount()), 0);
+            Assert.assertEquals(refreshedPaymentTransaction.getCurrency(), paymentTransaction.getCurrency());
+            Assert.assertEquals(refreshedPaymentTransaction.getExternalKey(), paymentTransaction.getExternalKey());
+            Assert.assertEquals(refreshedPaymentTransaction.getTransactionStatus(), paymentTransaction.getTransactionStatus());
+        }
     }
 
     private Payment createPayment(final TransactionType transactionType,

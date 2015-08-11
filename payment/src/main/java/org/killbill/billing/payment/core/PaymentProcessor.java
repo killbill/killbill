@@ -386,7 +386,7 @@ public class PaymentProcessor extends ProcessorBase {
         final InternalTenantContext tenantContextWithAccountRecordId = getInternalTenantContextWithAccountRecordId(paymentModelDao.getAccountId(), tenantContext);
         final List<PaymentTransactionModelDao> transactionsForPayment = paymentDao.getTransactionsForPayment(paymentModelDao.getId(), tenantContextWithAccountRecordId);
 
-        return toPayment(paymentModelDao, transactionsForPayment, pluginTransactions, tenantContext);
+        return toPayment(paymentModelDao, transactionsForPayment, pluginTransactions, tenantContextWithAccountRecordId);
     }
 
     // Used in bulk get API (getAccountPayments)

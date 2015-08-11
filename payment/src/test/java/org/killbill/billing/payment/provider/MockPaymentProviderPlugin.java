@@ -317,7 +317,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public PaymentTransactionInfoPlugin refundPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final UUID kbTransactionId, final BigDecimal refundAmount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+    public PaymentTransactionInfoPlugin refundPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal refundAmount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
 
         final InternalPaymentInfo info = payments.get(kbPaymentId.toString());
         if (info == null) {
