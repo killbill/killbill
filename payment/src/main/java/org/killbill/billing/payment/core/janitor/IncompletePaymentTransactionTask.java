@@ -188,8 +188,13 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             case PLUGIN_FAILURE:
             case UNKNOWN:
             default:
-                log.info("Janitor IncompletePaymentTransactionTask unable to repair payment {}, transaction {}: {} -> {}",
-                         payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
+                if (transactionStatus == paymentTransaction.getTransactionStatus()) {
+                    log.debug("Janitor IncompletePaymentTransactionTask unable to repair payment {}, transaction {}: {} -> {}",
+                              payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
+                } else {
+                    log.info("Janitor IncompletePaymentTransactionTask unable to repair payment {}, transaction {}: {} -> {}",
+                             payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
+                }
                 // We can't get anything interesting from the plugin...
                 insertNewNotificationForUnresolvedTransactionIfNeeded(paymentTransaction.getId(), attemptNumber, userToken, internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
                 return false;
@@ -208,8 +213,13 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         final String gatewayErrorCode = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin.getGatewayErrorCode() : paymentTransaction.getGatewayErrorCode();
         final String gatewayError = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin.getGatewayError() : paymentTransaction.getGatewayErrorMsg();
 
-        log.info("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, transitioning transactionStatus from {} -> {}",
-                 payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
+        if (transactionStatus == paymentTransaction.getTransactionStatus()) {
+            log.debug("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, transitioning transactionStatus from {} -> {}",
+                      payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
+        } else {
+            log.info("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, transitioning transactionStatus from {} -> {}",
+                     payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
+        }
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(payment.getAccountId(), callContext);
         paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, lastSuccessPaymentState,
