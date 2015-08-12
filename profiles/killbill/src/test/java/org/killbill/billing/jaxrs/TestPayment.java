@@ -82,14 +82,14 @@ public class TestPayment extends TestJaxrsBase {
             // Second, only specify the payment external key
             final PaymentTransaction completeTransactionByPaymentExternalKey = new PaymentTransaction();
             completeTransactionByPaymentExternalKey.setPaymentExternalKey(initialPayment.getPaymentExternalKey());
-            final Payment completedPaymentByExternalKey = killBillClient.completePayment(completeTransactionByPaymentId, pluginProperties, createdBy, reason, comment);
+            final Payment completedPaymentByExternalKey = killBillClient.completePayment(completeTransactionByPaymentExternalKey, pluginProperties, createdBy, reason, comment);
             verifyPayment(account, paymentMethodId, completedPaymentByExternalKey, paymentExternalKey, authTransactionExternalKey, transactionType.toString(), pending, amount, authAmount, BigDecimal.ZERO, BigDecimal.ZERO, 1, paymentNb);
 
             // Third, specify the payment id and transaction external key
             final PaymentTransaction completeTransactionWithTypeAndKey = new PaymentTransaction();
             completeTransactionWithTypeAndKey.setPaymentId(initialPayment.getPaymentId());
             completeTransactionWithTypeAndKey.setTransactionExternalKey(authPaymentTransaction.getTransactionExternalKey());
-            final Payment completedPaymentByTypeAndKey = killBillClient.completePayment(completeTransactionByPaymentId, pluginProperties, createdBy, reason, comment);
+            final Payment completedPaymentByTypeAndKey = killBillClient.completePayment(completeTransactionWithTypeAndKey, pluginProperties, createdBy, reason, comment);
             verifyPayment(account, paymentMethodId, completedPaymentByTypeAndKey, paymentExternalKey, authTransactionExternalKey, transactionType.toString(), pending, amount, authAmount, BigDecimal.ZERO, BigDecimal.ZERO, 1, paymentNb);
         }
     }
