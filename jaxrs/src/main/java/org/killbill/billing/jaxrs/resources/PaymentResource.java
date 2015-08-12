@@ -285,7 +285,22 @@ public class PaymentResource extends ComboPaymentResource {
 
         final TransactionType transactionType;
         final String transactionExternalKey;
-        if (json != null && json.getTransactionExternalKey() != null && json.getTransactionType() != null) {
+        if (json != null && json.getTransactionId() != null) {
+            final Collection<PaymentTransaction> paymentTransactionCandidates = Collections2.<PaymentTransaction>filter(initialPayment.getTransactions(),
+                                                                                                                        new Predicate<PaymentTransaction>() {
+                                                                                                                            @Override
+                                                                                                                            public boolean apply(final PaymentTransaction input) {
+                                                                                                                                return input.getId().toString().equals(json.getTransactionId());
+                                                                                                                            }
+                                                                                                                        });
+            if (paymentTransactionCandidates.size() == 1) {
+                final PaymentTransaction paymentTransaction = paymentTransactionCandidates.iterator().next();
+                transactionType = paymentTransaction.getTransactionType();
+                transactionExternalKey = paymentTransaction.getExternalKey();
+            } else {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+        } else if (json != null && json.getTransactionExternalKey() != null && json.getTransactionType() != null) {
             transactionType = TransactionType.valueOf(json.getTransactionType());
             transactionExternalKey = json.getTransactionExternalKey();
         } else if (json != null && json.getTransactionExternalKey() != null) {

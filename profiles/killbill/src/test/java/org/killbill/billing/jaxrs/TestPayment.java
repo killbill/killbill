@@ -91,6 +91,13 @@ public class TestPayment extends TestJaxrsBase {
             completeTransactionWithTypeAndKey.setTransactionExternalKey(authPaymentTransaction.getTransactionExternalKey());
             final Payment completedPaymentByTypeAndKey = killBillClient.completePayment(completeTransactionWithTypeAndKey, pluginProperties, createdBy, reason, comment);
             verifyPayment(account, paymentMethodId, completedPaymentByTypeAndKey, paymentExternalKey, authTransactionExternalKey, transactionType.toString(), pending, amount, authAmount, BigDecimal.ZERO, BigDecimal.ZERO, 1, paymentNb);
+
+            // Finally, specify the payment id and transaction id
+            final PaymentTransaction completeTransactionWithTypeAndId = new PaymentTransaction();
+            completeTransactionWithTypeAndId.setPaymentId(initialPayment.getPaymentId());
+            completeTransactionWithTypeAndId.setTransactionId(authPaymentTransaction.getTransactionId());
+            final Payment completedPaymentByTypeAndId = killBillClient.completePayment(completeTransactionWithTypeAndId, pluginProperties, createdBy, reason, comment);
+            verifyPayment(account, paymentMethodId, completedPaymentByTypeAndId, paymentExternalKey, authTransactionExternalKey, transactionType.toString(), pending, amount, authAmount, BigDecimal.ZERO, BigDecimal.ZERO, 1, paymentNb);
         }
     }
 
@@ -145,6 +152,13 @@ public class TestPayment extends TestJaxrsBase {
         completeTransactionWithTypeAndKey.setTransactionExternalKey(refundTransactionExternalKey);
         final Payment completedPaymentByTypeAndKey = killBillClient.completePayment(completeTransactionWithTypeAndKey, pluginProperties, createdBy, reason, comment);
         verifyPaymentWithPendingRefund(account, paymentMethodId, paymentExternalKey, purchaseTransactionExternalKey, purchaseAmount, refundTransactionExternalKey, completedPaymentByTypeAndKey);
+
+        // Also, it should work if we specify the payment id and transaction id
+        final PaymentTransaction completeTransactionWithTypeAndId = new PaymentTransaction();
+        completeTransactionWithTypeAndId.setPaymentId(refundPayment.getPaymentId());
+        completeTransactionWithTypeAndId.setTransactionId(refundPayment.getTransactions().get(1).getTransactionId());
+        final Payment completedPaymentByTypeAndId = killBillClient.completePayment(completeTransactionWithTypeAndId, pluginProperties, createdBy, reason, comment);
+        verifyPaymentWithPendingRefund(account, paymentMethodId, paymentExternalKey, purchaseTransactionExternalKey, purchaseAmount, refundTransactionExternalKey, completedPaymentByTypeAndId);
     }
 
     @Test(groups = "slow")
