@@ -17,7 +17,9 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +58,7 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -69,7 +72,9 @@ import org.killbill.clock.Clock;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -270,39 +275,84 @@ public class PaymentResource extends ComboPaymentResource {
                                                  final String comment,
                                                  final UriInfo uriInfo,
                                                  final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
-        verifyNonNullOrEmpty(json.getTransactionType(), "PaymentTransactionJson transactionType needs to be set");
-        if (paymentIdStr == null) {
-            verifyNonNullOrEmpty(json.getPaymentExternalKey(), "PaymentTransactionJson externalKey needs to be set");
-        }
-
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json == null ? null : json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
-        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+        final BigDecimal amount = json == null ? null : json.getAmount();
+        final Currency currency = json == null || json.getCurrency() == null ? null : Currency.valueOf(json.getCurrency());
 
-        final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
+        final TransactionType transactionType;
+        final String transactionExternalKey;
+        if (json != null && json.getTransactionExternalKey() != null && json.getTransactionType() != null) {
+            transactionType = TransactionType.valueOf(json.getTransactionType());
+            transactionExternalKey = json.getTransactionExternalKey();
+        } else if (json != null && json.getTransactionExternalKey() != null) {
+            final Collection<PaymentTransaction> paymentTransactionCandidates = Collections2.<PaymentTransaction>filter(initialPayment.getTransactions(),
+                                                                                                                        new Predicate<PaymentTransaction>() {
+                                                                                                                            @Override
+                                                                                                                            public boolean apply(final PaymentTransaction input) {
+                                                                                                                                return input.getExternalKey().equals(json.getTransactionExternalKey());
+                                                                                                                            }
+                                                                                                                        });
+            if (paymentTransactionCandidates.size() == 1) {
+                transactionType = paymentTransactionCandidates.iterator().next().getTransactionType();
+                transactionExternalKey = json.getTransactionExternalKey();
+            } else {
+                // Note: we could bit a bit smarter but keep the logic in the payment system
+                verifyNonNullOrEmpty(null, "PaymentTransactionJson transactionType needs to be set");
+                // Never reached
+                return Response.status(Status.PRECONDITION_FAILED).build();
+            }
+        } else if (json != null && json.getTransactionType() != null) {
+            final Collection<PaymentTransaction> paymentTransactionCandidates = Collections2.<PaymentTransaction>filter(initialPayment.getTransactions(),
+                                                                                                                        new Predicate<PaymentTransaction>() {
+                                                                                                                            @Override
+                                                                                                                            public boolean apply(final PaymentTransaction input) {
+                                                                                                                                return input.getTransactionType().toString().equals(json.getTransactionType());
+                                                                                                                            }
+                                                                                                                        });
+            if (paymentTransactionCandidates.size() == 1) {
+                transactionType = TransactionType.valueOf(json.getTransactionType());
+                transactionExternalKey = paymentTransactionCandidates.iterator().next().getExternalKey();
+            } else {
+                verifyNonNullOrEmpty(null, "PaymentTransactionJson externalKey needs to be set");
+                // Never reached
+                return Response.status(Status.PRECONDITION_FAILED).build();
+            }
+        } else if (initialPayment.getTransactions().size() == 1) {
+            final PaymentTransaction paymentTransaction = initialPayment.getTransactions().get(0);
+            transactionType = paymentTransaction.getTransactionType();
+            transactionExternalKey = paymentTransaction.getExternalKey();
+        } else {
+            verifyNonNullOrEmpty(null, "PaymentTransactionJson transactionType and externalKey need to be set");
+            // Never reached
+            return Response.status(Status.PRECONDITION_FAILED).build();
+        }
+
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         switch (transactionType) {
             case AUTHORIZE:
-                paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), json.getAmount(), currency,
-                                                                 json.getPaymentExternalKey(), json.getTransactionExternalKey(),
+                paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
+                                                                 initialPayment.getExternalKey(), transactionExternalKey,
                                                                  pluginProperties, paymentOptions, callContext);
                 break;
             case PURCHASE:
-                paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), json.getAmount(), currency,
-                                                            json.getPaymentExternalKey(), json.getTransactionExternalKey(),
+                paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
+                                                            initialPayment.getExternalKey(), transactionExternalKey,
                                                             pluginProperties, paymentOptions, callContext);
                 break;
             case CREDIT:
-                paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), json.getAmount(), currency,
-                                                          json.getPaymentExternalKey(), json.getTransactionExternalKey(),
+                paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
+                                                          initialPayment.getExternalKey(), transactionExternalKey,
                                                           pluginProperties, paymentOptions, callContext);
                 break;
+            case REFUND:
+                paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), amount, currency,
+                                                          transactionExternalKey, pluginProperties, paymentOptions, callContext);
+                break;
             default:
-                // It looks like we need at least REFUND? See https://github.com/killbill/killbill/issues/371
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " cannot be completed").build();
         }
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", initialPayment.getId());
