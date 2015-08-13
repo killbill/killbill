@@ -200,18 +200,22 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
     }
 
     protected void executePluginOnSuccessCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
-
+        // Values that were obtained/chnaged after the payment call was made (paymentId, processedAmount, processedCurrency,... needs to be extracted from the paymentControlContext)
+        // paymentId, paymentExternalKey, transactionAmount, transaction currency are extracted from  paymentControlContext which was update from the operation result.
         final OnSuccessPaymentControlResult result = controlPluginRunner.executePluginOnSuccessCalls(paymentStateContext.getAccount(),
-                                                                                                     paymentControlContext.getPaymentMethodId(),
+                                                                                                     paymentStateContext.getPaymentMethodId(),
                                                                                                      paymentStateControlContext.getAttemptId(),
-                                                                                                     paymentStateContext.getPaymentId(),
-                                                                                                     paymentStateContext.getPaymentExternalKey(),
+                                                                                                     paymentControlContext.getPaymentId(),
+                                                                                                     paymentControlContext.getPaymentExternalKey(),
+                                                                                                     paymentControlContext.getTransactionId(),
                                                                                                      paymentStateContext.getPaymentTransactionExternalKey(),
                                                                                                      PaymentApiType.PAYMENT_TRANSACTION,
                                                                                                      paymentStateContext.getTransactionType(),
                                                                                                      null,
                                                                                                      paymentControlContext.getAmount(),
                                                                                                      paymentControlContext.getCurrency(),
+                                                                                                     paymentControlContext.getProcessedAmount(),
+                                                                                                     paymentControlContext.getProcessedCurrency(),
                                                                                                      paymentStateControlContext.isApiPayment(),
                                                                                                      paymentControlPluginNames,
                                                                                                      paymentStateContext.getProperties(),

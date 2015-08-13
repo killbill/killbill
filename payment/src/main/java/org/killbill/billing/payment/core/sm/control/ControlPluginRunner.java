@@ -68,7 +68,7 @@ public class ControlPluginRunner {
                                                              final HPPType hppType,
                                                              final BigDecimal amount,
                                                              final Currency currency,
-                                                             final boolean  isApiPayment,
+                                                             final boolean isApiPayment,
                                                              final List<String> paymentControlPluginNames,
                                                              final Iterable<PluginProperty> pluginProperties,
                                                              final CallContext callContext) throws PaymentControlApiException {
@@ -124,34 +124,39 @@ public class ControlPluginRunner {
         return prevResult;
     }
 
-
     public OnSuccessPaymentControlResult executePluginOnSuccessCalls(final Account account,
-                                            final UUID paymentMethodId,
-                                            final UUID paymentAttemptId,
-                                            final UUID paymentId,
-                                            final String paymentExternalKey,
-                                            final String paymentTransactionExternalKey,
-                                            final PaymentApiType paymentApiType,
-                                            final TransactionType transactionType,
-                                            final HPPType hppType,
-                                            final BigDecimal amount,
-                                            final Currency currency,
-                                            final boolean  isApiPayment,
-                                            final List<String> paymentControlPluginNames,
-                                            final Iterable<PluginProperty> pluginProperties,
-                                            final CallContext callContext) {
+                                                                     final UUID paymentMethodId,
+                                                                     final UUID paymentAttemptId,
+                                                                     final UUID paymentId,
+                                                                     final String paymentExternalKey,
+                                                                     final UUID transactionId,
+                                                                     final String paymentTransactionExternalKey,
+                                                                     final PaymentApiType paymentApiType,
+                                                                     final TransactionType transactionType,
+                                                                     final HPPType hppType,
+                                                                     final BigDecimal amount,
+                                                                     final Currency currency,
+                                                                     final BigDecimal processedAmount,
+                                                                     final Currency processedCurrency,
+                                                                     final boolean isApiPayment,
+                                                                     final List<String> paymentControlPluginNames,
+                                                                     final Iterable<PluginProperty> pluginProperties,
+                                                                     final CallContext callContext) {
 
         final PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(account,
                                                                                                   paymentMethodId,
                                                                                                   paymentAttemptId,
                                                                                                   paymentId,
                                                                                                   paymentExternalKey,
+                                                                                                  transactionId,
                                                                                                   paymentTransactionExternalKey,
                                                                                                   paymentApiType,
                                                                                                   transactionType,
                                                                                                   hppType,
                                                                                                   amount,
                                                                                                   currency,
+                                                                                                  processedAmount,
+                                                                                                  processedCurrency,
                                                                                                   isApiPayment,
                                                                                                   callContext);
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
@@ -174,7 +179,6 @@ public class ControlPluginRunner {
         return new DefaultOnSuccessPaymentControlResult(inputPluginProperties);
     }
 
-
     public OnFailurePaymentControlResult executePluginOnFailureCalls(final Account account,
                                                                      final UUID paymentMethodId,
                                                                      final UUID paymentAttemptId,
@@ -186,7 +190,7 @@ public class ControlPluginRunner {
                                                                      final HPPType hppType,
                                                                      final BigDecimal amount,
                                                                      final Currency currency,
-                                                                     final boolean  isApiPayment,
+                                                                     final boolean isApiPayment,
                                                                      final List<String> paymentControlPluginNames,
                                                                      final Iterable<PluginProperty> pluginProperties,
                                                                      final CallContext callContext) {
@@ -231,9 +235,6 @@ public class ControlPluginRunner {
         }
         return new DefaultFailureCallResult(candidate, inputPluginProperties);
     }
-
-
-
 
     public static class DefaultPaymentControlContext extends DefaultCallContext implements PaymentControlContext {
 

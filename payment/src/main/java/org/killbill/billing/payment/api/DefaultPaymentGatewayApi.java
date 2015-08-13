@@ -124,9 +124,9 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
             final T result = callback.doPaymentGatewayApiOperation(priorCallResult.getAdjustedPluginProperties());
             controlPluginRunner.executePluginOnSuccessCalls(account,
                                                             paymentMethodId,
-                                                            null, null, null, null,
+                                                            null, null, null, null, null,
                                                             PaymentApiType.HPP, null, HPPType.BUILD_FORM_DESCRIPTOR,
-                                                            null, null, true, paymentControlPluginNames, priorCallResult.getAdjustedPluginProperties(), callContext);
+                                                            null, null, null, null, true, paymentControlPluginNames, priorCallResult.getAdjustedPluginProperties(), callContext);
             return result;
         } catch (final PaymentApiException e) {
             controlPluginRunner.executePluginOnFailureCalls(account,
