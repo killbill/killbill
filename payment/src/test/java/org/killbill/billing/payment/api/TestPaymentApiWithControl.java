@@ -46,7 +46,7 @@ import com.google.inject.Inject;
 public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
     @Inject
-    private OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry;
+    private OSGIServiceRegistration<PaymentControlPluginApi> controlPluginRegistry;
 
     private Account account;
     private UUID newPaymentMethodId;
@@ -58,7 +58,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null);
         newPaymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(), MockPaymentProviderPlugin.PLUGIN_NAME, false, paymentMethodInfo, ImmutableList.<PluginProperty>of(), callContext);
 
-        retryPluginRegistry.registerService(new OSGIServiceDescriptor() {
+        controlPluginRegistry.registerService(new OSGIServiceDescriptor() {
             @Override
             public String getPluginSymbolicName() {
                 return null;

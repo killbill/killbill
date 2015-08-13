@@ -55,7 +55,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
     }
 
     @Override
-    public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, @Nullable final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         final UUID paymentMethodIdToUse = paymentMethodId != null ? paymentMethodId : account.getPaymentMethodId();
 
         if (paymentMethodId == null) {
@@ -66,7 +66,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
     }
 
     @Override
-    public HostedPaymentPageFormDescriptor buildFormDescriptorWithPaymentControl(final Account account, @Nullable final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
+    public HostedPaymentPageFormDescriptor buildFormDescriptorWithPaymentControl(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
 
         return executeWithPaymentControl(account, paymentMethodId, properties, paymentOptions, callContext, new WithPaymentControlCallback<HostedPaymentPageFormDescriptor>() {
             @Override
