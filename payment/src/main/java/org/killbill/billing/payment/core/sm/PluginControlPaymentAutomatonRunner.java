@@ -47,6 +47,7 @@ import org.killbill.billing.payment.core.sm.control.AuthorizeControlOperation;
 import org.killbill.billing.payment.core.sm.control.CaptureControlOperation;
 import org.killbill.billing.payment.core.sm.control.ChargebackControlOperation;
 import org.killbill.billing.payment.core.sm.control.CompletionControlOperation;
+import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
 import org.killbill.billing.payment.core.sm.control.CreditControlOperation;
 import org.killbill.billing.payment.core.sm.control.DefaultControlCompleted;
 import org.killbill.billing.payment.core.sm.control.DefaultControlInitiated;
@@ -78,16 +79,19 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
     private final PaymentProcessor paymentProcessor;
     private final RetryServiceScheduler retryServiceScheduler;
     private final PaymentControlStateMachineHelper paymentControlStateMachineHelper;
+    private final ControlPluginRunner controlPluginRunner;
 
     @Inject
     public PluginControlPaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                                final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry, final Clock clock, final PaymentProcessor paymentProcessor, @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
-                                               final PaymentConfig paymentConfig, @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor, final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper paymentControlStateMachineHelper, final PersistentBus eventBus) {
+                                               final PaymentConfig paymentConfig, @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor, final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper paymentControlStateMachineHelper,
+                                               final ControlPluginRunner controlPluginRunner, final PersistentBus eventBus) {
         super(stateMachineConfig, paymentConfig, paymentDao, locker, pluginRegistry, clock, executor, eventBus, paymentSMHelper);
         this.paymentProcessor = paymentProcessor;
         this.paymentControlPluginRegistry = paymentControlPluginRegistry;
         this.retryServiceScheduler = retryServiceScheduler;
         this.paymentControlStateMachineHelper = paymentControlStateMachineHelper;
+        this.controlPluginRunner = controlPluginRunner;
     }
 
     public Payment run(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
@@ -132,7 +136,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
 
     public Payment completeRun(final PaymentStateControlContext paymentStateContext) throws PaymentApiException {
         try {
-            final OperationCallback callback = new CompletionControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
+            final OperationCallback callback = new CompletionControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
             final LeavingStateCallback leavingStateCallback = new NoopControlInitiated();
             final EnteringStateCallback enteringStateCallback = new DefaultControlCompleted(this, paymentStateContext, paymentControlStateMachineHelper.getRetriedState(), retryServiceScheduler);
 
@@ -165,25 +169,25 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
         final OperationCallback callback;
         switch (transactionType) {
             case AUTHORIZE:
-                callback = new AuthorizeControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
+                callback = new AuthorizeControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case CAPTURE:
-                callback = new CaptureControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
+                callback = new CaptureControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case PURCHASE:
-                callback = new PurchaseControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
+                callback = new PurchaseControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case VOID:
-                callback = new VoidControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
+                callback = new VoidControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case CREDIT:
-                callback = new CreditControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
+                callback = new CreditControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case REFUND:
-                callback = new RefundControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
+                callback = new RefundControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case CHARGEBACK:
-                callback = new ChargebackControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
+                callback = new ChargebackControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             default:
                 throw new IllegalStateException("Unsupported transaction type " + transactionType);

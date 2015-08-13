@@ -19,11 +19,13 @@ package org.killbill.billing.payment.core.sm.control;
 
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
+import org.killbill.billing.control.plugin.api.PaymentApiType;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
+import org.killbill.billing.payment.core.sm.control.ControlPluginRunner.DefaultPaymentControlContext;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
@@ -36,8 +38,11 @@ import org.killbill.commons.locker.GlobalLocker;
 //
 public class CompletionControlOperation extends OperationControlCallback {
 
-    public CompletionControlOperation(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry) {
-        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, retryPluginRegistry);
+    public CompletionControlOperation(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                                      final PaymentStateControlContext paymentStateContext,
+                                      final PaymentProcessor paymentProcessor,
+                                      final ControlPluginRunner controlPluginRunner) {
+        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
     }
 
     @Override
@@ -54,7 +59,9 @@ public class CompletionControlOperation extends OperationControlCallback {
                                                                                                             paymentStateContext.getPaymentExternalKey(),
                                                                                                             transaction.getId(),
                                                                                                             paymentStateContext.getPaymentTransactionExternalKey(),
+                                                                                                            PaymentApiType.PAYMENT_TRANSACTION,
                                                                                                             paymentStateContext.getTransactionType(),
+                                                                                                            null,
                                                                                                             transaction.getAmount(),
                                                                                                             transaction.getCurrency(),
                                                                                                             transaction.getProcessedAmount(),

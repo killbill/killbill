@@ -22,10 +22,20 @@ import org.killbill.billing.payment.api.PluginProperty;
 
 public class DefaultFailureCallResult implements OnFailurePaymentControlResult {
 
+    private final Iterable<PluginProperty> adjustedPluginProperties;
     private final DateTime nextRetryDate;
 
+    public DefaultFailureCallResult() {
+        this(null, null);
+    }
+
     public DefaultFailureCallResult(final DateTime nextRetryDate) {
+        this(nextRetryDate, null);
+    }
+
+    public DefaultFailureCallResult(final DateTime nextRetryDate, final Iterable<PluginProperty> adjustedPluginProperties) {
         this.nextRetryDate = nextRetryDate;
+        this.adjustedPluginProperties = adjustedPluginProperties;
     }
 
     @Override
@@ -35,6 +45,6 @@ public class DefaultFailureCallResult implements OnFailurePaymentControlResult {
 
     @Override
     public Iterable<PluginProperty> getAdjustedPluginProperties() {
-        return null;
+        return adjustedPluginProperties;
     }
 }
