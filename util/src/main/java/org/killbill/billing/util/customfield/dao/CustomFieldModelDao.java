@@ -19,11 +19,10 @@ package org.killbill.billing.util.customfield.dao;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.dao.TableName;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
@@ -48,9 +47,8 @@ public class CustomFieldModelDao extends EntityModelDaoBase implements EntityMod
         this.isActive = true;
     }
 
-    public CustomFieldModelDao(final CustomField customField) {
-        this(customField.getId(), customField.getCreatedDate(), customField.getUpdatedDate(), customField.getFieldName(),
-             customField.getFieldValue(), customField.getObjectId(), customField.getObjectType());
+    public CustomFieldModelDao(final DateTime createdDate, final String fieldName, final String fieldValue, final UUID objectId, final ObjectType objectType) {
+        this(UUIDs.randomUUID(), createdDate, createdDate, fieldName, fieldValue, objectId, objectType);
     }
 
     public String getFieldName() {

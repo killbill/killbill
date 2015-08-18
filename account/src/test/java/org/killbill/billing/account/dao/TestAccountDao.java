@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -41,8 +43,6 @@ import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogs;
-import org.killbill.billing.util.customfield.CustomField;
-import org.killbill.billing.util.customfield.StringCustomField;
 import org.killbill.billing.util.customfield.dao.CustomFieldModelDao;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Pagination;
@@ -169,8 +169,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final String fieldName = UUID.randomUUID().toString().substring(0, 4);
         final String fieldValue = UUID.randomUUID().toString();
 
-        final CustomField field = new StringCustomField(fieldName, fieldValue, ObjectType.ACCOUNT, accountId, internalCallContext.getCreatedDate());
-        customFieldDao.create(new CustomFieldModelDao(field), internalCallContext);
+        customFieldDao.create(new CustomFieldModelDao(internalCallContext.getCreatedDate(), fieldName, fieldValue, accountId, ObjectType.ACCOUNT), internalCallContext);
 
         final List<CustomFieldModelDao> customFieldMap = customFieldDao.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(customFieldMap.size(), 1);

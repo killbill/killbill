@@ -119,7 +119,7 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
         }
 
         for (CustomField cur : toBeInserted) {
-            customFieldDao.create(new CustomFieldModelDao(cur), internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
+            customFieldDao.create(new CustomFieldModelDao(context.getCreatedDate(), cur.getFieldName(), cur.getFieldValue(), cur.getObjectId(), cur.getObjectType()), internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
         }
     }
 
