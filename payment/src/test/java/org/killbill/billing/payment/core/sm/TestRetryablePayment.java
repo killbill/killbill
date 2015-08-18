@@ -41,6 +41,7 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
+import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.MockPaymentDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
@@ -109,6 +110,8 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
     @Inject
     private PaymentControlStateMachineHelper retrySMHelper;
     @Inject
+    private ControlPluginRunner controlPluginRunner;
+    @Inject
     private InternalCallContextFactory internalCallContextFactory;
 
     private Account account;
@@ -169,6 +172,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                 executor,
                 paymentSMHelper,
                 retrySMHelper,
+                controlPluginRunner,
                 eventBus);
 
         paymentStateContext =
@@ -191,7 +195,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                         runner.getPaymentPluginDispatcher(),
                                                         paymentStateContext,
                                                         null,
-                                                        runner.getRetryPluginRegistry(),
+                                                        controlPluginRunner,
                                                         paymentDao,
                                                         clock);
 

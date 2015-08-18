@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-public class DefaultPaymentApi implements PaymentApi {
+public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
     private static final boolean SHOULD_LOCK_ACCOUNT = true;
     private static final boolean IS_API_PAYMENT = true;
@@ -52,7 +52,6 @@ public class DefaultPaymentApi implements PaymentApi {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentApi.class);
 
-    private final PaymentConfig paymentConfig;
     private final PaymentProcessor paymentProcessor;
     private final PaymentMethodProcessor paymentMethodProcessor;
     private final PluginControlPaymentProcessor pluginControlPaymentProcessor;
@@ -60,7 +59,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Inject
     public DefaultPaymentApi(final PaymentConfig paymentConfig, final PaymentProcessor paymentProcessor, final PaymentMethodProcessor paymentMethodProcessor, final PluginControlPaymentProcessor pluginControlPaymentProcessor, final InternalCallContextFactory internalCallContextFactory) {
-        this.paymentConfig = paymentConfig;
+        super(paymentConfig);
         this.paymentProcessor = paymentProcessor;
         this.paymentMethodProcessor = paymentMethodProcessor;
         this.pluginControlPaymentProcessor = pluginControlPaymentProcessor;
@@ -167,7 +166,7 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Payment createPurchaseWithPaymentControl(final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency, final String paymentExternalKey, final String paymentTransactionExternalKey,
+    public Payment createPurchaseWithPaymentControl(final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency, @Nullable  final String paymentExternalKey, final String paymentTransactionExternalKey,
                                                     final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
         final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
         if (paymentControlPluginNames.isEmpty()) {
@@ -180,7 +179,6 @@ public class DefaultPaymentApi implements PaymentApi {
             checkPositiveAmount(amount);
             checkNotNullParameter(currency, "currency");
         }
-        checkNotNullParameter(paymentExternalKey, "paymentExternalKey");
         checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
         checkNotNullParameter(properties, "plugin properties");
 
@@ -497,74 +495,5 @@ public class DefaultPaymentApi implements PaymentApi {
         }
 
         return paymentMethods;
-    }
-
-    private void logAPICall(final String transactionType, final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, @Nullable final UUID transactionId, @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey) {
-        if (log.isInfoEnabled()) {
-            final StringBuilder logLine = new StringBuilder();
-            logLine.append("PaymentApi : ")
-                   .append(transactionType)
-                   .append(", account = ")
-                   .append(account.getId());
-            if (paymentMethodId != null) {
-                logLine.append(", paymentMethodId = ")
-                       .append(paymentMethodId);
-            }
-            if (paymentExternalKey != null) {
-                logLine.append(", paymentExternalKey = ")
-                       .append(paymentExternalKey);
-            }
-            if (paymentTransactionExternalKey != null) {
-                logLine.append(", paymentTransactionExternalKey = ")
-                       .append(paymentTransactionExternalKey);
-            }
-            if (paymentId != null) {
-                logLine.append(", paymentId = ")
-                       .append(paymentId);
-            }
-            if (transactionId != null) {
-                logLine.append(", transactionId = ")
-                       .append(transactionId);
-            }
-            if (amount != null) {
-                logLine.append(", amount = ")
-                       .append(amount);
-            }
-            if (currency != null) {
-                logLine.append(", currency = ")
-                       .append(currency);
-            }
-            log.info(logLine.toString());
-        }
-    }
-
-    private List<String> toPaymentControlPluginNames(final PaymentOptions paymentOptions) {
-        // Special path for JAX-RS InvoicePayment endpoints (see JaxRsResourceBase)
-        if (paymentConfig.getPaymentControlPluginNames() != null &&
-            paymentOptions.getPaymentControlPluginNames() != null &&
-            paymentOptions.getPaymentControlPluginNames().size() == 1 &&
-            InvoicePaymentControlPluginApi.PLUGIN_NAME.equals(paymentOptions.getPaymentControlPluginNames().get(0))) {
-            final List<String> paymentControlPluginNames = new LinkedList<String>(paymentOptions.getPaymentControlPluginNames());
-            paymentControlPluginNames.addAll(paymentConfig.getPaymentControlPluginNames());
-            return paymentControlPluginNames;
-        } else if (paymentOptions.getPaymentControlPluginNames() != null && !paymentOptions.getPaymentControlPluginNames().isEmpty()) {
-            return paymentOptions.getPaymentControlPluginNames();
-        } else if (paymentConfig.getPaymentControlPluginNames() != null && !paymentConfig.getPaymentControlPluginNames().isEmpty()) {
-            return paymentConfig.getPaymentControlPluginNames();
-        } else {
-            return ImmutableList.<String>of();
-        }
-    }
-
-    private void checkNotNullParameter(final Object parameter, final String parameterName) throws PaymentApiException {
-        if (parameter == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, parameterName, "should not be null");
-        }
-    }
-
-    private void checkPositiveAmount(final BigDecimal amount) throws PaymentApiException {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, "amount", "should be greater than 0");
-        }
     }
 }

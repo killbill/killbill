@@ -27,8 +27,8 @@ import org.killbill.commons.locker.GlobalLocker;
 
 public class VoidControlOperation extends OperationControlCallback {
 
-    public VoidControlOperation(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry) {
-        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentControlPluginRegistry);
+    public VoidControlOperation(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final ControlPluginRunner controlPluginRunner) {
+        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
     }
 
     @Override

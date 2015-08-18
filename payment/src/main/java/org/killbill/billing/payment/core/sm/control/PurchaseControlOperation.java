@@ -27,8 +27,8 @@ import org.killbill.commons.locker.GlobalLocker;
 
 public class PurchaseControlOperation extends OperationControlCallback {
 
-    public PurchaseControlOperation(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry) {
-        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, retryPluginRegistry);
+    public PurchaseControlOperation(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final ControlPluginRunner controlPluginRunner) {
+        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
     }
 
     @Override

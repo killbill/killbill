@@ -22,8 +22,18 @@ import org.killbill.billing.payment.api.PluginProperty;
 
 public class DefaultOnSuccessPaymentControlResult implements OnSuccessPaymentControlResult {
 
+    private final Iterable<PluginProperty> adjustedPluginProperties;
+
+    public DefaultOnSuccessPaymentControlResult() {
+        this(null);
+    }
+
+    public DefaultOnSuccessPaymentControlResult(final Iterable<PluginProperty> adjustedPluginProperties) {
+        this.adjustedPluginProperties = adjustedPluginProperties;
+    }
+
     @Override
     public Iterable<PluginProperty> getAdjustedPluginProperties() {
-        return null;
+        return adjustedPluginProperties;
     }
 }
