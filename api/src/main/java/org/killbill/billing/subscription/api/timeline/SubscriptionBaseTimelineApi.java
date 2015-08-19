@@ -16,23 +16,11 @@
 
 package org.killbill.billing.subscription.api.timeline;
 
-import java.util.UUID;
-
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 
 public interface SubscriptionBaseTimelineApi {
 
     public BundleBaseTimeline getBundleTimeline(SubscriptionBaseBundle bundle, TenantContext context)
-            throws SubscriptionBaseRepairException;
-
-    public BundleBaseTimeline getBundleTimeline(UUID accountId, String bundleName, TenantContext context)
-            throws SubscriptionBaseRepairException;
-
-    public BundleBaseTimeline getBundleTimeline(UUID bundleId, TenantContext context)
-            throws SubscriptionBaseRepairException;
-
-    public BundleBaseTimeline repairBundle(BundleBaseTimeline input, boolean dryRun, CallContext context)
             throws SubscriptionBaseRepairException;
 }

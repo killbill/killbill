@@ -27,7 +27,6 @@ import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
-import org.killbill.billing.subscription.api.timeline.SubscriptionDataRepair;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
@@ -98,9 +97,6 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
     public void transfer(UUID srcAccountId, UUID destAccountId, BundleMigrationData data, List<TransferCancelData> transferCancelData, InternalCallContext fromContext, InternalCallContext toContext);
 
     public void updateBundleExternalKey(UUID bundleId, String externalKey, InternalCallContext context);
-
-    // Repair
-    public void repair(UUID accountId, UUID bundleId, List<SubscriptionDataRepair> inRepair, InternalCallContext context);
 
 }
 

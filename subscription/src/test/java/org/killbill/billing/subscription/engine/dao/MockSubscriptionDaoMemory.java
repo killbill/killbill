@@ -41,7 +41,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
-import org.killbill.billing.subscription.api.timeline.SubscriptionDataRepair;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
@@ -483,11 +482,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     @Override
     public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(final InternalTenantContext context) {
         return null;
-    }
-
-    @Override
-    public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair,
-                       final InternalCallContext context) {
     }
 
     @Override
