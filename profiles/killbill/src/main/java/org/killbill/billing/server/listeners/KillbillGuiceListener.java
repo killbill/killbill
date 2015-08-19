@@ -28,6 +28,7 @@ import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.config.DefaultKillbillConfigSource;
 import org.killbill.billing.server.filters.ProfilingContainerResponseFilter;
+import org.killbill.billing.server.filters.RequestIdFilter;
 import org.killbill.billing.server.filters.ResponseCorsFilter;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.security.TenantFilter;
@@ -73,6 +74,7 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         // The logging filter is still incompatible with the GZIP filter
         //builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());
         builder.addJerseyFilter(ProfilingContainerResponseFilter.class.getName());
+        builder.addJerseyFilter(RequestIdFilter.class.getName());
 
         // Broader, to support the "Try it out!" feature
         //builder.addFilter("/" + SWAGGER_PATH + "*", ResponseCorsFilter.class);

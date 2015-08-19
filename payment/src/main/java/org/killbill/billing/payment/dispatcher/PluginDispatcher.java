@@ -27,6 +27,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.ProfilingData;
+import org.killbill.commons.request.Request;
 
 public class PluginDispatcher<ReturnType> {
 
@@ -48,7 +49,10 @@ public class PluginDispatcher<ReturnType> {
     public ReturnType dispatchWithTimeout(final Callable<PluginDispatcherReturnType<ReturnType>> task, final long timeout, final TimeUnit unit)
             throws TimeoutException, ExecutionException, InterruptedException {
 
-        final Future<PluginDispatcherReturnType<ReturnType>> future = executor.submit(task);
+        // Wrap existing callable to keep the original requestId
+        final Callable<PluginDispatcherReturnType<ReturnType>> callableWithRequestData = new CallableWithRequestData(Request.getPerThreadRequestData(), task);
+
+        final Future<PluginDispatcherReturnType<ReturnType>> future = executor.submit(callableWithRequestData);
         final PluginDispatcherReturnType<ReturnType> pluginDispatcherResult = future.get(timeout, unit);
 
         if (pluginDispatcherResult instanceof WithProfilingPluginDispatcherReturnType) {

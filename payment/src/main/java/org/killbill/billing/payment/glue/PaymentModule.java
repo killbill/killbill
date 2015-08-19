@@ -136,8 +136,10 @@ public class PaymentModule extends KillBillModule {
 
     protected void installProcessors(final PaymentConfig paymentConfig) {
 
-        final ExecutorService pluginExecutorService = new WithProfilingThreadPoolExecutor(paymentConfig.getPaymentPluginThreadNb(), paymentConfig.getPaymentPluginThreadNb(),
-                                                                                          0L, TimeUnit.MILLISECONDS,
+        final ExecutorService pluginExecutorService = new WithProfilingThreadPoolExecutor(paymentConfig.getPaymentPluginThreadNb(),
+                                                                                          paymentConfig.getPaymentPluginThreadNb(),
+                                                                                          0L,
+                                                                                          TimeUnit.MILLISECONDS,
                                                                                           new LinkedBlockingQueue<Runnable>(),
                                                                                           new ThreadFactory() {
 
