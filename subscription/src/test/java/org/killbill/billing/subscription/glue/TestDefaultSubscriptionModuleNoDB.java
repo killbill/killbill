@@ -22,13 +22,9 @@ import org.killbill.billing.GuicyKillbillTestNoDBModule;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
 import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
-import org.killbill.billing.subscription.engine.dao.RepairSubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.mockito.Mockito;
-
-import com.google.inject.name.Names;
 
 public class TestDefaultSubscriptionModuleNoDB extends TestDefaultSubscriptionModule {
 
@@ -39,9 +35,6 @@ public class TestDefaultSubscriptionModuleNoDB extends TestDefaultSubscriptionMo
     @Override
     protected void installSubscriptionDao() {
         bind(SubscriptionDao.class).to(MockSubscriptionDaoMemory.class).asEagerSingleton();
-        bind(SubscriptionDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionDao.class);
-        bind(RepairSubscriptionLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionDao.class);
-        bind(RepairSubscriptionDao.class).asEagerSingleton();
     }
 
     @Override

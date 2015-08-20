@@ -19,8 +19,6 @@
 package org.killbill.billing.subscription.api.user;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +28,6 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
@@ -47,17 +44,10 @@ import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.BundleMigration;
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.SubscriptionMigration;
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.SubscriptionMigrationCase;
-import org.killbill.billing.subscription.api.timeline.BundleBaseTimeline;
-import org.killbill.billing.subscription.api.timeline.SubscriptionBaseRepairException;
-import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimeline;
-import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimeline.DeletedEvent;
-import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
-import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
@@ -67,7 +57,6 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -151,31 +140,6 @@ public class TestSubscriptionHelper {
         assertTrue(in.isEqual(upper) || in.isBefore(upper));
     }
 
-    public Duration getDurationDay(final int days) {
-        final Duration result = new Duration() {
-            @Override
-            public TimeUnit getUnit() {
-                return TimeUnit.DAYS;
-            }
-
-            @Override
-            public int getNumber() {
-                return days;
-            }
-
-            @Override
-            public DateTime addToDateTime(final DateTime dateTime) {
-                return null;
-            }
-
-            @Override
-            public Period toJodaPeriod() {
-                throw new UnsupportedOperationException();
-            }
-        };
-        return result;
-    }
-
     public Duration getDurationMonth(final int months) {
         final Duration result = new Duration() {
             @Override
@@ -191,31 +155,6 @@ public class TestSubscriptionHelper {
             @Override
             public DateTime addToDateTime(final DateTime dateTime) {
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            @Override
-            public Period toJodaPeriod() {
-                throw new UnsupportedOperationException();
-            }
-        };
-        return result;
-    }
-
-    public Duration getDurationYear(final int years) {
-        final Duration result = new Duration() {
-            @Override
-            public TimeUnit getUnit() {
-                return TimeUnit.YEARS;
-            }
-
-            @Override
-            public int getNumber() {
-                return years;
-            }
-
-            @Override
-            public DateTime addToDateTime(final DateTime dateTime) {
-                return dateTime.plusYears(years);
             }
 
             @Override
@@ -401,206 +340,6 @@ public class TestSubscriptionHelper {
         return createAccountForMigrationTest(input);
     }
 
-    public SubscriptionBaseTimeline createSubscriptionRepair(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
-        return new SubscriptionBaseTimeline() {
-            @Override
-            public UUID getId() {
-                return id;
-            }
-
-            @Override
-            public DateTime getCreatedDate() {
-                return null;
-            }
-
-            @Override
-            public DateTime getUpdatedDate() {
-                return null;
-            }
-
-            @Override
-            public List<NewEvent> getNewEvents() {
-                return newEvents;
-            }
-
-            @Override
-            public List<ExistingEvent> getExistingEvents() {
-                return null;
-            }
-
-            @Override
-            public List<DeletedEvent> getDeletedEvents() {
-                return deletedEvents;
-            }
-
-            @Override
-            public long getActiveVersion() {
-                return 1;
-            }
-        };
-    }
-
-    public BundleBaseTimeline createBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionBaseTimeline> subscriptionRepair) {
-        return new BundleBaseTimeline() {
-            @Override
-            public String getViewId() {
-                return viewId;
-            }
-
-            @Override
-            public List<SubscriptionBaseTimeline> getSubscriptions() {
-                return subscriptionRepair;
-            }
-
-            @Override
-            public UUID getId() {
-                return bundleId;
-            }
-
-            @Override
-            public DateTime getCreatedDate() {
-                return null;
-            }
-
-            @Override
-            public DateTime getUpdatedDate() {
-                return null;
-            }
-
-            @Override
-            public String getExternalKey() {
-                return null;
-            }
-        };
-    }
-
-    public ExistingEvent createExistingEventForAssertion(final SubscriptionBaseTransitionType type,
-                                                         final String productName, final PhaseType phaseType, final ProductCategory category, final String priceListName, final BillingPeriod billingPeriod,
-                                                         final DateTime effectiveDateTime) {
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
-        return new ExistingEvent() {
-            @Override
-            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-                return type;
-            }
-
-            @Override
-            public DateTime getRequestedDate() {
-                return null;
-            }
-
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-                return spec;
-            }
-
-            @Override
-            public UUID getEventId() {
-                return null;
-            }
-
-            @Override
-            public DateTime getEffectiveDate() {
-                return effectiveDateTime;
-            }
-
-            @Override
-            public String getPlanName() {
-                return null;
-            }
-
-            @Override
-            public String getPlanPhaseName() {
-                return null;
-            }
-        };
-    }
-
-    public SubscriptionBaseTimeline getSubscriptionRepair(final UUID id, final BundleBaseTimeline bundleRepair) {
-        for (final SubscriptionBaseTimeline cur : bundleRepair.getSubscriptions()) {
-            if (cur.getId().equals(id)) {
-                return cur;
-            }
-        }
-        Assert.fail("Failed to find SubscriptionRepair " + id);
-        return null;
-    }
-
-    public void validateExistingEventForAssertion(final ExistingEvent expected, final ExistingEvent input) {
-        log.debug(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName()));
-        assertEquals(input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName());
-        log.debug(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType()));
-        assertEquals(input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType());
-        log.debug(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory()));
-        assertEquals(input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory());
-        log.debug(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName()));
-        assertEquals(input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName());
-        log.debug(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod()));
-        assertEquals(input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod());
-        log.debug(String.format("Got %s -> Expected %s", input.getEffectiveDate(), expected.getEffectiveDate()));
-        assertEquals(input.getEffectiveDate(), expected.getEffectiveDate());
-    }
-
-    public DeletedEvent createDeletedEvent(final UUID eventId) {
-        return new DeletedEvent() {
-            @Override
-            public UUID getEventId() {
-                return eventId;
-            }
-        };
-    }
-
-    public NewEvent createNewEvent(final SubscriptionBaseTransitionType type, final DateTime requestedDate, final PlanPhaseSpecifier spec) {
-        return new NewEvent() {
-            @Override
-            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-                return type;
-            }
-
-            @Override
-            public DateTime getRequestedDate() {
-                return requestedDate;
-            }
-
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-                return spec;
-            }
-        };
-    }
-
-    public void sortEventsOnBundle(final BundleBaseTimeline bundle) {
-        if (bundle.getSubscriptions() == null) {
-            return;
-        }
-        for (final SubscriptionBaseTimeline cur : bundle.getSubscriptions()) {
-            if (cur.getExistingEvents() != null) {
-                sortExistingEvent(cur.getExistingEvents());
-            }
-            if (cur.getNewEvents() != null) {
-                sortNewEvent(cur.getNewEvents());
-            }
-        }
-    }
-
-    public void sortExistingEvent(final List<ExistingEvent> events) {
-        Collections.sort(events, new Comparator<ExistingEvent>() {
-            @Override
-            public int compare(final ExistingEvent arg0, final ExistingEvent arg1) {
-                return arg0.getEffectiveDate().compareTo(arg1.getEffectiveDate());
-            }
-        });
-    }
-
-    public void sortNewEvent(final List<NewEvent> events) {
-        Collections.sort(events, new Comparator<NewEvent>() {
-            @Override
-            public int compare(final NewEvent arg0, final NewEvent arg1) {
-                return arg0.getRequestedDate().compareTo(arg1.getRequestedDate());
-            }
-        });
-    }
-
     public static DateTime addOrRemoveDuration(final DateTime input, final List<Duration> durations, final boolean add) {
         DateTime result = input;
         for (final Duration cur : durations) {
@@ -628,20 +367,10 @@ public class TestSubscriptionHelper {
         return addOrRemoveDuration(input, durations, true);
     }
 
-    public static DateTime removeDuration(final DateTime input, final List<Duration> durations) {
-        return addOrRemoveDuration(input, durations, false);
-    }
-
     public static DateTime addDuration(final DateTime input, final Duration duration) {
         final List<Duration> list = new ArrayList<Duration>();
         list.add(duration);
         return addOrRemoveDuration(input, list, true);
-    }
-
-    public static DateTime removeDuration(final DateTime input, final Duration duration) {
-        final List<Duration> list = new ArrayList<Duration>();
-        list.add(duration);
-        return addOrRemoveDuration(input, list, false);
     }
 
     public static class SubscriptionMigrationCaseWithCTD implements SubscriptionMigrationCase {
@@ -678,20 +407,4 @@ public class TestSubscriptionHelper {
         }
     }
 
-    public interface TestWithExceptionCallback {
-
-        public void doTest() throws SubscriptionBaseRepairException, SubscriptionBaseApiException;
-    }
-
-    public static class TestWithException {
-
-        public void withException(final TestWithExceptionCallback callback, final ErrorCode code) throws Exception {
-            try {
-                callback.doTest();
-                Assert.fail("Failed to catch exception " + code);
-            } catch (SubscriptionBaseRepairException e) {
-                assertEquals(e.getCode(), code.getCode());
-            }
-        }
-    }
 }

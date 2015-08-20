@@ -29,8 +29,6 @@ import org.killbill.billing.subscription.api.migration.DefaultSubscriptionBaseMi
 import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
 import org.killbill.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
 import org.killbill.billing.subscription.api.timeline.DefaultSubscriptionBaseTimelineApi;
-import org.killbill.billing.subscription.api.timeline.RepairSubscriptionApiService;
-import org.killbill.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.transfer.DefaultSubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
@@ -38,17 +36,12 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseApiServ
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.dao.DefaultSubscriptionDao;
-import org.killbill.billing.subscription.engine.dao.RepairSubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.util.config.SubscriptionConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.name.Names;
-
 public class DefaultSubscriptionModule extends KillBillModule implements SubscriptionModule {
-
-    public static final String REPAIR_NAMED = "repair";
 
     public DefaultSubscriptionModule(final KillbillConfigSource configSource) {
         super(configSource);
@@ -61,15 +54,10 @@ public class DefaultSubscriptionModule extends KillBillModule implements Subscri
 
     protected void installSubscriptionDao() {
         bind(SubscriptionDao.class).to(DefaultSubscriptionDao.class).asEagerSingleton();
-        bind(SubscriptionDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionDao.class);
-        bind(RepairSubscriptionLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionDao.class);
-        bind(RepairSubscriptionDao.class).asEagerSingleton();
     }
 
     protected void installSubscriptionCore() {
-        bind(SubscriptionBaseApiService.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
         bind(SubscriptionBaseApiService.class).to(DefaultSubscriptionBaseApiService.class).asEagerSingleton();
-
         bind(DefaultSubscriptionBaseService.class).asEagerSingleton();
         bind(PlanAligner.class).asEagerSingleton();
         bind(AddonUtils.class).asEagerSingleton();

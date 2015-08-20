@@ -21,14 +21,10 @@ package org.killbill.billing.subscription.glue;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
 import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoSql;
-import org.killbill.billing.subscription.engine.dao.RepairSubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
-
-import com.google.inject.name.Names;
 
 public class TestDefaultSubscriptionModuleWithEmbeddedDB extends TestDefaultSubscriptionModule {
 
@@ -39,9 +35,6 @@ public class TestDefaultSubscriptionModuleWithEmbeddedDB extends TestDefaultSubs
     @Override
     protected void installSubscriptionDao() {
         bind(SubscriptionDao.class).to(MockSubscriptionDaoSql.class).asEagerSingleton();
-        bind(SubscriptionDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionDao.class);
-        bind(RepairSubscriptionLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionDao.class);
-        bind(RepairSubscriptionDao.class).asEagerSingleton();
     }
 
     @Override

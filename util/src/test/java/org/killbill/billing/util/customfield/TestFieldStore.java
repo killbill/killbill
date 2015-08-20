@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,13 +20,12 @@ package org.killbill.billing.util.customfield;
 
 import java.util.UUID;
 
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.customfield.dao.CustomFieldModelDao;
+import org.testng.annotations.Test;
 
 public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
 
@@ -36,16 +37,14 @@ public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
         String fieldName = "TestField1";
         String fieldValue = "Kitty Hawk";
 
-        final CustomField field = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
         eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
-        customFieldDao.create(new CustomFieldModelDao(field), internalCallContext);
+        customFieldDao.create(new CustomFieldModelDao(internalCallContext.getCreatedDate(), fieldName, fieldValue, id, objectType), internalCallContext);
         assertListenerStatus();
 
         fieldName = "TestField2";
         fieldValue = "Cape Canaveral";
-        final CustomField field2 = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
         eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
-        customFieldDao.create(new CustomFieldModelDao(field2), internalCallContext);
+        customFieldDao.create(new CustomFieldModelDao(internalCallContext.getCreatedDate(), fieldName, fieldValue, id, objectType), internalCallContext);
         assertListenerStatus();
     }
 }

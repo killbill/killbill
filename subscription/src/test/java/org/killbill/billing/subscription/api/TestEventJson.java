@@ -24,10 +24,8 @@ import org.testng.annotations.Test;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
-import org.killbill.billing.subscription.api.timeline.DefaultRepairSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
-import org.killbill.billing.events.RepairSubscriptionInternalEvent;
 import org.killbill.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson extends GuicyKillbillTestSuiteNoDB {
@@ -44,17 +42,6 @@ public class TestEventJson extends GuicyKillbillTestSuiteNoDB {
         final String json = mapper.writeValueAsString(e);
 
         final Class<?> claz = Class.forName(DefaultEffectiveSubscriptionEvent.class.getName());
-        final Object obj = mapper.readValue(json, claz);
-        Assert.assertTrue(obj.equals(e));
-    }
-
-    @Test(groups = "fast")
-    public void testRepairSubscriptionEvent() throws Exception {
-        final RepairSubscriptionInternalEvent e = new DefaultRepairSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), new DateTime(), 1L, 2L, null);
-
-        final String json = mapper.writeValueAsString(e);
-
-        final Class<?> claz = Class.forName(DefaultRepairSubscriptionEvent.class.getName());
         final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
     }

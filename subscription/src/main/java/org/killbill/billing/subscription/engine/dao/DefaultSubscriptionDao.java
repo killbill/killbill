@@ -46,14 +46,11 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
-import org.killbill.billing.events.RepairSubscriptionInternalEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
-import org.killbill.billing.subscription.api.timeline.DefaultRepairSubscriptionEvent;
-import org.killbill.billing.subscription.api.timeline.SubscriptionDataRepair;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultRequestedSubscriptionEvent;
@@ -965,44 +962,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 for (final BundleMigrationData curBundle : accountData.getData()) {
                     migrateBundleDataFromTransaction(curBundle, transactional, entitySqlDaoWrapperFactory, context);
                 }
-                return null;
-            }
-        });
-    }
-
-    @Override
-    public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final InternalCallContext context) {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
-
-                final SubscriptionEventSqlDao transEventDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-                for (final SubscriptionDataRepair cur : inRepair) {
-                    transactional.updateForRepair(cur.getId().toString(), cur.getActiveVersion(), cur.getAlignStartDate().toDate(), cur.getBundleStartDate().toDate(), context);
-                    for (final SubscriptionBaseEvent event : cur.getInitialEvents()) {
-                        transEventDao.updateVersion(event.getId().toString(), event.getActiveVersion(), context);
-                    }
-                    for (final SubscriptionBaseEvent event : cur.getNewEvents()) {
-                        transEventDao.create(new SubscriptionEventModelDao(event), context);
-                        if (event.getEffectiveDate().isAfter(clock.getUTCNow())) {
-                            recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
-                                                                    event.getEffectiveDate(),
-                                                                    new SubscriptionNotificationKey(event.getId()),
-                                                                    context);
-                        }
-                    }
-                }
-
-                try {
-                    // Note: we don't send a requested change event here, but a repair event
-                    final RepairSubscriptionInternalEvent busEvent = new DefaultRepairSubscriptionEvent(accountId, bundleId, clock.getUTCNow(),
-                                                                                                        context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
-                    eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
-                } catch (EventBusException e) {
-                    log.warn("Failed to post repair subscription event for bundle " + bundleId, e);
-                }
-
                 return null;
             }
         });
