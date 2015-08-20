@@ -125,20 +125,23 @@ public class PaymentAutomatonRunner {
                     final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         final DateTime utcNow = clock.getUTCNow();
 
-        final PaymentStateContext paymentStateContext = new PaymentStateContext(isApiPayment, paymentId, transactionId, attemptId, paymentExternalKey, paymentTransactionExternalKey, transactionType,
+        // Retrieve the payment id from the payment external key if needed
+        final UUID effectivePaymentId = paymentId != null ? paymentId : retrievePaymentId(paymentExternalKey, internalCallContext);
+
+        final PaymentStateContext paymentStateContext = new PaymentStateContext(isApiPayment, effectivePaymentId, transactionId, attemptId, paymentExternalKey, paymentTransactionExternalKey, transactionType,
                                                                                 account, paymentMethodId, amount, currency, shouldLockAccount, overridePluginOperationResult, properties, internalCallContext, callContext);
 
         final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext, eventBus, paymentSMHelper);
 
         final UUID effectivePaymentMethodId;
         final String currentStateName;
-        if (paymentId != null) {
+        if (effectivePaymentId != null) {
             final PaymentModelDao paymentModelDao = daoHelper.getPayment();
             effectivePaymentMethodId = paymentModelDao.getPaymentMethodId();
             currentStateName = paymentModelDao.getLastSuccessStateName() != null ? paymentModelDao.getLastSuccessStateName() : paymentSMHelper.getInitStateNameForTransaction();
 
             // Check for illegal states (should never happen)
-            Preconditions.checkState(currentStateName != null, "State name cannot be null for payment " + paymentId);
+            Preconditions.checkState(currentStateName != null, "State name cannot be null for payment " + effectivePaymentId);
             Preconditions.checkState(paymentMethodId == null || effectivePaymentMethodId.equals(paymentMethodId), "Specified payment method id " + paymentMethodId + " doesn't match the one on the payment " + effectivePaymentMethodId);
         } else {
             // If the payment method is not specified, retrieve the default one on the account; it could still be null, in which case
@@ -241,5 +244,14 @@ public class PaymentAutomatonRunner {
         }).orNull();
 
         return invoiceProperty == null || invoiceProperty.getValue() == null ? null : invoiceProperty.getValue().toString();
+    }
+
+    private UUID retrievePaymentId(@Nullable final String paymentExternalKey, final InternalCallContext internalCallContext) {
+        if (paymentExternalKey == null) {
+            return null;
+        }
+
+        final PaymentModelDao payment = paymentDao.getPaymentByExternalKey(paymentExternalKey, internalCallContext);
+        return payment == null ? null : payment.getId();
     }
 }
