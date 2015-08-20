@@ -74,6 +74,7 @@ import com.google.inject.name.Names;
 public class PaymentModule extends KillBillModule {
 
     private static final String PLUGIN_THREAD_PREFIX = "Plugin-th-";
+    private static final String PAYMENT_PLUGIN_TH_GROUP_NAME = "pay-plugin-grp";
 
     public static final String JANITOR_EXECUTOR_NAMED = "JanitorExecutor";
     public static final String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
@@ -145,7 +146,7 @@ public class PaymentModule extends KillBillModule {
 
                                                                                               @Override
                                                                                               public Thread newThread(final Runnable r) {
-                                                                                                  final Thread th = new Thread(r);
+                                                                                                  final Thread th = new Thread(new ThreadGroup(PAYMENT_PLUGIN_TH_GROUP_NAME), r);
                                                                                                   th.setName(PLUGIN_THREAD_PREFIX + th.getId());
                                                                                                   return th;
                                                                                               }
