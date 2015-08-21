@@ -18,8 +18,6 @@
 
 package org.killbill.billing.tenant.glue;
 
-import java.util.concurrent.ScheduledExecutorService;
-
 import org.killbill.billing.glue.TenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.DefaultTenantInternalApi;
@@ -45,8 +43,6 @@ import com.google.inject.name.Names;
 public class DefaultTenantModule extends KillBillModule implements TenantModule {
 
     public static final String NO_CACHING_TENANT = "NoCachingTenant";
-
-    public static final String TENANT_EXECUTOR_NAMED = "TenantExecutor";
 
     public DefaultTenantModule(final KillbillConfigSource configSource) {
         super(configSource);
@@ -79,11 +75,6 @@ public class DefaultTenantModule extends KillBillModule implements TenantModule 
         bind(TenantCacheInvalidation.class).asEagerSingleton();
     }
 
-    protected void installExecutor() {
-        final ScheduledExecutorService tenantExecutor = org.killbill.commons.concurrent.Executors.newSingleThreadScheduledExecutor("TenantExecutor");
-        bind(ScheduledExecutorService.class).annotatedWith(Names.named(TENANT_EXECUTOR_NAMED)).toInstance(tenantExecutor);
-    }
-
     @Override
     protected void configure() {
         installConfig();
@@ -91,6 +82,5 @@ public class DefaultTenantModule extends KillBillModule implements TenantModule 
         installTenantService();
         installTenantUserApi();
         installTenantCacheInvalidation();
-        installExecutor();
     }
 }

@@ -42,6 +42,7 @@ import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.util.config.TenantConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.commons.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,22 +68,21 @@ public class TenantCacheInvalidation {
 
     private final Map<TenantKey, CacheInvalidationCallback> cache;
     private final TenantBroadcastDao broadcastDao;
-    private final ScheduledExecutorService tenantExecutor;
     private final TenantConfig tenantConfig;
     private final PersistentBus eventBus;
     private final TenantDao tenantDao;
     private AtomicLong latestRecordIdProcessed;
     private volatile boolean isStopped;
 
+    private ScheduledExecutorService tenantExecutor;
+
     @Inject
     public TenantCacheInvalidation(@Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantBroadcastDao broadcastDao,
-                                   @Named(DefaultTenantModule.TENANT_EXECUTOR_NAMED) final ScheduledExecutorService tenantExecutor,
                                    @Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantDao tenantDao,
                                    final PersistentBus eventBus,
                                    final TenantConfig tenantConfig) {
         this.cache = new HashMap<TenantKey, CacheInvalidationCallback>();
         this.broadcastDao = broadcastDao;
-        this.tenantExecutor = tenantExecutor;
         this.tenantConfig = tenantConfig;
         this.tenantDao = tenantDao;
         this.eventBus = eventBus;
@@ -92,14 +92,11 @@ public class TenantCacheInvalidation {
     public void initialize() {
         final TenantBroadcastModelDao entry = broadcastDao.getLatestEntry();
         this.latestRecordIdProcessed = entry != null ? new AtomicLong(entry.getRecordId()) : new AtomicLong(0L);
-
+        this.tenantExecutor = Executors.newSingleThreadScheduledExecutor("TenantExecutor");
+        this.isStopped = false;
     }
 
     public void start() {
-        if (isStopped) {
-            logger.warn("TenantExecutor is in a stopped state, abort start sequence");
-            return;
-        }
         final TimeUnit pendingRateUnit = tenantConfig.getTenantBroadcastServiceRunningRate().getUnit();
         final long pendingPeriod = tenantConfig.getTenantBroadcastServiceRunningRate().getPeriod();
         tenantExecutor.scheduleAtFixedRate(new TenantCacheInvalidationRunnable(this, broadcastDao, tenantDao), pendingPeriod, pendingPeriod, pendingRateUnit);
