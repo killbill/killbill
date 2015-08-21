@@ -30,7 +30,7 @@ import com.sun.jersey.spi.container.ContainerResponse;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
 
 @Singleton
-public class RequestIdFilter implements ContainerRequestFilter, ContainerResponseFilter {
+public class RequestDataFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
 
     private static final String REQUEST_ID_HEADER_REQ = "X-Killbill-Request-Id-Req";
