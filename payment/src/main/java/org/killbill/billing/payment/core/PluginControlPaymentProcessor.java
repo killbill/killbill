@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -55,9 +54,6 @@ import org.killbill.commons.locker.GlobalLocker;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.name.Named;
-
-import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class PluginControlPaymentProcessor extends ProcessorBase {
 
@@ -73,12 +69,11 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                          final TagInternalApi tagUserApi,
                                          final PaymentDao paymentDao,
                                          final GlobalLocker locker,
-                                         @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                                          final InternalCallContextFactory internalCallContextFactory,
                                          final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                                          final PaymentControlStateMachineHelper paymentControlStateMachineHelper,
                                          final Clock clock) {
-        super(pluginRegistry, accountInternalApi, paymentDao, tagUserApi, locker, executor, internalCallContextFactory, invoiceApi, clock);
+        super(pluginRegistry, accountInternalApi, paymentDao, tagUserApi, locker, internalCallContextFactory, invoiceApi, clock);
         this.paymentControlStateMachineHelper = paymentControlStateMachineHelper;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
     }

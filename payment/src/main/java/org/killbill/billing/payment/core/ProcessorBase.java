@@ -37,11 +37,8 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
-import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.dispatcher.CallableWithRequestData;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -57,15 +54,12 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
-import org.killbill.commons.request.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
 
 public abstract class ProcessorBase {
 
@@ -74,7 +68,6 @@ public abstract class ProcessorBase {
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final AccountInternalApi accountInternalApi;
     protected final GlobalLocker locker;
-    protected final ExecutorService executor;
     protected final PaymentDao paymentDao;
     protected final InternalCallContextFactory internalCallContextFactory;
     protected final TagInternalApi tagInternalApi;
@@ -88,7 +81,6 @@ public abstract class ProcessorBase {
                          final PaymentDao paymentDao,
                          final TagInternalApi tagInternalApi,
                          final GlobalLocker locker,
-                         final ExecutorService executor,
                          final InternalCallContextFactory internalCallContextFactory,
                          final InvoiceInternalApi invoiceApi,
                          final Clock clock) {
@@ -96,7 +88,6 @@ public abstract class ProcessorBase {
         this.accountInternalApi = accountInternalApi;
         this.paymentDao = paymentDao;
         this.locker = locker;
-        this.executor = executor;
         this.tagInternalApi = tagInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceApi = invoiceApi;
@@ -168,6 +159,7 @@ public abstract class ProcessorBase {
 
     // TODO Rename - there is no lock!
     public interface WithAccountLockCallback<PluginDispatcherReturnType, ExceptionType extends Exception> {
+
         public PluginDispatcherReturnType doOperation() throws ExceptionType;
     }
 

@@ -19,7 +19,6 @@ package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
 
@@ -104,7 +103,7 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
 
     private void setUp(final PaymentPluginStatus paymentPluginStatus) throws Exception {
         final GlobalLocker locker = new MemoryGlobalLocker();
-        final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(1, Executors.newCachedThreadPool());
+        final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(1, paymentExecutors);
         paymentStateContext = new PaymentStateContext(true,
                                                       UUID.randomUUID(),
                                                       null, null,

@@ -20,11 +20,13 @@ package org.killbill.billing.payment.dispatcher;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.ProfilingData;
 import org.killbill.commons.request.Request;
@@ -34,11 +36,11 @@ public class PluginDispatcher<ReturnType> {
     private final TimeUnit DEEFAULT_PLUGIN_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
     private final long timeoutSeconds;
-    private final ExecutorService executor;
+    private final PaymentExecutors paymentExecutors;
 
-    public PluginDispatcher(final long timeoutSeconds, final ExecutorService executor) {
+    public PluginDispatcher(final long timeoutSeconds, final PaymentExecutors paymentExecutors) {
         this.timeoutSeconds = timeoutSeconds;
-        this.executor = executor;
+        this.paymentExecutors = paymentExecutors;
     }
 
     // TODO Once we switch fully to automata, should this throw PaymentPluginApiException instead?
@@ -49,10 +51,12 @@ public class PluginDispatcher<ReturnType> {
     public ReturnType dispatchWithTimeout(final Callable<PluginDispatcherReturnType<ReturnType>> task, final long timeout, final TimeUnit unit)
             throws TimeoutException, ExecutionException, InterruptedException {
 
+        final ExecutorService pluginExecutor = paymentExecutors.getPluginExecutorService();
+
         // Wrap existing callable to keep the original requestId
         final Callable<PluginDispatcherReturnType<ReturnType>> callableWithRequestData = new CallableWithRequestData(Request.getPerThreadRequestData(), task);
 
-        final Future<PluginDispatcherReturnType<ReturnType>> future = executor.submit(callableWithRequestData);
+        final Future<PluginDispatcherReturnType<ReturnType>> future = pluginExecutor.submit(callableWithRequestData);
         final PluginDispatcherReturnType<ReturnType> pluginDispatcherResult = future.get(timeout, unit);
 
         if (pluginDispatcherResult instanceof WithProfilingPluginDispatcherReturnType) {

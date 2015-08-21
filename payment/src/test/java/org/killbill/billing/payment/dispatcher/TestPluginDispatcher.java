@@ -33,9 +33,9 @@ import org.testng.annotations.Test;
 
 public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
 
-    private final PluginDispatcher<Void> voidPluginDispatcher = new PluginDispatcher<Void>(10, Executors.newSingleThreadExecutor());
+    private final PluginDispatcher<Void> voidPluginDispatcher = new PluginDispatcher<Void>(10, paymentExecutors);
 
-    private final PluginDispatcher<String> stringPluginDispatcher = new PluginDispatcher<String>(1, Executors.newSingleThreadExecutor());
+    private final PluginDispatcher<String> stringPluginDispatcher = new PluginDispatcher<String>(1, paymentExecutors);
 
     @Test(groups = "fast")
     public void testDispatchWithTimeout() throws TimeoutException, PaymentApiException {

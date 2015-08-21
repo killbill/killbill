@@ -184,7 +184,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     }
 
     private PaymentOperation getPluginOperation(final boolean shouldLockAccount, final int timeoutSeconds) throws PaymentApiException {
-        final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(timeoutSeconds, Executors.newCachedThreadPool());
+        final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(timeoutSeconds, paymentExecutors);
 
         final PaymentStateContext paymentStateContext = new PaymentStateContext(true, UUID.randomUUID(),
                                                                                 null, null,

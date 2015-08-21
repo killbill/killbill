@@ -114,6 +114,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     protected void beforeClass() throws Exception {
         super.beforeClass();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
+        paymentExecutors.initialize();
         janitor.initialize();
         janitor.start();
     }
@@ -121,6 +122,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     @AfterClass(groups = "slow")
     protected void afterClass() throws Exception {
         janitor.stop();
+        paymentExecutors.stop();
     }
 
     @BeforeMethod(groups = "slow")

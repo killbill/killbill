@@ -20,7 +20,6 @@ package org.killbill.billing.payment.core.sm;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -28,23 +27,22 @@ import javax.inject.Named;
 
 import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationResult;
-import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
-import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
-import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.PaymentConfig;
@@ -52,7 +50,6 @@ import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
-import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 
 public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAutomatonRunner {
@@ -61,10 +58,10 @@ public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAut
     private PaymentStateControlContext context;
 
     @Inject
-    public MockRetryablePaymentAutomatonRunner(@Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig, @Named(PaymentModule.STATE_MACHINE_RETRY) final StateMachineConfig retryStateMachine, final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final PaymentProcessor paymentProcessor,
-                                               @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler, final PaymentConfig paymentConfig, @com.google.inject.name.Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
+    public MockRetryablePaymentAutomatonRunner(final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final PaymentProcessor paymentProcessor,
+                                               @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler, final PaymentConfig paymentConfig, final PaymentExecutors executors,
                                                final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper retrySMHelper, final ControlPluginRunner controlPluginRunner, final PersistentBus eventBus) {
-        super(stateMachineConfig, paymentDao, locker, pluginRegistry, retryPluginRegistry, clock, paymentProcessor, retryServiceScheduler, paymentConfig, executor, paymentSMHelper, retrySMHelper, controlPluginRunner, eventBus);
+        super(paymentDao, locker, pluginRegistry, retryPluginRegistry, clock, paymentProcessor, retryServiceScheduler, paymentConfig, executors, paymentSMHelper, retrySMHelper, controlPluginRunner, eventBus);
     }
 
     @Override

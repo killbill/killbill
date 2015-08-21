@@ -24,6 +24,7 @@ import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
+import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
@@ -70,6 +71,8 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected PaymentDao paymentDao;
     @Inject
     protected TestPaymentHelper testHelper;
+    @Inject
+    protected PaymentExecutors paymentExecutors;
 
     @Override
     protected KillbillConfigSource getConfigSource() {

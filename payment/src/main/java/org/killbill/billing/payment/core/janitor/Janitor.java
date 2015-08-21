@@ -22,12 +22,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.events.PaymentInternalEvent;
+import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
-import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -49,27 +48,28 @@ public class Janitor {
     public static final String QUEUE_NAME = "janitor";
 
     private final NotificationQueueService notificationQueueService;
-    private final ScheduledExecutorService janitorExecutor;
     private final PaymentConfig paymentConfig;
     private final IncompletePaymentAttemptTask incompletePaymentAttemptTask;
     private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
+    private final PaymentExecutors paymentExecutors;
 
     private NotificationQueue janitorQueue;
+    private ScheduledExecutorService janitorExecutor;
 
     private volatile boolean isStopped;
 
     @Inject
     public Janitor(final PaymentConfig paymentConfig,
                    final NotificationQueueService notificationQueueService,
-                   @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
+                   final PaymentExecutors paymentExecutors,
                    final IncompletePaymentAttemptTask incompletePaymentAttemptTask,
                    final IncompletePaymentTransactionTask incompletePaymentTransactionTask) {
         this.notificationQueueService = notificationQueueService;
-        this.janitorExecutor = janitorExecutor;
+        this.paymentExecutors = paymentExecutors;
         this.paymentConfig = paymentConfig;
         this.incompletePaymentAttemptTask = incompletePaymentAttemptTask;
         this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
-        this.isStopped = false;
+
     }
 
     public void initialize() throws NotificationQueueAlreadyExists {
@@ -95,10 +95,10 @@ public class Janitor {
     }
 
     public void start() {
-        if (isStopped) {
-            log.warn("Janitor is not a restartable service, and was already started, aborting");
-            return;
-        }
+
+        this.isStopped = false;
+
+        janitorExecutor = paymentExecutors.getJanitorExecutorService();
 
         janitorQueue.startQueue();
 

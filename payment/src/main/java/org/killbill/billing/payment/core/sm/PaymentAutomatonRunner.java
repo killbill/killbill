@@ -19,7 +19,6 @@ package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -36,7 +35,6 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.automaton.StateMachine;
-import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -45,6 +43,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.sm.payments.AuthorizeCompleted;
 import org.killbill.billing.payment.core.sm.payments.AuthorizeInitiated;
 import org.killbill.billing.payment.core.sm.payments.AuthorizeOperation;
@@ -69,7 +68,6 @@ import org.killbill.billing.payment.core.sm.payments.VoidOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
-import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -82,9 +80,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.google.inject.name.Named;
-
-import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class PaymentAutomatonRunner {
 
@@ -97,13 +92,12 @@ public class PaymentAutomatonRunner {
     private final PersistentBus eventBus;
 
     @Inject
-    public PaymentAutomatonRunner(@javax.inject.Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig,
-                                  final PaymentConfig paymentConfig,
+    public PaymentAutomatonRunner(final PaymentConfig paymentConfig,
                                   final PaymentDao paymentDao,
                                   final GlobalLocker locker,
                                   final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                   final Clock clock,
-                                  @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
+                                  final PaymentExecutors executors,
                                   final PersistentBus eventBus,
                                   final PaymentStateMachineHelper paymentSMHelper) {
         this.paymentSMHelper = paymentSMHelper;
@@ -114,7 +108,7 @@ public class PaymentAutomatonRunner {
         this.eventBus = eventBus;
 
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
-        this.paymentPluginDispatcher = new PluginDispatcher<OperationResult>(paymentPluginTimeoutSec, executor);
+        this.paymentPluginDispatcher = new PluginDispatcher<OperationResult>(paymentPluginTimeoutSec, executors);
 
     }
 
