@@ -103,11 +103,13 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         eventBus.start();
+        paymentExecutors.initialize();
         Profiling.resetPerThreadProfilingData();
     }
 
     @AfterMethod(groups = "fast")
     public void afterMethod() throws Exception {
+        paymentExecutors.stop();
         eventBus.stop();
     }
 }

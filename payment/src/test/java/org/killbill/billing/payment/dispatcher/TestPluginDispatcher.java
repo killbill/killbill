@@ -26,16 +26,27 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
+import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
 
-    private final PluginDispatcher<Void> voidPluginDispatcher = new PluginDispatcher<Void>(10, paymentExecutors);
+    private PluginDispatcher<Void> voidPluginDispatcher;
 
-    private final PluginDispatcher<String> stringPluginDispatcher = new PluginDispatcher<String>(1, paymentExecutors);
+    private PluginDispatcher<String> stringPluginDispatcher;
+
+    @BeforeMethod(groups = "fast")
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
+        eventBus.start();
+        voidPluginDispatcher = new PluginDispatcher<Void>(10, paymentExecutors);
+        stringPluginDispatcher = new PluginDispatcher<String>(1, paymentExecutors);
+    }
+
 
     @Test(groups = "fast")
     public void testDispatchWithTimeout() throws TimeoutException, PaymentApiException {

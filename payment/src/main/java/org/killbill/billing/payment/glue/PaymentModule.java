@@ -92,8 +92,6 @@ public class PaymentModule extends KillBillModule {
     }
 
     protected void installJanitor() {
-        bind(IncompletePaymentTransactionTask.class).asEagerSingleton();
-        bind(IncompletePaymentAttemptTask.class).asEagerSingleton();
         bind(Janitor.class).asEagerSingleton();
     }
 

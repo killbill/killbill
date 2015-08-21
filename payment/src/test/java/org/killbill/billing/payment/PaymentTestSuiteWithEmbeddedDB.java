@@ -90,6 +90,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+        paymentExecutors.initialize();
         eventBus.start();
         Profiling.resetPerThreadProfilingData();
         clock.resetDeltaFromReality();
@@ -99,5 +100,6 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
         eventBus.stop();
+        paymentExecutors.stop();
     }
 }
