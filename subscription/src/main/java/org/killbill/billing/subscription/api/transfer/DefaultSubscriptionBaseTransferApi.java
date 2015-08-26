@@ -102,7 +102,6 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 .setEventPlanPhase(currentPhase.getName())
                 .setEventPriceList(spec.getPriceListName())
                 .setActiveVersion(subscription.getActiveVersion())
-                .setProcessedDate(clock.getUTCNow())
                 .setEffectiveDate(effectiveDate)
                 .setRequestedDate(effectiveDate)
                 .setFromDisk(true);
@@ -241,7 +240,6 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                     final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                          .setSubscriptionId(cur.getId())
                                                                                          .setActiveVersion(cur.getActiveVersion())
-                                                                                         .setProcessedDate(clock.getUTCNow())
                                                                                          .setEffectiveDate(effectiveCancelDate)
                                                                                          .setRequestedDate(effectiveTransferDate)
                                                                                          .setFromDisk(true));

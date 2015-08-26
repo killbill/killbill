@@ -42,8 +42,6 @@ public interface SubscriptionBaseEvent extends Comparable<SubscriptionBaseEvent>
 
     public boolean isActive();
 
-    public DateTime getProcessedDate();
-
     public DateTime getRequestedDate();
 
     public DateTime getEffectiveDate();

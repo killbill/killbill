@@ -206,7 +206,6 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
                     .setEventPriceList(cur.getPriceList())
                     .setActiveVersion(defaultSubscriptionBase.getActiveVersion())
                     .setEffectiveDate(cur.getEventTime())
-                    .setProcessedDate(now)
                     .setRequestedDate(now)
                     .setFromDisk(true);
 

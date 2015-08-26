@@ -53,7 +53,6 @@ public class PhaseEventData extends EventBase implements PhaseEvent {
                 + ", getRequestedDate()=" + getRequestedDate()
                 + ", getEffectiveDate()=" + getEffectiveDate()
                 + ", getActiveVersion()=" + getActiveVersion()
-                + ", getProcessedDate()=" + getProcessedDate()
                 + ", getSubscriptionId()=" + getSubscriptionId()
                 + ", isActive()=" + isActive() + "]\n";
     }
@@ -65,7 +64,6 @@ public class PhaseEventData extends EventBase implements PhaseEvent {
                                            .setSubscriptionId(subscriptionId)
                                            .setRequestedDate(now)
                                            .setEffectiveDate(effectiveDate)
-                                           .setProcessedDate(now)
                                            .setActiveVersion(activeVersion)
                                            .setPhaseName(phaseName));
     }

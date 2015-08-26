@@ -699,7 +699,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     .setUpdatedDate(now)
                     .setRequestedDate(migrateBillingEvent.getRequestedDate())
                     .setEffectiveDate(migrateBillingEvent.getEffectiveDate())
-                    .setProcessedDate(now)
                     .setActiveVersion(migrateBillingEvent.getCurrentVersion())
                     .setEventPlan(prevPlan)
                     .setEventPlanPhase(prevPhase)
@@ -905,7 +904,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                         final SubscriptionBaseEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                                   .setSubscriptionId(reloaded.getId())
                                                                                                   .setActiveVersion(((DefaultSubscriptionBase) reloaded).getActiveVersion())
-                                                                                                  .setProcessedDate(now)
                                                                                                   .setEffectiveDate(baseTriggerEventForAddOnCancellation.getEffectiveDate())
                                                                                                   .setRequestedDate(now)
                                                                                                   .setCreatedDate(baseTriggerEventForAddOnCancellation.getCreatedDate())
@@ -943,7 +941,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                         it.remove();
                     }
                 }
-                // Set total ordering value of the fake dryRun event to make sure billing events are correctly ordererd
+                // Set total ordering value of the fake dryRun event to make sure billing events are correctly ordered
                 if (!events.isEmpty()) {
                     curDryRun.setTotalOrdering(events.get(events.size() - 1).getTotalOrdering() + 1);
                 }

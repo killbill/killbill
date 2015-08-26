@@ -203,7 +203,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
                 .setUpdatedDate(src.getUpdatedDate())
                 .setRequestedDate(src.getRequestedDate())
                 .setEffectiveDate(src.getEffectiveDate())
-                .setProcessedDate(src.getCreatedDate())
                 .setActiveVersion(src.getCurrentVersion())
                 .setActive(src.isActive());
 

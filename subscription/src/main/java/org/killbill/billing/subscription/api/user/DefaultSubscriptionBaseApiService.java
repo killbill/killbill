@@ -238,7 +238,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final SubscriptionBaseEvent uncancelEvent = new ApiEventUncancel(new ApiEventBuilder()
                                                                                  .setSubscriptionId(subscription.getId())
                                                                                  .setActiveVersion(subscription.getActiveVersion())
-                                                                                 .setProcessedDate(now)
                                                                                  .setRequestedDate(now)
                                                                                  .setEffectiveDate(now)
                                                                                  .setFromDisk(true));
@@ -380,7 +379,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 .setEventPlanPhase(curAndNextPhases[0].getPhase().getName())
                 .setEventPriceList(realPriceList)
                 .setActiveVersion(activeVersion)
-                .setProcessedDate(processedDate)
                 .setEffectiveDate(effectiveDate)
                 .setRequestedDate(requestedDate)
                 .setFromDisk(true);
@@ -410,7 +408,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                              .setEventPlanPhase(currentTimedPhase.getPhase().getName())
                                                                              .setEventPriceList(newPriceList)
                                                                              .setActiveVersion(subscription.getActiveVersion())
-                                                                             .setProcessedDate(processedDate)
                                                                              .setEffectiveDate(effectiveDate)
                                                                              .setRequestedDate(requestedDate)
                                                                              .setFromDisk(true));
@@ -443,7 +440,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                              .setSubscriptionId(subscription.getId())
                                                                              .setActiveVersion(subscription.getActiveVersion())
-                                                                             .setProcessedDate(processedDate)
                                                                              .setEffectiveDate(effectiveDate)
                                                                              .setRequestedDate(requestedDate)
                                                                              .setFromDisk(true));
@@ -495,7 +491,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                      .setSubscriptionId(cur.getId())
                                                                                      .setActiveVersion(cur.getActiveVersion())
-                                                                                     .setProcessedDate(processedDate)
                                                                                      .setEffectiveDate(effectiveDate)
                                                                                      .setRequestedDate(requestedDate)
                                                                                      .setFromDisk(true));

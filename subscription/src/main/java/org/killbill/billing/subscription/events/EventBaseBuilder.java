@@ -31,7 +31,6 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     private DateTime updatedDate;
     private DateTime requestedDate;
     private DateTime effectiveDate;
-    private DateTime processedDate;
 
     private long activeVersion;
     private boolean isActive;
@@ -46,7 +45,6 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         this.subscriptionId = copy.subscriptionId;
         this.requestedDate = copy.requestedDate;
         this.effectiveDate = copy.effectiveDate;
-        this.processedDate = copy.processedDate;
         this.createdDate = copy.getCreatedDate();
         this.activeVersion = copy.activeVersion;
         this.isActive = copy.isActive;
@@ -88,11 +86,6 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         return (T) this;
     }
 
-    public T setProcessedDate(final DateTime processedDate) {
-        this.processedDate = processedDate;
-        return (T) this;
-    }
-
     public T setActiveVersion(final long activeVersion) {
         this.activeVersion = activeVersion;
         return (T) this;
@@ -129,10 +122,6 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
     public DateTime getEffectiveDate() {
         return effectiveDate;
-    }
-
-    public DateTime getProcessedDate() {
-        return processedDate;
     }
 
     public long getActiveVersion() {
