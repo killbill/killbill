@@ -42,10 +42,6 @@ public interface SubscriptionBaseEvent extends Comparable<SubscriptionBaseEvent>
 
     public boolean isActive();
 
-    public void deactivate();
-
-    public void reactivate();
-
     public DateTime getProcessedDate();
 
     public DateTime getRequestedDate();

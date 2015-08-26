@@ -105,16 +105,6 @@ public abstract class EventBase implements SubscriptionBaseEvent {
     }
 
     @Override
-    public void deactivate() {
-        this.isActive = false;
-    }
-
-    @Override
-    public void reactivate() {
-        this.isActive = true;
-    }
-
-    @Override
     public void setTotalOrdering(final long totalOrdering) {
         this.totalOrdering = totalOrdering;
     }
