@@ -65,9 +65,11 @@ import org.killbill.billing.subscription.engine.core.SubscriptionNotificationKey
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionEventModelDao;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionModelDao;
+import org.killbill.billing.subscription.events.EventBaseBuilder;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
+import org.killbill.billing.subscription.events.phase.PhaseEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCancel;
@@ -673,7 +675,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             }
 
             if (cur.getEffectiveDate().compareTo(migrateBillingEvent.getEffectiveDate()) > 0) {
-                if (cur.getType() == EventType.API_USER && ((ApiEvent) cur).getEventType() == ApiEventType.CHANGE) {
+                if (cur.getType() == EventType.API_USER && ((ApiEvent) cur).getApiEventType() == ApiEventType.CHANGE) {
                     // This is an EOT change that is occurring after the MigrateBilling : returns same list
                     return changeEvents;
                 }
@@ -690,7 +692,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             final DateTime now = clock.getUTCNow();
             final ApiEventBuilder builder = new ApiEventBuilder()
                     .setActive(true)
-                    .setEventType(ApiEventType.MIGRATE_BILLING)
+                    .setApiEventType(ApiEventType.MIGRATE_BILLING)
                     .setFromDisk(true)
                     .setTotalOrdering(migrateBillingEvent.getTotalOrdering())
                     .setUuid(UUIDs.randomUUID())
@@ -942,10 +944,18 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     }
                 }
                 // Set total ordering value of the fake dryRun event to make sure billing events are correctly ordered
+                final SubscriptionBaseEvent curAdjustedDryRun;
                 if (!events.isEmpty()) {
-                    curDryRun.setTotalOrdering(events.get(events.size() - 1).getTotalOrdering() + 1);
+                    final EventBaseBuilder eventBuilder = (curDryRun.getType() == EventType.API_USER) ?
+                                                          new ApiEventBuilder((ApiEvent) curDryRun) :
+                                                          new PhaseEventBuilder((PhaseEvent) curDryRun);
+                    eventBuilder.setTotalOrdering(events.get(events.size() - 1).getTotalOrdering() + 1);
+
+                    curAdjustedDryRun = eventBuilder.build();
+                } else {
+                    curAdjustedDryRun = curDryRun;
                 }
-                events.add(curDryRun);
+                events.add(curAdjustedDryRun);
             }
         }
     }

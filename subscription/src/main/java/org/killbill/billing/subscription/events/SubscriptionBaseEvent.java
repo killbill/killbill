@@ -34,11 +34,7 @@ public interface SubscriptionBaseEvent extends Comparable<SubscriptionBaseEvent>
 
     public long getTotalOrdering();
 
-    public void setTotalOrdering(long totalOrdering);
-
     public long getActiveVersion();
-
-    public void setActiveVersion(long activeVersion);
 
     public boolean isActive();
 

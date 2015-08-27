@@ -20,6 +20,6 @@ package org.killbill.billing.subscription.events.user;
 public class ApiEventChange extends ApiEventBase {
 
     public ApiEventChange(final ApiEventBuilder builder) {
-        super(builder.setEventType(ApiEventType.CHANGE));
+        super(builder.setApiEventType(ApiEventType.CHANGE));
     }
 }

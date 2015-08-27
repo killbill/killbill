@@ -20,6 +20,6 @@ public class ApiEventCancel extends ApiEventBase {
 
 
     public ApiEventCancel(final ApiEventBuilder builder) {
-        super(builder.setEventType(ApiEventType.CANCEL));
+        super(builder.setApiEventType(ApiEventType.CANCEL));
     }
 }

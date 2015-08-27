@@ -18,6 +18,6 @@ package org.killbill.billing.subscription.events.user;
 
 public class ApiEventMigrateBilling extends ApiEventBase {
     public ApiEventMigrateBilling(final ApiEventBuilder builder) {
-        super(builder.setEventType(ApiEventType.MIGRATE_BILLING));
+        super(builder.setApiEventType(ApiEventType.MIGRATE_BILLING));
     }
 }

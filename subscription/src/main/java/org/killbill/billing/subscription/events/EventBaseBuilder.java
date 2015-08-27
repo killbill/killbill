@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.util.UUIDs;
 
 @SuppressWarnings("unchecked")
-public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
+public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
     private long totalOrdering;
     private UUID uuid;
@@ -40,12 +40,26 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         this.isActive = true;
     }
 
+
+    public EventBaseBuilder(final SubscriptionBaseEvent event) {
+        this.uuid = event.getId();
+        this.subscriptionId = event.getSubscriptionId();
+        this.requestedDate = event.getRequestedDate();
+        this.effectiveDate = event.getEffectiveDate();
+        this.createdDate = event.getCreatedDate();
+        this.updatedDate = event.getUpdatedDate();
+        this.activeVersion = event.getActiveVersion();
+        this.isActive = event.isActive();
+        this.totalOrdering = event.getTotalOrdering();
+    }
+
     public EventBaseBuilder(final EventBaseBuilder<?> copy) {
         this.uuid = copy.uuid;
         this.subscriptionId = copy.subscriptionId;
         this.requestedDate = copy.requestedDate;
         this.effectiveDate = copy.effectiveDate;
         this.createdDate = copy.getCreatedDate();
+        this.updatedDate = copy.getUpdatedDate();
         this.activeVersion = copy.activeVersion;
         this.isActive = copy.isActive;
         this.totalOrdering = copy.totalOrdering;
@@ -131,4 +145,6 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     public boolean isActive() {
         return isActive;
     }
+
+    public abstract SubscriptionBaseEvent build();
 }

@@ -17,7 +17,7 @@ package org.killbill.billing.subscription.events.user;
 
 public class ApiEventTransfer extends ApiEventBase {
     public ApiEventTransfer(final ApiEventBuilder builder) {
-        super(builder.setEventType(ApiEventType.TRANSFER));
+        super(builder.setApiEventType(ApiEventType.TRANSFER));
     }
 
 }

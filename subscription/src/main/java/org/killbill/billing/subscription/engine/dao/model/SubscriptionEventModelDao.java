@@ -39,7 +39,6 @@ import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.events.user.ApiEventUncancel;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.dao.TableName;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
@@ -83,7 +82,7 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         super(src.getId(), src.getCreatedDate(), src.getUpdatedDate());
         this.totalOrdering = src.getTotalOrdering();
         this.eventType = src.getType();
-        this.userType = eventType == EventType.API_USER ? ((ApiEvent) src).getEventType() : null;
+        this.userType = eventType == EventType.API_USER ? ((ApiEvent) src).getApiEventType() : null;
         this.requestedDate = src.getRequestedDate();
         this.effectiveDate = src.getEffectiveDate();
         this.subscriptionId = src.getSubscriptionId();
@@ -206,36 +205,18 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
                 .setActiveVersion(src.getCurrentVersion())
                 .setActive(src.isActive());
 
-        SubscriptionBaseEvent result = null;
+        SubscriptionBaseEvent result;
         if (src.getEventType() == EventType.PHASE) {
-            result = new PhaseEventData(new PhaseEventBuilder(base).setPhaseName(src.getPhaseName()));
+            result = (new PhaseEventBuilder(base).setPhaseName(src.getPhaseName())).build();
         } else if (src.getEventType() == EventType.API_USER) {
             final ApiEventBuilder builder = new ApiEventBuilder(base)
                     .setEventPlan(src.getPlanName())
                     .setEventPlanPhase(src.getPhaseName())
                     .setEventPriceList(src.getPriceListName())
-                    .setEventType(src.getUserType())
+                    .setApiEventType(src.getUserType())
+                    .setApiEventType(src.getUserType())
                     .setFromDisk(true);
-
-            if (src.getUserType() == ApiEventType.CREATE) {
-                result = new ApiEventCreate(builder);
-            } else if (src.getUserType() == ApiEventType.RE_CREATE) {
-                result = new ApiEventReCreate(builder);
-            } else if (src.getUserType() == ApiEventType.MIGRATE_ENTITLEMENT) {
-                result = new ApiEventMigrateSubscription(builder);
-            } else if (src.getUserType() == ApiEventType.MIGRATE_BILLING) {
-                result = new ApiEventMigrateBilling(builder);
-            } else if (src.getUserType() == ApiEventType.TRANSFER) {
-                result = new ApiEventTransfer(builder);
-            } else if (src.getUserType() == ApiEventType.CHANGE) {
-                result = new ApiEventChange(builder);
-            } else if (src.getUserType() == ApiEventType.CANCEL) {
-                result = new ApiEventCancel(builder);
-            } else if (src.getUserType() == ApiEventType.RE_CREATE) {
-                result = new ApiEventReCreate(builder);
-            } else if (src.getUserType() == ApiEventType.UNCANCEL) {
-                result = new ApiEventUncancel(builder);
-            }
+            result = builder.build();
         } else {
             throw new SubscriptionBaseError(String.format("Can't figure out event %s", src.getEventType()));
         }

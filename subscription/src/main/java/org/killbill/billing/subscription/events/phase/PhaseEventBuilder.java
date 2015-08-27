@@ -27,6 +27,11 @@ public class PhaseEventBuilder extends EventBaseBuilder<PhaseEventBuilder> {
         super();
     }
 
+    public PhaseEventBuilder(final PhaseEvent phaseEvent) {
+        super(phaseEvent);
+        this.phaseName = phaseEvent.getPhase();
+    }
+
     public PhaseEventBuilder(final EventBaseBuilder<?> base) {
         super(base);
     }
@@ -38,5 +43,9 @@ public class PhaseEventBuilder extends EventBaseBuilder<PhaseEventBuilder> {
 
     public String getPhaseName() {
         return phaseName;
+    }
+
+    public PhaseEvent build() {
+        return new PhaseEventData(this);
     }
 }

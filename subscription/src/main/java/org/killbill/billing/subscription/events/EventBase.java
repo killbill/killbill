@@ -31,9 +31,9 @@ public abstract class EventBase implements SubscriptionBaseEvent {
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
 
-    private long totalOrdering;
-    private long activeVersion;
-    private boolean isActive;
+    private final long totalOrdering;
+    private final long activeVersion;
+    private final boolean isActive;
 
     public EventBase(final EventBaseBuilder<?> builder) {
         this.totalOrdering = builder.getTotalOrdering();
@@ -88,18 +88,8 @@ public abstract class EventBase implements SubscriptionBaseEvent {
     }
 
     @Override
-    public void setActiveVersion(final long activeVersion) {
-        this.activeVersion = activeVersion;
-    }
-
-    @Override
     public boolean isActive() {
         return isActive;
-    }
-
-    @Override
-    public void setTotalOrdering(final long totalOrdering) {
-        this.totalOrdering = totalOrdering;
     }
 
     //
@@ -128,7 +118,7 @@ public abstract class EventBase implements SubscriptionBaseEvent {
         } else if (getType() != other.getType()) {
             return (getType() == EventType.PHASE) ? -1 : 1;
         } else if (getType() == EventType.API_USER) {
-            return ((ApiEvent) this).getEventType().compareTo(((ApiEvent) other).getEventType());
+            return ((ApiEvent) this).getApiEventType().compareTo(((ApiEvent) other).getApiEventType());
         } else {
             return uuid.compareTo(other.getId());
         }

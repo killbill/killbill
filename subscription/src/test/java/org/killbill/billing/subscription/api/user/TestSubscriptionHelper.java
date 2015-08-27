@@ -125,7 +125,7 @@ public class TestSubscriptionHelper {
                     assertEquals(cur.getEffectiveDate(), expPhaseChange);
                 } else if (cur instanceof ApiEvent) {
                     final ApiEvent uEvent = (ApiEvent) cur;
-                    assertEquals(ApiEventType.CHANGE, uEvent.getEventType());
+                    assertEquals(ApiEventType.CHANGE, uEvent.getApiEventType());
                     assertEquals(foundChange, false);
                     foundChange = true;
                 } else {

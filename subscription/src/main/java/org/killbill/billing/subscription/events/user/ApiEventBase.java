@@ -20,7 +20,7 @@ import org.killbill.billing.subscription.events.EventBase;
 
 public class ApiEventBase extends EventBase implements ApiEvent {
 
-    private final ApiEventType eventType;
+    private final ApiEventType apiEventType;
     // Only valid for CREATE/CHANGE
     private final String eventPlan;
     private final String eventPlanPhase;
@@ -29,7 +29,7 @@ public class ApiEventBase extends EventBase implements ApiEvent {
 
     public ApiEventBase(final ApiEventBuilder builder) {
         super(builder);
-        this.eventType = builder.getEventType();
+        this.apiEventType = builder.getApiEventType();
         this.eventPriceList = builder.getEventPriceList();
         this.eventPlan = builder.getEventPlan();
         this.eventPlanPhase = builder.getEventPlanPhase();
@@ -37,8 +37,8 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     }
 
     @Override
-    public ApiEventType getEventType() {
-        return eventType;
+    public ApiEventType getApiEventType() {
+        return apiEventType;
     }
 
     @Override
@@ -70,10 +70,10 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     @Override
     public String toString() {
         return "ApiEventBase [ getId()= " + getId()
-               + " eventType=" + eventType
+               + " apiEventType=" + apiEventType
                + ", eventPlan=" + eventPlan
                + ", eventPlanPhase=" + eventPlanPhase
-               + ", getEventType()=" + getEventType()
+               + ", getApiEventType()=" + getApiEventType()
                + ", getEventPlan()=" + getEventPlan()
                + ", getEventPlanPhase()=" + getEventPlanPhase()
                + ", getType()=" + getType()

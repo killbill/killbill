@@ -25,7 +25,7 @@ public interface ApiEvent extends SubscriptionBaseEvent {
 
     public String getEventPlanPhase();
 
-    public ApiEventType getEventType();
+    public ApiEventType getApiEventType();
 
     public String getPriceList();
 

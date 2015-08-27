@@ -255,11 +255,11 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
             int compForApiType(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2, final ApiEventType type) {
                 ApiEventType apiO1 = null;
                 if (o1.getType() == EventType.API_USER) {
-                    apiO1 = ((ApiEvent) o1).getEventType();
+                    apiO1 = ((ApiEvent) o1).getApiEventType();
                 }
                 ApiEventType apiO2 = null;
                 if (o2.getType() == EventType.API_USER) {
-                    apiO2 = ((ApiEvent) o2).getEventType();
+                    apiO2 = ((ApiEvent) o2).getApiEventType();
                 }
                 if (apiO1 != null && apiO1.equals(type)) {
                     return -1;

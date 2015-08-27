@@ -223,7 +223,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         eventBuilder.setFromDisk(true);
         eventBuilder.setActiveVersion(activeVersion);
 
-        return new ApiEventBase(eventBuilder.setEventType(apiEventType));
+        return new ApiEventBase(eventBuilder.setApiEventType(apiEventType));
     }
 
     private TimedPhase getNextTimedPhaseOnChange(final DefaultSubscriptionBase defaultSubscriptionBase,

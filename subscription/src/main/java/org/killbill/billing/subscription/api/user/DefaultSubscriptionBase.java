@@ -414,7 +414,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
         // Since UNCANCEL are not part of the transitions, we compute a new 'UNCANCEL' transition based on the event right before that UNCANCEL
         // This is used to be able to send a bus event for uncancellation
-        if (prev != null && event.getType() == EventType.API_USER && ((ApiEvent) event).getEventType() == ApiEventType.UNCANCEL) {
+        if (prev != null && event.getType() == EventType.API_USER && ((ApiEvent) event).getApiEventType() == ApiEventType.UNCANCEL) {
             final SubscriptionBaseTransitionData withSeq = new SubscriptionBaseTransitionData((SubscriptionBaseTransitionData) prev, EventType.API_USER, ApiEventType.UNCANCEL, seqId);
             return withSeq;
         }
@@ -583,7 +583,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
                 case API_USER:
                     final ApiEvent userEV = (ApiEvent) cur;
-                    apiEventType = userEV.getEventType();
+                    apiEventType = userEV.getApiEventType();
                     isFromDisk = userEV.isFromDisk();
 
                     switch (apiEventType) {
@@ -617,7 +617,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         default:
                             throw new SubscriptionBaseError(String.format(
                                     "Unexpected UserEvent type = %s", userEV
-                                            .getEventType().toString()));
+                                            .getApiEventType().toString()));
                     }
                     break;
                 default:

@@ -20,7 +20,6 @@ package org.killbill.billing.subscription.api.svcs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -118,7 +117,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         this.internalCallContextFactory = internalCallContextFactory;
         this.notificationQueueService = notificationQueueService;
     }
-
 
     @Override
     public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
@@ -509,11 +507,10 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     return input.getEffectiveDate();
                 }
             });
-        } catch(NoSuchNotificationQueue noSuchNotificationQueue) {
+        } catch (NoSuchNotificationQueue noSuchNotificationQueue) {
             throw new IllegalStateException(noSuchNotificationQueue);
         }
     }
-
 
     @Override
     public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final SubscriptionBaseTransitionType eventType, final InternalCallContext internalCallContext) {
@@ -524,7 +521,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 return (eventType == SubscriptionBaseTransitionType.PHASE && input.getType() == EventType.PHASE) || input.getType() != EventType.PHASE;
             }
         });
-        final Map<UUID, DateTime> result  = filteredEvents.iterator().hasNext() ? new HashMap<UUID, DateTime>() : ImmutableMap.<UUID, DateTime>of();
+        final Map<UUID, DateTime> result = filteredEvents.iterator().hasNext() ? new HashMap<UUID, DateTime>() : ImmutableMap.<UUID, DateTime>of();
         for (SubscriptionBaseEvent cur : filteredEvents) {
             final DateTime targetDate = result.get(cur.getSubscriptionId());
             if (targetDate == null || targetDate.compareTo(cur.getEffectiveDate()) > 0) {

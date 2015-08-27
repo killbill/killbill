@@ -19,6 +19,6 @@ package org.killbill.billing.subscription.events.user;
 public class ApiEventReCreate extends ApiEventBase {
 
     public ApiEventReCreate(final ApiEventBuilder builder) {
-        super(builder.setEventType(ApiEventType.RE_CREATE));
+        super(builder.setApiEventType(ApiEventType.RE_CREATE));
     }
 }

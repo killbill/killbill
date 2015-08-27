@@ -19,6 +19,6 @@ package org.killbill.billing.subscription.events.user;
 public class ApiEventUncancel extends ApiEventBase {
 
     public ApiEventUncancel(final ApiEventBuilder builder) {
-        super(builder.setEventType(ApiEventType.UNCANCEL));
+        super(builder.setApiEventType(ApiEventType.UNCANCEL));
     }
 }

@@ -101,7 +101,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
         Assert.assertEquals(events.get(0).getEffectiveDate(), transferDate);
-        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getEventType(), ApiEventType.TRANSFER);
+        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getApiEventType(), ApiEventType.TRANSFER);
     }
 
     @Test(groups = "fast")
@@ -115,7 +115,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
         Assert.assertEquals(events.get(0).getEffectiveDate(), transferDate);
-        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getEventType(), ApiEventType.TRANSFER);
+        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getApiEventType(), ApiEventType.TRANSFER);
     }
 
     @Test(groups = "fast")
@@ -129,7 +129,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
         Assert.assertEquals(events.get(0).getEffectiveDate(), transferDate);
-        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getEventType(), ApiEventType.TRANSFER);
+        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getApiEventType(), ApiEventType.TRANSFER);
     }
 
     @Test(groups = "fast")
@@ -143,7 +143,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
         Assert.assertEquals(events.get(0).getEffectiveDate(), transferDate);
-        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getEventType(), ApiEventType.TRANSFER);
+        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getApiEventType(), ApiEventType.TRANSFER);
     }
 
     @Test(groups = "fast")
@@ -157,7 +157,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
         Assert.assertEquals(events.get(0).getEffectiveDate(), migrateSubscriptionEventEffectiveDate);
-        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getEventType(), ApiEventType.TRANSFER);
+        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getApiEventType(), ApiEventType.TRANSFER);
     }
 
     private List<SubscriptionBaseEvent> transferBundle(final DateTime migrateSubscriptionEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate,

@@ -18,26 +18,33 @@ package org.killbill.billing.subscription.events.user;
 
 import org.killbill.billing.subscription.events.EventBaseBuilder;
 
-
 public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
 
-    private ApiEventType eventType;
+    private ApiEventType apiEventType;
     private String eventPlan;
     private String eventPlanPhase;
     private String eventPriceList;
     private boolean fromDisk;
 
-
     public ApiEventBuilder() {
         super();
+    }
+
+    public ApiEventBuilder(final ApiEvent apiEvent) {
+        super(apiEvent);
+        this.apiEventType = apiEvent.getApiEventType();
+        this.eventPlan = apiEvent.getEventPlan();
+        this.eventPlanPhase = apiEvent.getEventPlanPhase();
+        this.eventPriceList = apiEvent.getPriceList();
+        this.fromDisk = apiEvent.isFromDisk();
     }
 
     public ApiEventBuilder(final EventBaseBuilder<?> base) {
         super(base);
     }
 
-    public ApiEventType getEventType() {
-        return eventType;
+    public ApiEventType getApiEventType() {
+        return apiEventType;
     }
 
     public String getEventPlan() {
@@ -61,8 +68,8 @@ public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
         return this;
     }
 
-    public ApiEventBuilder setEventType(final ApiEventType eventType) {
-        this.eventType = eventType;
+    public ApiEventBuilder setApiEventType(final ApiEventType eventType) {
+        this.apiEventType = eventType;
         return this;
     }
 
@@ -79,5 +86,31 @@ public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
     public ApiEventBuilder setEventPriceList(final String eventPriceList) {
         this.eventPriceList = eventPriceList;
         return this;
+    }
+    
+    public ApiEventBase build() {
+        final ApiEventBase result;
+        if (apiEventType == ApiEventType.CREATE) {
+            result = new ApiEventCreate(this);
+        } else if (apiEventType == ApiEventType.RE_CREATE) {
+            result = new ApiEventReCreate(this);
+        } else if (apiEventType == ApiEventType.MIGRATE_ENTITLEMENT) {
+            result = new ApiEventMigrateSubscription(this);
+        } else if (apiEventType == ApiEventType.MIGRATE_BILLING) {
+            result = new ApiEventMigrateBilling(this);
+        } else if (apiEventType == ApiEventType.TRANSFER) {
+            result = new ApiEventTransfer(this);
+        } else if (apiEventType == ApiEventType.CHANGE) {
+            result = new ApiEventChange(this);
+        } else if (apiEventType == ApiEventType.CANCEL) {
+            result = new ApiEventCancel(this);
+        } else if (apiEventType == ApiEventType.RE_CREATE) {
+            result = new ApiEventReCreate(this);
+        } else if (apiEventType == ApiEventType.UNCANCEL) {
+            result = new ApiEventUncancel(this);
+        } else {
+            throw new IllegalStateException("Unknown ApiEventType " + apiEventType);
+        }
+        return result;
     }
 }

@@ -394,7 +394,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
                     continue;
                 }
                 if (cur.getType() == EventType.API_USER &&
-                    ApiEventType.CHANGE == ((ApiEvent) cur).getEventType() &&
+                    ApiEventType.CHANGE == ((ApiEvent) cur).getApiEventType() &&
                     cur.getEffectiveDate().isAfter(clock.getUTCNow())) {
                     it.remove();
                     break;
@@ -416,7 +416,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
                     continue;
                 }
                 if (cur.getType() == EventType.API_USER &&
-                    ((ApiEvent) cur).getEventType() == ApiEventType.CANCEL) {
+                    ((ApiEvent) cur).getApiEventType() == ApiEventType.CANCEL) {
                     it.remove();
                     foundCancel = true;
                     break;

@@ -107,7 +107,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
                 case API_USER:
                     final ApiEvent userEV = (ApiEvent) cur;
-                    apiType = userEV.getEventType();
+                    apiType = userEV.getApiEventType();
                     planName = userEV.getEventPlan();
                     planPhaseName = userEV.getEventPlanPhase();
                     final Plan plan = (userEV.getEventPlan() != null) ? catalog.findPlan(userEV.getEventPlan(), cur.getRequestedDate(), startDate) : null;
