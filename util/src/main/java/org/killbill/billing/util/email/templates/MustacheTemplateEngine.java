@@ -25,7 +25,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
 
     @Override
     public String executeTemplateText(final String templateText, final Map<String, Object> data) {
-        final Template template = Mustache.compiler().compile(templateText);
+        final Template template = Mustache.compiler().nullValue("").compile(templateText);
         return template.execute(data);
     }
 }
