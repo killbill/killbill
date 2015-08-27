@@ -70,11 +70,16 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
     private final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
 
     @Inject
-    public IncompletePaymentAttemptTask(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                                        final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
-                                        final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
+    public IncompletePaymentAttemptTask(final InternalCallContextFactory internalCallContextFactory,
+                                        final PaymentConfig paymentConfig,
+                                        final PaymentDao paymentDao,
+                                        final Clock clock,
+                                        final PaymentStateMachineHelper paymentStateMachineHelper,
+                                        final PaymentControlStateMachineHelper retrySMHelper,
+                                        final AccountInternalApi accountInternalApi,
                                         final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
-                                        final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final GlobalLocker locker) {
+                                        final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+                                        final GlobalLocker locker) {
         super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry, locker);
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
     }

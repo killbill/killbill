@@ -26,12 +26,27 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
+import org.killbill.commons.profiling.Profiling;
+import org.killbill.commons.request.Request;
+import org.killbill.commons.request.RequestData;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
 
-    private final PluginDispatcher<Void> voidPluginDispatcher = new PluginDispatcher<Void>(10, Executors.newSingleThreadExecutor());
+    private PluginDispatcher<Void> voidPluginDispatcher;
+
+    private PluginDispatcher<String> stringPluginDispatcher;
+
+    @BeforeMethod(groups = "fast")
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
+        eventBus.start();
+        voidPluginDispatcher = new PluginDispatcher<Void>(10, paymentExecutors);
+        stringPluginDispatcher = new PluginDispatcher<String>(1, paymentExecutors);
+    }
+
 
     @Test(groups = "fast")
     public void testDispatchWithTimeout() throws TimeoutException, PaymentApiException {
@@ -106,4 +121,25 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
         }
         Assert.assertTrue(gotIt);
     }
+
+
+    @Test(groups = "fast")
+    public void testDispatchWithRequestData() throws TimeoutException, PaymentApiException, ExecutionException, InterruptedException {
+
+        final String requestId = "vive la vie et les coquillettes";
+
+        final Callable<PluginDispatcherReturnType<String>> delegate = new Callable<PluginDispatcherReturnType<String>>() {
+            @Override
+            public PluginDispatcherReturnType<String> call() throws Exception {
+                return PluginDispatcher.<String>createPluginDispatcherReturnType(Request.getPerThreadRequestData().getRequestId());
+            }
+        };
+
+        final CallableWithRequestData<PluginDispatcherReturnType<String>> callable = new CallableWithRequestData<PluginDispatcherReturnType<String>>(new RequestData(requestId),
+                                                                                                                                                        delegate);
+
+        final String actualRequestId = stringPluginDispatcher.dispatchWithTimeout(callable, 100, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(actualRequestId, requestId);
+    }
+
 }

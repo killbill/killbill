@@ -21,6 +21,7 @@ package org.killbill.billing.payment.glue;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.PaymentBusEventHandler;
+import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.invoice.PaymentTagHandler;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.retry.DefaultRetryService;
@@ -46,6 +47,7 @@ public class DefaultPaymentService implements PaymentService {
     private final PaymentApi api;
     private final DefaultRetryService retryService;
     private final Janitor janitor;
+    private final PaymentExecutors paymentExecutors;
 
     @Inject
     public DefaultPaymentService(final PaymentBusEventHandler paymentBusEventHandler,
@@ -53,13 +55,15 @@ public class DefaultPaymentService implements PaymentService {
                                  final PaymentApi api,
                                  final DefaultRetryService retryService,
                                  final PersistentBus eventBus,
-                                 final Janitor janitor) {
+                                 final Janitor janitor,
+                                 final PaymentExecutors paymentExecutors) {
         this.paymentBusEventHandler = paymentBusEventHandler;
         this.tagHandler = tagHandler;
         this.eventBus = eventBus;
         this.api = api;
         this.retryService = retryService;
         this.janitor = janitor;
+        this.paymentExecutors = paymentExecutors;
     }
 
     @Override
@@ -75,6 +79,7 @@ public class DefaultPaymentService implements PaymentService {
         } catch (final PersistentBus.EventBusException e) {
             log.error("Unable to register with the EventBus!", e);
         }
+        paymentExecutors.initialize();
         retryService.initialize();
         janitor.initialize();
     }
@@ -95,6 +100,12 @@ public class DefaultPaymentService implements PaymentService {
         }
         retryService.stop();
         janitor.stop();
+        try {
+            paymentExecutors.stop();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("PaymentService got interrupted", e);
+        }
     }
 
     @Override

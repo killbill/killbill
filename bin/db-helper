@@ -19,7 +19,7 @@
 #                                                                                 #
 ###################################################################################
 
-#set -x
+# set -x
 
 HERE=`cd \`dirname $0\`; pwd`
 TOP=$HERE/..
@@ -27,6 +27,7 @@ TOP=$HERE/..
 POM="$TOP/pom.xml"
 
 ACTION=
+HOST="localhost"
 DATABASE="killbill"
 USER="root"
 PWD="root"
@@ -42,6 +43,7 @@ SKIP="(server)"
 function usage() {
     echo -n "./db_helper "
     echo -n " -a <create|clean|dump>"
+    echo -n " -H MySQL host (default = localhost)"
     echo -n " -d database_name (default = killbill)"
     echo -n " -u user_name (default = root)"
     echo -n " -p password (default = root)"
@@ -106,7 +108,7 @@ function create_ddl_file() {
 
     local tmp="/tmp/ddl-$DATABASE.$$"
     touch $tmp
-    echo "/*! use $DATABASE; */" >> $tmp
+    echo "use $DATABASE;" >> $tmp
     echo "" >> $tmp
     for d in $ddls; do
         cat $d >> $tmp
@@ -120,10 +122,11 @@ function cleanup() {
 }
 
 
-while getopts ":a:d:u:p:f:t" options; do
+while getopts ":a:d:H:u:p:f:t" options; do
   case $options in
     a ) ACTION=$OPTARG;;
 	d ) DATABASE=$OPTARG;;
+	H ) HOST=$OPTARG;;
 	u ) USER=$OPTARG;;
 	p ) PWD=$OPTARG;;
 	t ) TEST_ALSO=1;;
@@ -152,15 +155,15 @@ fi
 
 if [ $ACTION == "create" ]; then
     DDL_FILE=`create_ddl_file`
-    echo "Applying new schema $tmp to database $DATABASE"
-    mysql -u $USER --password=$PWD < $DDL_FILE
+    echo "Applying new schema to database $DATABASE"
+    mysql -h $HOST -u $USER --password=$PWD < $DDL_FILE
 fi
 
 if [ $ACTION == "clean" ]; then
     DDL_FILE=`create_ddl_file`
     CLEAN_FILE=`create_clean_file $DDL_FILE`
     echo "Cleaning db tables on database $DATABASE"
-    mysql -u $USER --password=$PWD < $DDL_FILE
+    mysql -h $HOST -u $USER --password=$PWD < $DDL_FILE
 fi
 
 cleanup

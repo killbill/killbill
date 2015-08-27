@@ -582,34 +582,74 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
     }
 
-    @Test(groups = "slow")
-    public void testApiRetryWithUnknownPaymentTransaction() throws Exception {
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/371")
+    public void testApiWithDuplicatePendingPaymentTransaction() throws Exception {
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
-        final String paymentExternalKey = UUID.randomUUID().toString();
-        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+        for (final TransactionType transactionType : ImmutableList.<TransactionType>of(TransactionType.AUTHORIZE, TransactionType.PURCHASE, TransactionType.CREDIT)) {
+            final String payment1ExternalKey = UUID.randomUUID().toString();
+            final String payment1TransactionExternalKey = UUID.randomUUID().toString();
+            final String payment2ExternalKey = UUID.randomUUID().toString();
+            final String payment2TransactionExternalKey = UUID.randomUUID().toString();
+            final String payment3TransactionExternalKey = UUID.randomUUID().toString();
 
-        final Payment badPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
-                                                                  paymentExternalKey, paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment pendingPayment1 = createPayment(transactionType, null, payment1ExternalKey, payment1TransactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
+            Assert.assertNotNull(pendingPayment1);
+            Assert.assertEquals(pendingPayment1.getExternalKey(), payment1ExternalKey);
+            Assert.assertEquals(pendingPayment1.getTransactions().size(), 1);
+            Assert.assertEquals(pendingPayment1.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+            Assert.assertEquals(pendingPayment1.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+            Assert.assertEquals(pendingPayment1.getTransactions().get(0).getCurrency(), account.getCurrency());
+            Assert.assertEquals(pendingPayment1.getTransactions().get(0).getExternalKey(), payment1TransactionExternalKey);
+            Assert.assertEquals(pendingPayment1.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
 
-        final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), badPayment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
-                                                           badPayment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
-                                                           "eroor 64", "bad something happened", internalCallContext);
+            // Attempt to create a second transaction for the same payment, but with a different transaction external key
+            final Payment pendingPayment2 = createPayment(transactionType, null, payment1ExternalKey, payment2TransactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
+            Assert.assertNotNull(pendingPayment2);
+            Assert.assertEquals(pendingPayment2.getId(), pendingPayment1.getId());
+            Assert.assertEquals(pendingPayment2.getExternalKey(), payment1ExternalKey);
+            Assert.assertEquals(pendingPayment2.getTransactions().size(), 2);
+            Assert.assertEquals(pendingPayment2.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+            Assert.assertEquals(pendingPayment2.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+            Assert.assertEquals(pendingPayment2.getTransactions().get(0).getCurrency(), account.getCurrency());
+            Assert.assertEquals(pendingPayment2.getTransactions().get(0).getExternalKey(), payment1TransactionExternalKey);
+            Assert.assertEquals(pendingPayment2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
+            Assert.assertEquals(pendingPayment2.getTransactions().get(1).getAmount().compareTo(requestedAmount), 0);
+            Assert.assertEquals(pendingPayment2.getTransactions().get(1).getProcessedAmount().compareTo(requestedAmount), 0);
+            Assert.assertEquals(pendingPayment2.getTransactions().get(1).getCurrency(), account.getCurrency());
+            Assert.assertEquals(pendingPayment2.getTransactions().get(1).getExternalKey(), payment2TransactionExternalKey);
+            Assert.assertEquals(pendingPayment2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.PENDING);
 
-        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
-                                                               paymentExternalKey, paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+            try {
+                // Verify we cannot use the same transaction external key on a different payment if the payment id isn't specified
+                createPayment(transactionType, null, payment2ExternalKey, payment1TransactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
+                Assert.fail();
+            } catch (final PaymentApiException e) {
+                Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+            }
 
-        Assert.assertEquals(payment.getId(), badPayment.getId());
-        Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
-        Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
+            try {
+                // Verify we cannot use the same transaction external key on a different payment if the payment id isn't specified
+                createPayment(transactionType, null, payment2ExternalKey, payment2TransactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
+                Assert.fail();
+            } catch (final PaymentApiException e) {
+                Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+            }
 
-        Assert.assertEquals(payment.getTransactions().size(), 1);
-        Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
-        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+            // Attempt to create a second transaction for a different payment
+            final Payment pendingPayment3 = createPayment(transactionType, null, payment2ExternalKey, payment3TransactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
+            Assert.assertNotNull(pendingPayment3);
+            Assert.assertNotEquals(pendingPayment3.getId(), pendingPayment1.getId());
+            Assert.assertEquals(pendingPayment3.getExternalKey(), payment2ExternalKey);
+            Assert.assertEquals(pendingPayment3.getTransactions().size(), 1);
+            Assert.assertEquals(pendingPayment3.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+            Assert.assertEquals(pendingPayment3.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+            Assert.assertEquals(pendingPayment3.getTransactions().get(0).getCurrency(), account.getCurrency());
+            Assert.assertEquals(pendingPayment3.getTransactions().get(0).getExternalKey(), payment3TransactionExternalKey);
+            Assert.assertEquals(pendingPayment3.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
+        }
     }
 
-    // Example of a 3D secure payment for instance
     @Test(groups = "slow")
     public void testApiWithPendingPaymentTransaction() throws Exception {
         for (final TransactionType transactionType : ImmutableList.<TransactionType>of(TransactionType.AUTHORIZE, TransactionType.PURCHASE, TransactionType.CREDIT)) {

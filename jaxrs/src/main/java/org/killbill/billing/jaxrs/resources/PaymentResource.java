@@ -250,7 +250,6 @@ public class PaymentResource extends ComboPaymentResource {
 
     @Timed
     @PUT
-    @Path("/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Complete an existing transaction")

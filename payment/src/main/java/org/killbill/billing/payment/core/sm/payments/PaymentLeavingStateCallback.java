@@ -71,20 +71,11 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
                 existingPaymentTransactions = ImmutableList.of();
             }
 
+            // Validate the payment transactions belong to the right payment
+            validatePaymentId(existingPaymentTransactions);
+
             // Validate some constraints on the unicity of that paymentTransactionExternalKey
             validateUniqueTransactionExternalKey(existingPaymentTransactions);
-
-            // Handle UNKNOWN cases, where we skip the whole state machine and let the getPayment (through Janitor) logic refresh the state.
-            final PaymentTransactionModelDao unknownPaymentTransaction = getUnknownPaymentTransaction(existingPaymentTransactions);
-            if (unknownPaymentTransaction != null) {
-                // Reset the attemptId on the existing paymentTransaction row since it is not accurate
-                unknownPaymentTransaction.setAttemptId(paymentStateContext.getAttemptId());
-                // Set the current paymentTransaction in the context (needed for the state machine logic)
-                paymentStateContext.setPaymentTransactionModelDao(unknownPaymentTransaction);
-                // Set special flag to bypass the state machine altogether (plugin will not be called, state will not be updated, no event will be sent unless state is fixed)
-                paymentStateContext.setSkipOperationForUnknownTransaction(true);
-                return;
-            }
 
             // Handle PENDING cases, where we want to re-use the same transaction
             final PaymentTransactionModelDao pendingPaymentTransaction = getPendingPaymentTransaction(existingPaymentTransactions);
@@ -94,7 +85,7 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
                 return;
             }
 
-            // At this point we are left with PAYMENT_FAILURE, PLUGIN_FAILURE or nothing, and we validated the uniquess of the paymentTransactionExternalKey so we will create a new row
+            // At this point we are left with PAYMENT_FAILURE, PLUGIN_FAILURE or nothing, and we validated the uniqueness of the paymentTransactionExternalKey so we will create a new row
             daoHelper.createNewPaymentTransaction();
 
         } catch (PaymentApiException e) {
@@ -139,6 +130,15 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
             }
         })) {
             throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
+        }
+    }
+
+    // At this point, the payment id should have been populated for follow-up transactions (see PaymentAutomationRunner#run)
+    protected void validatePaymentId(final List<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
+        for (final PaymentTransactionModelDao paymentTransactionModelDao : existingPaymentTransactions) {
+            if (!paymentTransactionModelDao.getPaymentId().equals(paymentStateContext.getPaymentId())) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, paymentTransactionModelDao.getId(), "does not belong to payment " + paymentStateContext.getPaymentId());
+            }
         }
     }
 }

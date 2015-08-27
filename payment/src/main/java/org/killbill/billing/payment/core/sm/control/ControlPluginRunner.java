@@ -73,7 +73,7 @@ public class ControlPluginRunner {
                                                              final Iterable<PluginProperty> pluginProperties,
                                                              final CallContext callContext) throws PaymentControlApiException {
         // Return as soon as the first plugin aborts, or the last result for the last plugin
-        PriorPaymentControlResult prevResult = null;
+        PriorPaymentControlResult prevResult = new DefaultPriorPaymentControlResult(false, amount, currency, paymentMethodId, pluginProperties);
 
         // Those values are adjusted prior each call with the result of what previous call to plugin returned
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;

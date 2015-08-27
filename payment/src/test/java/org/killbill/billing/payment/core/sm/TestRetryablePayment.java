@@ -20,7 +20,6 @@ package org.killbill.billing.payment.core.sm;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
 
 import javax.inject.Named;
 
@@ -32,6 +31,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
@@ -39,6 +39,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
@@ -53,7 +54,6 @@ import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
-import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -72,7 +72,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
-import static org.killbill.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -103,8 +102,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
     @Named(RETRYABLE_NAMED)
     private RetryServiceScheduler retryServiceScheduler;
     @Inject
-    @Named(PLUGIN_EXECUTOR_NAMED)
-    private ExecutorService executor;
+    private PaymentExecutors executors;
     @Inject
     private PaymentStateMachineHelper paymentSMHelper;
     @Inject
@@ -158,8 +156,6 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         this.utcNow = clock.getUTCNow();
 
         runner = new MockRetryablePaymentAutomatonRunner(
-                stateMachineConfig,
-                retryStateMachineConfig,
                 paymentDao,
                 locker,
                 pluginRegistry,
@@ -169,7 +165,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                 paymentProcessor,
                 retryServiceScheduler,
                 paymentConfig,
-                executor,
+                paymentExecutors,
                 paymentSMHelper,
                 retrySMHelper,
                 controlPluginRunner,
@@ -177,18 +173,18 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
 
         paymentStateContext =
                 new PaymentStateControlContext(ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME),
-                                                 true,
-                                                 null,
-                                                 paymentExternalKey,
-                                                 paymentTransactionExternalKey,
-                                                 TransactionType.AUTHORIZE,
-                                                 account,
-                                                 paymentMethodId,
-                                                 amount,
-                                                 currency,
-                                                 emptyProperties,
-                                                 internalCallContext,
-                                                 callContext);
+                                               true,
+                                               null,
+                                               paymentExternalKey,
+                                               paymentTransactionExternalKey,
+                                               TransactionType.AUTHORIZE,
+                                               account,
+                                               paymentMethodId,
+                                               amount,
+                                               currency,
+                                               emptyProperties,
+                                               internalCallContext,
+                                               callContext);
 
         mockRetryAuthorizeOperationCallback =
                 new MockRetryAuthorizeOperationCallback(locker,
@@ -205,7 +201,6 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                       tagApi,
                                                       paymentDao,
                                                       locker,
-                                                      executor,
                                                       internalCallContextFactory,
                                                       runner,
                                                       retrySMHelper,

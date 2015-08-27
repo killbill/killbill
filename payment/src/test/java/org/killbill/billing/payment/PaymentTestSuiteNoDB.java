@@ -24,6 +24,7 @@ import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
+import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
@@ -82,6 +83,8 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected DefaultRetryService retryService;
     @Inject
     protected CacheControllerDispatcher cacheControllerDispatcher;
+    @Inject
+    protected PaymentExecutors paymentExecutors;
 
     @Override
     protected KillbillConfigSource getConfigSource() {
@@ -100,11 +103,13 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         eventBus.start();
+        paymentExecutors.initialize();
         Profiling.resetPerThreadProfilingData();
     }
 
     @AfterMethod(groups = "fast")
     public void afterMethod() throws Exception {
+        paymentExecutors.stop();
         eventBus.stop();
     }
 }

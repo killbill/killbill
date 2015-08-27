@@ -22,13 +22,22 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.events.PaymentInternalEvent;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.core.PaymentExecutors;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
+import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
+import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
+import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
-import org.killbill.billing.payment.glue.PaymentModule;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -49,28 +58,75 @@ public class Janitor {
     public static final String QUEUE_NAME = "janitor";
 
     private final NotificationQueueService notificationQueueService;
-    private final ScheduledExecutorService janitorExecutor;
     private final PaymentConfig paymentConfig;
-    private final IncompletePaymentAttemptTask incompletePaymentAttemptTask;
-    private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
+    private final PaymentExecutors paymentExecutors;
+    private final Clock clock;
+    private final PaymentDao paymentDao;
+    private final InternalCallContextFactory internalCallContextFactory;
+    private final PaymentStateMachineHelper paymentStateMachineHelper;
+    private final PaymentControlStateMachineHelper retrySMHelper;
+    private final AccountInternalApi accountInternalApi;
+    private final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
+    private final GlobalLocker locker;
+    private final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
 
+
+
+
+    private IncompletePaymentAttemptTask incompletePaymentAttemptTask;
+    private IncompletePaymentTransactionTask incompletePaymentTransactionTask;
     private NotificationQueue janitorQueue;
+    private ScheduledExecutorService janitorExecutor;
 
     private volatile boolean isStopped;
 
     @Inject
-    public Janitor(final PaymentConfig paymentConfig,
+    public Janitor(final InternalCallContextFactory internalCallContextFactory,
+                   final PaymentDao paymentDao,
+                   final Clock clock,
+                   final PaymentStateMachineHelper paymentStateMachineHelper,
+                   final PaymentControlStateMachineHelper retrySMHelper,
+                   final AccountInternalApi accountInternalApi,
+                   final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
+                   final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+                   final GlobalLocker locker,
+                   final PaymentConfig paymentConfig,
                    final NotificationQueueService notificationQueueService,
-                   @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
-                   final IncompletePaymentAttemptTask incompletePaymentAttemptTask,
-                   final IncompletePaymentTransactionTask incompletePaymentTransactionTask) {
+                   final PaymentExecutors paymentExecutors) {
         this.notificationQueueService = notificationQueueService;
-        this.janitorExecutor = janitorExecutor;
+        this.paymentExecutors = paymentExecutors;
         this.paymentConfig = paymentConfig;
-        this.incompletePaymentAttemptTask = incompletePaymentAttemptTask;
-        this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
-        this.isStopped = false;
+        this.internalCallContextFactory = internalCallContextFactory;
+        this.paymentDao = paymentDao;
+        this.clock = clock;
+        this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
+        this.paymentStateMachineHelper = paymentStateMachineHelper;
+        this.retrySMHelper = retrySMHelper;
+        this.accountInternalApi = accountInternalApi;
+        this.pluginRegistry = pluginRegistry;
+        this.locker = locker;
+
     }
+
+    /*
+        public IncompletePaymentAttemptTask(final InternalCallContextFactory internalCallContextFactory,
+                                        final PaymentConfig paymentConfig,
+                                        final PaymentDao paymentDao,
+                                        final Clock clock,
+                                        final PaymentStateMachineHelper paymentStateMachineHelper,
+                                        final PaymentControlStateMachineHelper retrySMHelper,
+                                        final AccountInternalApi accountInternalApi,
+                                        final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
+                                        final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+                                        final GlobalLocker locker) {
+
+
+    public IncompletePaymentTransactionTask(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
+                                            final PaymentDao paymentDao, final Clock clock,
+                                            final PaymentStateMachineHelper paymentStateMachineHelper, final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
+                                            final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final GlobalLocker locker) {
+
+     */
 
     public void initialize() throws NotificationQueueAlreadyExists {
         janitorQueue = notificationQueueService.createNotificationQueue(DefaultPaymentService.SERVICE_NAME,
@@ -90,15 +146,38 @@ public class Janitor {
                                                                             }
                                                                         }
                                                                        );
+
+        this.incompletePaymentAttemptTask = new IncompletePaymentAttemptTask(internalCallContextFactory,
+                                                                             paymentConfig,
+                                                                             paymentDao,
+                                                                             clock,
+                                                                             paymentStateMachineHelper,
+                                                                             retrySMHelper,
+                                                                             accountInternalApi,
+                                                                             pluginControlledPaymentAutomatonRunner,
+                                                                             pluginRegistry,
+                                                                             locker);
+
+        this.incompletePaymentTransactionTask = new IncompletePaymentTransactionTask(internalCallContextFactory,
+                                                                                     paymentConfig,
+                                                                                     paymentDao,
+                                                                                     clock,
+                                                                                     paymentStateMachineHelper,
+                                                                                     retrySMHelper,
+                                                                                     accountInternalApi,
+                                                                                     pluginRegistry,
+                                                                                     locker);
+
+
         incompletePaymentTransactionTask.attachJanitorQueue(janitorQueue);
         incompletePaymentAttemptTask.attachJanitorQueue(janitorQueue);
     }
 
     public void start() {
-        if (isStopped) {
-            log.warn("Janitor is not a restartable service, and was already started, aborting");
-            return;
-        }
+
+        this.isStopped = false;
+
+        janitorExecutor = paymentExecutors.getJanitorExecutorService();
 
         janitorQueue.startQueue();
 
