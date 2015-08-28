@@ -47,7 +47,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.BillingModeGenerator;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
-import org.killbill.billing.invoice.model.InAdvanceBillingMode;
+import org.killbill.billing.invoice.model.DefaultBillingModeGenerator;
 import org.killbill.billing.invoice.model.InvalidDateSequenceException;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItemData;
@@ -57,7 +57,6 @@ import org.killbill.billing.invoice.usage.RawUsageOptimizer.RawUsageOptimizerRes
 import org.killbill.billing.invoice.usage.SubscriptionConsumableInArrear;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.clock.Clock;
@@ -79,12 +78,14 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private final Clock clock;
     private final InvoiceConfig config;
     private final RawUsageOptimizer rawUsageOptimizer;
+    final BillingModeGenerator billingModeGenerator;
 
     @Inject
     public DefaultInvoiceGenerator(final Clock clock, final InvoiceConfig config, final RawUsageOptimizer rawUsageOptimizer) {
         this.clock = clock;
         this.config = config;
         this.rawUsageOptimizer = rawUsageOptimizer;
+        this.billingModeGenerator = new DefaultBillingModeGenerator();
     }
 
     /*
@@ -105,7 +106,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final Invoice invoice = new DefaultInvoice(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), adjustedTargetDate, targetCurrency);
         final UUID invoiceId = invoice.getId();
 
-        final List<InvoiceItem> inAdvanceItems = generateInAdvanceInvoiceItems(account.getId(), invoiceId, events, existingInvoices, adjustedTargetDate, targetCurrency);
+        final List<InvoiceItem> inAdvanceItems = generateFixedAndRecurringInvoiceItems(account.getId(), invoiceId, events, existingInvoices, adjustedTargetDate, targetCurrency);
         invoice.addInvoiceItems(inAdvanceItems);
 
         final List<InvoiceItem> usageItems = generateUsageConsumableInArrearItems(account, invoiceId, events, existingInvoices, targetDate, context);
@@ -209,9 +210,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return result;
     }
 
-    private List<InvoiceItem> generateInAdvanceInvoiceItems(final UUID accountId, final UUID invoiceId, final BillingEventSet eventSet,
-                                                            @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
-                                                            final Currency targetCurrency) throws InvoiceApiException {
+    private List<InvoiceItem> generateFixedAndRecurringInvoiceItems(final UUID accountId, final UUID invoiceId, final BillingEventSet eventSet,
+                                                                    @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
+                                                                    final Currency targetCurrency) throws InvoiceApiException {
         final AccountItemTree accountItemTree = new AccountItemTree(accountId, invoiceId);
         if (existingInvoices != null) {
             for (final Invoice invoice : existingInvoices) {
@@ -226,7 +227,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         // Generate list of proposed invoice items based on billing events from junction-- proposed items are ALL items since beginning of time
-        final List<InvoiceItem> proposedItems = generateInAdvanceInvoiceItems(invoiceId, accountId, eventSet, targetDate, targetCurrency);
+        final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
+        generateRecurringInvoiceItems(invoiceId, accountId, eventSet, targetDate, targetCurrency, proposedItems);
+        processFixedPriceEvents(invoiceId, accountId, eventSet, targetDate, targetCurrency, proposedItems);
 
         accountItemTree.mergeWithProposedItems(proposedItems);
         return accountItemTree.getResultingItemList();
@@ -255,12 +258,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return maxDate;
     }
 
-    private List<InvoiceItem> generateInAdvanceInvoiceItems(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
-                                                            final LocalDate targetDate, final Currency currency) throws InvoiceApiException {
-        final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
-
+    private List<InvoiceItem> generateRecurringInvoiceItems(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
+                                                            final LocalDate targetDate, final Currency currency, final List<InvoiceItem> proposedItems) throws InvoiceApiException {
         if (events.size() == 0) {
-            return items;
+            return proposedItems;
         }
 
         // Pretty-print the generated invoice items from the junction events
@@ -277,32 +278,39 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             if (!events.getSubscriptionIdsWithAutoInvoiceOff().
                     contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
                 final BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-                items.addAll(processInAdvanceEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, logStringBuilder));
+                proposedItems.addAll(processRecurringEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, logStringBuilder, events.getRecurringBillingMode()));
             }
         }
-        items.addAll(processInAdvanceEvents(invoiceId, accountId, nextEvent, null, targetDate, currency, logStringBuilder));
+        proposedItems.addAll(processRecurringEvents(invoiceId, accountId, nextEvent, null, targetDate, currency, logStringBuilder, events.getRecurringBillingMode()));
 
         log.info(logStringBuilder.toString());
 
-        return items;
+        return proposedItems;
     }
 
-    // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
-    private List<InvoiceItem> processInAdvanceEvents(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
-                                                     final LocalDate targetDate, final Currency currency,
-                                                     final StringBuilder logStringBuilder) throws InvoiceApiException {
-        final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
+    private List<InvoiceItem> processFixedPriceEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events, final LocalDate targetDate, final Currency currency, final List<InvoiceItem> proposedItems) {
+        final Iterator<BillingEvent> eventIt = events.iterator();
+        while (eventIt.hasNext()) {
+            final BillingEvent thisEvent = eventIt.next();
 
-        // Handle fixed price items
-        final InvoiceItem fixedPriceInvoiceItem = generateFixedPriceItem(invoiceId, accountId, thisEvent, targetDate, currency);
-        if (fixedPriceInvoiceItem != null) {
-            items.add(fixedPriceInvoiceItem);
+            final InvoiceItem fixedPriceInvoiceItem = generateFixedPriceItem(invoiceId, accountId, thisEvent, targetDate, currency);
+            if (fixedPriceInvoiceItem != null) {
+                proposedItems.add(fixedPriceInvoiceItem);
+            }
         }
+        return proposedItems;
+    }
+
+
+    // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
+    private List<InvoiceItem> processRecurringEvents(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
+                                                     final LocalDate targetDate, final Currency currency,
+                                                     final StringBuilder logStringBuilder, final BillingMode billingMode) throws InvoiceApiException {
+        final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
         // Handle recurring items
         final BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
         if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-            final BillingModeGenerator billingModeGenerator = instantiateBillingMode(thisEvent.getBillingMode());
             final LocalDate startDate = new LocalDate(thisEvent.getEffectiveDate(), thisEvent.getTimeZone());
 
             if (!startDate.isAfter(targetDate)) {
@@ -312,7 +320,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
                 final List<RecurringInvoiceItemData> itemData;
                 try {
-                    itemData = billingModeGenerator.generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod);
+                    itemData = billingModeGenerator.generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod, billingMode);
                 } catch (InvalidDateSequenceException e) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                 }
@@ -346,15 +354,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         return items;
-    }
-
-    private BillingModeGenerator instantiateBillingMode(final BillingMode billingMode) {
-        switch (billingMode) {
-            case IN_ADVANCE:
-                return new InAdvanceBillingMode();
-            default:
-                throw new UnsupportedOperationException();
-        }
     }
 
     InvoiceItem generateFixedPriceItem(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent,

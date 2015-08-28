@@ -23,6 +23,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -148,9 +149,9 @@ public class TestInAdvanceBillingMode extends InvoiceTestSuiteNoDB {
     private void verifyInvoiceItems(final LocalDate startDate, final LocalDate endDate, final LocalDate targetDate,
                                     final DateTimeZone dateTimeZone, final int billingCycleDayLocal, final BillingPeriod billingPeriod,
                                     final LinkedHashMap<LocalDate, LocalDate> expectedDates) throws InvalidDateSequenceException {
-        final InAdvanceBillingMode billingMode = new InAdvanceBillingMode();
+        final DefaultBillingModeGenerator billingMode = new DefaultBillingModeGenerator();
 
-        final List<RecurringInvoiceItemData> invoiceItems = billingMode.generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod);
+        final List<RecurringInvoiceItemData> invoiceItems = billingMode.generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod, BillingMode.IN_ADVANCE);
 
         int i = 0;
         for (final LocalDate periodStartDate : expectedDates.keySet()) {

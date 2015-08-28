@@ -106,7 +106,7 @@ public class ContiguousIntervalConsumableInArrear {
         }
         final LocalDate endDate = closedInterval ? new LocalDate(billingEvents.get(billingEvents.size() - 1).getEffectiveDate(), getAccountTimeZone()) : targetDate;
 
-        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, getBCD(), usage.getBillingPeriod());
+        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, getBCD(), usage.getBillingPeriod(), usage.getBillingMode());
 
         int numberOfPeriod = 0;
         // First billingCycleDate prior startDate

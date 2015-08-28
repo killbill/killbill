@@ -16,14 +16,13 @@
 
 package org.killbill.billing.invoice.tests.inAdvance;
 
-import org.killbill.billing.invoice.model.BillingModeGenerator;
-import org.killbill.billing.invoice.model.InAdvanceBillingMode;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.invoice.tests.ProRationTestBase;
 
 public abstract class ProRationInAdvanceTestBase extends ProRationTestBase {
 
     @Override
-    protected BillingModeGenerator getBillingMode() {
-        return new InAdvanceBillingMode();
+    protected BillingMode getBillingMode() {
+        return BillingMode.IN_ADVANCE;
     }
 }

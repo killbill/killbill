@@ -23,9 +23,11 @@ import java.util.List;
 
 import org.joda.time.LocalDate;
 
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.model.BillingModeGenerator;
+import org.killbill.billing.invoice.model.DefaultBillingModeGenerator;
 import org.killbill.billing.invoice.model.InvalidDateSequenceException;
 import org.killbill.billing.invoice.model.RecurringInvoiceItemData;
 
@@ -34,9 +36,14 @@ import static org.testng.Assert.fail;
 
 public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
 
-    protected abstract BillingModeGenerator getBillingMode();
+    protected BillingModeGenerator getBillingModeGenerator() {
+        return new DefaultBillingModeGenerator();
+    }
 
     protected abstract BillingPeriod getBillingPeriod();
+
+    protected abstract BillingMode getBillingMode();
+
 
     protected void testCalculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate targetDate, final int billingCycleDay, final BigDecimal expectedValue) throws InvalidDateSequenceException {
         try {
@@ -65,7 +72,7 @@ public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate endDate, final LocalDate targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
-        final List<RecurringInvoiceItemData> items = getBillingMode().generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod());
+        final List<RecurringInvoiceItemData> items = getBillingModeGenerator().generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod(), getBillingMode());
 
         BigDecimal numberOfBillingCycles = ZERO;
         for (final RecurringInvoiceItemData item : items) {
@@ -76,7 +83,7 @@ public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
-        final List<RecurringInvoiceItemData> items = getBillingMode().generateInvoiceItemData(startDate, null, targetDate, billingCycleDay, getBillingPeriod());
+        final List<RecurringInvoiceItemData> items = getBillingModeGenerator().generateInvoiceItemData(startDate, null, targetDate, billingCycleDay, getBillingPeriod(), getBillingMode());
 
         BigDecimal numberOfBillingCycles = ZERO;
         for (final RecurringInvoiceItemData item : items) {

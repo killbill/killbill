@@ -23,24 +23,26 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.generator.BillingIntervalDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateNumberOfWholeBillingPeriods;
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate;
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod;
 
-public class InAdvanceBillingMode implements BillingModeGenerator {
+public class DefaultBillingModeGenerator implements BillingModeGenerator {
 
-    private static final Logger log = LoggerFactory.getLogger(InAdvanceBillingMode.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultBillingModeGenerator.class);
 
     @Override
     public List<RecurringInvoiceItemData> generateInvoiceItemData(final LocalDate startDate, @Nullable final LocalDate endDate,
                                                                   final LocalDate targetDate,
-                                                                  final int billingCycleDayLocal, final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
+                                                                  final int billingCycleDayLocal,
+                                                                  final BillingPeriod billingPeriod,
+                                                                  final BillingMode billingMode) throws InvalidDateSequenceException {
         if (endDate != null && endDate.isBefore(startDate)) {
             throw new InvalidDateSequenceException();
         }
@@ -50,10 +52,10 @@ public class InAdvanceBillingMode implements BillingModeGenerator {
 
         final List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
 
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod, billingMode);
 
         // We are not billing for less than a day (we could...)
-        if (endDate != null && endDate.equals(startDate)) {
+        if (!billingIntervalDetail.hasSomethingToBill()) {
             return results;
         }
         //

@@ -17,7 +17,7 @@
 package org.killbill.billing.invoice.generator;
 
 import org.joda.time.LocalDate;
-
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -29,17 +29,23 @@ public class BillingIntervalDetail {
     private final LocalDate targetDate;
     private final int billingCycleDay;
     private final BillingPeriod billingPeriod;
-
+    private final BillingMode billingMode;
     private LocalDate firstBillingCycleDate;
     private LocalDate effectiveEndDate;
     private LocalDate lastBillingCycleDate;
 
-    public BillingIntervalDetail(final LocalDate startDate, final LocalDate endDate, final LocalDate targetDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
+    public BillingIntervalDetail(final LocalDate startDate,
+                                 final LocalDate endDate,
+                                 final LocalDate targetDate,
+                                 final int billingCycleDay,
+                                 final BillingPeriod billingPeriod,
+                                 final BillingMode billingMode) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.targetDate = targetDate;
         this.billingCycleDay = billingCycleDay;
         this.billingPeriod = billingPeriod;
+        this.billingMode = billingMode;
         computeAll();
     }
 
@@ -59,6 +65,11 @@ public class BillingIntervalDetail {
 
     public LocalDate getLastBillingCycleDate() {
         return lastBillingCycleDate;
+    }
+
+    public boolean hasSomethingToBill() {
+        return effectiveEndDate != null /* IN_ARREAR mode prior we have reached our firstBillingCycleDate */ &&
+               (endDate == null || endDate.isAfter(startDate)); /* When there is an endDate, it should be > startDate since we don't bill for less than a day */
     }
 
     private void computeAll() {
@@ -87,6 +98,44 @@ public class BillingIntervalDetail {
     }
 
     private void calculateEffectiveEndDate() {
+        if (billingMode == BillingMode.IN_ADVANCE) {
+            calculateInAdvanceEffectiveEndDate();
+        } else {
+            calculateInArrearEffectiveEndDate();
+        }
+    }
+
+    private void calculateInArrearEffectiveEndDate() {
+        if (targetDate.isBefore(firstBillingCycleDate)) {
+            // Nothing to bill for, hasSomethingToBill will return false
+            effectiveEndDate = null;
+            return;
+        }
+
+        if (endDate != null && endDate.isBefore(firstBillingCycleDate)) {
+            effectiveEndDate = endDate;
+            return;
+        }
+
+        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
+        int numberOfPeriods = 0;
+        LocalDate proposedDate = firstBillingCycleDate;
+
+        while (proposedDate.isBefore(targetDate)) {
+            proposedDate = firstBillingCycleDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
+            numberOfPeriods += 1;
+        }
+        proposedDate = alignProposedBillCycleDate(proposedDate, billingCycleDay);
+
+        // The proposedDate is greater to our endDate => return it
+        if (endDate != null && endDate.isBefore(proposedDate)) {
+            effectiveEndDate = endDate;
+        } else {
+            effectiveEndDate = proposedDate;
+        }
+    }
+
+    private void calculateInAdvanceEffectiveEndDate() {
 
         // We have an endDate and the targetDate is greater or equal to our endDate => return it
         if (endDate != null && !targetDate.isBefore(endDate)) {
@@ -117,8 +166,12 @@ public class BillingIntervalDetail {
         }
     }
 
-
     private void calculateLastBillingCycleDate() {
+
+        if (effectiveEndDate == null) {
+            lastBillingCycleDate = firstBillingCycleDate;
+            return;
+        }
 
         // Start from firstBillingCycleDate and billingPeriod until we pass the effectiveEndDate
         LocalDate proposedDate = firstBillingCycleDate;
@@ -134,12 +187,11 @@ public class BillingIntervalDetail {
 
         if (proposedDate.isBefore(firstBillingCycleDate)) {
             // Make sure not to go too far in the past
-            lastBillingCycleDate =  firstBillingCycleDate;
+            lastBillingCycleDate = firstBillingCycleDate;
         } else {
-            lastBillingCycleDate =  proposedDate;
+            lastBillingCycleDate = proposedDate;
         }
     }
-
 
     //
     // We start from a billCycleDate
