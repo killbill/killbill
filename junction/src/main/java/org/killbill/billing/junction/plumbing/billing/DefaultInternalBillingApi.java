@@ -86,7 +86,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final DefaultBillingEventSet result = new DefaultBillingEventSet();
         final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(context);
-        result.setRecurrringBillingMode(currentCatalog.getRecurringBillingMode());
+        result.setRecurringBillingMode(currentCatalog.getRecurringBillingMode());
 
         try {
             final Account account = accountApi.getAccountById(accountId, context);

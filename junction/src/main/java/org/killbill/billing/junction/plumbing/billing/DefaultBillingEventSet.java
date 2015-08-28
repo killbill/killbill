@@ -45,7 +45,7 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
 
     private boolean accountAutoInvoiceOff = false;
     private List<UUID> subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
-    private BillingMode recurrringBillingMode;
+    private BillingMode recurringBillingMode;
 
     /* (non-Javadoc)
     * @see org.killbill.billing.junction.plumbing.billing.BillingEventSet#isAccountAutoInvoiceOff()
@@ -57,7 +57,7 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
 
     @Override
     public BillingMode getRecurringBillingMode() {
-        return null;
+        return recurringBillingMode;
     }
 
     /* (non-Javadoc)
@@ -90,12 +90,8 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
         this.accountAutoInvoiceOff = accountAutoInvoiceIsOff;
     }
 
-    public BillingMode getRecurrringBillingMode() {
-        return recurrringBillingMode;
-    }
-
-    public void setRecurrringBillingMode(final BillingMode recurrringBillingMode) {
-        this.recurrringBillingMode = recurrringBillingMode;
+    public void setRecurringBillingMode(final BillingMode recurringBillingMode) {
+        this.recurringBillingMode = recurringBillingMode;
     }
 
     @Override
