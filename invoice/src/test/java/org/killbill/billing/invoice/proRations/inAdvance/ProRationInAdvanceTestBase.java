@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.tests.inAdvance;
+package org.killbill.billing.invoice.proRations.inAdvance;
 
 import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.invoice.tests.ProRationTestBase;
+import org.killbill.billing.invoice.proRations.ProRationTestBase;
 
 public abstract class ProRationInAdvanceTestBase extends ProRationTestBase {
 

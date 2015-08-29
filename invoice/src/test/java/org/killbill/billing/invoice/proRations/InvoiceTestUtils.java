@@ -16,14 +16,13 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.tests;
+package org.killbill.billing.invoice.proRations;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;

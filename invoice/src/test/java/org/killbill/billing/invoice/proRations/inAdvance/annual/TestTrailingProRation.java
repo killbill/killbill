@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.tests.inAdvance.quarterly;
+package org.killbill.billing.invoice.proRations.inAdvance.annual;
 
 import static org.killbill.billing.invoice.TestInvoiceHelper.*;
 
@@ -25,20 +25,20 @@ import org.testng.annotations.Test;
 
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.model.InvalidDateSequenceException;
-import org.killbill.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
+import org.killbill.billing.invoice.proRations.inAdvance.ProRationInAdvanceTestBase;
 import org.killbill.billing.util.currency.KillBillMoney;
 
 public class TestTrailingProRation extends ProRationInAdvanceTestBase {
 
     @Override
     protected BillingPeriod getBillingPeriod() {
-        return BillingPeriod.QUARTERLY;
+        return BillingPeriod.ANNUAL;
     }
 
     @Test(groups = "fast")
     public void testTargetDateOnStartDate() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2010, 6, 17);
-        final LocalDate endDate = invoiceUtil.buildDate(2010, 9, 25);
+        final LocalDate endDate = invoiceUtil.buildDate(2012, 6, 25);
         final LocalDate targetDate = invoiceUtil.buildDate(2010, 6, 17);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, ONE);
@@ -47,7 +47,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
     @Test(groups = "fast")
     public void testTargetDateInFirstBillingPeriod() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2010, 6, 17);
-        final LocalDate endDate = invoiceUtil.buildDate(2010, 9, 25);
+        final LocalDate endDate = invoiceUtil.buildDate(2011, 6, 25);
         final LocalDate targetDate = invoiceUtil.buildDate(2010, 6, 20);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, ONE);
@@ -56,39 +56,39 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
     @Test(groups = "fast")
     public void testTargetDateAtEndOfFirstBillingCycle() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2010, 6, 17);
-        final LocalDate endDate = invoiceUtil.buildDate(2010, 9, 25);
-        final LocalDate targetDate = invoiceUtil.buildDate(2010, 9, 17);
+        final LocalDate endDate = invoiceUtil.buildDate(2011, 6, 25);
+        final LocalDate targetDate = invoiceUtil.buildDate(2011, 6, 17);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(NINETY_ONE, KillBillMoney.ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_SIX, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
     @Test(groups = "fast")
     public void testTargetDateInProRationPeriod() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2010, 6, 17);
-        final LocalDate endDate = invoiceUtil.buildDate(2010, 9, 25);
-        final LocalDate targetDate = invoiceUtil.buildDate(2010, 9, 18);
+        final LocalDate endDate = invoiceUtil.buildDate(2011, 6, 25);
+        final LocalDate targetDate = invoiceUtil.buildDate(2011, 6, 18);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(NINETY_ONE, KillBillMoney.ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_SIX, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
     @Test(groups = "fast")
     public void testTargetDateOnEndDate() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2010, 6, 17);
-        final LocalDate endDate = invoiceUtil.buildDate(2010, 9, 25);
+        final LocalDate endDate = invoiceUtil.buildDate(2011, 6, 25);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(NINETY_ONE, KillBillMoney.ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_SIX, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, endDate, 17, expectedValue);
     }
 
     @Test(groups = "fast")
     public void testTargetDateAfterEndDate() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2010, 6, 17);
-        final LocalDate endDate = invoiceUtil.buildDate(2010, 9, 25);
-        final LocalDate targetDate = invoiceUtil.buildDate(2010, 9, 30);
+        final LocalDate endDate = invoiceUtil.buildDate(2011, 6, 25);
+        final LocalDate targetDate = invoiceUtil.buildDate(2011, 7, 30);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(NINETY_ONE, KillBillMoney.ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_SIX, KillBillMoney.ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 }

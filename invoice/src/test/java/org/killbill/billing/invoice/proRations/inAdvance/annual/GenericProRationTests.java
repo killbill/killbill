@@ -14,14 +14,14 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.tests.inAdvance.annual;
+package org.killbill.billing.invoice.proRations.inAdvance.annual;
 
 import static org.killbill.billing.invoice.TestInvoiceHelper.*;
 
 import java.math.BigDecimal;
 
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.invoice.tests.inAdvance.GenericProRationTestBase;
+import org.killbill.billing.invoice.proRations.inAdvance.GenericProRationTestBase;
 
 public class GenericProRationTests extends GenericProRationTestBase {
 

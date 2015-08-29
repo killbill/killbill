@@ -120,9 +120,12 @@ public class BillingIntervalDetail {
         final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
         int numberOfPeriods = 0;
         LocalDate proposedDate = firstBillingCycleDate;
+        LocalDate nextProposedDate = proposedDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
 
-        while (proposedDate.isBefore(targetDate)) {
-            proposedDate = firstBillingCycleDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
+
+        while (!nextProposedDate.isAfter(targetDate)) {
+            proposedDate = nextProposedDate;
+            nextProposedDate = firstBillingCycleDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
             numberOfPeriods += 1;
         }
         proposedDate = alignProposedBillCycleDate(proposedDate, billingCycleDay);

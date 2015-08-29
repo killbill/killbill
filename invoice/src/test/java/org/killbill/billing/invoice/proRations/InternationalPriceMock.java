@@ -14,24 +14,39 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.tests.inAdvance.monthly;
-
-import static org.killbill.billing.invoice.TestInvoiceHelper.*;
+package org.killbill.billing.invoice.proRations;
 
 import java.math.BigDecimal;
 
-import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.invoice.tests.inAdvance.GenericProRationTestBase;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.InternationalPrice;
+import org.killbill.billing.catalog.api.Price;
 
-public class GenericProRationTests extends GenericProRationTestBase {
+import static org.testng.Assert.fail;
 
-    @Override
-    protected BillingPeriod getBillingPeriod() {
-        return BillingPeriod.MONTHLY;
+public class InternationalPriceMock implements InternationalPrice {
+
+    private final BigDecimal rate;
+
+    public InternationalPriceMock(final BigDecimal rate) {
+        this.rate = rate;
     }
 
     @Override
-    protected BigDecimal getDaysInTestPeriod() {
-        return THIRTY_ONE;
+    public Price[] getPrices() {
+        fail();
+
+        return null;
     }
+
+    @Override
+    public BigDecimal getPrice(final Currency currency) {
+        return rate;
+    }
+
+    @Override
+    public boolean isZero() {
+        return rate.compareTo(BigDecimal.ZERO) == 0;
+    }
+
 }

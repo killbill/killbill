@@ -14,19 +14,18 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.tests.inAdvance.annual;
+package org.killbill.billing.invoice.proRations.inAdvance.annual;
 
 import static org.killbill.billing.invoice.TestInvoiceHelper.*;
 
 import java.math.BigDecimal;
 
-import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.model.InvalidDateSequenceException;
-import org.killbill.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
+import org.killbill.billing.invoice.proRations.inAdvance.ProRationInAdvanceTestBase;
 import org.killbill.billing.util.currency.KillBillMoney;
 
 public class TestProRation extends ProRationInAdvanceTestBase {

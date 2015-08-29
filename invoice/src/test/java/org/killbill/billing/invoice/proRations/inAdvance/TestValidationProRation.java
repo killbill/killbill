@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.tests.inAdvance;
+package org.killbill.billing.invoice.proRations.inAdvance;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
@@ -24,7 +24,7 @@ import org.testng.annotations.Test;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.model.DefaultBillingModeGenerator;
 import org.killbill.billing.invoice.model.InvalidDateSequenceException;
-import org.killbill.billing.invoice.tests.ProRationTestBase;
+import org.killbill.billing.invoice.proRations.ProRationTestBase;
 
 import static org.testng.Assert.assertEquals;
 

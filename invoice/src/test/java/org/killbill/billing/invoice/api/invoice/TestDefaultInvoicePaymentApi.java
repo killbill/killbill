@@ -33,8 +33,8 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import static org.killbill.billing.invoice.tests.InvoiceTestUtils.createAndPersistInvoice;
-import static org.killbill.billing.invoice.tests.InvoiceTestUtils.createAndPersistPayment;
+import static org.killbill.billing.invoice.proRations.InvoiceTestUtils.createAndPersistInvoice;
+import static org.killbill.billing.invoice.proRations.InvoiceTestUtils.createAndPersistPayment;
 
 public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB {
 

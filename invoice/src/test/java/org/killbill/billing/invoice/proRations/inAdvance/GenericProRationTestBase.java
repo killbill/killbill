@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.tests.inAdvance;
+package org.killbill.billing.invoice.proRations.inAdvance;
 
 import static org.killbill.billing.invoice.TestInvoiceHelper.*;
 
