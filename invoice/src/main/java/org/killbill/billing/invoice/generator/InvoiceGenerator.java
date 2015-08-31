@@ -32,6 +32,6 @@ import org.killbill.billing.junction.BillingEventSet;
 
 public interface InvoiceGenerator {
 
-    public Invoice generateInvoice(Account account, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
+    public InvoiceWithMetadata generateInvoice(Account account, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
                                    LocalDate targetDate, Currency targetCurrency, final InternalCallContext context) throws InvoiceApiException;
 }

@@ -54,7 +54,7 @@ public class DefaultBillingModeGenerator implements BillingModeGenerator {
 
         final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod, billingMode);
 
-        // We are not billing for less than a day (we could...)
+        // We are not billing for less than a day
         if (!billingIntervalDetail.hasSomethingToBill()) {
             return results;
         }
