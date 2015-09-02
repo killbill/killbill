@@ -367,11 +367,6 @@ public class TestInvoiceHelper {
             }
 
             @Override
-            public BillingMode getBillingMode() {
-                return billingMode;
-            }
-
-            @Override
             public String getDescription() {
                 return description;
             }

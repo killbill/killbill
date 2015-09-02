@@ -32,7 +32,6 @@ import org.joda.time.DateTimeZone;
 
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
@@ -204,14 +203,13 @@ public class BlockingCalculator {
 
         final Currency currency = previousEvent.getCurrency();
         final String description = "";
-        final BillingMode billingMode = previousEvent.getBillingMode();
         final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.START_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
         final DateTimeZone tz = previousEvent.getTimeZone();
 
-        return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
+        return new DefaultBillingEvent(account, subscription, effectiveDate, true, plan, planPhase,
                                        fixedPrice, recurringPrice, currency,
-                                       billingPeriod, billCycleDay, billingMode,
+                                       billingPeriod, billCycleDay,
                                        description, totalOrdering, type, tz);
     }
 
@@ -227,15 +225,14 @@ public class BlockingCalculator {
         final BigDecimal recurringPrice = previousEvent.getRecurringPrice();
         final Currency currency = previousEvent.getCurrency();
         final String description = "";
-        final BillingMode billingMode  = previousEvent.getBillingMode();
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
         final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.END_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
         final DateTimeZone tz = previousEvent.getTimeZone();
 
-        return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
+        return new DefaultBillingEvent(account, subscription, effectiveDate, true, plan, planPhase,
                                        fixedPrice, recurringPrice, currency,
-                                       billingPeriod, billCycleDay, billingMode,
+                                       billingPeriod, billCycleDay,
                                        description, totalOrdering, type, tz);
     }
 

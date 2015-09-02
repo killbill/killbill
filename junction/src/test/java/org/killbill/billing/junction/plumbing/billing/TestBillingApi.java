@@ -255,7 +255,6 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         if (!SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(event.getTransitionType())) {
             Assert.assertEquals(nextPhase.getRecurring().getBillingPeriod(), event.getBillingPeriod());
         }
-        Assert.assertEquals(BillingMode.IN_ADVANCE, event.getBillingMode());
         Assert.assertEquals(desc, event.getTransitionType().toString());
     }
 

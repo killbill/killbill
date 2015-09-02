@@ -37,83 +37,78 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the account that this billing event is associated with
      */
-    public Account getAccount();
+    Account getAccount();
 
     /**
      * @return the billCycleDay in the account timezone as seen for that subscription at that time
      *         <p/>
      *         Note: The billCycleDay may come from the Account, or the bundle or the subscription itself
      */
-    public int getBillCycleDayLocal();
+    int getBillCycleDayLocal();
 
     /**
      * @return the subscription
      */
-    public SubscriptionBase getSubscription();
+    SubscriptionBase getSubscription();
 
     /**
      * @return the date for when that event became effective
      */
-    public DateTime getEffectiveDate();
+    DateTime getEffectiveDate();
 
     /**
      * @return the plan phase
      */
-    public PlanPhase getPlanPhase();
+    PlanPhase getPlanPhase();
 
     /**
      * @return the plan
      */
-    public Plan getPlan();
+    Plan getPlan();
 
     /**
      * @return the billing period for the active phase
      */
-    public BillingPeriod getBillingPeriod();
-
-    /**
-     * @return the billing mode for the current event
-     */
-    public BillingMode getBillingMode();
+    BillingPeriod getBillingPeriod();
 
     /**
      * @return the description of the billing event
      */
-    public String getDescription();
+    String getDescription();
 
     /**
      * @return the fixed price for the phase
      */
-    public BigDecimal getFixedPrice();
+    BigDecimal getFixedPrice();
 
     /**
      * @return the recurring price for the phase
      */
-    public BigDecimal getRecurringPrice();
+    BigDecimal getRecurringPrice();
 
     /**
      * @return the currency for the account being invoiced
      */
-    public Currency getCurrency();
+    Currency getCurrency();
 
     /**
      * @return the transition type of the underlying subscription event that triggered this
      */
-    public SubscriptionBaseTransitionType getTransitionType();
+    SubscriptionBaseTransitionType getTransitionType();
 
     /**
      * @return a unique long indicating the ordering on which events got inserted on disk-- used for sorting only
      */
-    public Long getTotalOrdering();
+    Long getTotalOrdering();
 
     /**
      * @return the TimeZone of the account
      */
-    public DateTimeZone getTimeZone();
+    DateTimeZone getTimeZone();
 
     /**
      *
      * @return the list of {@code Usage} section
      */
-    public List<Usage> getUsages();
+    List<Usage> getUsages();
 }

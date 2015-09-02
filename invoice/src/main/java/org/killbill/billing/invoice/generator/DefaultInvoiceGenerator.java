@@ -372,7 +372,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                         items.add(recurringItem);
                     }
                 }
-                updatePerSubscriptionNextNotificationDate(thisEvent.getSubscription().getId(), itemDataWithNextBillingCycleDate.getNextBillingCycleDate(), items, thisEvent.getBillingMode(), perSubscriptionFutureNotificationDate);
+                updatePerSubscriptionNextNotificationDate(thisEvent.getSubscription().getId(), itemDataWithNextBillingCycleDate.getNextBillingCycleDate(), items, billingMode, perSubscriptionFutureNotificationDate);
 
             }
         }
