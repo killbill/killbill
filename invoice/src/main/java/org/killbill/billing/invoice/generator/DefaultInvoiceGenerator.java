@@ -52,6 +52,7 @@ import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InvalidDateSequenceException;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItemData;
+import org.killbill.billing.invoice.model.RecurringInvoiceItemDataWithNextBillingCycleDate;
 import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer.RawUsageOptimizerResult;
@@ -65,6 +66,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -123,8 +126,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                                    final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
                                                                    final InternalCallContext internalCallContext) throws InvoiceApiException {
 
-        final Map<String, LocalDate> perSubscriptionUsage = new HashMap<String, LocalDate>();
-
         final Map<UUID, List<InvoiceItem>> perSubscriptionConsumableInArrearUsageItems = extractPerSubscriptionExistingConsumableInArrearUsageItems(eventSet.getUsages(), existingInvoices);
         try {
             final List<InvoiceItem> items = Lists.newArrayList();
@@ -163,10 +164,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, rawUsageOptimizerResult.getRawUsage(), targetDate, rawUsageOptimizerResult.getRawUsageStartDate());
                     final List<InvoiceItem> consumableInUsageArrearItems = perSubscriptionConsumableInArrearUsageItems.get(curSubscriptionId);
 
-                    final List<InvoiceItem> newProposedItems = subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(consumableInUsageArrearItems != null ? consumableInUsageArrearItems : ImmutableList.<InvoiceItem>of());
-                    items.addAll(newProposedItems);
-                    updatePerSubscriptionNextNotificationUsageDate(curSubscriptionId, newProposedItems, perSubscriptionFutureNotificationDates);
-
+                    final List<InvoiceItem> newInArrearUsageItems = subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(consumableInUsageArrearItems != null ? consumableInUsageArrearItems : ImmutableList.<InvoiceItem>of());
+                    items.addAll(newInArrearUsageItems);
+                    updatePerSubscriptionNextNotificationUsageDate(curSubscriptionId, newInArrearUsageItems, BillingMode.IN_ARREAR, perSubscriptionFutureNotificationDates);
                     curEvents = Lists.newArrayList();
                 }
                 curSubscriptionId = subscriptionId;
@@ -176,9 +176,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(invoiceId, curEvents, rawUsageOptimizerResult.getRawUsage(), targetDate, rawUsageOptimizerResult.getRawUsageStartDate());
                 final List<InvoiceItem> consumableInUsageArrearItems = perSubscriptionConsumableInArrearUsageItems.get(curSubscriptionId);
 
-                final List<InvoiceItem> newProposedItems = subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(consumableInUsageArrearItems != null ? consumableInUsageArrearItems : ImmutableList.<InvoiceItem>of());
-                items.addAll(newProposedItems);
-                updatePerSubscriptionNextNotificationUsageDate(curSubscriptionId, newProposedItems, perSubscriptionFutureNotificationDates);
+                final List<InvoiceItem> newInArrearUsageItems = subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(consumableInUsageArrearItems != null ? consumableInUsageArrearItems : ImmutableList.<InvoiceItem>of());
+                items.addAll(newInArrearUsageItems);
+                updatePerSubscriptionNextNotificationUsageDate(curSubscriptionId, newInArrearUsageItems, BillingMode.IN_ARREAR, perSubscriptionFutureNotificationDates);
             }
             return items;
 
@@ -188,14 +188,14 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     }
 
 
-    private void updatePerSubscriptionNextNotificationUsageDate(final UUID subscriptionId, final List<InvoiceItem> newProposedItems, Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
-        for (final InvoiceItem item : newProposedItems) {
+    private void updatePerSubscriptionNextNotificationUsageDate(final UUID subscriptionId, final List<InvoiceItem> newInArrearUsageItems, final BillingMode usageBillingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
+        for (final InvoiceItem item : newInArrearUsageItems) {
             SubscriptionFutureNotificationDates subscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates.get(subscriptionId);
             if (subscriptionFutureNotificationDates == null) {
-                subscriptionFutureNotificationDates = new SubscriptionFutureNotificationDates();
+                subscriptionFutureNotificationDates = new SubscriptionFutureNotificationDates(null);
                 perSubscriptionFutureNotificationDates.put(subscriptionId, subscriptionFutureNotificationDates);
             }
-            subscriptionFutureNotificationDates.updateNextUsageDateIfRequired(item.getUsageName(), item.getEndDate());
+            subscriptionFutureNotificationDates.updateNextUsageDateIfRequired(item.getUsageName(), usageBillingMode, item.getEndDate());
         }
     }
 
@@ -285,7 +285,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     private List<InvoiceItem> processRecurringBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
                                                             final LocalDate targetDate, final Currency currency, final List<InvoiceItem> proposedItems,
-                                                            Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate) throws InvoiceApiException {
+                                                            final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate) throws InvoiceApiException {
 
         if (events.size() == 0) {
             return proposedItems;
@@ -305,36 +305,17 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             if (!events.getSubscriptionIdsWithAutoInvoiceOff().
                     contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
                 final BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-                final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, logStringBuilder, events.getRecurringBillingMode());
+                final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, logStringBuilder, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate);
                 proposedItems.addAll(newProposedItems);
-                updatePerSubscriptionNextNotificationDate(thisEvent.getSubscription().getId(), newProposedItems, perSubscriptionFutureNotificationDate);
             }
         }
-        final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, nextEvent, null, targetDate, currency, logStringBuilder, events.getRecurringBillingMode());
+        final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, nextEvent, null, targetDate, currency, logStringBuilder, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate);
         proposedItems.addAll(newProposedItems);
-        updatePerSubscriptionNextNotificationDate(nextEvent.getSubscription().getId(), newProposedItems, perSubscriptionFutureNotificationDate);
 
         log.info(logStringBuilder.toString());
 
         return proposedItems;
     }
-
-    private void updatePerSubscriptionNextNotificationDate(final UUID subscriptionId, final List<InvoiceItem> newProposedItems, Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
-        for (final InvoiceItem item : newProposedItems) {
-            if ((item.getEndDate() != null) &&
-                (item.getAmount() == null ||
-                 item.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                SubscriptionFutureNotificationDates subscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates.get(subscriptionId);
-                if (subscriptionFutureNotificationDates == null) {
-                    subscriptionFutureNotificationDates = new SubscriptionFutureNotificationDates();
-                    perSubscriptionFutureNotificationDates.put(subscriptionId, subscriptionFutureNotificationDates);
-                }
-                subscriptionFutureNotificationDates.updateNextRecurringDateIfRequired(item.getEndDate());
-            }
-        }
-    }
-
-
 
 
     private List<InvoiceItem> processFixedBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events, final LocalDate targetDate, final Currency currency, final List<InvoiceItem> proposedItems) {
@@ -353,7 +334,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
     private List<InvoiceItem> processRecurringEvent(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
                                                     final LocalDate targetDate, final Currency currency,
-                                                    final StringBuilder logStringBuilder, final BillingMode billingMode) throws InvoiceApiException {
+                                                    final StringBuilder logStringBuilder, final BillingMode billingMode,
+                                                    final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
         // Handle recurring items
@@ -366,14 +348,14 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
                 final int billCycleDayLocal = thisEvent.getBillCycleDayLocal();
 
-                final List<RecurringInvoiceItemData> itemData;
+                final RecurringInvoiceItemDataWithNextBillingCycleDate itemDataWithNextBillingCycleDate;
                 try {
-                    itemData = billingModeGenerator.generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod, billingMode);
+                    itemDataWithNextBillingCycleDate = billingModeGenerator.generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod, billingMode);
                 } catch (InvalidDateSequenceException e) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                 }
 
-                for (final RecurringInvoiceItemData itemDatum : itemData) {
+                for (final RecurringInvoiceItemData itemDatum : itemDataWithNextBillingCycleDate.getItemData()) {
                     final BigDecimal rate = thisEvent.getRecurringPrice();
 
                     if (rate != null) {
@@ -390,6 +372,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                         items.add(recurringItem);
                     }
                 }
+                updatePerSubscriptionNextNotificationDate(thisEvent.getSubscription().getId(), itemDataWithNextBillingCycleDate.getNextBillingCycleDate(), items, thisEvent.getBillingMode(), perSubscriptionFutureNotificationDate);
+
             }
         }
 
@@ -400,11 +384,45 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             logStringBuilder.append("\n\t")
                             .append(item);
         }
-
         return items;
     }
 
-    InvoiceItem generateFixedPriceItem(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent,
+    private void updatePerSubscriptionNextNotificationDate(final UUID subscriptionId, final LocalDate nextBillingCycleDate, final List<InvoiceItem> newProposedItems, final BillingMode billingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
+
+        LocalDate nextNotificationDate = null;
+        switch(billingMode) {
+            case IN_ADVANCE:
+                for (final InvoiceItem item : newProposedItems) {
+                    if ((item.getEndDate() != null) &&
+                        (item.getAmount() == null ||
+                         item.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
+                        if (nextNotificationDate == null) {
+                            nextNotificationDate = item.getEndDate();
+                        } else {
+                            nextNotificationDate = nextNotificationDate.compareTo(item.getEndDate()) > 0 ? nextNotificationDate : item.getEndDate();
+                        }
+                    }
+                }
+                break;
+            case IN_ARREAR:
+                nextNotificationDate = nextBillingCycleDate;
+                break;
+            default:
+                throw new IllegalStateException("Unrecognized billing mode " + billingMode);
+        }
+        if (nextNotificationDate != null) {
+            SubscriptionFutureNotificationDates subscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates.get(subscriptionId);
+            if (subscriptionFutureNotificationDates == null) {
+                subscriptionFutureNotificationDates = new SubscriptionFutureNotificationDates(billingMode);
+                perSubscriptionFutureNotificationDates.put(subscriptionId, subscriptionFutureNotificationDates);
+            }
+            subscriptionFutureNotificationDates.updateNextRecurringDateIfRequired(nextNotificationDate);
+
+        }
+    }
+
+
+    private InvoiceItem generateFixedPriceItem(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent,
                                        final LocalDate targetDate, final Currency currency) {
         final LocalDate roundedStartDate = new LocalDate(thisEvent.getEffectiveDate(), thisEvent.getTimeZone());
 

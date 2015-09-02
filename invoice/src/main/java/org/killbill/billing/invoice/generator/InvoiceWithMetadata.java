@@ -18,62 +18,32 @@
 package org.killbill.billing.invoice.generator;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates.UsageDef;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class InvoiceWithMetadata {
 
     private final Invoice invoice;
     private final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates;
 
-    public static class SubscriptionFutureNotificationDates {
-
-        private LocalDate nextRecurringDate;
-        private Map<String, LocalDate> nextUsageDates;
-
-        public SubscriptionFutureNotificationDates() {
-            this.nextRecurringDate = null;
-            this.nextUsageDates = null;
-        }
-
-        public void updateNextRecurringDateIfRequired(final LocalDate nextRecurringDateCandidate) {
-            nextRecurringDate = getMaxDate(nextRecurringDate, nextRecurringDateCandidate);
-        }
-
-        public void updateNextUsageDateIfRequired(final String usageName, final LocalDate nextUsageDateCandidate) {
-            if (nextUsageDates == null) {
-                nextUsageDates = new HashMap<String, LocalDate>();
-            }
-            final LocalDate nextUsageDate = getMaxDate(nextUsageDates.get(usageName), nextUsageDateCandidate);
-            nextUsageDates.put(usageName, nextUsageDate);
-        }
-
-        public LocalDate getNextRecurringDate() {
-            return nextRecurringDate;
-        }
-
-        public Map<String, LocalDate> getNextUsageDates() {
-            return nextUsageDates;
-        }
-
-        private static LocalDate getMaxDate(@Nullable final LocalDate existingDate, final LocalDate nextDateCandidate) {
-            if (existingDate == null) {
-                return nextDateCandidate;
-            } else {
-                return nextDateCandidate.compareTo(existingDate) > 0 ? nextDateCandidate : existingDate;
-            }
-        }
-
-    }
 
     public InvoiceWithMetadata(final Invoice invoice, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
         this.invoice = invoice;
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
+        build();
     }
 
     public Invoice getInvoice() {
@@ -84,4 +54,129 @@ public class InvoiceWithMetadata {
         return perSubscriptionFutureNotificationDates;
     }
 
+    // Remove all the IN_ADVANCE items for which we have no invoice items
+    private void build() {
+        for (final UUID subscriptionId : perSubscriptionFutureNotificationDates.keySet()) {
+            final SubscriptionFutureNotificationDates tmp = perSubscriptionFutureNotificationDates.get(subscriptionId);
+            if (tmp.getRecurringBillingMode() == BillingMode.IN_ADVANCE && !hasItemsForSubscription(subscriptionId, InvoiceItemType.RECURRING)) {
+                tmp.resetNextRecurringDate();
+            }
+            if (tmp.getNextUsageDates() != null) {
+                final Iterator<UsageDef> it = tmp.getNextUsageDates().keySet().iterator();
+                while (it.hasNext()) {
+                    final UsageDef usageDef = it.next();
+                    if (usageDef.getBillingMode() == BillingMode.IN_ADVANCE && !hasItemsForSubscription(subscriptionId, InvoiceItemType.USAGE)) {
+                        it.remove();
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean hasItemsForSubscription(final UUID subscriptionId, final InvoiceItemType invoiceItemType) {
+        return invoice != null && Iterables.any(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getInvoiceItemType() == invoiceItemType &&
+                       input.getSubscriptionId().equals(subscriptionId);
+            }
+        });
+    }
+
+    public static class SubscriptionFutureNotificationDates {
+
+        private final BillingMode recurringBillingMode;
+
+        private LocalDate nextRecurringDate;
+        private Map<UsageDef, LocalDate> nextUsageDates;
+
+        public SubscriptionFutureNotificationDates(final BillingMode recurringBillingMode) {
+            this.recurringBillingMode = recurringBillingMode;
+            this.nextRecurringDate = null;
+            this.nextUsageDates = null;
+        }
+
+        public void updateNextRecurringDateIfRequired(final LocalDate nextRecurringDateCandidate) {
+            nextRecurringDate = getMaxDate(nextRecurringDate, nextRecurringDateCandidate);
+        }
+
+        public void updateNextUsageDateIfRequired(final String usageName, final BillingMode billingMode, final LocalDate nextUsageDateCandidate) {
+            if (nextUsageDates == null) {
+                nextUsageDates = new HashMap<UsageDef, LocalDate>();
+            }
+            final UsageDef usageDef = new UsageDef(usageName, billingMode);
+            final LocalDate nextUsageDate = getMaxDate(nextUsageDates.get(usageDef), nextUsageDateCandidate);
+            nextUsageDates.put(usageDef, nextUsageDate);
+        }
+
+        public LocalDate getNextRecurringDate() {
+            return nextRecurringDate;
+        }
+
+        public Map<UsageDef, LocalDate> getNextUsageDates() {
+            return nextUsageDates;
+        }
+
+        public BillingMode getRecurringBillingMode() {
+            return recurringBillingMode;
+        }
+
+        public void resetNextRecurringDate() {
+            nextRecurringDate = null;
+        }
+
+
+        private static LocalDate getMaxDate(@Nullable final LocalDate existingDate, final LocalDate nextDateCandidate) {
+            if (existingDate == null) {
+                return nextDateCandidate;
+            } else {
+                return nextDateCandidate.compareTo(existingDate) > 0 ? nextDateCandidate : existingDate;
+            }
+        }
+
+
+        public static class UsageDef {
+
+            private final String usageName;
+            private final BillingMode billingMode;
+
+            public UsageDef(final String usageName, final BillingMode billingMode) {
+                this.usageName = usageName;
+                this.billingMode = billingMode;
+            }
+
+            public String getUsageName() {
+                return usageName;
+            }
+
+            public BillingMode getBillingMode() {
+                return billingMode;
+            }
+
+            @Override
+            public boolean equals(final Object o) {
+                if (this == o) {
+                    return true;
+                }
+                if (!(o instanceof UsageDef)) {
+                    return false;
+                }
+
+                final UsageDef usageDef = (UsageDef) o;
+
+                if (usageName != null ? !usageName.equals(usageDef.usageName) : usageDef.usageName != null) {
+                    return false;
+                }
+                return billingMode == usageDef.billingMode;
+
+            }
+
+            @Override
+            public int hashCode() {
+                int result = usageName != null ? usageName.hashCode() : 0;
+                result = 31 * result + (billingMode != null ? billingMode.hashCode() : 0);
+                return result;
+            }
+        }
+    }
 }

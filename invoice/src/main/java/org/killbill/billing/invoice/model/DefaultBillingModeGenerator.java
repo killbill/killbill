@@ -38,7 +38,7 @@ public class DefaultBillingModeGenerator implements BillingModeGenerator {
     private static final Logger log = LoggerFactory.getLogger(DefaultBillingModeGenerator.class);
 
     @Override
-    public List<RecurringInvoiceItemData> generateInvoiceItemData(final LocalDate startDate, @Nullable final LocalDate endDate,
+    public RecurringInvoiceItemDataWithNextBillingCycleDate generateInvoiceItemData(final LocalDate startDate, @Nullable final LocalDate endDate,
                                                                   final LocalDate targetDate,
                                                                   final int billingCycleDayLocal,
                                                                   final BillingPeriod billingPeriod,
@@ -56,7 +56,7 @@ public class DefaultBillingModeGenerator implements BillingModeGenerator {
 
         // We are not billing for less than a day
         if (!billingIntervalDetail.hasSomethingToBill()) {
-            return results;
+            return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail, billingMode);
         }
         //
         // If there is an endDate and that endDate is before our first coming firstBillingCycleDate, all we have to do
@@ -66,7 +66,7 @@ public class DefaultBillingModeGenerator implements BillingModeGenerator {
             final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod);
             final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, endDate, leadingProRationPeriods);
             results.add(itemData);
-            return results;
+            return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail, billingMode);
         }
 
         //
@@ -126,6 +126,6 @@ public class DefaultBillingModeGenerator implements BillingModeGenerator {
                 results.add(itemData);
             }
         }
-        return results;
+        return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail, billingMode);
     }
 }

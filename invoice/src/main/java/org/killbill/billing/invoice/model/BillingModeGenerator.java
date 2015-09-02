@@ -16,18 +16,14 @@
 
 package org.killbill.billing.invoice.model;
 
-import java.util.List;
-
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 
 public interface BillingModeGenerator {
 
-    List<RecurringInvoiceItemData> generateInvoiceItemData(LocalDate startDate, @Nullable LocalDate endDate, LocalDate targetDate,
-                                                           int billingCycleDay, BillingPeriod billingPeriod, BillingMode billingMode) throws InvalidDateSequenceException;
+    RecurringInvoiceItemDataWithNextBillingCycleDate generateInvoiceItemData(LocalDate startDate, @Nullable LocalDate endDate, LocalDate targetDate,
+                                                                             int billingCycleDay, BillingPeriod billingPeriod, BillingMode billingMode) throws InvalidDateSequenceException;
 }

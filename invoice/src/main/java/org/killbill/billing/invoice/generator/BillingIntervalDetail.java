@@ -30,7 +30,9 @@ public class BillingIntervalDetail {
     private final int billingCycleDay;
     private final BillingPeriod billingPeriod;
     private final BillingMode billingMode;
+    // First date after the startDate aligned with the BCD
     private LocalDate firstBillingCycleDate;
+    // Date up to which we should bill
     private LocalDate effectiveEndDate;
     private LocalDate lastBillingCycleDate;
 
@@ -66,6 +68,14 @@ public class BillingIntervalDetail {
     public LocalDate getLastBillingCycleDate() {
         return lastBillingCycleDate;
     }
+
+    public LocalDate getNextBillingCycleDate() {
+        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
+        final LocalDate proposedDate = lastBillingCycleDate != null ? lastBillingCycleDate.plusMonths(numberOfMonthsInPeriod) : firstBillingCycleDate;
+        final LocalDate nextBillingCycleDate = alignProposedBillCycleDate(proposedDate, billingCycleDay);
+        return nextBillingCycleDate;
+    }
+
 
     public boolean hasSomethingToBill() {
         return effectiveEndDate != null /* IN_ARREAR mode prior we have reached our firstBillingCycleDate */ &&
@@ -171,8 +181,9 @@ public class BillingIntervalDetail {
 
     private void calculateLastBillingCycleDate() {
 
-        if (effectiveEndDate == null) {
-            lastBillingCycleDate = firstBillingCycleDate;
+        // IN_ARREAR cases
+        if (effectiveEndDate == null || effectiveEndDate.compareTo(firstBillingCycleDate) < 0 ) {
+            lastBillingCycleDate = null;
             return;
         }
 

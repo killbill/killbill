@@ -70,6 +70,7 @@ import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates.UsageDef;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
@@ -101,7 +102,6 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -118,7 +118,7 @@ public class InvoiceDispatcher {
     private static final int NB_LOCK_TRY = 5;
 
     private static final Ordering<DateTime> UPCOMING_NOTIFICATION_DATE_ORDERING = Ordering.natural();
-
+    private final static Joiner JOINER_COMMA = Joiner.on(",");
     private static final NullDryRunArguments NULL_DRY_RUN_ARGUMENTS = new NullDryRunArguments();
 
     private final InvoiceGenerator generator;
@@ -358,9 +358,9 @@ public class InvoiceDispatcher {
             }
             // Add next usage dates if any
             if (subscriptionFutureNotificationDates.getNextUsageDates() != null) {
-                for (String usageName : subscriptionFutureNotificationDates.getNextUsageDates().keySet()) {
-                    final LocalDate nextNotificationDateForUsage = subscriptionFutureNotificationDates.getNextUsageDates().get(usageName);
-                    final DateTime subscriptionUsageCallbackDate = getNextUsageBillingDate(subscriptionId, usageName, nextNotificationDateForUsage, dateAndTimeZoneContext, billingEvents);
+                for (UsageDef usageDef : subscriptionFutureNotificationDates.getNextUsageDates().keySet()) {
+                    final LocalDate nextNotificationDateForUsage = subscriptionFutureNotificationDates.getNextUsageDates().get(usageDef);
+                    final DateTime subscriptionUsageCallbackDate = getNextUsageBillingDate(subscriptionId, usageDef.getUsageName(), nextNotificationDateForUsage, dateAndTimeZoneContext, billingEvents);
                     perSubscriptionNotifications.add(new SubscriptionNotification(subscriptionUsageCallbackDate, true));
                 }
             }
@@ -409,14 +409,18 @@ public class InvoiceDispatcher {
     }
 
     private void logInvoiceWithItems(final Account account, final Invoice invoice, final LocalDate targetDate, final Set<UUID> adjustedUniqueOtherInvoiceId, final boolean isRealInvoiceWithItems) {
+        final StringBuilder tmp = new StringBuilder();
         if (isRealInvoiceWithItems) {
-            log.info("Generated invoice {} with {} items for accountId {} and targetDate {}", new Object[]{invoice.getId(), invoice.getNumberOfItems(), account.getId(), targetDate});
+            tmp.append(String.format("Generated invoice %s with %d items for accountId %s and targetDate %s:\n", invoice.getId(), invoice.getNumberOfItems(), account.getId(), targetDate));
         } else {
-            final Joiner joiner = Joiner.on(",");
-            final String adjustedInvoices = joiner.join(adjustedUniqueOtherInvoiceId.toArray(new UUID[adjustedUniqueOtherInvoiceId.size()]));
-            log.info("Adjusting existing invoices {} with {} items for accountId {} and targetDate {})", new Object[]{adjustedInvoices, invoice.getNumberOfItems(),
-                                                                                                                      account.getId(), targetDate});
+            final String adjustedInvoices = JOINER_COMMA.join(adjustedUniqueOtherInvoiceId.toArray(new UUID[adjustedUniqueOtherInvoiceId.size()]));
+            tmp.append(String.format("Adjusting existing invoices %s with %d items for accountId %s and targetDate %s:\n",
+                                     adjustedInvoices, invoice.getNumberOfItems(), account.getId(), targetDate));
         }
+        for (InvoiceItem item : invoice.getInvoiceItems()) {
+            tmp.append(String.format("\t item = %s\n", item));
+        }
+        log.info(tmp.toString());
     }
 
 

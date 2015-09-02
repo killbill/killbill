@@ -24,7 +24,7 @@ import org.testng.annotations.Test;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 
-public class TestBillingIntervalDetail extends InvoiceTestSuiteNoDB {
+public class TestInAdvanceBillingIntervalDetail extends InvoiceTestSuiteNoDB {
 
     /*
      *

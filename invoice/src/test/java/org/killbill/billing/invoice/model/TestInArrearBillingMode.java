@@ -153,7 +153,8 @@ public class TestInArrearBillingMode extends InvoiceTestSuiteNoDB {
                                     final LinkedHashMap<LocalDate, LocalDate> expectedDates) throws InvalidDateSequenceException {
         final DefaultBillingModeGenerator billingMode = new DefaultBillingModeGenerator();
 
-        final List<RecurringInvoiceItemData> invoiceItems = billingMode.generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod, BillingMode.IN_ARREAR);
+        final RecurringInvoiceItemDataWithNextBillingCycleDate invoiceItemsWithDates = billingMode.generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod, BillingMode.IN_ARREAR);
+        final List<RecurringInvoiceItemData> invoiceItems = invoiceItemsWithDates.getItemData();
 
         int i = 0;
         for (final LocalDate periodStartDate : expectedDates.keySet()) {
