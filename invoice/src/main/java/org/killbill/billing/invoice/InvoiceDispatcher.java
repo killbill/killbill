@@ -113,7 +113,10 @@ import com.google.inject.Inject;
 public class InvoiceDispatcher {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceDispatcher.class);
-    private static final int NB_LOCK_TRY = 5;
+
+
+    // 50 * 100ms = 5sec
+    private static final int NB_LOCK_TRY = 50;
 
     private static final Ordering<DateTime> UPCOMING_NOTIFICATION_DATE_ORDERING = Ordering.natural();
 

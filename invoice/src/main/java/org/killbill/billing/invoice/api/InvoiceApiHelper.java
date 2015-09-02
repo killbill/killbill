@@ -57,7 +57,8 @@ public class InvoiceApiHelper {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceApiHelper.class);
 
-    private static final int NB_LOCK_TRY = 5;
+    // 50 * 100ms = 5sec
+    private static final int NB_LOCK_TRY = 50;
 
     private final InvoicePluginDispatcher invoicePluginDispatcher;
     private final InvoiceDao dao;
