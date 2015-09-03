@@ -612,6 +612,10 @@
                             <value>5.95</value>
                         </price>
                         <price>
+                            <currency>EUR</currency>
+                            <value>6.95</value>
+                        </price>
+                        <price>
                             <currency>USD</currency>
                             <value>7.95</value>
                         </price>
