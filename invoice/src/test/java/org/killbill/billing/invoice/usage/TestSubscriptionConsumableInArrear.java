@@ -78,9 +78,10 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
         assertEquals(result.size(), 3);
 
         assertEquals(result.get(0).getUsage().getName(), usageName2);
-        assertEquals(result.get(0).getTransitionTimes().size(), 2);
+        assertEquals(result.get(0).getTransitionTimes().size(), 3);
         assertTrue(result.get(0).getTransitionTimes().get(0).compareTo(new LocalDate(2013, 3, 23)) == 0);
         assertTrue(result.get(0).getTransitionTimes().get(1).compareTo(new LocalDate(2013, 4, 15)) == 0);
+        assertTrue(result.get(0).getTransitionTimes().get(2).compareTo(new LocalDate(2013, 4, 23)) == 0);
 
         assertEquals(result.get(1).getUsage().getName(), usageName1);
         assertEquals(result.get(1).getTransitionTimes().size(), 4);

@@ -357,6 +357,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                 }
 
+                // STEPH Move all this logic into RecurringInvoiceItemData
                 for (final RecurringInvoiceItemData itemDatum : itemDataWithNextBillingCycleDate.getItemData()) {
                     final BigDecimal rate = thisEvent.getRecurringPrice();
 

@@ -124,6 +124,9 @@ public class ContiguousIntervalConsumableInArrear {
             numberOfPeriod++;
             nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
         }
+        if (closedInterval && endDate.isAfter(transitionTimes.get(transitionTimes.size() - 1))) {
+            transitionTimes.add(endDate);
+        }
         isBuilt.set(true);
         return this;
     }
