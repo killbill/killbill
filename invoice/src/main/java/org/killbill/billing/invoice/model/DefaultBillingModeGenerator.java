@@ -56,7 +56,7 @@ public class DefaultBillingModeGenerator implements BillingModeGenerator {
 
         // We are not billing for less than a day
         if (!billingIntervalDetail.hasSomethingToBill()) {
-            return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail, billingMode);
+            return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail);
         }
         //
         // If there is an endDate and that endDate is before our first coming firstBillingCycleDate, all we have to do
@@ -66,7 +66,7 @@ public class DefaultBillingModeGenerator implements BillingModeGenerator {
             final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod);
             final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, endDate, leadingProRationPeriods);
             results.add(itemData);
-            return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail, billingMode);
+            return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail);
         }
 
         //
@@ -126,6 +126,6 @@ public class DefaultBillingModeGenerator implements BillingModeGenerator {
                 results.add(itemData);
             }
         }
-        return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail, billingMode);
+        return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail);
     }
 }

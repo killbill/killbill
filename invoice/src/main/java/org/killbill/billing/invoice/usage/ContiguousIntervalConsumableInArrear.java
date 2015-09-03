@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.TieredBlock;
@@ -127,6 +128,25 @@ public class ContiguousIntervalConsumableInArrear {
         return this;
     }
 
+    public class ConsumableInArrearItemsAndNextNotificationDate {
+        private final List<InvoiceItem> invoiceItems;
+        private final LocalDate nextNotificationDate;
+
+        public ConsumableInArrearItemsAndNextNotificationDate(final List<InvoiceItem> invoiceItems, final LocalDate nextNotificationDate) {
+            this.invoiceItems = invoiceItems;
+            this.nextNotificationDate = nextNotificationDate;
+        }
+
+        public List<InvoiceItem> getInvoiceItems() {
+            return invoiceItems;
+        }
+
+        public LocalDate getNextNotificationDate() {
+            return nextNotificationDate;
+        }
+    }
+
+
     /**
      * Compute the missing usage invoice items based on what should be billed and what has been billed ($ amount comparison).
      *
@@ -134,12 +154,12 @@ public class ContiguousIntervalConsumableInArrear {
      * @return
      * @throws CatalogApiException
      */
-    public List<InvoiceItem> computeMissingItems(final List<InvoiceItem> existingUsage) throws CatalogApiException {
+    public ConsumableInArrearItemsAndNextNotificationDate computeMissingItemsAndNextNotificationDate(final List<InvoiceItem> existingUsage) throws CatalogApiException {
 
         Preconditions.checkState(isBuilt.get());
 
         if (transitionTimes.size() < 2) {
-            return ImmutableList.of();
+            return new ConsumableInArrearItemsAndNextNotificationDate(ImmutableList.<InvoiceItem>of(), null);
         }
 
         final List<InvoiceItem> result = Lists.newLinkedList();
@@ -184,8 +204,33 @@ public class ContiguousIntervalConsumableInArrear {
                 }
             }
         }
+
+        final LocalDate nextNotificationdate = computeNextNotificationDate();
+        return new ConsumableInArrearItemsAndNextNotificationDate(result, nextNotificationdate);
+    }
+
+    private LocalDate computeNextNotificationDate() {
+        LocalDate result = null;
+        final Iterator<BillingEvent> eventIt = billingEvents.iterator();
+        BillingEvent nextEvent = eventIt.next();
+        while (eventIt.hasNext()) {
+            final BillingEvent thisEvent = nextEvent;
+            nextEvent = eventIt.next();
+            final LocalDate startDate = new LocalDate(thisEvent.getEffectiveDate(), thisEvent.getTimeZone());
+            final LocalDate endDate = new LocalDate(nextEvent.getEffectiveDate(), nextEvent.getTimeZone());
+
+            final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, thisEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR);
+            final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
+            result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;
+        }
+
+        final LocalDate startDate = new LocalDate(nextEvent.getEffectiveDate(), nextEvent.getTimeZone());
+        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, null, targetDate, nextEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR);
+        final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
+        result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;
         return result;
     }
+
 
     @VisibleForTesting
     List<RolledUpUsage> getRolledUpUsage() {

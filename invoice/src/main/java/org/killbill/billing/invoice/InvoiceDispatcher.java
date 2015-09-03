@@ -39,12 +39,10 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
@@ -66,7 +64,6 @@ import org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
-import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
@@ -77,7 +74,6 @@ import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDateNotificationKey;
-import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -272,7 +268,7 @@ public class InvoiceDispatcher {
             final Invoice invoice = invoiceWithMetadata.getInvoice();
 
             // Compute future notifications
-            final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceWithMetadata, billingEvents, dateAndTimeZoneContext, context);
+            final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceWithMetadata, dateAndTimeZoneContext, context);
 
             //
 
@@ -343,7 +339,7 @@ public class InvoiceDispatcher {
     }
 
 
-    private FutureAccountNotifications createNextFutureNotificationDate(final InvoiceWithMetadata invoiceWithMetadata, final BillingEventSet billingEvents, final DateAndTimeZoneContext dateAndTimeZoneContext, final InternalCallContext context) {
+    private FutureAccountNotifications createNextFutureNotificationDate(final InvoiceWithMetadata invoiceWithMetadata, final DateAndTimeZoneContext dateAndTimeZoneContext, final InternalCallContext context) {
 
         final Map<UUID, List<SubscriptionNotification>> result = new HashMap<UUID, List<SubscriptionNotification>>();
 
@@ -360,7 +356,7 @@ public class InvoiceDispatcher {
             if (subscriptionFutureNotificationDates.getNextUsageDates() != null) {
                 for (UsageDef usageDef : subscriptionFutureNotificationDates.getNextUsageDates().keySet()) {
                     final LocalDate nextNotificationDateForUsage = subscriptionFutureNotificationDates.getNextUsageDates().get(usageDef);
-                    final DateTime subscriptionUsageCallbackDate = getNextUsageBillingDate(subscriptionId, usageDef.getUsageName(), nextNotificationDateForUsage, dateAndTimeZoneContext, billingEvents);
+                    final DateTime subscriptionUsageCallbackDate = nextNotificationDateForUsage != null ? dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(nextNotificationDateForUsage) : null;
                     perSubscriptionNotifications.add(new SubscriptionNotification(subscriptionUsageCallbackDate, true));
                 }
             }
@@ -494,20 +490,6 @@ public class InvoiceDispatcher {
 
     private CallContext buildCallContext(final InternalCallContext context) {
         return internalCallContextFactory.createCallContext(context);
-    }
-
-    private DateTime getNextUsageBillingDate(final UUID subscriptionId, final String usageName, final LocalDate chargedThroughDate, final DateAndTimeZoneContext dateAndTimeZoneContext, final BillingEventSet billingEvents) {
-
-        final Usage usage = billingEvents.getUsages().get(usageName);
-        final BillingEvent billingEventSubscription = Iterables.tryFind(billingEvents, new Predicate<BillingEvent>() {
-            @Override
-            public boolean apply(@Nullable final BillingEvent input) {
-                return input.getSubscription().getId().equals(subscriptionId);
-            }
-        }).orNull();
-
-        final LocalDate nextCallbackUsageDate = (usage.getBillingMode() == BillingMode.IN_ARREAR) ? BillingIntervalDetail.alignProposedBillCycleDate(chargedThroughDate.plusMonths(usage.getBillingPeriod().getNumberOfMonths()), billingEventSubscription.getBillCycleDayLocal()) : chargedThroughDate;
-        return dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(nextCallbackUsageDate);
     }
 
     private void setChargedThroughDates(final DateAndTimeZoneContext dateAndTimeZoneContext,

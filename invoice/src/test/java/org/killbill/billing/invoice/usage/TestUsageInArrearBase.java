@@ -109,12 +109,14 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return block;
     }
 
-    protected BillingEvent createMockBillingEvent(DateTime effectiveDate, final List<Usage> usages) {
+    protected BillingEvent createMockBillingEvent(DateTime effectiveDate, BillingPeriod billingPeriod, final List<Usage> usages) {
         final BillingEvent result = Mockito.mock(BillingEvent.class);
         Mockito.when(result.getCurrency()).thenReturn(Currency.BTC);
         Mockito.when(result.getBillCycleDayLocal()).thenReturn(BCD);
         Mockito.when(result.getTimeZone()).thenReturn(DateTimeZone.UTC);
         Mockito.when(result.getEffectiveDate()).thenReturn(effectiveDate);
+        Mockito.when(result.getBillingPeriod()).thenReturn(billingPeriod);
+
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);

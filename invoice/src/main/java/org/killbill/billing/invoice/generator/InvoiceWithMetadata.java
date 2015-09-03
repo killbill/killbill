@@ -18,7 +18,6 @@
 package org.killbill.billing.invoice.generator;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -29,7 +28,6 @@ import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates.UsageDef;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -38,7 +36,6 @@ public class InvoiceWithMetadata {
 
     private final Invoice invoice;
     private final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates;
-
 
     public InvoiceWithMetadata(final Invoice invoice, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
         this.invoice = invoice;
@@ -56,19 +53,13 @@ public class InvoiceWithMetadata {
 
     // Remove all the IN_ADVANCE items for which we have no invoice items
     private void build() {
+        // nextRecurringDate are computed based on *proposed* items, and not missing items (= proposed - existing). So
+        // we need to filter out the dates for which there is no item left otherwsie we may end up in creating too many notification dates
+        // and in particular that could lead to an infinite loop.
         for (final UUID subscriptionId : perSubscriptionFutureNotificationDates.keySet()) {
             final SubscriptionFutureNotificationDates tmp = perSubscriptionFutureNotificationDates.get(subscriptionId);
             if (tmp.getRecurringBillingMode() == BillingMode.IN_ADVANCE && !hasItemsForSubscription(subscriptionId, InvoiceItemType.RECURRING)) {
                 tmp.resetNextRecurringDate();
-            }
-            if (tmp.getNextUsageDates() != null) {
-                final Iterator<UsageDef> it = tmp.getNextUsageDates().keySet().iterator();
-                while (it.hasNext()) {
-                    final UsageDef usageDef = it.next();
-                    if (usageDef.getBillingMode() == BillingMode.IN_ADVANCE && !hasItemsForSubscription(subscriptionId, InvoiceItemType.USAGE)) {
-                        it.remove();
-                    }
-                }
             }
         }
     }
@@ -97,16 +88,20 @@ public class InvoiceWithMetadata {
         }
 
         public void updateNextRecurringDateIfRequired(final LocalDate nextRecurringDateCandidate) {
-            nextRecurringDate = getMaxDate(nextRecurringDate, nextRecurringDateCandidate);
+            if (nextRecurringDateCandidate != null) {
+                nextRecurringDate = getMaxDate(nextRecurringDate, nextRecurringDateCandidate);
+            }
         }
 
         public void updateNextUsageDateIfRequired(final String usageName, final BillingMode billingMode, final LocalDate nextUsageDateCandidate) {
-            if (nextUsageDates == null) {
-                nextUsageDates = new HashMap<UsageDef, LocalDate>();
+            if (nextUsageDateCandidate != null) {
+                if (nextUsageDates == null) {
+                    nextUsageDates = new HashMap<UsageDef, LocalDate>();
+                }
+                final UsageDef usageDef = new UsageDef(usageName, billingMode);
+                final LocalDate nextUsageDate = getMaxDate(nextUsageDates.get(usageDef), nextUsageDateCandidate);
+                nextUsageDates.put(usageDef, nextUsageDate);
             }
-            final UsageDef usageDef = new UsageDef(usageName, billingMode);
-            final LocalDate nextUsageDate = getMaxDate(nextUsageDates.get(usageDef), nextUsageDateCandidate);
-            nextUsageDates.put(usageDef, nextUsageDate);
         }
 
         public LocalDate getNextRecurringDate() {
@@ -125,7 +120,6 @@ public class InvoiceWithMetadata {
             nextRecurringDate = null;
         }
 
-
         private static LocalDate getMaxDate(@Nullable final LocalDate existingDate, final LocalDate nextDateCandidate) {
             if (existingDate == null) {
                 return nextDateCandidate;
@@ -133,7 +127,6 @@ public class InvoiceWithMetadata {
                 return nextDateCandidate.compareTo(existingDate) > 0 ? nextDateCandidate : existingDate;
             }
         }
-
 
         public static class UsageDef {
 

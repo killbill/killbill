@@ -27,12 +27,10 @@ public class RecurringInvoiceItemDataWithNextBillingCycleDate {
 
     private final List<RecurringInvoiceItemData> itemData;
     private final BillingIntervalDetail billingIntervalDetail;
-    private final BillingMode billingMode;
 
-    public RecurringInvoiceItemDataWithNextBillingCycleDate(final List<RecurringInvoiceItemData> itemData, final BillingIntervalDetail billingIntervalDetail,final BillingMode billingMode) {
+    public RecurringInvoiceItemDataWithNextBillingCycleDate(final List<RecurringInvoiceItemData> itemData, final BillingIntervalDetail billingIntervalDetail) {
         this.itemData = itemData;
         this.billingIntervalDetail = billingIntervalDetail;
-        this.billingMode = billingMode;
     }
 
     public List<RecurringInvoiceItemData> getItemData() {

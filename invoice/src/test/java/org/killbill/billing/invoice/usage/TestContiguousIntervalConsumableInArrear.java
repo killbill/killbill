@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
+import org.killbill.billing.invoice.usage.ContiguousIntervalConsumableInArrear.ConsumableInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUsage;
@@ -88,6 +89,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final LocalDate targetDate = startDate.plusDays(1);
         final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, ImmutableList.<RawUsage>of(), targetDate, false,
                                                                                                                            createMockBillingEvent(targetDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                                                                                                                                                  BillingPeriod.MONTHLY,
                                                                                                                                                   Collections.<Usage>emptyList())
                                                                                                                           );
 
@@ -127,6 +129,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, ImmutableList.<RawUsage>of(), targetDate, false,
                                                                                                                            createMockBillingEvent(targetDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                                                                                                                                                  BillingPeriod.MONTHLY,
                                                                                                                                                   Collections.<Usage>emptyList())
                                                                                                                           );
 
@@ -156,8 +159,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final LocalDate targetDate = endDate;
 
-        final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), Collections.<Usage>emptyList());
-        final BillingEvent event2 = createMockBillingEvent(endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), Collections.<Usage>emptyList());
+        final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+        final BillingEvent event2 = createMockBillingEvent(endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
 
         final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsages, targetDate, true, event1, event2);
 
@@ -168,7 +171,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final InvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), firstBCDDate, endDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii2);
 
-        final List<InvoiceItem> rawResults = intervalConsumableInArrear.computeMissingItems(invoiceItems);
+        final ConsumableInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
+        final List<InvoiceItem> rawResults = usageResult.getInvoiceItems();
         assertEquals(rawResults.size(), 4);
 
         final List<InvoiceItem> result = ImmutableList.copyOf(Iterables.filter(rawResults, new Predicate<InvoiceItem>() {
@@ -216,16 +220,16 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
 
         final LocalDate t0 = new LocalDate(2015, 03, BCD);
-        final BillingEvent eventT0 = createMockBillingEvent(t0.toDateTimeAtStartOfDay(DateTimeZone.UTC), Collections.<Usage>emptyList());
+        final BillingEvent eventT0 = createMockBillingEvent(t0.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
 
         final LocalDate t1 = new LocalDate(2015, 04, BCD);
-        final BillingEvent eventT1 = createMockBillingEvent(t1.toDateTimeAtStartOfDay(DateTimeZone.UTC), Collections.<Usage>emptyList());
+        final BillingEvent eventT1 = createMockBillingEvent(t1.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
 
         final LocalDate t2 = new LocalDate(2015, 05, BCD);
-        final BillingEvent eventT2 = createMockBillingEvent(t2.toDateTimeAtStartOfDay(DateTimeZone.UTC), Collections.<Usage>emptyList());
+        final BillingEvent eventT2 = createMockBillingEvent(t2.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
 
         final LocalDate t3 = new LocalDate(2015, 06, BCD);
-        final BillingEvent eventT3 = createMockBillingEvent(t3.toDateTimeAtStartOfDay(DateTimeZone.UTC), Collections.<Usage>emptyList());
+        final BillingEvent eventT3 = createMockBillingEvent(t3.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
 
         final LocalDate targetDate = t3;
 
