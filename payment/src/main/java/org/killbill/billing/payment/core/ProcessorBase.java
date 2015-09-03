@@ -63,7 +63,8 @@ import com.google.common.collect.Collections2;
 
 public abstract class ProcessorBase {
 
-    public static final int NB_LOCK_TRY = 5;
+    // 50 * 100ms = 5sec
+    public static final int NB_LOCK_TRY = 50;
 
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final AccountInternalApi accountInternalApi;
