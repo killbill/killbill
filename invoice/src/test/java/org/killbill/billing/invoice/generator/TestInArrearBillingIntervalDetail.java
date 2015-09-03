@@ -164,7 +164,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-18"));
-        Assert.assertEquals(billingIntervalDetail.getEffectiveEndDate(), new LocalDate("2012-01-18"));
+        Assert.assertEquals(billingIntervalDetail.getEffectiveEndDate(), new LocalDate("2012-01-20"));
         Assert.assertEquals(billingIntervalDetail.getNextBillingCycleDate(), new LocalDate("2012-02-18"));
     }
 
