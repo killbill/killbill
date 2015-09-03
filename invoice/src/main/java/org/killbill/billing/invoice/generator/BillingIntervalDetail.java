@@ -140,8 +140,8 @@ public class BillingIntervalDetail {
         }
         proposedDate = alignProposedBillCycleDate(proposedDate, billingCycleDay);
 
-        // The proposedDate is greater to our endDate => return it
-        if (endDate != null && endDate.isBefore(proposedDate)) {
+        // We honor the endDate as long as it does not go beyond our targetDate (by construction this cannot be after the nextProposedDate neither.
+        if (endDate != null && !endDate.isAfter(targetDate)) {
             effectiveEndDate = endDate;
         } else {
             effectiveEndDate = proposedDate;
