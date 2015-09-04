@@ -90,6 +90,7 @@ public class PaymentAutomatonRunner {
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final Clock clock;
     private final PersistentBus eventBus;
+    private final PaymentConfig paymentConfig;
 
     @Inject
     public PaymentAutomatonRunner(final PaymentConfig paymentConfig,
@@ -106,7 +107,7 @@ public class PaymentAutomatonRunner {
         this.pluginRegistry = pluginRegistry;
         this.clock = clock;
         this.eventBus = eventBus;
-
+        this.paymentConfig = paymentConfig;
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentPluginDispatcher = new PluginDispatcher<OperationResult>(paymentPluginTimeoutSec, executors);
 
@@ -151,37 +152,37 @@ public class PaymentAutomatonRunner {
         final EnteringStateCallback enteringStateCallback;
         switch (transactionType) {
             case PURCHASE:
-                operationCallback = new PurchaseOperation(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+                operationCallback = new PurchaseOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new PurchaseInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new PurchaseCompleted(daoHelper, paymentStateContext);
                 break;
             case AUTHORIZE:
-                operationCallback = new AuthorizeOperation(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+                operationCallback = new AuthorizeOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new AuthorizeInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new AuthorizeCompleted(daoHelper, paymentStateContext);
                 break;
             case CAPTURE:
-                operationCallback = new CaptureOperation(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+                operationCallback = new CaptureOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new CaptureInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new CaptureCompleted(daoHelper, paymentStateContext);
                 break;
             case VOID:
-                operationCallback = new VoidOperation(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+                operationCallback = new VoidOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new VoidInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new VoidCompleted(daoHelper, paymentStateContext);
                 break;
             case REFUND:
-                operationCallback = new RefundOperation(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+                operationCallback = new RefundOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new RefundInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new RefundCompleted(daoHelper, paymentStateContext);
                 break;
             case CREDIT:
-                operationCallback = new CreditOperation(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+                operationCallback = new CreditOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new CreditInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new CreditCompleted(daoHelper, paymentStateContext);
                 break;
             case CHARGEBACK:
-                operationCallback = new ChargebackOperation(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+                operationCallback = new ChargebackOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new ChargebackInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new ChargebackCompleted(daoHelper, paymentStateContext);
                 break;

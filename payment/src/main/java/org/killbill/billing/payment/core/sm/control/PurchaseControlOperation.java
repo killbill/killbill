@@ -23,12 +23,18 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 
 public class PurchaseControlOperation extends OperationControlCallback {
 
-    public PurchaseControlOperation(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final ControlPluginRunner controlPluginRunner) {
-        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+    public PurchaseControlOperation(final GlobalLocker locker,
+                                    final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                                    final PaymentConfig paymentConfig,
+                                    final PaymentStateControlContext paymentStateContext,
+                                    final PaymentProcessor paymentProcessor,
+                                    final ControlPluginRunner controlPluginRunner) {
+        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentConfig, controlPluginRunner);
     }
 
     @Override

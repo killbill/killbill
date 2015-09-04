@@ -25,9 +25,10 @@ import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.core.ProcessorBase.CallableWithAccountLock;
-import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
+import org.killbill.billing.payment.core.ProcessorBase.DispatcherCallback;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,15 +39,18 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
 
     private final GlobalLocker locker;
     private final PluginDispatcher<OperationResult> paymentPluginDispatcher;
+    private final PaymentConfig paymentConfig;
 
     protected final PaymentStateContext paymentStateContext;
 
     protected OperationCallbackBase(final GlobalLocker locker,
                                     final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                                    final PaymentConfig paymentConfig,
                                     final PaymentStateContext paymentStateContext) {
         this.locker = locker;
         this.paymentPluginDispatcher = paymentPluginDispatcher;
         this.paymentStateContext = paymentStateContext;
+        this.paymentConfig = paymentConfig;
     }
 
     //
@@ -54,13 +58,14 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
     // The dispatcher may throw a TimeoutException, ExecutionException, or InterruptedException; those will be handled in specific
     // callback to eventually throw a OperationException, that will be used to drive the state machine in the right direction.
     //
-    protected <ExceptionType extends Exception> OperationResult dispatchWithAccountLockAndTimeout(final WithAccountLockCallback<PluginDispatcherReturnType<OperationResult>, ExceptionType> callback) throws OperationException {
+    protected <ExceptionType extends Exception> OperationResult dispatchWithAccountLockAndTimeout(final DispatcherCallback<PluginDispatcherReturnType<OperationResult>, ExceptionType> callback) throws OperationException {
         final Account account = paymentStateContext.getAccount();
         logger.debug("Dispatching plugin call for account {}", account.getExternalKey());
 
         try {
             final Callable<PluginDispatcherReturnType<OperationResult>> task = new CallableWithAccountLock<OperationResult, ExceptionType>(locker,
                                                                                                                                            account.getExternalKey(),
+                                                                                                                                           paymentConfig,
                                                                                                                                            callback);
             final OperationResult operationResult = paymentPluginDispatcher.dispatchWithTimeout(task);
             logger.debug("Successful plugin call for account {} with result {}", account.getExternalKey(), operationResult);

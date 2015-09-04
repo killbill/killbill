@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
@@ -47,6 +46,7 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -62,9 +62,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Collections2;
 
 public abstract class ProcessorBase {
-
-    // 50 * 100ms = 5sec
-    public static final int NB_LOCK_TRY = 50;
 
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final AccountInternalApi accountInternalApi;
@@ -158,9 +155,7 @@ public abstract class ProcessorBase {
         return internalCallContextFactory.createCallContext(context);
     }
 
-    // TODO Rename - there is no lock!
-    public interface WithAccountLockCallback<PluginDispatcherReturnType, ExceptionType extends Exception> {
-
+    public interface DispatcherCallback<PluginDispatcherReturnType, ExceptionType extends Exception> {
         public PluginDispatcherReturnType doOperation() throws ExceptionType;
     }
 
@@ -168,29 +163,38 @@ public abstract class ProcessorBase {
 
         private final GlobalLocker locker;
         private final String accountExternalKey;
-        private final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback;
+        private final DispatcherCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback;
+        private final PaymentConfig paymentConfig;
 
         public CallableWithAccountLock(final GlobalLocker locker,
                                        final String accountExternalKey,
-                                       final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback) {
+                                       final PaymentConfig paymentConfig,
+                                       final DispatcherCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback) {
             this.locker = locker;
             this.accountExternalKey = accountExternalKey;
             this.callback = callback;
+            this.paymentConfig = paymentConfig;
         }
 
         @Override
         public PluginDispatcherReturnType<ReturnType> call() throws ExceptionType, LockFailedException {
-            return new WithAccountLock<ReturnType, ExceptionType>().processAccountWithLock(locker, accountExternalKey, callback);
+            return new WithAccountLock<ReturnType, ExceptionType>(paymentConfig).processAccountWithLock(locker, accountExternalKey, callback);
         }
     }
 
     public static class WithAccountLock<ReturnType, ExceptionType extends Exception> {
 
-        public PluginDispatcherReturnType<ReturnType> processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback)
+        private final PaymentConfig paymentConfig;
+
+        public WithAccountLock(final PaymentConfig paymentConfig) {
+            this.paymentConfig = paymentConfig;
+        }
+
+        public PluginDispatcherReturnType<ReturnType> processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final DispatcherCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback)
                 throws ExceptionType, LockFailedException {
             GlobalLock lock = null;
             try {
-                lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountExternalKey, NB_LOCK_TRY);
+                lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountExternalKey, paymentConfig.getMaxGlobalLockRetries());
                 return callback.doOperation();
             } finally {
                 if (lock != null) {

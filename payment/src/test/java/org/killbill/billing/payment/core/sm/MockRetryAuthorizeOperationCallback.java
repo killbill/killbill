@@ -35,6 +35,7 @@ import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
@@ -46,8 +47,15 @@ public class MockRetryAuthorizeOperationCallback extends AuthorizeControlOperati
     private Exception exception;
     private OperationResult result;
 
-    public MockRetryAuthorizeOperationCallback(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateControlContext paymentStateContext, final PaymentProcessor paymentProcessor, final ControlPluginRunner controlPluginRunner, final PaymentDao paymentDao, final Clock clock) {
-        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+    public MockRetryAuthorizeOperationCallback(final GlobalLocker locker,
+                                               final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                                               final PaymentConfig paymentConfig,
+                                               final PaymentStateControlContext paymentStateContext,
+                                               final PaymentProcessor paymentProcessor,
+                                               final ControlPluginRunner controlPluginRunner,
+                                               final PaymentDao paymentDao,
+                                               final Clock clock) {
+        super(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
         this.paymentDao = paymentDao;
         this.clock = clock;
     }

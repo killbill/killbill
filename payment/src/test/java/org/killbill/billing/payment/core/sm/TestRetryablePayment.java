@@ -189,6 +189,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         mockRetryAuthorizeOperationCallback =
                 new MockRetryAuthorizeOperationCallback(locker,
                                                         runner.getPaymentPluginDispatcher(),
+                                                        paymentConfig,
                                                         paymentStateContext,
                                                         null,
                                                         controlPluginRunner,

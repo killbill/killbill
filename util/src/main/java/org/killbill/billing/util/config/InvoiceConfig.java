@@ -26,22 +26,27 @@ public interface InvoiceConfig extends KillbillConfig {
     @Config("org.killbill.invoice.maxNumberOfMonthsInFuture")
     @Default("36")
     @Description("Maximum target date to consider when generating an invoice")
-    public int getNumberOfMonthsInFuture();
+    int getNumberOfMonthsInFuture();
 
     @Config("org.killbill.invoice.emailNotificationsEnabled")
     @Default("false")
     @Description("Whether to send email notifications on invoice creation (for configured accounts)")
-    public boolean isEmailNotificationsEnabled();
+    boolean isEmailNotificationsEnabled();
 
     @Config("org.killbill.invoice.dryRunNotificationSchedule")
     @Default("0s")
     @Description("DryRun invoice notification time before targetDate (ignored if set to 0s)")
-    public TimeSpan getDryRunNotificationSchedule();
+    TimeSpan getDryRunNotificationSchedule();
 
 
     @Config("org.killbill.invoice.readMaxRawUsagePreviousPeriod")
     @Default("2")
     @Description("Maximum number of past billing periods we use to fetch raw usage data (usage optimization)")
-    public int getMaxRawUsagePreviousPeriod();
+    int getMaxRawUsagePreviousPeriod();
 
+
+    @Config("org.killbill.invoice.globalLock.retries")
+    @Default("50")
+    @Description("Maximum number of times the system will retry to grab global lock (with a 100ms wait each time)")
+    int getMaxGlobalLockRetries();
 }
