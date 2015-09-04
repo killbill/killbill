@@ -35,7 +35,6 @@ public class TestIncompletePaymentTransactionTask extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGetNextNotificationTime() {
-        assertNull(incompletePaymentTransactionTask.getNextNotificationTime(null));
         final DateTime initTime = clock.getUTCNow();
 
         // Based on config "15s,1m,3m,1h,1d,1d,1d,1d,1d"

@@ -209,6 +209,13 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
+    public void updatePaymentTransactions(final UUID paymentId, final List<PaymentTransactionInfoPlugin> newTransactions) {
+        if (paymentTransactions.containsKey(paymentId.toString())) {
+            paymentTransactions.put (paymentId.toString(), newTransactions);
+        }
+    }
+
+    @Override
     public PaymentTransactionInfoPlugin authorizePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context)
             throws PaymentPluginApiException {
         return getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.AUTHORIZE, amount, currency, properties);
