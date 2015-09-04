@@ -133,7 +133,6 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
                 return 10;
             }
         };
-        this.generator = new DefaultInvoiceGenerator(clock, invoiceConfig, null);
         this.account = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
                                                .firstNameLength(6)
                                                .email(UUID.randomUUID().toString().substring(1, 8))

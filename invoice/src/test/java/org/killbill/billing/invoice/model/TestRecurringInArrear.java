@@ -30,7 +30,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestInArrearBillingMode extends InvoiceTestSuiteNoDB {
+public class TestRecurringInArrear extends InvoiceTestSuiteNoDB {
 
     private static final DateTimeZone TIMEZONE = DateTimeZone.forID("Pacific/Pitcairn");
     private static final BillingPeriod BILLING_PERIOD = BillingPeriod.MONTHLY;
@@ -43,7 +43,7 @@ public class TestInArrearBillingMode extends InvoiceTestSuiteNoDB {
         final int billingCycleDayLocal = 15;
 
         final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
-        verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
     }
 
     @Test(groups = "fast")
@@ -54,7 +54,7 @@ public class TestInArrearBillingMode extends InvoiceTestSuiteNoDB {
         final int billingCycleDayLocal = 15;
 
         final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
-        verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
     }
 
     @Test(groups = "fast")
@@ -65,11 +65,11 @@ public class TestInArrearBillingMode extends InvoiceTestSuiteNoDB {
         final int billingCycleDayLocal = 15;
 
         final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
-        verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
 
         final LocalDate targetDate2 = new LocalDate(2012, 8, 15);
         expectedDates.put(new LocalDate(2012, 7, 16), new LocalDate(2012, 8, 15));
-        verifyInvoiceItems(startDate, endDate, targetDate2, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate2, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
     }
 
     @Test(groups = "fast")
@@ -80,11 +80,11 @@ public class TestInArrearBillingMode extends InvoiceTestSuiteNoDB {
         final int billingCycleDayLocal = 16;
 
         final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
-        verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
 
         expectedDates.put(new LocalDate(2012, 7, 16), new LocalDate(2012, 8, 16));
         final LocalDate targetDate2 = new LocalDate(2012, 8, 16);
-        verifyInvoiceItems(startDate, endDate, targetDate2, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate2, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
 
     }
 
@@ -96,11 +96,11 @@ public class TestInArrearBillingMode extends InvoiceTestSuiteNoDB {
         final int billingCycleDayLocal = 17;
 
         final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
-        verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
 
         final LocalDate targetDate2 = new LocalDate(2012, 7, 17);
         expectedDates.put(new LocalDate(2012, 7, 16), new LocalDate(2012, 7, 17));
-        verifyInvoiceItems(startDate, endDate, targetDate2, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate2, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
     }
 
     @Test(groups = "fast")
@@ -115,7 +115,7 @@ public class TestInArrearBillingMode extends InvoiceTestSuiteNoDB {
         expectedDates.put(new LocalDate(2012, 8, 15), new LocalDate(2012, 9, 15));
         expectedDates.put(new LocalDate(2012, 9, 15), new LocalDate(2012, 10, 15));
 
-        verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
     }
 
     @Test(groups = "fast")
@@ -130,7 +130,7 @@ public class TestInArrearBillingMode extends InvoiceTestSuiteNoDB {
         expectedDates.put(new LocalDate(2012, 8, 16), new LocalDate(2012, 9, 16));
         expectedDates.put(new LocalDate(2012, 9, 16), new LocalDate(2012, 10, 16));
 
-        verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
     }
 
     @Test(groups = "fast")
@@ -145,15 +145,14 @@ public class TestInArrearBillingMode extends InvoiceTestSuiteNoDB {
         expectedDates.put(new LocalDate(2012, 7, 17), new LocalDate(2012, 8, 17));
         expectedDates.put(new LocalDate(2012, 8, 17), new LocalDate(2012, 9, 17));
 
-        verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+        verifyInvoiceItems(startDate, endDate, targetDate, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
     }
 
     private void verifyInvoiceItems(final LocalDate startDate, final LocalDate endDate, final LocalDate targetDate,
-                                    final DateTimeZone dateTimeZone, final int billingCycleDayLocal, final BillingPeriod billingPeriod,
+                                    final int billingCycleDayLocal, final BillingPeriod billingPeriod,
                                     final LinkedHashMap<LocalDate, LocalDate> expectedDates) throws InvalidDateSequenceException {
-        final DefaultBillingModeGenerator billingMode = new DefaultBillingModeGenerator();
 
-        final RecurringInvoiceItemDataWithNextBillingCycleDate invoiceItemsWithDates = billingMode.generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod, BillingMode.IN_ARREAR);
+        final RecurringInvoiceItemDataWithNextBillingCycleDate invoiceItemsWithDates = fixedAndRecurringInvoiceItemGenerator.generateInvoiceItemData(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod, BillingMode.IN_ARREAR);
         final List<RecurringInvoiceItemData> invoiceItems = invoiceItemsWithDates.getItemData();
 
         int i = 0;

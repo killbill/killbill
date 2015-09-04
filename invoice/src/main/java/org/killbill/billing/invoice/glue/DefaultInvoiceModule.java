@@ -39,7 +39,9 @@ import org.killbill.billing.invoice.api.user.DefaultInvoiceUserApi;
 import org.killbill.billing.invoice.dao.DefaultInvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.generator.DefaultInvoiceGenerator;
+import org.killbill.billing.invoice.generator.FixedAndRecurringInvoiceItemGenerator;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
+import org.killbill.billing.invoice.generator.UsageInvoiceItemGenerator;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDatePoster;
 import org.killbill.billing.invoice.notification.EmailInvoiceNotifier;
@@ -133,6 +135,8 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
 
     protected void installInvoiceGenerator() {
         bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
+        bind(FixedAndRecurringInvoiceItemGenerator.class).asEagerSingleton();
+        bind(UsageInvoiceItemGenerator.class).asEagerSingleton();
     }
 
     protected void installInvoicePluginApi() {
@@ -157,7 +161,8 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
         installResourceBundleFactory();
-        bind(RawUsageOptimizer.class).asEagerSingleton();;
+        bind(RawUsageOptimizer.class).asEagerSingleton();
+        ;
         bind(InvoiceApiHelper.class).asEagerSingleton();
     }
 }
