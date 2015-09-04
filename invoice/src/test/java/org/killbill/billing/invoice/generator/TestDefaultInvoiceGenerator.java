@@ -127,6 +127,11 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
             public int getMaxRawUsagePreviousPeriod() {
                 return -1;
             }
+
+            @Override
+            public int getMaxGlobalLockRetries() {
+                return 10;
+            }
         };
         this.generator = new DefaultInvoiceGenerator(clock, invoiceConfig, null);
         this.account = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))

@@ -47,6 +47,10 @@ import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
+import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -55,6 +59,7 @@ import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.skife.config.TimeSpan;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
@@ -393,6 +398,58 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
+    // The test will check that when a PENDING entry stays PENDING, we go through all our retries and evebtually give up (no infinite loop of retries)
+    @Test(groups = "slow")
+    public void testPendingEntriesThatDontMove() throws PaymentApiException, EventBusException, NoSuchNotificationQueue, PaymentPluginApiException, InterruptedException {
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "haha";
+        final String transactionExternalKey = "hoho!";
+
+        testListener.pushExpectedEvent(NextEvent.PAYMENT);
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), paymentExternalKey,
+                                                               transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+        testListener.assertListenerStatus();
+
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+
+        // Artificially move the transaction status to PENDING AND update state on the plugin as well
+        final List<PaymentTransactionInfoPlugin> paymentTransactions = mockPaymentProviderPlugin.getPaymentInfo(account.getId(), payment.getId(), ImmutableList.<PluginProperty>of(), callContext);
+        final PaymentTransactionInfoPlugin oTx = paymentTransactions.remove(0);
+        final PaymentTransactionInfoPlugin updatePaymentTransaction = new DefaultNoOpPaymentInfoPlugin(oTx.getKbPaymentId(), oTx.getKbTransactionPaymentId(), oTx.getTransactionType(), oTx.getAmount(), oTx.getCurrency(), oTx.getCreatedDate(), oTx.getCreatedDate(), PaymentPluginStatus.PENDING, null);
+        paymentTransactions.add(updatePaymentTransaction);
+        mockPaymentProviderPlugin.updatePaymentTransactions(payment.getId(), paymentTransactions);
+
+        final String paymentStateName = paymentSMHelper.getPendingStateForTransaction(TransactionType.AUTHORIZE).toString();
+
+
+        testListener.pushExpectedEvent(NextEvent.PAYMENT);
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+                                                           payment.getTransactions().get(0).getId(), TransactionStatus.PENDING, requestedAmount, account.getCurrency(),
+                                                           "loup", "chat", internalCallContext);
+        testListener.assertListenerStatus();
+
+        // 15s,1m,3m,1h,1d,1d,1d,1d,1d
+        for (TimeSpan cur : paymentConfig.getIncompleteTransactionsRetries()) {
+            // Verify there is a notification to retry updating the value
+            assertEquals(getPendingNotificationCnt(internalCallContext), 1);
+
+            clock.addDeltaFromReality(cur.getMillis() + 1);
+
+            // We add a sleep here to make sure the notification gets processed. Note that calling assertNotificationsCompleted would not work
+            // because there is a point in time where the notification  queue is empty (showing notification was processed), but the processing of the notification
+            // will itself enter a new notification, and so the synchronization is difficult without writing *too much code*.
+            Thread.sleep(1000);
+
+            //assertNotificationsCompleted(internalCallContext, 5);
+            final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+            Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
+        }
+
+        assertEquals(getPendingNotificationCnt(internalCallContext), 0);
+    }
+
+
     private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
         final List<PluginProperty> result = new ArrayList<PluginProperty>();
         result.add(new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
@@ -440,6 +497,16 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         } catch (final Exception e) {
             fail("Test failed ", e);
         }
+    }
+
+    private int getPendingNotificationCnt(final InternalCallContext internalCallContext) {
+        try {
+            return notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()).size();
+        } catch (final Exception e) {
+            fail("Test failed ", e);
+        }
+        // Not reached..
+        return -1;
     }
 }
 

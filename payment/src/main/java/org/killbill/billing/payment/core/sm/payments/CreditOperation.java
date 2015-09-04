@@ -24,6 +24,7 @@ import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +34,11 @@ public class CreditOperation extends PaymentOperation {
     private final Logger logger = LoggerFactory.getLogger(CreditOperation.class);
 
     public CreditOperation(final PaymentAutomatonDAOHelper daoHelper,
-                           final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                           final GlobalLocker locker,
+                           final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                           final PaymentConfig paymentConfig,
                            final PaymentStateContext paymentStateContext) throws PaymentApiException {
-        super(locker, daoHelper, paymentPluginDispatcher, paymentStateContext);
+        super(locker, daoHelper, paymentPluginDispatcher, paymentConfig, paymentStateContext);
     }
 
     @Override

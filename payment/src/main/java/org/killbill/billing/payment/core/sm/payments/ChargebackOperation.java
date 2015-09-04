@@ -30,6 +30,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +40,11 @@ public class ChargebackOperation extends PaymentOperation {
     private final Logger logger = LoggerFactory.getLogger(ChargebackOperation.class);
 
     public ChargebackOperation(final PaymentAutomatonDAOHelper daoHelper,
-                               final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                               final GlobalLocker locker,
+                               final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                               final PaymentConfig paymentConfig,
                                final PaymentStateContext paymentStateContext) throws PaymentApiException {
-        super(locker, daoHelper, paymentPluginDispatcher, paymentStateContext);
+        super(locker, daoHelper, paymentPluginDispatcher, paymentConfig, paymentStateContext);
     }
 
     @Override

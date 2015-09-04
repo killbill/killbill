@@ -16,13 +16,18 @@
 
 package org.killbill.billing.payment.plugin.api;
 
+import java.util.List;
+import java.util.UUID;
+
 public interface NoOpPaymentPluginApi extends PaymentPluginApi {
 
-    public void clear();
+    void clear();
 
-    public void makeNextPaymentFailWithError();
+    void makeNextPaymentFailWithError();
 
-    public void makeNextPaymentFailWithException();
+    void makeNextPaymentFailWithException();
 
-    public void makeAllInvoicesFailWithError(boolean failure);
+    void makeAllInvoicesFailWithError(boolean failure);
+
+    void updatePaymentTransactions(UUID paymentId, List<PaymentTransactionInfoPlugin> newTransactions);
 }

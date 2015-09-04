@@ -93,6 +93,11 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
+    public void updatePaymentTransactions(final UUID paymentId, final List<PaymentTransactionInfoPlugin> newTransactions) {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
     public PaymentTransactionInfoPlugin authorizePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context)
             throws PaymentPluginApiException {
         return getInternalNoopPaymentInfoResult(kbPaymentId, kbTransactionId, TransactionType.AUTHORIZE, amount, currency);

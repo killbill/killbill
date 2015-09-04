@@ -39,12 +39,13 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.PaymentProcessor;
-import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
+import org.killbill.billing.payment.core.ProcessorBase.DispatcherCallback;
 import org.killbill.billing.payment.core.sm.OperationCallbackBase;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner.DefaultPaymentControlContext;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
@@ -64,8 +65,9 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                        final PluginDispatcher<OperationResult> paymentPluginDispatcher,
                                        final PaymentStateControlContext paymentStateContext,
                                        final PaymentProcessor paymentProcessor,
+                                       final PaymentConfig paymentConfig,
                                        final ControlPluginRunner controlPluginRunner) {
-        super(locker, paymentPluginDispatcher, paymentStateContext);
+        super(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
         this.paymentProcessor = paymentProcessor;
         this.controlPluginRunner = controlPluginRunner;
         this.paymentStateControlContext = paymentStateContext;
@@ -77,7 +79,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
     @Override
     public OperationResult doOperationCallback() throws OperationException {
 
-        return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
+        return dispatchWithAccountLockAndTimeout(new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
 
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {

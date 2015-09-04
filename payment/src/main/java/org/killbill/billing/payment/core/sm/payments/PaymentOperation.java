@@ -30,7 +30,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
-import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
+import org.killbill.billing.payment.core.ProcessorBase.DispatcherCallback;
 import org.killbill.billing.payment.core.sm.OperationCallbackBase;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
@@ -42,6 +42,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 
@@ -59,8 +60,9 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     protected PaymentOperation(final GlobalLocker locker,
                                final PaymentAutomatonDAOHelper daoHelper,
                                final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                               final PaymentConfig paymentConfig,
                                final PaymentStateContext paymentStateContext) {
-        super(locker, paymentPluginDispatcher, paymentStateContext);
+        super(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
         this.daoHelper = daoHelper;
     }
 
@@ -154,7 +156,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     }
 
     private OperationResult doOperationCallbackWithDispatchAndAccountLock() throws OperationException {
-        return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
+        return dispatchWithAccountLockAndTimeout(new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
                 final OperationResult result = doSimpleOperationCallback();

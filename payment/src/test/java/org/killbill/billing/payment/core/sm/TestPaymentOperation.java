@@ -38,6 +38,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.mockito.Mockito;
@@ -125,7 +126,7 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
         Mockito.when(paymentDao.getPaymentMethodIncludedDeleted(paymentStateContext.getPaymentMethodId(), internalCallContext)).thenReturn(paymentMethodModelDao);
 
         final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, eventBus, paymentSMHelper);
-        paymentOperation = new PaymentOperationTest(paymentPluginStatus, daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+        paymentOperation = new PaymentOperationTest(paymentPluginStatus, daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
     }
 
     private static final class PaymentOperationTest extends PaymentOperation {
@@ -134,8 +135,10 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
 
         public PaymentOperationTest(@Nullable final PaymentPluginStatus paymentPluginStatus,
                                     final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker,
-                                    final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateContext paymentStateContext) throws PaymentApiException {
-            super(locker, daoHelper, paymentPluginDispatcher, paymentStateContext);
+                                    final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                                    final PaymentConfig paymentConfig,
+                                    final PaymentStateContext paymentStateContext) throws PaymentApiException {
+            super(locker, daoHelper, paymentPluginDispatcher, paymentConfig, paymentStateContext);
             this.paymentInfoPlugin = (paymentPluginStatus == null ? null : getPaymentInfoPlugin(paymentPluginStatus));
         }
 

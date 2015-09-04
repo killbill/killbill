@@ -124,7 +124,7 @@ abstract class CompletionTaskBase<T> implements Runnable {
         GlobalLock lock = null;
         try {
             final Account account = accountInternalApi.getAccountByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
-            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getExternalKey(), ProcessorBase.NB_LOCK_TRY);
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getExternalKey(), paymentConfig.getMaxGlobalLockRetries());
             return callback.doIteration();
         } catch (AccountApiException e) {
             log.warn(String.format("Janitor failed to retrieve account with recordId %s", internalTenantContext.getAccountRecordId()), e);

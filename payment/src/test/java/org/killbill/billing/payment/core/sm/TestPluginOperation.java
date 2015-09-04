@@ -20,7 +20,6 @@ package org.killbill.billing.payment.core.sm;
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,12 +35,13 @@ import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
+import org.killbill.billing.payment.core.ProcessorBase.DispatcherCallback;
 import org.killbill.billing.payment.core.sm.payments.PaymentOperation;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.mockito.Mockito;
@@ -202,10 +202,10 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
         final PaymentAutomatonDAOHelper daoHelper = Mockito.mock(PaymentAutomatonDAOHelper.class);
         Mockito.when(daoHelper.getPaymentProviderPlugin()).thenReturn(null);
-        return new PluginOperationTest(daoHelper, locker, paymentPluginDispatcher, paymentStateContext);
+        return new PluginOperationTest(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
     }
 
-    private static final class CallbackTest implements WithAccountLockCallback<PluginDispatcherReturnType<OperationResult>, PaymentApiException> {
+    private static final class CallbackTest implements DispatcherCallback<PluginDispatcherReturnType<OperationResult>, PaymentApiException> {
 
         private final AtomicInteger runCount = new AtomicInteger(0);
 
@@ -274,8 +274,8 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
     private static final class PluginOperationTest extends PaymentOperation {
 
-        protected PluginOperationTest(final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentStateContext paymentStateContext) throws PaymentApiException {
-            super(locker, daoHelper, paymentPluginDispatcher, paymentStateContext);
+        protected PluginOperationTest(final PaymentAutomatonDAOHelper daoHelper, final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher, final PaymentConfig paymentConfig, final PaymentStateContext paymentStateContext) throws PaymentApiException {
+            super(locker, daoHelper, paymentPluginDispatcher, paymentConfig, paymentStateContext);
         }
 
         @Override

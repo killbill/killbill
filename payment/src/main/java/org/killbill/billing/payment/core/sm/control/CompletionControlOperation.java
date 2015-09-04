@@ -20,17 +20,16 @@ package org.killbill.billing.payment.core.sm.control;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.PaymentProcessor;
-import org.killbill.billing.payment.core.ProcessorBase.WithAccountLockCallback;
+import org.killbill.billing.payment.core.ProcessorBase.DispatcherCallback;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner.DefaultPaymentControlContext;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.control.plugin.api.PaymentControlContext;
-import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 
 //
@@ -38,17 +37,19 @@ import org.killbill.commons.locker.GlobalLocker;
 //
 public class CompletionControlOperation extends OperationControlCallback {
 
-    public CompletionControlOperation(final GlobalLocker locker, final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+    public CompletionControlOperation(final GlobalLocker locker,
+                                      final PluginDispatcher<OperationResult> paymentPluginDispatcher,
+                                      final PaymentConfig paymentConfig,
                                       final PaymentStateControlContext paymentStateContext,
                                       final PaymentProcessor paymentProcessor,
                                       final ControlPluginRunner controlPluginRunner) {
-        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+        super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentConfig, controlPluginRunner);
     }
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
 
-        return dispatchWithAccountLockAndTimeout(new WithAccountLockCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
+        return dispatchWithAccountLockAndTimeout(new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
                 final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();

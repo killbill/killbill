@@ -113,9 +113,6 @@ public class InvoiceDispatcher {
     private static final Logger log = LoggerFactory.getLogger(InvoiceDispatcher.class);
 
 
-    // 50 * 100ms = 5sec
-    private static final int NB_LOCK_TRY = 50;
-
     private static final Ordering<DateTime> UPCOMING_NOTIFICATION_DATE_ORDERING = Ordering.natural();
     private final static Joiner JOINER_COMMA = Joiner.on(",");
     private static final NullDryRunArguments NULL_DRY_RUN_ARGUMENTS = new NullDryRunArguments();
@@ -208,7 +205,7 @@ public class InvoiceDispatcher {
                                   @Nullable final DryRunArguments dryRunArguments, final InternalCallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
-            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), NB_LOCK_TRY);
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries());
 
             return processAccountWithLock(accountId, targetDate, dryRunArguments, context);
         } catch (final LockFailedException e) {

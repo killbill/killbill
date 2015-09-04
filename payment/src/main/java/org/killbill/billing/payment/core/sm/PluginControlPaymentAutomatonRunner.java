@@ -77,6 +77,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
     private final RetryServiceScheduler retryServiceScheduler;
     private final PaymentControlStateMachineHelper paymentControlStateMachineHelper;
     private final ControlPluginRunner controlPluginRunner;
+    private final PaymentConfig paymentConfig;
 
     @Inject
     public PluginControlPaymentAutomatonRunner(final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
@@ -89,6 +90,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
         this.retryServiceScheduler = retryServiceScheduler;
         this.paymentControlStateMachineHelper = paymentControlStateMachineHelper;
         this.controlPluginRunner = controlPluginRunner;
+        this.paymentConfig = paymentConfig;
     }
 
     public Payment run(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
@@ -133,7 +135,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
 
     public Payment completeRun(final PaymentStateControlContext paymentStateContext) throws PaymentApiException {
         try {
-            final OperationCallback callback = new CompletionControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+            final OperationCallback callback = new CompletionControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
             final LeavingStateCallback leavingStateCallback = new NoopControlInitiated();
             final EnteringStateCallback enteringStateCallback = new DefaultControlCompleted(this, paymentStateContext, paymentControlStateMachineHelper.getRetriedState(), retryServiceScheduler);
 
@@ -166,25 +168,25 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
         final OperationCallback callback;
         switch (transactionType) {
             case AUTHORIZE:
-                callback = new AuthorizeControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+                callback = new AuthorizeControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case CAPTURE:
-                callback = new CaptureControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+                callback = new CaptureControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case PURCHASE:
-                callback = new PurchaseControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+                callback = new PurchaseControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case VOID:
-                callback = new VoidControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+                callback = new VoidControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case CREDIT:
-                callback = new CreditControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+                callback = new CreditControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case REFUND:
-                callback = new RefundControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+                callback = new RefundControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             case CHARGEBACK:
-                callback = new ChargebackControlOperation(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, controlPluginRunner);
+                callback = new ChargebackControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             default:
                 throw new IllegalStateException("Unsupported transaction type " + transactionType);
