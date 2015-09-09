@@ -100,6 +100,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
 
 import com.codahale.metrics.annotation.Timed;
@@ -890,6 +891,27 @@ public class AccountResource extends JaxRsResourceBase {
         final UUID accountId = UUID.fromString(accountIdString);
         return super.getTags(accountId, accountId, auditMode, includedDeleted, context.createContext(request));
     }
+
+    @Timed
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + ALL_TAGS)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account tags", response = TagJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response getAllTags(@PathParam(ID_PARAM_NAME) final String accountIdString,
+                               @QueryParam(QUERY_OBJECT_TYPE) final ObjectType objectType,
+                               @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                               @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
+        final UUID accountId = UUID.fromString(accountIdString);
+        final TenantContext tenantContext = context.createContext(request);
+        final List<Tag> tags = objectType != null ?
+                               tagUserApi.getTagsForAccountType(accountId, objectType, includedDeleted, tenantContext) :
+                               tagUserApi.getTagsForAccount(accountId, includedDeleted, tenantContext);
+        return createTagResponse(accountId, tags, auditMode, tenantContext);
+    }
+
 
     @Timed
     @POST

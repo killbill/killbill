@@ -23,12 +23,17 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
+import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.client.model.Tag;
 import org.killbill.billing.client.model.TagDefinition;
 import org.killbill.billing.client.model.Tags;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -93,6 +98,39 @@ public class TestTag extends TestJaxrsBase {
         assertNotNull(objFromJson);
         assertEquals(objFromJson.size(), 3 + sizeSystemTag);
     }
+
+
+    @Test(groups = "slow", description = "Can search all tags for an account")
+    public void testGetAllTagsByType() throws Exception {
+
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithDefaultPaymentMethod();
+
+        final Subscription subscriptionJson = createEntitlement(account.getAccountId(), "87544332", "Shotgun",
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+
+        for (final ControlTagType controlTagType : ControlTagType.values()) {
+            killBillClient.createAccountTag(account.getAccountId(), controlTagType.getId(), createdBy, reason, comment);
+        }
+
+        final TagDefinition bundleTagDefInput = new TagDefinition(null, false, "bundleTagDef", "nothing special", ImmutableList.<ObjectType>of());
+        final TagDefinition bundleTagDef = killBillClient.createTagDefinition(bundleTagDefInput, createdBy, reason, comment);
+
+        killBillClient.createBundleTag(subscriptionJson.getBundleId(), bundleTagDef.getId(), createdBy, reason, comment);
+
+        final Tags allBundleTags = killBillClient.getBundleTags(subscriptionJson.getBundleId(), AuditLevel.FULL);
+        Assert.assertEquals(allBundleTags.size(), 1);
+
+        final Tags allAccountTags = killBillClient.getAllAccountTags(account.getAccountId(), null, AuditLevel.FULL);
+        Assert.assertEquals(allAccountTags.size(), ControlTagType.values().length + 1);
+
+
+        final Tags allBundleTagsForAccount = killBillClient.getAllAccountTags(account.getAccountId(), ObjectType.BUNDLE.name(), AuditLevel.FULL);
+        Assert.assertEquals(allBundleTagsForAccount.size(), 1);
+    }
+
 
     @Test(groups = "slow", description = "Can search system tags")
     public void testSystemTagsPagination() throws Exception {

@@ -88,9 +88,12 @@ public interface JaxrsResource {
     public static final String QUERY_PAYMENT_METHOD_ID = "paymentMethodId";
     public static final String QUERY_PAYMENT_CONTROL_PLUGIN_NAME = "controlPluginName";
 
+
     public static final String QUERY_TAGS = "tagList";
     public static final String QUERY_TAGS_INCLUDED_DELETED = "includedDeleted";
     public static final String QUERY_CUSTOM_FIELDS = "customFieldList";
+
+    public static final String QUERY_OBJECT_TYPE = "objectType";
 
     public static final String QUERY_PAYMENT_METHOD_PLUGIN_NAME = "pluginName";
     public static final String QUERY_WITH_PLUGIN_INFO = "withPluginInfo";
@@ -172,6 +175,7 @@ public interface JaxrsResource {
     public static final String CHARGEBACKS = "chargebacks";
     public static final String CHARGEBACKS_PATH = PREFIX + "/" + CHARGEBACKS;
 
+    public static final String ALL_TAGS = "allTags";
     public static final String TAGS = "tags";
     public static final String TAGS_PATH = PREFIX + "/" + TAGS;
 

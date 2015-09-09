@@ -140,6 +140,10 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected Response getTags(final UUID accountId, final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {
         final List<Tag> tags = tagUserApi.getTagsForObject(taggedObjectId, getObjectType(), includeDeleted, context);
+        return createTagResponse(accountId, tags, auditMode, context);
+    }
+
+    protected Response createTagResponse(final UUID accountId, final List<Tag> tags, final AuditMode auditMode, final TenantContext context) throws TagDefinitionApiException {
         final AccountAuditLogsForObjectType tagsAuditLogs = auditUserApi.getAccountAuditLogs(accountId, ObjectType.TAG, auditMode.getLevel(), context);
 
         final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
@@ -153,9 +157,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             final List<AuditLog> auditLogs = tagsAuditLogs.getAuditLogs(tag.getId());
             result.add(new TagJson(tag, tagDefinition, auditLogs));
         }
-
         return Response.status(Response.Status.OK).entity(result).build();
     }
+
 
     protected Response createTags(final UUID id,
                                   final String tagList,
