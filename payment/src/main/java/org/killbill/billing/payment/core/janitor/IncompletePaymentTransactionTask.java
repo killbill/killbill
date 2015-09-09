@@ -186,12 +186,11 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                 newPaymentState = paymentStateMachineHelper.getFailureStateForTransaction(paymentTransaction.getTransactionType());
                 break;
             case PLUGIN_FAILURE:
+                newPaymentState = paymentStateMachineHelper.getErroredStateForTransaction(paymentTransaction.getTransactionType());
+                break;
             case UNKNOWN:
             default:
-                if (transactionStatus == paymentTransaction.getTransactionStatus()) {
-                    log.debug("Janitor IncompletePaymentTransactionTask unable to repair payment {}, transaction {}: {} -> {}",
-                              payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
-                } else {
+                if (transactionStatus != paymentTransaction.getTransactionStatus()) {
                     log.info("Janitor IncompletePaymentTransactionTask unable to repair payment {}, transaction {}: {} -> {}",
                              payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
                 }
