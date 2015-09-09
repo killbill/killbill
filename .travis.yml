@@ -21,6 +21,7 @@ env:
 matrix:
   allow_failures:
     - jdk: oraclejdk8
+    - env: PHASE="-Ppostgresql"
   include:
     - env: PHASE="-Pmysql"
       jdk: openjdk7
