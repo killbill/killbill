@@ -72,17 +72,6 @@ public class PaymentStateControlContext extends PaymentStateContext {
         this.result = result;
     }
 
-    public void setAmount(final BigDecimal adjustedAmount) {
-        this.amount = adjustedAmount;
-    }
-
-    public void setCurrency(final Currency currency) {
-        this.currency = currency;
-    }
-
-    public void setProperties(final Iterable<PluginProperty> properties) {
-        this.properties = properties;
-    }
 
     public PaymentTransaction getCurrentTransaction() {
         if (result == null || result.getTransactions() == null) {
@@ -91,7 +80,7 @@ public class PaymentStateControlContext extends PaymentStateContext {
         return Iterables.tryFind(result.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
             public boolean apply(final PaymentTransaction input) {
-                return ((DefaultPaymentTransaction) input).getAttemptId().equals(attemptId);
+                return ((DefaultPaymentTransaction) input).getAttemptId().equals(getAttemptId());
             }
         }).orNull();
     }

@@ -69,10 +69,6 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     @Override
     public OperationResult doOperationCallback() throws OperationException {
 
-        if (paymentStateContext.isSkipOperationForUnknownTransaction()) {
-            return OperationResult.SUCCESS;
-        }
-
         try {
             this.plugin = daoHelper.getPaymentProviderPlugin();
 

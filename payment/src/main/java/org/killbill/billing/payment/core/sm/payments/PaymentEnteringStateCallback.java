@@ -17,8 +17,6 @@
 
 package org.killbill.billing.payment.core.sm.payments;
 
-import javax.annotation.Nullable;
-
 import org.killbill.automaton.Operation;
 import org.killbill.automaton.OperationResult;
 import org.killbill.automaton.State;
@@ -51,10 +49,6 @@ public abstract class PaymentEnteringStateCallback implements EnteringStateCallb
     @Override
     public void enteringState(final State newState, final Operation.OperationCallback operationCallback, final OperationResult operationResult, final LeavingStateCallback leavingStateCallback) {
         logger.debug("Entering state {} with result {}", newState.getName(), operationResult);
-
-        if (paymentStateContext.isSkipOperationForUnknownTransaction()) {
-            return;
-        }
 
         // If the transaction was not created -- for instance we had an exception in leavingState callback then we bail; if not, then update state:
         if (paymentStateContext.getPaymentTransactionModelDao() != null && paymentStateContext.getPaymentTransactionModelDao().getId() != null) {

@@ -37,31 +37,40 @@ import com.google.common.collect.ImmutableList;
 
 public class PaymentStateContext {
 
-    // HACK
-    protected UUID paymentMethodId;
-    protected UUID attemptId;
 
-    // Stateful objects created by the callbacks and passed to the other following callbacks in the automaton
-    protected List<PaymentTransactionModelDao> onLeavingStateExistingTransactions;
-    protected PaymentTransactionModelDao paymentTransactionModelDao;
-    protected PaymentTransactionInfoPlugin paymentTransactionInfoPlugin;
-    protected BigDecimal amount;
-    protected String paymentExternalKey;
-    protected String paymentTransactionExternalKey;
-    protected Currency currency;
-    protected Iterable<PluginProperty> properties;
-    protected boolean skipOperationForUnknownTransaction;
+    // The following fields (paymentId, transactionId, amount, currency) may take their value from the paymentTransactionModelDao *when they are not already set*
+    private PaymentTransactionModelDao paymentTransactionModelDao;
+    // Initialized in CTOR or only set through paymentTransactionModelDao
+    private UUID paymentId;
+    private UUID transactionId;
 
-    // Can be updated later via paymentTransactionModelDao (e.g. for auth or purchase)
-    protected final UUID paymentId;
-    protected final UUID transactionId;
-    protected final Account account;
-    protected final TransactionType transactionType;
-    protected final boolean shouldLockAccountAndDispatch;
-    protected final InternalCallContext internalCallContext;
-    protected final CallContext callContext;
-    protected final boolean isApiPayment;
-    protected final OperationResult overridePluginOperationResult;
+    // Can be overriden by control plugin
+    private BigDecimal amount;
+    private Currency currency;
+    private UUID paymentMethodId;
+    private Iterable<PluginProperty> properties;
+
+    // Set in the doOperationCallback when coming back from payment plugin
+    private PaymentTransactionInfoPlugin paymentTransactionInfoPlugin;
+
+    // Set in the control layer in the leavingState callback
+    private String paymentExternalKey;
+    private String paymentTransactionExternalKey;
+
+    // Set in the control layer after creating the attempt in the enteringState callback
+    private UUID attemptId;
+
+    // This is purely a performance improvement to avoid fetching the existing transactions for that payment throughout the state machine
+    private List<PaymentTransactionModelDao> onLeavingStateExistingTransactions;
+
+    // Immutable
+    private final Account account;
+    private final TransactionType transactionType;
+    private final boolean shouldLockAccountAndDispatch;
+    private final OperationResult overridePluginOperationResult;
+    private final InternalCallContext internalCallContext;
+    private final CallContext callContext;
+    private final boolean isApiPayment;
 
     // Use to create new transactions only
     public PaymentStateContext(final boolean isApiPayment, @Nullable final UUID paymentId, @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
@@ -95,7 +104,6 @@ public class PaymentStateContext {
         this.internalCallContext = internalCallContext;
         this.callContext = callContext;
         this.onLeavingStateExistingTransactions = ImmutableList.of();
-        this.skipOperationForUnknownTransaction = false;
     }
 
     public boolean isApiPayment() {
@@ -112,6 +120,18 @@ public class PaymentStateContext {
 
     public void setPaymentTransactionModelDao(final PaymentTransactionModelDao paymentTransactionModelDao) {
         this.paymentTransactionModelDao = paymentTransactionModelDao;
+        if (paymentId == null) {
+            this.paymentId = paymentTransactionModelDao.getPaymentId();
+        }
+        if (transactionId == null) {
+            this.transactionId = paymentTransactionModelDao.getId();
+        }
+        if (amount == null) {
+            this.amount = paymentTransactionModelDao.getAmount();
+        }
+        if (currency == null) {
+            this.currency = paymentTransactionModelDao.getCurrency();
+        }
     }
 
     public List<PaymentTransactionModelDao> getOnLeavingStateExistingTransactions() {
@@ -131,11 +151,11 @@ public class PaymentStateContext {
     }
 
     public UUID getPaymentId() {
-        return paymentId != null ? paymentId : (paymentTransactionModelDao != null ? paymentTransactionModelDao.getPaymentId() : null);
+        return paymentId;
     }
 
     public UUID getTransactionId() {
-        return transactionId != null ? transactionId : (paymentTransactionModelDao != null ? paymentTransactionModelDao.getId() : null);
+        return transactionId;
     }
 
     public String getPaymentExternalKey() {
@@ -171,13 +191,11 @@ public class PaymentStateContext {
     }
 
     public BigDecimal getAmount() {
-        // For a complete operation, if the amount isn't specified, take the original amount on the transaction
-        return amount == null && paymentTransactionModelDao != null ? paymentTransactionModelDao.getAmount() : amount;
+        return amount;
     }
 
     public Currency getCurrency() {
-        // For a complete operation, if the currency isn't specified, take the original currency on the transaction
-        return currency == null && paymentTransactionModelDao != null ? paymentTransactionModelDao.getCurrency() : currency;
+        return currency;
     }
 
     public TransactionType getTransactionType() {
@@ -204,11 +222,16 @@ public class PaymentStateContext {
         return callContext;
     }
 
-    public boolean isSkipOperationForUnknownTransaction() {
-        return skipOperationForUnknownTransaction;
+    public void setAmount(final BigDecimal adjustedAmount) {
+        this.amount = adjustedAmount;
     }
 
-    public void setSkipOperationForUnknownTransaction(final boolean skipOperationForUnknownTransaction) {
-        this.skipOperationForUnknownTransaction = skipOperationForUnknownTransaction;
+    public void setCurrency(final Currency currency) {
+        this.currency = currency;
     }
+
+    public void setProperties(final Iterable<PluginProperty> properties) {
+        this.properties = properties;
+    }
+
 }

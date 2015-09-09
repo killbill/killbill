@@ -134,8 +134,8 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
                                                       paymentStateContext.getPaymentMethodId(),
                                                       paymentStateContext.getAmount(),
                                                       paymentStateContext.getCurrency(),
-                                                      paymentStateContext.shouldLockAccountAndDispatch,
-                                                      paymentStateContext.overridePluginOperationResult,
+                                                      paymentStateContext.shouldLockAccountAndDispatch(),
+                                                      paymentStateContext.getOverridePluginOperationResult(),
                                                       paymentStateContext.getProperties(),
                                                       internalCallContextForOtherAccount,
                                                       callContext);

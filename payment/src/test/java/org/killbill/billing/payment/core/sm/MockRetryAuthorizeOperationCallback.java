@@ -71,23 +71,23 @@ public class MockRetryAuthorizeOperationCallback extends AuthorizeControlOperati
         }
         final PaymentModelDao payment = new PaymentModelDao(clock.getUTCNow(),
                                                             clock.getUTCNow(),
-                                                            paymentStateContext.account.getId(),
-                                                            paymentStateContext.paymentMethodId,
-                                                            paymentStateContext.paymentExternalKey);
+                                                            paymentStateContext.getAccount().getId(),
+                                                            paymentStateContext.getPaymentMethodId(),
+                                                            paymentStateContext.getPaymentExternalKey());
 
         final PaymentTransactionModelDao transaction = new PaymentTransactionModelDao(clock.getUTCNow(),
                                                                                       clock.getUTCNow(),
                                                                                       paymentStateContext.getAttemptId(),
-                                                                                      paymentStateContext.paymentTransactionExternalKey,
-                                                                                      paymentStateContext.paymentId,
-                                                                                      paymentStateContext.transactionType,
+                                                                                      paymentStateContext.getPaymentTransactionExternalKey(),
+                                                                                      paymentStateContext.getPaymentId(),
+                                                                                      paymentStateContext.getTransactionType(),
                                                                                       clock.getUTCNow(),
                                                                                       TransactionStatus.SUCCESS,
-                                                                                      paymentStateContext.amount,
-                                                                                      paymentStateContext.currency,
+                                                                                      paymentStateContext.getAmount(),
+                                                                                      paymentStateContext.getCurrency(),
                                                                                       "",
                                                                                       "");
-        final PaymentModelDao paymentModelDao = paymentDao.insertPaymentWithFirstTransaction(payment, transaction, paymentStateContext.internalCallContext);
+        final PaymentModelDao paymentModelDao = paymentDao.insertPaymentWithFirstTransaction(payment, transaction, paymentStateContext.getInternalCallContext());
         final PaymentTransaction convertedTransaction = new DefaultPaymentTransaction(transaction.getId(),
                                                                                                   paymentStateContext.getAttemptId(),
                                                                                                   transaction.getTransactionExternalKey(),
