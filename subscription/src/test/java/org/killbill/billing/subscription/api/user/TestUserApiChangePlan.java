@@ -21,6 +21,8 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.killbill.billing.ErrorCode;
+import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -427,4 +429,32 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         assertListenerStatus();
     }
+
+    @Test(groups = "slow")
+    public void testInvalidChangesAcrossProductTypes() throws SubscriptionBaseApiException {
+        final String baseProduct = "Shotgun";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        // CREATE BP
+        final DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+
+        // MOVE CLOCK 14 DAYS LATER
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(14));
+        clock.addDeltaFromReality(it.toDurationMillis());
+
+        // Create AO
+        final String aoProduct = "Laser-Scope";
+        final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+        final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+
+        try {
+            aoSubscription.changePlanWithDate(baseProduct, baseTerm, basePriceList, null, clock.getUTCNow(), callContext);
+            Assert.fail("Should not allow plan change across product type");
+        } catch (final SubscriptionBaseApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_INVALID.getCode());
+        }
+    }
+
 }

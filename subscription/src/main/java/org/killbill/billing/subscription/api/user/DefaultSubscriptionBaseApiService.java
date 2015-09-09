@@ -354,6 +354,9 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
         final Plan newPlan = catalogService.getFullCatalog(internalCallContext).createOrFindPlan(newProductName, newBillingPeriod, newPriceList, overridesWithContext, effectiveDate, subscription.getStartDate());
 
+        if (newPlan.getProduct().getCategory() != subscription.getCategory()) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_INVALID, subscription.getId());
+        }
         final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPriceList, now, effectiveDate, now, false, internalCallContext);
         dao.changePlan(subscription, changeEvents, internalCallContext);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog(internalCallContext));
