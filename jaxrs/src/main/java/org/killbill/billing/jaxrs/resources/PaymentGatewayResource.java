@@ -94,7 +94,6 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @ApiOperation(value = "Combo API to generate form data to redirect the customer to the gateway", response = HostedPaymentPageFormDescriptorJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
     public Response buildComboFormDescriptor(final ComboHostedPaymentPageJson json,
-                                             @PathParam("accountId") final String accountIdString,
                                              @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
