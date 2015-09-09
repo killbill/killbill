@@ -96,6 +96,9 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final BigDecimal refundAmount = paymentJson.getPurchasedAmount();
         final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
 
+        final InvoicePayments invoicePayments = killBillClient.getInvoicePayment(paymentJson.getTargetInvoiceId());
+        Assert.assertEquals(invoicePayments.size(), 1);
+
         // Post and verify the refund
         final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(paymentJson.getPaymentId());
@@ -106,6 +109,10 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         // Verify the invoice balance
         verifyInvoice(paymentJson, expectedInvoiceBalance);
+
+        final InvoicePayments invoicePaymentsAfterRefund = killBillClient.getInvoicePayment(paymentJson.getTargetInvoiceId());
+        Assert.assertEquals(invoicePaymentsAfterRefund.size(), 1);
+
     }
 
     @Test(groups = "slow", description = "Can create a partial refund with invoice adjustment")

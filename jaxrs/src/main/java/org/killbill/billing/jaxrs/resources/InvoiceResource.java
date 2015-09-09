@@ -111,6 +111,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -522,9 +523,18 @@ public class InvoiceResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), tenantContext);
+
+        // Extract unique set of paymentId for this invoice
+        final Set<UUID> invoicePaymentIds = ImmutableSet.copyOf(Iterables.transform(invoice.getPayments(), new Function<InvoicePayment, UUID>() {
+            @Override
+            public UUID apply(final InvoicePayment input) {
+                return input.getPaymentId();
+            }
+        }));
+
         final List<Payment> payments = new ArrayList<Payment>();
-        for (InvoicePayment cur : invoice.getPayments()) {
-            final Payment payment = paymentApi.getPayment(cur.getPaymentId(), withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
+        for (final UUID paymentId : invoicePaymentIds) {
+            final Payment payment = paymentApi.getPayment(paymentId, withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
             payments.add(payment);
         }
         final List<InvoicePaymentJson> result = new ArrayList<InvoicePaymentJson>(payments.size());
