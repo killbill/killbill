@@ -31,25 +31,34 @@ HOST="localhost"
 DATABASE="killbill"
 USER="root"
 PWD="root"
+PORT=
+PORT_MYSQL=3306
+PORT_POSTGRES=5432
+DRIVER="mysql"
 TEST_ALSO=
 OUTPUT_FILE=
-
 DDL_FILE=
 CLEAN_FILE=
 
 # Egrep like for skipping some modules until they are ready
 SKIP="(server)"
 
+ARGS=`getopt -o "a:d:h:u:p:t:f:" -l "action:,driver:,database:,host:,user:,password:,test:,file:,port:,help" -n "db-helper" -- "$@"`
+eval set -- "${ARGS}"
+
+
 function usage() {
-    echo -n "./db_helper "
-    echo -n " -a <create|clean|dump>"
-    echo -n " -H MySQL host (default = localhost)"
-    echo -n " -d database_name (default = killbill)"
-    echo -n " -u user_name (default = root)"
-    echo -n " -p password (default = root)"
-    echo -n " -t (also include test ddl)"
-    echo -n " -f file (output file, for dump only)"
-    echo -n " -h this message"
+    echo -n "./db_helper"
+    echo -n " -a|--action <create|clean|dump>"
+    echo -n " --driver <mysql|postgres> (default = mysql)"
+    echo -n " -h|--host host (default = localhost)"
+    echo -n " --port port"
+    echo -n " -d|--database database_name (default = killbill)"
+    echo -n " -u|--user user_name (default = root)"
+    echo -n " -p|--password password (default = root)"
+    echo -n " -t|--test (also include test ddl)"
+    echo -n " -f|--file file (output file, for dump only)"
+    echo -n " --help this message"
     echo
     exit 1
 }
@@ -69,10 +78,10 @@ function find_test_ddl() {
         ddl_test="$ddl_test $cur_ddl"
     done
     echo "$ddl_test"
-
 }
-function find_src_ddl() {
 
+
+function find_src_ddl() {
     local modules=`get_modules`
     local ddl_src=
 
@@ -98,6 +107,7 @@ function create_clean_file() {
     echo $tmp
 }
 
+
 function create_ddl_file() {
     local ddls=`find_src_ddl`
     local test_ddls=
@@ -108,7 +118,10 @@ function create_ddl_file() {
 
     local tmp="/tmp/ddl-$DATABASE.$$"
     touch $tmp
-    echo "use $DATABASE;" >> $tmp
+    if [ $DRIVER == "postgres" ]; then
+        cat util/src/main/resources/org/killbill/billing/util/ddl-postgresql.sql > $tmp
+    fi
+    echo "/*! use $DATABASE; */" >> $tmp
     echo "" >> $tmp
     for d in $ddls; do
         cat $d >> $tmp
@@ -117,30 +130,59 @@ function create_ddl_file() {
     echo $tmp
 }
 
+
+function create_pgfile() {
+    mv -f $HOME/.pgpass $HOME/.pgpass_bak > /dev/null 2>&1
+    echo "$HOST:$PORT:*:$USER:$PWD" > $HOME/.pgpass
+    chmod 600 $HOME/.pgpass
+}
+
+
+function clean_pgfile() {
+    rm -f $HOME/.pgpass > /dev/null 2>&1
+    mv -f $HOME/.pgpass_bak $HOME/.pgpass > /dev/null 2>&1
+}
+
+
 function cleanup() {
     rm -f "/tmp/*.$$"
 }
 
 
-while getopts ":a:d:H:u:p:f:t" options; do
-  case $options in
-    a ) ACTION=$OPTARG;;
-	d ) DATABASE=$OPTARG;;
-	H ) HOST=$OPTARG;;
-	u ) USER=$OPTARG;;
-	p ) PWD=$OPTARG;;
-	t ) TEST_ALSO=1;;
-	f ) OUTPUT_FILE=$OPTARG;;
-    h ) usage;;
-    * ) usage;;
+while true; do
+  case "$1" in
+    -a|--action) ACTION=$2; shift 2;;
+    --driver) DRIVER=$2; shift 2;;
+    -d|--database) DATABASE=$2; shift 2;;
+    -h|--host) HOST=$2; shift 2;;
+    --port) HOST=$2; shift 2;;
+    -u|--user) USER=$2; shift 2;;
+    -p|--password) PWD=$2; shift 2;;
+    -t|--test) TEST_ALSO=1; shift 2;;
+    -f|--file) OUTPUT_FILE=$2; shift 2;;
+    --help) usage; shift;;
+    --) shift; break;;
   esac
 done
-
 
 
 if [ -z $ACTION ]; then
     echo "Need to specify an action <CREATE|CLEAN|DUMP>"
     usage
+fi
+
+
+if [ $DRIVER != "mysql" ] && [ $DRIVER != "postgres" ]; then
+    echo "Only support driver <mysql> or <postgres>"
+    usage
+fi
+
+
+if [ $DRIVER == "mysql" ] && [ -z $PORT ]; then
+    PORT=$PORT_MYSQL
+fi
+if [ $DRIVER == "postgres" ] && [ -z $PORT ]; then
+    PORT=$PORT_POSTGRES
 fi
 
 
@@ -153,17 +195,31 @@ if [ $ACTION == "dump" ]; then
     fi
 fi
 
+
 if [ $ACTION == "create" ]; then
     DDL_FILE=`create_ddl_file`
     echo "Applying new schema to database $DATABASE"
-    mysql -h $HOST -u $USER --password=$PWD < $DDL_FILE
+    if [ $DRIVER == "mysql" ]; then
+        mysql -h $HOST -P $PORT -u $USER --password=$PWD < $DDL_FILE
+    else
+        create_pgfile
+        psql -h $HOST -p $PORT -U $USER -d $DATABASE < $DDL_FILE
+        clean_pgfile
+    fi
 fi
+
 
 if [ $ACTION == "clean" ]; then
     DDL_FILE=`create_ddl_file`
     CLEAN_FILE=`create_clean_file $DDL_FILE`
     echo "Cleaning db tables on database $DATABASE"
-    mysql -h $HOST -u $USER --password=$PWD < $DDL_FILE
+    if [ $DRIVER == "mysql" ]; then
+        mysql -h $HOST -P $PORT -u $USER --password=$PWD < $CLEAN_FILE
+    else
+        create_pgfile
+        psql -h $HOST -p $PORT -U $USER -d $DATABASE < $CLEAN_FILE
+        clean_pgfile
+    fi
 fi
 
 cleanup
