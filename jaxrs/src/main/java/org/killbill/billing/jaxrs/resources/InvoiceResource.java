@@ -459,25 +459,12 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
-
-        // TODO Get rid of that check once we truly support multiple currencies per account
-        // See discussion https://github.com/killbill/killbill/commit/942e214d49e9c7ed89da76d972ee017d2d3ade58#commitcomment-6045547
-        final Set<Currency> currencies = new HashSet<Currency>(Lists.<InvoiceItemJson, Currency>transform(ImmutableList.<InvoiceItemJson>copyOf(externalChargesJson),
-                                                                                                          new Function<InvoiceItemJson, Currency>() {
-                                                                                                              @Override
-                                                                                                              public Currency apply(final InvoiceItemJson input) {
-                                                                                                                  return input.getCurrency();
-                                                                                                              }
-                                                                                                          }
-                                                                                                         ));
-        if (currencies.size() != 1 || !currencies.iterator().next().equals(account.getCurrency())) {
-            throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, currencies.iterator().next(), account.getCurrency());
-        }
+        final Iterable<InvoiceItemJson> sanitizedExternalChargesJson = cloneRefundItemsWithValidCurrency(account.getCurrency(), externalChargesJson);
 
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate = toLocalDate(account, requestedDateTimeString, callContext);
 
-        final Iterable<InvoiceItem> externalCharges = Iterables.<InvoiceItemJson, InvoiceItem>transform(externalChargesJson,
+        final Iterable<InvoiceItem> externalCharges = Iterables.<InvoiceItemJson, InvoiceItem>transform(sanitizedExternalChargesJson,
                                                                                                         new Function<InvoiceItemJson, InvoiceItem>() {
                                                                                                             @Override
                                                                                                             public InvoiceItem apply(final InvoiceItemJson invoiceItemJson) {
@@ -507,6 +494,40 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                                                                }
                                                                                                               );
         return Response.status(Status.OK).entity(createdExternalChargesJson).build();
+    }
+
+    private Iterable<InvoiceItemJson> cloneRefundItemsWithValidCurrency(final Currency accountCurrency, final Iterable<InvoiceItemJson> inputItems) throws InvoiceApiException {
+        try {
+            return Iterables.transform(inputItems, new Function<InvoiceItemJson, InvoiceItemJson>() {
+                @Override
+                public InvoiceItemJson apply(final InvoiceItemJson input) {
+                    if (input.getCurrency() != null) {
+                        if (!input.getCurrency().equals(accountCurrency)) {
+                            throw new IllegalArgumentException(input.getCurrency().toString());
+                        }
+                        return input;
+                    } else {
+                        return new InvoiceItemJson(null,
+                                                   input.getInvoiceId(),
+                                                   null, input.getAccountId(),
+                                                   input.getBundleId(),
+                                                   input.getSubscriptionId(),
+                                                   input.getPlanName(),
+                                                   input.getPhaseName(),
+                                                   input.getUsageName(),
+                                                   input.getItemType(),
+                                                   input.getDescription(),
+                                                   input.getStartDate(),
+                                                   input.getEndDate(),
+                                                   input.getAmount(),
+                                                   accountCurrency,
+                                                   null);
+                    }
+                }
+            });
+        } catch (IllegalArgumentException e) {
+            throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, accountCurrency, e.getMessage());
+        }
     }
 
     @Timed
