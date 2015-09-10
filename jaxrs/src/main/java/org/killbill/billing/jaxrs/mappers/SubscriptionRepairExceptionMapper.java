@@ -38,35 +38,7 @@ public class SubscriptionRepairExceptionMapper extends ExceptionMapperBase imple
 
     @Override
     public Response toResponse(final SubscriptionBaseRepairException exception) {
-        if (exception.getCode() == ErrorCode.SUB_REPAIR_AO_CREATE_BEFORE_BP_START.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_BP_RECREATE_MISSING_AO.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_BP_RECREATE_MISSING_AO_CREATE.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_INVALID_DELETE_SET.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_MISSING_AO_DELETE_EVENT.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_NO_ACTIVE_SUBSCRIPTIONS.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_NON_EXISTENT_DELETE_EVENT.getCode()) {
-            return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_SUB_EMPTY.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_SUB_RECREATE_NOT_EMPTY.getCode()) {
-            return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_UNKNOWN_BUNDLE.getCode()) {
-            return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_UNKNOWN_SUBSCRIPTION.getCode()) {
-            return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_UNKNOWN_TYPE.getCode()) {
-            return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_VIEW_CHANGED.getCode()) {
+        if (exception.getCode() == ErrorCode.SUB_NO_ACTIVE_SUBSCRIPTIONS.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
         } else {
             return fallback(exception, uriInfo);

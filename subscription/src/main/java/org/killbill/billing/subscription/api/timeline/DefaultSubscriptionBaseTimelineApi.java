@@ -63,15 +63,12 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
     public BundleBaseTimeline getBundleTimeline(final SubscriptionBaseBundle bundle, final TenantContext context)
             throws SubscriptionBaseRepairException {
         try {
-            if (bundle == null) {
-                throw new SubscriptionBaseRepairException(ErrorCode.SUB_REPAIR_UNKNOWN_BUNDLE, bundle.getExternalKey());
-            }
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(bundle.getAccountId(), context);
             final List<SubscriptionBase> subscriptions = dao.getSubscriptions(bundle.getId(),
                                                                               ImmutableList.<SubscriptionBaseEvent>of(),
                                                                               internalTenantContext);
             if (subscriptions.size() == 0) {
-                throw new SubscriptionBaseRepairException(ErrorCode.SUB_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, bundle.getId());
+                throw new SubscriptionBaseRepairException(ErrorCode.SUB_NO_ACTIVE_SUBSCRIPTIONS, bundle.getId());
             }
             final String viewId = getViewId(((DefaultSubscriptionBaseBundle) bundle).getLastSysUpdateDate(), subscriptions);
             final List<SubscriptionBaseTimeline> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionBaseTimeline>emptyList(), internalTenantContext);
