@@ -18,21 +18,29 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 public class TestInvoicePayment extends TestIntegrationBase {
@@ -97,4 +105,58 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertTrue(accountBalance.compareTo(new BigDecimal("4.00")) == 0);
 
     }
+
+    //
+
+    @Test(groups = "slow")
+    public void testWithPaymentFailure() throws Exception {
+
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        paymentPlugin.makeNextPaymentFailWithError();
+
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        assertEquals(invoices.size(), 2);
+
+        final Invoice invoice1 = invoices.get(0).getInvoiceItems().get(0).getInvoiceItemType() == InvoiceItemType.RECURRING ?
+                           invoices.get(0) : invoices.get(1);
+        assertTrue(invoice1.getBalance().compareTo(new BigDecimal("249.95")) == 0);
+        assertTrue(invoice1.getPaidAmount().compareTo(BigDecimal.ZERO) == 0);
+        assertTrue(invoice1.getChargedAmount().compareTo(new BigDecimal("249.95")) == 0);
+        assertEquals(invoice1.getPayments().size(), 1);
+        assertFalse(invoice1.getPayments().get(0).isSuccess());
+
+        BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
+
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(payments.size(), 1);
+
+        // Trigger the payment retry
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT);
+        clock.addDays(8);
+        assertListenerStatus();
+
+        Invoice invoice2 = invoiceUserApi.getInvoice(invoice1.getId(), callContext);
+        assertTrue(invoice2.getBalance().compareTo(BigDecimal.ZERO) == 0);
+        assertTrue(invoice2.getPaidAmount().compareTo(new BigDecimal("249.95")) == 0);
+        assertTrue(invoice2.getChargedAmount().compareTo(new BigDecimal("249.95")) == 0);
+        assertEquals(invoice2.getPayments().size(), 1);
+        assertTrue(invoice2.getPayments().get(0).isSuccess());
+
+        BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance2.compareTo(BigDecimal.ZERO) == 0);
+    }
+
+
 }

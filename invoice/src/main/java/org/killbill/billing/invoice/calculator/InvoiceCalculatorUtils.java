@@ -170,6 +170,9 @@ public abstract class InvoiceCalculatorUtils {
         }
 
         for (final InvoicePayment invoicePayment : invoicePayments) {
+            if (!invoicePayment.isSuccess()) {
+                continue;
+            }
             if (InvoicePaymentType.ATTEMPT.equals(invoicePayment.getType())) {
                 amountPaid = amountPaid.add(invoicePayment.getAmount());
             }
@@ -185,6 +188,9 @@ public abstract class InvoiceCalculatorUtils {
         }
 
         for (final InvoicePayment invoicePayment : invoicePayments) {
+            if (!invoicePayment.isSuccess()) {
+                continue;
+            }
             if (InvoicePaymentType.REFUND.equals(invoicePayment.getType()) ||
                 InvoicePaymentType.CHARGED_BACK.equals(invoicePayment.getType())) {
                 amountRefunded = amountRefunded.add(invoicePayment.getAmount());

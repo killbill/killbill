@@ -43,6 +43,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -53,6 +54,8 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
+
+    private MockPaymentProviderPlugin mockPaymentProviderPlugin;
 
     final PaymentOptions INVOICE_PAYMENT = new PaymentOptions() {
         @Override
@@ -68,9 +71,16 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     private Account account;
 
+    @BeforeClass(groups = "slow")
+    protected void beforeClass() throws Exception {
+        super.beforeClass();
+        mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
+    }
+
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+        mockPaymentProviderPlugin.clear();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
     }
 
@@ -241,7 +251,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                             requestedAmount,
                                                             new BigDecimal("1.0"),
                                                             Currency.USD));
-
         final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                                             createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
 
@@ -271,6 +280,64 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(payment.getExternalKey(), internalCallContext);
         assertEquals(attempts.size(), 1);
     }
+
+
+
+    @Test(groups = "slow")
+    public void testCreateFailedPurchaseWithPaymentControl() throws PaymentApiException, InvoiceApiException, EventBusException {
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final UUID subscriptionId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
+        final LocalDate now = clock.getUTCToday();
+
+        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
+
+        final String paymentExternalKey = invoice.getId().toString();
+        final String transactionExternalKey = "brrrrrr";
+
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+
+        invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(), account.getId(),
+                                                            subscriptionId,
+                                                            bundleId,
+                                                            "test plan", "test phase", null,
+                                                            now,
+                                                            now.plusMonths(1),
+                                                            requestedAmount,
+                                                            new BigDecimal("1.0"),
+                                                            Currency.USD));
+        try {
+            paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+                                                        createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+        } catch (final PaymentApiException expected) {
+        }
+
+
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(accountPayments.size(), 1);
+        final Payment payment = accountPayments.get(0);
+        assertEquals(payment.getExternalKey(), paymentExternalKey);
+        assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment.getAccountId(), account.getId());
+        assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCurrency(), Currency.USD);
+
+        assertEquals(payment.getTransactions().size(), 1);
+        assertEquals(payment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
+        assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
+        assertEquals(payment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.USD);
+        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0); // This is weird...
+        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.USD);
+
+        assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
+    }
+
 
     @Test(groups = "slow")
     public void testCreateAbortedPurchaseWithPaymentControl() throws InvoiceApiException, EventBusException {

@@ -19,16 +19,19 @@
 package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @EntitySqlDaoStringTemplate
 public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDao, InvoicePayment> {
@@ -64,4 +67,14 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
     @SqlQuery
     List<InvoicePaymentModelDao> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId,
                                                            @BindBean final InternalTenantContext context);
+
+
+
+    @SqlUpdate
+    void updateAttempt(@Bind("recordId") Long recordId,
+                       @Bind("paymentDate") final Date paymentDate,
+                       @Bind("amount") final BigDecimal amount,
+                       @Bind("currency") final Currency currency,
+                       @Bind("processedCurrency") final Currency processedCurrency,
+                       @BindBean final InternalTenantContext context);
 }

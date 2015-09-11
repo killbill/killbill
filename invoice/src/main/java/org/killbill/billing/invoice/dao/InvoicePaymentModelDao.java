@@ -40,12 +40,13 @@ public class InvoicePaymentModelDao extends EntityModelDaoBase implements Entity
     private Currency processedCurrency;
     private String paymentCookieId;
     private UUID linkedInvoicePaymentId;
+    private Boolean success;
 
     public InvoicePaymentModelDao() { /* For the DAO mapper */ }
 
     public InvoicePaymentModelDao(final UUID id, final DateTime createdDate, final InvoicePaymentType type, final UUID invoiceId,
                                   final UUID paymentId, final DateTime paymentDate, final BigDecimal amount, final Currency currency,
-                                  final Currency processedCurrency, final String paymentCookieId, final UUID linkedInvoicePaymentId) {
+                                  final Currency processedCurrency, final String paymentCookieId, final UUID linkedInvoicePaymentId, final Boolean success) {
         super(id, createdDate, createdDate);
         this.type = type;
         this.invoiceId = invoiceId;
@@ -56,12 +57,13 @@ public class InvoicePaymentModelDao extends EntityModelDaoBase implements Entity
         this.processedCurrency = processedCurrency;
         this.paymentCookieId = paymentCookieId;
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
+        this.success = success;
     }
 
     public InvoicePaymentModelDao(final InvoicePayment invoicePayment) {
         this(invoicePayment.getId(), invoicePayment.getCreatedDate(), invoicePayment.getType(), invoicePayment.getInvoiceId(), invoicePayment.getPaymentId(),
              invoicePayment.getPaymentDate(), invoicePayment.getAmount(), invoicePayment.getCurrency(), invoicePayment.getProcessedCurrency(), invoicePayment.getPaymentCookieId(),
-             invoicePayment.getLinkedInvoicePaymentId());
+             invoicePayment.getLinkedInvoicePaymentId(), invoicePayment.isSuccess());
     }
 
     public InvoicePaymentType getType() {
@@ -134,6 +136,14 @@ public class InvoicePaymentModelDao extends EntityModelDaoBase implements Entity
 
     public void setLinkedInvoicePaymentId(final UUID linkedInvoicePaymentId) {
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
+    }
+
+    public Boolean getSuccess() {
+        return success;
+    }
+
+    public void setSuccess(final Boolean success) {
+        this.success = success;
     }
 
     @Override

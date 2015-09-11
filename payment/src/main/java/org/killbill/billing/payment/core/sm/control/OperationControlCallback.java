@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.sm.control;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -117,35 +118,34 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                     final PaymentTransaction transaction = ((PaymentStateControlContext) paymentStateContext).getCurrentTransaction();
 
                     success = transaction.getTransactionStatus() == TransactionStatus.SUCCESS || transaction.getTransactionStatus() == TransactionStatus.PENDING;
+                    final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                                                                                                                paymentStateContext.getPaymentMethodId(),
+                                                                                                                paymentStateControlContext.getAttemptId(),
+                                                                                                                result.getId(),
+                                                                                                                result.getExternalKey(),
+                                                                                                                transaction.getId(),
+                                                                                                                paymentStateContext.getPaymentTransactionExternalKey(),
+                                                                                                                PaymentApiType.PAYMENT_TRANSACTION,
+                                                                                                                paymentStateContext.getTransactionType(),
+                                                                                                                null,
+                                                                                                                transaction.getAmount(),
+                                                                                                                transaction.getCurrency(),
+                                                                                                                transaction.getProcessedAmount(),
+                                                                                                                transaction.getProcessedCurrency(),
+                                                                                                                paymentStateControlContext.isApiPayment(),
+                                                                                                                paymentStateContext.getCallContext());
                     if (success) {
-                        final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
-                                                                                                                    paymentStateContext.getPaymentMethodId(),
-                                                                                                                    paymentStateControlContext.getAttemptId(),
-                                                                                                                    result.getId(),
-                                                                                                                    result.getExternalKey(),
-                                                                                                                    transaction.getId(),
-                                                                                                                    paymentStateContext.getPaymentTransactionExternalKey(),
-                                                                                                                    PaymentApiType.PAYMENT_TRANSACTION,
-                                                                                                                    paymentStateContext.getTransactionType(),
-                                                                                                                    null,
-                                                                                                                    transaction.getAmount(),
-                                                                                                                    transaction.getCurrency(),
-                                                                                                                    transaction.getProcessedAmount(),
-                                                                                                                    transaction.getProcessedCurrency(),
-                                                                                                                    paymentStateControlContext.isApiPayment(),
-                                                                                                                    paymentStateContext.getCallContext());
-
                         executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
                     } else {
-                        throw new OperationException(null, executePluginOnFailureCallsAndSetRetryDate(paymentStateControlContext, paymentControlContext));
+                        throw new OperationException(null, executePluginOnFailureCallsAndSetRetryDate(updatedPaymentControlContext));
                     }
                 } catch (final PaymentApiException e) {
                     // Wrap PaymentApiException, and throw a new OperationException with an ABORTED/FAILURE state based on the retry result.
-                    throw new OperationException(e, executePluginOnFailureCallsAndSetRetryDate(paymentStateControlContext, paymentControlContext));
+                    throw new OperationException(e, executePluginOnFailureCallsAndSetRetryDate(paymentControlContext));
                 } catch (final RuntimeException e) {
                     // Attempts to set the retry date in context if needed.
-                    executePluginOnFailureCallsAndSetRetryDate(paymentStateControlContext, paymentControlContext);
+                    executePluginOnFailureCallsAndSetRetryDate(paymentControlContext);
                     throw e;
                 }
             }
@@ -202,7 +202,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
     }
 
     protected void executePluginOnSuccessCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
-        // Values that were obtained/chnaged after the payment call was made (paymentId, processedAmount, processedCurrency,... needs to be extracted from the paymentControlContext)
+        // Values that were obtained/changed after the payment call was made (paymentId, processedAmount, processedCurrency,... needs to be extracted from the paymentControlContext)
         // paymentId, paymentExternalKey, transactionAmount, transaction currency are extracted from  paymentControlContext which was update from the operation result.
         final OnSuccessPaymentControlResult result = controlPluginRunner.executePluginOnSuccessCalls(paymentStateContext.getAccount(),
                                                                                                      paymentStateContext.getPaymentMethodId(),
@@ -225,7 +225,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         adjustStateContextPluginProperties(paymentStateContext, result.getAdjustedPluginProperties());
     }
 
-    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentStateControlContext paymentStateControlContext, final PaymentControlContext paymentControlContext) {
+    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentControlContext paymentControlContext) {
         final DateTime retryDate = executePluginOnFailureCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
         if (retryDate != null) {
             ((PaymentStateControlContext) paymentStateContext).setRetryDate(retryDate);
@@ -238,11 +238,11 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         final OnFailurePaymentControlResult result = controlPluginRunner.executePluginOnFailureCalls(paymentStateContext.getAccount(),
                                                                                                      paymentControlContext.getPaymentMethodId(),
                                                                                                      paymentStateControlContext.getAttemptId(),
-                                                                                                     paymentStateContext.getPaymentId(),
-                                                                                                     paymentStateContext.getPaymentExternalKey(),
-                                                                                                     paymentStateContext.getPaymentTransactionExternalKey(),
+                                                                                                     paymentControlContext.getPaymentId(),
+                                                                                                     paymentControlContext.getPaymentExternalKey(),
+                                                                                                     paymentControlContext.getTransactionExternalKey(),
                                                                                                      PaymentApiType.PAYMENT_TRANSACTION,
-                                                                                                     paymentStateContext.getTransactionType(),
+                                                                                                     paymentControlContext.getTransactionType(),
                                                                                                      null,
                                                                                                      paymentControlContext.getAmount(),
                                                                                                      paymentControlContext.getCurrency(),

@@ -462,7 +462,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final InvoicePaymentModelDao refund = new InvoicePaymentModelDao(UUIDs.randomUUID(), context.getCreatedDate(), InvoicePaymentType.REFUND,
                                                                                  payment.getInvoiceId(), paymentId,
                                                                                  context.getCreatedDate(), requestedPositiveAmount.negate(),
-                                                                                 payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId());
+                                                                                 payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId(), true);
                 transactional.create(refund, context);
 
                 // Retrieve invoice after the Refund
@@ -548,7 +548,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final InvoicePaymentModelDao chargeBack = new InvoicePaymentModelDao(UUIDs.randomUUID(), context.getCreatedDate(), InvoicePaymentType.CHARGED_BACK,
                                                                                      payment.getInvoiceId(), payment.getPaymentId(), context.getCreatedDate(),
                                                                                      requestedChargedBackAmount.negate(), payment.getCurrency(), payment.getProcessedCurrency(),
-                                                                                     null, payment.getId());
+                                                                                     null, payment.getId(), true);
                 transactional.create(chargeBack, context);
 
                 // Notify the bus since the balance of the invoice changed
@@ -664,6 +664,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }).orNull();
                 if (existingAttempt == null) {
                     transactional.create(invoicePayment, context);
+                } else if (!existingAttempt.getSuccess() && invoicePayment.getSuccess()) {
+                    transactional.updateAttempt(existingAttempt.getRecordId(), invoicePayment.getPaymentDate().toDate(), invoicePayment.getAmount(), invoicePayment.getCurrency(), invoicePayment.getProcessedCurrency(), context);
                 }
                 return null;
             }

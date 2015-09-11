@@ -149,7 +149,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 case PURCHASE:
                     final UUID invoiceId = getInvoiceId(pluginProperties);
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
-                    if (existingInvoicePayment != null) {
+                    if (existingInvoicePayment != null && existingInvoicePayment.isSuccess()) {
                         log.info("onSuccessCall was already completed for payment purchase :" + paymentControlContext.getPaymentId());
                     } else {
                         invoiceApi.notifyOfPayment(invoiceId,
@@ -158,6 +158,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                    paymentControlContext.getProcessedCurrency(),
                                                    paymentControlContext.getPaymentId(),
                                                    paymentControlContext.getCreatedDate(),
+                                                   true,
                                                    internalContext);
                     }
                     break;
@@ -193,11 +194,28 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     @Override
-    public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+    public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> pluginProperties) throws PaymentControlApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         switch (transactionType) {
             case PURCHASE:
+                final UUID invoiceId = getInvoiceId(pluginProperties);
+                if (paymentControlContext.getPaymentId() != null) {
+                    try {
+                        invoiceApi.notifyOfPayment(invoiceId,
+                                                   paymentControlContext.getAmount(),
+                                                   paymentControlContext.getCurrency(),
+                                                   // processed currency may be null so we use currency; processed currency will be updated if/when payment succeeds
+                                                   paymentControlContext.getCurrency(),
+                                                   paymentControlContext.getPaymentId(),
+                                                   paymentControlContext.getCreatedDate(),
+                                                   false,
+                                                   internalContext);
+                    } catch (InvoiceApiException e) {
+                        log.error("InvoicePaymentControlPluginApi onFailureCall failed ton update invoice for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
+                    }
+                }
+
                 final DateTime nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
                 return new DefaultFailureCallResult(nextRetryDate);
             case REFUND:

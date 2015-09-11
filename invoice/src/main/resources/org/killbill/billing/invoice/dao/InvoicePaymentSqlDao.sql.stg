@@ -12,6 +12,7 @@ tableFields(prefix) ::= <<
 , <prefix>processed_currency
 , <prefix>payment_cookie_id
 , <prefix>linked_invoice_payment_id
+, <prefix>success
 , <prefix>created_by
 , <prefix>created_date
 >>
@@ -26,6 +27,7 @@ tableValues() ::= <<
 , :processedCurrency
 , :paymentCookieId
 , :linkedInvoicePaymentId
+, :success
 , :createdBy
 , :createdDate
 >>
@@ -70,6 +72,7 @@ getRemainingAmountPaid() ::= <<
     SELECT SUM(amount)
     FROM <tableName()>
     WHERE (id = :invoicePaymentId OR linked_invoice_payment_id = :invoicePaymentId)
+    AND success
     <AND_CHECK_TENANT()>
     ;
 >>
@@ -103,3 +106,14 @@ getChargebacksByPaymentId() ::= <<
     ;
 >>
 
+
+updateAttempt() ::= <<
+    UPDATE <tableName()>
+    SET success = true,
+    payment_date = :paymentDate,
+    amount = :amount,
+    processed_currency = :processedCurrency
+    WHERE record_id = :recordId
+    <AND_CHECK_TENANT("")>
+    ;
+>>
