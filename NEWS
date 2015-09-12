@@ -1,3 +1,6 @@
+
+    Fix usage bug (see 8511f41cdf78bd1cb9d0c335ffa8d40ca53aeccd)
+
 0.13.7
     https://github.com/killbill/killbill/issues/249
     https://github.com/killbill/killbill/issues/297
