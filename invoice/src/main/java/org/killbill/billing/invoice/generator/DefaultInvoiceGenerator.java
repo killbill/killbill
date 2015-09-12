@@ -29,6 +29,8 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
 import org.killbill.billing.ErrorCode;
@@ -114,8 +116,21 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return invoice.getInvoiceItems().size() != 0 ? invoice : null;
     }
 
+    private LocalDate getMinBillingEventDate(final BillingEventSet eventSet, final DateTimeZone accountTimeZone) {
+        DateTime minDate = null;
+        final Iterator<BillingEvent> events = eventSet.iterator();
+        while (events.hasNext()) {
+            final BillingEvent cur = events.next();
+            if (minDate == null || minDate.compareTo(cur.getEffectiveDate()) > 0) {
+                minDate = cur.getEffectiveDate();
+            }
+        }
+        return new LocalDate(minDate, accountTimeZone);
+    }
+
     private List<InvoiceItem> generateUsageConsumableInArrearItems(final Account account,
-                                                                   final UUID invoiceId, final BillingEventSet eventSet,
+                                                                   final UUID invoiceId,
+                                                                   final BillingEventSet eventSet,
                                                                    @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
                                                                    final InternalCallContext internalCallContext) throws InvoiceApiException {
 
@@ -144,7 +159,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                     input.getBillingMode() == BillingMode.IN_ARREAR);
                         }
                     })) {
-                    rawUsageOptimizerResult = rawUsageOptimizer.getConsumableInArrearUsage(new LocalDate(event.getEffectiveDate(), account.getTimeZone()), targetDate, Iterables.concat(perSubscriptionConsumableInArrearUsageItems.values()), eventSet.getUsages(), internalCallContext);
+                    final LocalDate minBillingEventDate = getMinBillingEventDate(eventSet, account.getTimeZone());
+                    rawUsageOptimizerResult = rawUsageOptimizer.getConsumableInArrearUsage(minBillingEventDate, targetDate, Iterables.concat(perSubscriptionConsumableInArrearUsageItems.values()), eventSet.getUsages(), internalCallContext);
                 }
 
                 // None of the billing events report any usage (CONSUMABLE/IN_ARREAR) sections
