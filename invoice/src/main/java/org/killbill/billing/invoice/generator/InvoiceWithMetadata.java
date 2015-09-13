@@ -17,7 +17,10 @@
 
 package org.killbill.billing.invoice.generator;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,13 +37,15 @@ import com.google.common.collect.Iterables;
 
 public class InvoiceWithMetadata {
 
-    private final Invoice invoice;
     private final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates;
 
-    public InvoiceWithMetadata(final Invoice invoice, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
-        this.invoice = invoice;
+    private Invoice invoice;
+
+    public InvoiceWithMetadata(final Invoice originalInvoice, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
+        this.invoice = originalInvoice;
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
         build();
+        remove$0RecurringAndUsageItems();
     }
 
     public Invoice getInvoice() {
@@ -73,6 +78,23 @@ public class InvoiceWithMetadata {
             }
         });
     }
+
+    protected void remove$0RecurringAndUsageItems() {
+        if (invoice != null) {
+            final Iterator<InvoiceItem> it = invoice.getInvoiceItems().iterator();
+            while (it.hasNext()) {
+                final InvoiceItem item = it.next();
+                if ((item.getInvoiceItemType() == InvoiceItemType.RECURRING ||  item.getInvoiceItemType() == InvoiceItemType.USAGE) &&
+                    item.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+                    it.remove();
+                }
+            }
+            if (invoice.getInvoiceItems().isEmpty()) {
+                invoice = null;
+            }
+        }
+    }
+
 
     public static class SubscriptionFutureNotificationDates {
 

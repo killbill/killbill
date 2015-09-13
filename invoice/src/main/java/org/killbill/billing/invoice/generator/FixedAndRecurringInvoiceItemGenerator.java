@@ -177,8 +177,6 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                     }
                 }
                 updatePerSubscriptionNextNotificationDate(thisEvent.getSubscription().getId(), itemDataWithNextBillingCycleDate.getNextBillingCycleDate(), items, billingMode, perSubscriptionFutureNotificationDate);
-                // Filtering $0 items needs to occur after we compute nextNotificationDate, because these items contain important date info for the case of IN_ADVANCE billing
-                remove0$RecurringItems(items);
             }
         }
 
@@ -192,15 +190,6 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         return items;
     }
 
-    private void remove0$RecurringItems(final List<InvoiceItem> items) {
-        final Iterator<InvoiceItem> it = items.iterator();
-        while (it.hasNext()) {
-            final InvoiceItem item = it.next();
-            if (item.getAmount().compareTo(BigDecimal.ZERO) == 0) {
-                it.remove();
-            }
-        }
-    }
 
     private void updatePerSubscriptionNextNotificationDate(final UUID subscriptionId, final LocalDate nextBillingCycleDate, final List<InvoiceItem> newProposedItems, final BillingMode billingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
 

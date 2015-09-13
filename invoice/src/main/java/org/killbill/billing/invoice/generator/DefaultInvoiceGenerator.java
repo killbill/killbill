@@ -18,7 +18,9 @@
 
 package org.killbill.billing.invoice.generator;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,6 +36,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.junction.BillingEventSet;
@@ -84,6 +87,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final List<InvoiceItem> usageItems = usageInvoiceItemGenerator.generateItems(account, invoiceId, events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
         invoice.addInvoiceItems(usageItems);
 
+
         return new InvoiceWithMetadata(invoice.getInvoiceItems().isEmpty() ? null : invoice, perSubscriptionFutureNotificationDates);
     }
 
@@ -109,4 +113,5 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
         return maxDate;
     }
+
 }

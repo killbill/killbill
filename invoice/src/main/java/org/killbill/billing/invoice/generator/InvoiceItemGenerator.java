@@ -40,5 +40,4 @@ public abstract class InvoiceItemGenerator {
                                                     final Currency targetCurrency, Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                     final InternalCallContext context) throws InvoiceApiException;
 
-
 }
