@@ -292,6 +292,51 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="sports-annual">
+            <product>Sports</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>3750.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>4250.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>5000.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>500.00</value>
+                        </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>5.0</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
         <plan name="super-monthly">
             <product>Super</product>
             <initialPhases>
@@ -749,6 +794,7 @@
             <plans>
                 <plan>standard-annual</plan>
                 <plan>standard-monthly</plan>
+                <plan>sports-annual</plan>
                 <plan>sports-monthly</plan>
                 <plan>super-monthly</plan>
                 <plan>remotecontrol-monthly</plan>
