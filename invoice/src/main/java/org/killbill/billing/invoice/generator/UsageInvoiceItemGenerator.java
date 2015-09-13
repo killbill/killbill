@@ -26,6 +26,8 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -80,6 +82,9 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
 
         final Map<UUID, List<InvoiceItem>> perSubscriptionConsumableInArrearUsageItems = extractPerSubscriptionExistingConsumableInArrearUsageItems(eventSet.getUsages(), existingInvoices);
         try {
+
+            final LocalDate minBillingEventDate = getMinBillingEventDate(eventSet, account.getTimeZone());
+
             final List<InvoiceItem> items = Lists.newArrayList();
             final Iterator<BillingEvent> events = eventSet.iterator();
 
@@ -103,7 +108,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                                     input.getBillingMode() == BillingMode.IN_ARREAR);
                         }
                     })) {
-                    rawUsageOptimizerResult = rawUsageOptimizer.getConsumableInArrearUsage(new LocalDate(event.getEffectiveDate(), account.getTimeZone()), targetDate, Iterables.concat(perSubscriptionConsumableInArrearUsageItems.values()), eventSet.getUsages(), internalCallContext);
+                    rawUsageOptimizerResult = rawUsageOptimizer.getConsumableInArrearUsage(minBillingEventDate, targetDate, Iterables.concat(perSubscriptionConsumableInArrearUsageItems.values()), eventSet.getUsages(), internalCallContext);
                 }
 
                 // None of the billing events report any usage (CONSUMABLE/IN_ARREAR) sections
@@ -139,6 +144,19 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
         } catch (CatalogApiException e) {
             throw new InvoiceApiException(e);
         }
+    }
+
+
+    private LocalDate getMinBillingEventDate(final BillingEventSet eventSet, final DateTimeZone accountTimeZone) {
+        DateTime minDate = null;
+        final Iterator<BillingEvent> events = eventSet.iterator();
+        while (events.hasNext()) {
+            final BillingEvent cur = events.next();
+            if (minDate == null || minDate.compareTo(cur.getEffectiveDate()) > 0) {
+                minDate = cur.getEffectiveDate();
+            }
+        }
+        return new LocalDate(minDate, accountTimeZone);
     }
 
     private void updatePerSubscriptionNextNotificationUsageDate(final UUID subscriptionId, final Map<String, LocalDate> nextBillingCycleDates, final BillingMode usageBillingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
