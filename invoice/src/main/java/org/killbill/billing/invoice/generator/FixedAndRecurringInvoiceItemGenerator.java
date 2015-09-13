@@ -165,7 +165,6 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
                     if (rate != null) {
                         final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
-                        if (BigDecimal.ZERO.compareTo(amount) != 0) {
                             final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
                                                                                                 accountId,
                                                                                                 thisEvent.getSubscription().getBundleId(),
@@ -175,11 +174,11 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                                                                 itemDatum.getStartDate(), itemDatum.getEndDate(),
                                                                                                 amount, rate, currency);
                             items.add(recurringItem);
-
-                        }
                     }
                 }
                 updatePerSubscriptionNextNotificationDate(thisEvent.getSubscription().getId(), itemDataWithNextBillingCycleDate.getNextBillingCycleDate(), items, billingMode, perSubscriptionFutureNotificationDate);
+                // Filtering $0 items needs to occur after we compute nextNotificationDate, because these items contain important date info for the case of IN_ADVANCE billing
+                remove0$RecurringItems(items);
             }
         }
 
@@ -191,6 +190,16 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                             .append(item);
         }
         return items;
+    }
+
+    private void remove0$RecurringItems(final List<InvoiceItem> items) {
+        final Iterator<InvoiceItem> it = items.iterator();
+        while (it.hasNext()) {
+            final InvoiceItem item = it.next();
+            if (item.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+                it.remove();
+            }
+        }
     }
 
     private void updatePerSubscriptionNextNotificationDate(final UUID subscriptionId, final LocalDate nextBillingCycleDate, final List<InvoiceItem> newProposedItems, final BillingMode billingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
