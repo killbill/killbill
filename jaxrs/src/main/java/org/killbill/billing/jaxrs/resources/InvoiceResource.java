@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -114,6 +115,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -136,6 +138,14 @@ public class InvoiceResource extends JaxRsResourceBase {
     private final InvoiceNotifier invoiceNotifier;
     private final TenantUserApi tenantApi;
     private final Locale defaultLocale;
+
+    private static final Ordering<InvoicePaymentJson> INVOICE_PAYMENT_ORDERING = Ordering.from(new Comparator<InvoicePaymentJson>() {
+        @Override
+        public int compare(final InvoicePaymentJson o1, final InvoicePaymentJson o2) {
+            return o1.getTransactions().get(0).getEffectiveDate().compareTo(o2.getTransactions().get(0).getEffectiveDate());
+        }
+    });
+
 
     @Inject
     public InvoiceResource(final AccountUserApi accountUserApi,
@@ -530,6 +540,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
     }
 
+
     @Timed
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
@@ -541,8 +552,8 @@ public class InvoiceResource extends JaxRsResourceBase {
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, InvoiceApiException {
-        final TenantContext tenantContext = context.createContext(request);
 
+        final TenantContext tenantContext = context.createContext(request);
         final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), tenantContext);
 
         // Extract unique set of paymentId for this invoice
@@ -552,19 +563,22 @@ public class InvoiceResource extends JaxRsResourceBase {
                 return input.getPaymentId();
             }
         }));
+        if (invoicePaymentIds.isEmpty()) {
+            return Response.status(Status.OK).entity(ImmutableList.<InvoicePaymentJson>of()).build();
+        }
 
         final List<Payment> payments = new ArrayList<Payment>();
         for (final UUID paymentId : invoicePaymentIds) {
             final Payment payment = paymentApi.getPayment(paymentId, withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
             payments.add(payment);
         }
-        final List<InvoicePaymentJson> result = new ArrayList<InvoicePaymentJson>(payments.size());
-        if (payments.isEmpty()) {
-            return Response.status(Status.OK).entity(result).build();
-        }
-        for (final Payment cur : payments) {
-            result.add(new InvoicePaymentJson(cur, invoice.getId(), null));
-        }
+
+        final Iterable<InvoicePaymentJson> result = INVOICE_PAYMENT_ORDERING.sortedCopy(Iterables.transform(payments, new Function<Payment, InvoicePaymentJson>() {
+            @Override
+            public InvoicePaymentJson apply(final Payment input) {
+                return new InvoicePaymentJson(input, invoice.getId(), null);
+            }
+        }));
         return Response.status(Status.OK).entity(result).build();
     }
 
