@@ -1,3 +1,6 @@
+0.15.5
+    Fix with issue with payment combo call where default account fields are not part of the request
+
 0.15.4
     See https://github.com/killbill/killbill/issues?q=milestone%3ARelease-0.15.4+is%3Aclosed
 
