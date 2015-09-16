@@ -55,8 +55,8 @@ public class TestAccount extends TestJaxrsBase {
 
         final Account account = killBillClient.createAccount(emptyAccount, createdBy, reason, comment);
         Assert.assertNotNull(account.getExternalKey());
-        Assert.assertNull(account.getName());
-        Assert.assertNull(account.getEmail());
+        Assert.assertNotNull(account.getName());
+        Assert.assertNotNull(account.getEmail());
     }
 
     @Test(groups = "slow", description = "Verify external key is unique")
