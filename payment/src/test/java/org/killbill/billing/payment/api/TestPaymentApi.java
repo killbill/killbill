@@ -119,6 +119,42 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testCreateFailedPurchase() throws PaymentApiException {
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final String paymentExternalKey = "ohhhh";
+        final String transactionExternalKey = "naaahhh";
+
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+
+        final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
+                                                          ImmutableList.<PluginProperty>of(), callContext);
+
+        assertEquals(payment.getExternalKey(), paymentExternalKey);
+        assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment.getAccountId(), account.getId());
+        assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCurrency(), Currency.AED);
+
+        assertEquals(payment.getTransactions().size(), 1);
+        assertEquals(payment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
+        assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
+        assertEquals(payment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.AED);
+        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.AED);
+
+        assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
+        assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
+        assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
+    }
+
+    @Test(groups = "slow")
     public void testCreateSuccessAuthCapture() throws PaymentApiException {
 
         final BigDecimal authAmount = BigDecimal.TEN;
@@ -311,6 +347,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                         createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
         } catch (final PaymentApiException expected) {
+            assertTrue(true);
         }
 
 

@@ -66,6 +66,7 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
@@ -119,15 +120,14 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
 
             state.runOperation(paymentControlStateMachineHelper.getOperation(), callback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {
-            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
         } catch (final OperationException e) {
-            if (e.getCause() == null) {
-                // Unclear if we should check whether there is a result that was set and return that result.
-                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
-            } else if (e.getCause() instanceof PaymentApiException) {
+            if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
-            } else {
-                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            // If the result is set (and cause is null), that means we created a Payment but the associated transaction status is 'XXX_FAILURE',
+            // we don't throw, and return the failed Payment instead to be consistent with what happens when we don't go through control api.
+            } else if (e.getCause() != null || paymentStateContext.getResult() == null) {
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
             }
         }
         return paymentStateContext.getResult();
