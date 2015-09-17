@@ -28,13 +28,10 @@ import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -119,9 +116,9 @@ public class AccountJson extends JsonBase {
         this.accountBalance = accountBalance;
         this.externalKey = externalKey;
         this.accountId = accountId;
-        this.name = MoreObjects.firstNonNull(name, UUIDs.randomUUID().toString());
-        this.firstNameLength = MoreObjects.firstNonNull(firstNameLength, this.name.length());
-        this.email = MoreObjects.firstNonNull(email, "");
+        this.name = name;
+        this.firstNameLength = firstNameLength;
+        this.email = email;
         this.billCycleDayLocal = billCycleDayLocal;
         this.currency = currency;
         this.paymentMethodId = paymentMethodId;
@@ -136,7 +133,7 @@ public class AccountJson extends JsonBase {
         this.locale = locale;
         this.phone = phone;
         this.isMigrated = isMigrated;
-        this.isNotifiedForInvoices = isNotifiedForInvoices != null ? isNotifiedForInvoices : false;
+        this.isNotifiedForInvoices = isNotifiedForInvoices;
         this.accountCBA = accountCBA;
     }
 
