@@ -67,12 +67,7 @@ public class TestChargeback extends TestJaxrsBase {
         }
 
         // Last attempt should fail because this is more than the Payment
-        try {
-            killBillClient.createInvoicePaymentChargeback(input, createdBy, reason, comment);
-            fail();
-        } catch (final KillBillClientException e) {
-        }
-
+        final InvoicePayment foo = killBillClient.createInvoicePaymentChargeback(input, createdBy, reason, comment);
         final List<InvoicePayment> payments = killBillClient.getInvoicePaymentsForAccount(payment.getAccountId());
         final List<PaymentTransaction> transactions = getPaymentTransactions(payments, TransactionType.CHARGEBACK.toString());
         Assert.assertEquals(transactions.size(), 5);
