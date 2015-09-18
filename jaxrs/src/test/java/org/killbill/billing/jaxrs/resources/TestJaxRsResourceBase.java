@@ -51,7 +51,17 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(pluginProperties.get(4).getValue(), "2020");
     }
 
-    private static final class JaxRsResourceBaseTest extends JaxRsResourceBase {
+    @Test(groups = "fast")
+    public void testExtractPluginPropertiesWithNullProperty() throws Exception {
+        final List<String> pluginPropertiesString = ImmutableList.<String>of("foo=",
+                                                                             "bar=ttt");
+        final List<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>copyOf(base.extractPluginProperties(pluginPropertiesString));
+        Assert.assertEquals(pluginProperties.size(), 1);
+        Assert.assertEquals(pluginProperties.get(0).getKey(), "bar");
+        Assert.assertEquals(pluginProperties.get(0).getValue(), "ttt");
+    }
+
+        private static final class JaxRsResourceBaseTest extends JaxRsResourceBase {
 
         public JaxRsResourceBaseTest() {
             super(null, null, null, null, null, null, null, null);

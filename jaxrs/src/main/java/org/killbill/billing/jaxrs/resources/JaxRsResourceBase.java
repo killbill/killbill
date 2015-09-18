@@ -367,9 +367,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
         for (final String pluginProperty : pluginProperties) {
             final List<String> property = ImmutableList.<String>copyOf(pluginProperty.split("="));
+            // Skip entries for which there is no value
+            if (property.size() == 1) {
+                continue;
+            }
+
             final String key = property.get(0);
             // Should we URL decode the value?
-            String value = property.size() == 1 ? null : Joiner.on("=").join(property.subList(1, property.size()));
+            String value = Joiner.on("=").join(property.subList(1, property.size()));
             if (pluginProperty.endsWith("=")) {
                 value += "=";
             }
