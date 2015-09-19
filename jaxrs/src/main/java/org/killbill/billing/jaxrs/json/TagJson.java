@@ -36,24 +36,28 @@ public class TagJson extends JsonBase {
     @ApiModelProperty(dataType = "org.killbill.billing.ObjectType")
     private final ObjectType objectType;
     @ApiModelProperty(dataType = "java.util.UUID")
+    private final String objectId;
+    @ApiModelProperty(dataType = "java.util.UUID")
     private final String tagDefinitionId;
     private final String tagDefinitionName;
 
     @JsonCreator
     public TagJson(@JsonProperty("tagId") final String tagId,
                    @JsonProperty("objectType") final ObjectType objectType,
+                   @JsonProperty("objectId") final String objectId,
                    @JsonProperty("tagDefinitionId") final String tagDefinitionId,
                    @JsonProperty("tagDefinitionName") final String tagDefinitionName,
                    @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.tagId = tagId;
         this.objectType = objectType;
+        this.objectId = objectId;
         this.tagDefinitionId = tagDefinitionId;
         this.tagDefinitionName = tagDefinitionName;
     }
 
     public TagJson(final Tag tag, final TagDefinition tagDefinition, @Nullable final List<AuditLog> auditLogs) {
-        this(tag.getId().toString(), tag.getObjectType(), tagDefinition.getId().toString(), tagDefinition.getName(), toAuditLogJson(auditLogs));
+        this(tag.getId().toString(), tag.getObjectType(), tag.getObjectId().toString(), tagDefinition.getId().toString(), tagDefinition.getName(), toAuditLogJson(auditLogs));
     }
 
     public String getTagId() {
@@ -72,11 +76,16 @@ public class TagJson extends JsonBase {
         return tagDefinitionName;
     }
 
+    public String getObjectId() {
+        return objectId;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("TagJson{");
         sb.append("tagId='").append(tagId).append('\'');
         sb.append(", objectType=").append(objectType);
+        sb.append(", objectId=").append(objectId);
         sb.append(", tagDefinitionId='").append(tagDefinitionId).append('\'');
         sb.append(", tagDefinitionName='").append(tagDefinitionName).append('\'');
         sb.append('}');
@@ -100,6 +109,9 @@ public class TagJson extends JsonBase {
         if (tagDefinitionId != null ? !tagDefinitionId.equals(tagJson.tagDefinitionId) : tagJson.tagDefinitionId != null) {
             return false;
         }
+        if (objectId != null ? !objectId.equals(tagJson.objectId) : tagJson.objectId != null) {
+            return false;
+        }
         if (tagDefinitionName != null ? !tagDefinitionName.equals(tagJson.tagDefinitionName) : tagJson.tagDefinitionName != null) {
             return false;
         }
@@ -115,6 +127,7 @@ public class TagJson extends JsonBase {
         int result = tagId != null ? tagId.hashCode() : 0;
         result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
         result = 31 * result + (tagDefinitionId != null ? tagDefinitionId.hashCode() : 0);
+        result = 31 * result + (objectId != null ? objectId.hashCode() : 0);
         result = 31 * result + (tagDefinitionName != null ? tagDefinitionName.hashCode() : 0);
         return result;
     }
