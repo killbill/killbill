@@ -193,6 +193,24 @@ public class TestPayment extends TestJaxrsBase {
                                  voidTransactionExternalKey, null, "VOID", "SUCCESS");
     }
 
+    @Test(groups = "slow")
+    public void testComboAuthorizationInvalidPaymentMethod() throws Exception {
+        final Account accountJson = getAccount();
+        accountJson.setAccountId(null);
+
+        final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
+        info.setProperties(null);
+
+        final UUID paymentMethodId = UUID.randomUUID();
+        final PaymentMethod paymentMethodJson = new PaymentMethod(paymentMethodId, null, null, true, PLUGIN_NAME, info);
+
+        final ComboPaymentTransaction comboPaymentTransaction = new ComboPaymentTransaction(accountJson, paymentMethodJson, null, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of());
+
+        final Payment payment = killBillClient.createPayment(comboPaymentTransaction, ImmutableMap.<String, String>of(), createdBy, reason, comment);
+        // Client returns null in case of a 404
+        Assert.assertNull(payment);
+    }
+
     private void testCreateRetrievePayment(final Account account, @Nullable final UUID paymentMethodId,
                                            final String paymentExternalKey, final int paymentNb) throws Exception {
         // Authorization
