@@ -43,6 +43,17 @@ CLEAN_FILE=
 # Egrep like for skipping some modules until they are ready
 SKIP="(server)"
 
+
+# test if user is running gnu-getopt
+TEST=`getopt -o "a:" -l "action:" -- --action dump`
+if [ "$TEST" != " --action 'dump' --" ]; then
+    echo "You are not using gnu-getopt or latest getopt."
+    echo "For Mac OS X, please upgrade 'getopt' to 'gnu-getopt',"
+    echo "For Linux, please upgrade 'getopt'."
+    exit
+fi
+
+
 ARGS=`getopt -o "a:d:h:u:p:t:f:" -l "action:,driver:,database:,host:,user:,password:,test:,file:,port:,help" -n "db-helper" -- "$@"`
 eval set -- "${ARGS}"
 
@@ -99,7 +110,7 @@ function create_clean_file() {
     local tables=`cat $ddl_file | grep -i "create table" | awk ' { print $3 } '`
 
     local tmp="/tmp/clean-$DATABASE.$$"
-    echo "/*! use $DATABASE; */" >> $tmp
+    echo "/*! USE $DATABASE */;" >> $tmp
     echo "" >> $tmp
     for t in $tables; do
         echo "truncate $t;" >> $tmp
@@ -121,7 +132,7 @@ function create_ddl_file() {
     if [ $DRIVER == "postgres" ]; then
         cat util/src/main/resources/org/killbill/billing/util/ddl-postgresql.sql > $tmp
     fi
-    echo "/*! use $DATABASE; */" >> $tmp
+    echo "/*! USE $DATABASE */;" >> $tmp
     echo "" >> $tmp
     for d in $ddls; do
         cat $d >> $tmp
