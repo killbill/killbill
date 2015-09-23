@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentMethod;
+import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.mockito.Mockito;
@@ -33,6 +34,28 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableList;
 
 public class TestPaymentMethodProcessorNoDB extends PaymentTestSuiteNoDB {
+
+    @Test(groups = "fast")
+    public void testPaymentMethodExternalKeySetByPluginIfNonSpecified() throws Exception {
+        final Account account = Mockito.mock(Account.class);
+        final PaymentMethodPlugin paymentMethodPlugin = Mockito.mock(PaymentMethodPlugin.class);
+        final Iterable<PluginProperty> properties = ImmutableList.<PluginProperty>of();
+
+        final String paymentMethodExternalKey = UUID.randomUUID().toString();
+        final UUID paymentMethodId1 = paymentMethodProcessor.addPaymentMethod(paymentMethodExternalKey, "__EXTERNAL_PAYMENT__", account, false, paymentMethodPlugin, properties, callContext, internalCallContext);
+        final PaymentMethod paymentMethod1 = paymentMethodProcessor.getPaymentMethodById(paymentMethodId1, false, false, properties, callContext, internalCallContext);
+        Assert.assertEquals(paymentMethod1.getExternalKey(), paymentMethodExternalKey);
+
+        // By default, the external payment plugin sets the external payment method id to "unknown"
+        final UUID paymentMethodId2 = paymentMethodProcessor.addPaymentMethod(null, "__EXTERNAL_PAYMENT__", account, false, paymentMethodPlugin, properties, callContext, internalCallContext);
+        final PaymentMethod paymentMethod2 = paymentMethodProcessor.getPaymentMethodById(paymentMethodId2, false, false, properties, callContext, internalCallContext);
+        Assert.assertEquals(paymentMethod2.getExternalKey(), "unknown");
+
+        // Make sure we don't try to set the same external key if the plugin returns duplicate external ids
+        final UUID paymentMethodId3 = paymentMethodProcessor.addPaymentMethod(null, "__EXTERNAL_PAYMENT__", account, false, paymentMethodPlugin, properties, callContext, internalCallContext);
+        final PaymentMethod paymentMethod3 = paymentMethodProcessor.getPaymentMethodById(paymentMethodId3, false, false, properties, callContext, internalCallContext);
+        Assert.assertNotEquals(paymentMethod3.getExternalKey(), "unknown");
+    }
 
     @Test(groups = "fast")
     public void testGetExternalPaymentProviderPlugin() throws Exception {

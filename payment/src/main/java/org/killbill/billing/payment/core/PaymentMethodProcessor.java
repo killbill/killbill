@@ -116,8 +116,15 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                                 pluginApi = getPaymentPluginApi(paymentPluginServiceName);
                                                                                                                 pm = new DefaultPaymentMethod(paymentMethodExternalKey, account.getId(), paymentPluginServiceName, paymentMethodProps);
                                                                                                                 pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, properties, callContext);
-                                                                                                                final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getExternalKey(), pm.getCreatedDate(), pm.getUpdatedDate(),
-                                                                                                                                                                                pm.getAccountId(), pm.getPluginName(), pm.isActive());
+
+                                                                                                                final String actualPaymentMethodExternalKey = retrieveActualPaymentMethodExternalKey(account, pm, pluginApi, properties, callContext, context);
+                                                                                                                final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(),
+                                                                                                                                                                                actualPaymentMethodExternalKey,
+                                                                                                                                                                                pm.getCreatedDate(),
+                                                                                                                                                                                pm.getUpdatedDate(),
+                                                                                                                                                                                pm.getAccountId(),
+                                                                                                                                                                                pm.getPluginName(),
+                                                                                                                                                                                pm.isActive());
                                                                                                                 paymentDao.insertPaymentMethod(pmModel, context);
 
                                                                                                                 if (setDefault) {
@@ -133,6 +140,30 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                         }
                                                                                                     }),
                                              uuidPluginNotificationDispatcher);
+    }
+
+    private String retrieveActualPaymentMethodExternalKey(final Account account, final PaymentMethod pm, final PaymentPluginApi pluginApi, final Iterable<PluginProperty> properties, final TenantContext callContext, final InternalCallContext context) {
+        // If the user specified an external key, use it
+        if (pm.getExternalKey() != null) {
+            return pm.getExternalKey();
+        }
+
+        // Otherwise, check if the plugin sets an external payment method id
+        final PaymentMethodPlugin paymentMethodPlugin;
+        try {
+            paymentMethodPlugin = pluginApi.getPaymentMethodDetail(account.getId(), pm.getId(), properties, callContext);
+        } catch (final PaymentPluginApiException e) {
+            log.warn("Error retrieving payment method " + pm.getId() + " from plugin " + pm.getPluginName(), e);
+            return null;
+        }
+
+        if (paymentMethodPlugin != null && paymentMethodPlugin.getExternalPaymentMethodId() != null) {
+            // An external payment method id is set but make sure it doesn't conflict with an existing one
+            final String externalKey = paymentMethodPlugin.getExternalPaymentMethodId();
+            return paymentDao.getPaymentMethodByExternalKeyIncludedDeleted(externalKey, context) == null ? externalKey : null;
+        } else {
+            return null;
+        }
     }
 
     public List<PaymentMethod> getPaymentMethods(final UUID accountId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
