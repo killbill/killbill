@@ -42,9 +42,12 @@ import ch.qos.logback.classic.LoggerContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
+import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
 import com.wordnik.swagger.jaxrs.config.BeanConfig;
 
 public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
+
+    private static final String ENABLE_HTTP_GZIP_RESPONSES = "org.killbill.server.http.gzip";
 
     private static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
 
@@ -71,8 +74,12 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         // c.s.j.s.w.g.AbstractWadlGeneratorGrammarGenerator - Couldn't find grammar element for class javax.ws.rs.core.Response
         builder.addJerseyParam("com.sun.jersey.config.feature.DisableWADL", "true");
 
-        // The logging filter is still incompatible with the GZIP filter
-        //builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());
+        // In order to use the GZIPContentEncodingFilter, the jersey param "com.sun.jersey.config.feature.logging.DisableEntitylogging"
+        // must not be set to false.
+        if (Boolean.valueOf(System.getProperty(ENABLE_HTTP_GZIP_RESPONSES, "false"))) {
+            logger.info("Enable http gzip responses");
+            builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());
+        }
         builder.addJerseyFilter(ProfilingContainerResponseFilter.class.getName());
         builder.addJerseyFilter(RequestDataFilter.class.getName());
 
