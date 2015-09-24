@@ -26,6 +26,12 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -60,6 +66,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
+import org.killbill.billing.jaxrs.JaxrsExecutors;
 import org.killbill.billing.jaxrs.json.AccountEmailJson;
 import org.killbill.billing.jaxrs.json.AccountJson;
 import org.killbill.billing.jaxrs.json.AccountTimelineJson;
@@ -97,6 +104,7 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
@@ -131,6 +139,8 @@ public class AccountResource extends JaxRsResourceBase {
     private final InvoicePaymentApi invoicePaymentApi;
     private final OverdueInternalApi overdueApi;
     private final PaymentConfig paymentConfig;
+    private final JaxrsExecutors jaxrsExecutors;
+    private final JaxrsConfig jaxrsConfig;
 
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
@@ -145,6 +155,8 @@ public class AccountResource extends JaxRsResourceBase {
                            final OverdueInternalApi overdueApi,
                            final Clock clock,
                            final PaymentConfig paymentConfig,
+                           final JaxrsExecutors jaxrsExecutors,
+                           final JaxrsConfig jaxrsConfig,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, paymentApi, clock, context);
         this.subscriptionApi = subscriptionApi;
@@ -152,6 +164,8 @@ public class AccountResource extends JaxRsResourceBase {
         this.invoicePaymentApi = invoicePaymentApi;
         this.overdueApi = overdueApi;
         this.paymentConfig = paymentConfig;
+        this.jaxrsExecutors = jaxrsExecutors;
+        this.jaxrsConfig = jaxrsConfig;
     }
 
     @Timed
@@ -353,6 +367,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     }
 
+
     @Timed
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TIMELINE)
@@ -362,28 +377,127 @@ public class AccountResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getAccountTimeline(@PathParam("accountId") final String accountIdString,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionApiException {
+                                       @QueryParam(QUERY_PARALLEL) @DefaultValue("false") final Boolean parallel,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionApiException, InvoiceApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID accountId = UUID.fromString(accountIdString);
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
 
-        // Get the invoices
-        final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), tenantContext);
+        final Callable<List<SubscriptionBundle>> bundlesCallable = new Callable<List<SubscriptionBundle>>() {
+            @Override
+            public List<SubscriptionBundle> call() throws Exception {
+                return subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), tenantContext);
+            }
+        };
+        final Callable<List<Invoice>> invoicesCallable = new Callable<List<Invoice>>() {
+            @Override
+            public List<Invoice> call() throws Exception {
+                return invoiceApi.getInvoicesByAccount(account.getId(), tenantContext);
+            }
+        };
+        final Callable<List<InvoicePayment>> invoicePaymentsCallable = new Callable<List<InvoicePayment>>() {
+            @Override
+            public List<InvoicePayment> call() throws Exception {
+                return invoicePaymentApi.getInvoicePaymentsByAccount(accountId, tenantContext);
+            }
+        };
+        final Callable<List<Payment>> paymentsCallable = new Callable<List<Payment>>() {
+            @Override
+            public List<Payment> call() throws Exception {
+                return paymentApi.getAccountPayments(accountId, false, ImmutableList.<PluginProperty>of(), tenantContext);
+            }
+        };
+        final Callable<AccountAuditLogs> auditsCallable = new Callable<AccountAuditLogs>() {
+            @Override
+            public AccountAuditLogs call() throws Exception {
+                return auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
+            }
+        };
 
-        // Get the payments
-        final List<Payment> payments = paymentApi.getAccountPayments(accountId, false, ImmutableList.<PluginProperty>of(), tenantContext);
+        final AccountTimelineJson json;
 
-        // Get the bundles
-        final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), tenantContext);
+        List<Invoice> invoices = null;
+        List<SubscriptionBundle> bundles = null;
+        List<InvoicePayment> invoicePayments = null;
+        List<Payment> payments = null;
+        AccountAuditLogs accountAuditLogs = null;
 
-        // Get all audit logs
-        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
+        if (parallel) {
 
-        final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePaymentsByAccount(accountId, tenantContext);
-        final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, invoicePayments, bundles,
-                                                                 accountAuditLogs);
+            final ExecutorService executor = jaxrsExecutors.getJaxrsExecutorService();
+            final Future<List<SubscriptionBundle>> futureBundlesCallable = executor.submit(bundlesCallable);
+            final Future<List<Invoice>> futureInvoicesCallable = executor.submit(invoicesCallable);
+            final Future<List<InvoicePayment>> futureInvoicePaymentsCallable = executor.submit(invoicePaymentsCallable);
+            final Future<List<Payment>> futurePaymentsCallable = executor.submit(paymentsCallable);
+            final Future<AccountAuditLogs> futureAuditsCallable = executor.submit(auditsCallable);
+
+            try {
+                long ini = System.currentTimeMillis();
+                do {
+                    bundles = (bundles == null) ? runCallableAndHandleTimeout(futureBundlesCallable, 100) : bundles;
+                    invoices = (invoices == null) ? runCallableAndHandleTimeout(futureInvoicesCallable, 100) : invoices;
+                    invoicePayments = (invoicePayments == null) ? runCallableAndHandleTimeout(futureInvoicePaymentsCallable, 100) : invoicePayments;
+                    payments = (payments == null) ? runCallableAndHandleTimeout(futurePaymentsCallable, 100) : payments;
+                    accountAuditLogs = (accountAuditLogs == null) ? runCallableAndHandleTimeout(futureAuditsCallable, 100) : accountAuditLogs;
+                } while ((System.currentTimeMillis() - ini < jaxrsConfig.getJaxrsTimeout().getMillis()) &&
+                         (bundles == null || invoices == null || invoicePayments == null || payments == null || accountAuditLogs == null));
+
+                if (bundles == null || invoices == null || invoicePayments == null || payments == null || accountAuditLogs == null) {
+                    Response.status(Status.SERVICE_UNAVAILABLE).build();
+                }
+            } catch (InterruptedException e) {
+                handleCallableException(e, ImmutableList.<Future>of(futureBundlesCallable, futureInvoicesCallable, futureInvoicePaymentsCallable, futurePaymentsCallable, futureAuditsCallable));
+            } catch (ExecutionException e) {
+                handleCallableException(e.getCause(), ImmutableList.<Future>of(futureBundlesCallable, futureInvoicesCallable, futureInvoicePaymentsCallable, futurePaymentsCallable, futureAuditsCallable));
+            }
+
+        } else {
+            try {
+                invoices = invoicesCallable.call();
+                payments = paymentsCallable.call();
+                bundles = bundlesCallable.call();
+                accountAuditLogs = auditsCallable.call();
+                invoicePayments = invoicePaymentsCallable.call();
+            } catch (Exception e) {
+                handleCallableException(e);
+            }
+        }
+
+        json = new AccountTimelineJson(account, invoices, payments, invoicePayments, bundles, accountAuditLogs);
         return Response.status(Status.OK).entity(json).build();
+    }
+
+    private <T> T runCallableAndHandleTimeout(final Future<T> future, final long timeoutMsec) throws ExecutionException, InterruptedException {
+        try {
+            return future.get(timeoutMsec, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            return null;
+        }
+    }
+
+    private void handleCallableException(final Throwable causeOrException, final List<Future> toBeCancelled) throws AccountApiException, SubscriptionApiException, PaymentApiException, InvoiceApiException {
+        for (final Future f : toBeCancelled) {
+            f.cancel(true);
+        }
+        handleCallableException(causeOrException);
+    }
+
+    private void handleCallableException(final Throwable causeOrException) throws AccountApiException, SubscriptionApiException, PaymentApiException, InvoiceApiException {
+        if (causeOrException instanceof AccountApiException) {
+            throw (AccountApiException) causeOrException;
+        } else if (causeOrException instanceof SubscriptionApiException) {
+            throw (SubscriptionApiException) causeOrException;
+        } else if (causeOrException instanceof InvoiceApiException) {
+            throw (InvoiceApiException) causeOrException;
+        } else if (causeOrException instanceof PaymentApiException) {
+            throw (PaymentApiException) causeOrException;
+        } else {
+            if (causeOrException instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw new RuntimeException(causeOrException.getMessage(), causeOrException);
+        }
     }
 
     /*

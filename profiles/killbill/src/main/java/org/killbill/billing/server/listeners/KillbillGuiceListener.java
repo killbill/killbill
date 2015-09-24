@@ -76,6 +76,7 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
         // In order to use the GZIPContentEncodingFilter, the jersey param "com.sun.jersey.config.feature.logging.DisableEntitylogging"
         // must not be set to false.
+
         if (Boolean.valueOf(System.getProperty(ENABLE_HTTP_GZIP_RESPONSES, "false"))) {
             logger.info("Enable http gzip responses");
             builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());

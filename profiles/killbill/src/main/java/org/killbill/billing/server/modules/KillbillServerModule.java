@@ -26,6 +26,7 @@ import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.currency.glue.CurrencyModule;
 import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
+import org.killbill.billing.jaxrs.glue.DefaultJaxrsModule;
 import org.killbill.billing.jaxrs.resources.AccountResource;
 import org.killbill.billing.jaxrs.resources.AdminResource;
 import org.killbill.billing.jaxrs.resources.BundleResource;
@@ -161,6 +162,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new TemplateModule(configSource));
         install(new DefaultTenantModule(configSource));
         install(new UsageModule(configSource));
+        install(new DefaultJaxrsModule(configSource));
     }
 
     protected void configureResources() {
