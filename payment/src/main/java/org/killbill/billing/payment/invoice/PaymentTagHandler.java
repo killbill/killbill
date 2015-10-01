@@ -21,13 +21,11 @@ package org.killbill.billing.payment.invoice;
 import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -66,14 +64,9 @@ public class PaymentTagHandler {
     }
 
     private void processUnpaid_AUTO_PAY_OFF_payments(final UUID accountId, final Long accountRecordId, final Long tenantRecordId, final UUID userToken) {
-        try {
-            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId,
-                                                                                                                 "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
-            final Account account = accountApi.getAccountById(accountId, internalCallContext);
-            ((InvoicePaymentControlPluginApi) invoicePaymentControlPlugin).process_AUTO_PAY_OFF_removal(account, internalCallContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId,
+                                                                                                             "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
+        ((InvoicePaymentControlPluginApi) invoicePaymentControlPlugin).process_AUTO_PAY_OFF_removal(accountId, internalCallContext);
 
-        } catch (final AccountApiException e) {
-            log.warn(String.format("Failed to process process  removal AUTO_PAY_OFF for account %s", accountId), e);
-        }
     }
 }

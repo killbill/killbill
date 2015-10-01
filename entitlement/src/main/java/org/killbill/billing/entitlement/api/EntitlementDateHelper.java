@@ -18,12 +18,10 @@ package org.killbill.billing.entitlement.api;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockUtil;
@@ -40,7 +38,7 @@ public class EntitlementDateHelper {
 
     public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
         try {
-            final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
+            final ImmutableAccountData account = accountApi.getImmutableAccountDataByRecordId(callContext.getAccountRecordId(), callContext);
             return ClockUtil.computeDateTimeWithUTCReferenceTime(requestedDate, referenceDateTime.toDateTime(DateTimeZone.UTC).toLocalTime(), account.getTimeZone(), clock);
         } catch (AccountApiException e) {
             throw new EntitlementApiException(e);

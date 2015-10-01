@@ -35,6 +35,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -205,9 +206,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                             final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
-        final Account account;
+        final ImmutableAccountData account;
         try {
-            account = accountUserApi.getAccountById(accountId, internalContext);
+            account = accountUserApi.getImmutableAccountDataById(accountId, internalContext);
         } catch (final AccountApiException e) {
             throw new InvoiceApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, e.toString());
         }

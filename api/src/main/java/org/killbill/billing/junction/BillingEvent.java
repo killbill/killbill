@@ -34,10 +34,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
-    /**
-     * @return the account that this billing event is associated with
-     */
-    Account getAccount();
 
     /**
      * @return the billCycleDay in the account timezone as seen for that subscription at that time

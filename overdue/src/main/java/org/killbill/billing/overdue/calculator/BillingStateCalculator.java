@@ -26,16 +26,15 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.payment.api.PaymentResponse;
-import org.killbill.clock.Clock;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueException;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.invoice.api.InvoiceInternalApi;
+import org.killbill.billing.payment.api.PaymentResponse;
 import org.killbill.billing.util.tag.Tag;
+import org.killbill.clock.Clock;
 
 import com.google.inject.Inject;
 
@@ -63,7 +62,7 @@ public class BillingStateCalculator {
         this.clock = clock;
     }
 
-    public BillingState calculateBillingState(final Account account, final InternalTenantContext context) throws OverdueException {
+    public BillingState calculateBillingState(final ImmutableAccountData account, final InternalTenantContext context) throws OverdueException {
         final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForAccount(account.getId(), account.getTimeZone(), context);
 
         final int numberOfUnpaidInvoices = unpaidInvoices.size();
@@ -77,7 +76,6 @@ public class BillingStateCalculator {
         }
         final PaymentResponse responseForLastFailedPayment = PaymentResponse.INSUFFICIENT_FUNDS; //TODO MDW
         final Tag[] tags = new Tag[]{}; //TODO MDW
-
 
         return new BillingState(account.getId(), numberOfUnpaidInvoices, unpaidInvoiceBalance, dateOfEarliestUnpaidInvoice, account.getTimeZone(), idOfEarliestUnpaidInvoice, responseForLastFailedPayment, tags);
     }

@@ -20,11 +20,11 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
@@ -60,10 +60,10 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
         Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
         Mockito.when(subscription.getLastActivePlan()).thenReturn(plan);
 
-        final Account account = Mockito.mock(Account.class);
+        final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
-        final Integer billCycleDayLocal = billCycleDayCalculator.calculateBcdForAlignment(BillingAlignment.BUNDLE, bundle.getId(), subscription,
-                                                                                          account, catalog, null, internalCallContext);
+        final Integer billCycleDayLocal = billCycleDayCalculator.calculateBcdForAlignment(account, 0, subscription, BillingAlignment.BUNDLE, bundle.getId(),
+                                                                                          catalog, null, internalCallContext);
 
         Assert.assertEquals(billCycleDayLocal, (Integer) expectedBCDUTC);
     }
@@ -132,7 +132,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(startDateUTC, null)).thenReturn(startDateUTC);
 
-        final Account account = Mockito.mock(Account.class);
+        final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
 
         final Integer bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, plan, account, Mockito.mock(Catalog.class), internalCallContext);

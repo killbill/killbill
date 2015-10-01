@@ -227,13 +227,13 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
     }
 
-    public void process_AUTO_PAY_OFF_removal(final Account account, final InternalCallContext internalCallContext) {
-        final List<PluginAutoPayOffModelDao> entries = controlDao.getAutoPayOffEntry(account.getId());
+    public void process_AUTO_PAY_OFF_removal(final UUID accountId, final InternalCallContext internalCallContext) {
+        final List<PluginAutoPayOffModelDao> entries = controlDao.getAutoPayOffEntry(accountId);
         for (final PluginAutoPayOffModelDao cur : entries) {
             // TODO In theory we should pass not only PLUGIN_NAME, but also all the plugin list associated which the original call
-            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, account.getId(), cur.getAttemptId(), internalCallContext.getTenantRecordId(), ImmutableList.<String>of(PLUGIN_NAME), clock.getUTCNow());
+            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, accountId, cur.getAttemptId(), internalCallContext.getTenantRecordId(), ImmutableList.<String>of(PLUGIN_NAME), clock.getUTCNow());
         }
-        controlDao.removeAutoPayOffEntry(account.getId());
+        controlDao.removeAutoPayOffEntry(accountId);
     }
 
     private UUID getInvoiceId(final Iterable<PluginProperty> pluginProperties) throws PaymentControlApiException {

@@ -23,10 +23,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.MutableAccountData;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
@@ -89,7 +88,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         result.setRecurringBillingMode(currentCatalog.getRecurringBillingMode());
 
         try {
-            final Account account = accountApi.getAccountById(accountId, context);
+            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
 
             // Check to see if billing is off for the account
             final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
@@ -123,8 +122,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
     }
 
-    private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final Account account, final DryRunArguments dryRunArguments, final InternalCallContext context,
-                                            final DefaultBillingEventSet result) throws SubscriptionBaseApiException {
+    private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final ImmutableAccountData account, final DryRunArguments dryRunArguments, final InternalCallContext context,
+                                            final DefaultBillingEventSet result) throws SubscriptionBaseApiException, AccountApiException {
 
         final boolean dryRunMode = dryRunArguments != null;
 
@@ -136,14 +135,14 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final UUID fakeBundleId = UUIDs.randomUUID();
             final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(fakeBundleId, dryRunArguments, context);
 
-            addBillingEventsForSubscription(subscriptions, fakeBundleId, account, dryRunMode, context, result);
+            addBillingEventsForSubscription(account, subscriptions, fakeBundleId, dryRunMode, context, result);
 
         }
 
         for (final SubscriptionBaseBundle bundle : bundles) {
             final DryRunArguments dryRunArgumentsForBundle = (dryRunArguments != null &&
-                                                             dryRunArguments.getBundleId() != null &&
-                                                             dryRunArguments.getBundleId().equals(bundle.getId())) ?
+                                                              dryRunArguments.getBundleId() != null &&
+                                                              dryRunArguments.getBundleId().equals(bundle.getId())) ?
                                                              dryRunArguments : null;
             final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), dryRunArgumentsForBundle, context);
 
@@ -155,18 +154,22 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                     result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
                 }
             } else { // billing is not off
-                addBillingEventsForSubscription(subscriptions, bundle.getId(), account, dryRunMode, context, result);
+                addBillingEventsForSubscription(account, subscriptions, bundle.getId(), dryRunMode, context, result);
             }
         }
     }
 
-    private void addBillingEventsForSubscription(final List<SubscriptionBase> subscriptions, final UUID bundleId, final Account account,
+    private void addBillingEventsForSubscription(final ImmutableAccountData account,
+                                                 final List<SubscriptionBase> subscriptions,
+                                                 final UUID bundleId,
                                                  final boolean dryRunMode,
                                                  final InternalCallContext context,
-                                                 final DefaultBillingEventSet result) {
+                                                 final DefaultBillingEventSet result) throws AccountApiException {
 
         // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
         boolean updatedAccountBCD = dryRunMode;
+
+        int currentAccountBCD = accountApi.getBCD(account.getId(), context);
         for (final SubscriptionBase subscription : subscriptions) {
 
             // The subscription did not even start, so there is nothing to do yet, we can skip and avoid some NPE down the line when calculating the BCD
@@ -176,12 +179,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             for (final EffectiveSubscriptionInternalEvent transition : subscriptionApi.getBillingTransitions(subscription, context)) {
                 try {
-                    final int bcdLocal = bcdCalculator.calculateBcd(bundleId, subscription, transition, account, context);
+                    final int bcdLocal = bcdCalculator.calculateBcd(account, currentAccountBCD, bundleId, subscription, transition, context);
 
-                    if (account.getBillCycleDayLocal() == 0 && !updatedAccountBCD) {
-                        final MutableAccountData modifiedData = account.toMutableAccountData();
-                        modifiedData.setBillCycleDayLocal(bcdLocal);
-                        accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
+                    if (currentAccountBCD == 0 && !updatedAccountBCD) {
+                        accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);
                         updatedAccountBCD = true;
                     }
 

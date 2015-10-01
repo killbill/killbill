@@ -29,9 +29,9 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.AccountEventsStreams;
@@ -123,9 +123,9 @@ public class EventsStreamBuilder {
     // Special signature for ProxyBlockingStateDao to save a DAO call
     public AccountEventsStreams buildForAccount(final Map<UUID, List<SubscriptionBase>> subscriptions, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         // Retrieve the account
-        final Account account;
+        final ImmutableAccountData account;
         try {
-            account = accountInternalApi.getAccountByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
+            account = accountInternalApi.getImmutableAccountDataByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
         } catch (AccountApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -229,9 +229,9 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
 
-        final Account account;
+        final ImmutableAccountData account;
         try {
-            account = accountInternalApi.getAccountById(bundle.getAccountId(), internalTenantContext);
+            account = accountInternalApi.getImmutableAccountDataById(bundle.getAccountId(), internalTenantContext);
         } catch (AccountApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -244,7 +244,7 @@ public class EventsStreamBuilder {
 
     // Special signature for OptimizedProxyBlockingStateDao to save some DAO calls
     public EventsStream buildForEntitlement(final List<BlockingState> blockingStatesForAccount,
-                                            final Account account,
+                                            final ImmutableAccountData account,
                                             final SubscriptionBaseBundle bundle,
                                             final SubscriptionBase baseSubscription,
                                             final List<SubscriptionBase> allSubscriptionsForBundle,
@@ -253,7 +253,7 @@ public class EventsStreamBuilder {
     }
 
     private EventsStream buildForEntitlement(final List<BlockingState> blockingStatesForAccount,
-                                             final Account account,
+                                             final ImmutableAccountData account,
                                              final SubscriptionBaseBundle bundle,
                                              @Nullable final SubscriptionBase baseSubscription,
                                              final SubscriptionBase subscription,
@@ -312,7 +312,7 @@ public class EventsStreamBuilder {
         return buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, blockingStates, internalTenantContext);
     }
 
-    private EventsStream buildForEntitlement(final Account account,
+    private EventsStream buildForEntitlement(final ImmutableAccountData account,
                                              final SubscriptionBaseBundle bundle,
                                              @Nullable final SubscriptionBase baseSubscription,
                                              final SubscriptionBase subscription,

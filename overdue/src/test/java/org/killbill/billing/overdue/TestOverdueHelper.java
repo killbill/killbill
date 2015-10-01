@@ -23,11 +23,11 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.mockito.Mockito;
 import org.testng.Assert;
 
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -116,13 +116,13 @@ public class TestOverdueHelper {
         Assert.assertEquals(result.isBlockBilling(), state.isDisableEntitlementAndChangesBlocked());
     }
 
-    public Account createAccount(final LocalDate dateOfLastUnPaidInvoice) throws SubscriptionBaseApiException, AccountApiException {
+    public ImmutableAccountData createImmutableAccountData(final LocalDate dateOfLastUnPaidInvoice) throws SubscriptionBaseApiException, AccountApiException {
 
         final UUID accountId = UUID.randomUUID();
-        final Account account = Mockito.mock(Account.class);
+        final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
-        Mockito.when(accountInternalApi.getAccountById(Mockito.eq(account.getId()), Mockito.<InternalTenantContext>any())).thenReturn(account);
+        Mockito.when(accountInternalApi.getImmutableAccountDataById(Mockito.eq(account.getId()), Mockito.<InternalTenantContext>any())).thenReturn(account);
 
         final Invoice invoice = Mockito.mock(Invoice.class);
         Mockito.when(invoice.getInvoiceDate()).thenReturn(dateOfLastUnPaidInvoice);

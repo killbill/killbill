@@ -32,6 +32,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.MockInternationalPrice;
@@ -1081,6 +1082,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
         assertEquals(invoices.size(), 2);
     }
+
 
     /*
      *

@@ -34,6 +34,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -120,7 +121,7 @@ public class OverdueStateApplicator {
     }
 
     public void apply(final OverdueStateSet overdueStateSet, final BillingState billingState,
-                      final Account account, final OverdueState previousOverdueState,
+                      final ImmutableAccountData account, final OverdueState previousOverdueState,
                       final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException, OverdueApiException {
         try {
 
@@ -157,7 +158,7 @@ public class OverdueStateApplicator {
 
             cancelSubscriptionsIfRequired(account, nextOverdueState, context);
 
-            sendEmailIfRequired(billingState, account, nextOverdueState, context);
+            sendEmailIfRequired(account.getId(), billingState, nextOverdueState, context);
 
             avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, nextOverdueState, context);
 
@@ -169,6 +170,8 @@ public class OverdueStateApplicator {
             if (e.getCode() != ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
                 throw new OverdueException(e);
             }
+        } catch (AccountApiException e) {
+            throw new OverdueException(e);
         }
         try {
             bus.post(createOverdueEvent(account, previousOverdueState.getName(), nextOverdueState.getName(), isBlockBillingTransition(previousOverdueState, nextOverdueState),
@@ -178,7 +181,7 @@ public class OverdueStateApplicator {
         }
     }
 
-    private void avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(final Account account, final OverdueState previousOverdueState,
+    private void avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(final ImmutableAccountData account, final OverdueState previousOverdueState,
                                                                  final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueApiException {
         if (isBlockBillingTransition(previousOverdueState, nextOverdueState)) {
             set_AUTO_INVOICE_OFF_on_blockedBilling(account.getId(), context);
@@ -187,7 +190,7 @@ public class OverdueStateApplicator {
         }
     }
 
-    public void clear(final Account account, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
+    public void clear(final ImmutableAccountData account, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
 
         log.debug("OverdueStateApplicator:clear : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueState.getName());
 
@@ -209,13 +212,13 @@ public class OverdueStateApplicator {
         }
     }
 
-    private OverdueChangeInternalEvent createOverdueEvent(final Account overdueable, final String previousOverdueStateName, final String nextOverdueStateName,
+    private OverdueChangeInternalEvent createOverdueEvent(final ImmutableAccountData overdueable, final String previousOverdueStateName, final String nextOverdueStateName,
                                                           final boolean isBlockedBilling, final boolean isUnblockedBilling, final InternalCallContext context) throws BlockingApiException {
         return new DefaultOverdueChangeEvent(overdueable.getId(), previousOverdueStateName, nextOverdueStateName, isBlockedBilling, isUnblockedBilling,
                                              context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
     }
 
-    protected void storeNewState(final Account blockable, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
+    protected void storeNewState(final ImmutableAccountData blockable, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
             blockingApi.setBlockingState(new DefaultBlockingState(blockable.getId(),
                                                                   BlockingStateType.ACCOUNT,
@@ -269,17 +272,17 @@ public class OverdueStateApplicator {
         return nextOverdueState.isDisableEntitlementAndChangesBlocked();
     }
 
-    protected void createFutureNotification(final Account account, final DateTime timeOfNextCheck, final InternalCallContext context) {
+    protected void createFutureNotification(final ImmutableAccountData account, final DateTime timeOfNextCheck, final InternalCallContext context) {
         final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(account.getId());
         checkPoster.insertOverdueNotification(account.getId(), timeOfNextCheck, OverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE, notificationKey, context);
     }
 
-    protected void clearFutureNotification(final Account account, final InternalCallContext context) {
+    protected void clearFutureNotification(final ImmutableAccountData account, final InternalCallContext context) {
         // Need to clear the override table here too (when we add it)
         checkPoster.clearOverdueCheckNotifications(account.getId(), OverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE, OverdueCheckNotificationKey.class, context);
     }
 
-    private void cancelSubscriptionsIfRequired(final Account account, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
+    private void cancelSubscriptionsIfRequired(final ImmutableAccountData account, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         if (nextOverdueState.getOverdueCancellationPolicy() == OverdueCancellationPolicy.NONE) {
             return;
         }
@@ -315,7 +318,7 @@ public class OverdueStateApplicator {
         }
     }
 
-    private void computeEntitlementsToCancel(final Account account, final List<Entitlement> result, final CallContext context) throws EntitlementApiException {
+    private void computeEntitlementsToCancel(final ImmutableAccountData account, final List<Entitlement> result, final CallContext context) throws EntitlementApiException {
         final List<Entitlement> allEntitlementsForAccountId = entitlementApi.getAllEntitlementsForAccountId(account.getId(), context);
         // Entitlement is smart enough and will cancel the associated add-ons. See also discussion in https://github.com/killbill/killbill/issues/94
         final Collection<Entitlement> allEntitlementsButAddonsForAccountId = Collections2.<Entitlement>filter(allEntitlementsForAccountId,
@@ -329,8 +332,8 @@ public class OverdueStateApplicator {
         result.addAll(allEntitlementsButAddonsForAccountId);
     }
 
-    private void sendEmailIfRequired(final BillingState billingState, final Account account,
-                                     final OverdueState nextOverdueState, final InternalTenantContext context) {
+    private void sendEmailIfRequired(final UUID accountId, final BillingState billingState,
+                                     final OverdueState nextOverdueState, final InternalTenantContext context) throws AccountApiException {
         // Note: we don't want to fail the full refresh call because sending the email failed.
         // That's the reason why we catch all exceptions here.
         // The alternative would be to: throw new OverdueApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
@@ -340,6 +343,7 @@ public class OverdueStateApplicator {
             return;
         }
 
+        final Account account = accountApi.getAccountById(accountId, context);
         if (Strings.emptyToNull(account.getEmail()) == null) {
             log.warn("Unable to send overdue notification email for account {} and overdueable {}: no email specified", account.getId(), account.getId());
             return;

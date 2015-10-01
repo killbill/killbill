@@ -19,7 +19,7 @@ package org.killbill.billing.overdue.wrapper;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import org.killbill.billing.overdue.api.OverdueState;
@@ -44,24 +44,24 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
         final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
         ((MockOverdueConfigCache) overdueConfigCache).loadOverwriteDefaultOverdueConfig(config);
 
-        Account account;
+        ImmutableAccountData account;
         OverdueWrapper wrapper;
         OverdueState state;
 
         state = config.getOverdueStatesAccount().findState("OD1");
-        account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(31));
+        account = testOverdueHelper.createImmutableAccountData(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account, internalCallContext);
         wrapper.refresh(internalCallContext);
         testOverdueHelper.checkStateApplied(state);
 
         state = config.getOverdueStatesAccount().findState("OD2");
-        account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(41));
+        account = testOverdueHelper.createImmutableAccountData(clock.getUTCToday().minusDays(41));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account, internalCallContext);
         wrapper.refresh(internalCallContext);
         testOverdueHelper.checkStateApplied(state);
 
         state = config.getOverdueStatesAccount().findState("OD3");
-        account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(51));
+        account = testOverdueHelper.createImmutableAccountData(clock.getUTCToday().minusDays(51));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account, internalCallContext);
         wrapper.refresh(internalCallContext);
         testOverdueHelper.checkStateApplied(state);
@@ -70,14 +70,14 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testWrapperNoConfig() throws Exception {
 
-        final Account account;
+        final ImmutableAccountData account;
         final OverdueWrapper wrapper;
         final OverdueState state;
 
         final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
         final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
         state = config.getOverdueStatesAccount().findState(DefaultBlockingState.CLEAR_STATE_NAME);
-        account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(31));
+        account = testOverdueHelper.createImmutableAccountData(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account, internalCallContext);
         final OverdueState result = wrapper.refresh(internalCallContext);
 

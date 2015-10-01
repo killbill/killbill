@@ -24,23 +24,22 @@ import javax.inject.Inject;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.account.api.DefaultAccountEmail;
+import org.killbill.billing.account.api.DefaultImmutableAccountData;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.dao.AccountEmailModelDao;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.util.entity.DefaultPagination;
-import org.killbill.billing.util.entity.Pagination;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
 
 public class DefaultAccountInternalApi implements AccountInternalApi {
 
@@ -67,18 +66,23 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public void updateAccount(final String externalKey, final AccountData accountData,
+    public void updateBCD(final String externalKey, final int bcd,
                               final InternalCallContext context) throws AccountApiException {
         final Account currentAccount = getAccountByKey(externalKey, context);
         if (currentAccount == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
         }
 
-        // Set unspecified (null) fields to their current values
-        final Account updatedAccount = new DefaultAccount(currentAccount.getId(), accountData);
-        final AccountModelDao accountToUpdate = new AccountModelDao(currentAccount.getId(), updatedAccount.mergeWithDelegate(currentAccount));
-
+        final MutableAccountData mutableAccountData = currentAccount.toMutableAccountData();
+        mutableAccountData.setBillCycleDayLocal(bcd);
+        final AccountModelDao accountToUpdate = new AccountModelDao(currentAccount.getId(), mutableAccountData);
         accountDao.update(accountToUpdate, context);
+    }
+
+    @Override
+    public int getBCD(final UUID accountId, final InternalTenantContext context) throws AccountApiException {
+        final Account account = getAccountById(accountId, context);
+        return account.getBillCycleDayLocal();
     }
 
     @Override
@@ -119,6 +123,24 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
         return accountModelDao.getId();
     }
 
+    @Override
+    public ImmutableAccountData getImmutableAccountDataById(final UUID accountId, final InternalTenantContext context) throws AccountApiException {
+        final Account account = getAccountById(accountId, context);
+        return new DefaultImmutableAccountData(account);
+    }
+
+    @Override
+    public ImmutableAccountData getImmutableAccountDataByKey(final String key, final InternalTenantContext context) throws AccountApiException {
+        final Account account = getAccountByKey(key, context);
+        return new DefaultImmutableAccountData(account);
+    }
+
+    @Override
+    public ImmutableAccountData getImmutableAccountDataByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
+        final Account account = getAccountByRecordId(recordId, context);
+        return new DefaultImmutableAccountData(account);
+    }
+
     private AccountModelDao getAccountModelDaoByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
         final AccountModelDao accountModelDao = accountDao.getByRecordId(recordId, context);
         if (accountModelDao == null) {
@@ -126,4 +148,6 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
         }
         return accountModelDao;
     }
+
+
 }

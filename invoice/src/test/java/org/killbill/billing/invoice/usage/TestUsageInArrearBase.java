@@ -71,7 +71,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     }
 
     protected ContiguousIntervalConsumableInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
-        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()));
+        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, accountId, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()));
         for (BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
         }
@@ -120,7 +120,6 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);
-        Mockito.when(result.getAccount()).thenReturn(account);
 
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(subscriptionId);

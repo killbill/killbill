@@ -16,7 +16,7 @@
 
 package org.killbill.billing.overdue;
 
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.api.BillingState;
@@ -26,12 +26,12 @@ import org.killbill.billing.util.callcontext.TenantContext;
 
 public interface OverdueInternalApi {
 
-    public OverdueState refreshOverdueStateFor(Account overdueable, CallContext context) throws OverdueException, OverdueApiException;
+    public OverdueState refreshOverdueStateFor(ImmutableAccountData overdueable, CallContext context) throws OverdueException, OverdueApiException;
 
-    public void setOverrideBillingStateForAccount(Account overdueable, BillingState state, CallContext context) throws OverdueException;
+    public void setOverrideBillingStateForAccount(ImmutableAccountData overdueable, BillingState state, CallContext context) throws OverdueException;
 
-    public OverdueState getOverdueStateFor(Account overdueable, TenantContext context) throws OverdueException;
+    public OverdueState getOverdueStateFor(ImmutableAccountData overdueable, TenantContext context) throws OverdueException;
 
-    public BillingState getBillingStateFor(Account overdueable, TenantContext context) throws OverdueException;
+    public BillingState getBillingStateFor(ImmutableAccountData overdueable, TenantContext context) throws OverdueException;
 
 }

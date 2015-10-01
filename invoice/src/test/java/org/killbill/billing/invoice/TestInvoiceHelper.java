@@ -332,11 +332,6 @@ public class TestInvoiceHelper {
         final Account accountOrMockAcount = account != null ? account : mockAccount;
         return new BillingEvent() {
             @Override
-            public Account getAccount() {
-                return accountOrMockAcount;
-            }
-
-            @Override
             public int getBillCycleDayLocal() {
                 return billCycleDayLocal;
             }

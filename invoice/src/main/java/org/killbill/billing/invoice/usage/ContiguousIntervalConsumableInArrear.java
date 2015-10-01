@@ -69,12 +69,14 @@ public class ContiguousIntervalConsumableInArrear {
     private final Set<String> unitTypes;
     private final List<RawUsage> rawSubscriptionUsage;
     private final LocalDate targetDate;
+    private final UUID accountId;
     private final UUID invoiceId;
     private final AtomicBoolean isBuilt;
     private final LocalDate rawUsageStartDate;
 
-    public ContiguousIntervalConsumableInArrear(final Usage usage, final UUID invoiceId, final List<RawUsage> rawSubscriptionUsage, final LocalDate targetDate, final LocalDate rawUsageStartDate) {
+    public ContiguousIntervalConsumableInArrear(final Usage usage, final UUID accountId, final UUID invoiceId, final List<RawUsage> rawSubscriptionUsage, final LocalDate targetDate, final LocalDate rawUsageStartDate) {
         this.usage = usage;
+        this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.unitTypes = getConsumableInArrearUnitTypes(usage);
         this.rawSubscriptionUsage = rawSubscriptionUsage;
@@ -173,7 +175,7 @@ public class ContiguousIntervalConsumableInArrear {
         LocalDate prevDate = null;
         for (LocalDate curDate : transitionTimes) {
             if (prevDate != null) {
-                InvoiceItem item = new UsageInvoiceItem(invoiceId, getAccountId(), getBundleId(), getSubscriptionId(), getPlanName(),
+                InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
                                                         getPhaseName(), usage.getName(), prevDate, curDate, BigDecimal.ZERO, getCurrency());
                 result.add(item);
             }
@@ -201,7 +203,7 @@ public class ContiguousIntervalConsumableInArrear {
             if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
                 final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
                 if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
-                    InvoiceItem item = new UsageInvoiceItem(invoiceId, getAccountId(), getBundleId(), getSubscriptionId(), getPlanName(),
+                    InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
                                                             getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), amountToBill, getCurrency());
                     result.add(item);
                 }
@@ -403,9 +405,6 @@ public class ContiguousIntervalConsumableInArrear {
         return billingEvents.get(0).getBillCycleDayLocal();
     }
 
-    public UUID getAccountId() {
-        return billingEvents.get(0).getAccount().getId();
-    }
 
     public UUID getBundleId() {
         return billingEvents.get(0).getSubscription().getBundleId();

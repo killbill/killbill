@@ -295,15 +295,18 @@ public class DefaultAccount extends EntityBase implements Account {
             accountData.setCurrency(currentAccount.getCurrency());
         }
 
-        if (billCycleDayLocal != null && billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL && currentAccount.getBillCycleDayLocal() != null && currentAccount.getBillCycleDayLocal() != DEFAULT_BILLING_CYCLE_DAY_LOCAL && !billCycleDayLocal.equals(currentAccount.getBillCycleDayLocal())) {
-            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: new=%s, current=%s",
-                                                             billCycleDayLocal, currentAccount.getBillCycleDayLocal()));
-        } else if (billCycleDayLocal != null && billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL) {
-            // Junction sets it
+
+        if (currentAccount.getBillCycleDayLocal() != DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is already a BCD set
+            billCycleDayLocal != null && // and the proposed date is not null
+            billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL && // and the proposed date is not 0
+            !currentAccount.getBillCycleDayLocal().equals(billCycleDayLocal)) { // and it does not match we we have
+            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: new=%s, current=%s", billCycleDayLocal, currentAccount.getBillCycleDayLocal()));
+        } else if (currentAccount.getBillCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is *not* already a BCD set
+                   billCycleDayLocal != null && // and the value proposed is not null
+                   billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL) {  // and the proposed date is not 0
             accountData.setBillCycleDayLocal(billCycleDayLocal);
         } else {
-            // Default to current value
-            accountData.setBillCycleDayLocal(currentAccount.getBillCycleDayLocal() == null ? DEFAULT_BILLING_CYCLE_DAY_LOCAL : currentAccount.getBillCycleDayLocal());
+            accountData.setBillCycleDayLocal(currentAccount.getBillCycleDayLocal());
         }
 
         // Set all updatable fields with the new values if non null, otherwise defaults to the current values
@@ -334,6 +337,10 @@ public class DefaultAccount extends EntityBase implements Account {
         }
 
         return new DefaultAccount(currentAccount.getId(), accountData);
+    }
+
+    public ImmutableAccountData toImmutableAccountData() {
+        return new DefaultImmutableAccountData(this);
     }
 
     @Override

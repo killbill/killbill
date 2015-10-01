@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.Product;
@@ -55,7 +55,7 @@ import com.google.common.collect.Iterables;
 
 public class DefaultEventsStream implements EventsStream {
 
-    private final Account account;
+    private final ImmutableAccountData account;
     private final SubscriptionBaseBundle bundle;
     // All blocking states for the account, associated bundle or subscription
     private final List<BlockingState> blockingStates;
@@ -80,7 +80,7 @@ public class DefaultEventsStream implements EventsStream {
     private BlockingState entitlementCancelEvent;
     private EntitlementState entitlementState;
 
-    public DefaultEventsStream(final Account account, final SubscriptionBaseBundle bundle,
+    public DefaultEventsStream(final ImmutableAccountData account, final SubscriptionBaseBundle bundle,
                                final List<BlockingState> blockingStates, final BlockingChecker blockingChecker,
                                @Nullable final SubscriptionBase baseSubscription, final SubscriptionBase subscription,
                                final List<SubscriptionBase> allSubscriptionsForBundle, final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {

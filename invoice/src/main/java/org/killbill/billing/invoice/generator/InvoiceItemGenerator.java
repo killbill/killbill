@@ -24,7 +24,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
@@ -35,7 +35,7 @@ import org.killbill.billing.junction.BillingEventSet;
 
 public abstract class InvoiceItemGenerator {
 
-    public abstract List<InvoiceItem> generateItems(final Account account, final UUID invoiceId, final BillingEventSet eventSet,
+    public abstract List<InvoiceItem> generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
                                                     @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
                                                     final Currency targetCurrency, Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                     final InternalCallContext context) throws InvoiceApiException;

@@ -18,7 +18,7 @@ package org.killbill.billing.overdue.api;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -62,7 +62,7 @@ public class DefaultOverdueInternalApi implements OverdueInternalApi {
 
     @SuppressWarnings("unchecked")
     @Override
-    public OverdueState getOverdueStateFor(final Account overdueable, final TenantContext context) throws OverdueException {
+    public OverdueState getOverdueStateFor(final ImmutableAccountData overdueable, final TenantContext context) throws OverdueException {
         try {
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
             final String stateName = accessApi.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContextFactory.createInternalTenantContext(context)).getStateName();
@@ -75,7 +75,7 @@ public class DefaultOverdueInternalApi implements OverdueInternalApi {
     }
 
     @Override
-    public BillingState getBillingStateFor(final Account overdueable, final TenantContext context) throws OverdueException {
+    public BillingState getBillingStateFor(final ImmutableAccountData overdueable, final TenantContext context) throws OverdueException {
         log.debug("Billing state of of {} requested", overdueable.getId());
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
@@ -84,19 +84,19 @@ public class DefaultOverdueInternalApi implements OverdueInternalApi {
     }
 
     @Override
-    public OverdueState refreshOverdueStateFor(final Account blockable, final CallContext context) throws OverdueException, OverdueApiException {
+    public OverdueState refreshOverdueStateFor(final ImmutableAccountData blockable, final CallContext context) throws OverdueException, OverdueApiException {
         log.info("Refresh of blockable {} ({}) requested", blockable.getId(), blockable.getClass());
         final InternalCallContext internalCallContext = createInternalCallContext(blockable, context);
         final OverdueWrapper wrapper = factory.createOverdueWrapperFor(blockable, internalCallContext);
         return wrapper.refresh(internalCallContext);
     }
 
-    private InternalCallContext createInternalCallContext(final Account blockable, final CallContext context) {
+    private InternalCallContext createInternalCallContext(final ImmutableAccountData blockable, final CallContext context) {
         return internalCallContextFactory.createInternalCallContext(blockable.getId(), ObjectType.ACCOUNT, context);
     }
 
     @Override
-    public void setOverrideBillingStateForAccount(final Account overdueable, final BillingState state, final CallContext context) {
+    public void setOverrideBillingStateForAccount(final ImmutableAccountData overdueable, final BillingState state, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 }

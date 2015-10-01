@@ -22,13 +22,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
 import org.killbill.xmlloader.XMLLoader;
@@ -45,7 +45,7 @@ public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
         final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
         final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
 
-        final Account account = Mockito.mock(Account.class);
+        final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
 
         final OverdueStateSet overdueStateSet = config.getOverdueStatesAccount();
