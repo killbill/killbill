@@ -86,6 +86,12 @@ getAccountByKey() ::= <<
     where external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
+getBCD() ::= <<
+    select billing_cycle_day_local
+    from accounts
+    where id = :id <AND_CHECK_TENANT()>;
+>>
+
 searchQuery(prefix) ::= <<
      <idField(prefix)> = :searchKey
   or <prefix>name like :likeSearchKey

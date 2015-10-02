@@ -17,70 +17,41 @@
 
 package org.killbill.billing.util.cache;
 
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-@Singleton
-public class TenantCatalogCacheLoader extends BaseCacheLoader {
-
-    private final Logger log = LoggerFactory.getLogger(TenantCatalogCacheLoader.class);
-
-    private final TenantInternalApi tenantApi;
-
-    @Inject
-    public TenantCatalogCacheLoader(final TenantInternalApi tenantApi) {
-        super();
-        this.tenantApi = tenantApi;
-    }
+public class ImmutableAccountCacheLoader extends BaseCacheLoader {
 
     @Override
     public CacheType getCacheType() {
-        return CacheType.TENANT_CATALOG;
+        return CacheType.ACCOUNT_IMMUTABLE;
     }
 
     @Override
     public Object load(final Object key, final Object argument) {
+
         checkCacheLoaderStatus();
 
         if (!(key instanceof Long)) {
             throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
         }
+
         if (!(argument instanceof CacheLoaderArgument)) {
             throw new IllegalArgumentException("Unexpected argument type of " + argument.getClass().getName());
         }
 
-        final Long tenantRecordId = (Long) key;
-        final InternalTenantContext internalTenantContext = new InternalTenantContext(tenantRecordId);
         final CacheLoaderArgument cacheLoaderArgument = (CacheLoaderArgument) argument;
 
-        if (cacheLoaderArgument.getArgs() == null || !(cacheLoaderArgument.getArgs()[0] instanceof LoaderCallback)) {
+        if (cacheLoaderArgument.getArgs() == null ||
+            !(cacheLoaderArgument.getArgs()[0] instanceof LoaderCallback)) {
             throw new IllegalArgumentException("Missing LoaderCallback from the arguments ");
         }
 
         final LoaderCallback callback = (LoaderCallback) cacheLoaderArgument.getArgs()[0];
-        final List<String> catalogXMLs = tenantApi.getTenantCatalogs(internalTenantContext);
-        if (catalogXMLs.isEmpty()) {
-            return null;
-        }
-        try {
-            log.info("Loading catalog cache for tenant " + internalTenantContext.getTenantRecordId());
-            return callback.loadCatalog(catalogXMLs, tenantRecordId);
-        } catch (final CatalogApiException e) {
-            throw new IllegalStateException(String.format("Failed to de-serialize catalog for tenant %s : %s",
-                                                          internalTenantContext.getTenantRecordId(), e.getMessage()), e);
-        }
+        return callback.loadAccount((Long) key, cacheLoaderArgument.getInternalTenantContext());
     }
 
     public interface LoaderCallback {
-        public Object loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException;
+        Object loadAccount(final Long recordId, final InternalTenantContext context);
     }
 }

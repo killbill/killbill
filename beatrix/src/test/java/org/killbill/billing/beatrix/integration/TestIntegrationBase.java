@@ -243,8 +243,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     @Inject
     protected IDBI idbi;
 
-    @Inject
-    protected CacheControllerDispatcher controlCacheDispatcher;
 
     @Inject
     protected TestApiListener busHandler;
@@ -273,9 +271,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         //Thread.currentThread().setContextClassLoader(null);
 
         log.debug("RESET TEST FRAMEWORK");
-
-        controlCacheDispatcher.clearAll();
-
         overdueConfigCache.loadDefaultOverdueConfig((OverdueConfig) null);
 
         clock.resetDeltaFromReality();

@@ -18,6 +18,8 @@
 
 package org.killbill.billing.util.cache;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.util.cache.Cachable.CacheType;
 
 import net.sf.ehcache.Ehcache;
@@ -39,12 +41,18 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     }
 
     @Override
-    public V get(final K key, final CacheLoaderArgument cacheLoaderArgument) {
-        final Element element = cache.getWithLoader(key, null, cacheLoaderArgument);
-        if (element == null || element.getObjectValue() == null || element.getObjectValue().equals(BaseCacheLoader.EMPTY_VALUE_PLACEHOLDER)) {
-            return null;
-        }
-        return (V) element.getObjectValue();
+    public V get(final K key, @Nullable final CacheLoaderArgument cacheLoaderArgument) {
+        return getWithOrWithoutCacheLoaderArgument(key, cacheLoaderArgument);
+    }
+
+    @Override
+    public V get(final K key) {
+        return getWithOrWithoutCacheLoaderArgument(key, null);
+    }
+
+    public void putIfAbsent(final K key, V value) {
+        final Element element = new Element(key, value);
+        cache.putIfAbsent(element);
     }
 
     @Override
@@ -66,4 +74,13 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     public CacheType getCacheType() {
         return cacheType;
     }
+
+    private V getWithOrWithoutCacheLoaderArgument(final K key, @Nullable final CacheLoaderArgument cacheLoaderArgument) {
+        final Element element = cacheLoaderArgument != null ? cache.getWithLoader(key, null, cacheLoaderArgument) : cache.get(key);
+        if (element == null || element.getObjectValue() == null || element.getObjectValue().equals(BaseCacheLoader.EMPTY_VALUE_PLACEHOLDER)) {
+            return null;
+        }
+        return (V) element.getObjectValue();
+    }
+
 }

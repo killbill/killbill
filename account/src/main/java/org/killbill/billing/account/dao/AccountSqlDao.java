@@ -18,11 +18,6 @@ package org.killbill.billing.account.dao;
 
 import java.util.UUID;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -30,6 +25,10 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @EntitySqlDaoStringTemplate
 public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
@@ -41,6 +40,10 @@ public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
     @SqlQuery
     public UUID getIdFromKey(@Bind("externalKey") final String key,
                              @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Long getBCD(@Bind("id") String accountId,
+                       @BindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)

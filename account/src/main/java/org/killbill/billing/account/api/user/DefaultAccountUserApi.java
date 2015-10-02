@@ -32,9 +32,12 @@ import org.killbill.billing.account.api.DefaultAccountEmail;
 import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.dao.AccountEmailModelDao;
 import org.killbill.billing.account.dao.AccountModelDao;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
@@ -45,16 +48,34 @@ import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
-public class DefaultAccountUserApi implements AccountUserApi {
+public class DefaultAccountUserApi extends DefaultAccountApiBase implements AccountUserApi {
 
     private final InternalCallContextFactory internalCallContextFactory;
     private final AccountDao accountDao;
 
     @Inject
-    public DefaultAccountUserApi(final InternalCallContextFactory internalCallContextFactory, final AccountDao accountDao) {
+    public DefaultAccountUserApi(final AccountDao accountDao,
+                                 final NonEntityDao nonEntityDao,
+                                 final CacheControllerDispatcher cacheControllerDispatcher,
+                                 final InternalCallContextFactory internalCallContextFactory) {
+        super(accountDao, nonEntityDao, cacheControllerDispatcher);
         this.internalCallContextFactory = internalCallContextFactory;
         this.accountDao = accountDao;
     }
+
+
+    @Override
+    public Account getAccountByKey(final String key, final TenantContext context) throws AccountApiException {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        return getAccountByKey(key, internalTenantContext);
+    }
+
+    @Override
+    public Account getAccountById(final UUID id, final TenantContext context) throws AccountApiException {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        return getAccountById(id, internalTenantContext);
+    }
+
 
     @Override
     public Account createAccount(final AccountData data, final CallContext context) throws AccountApiException {
@@ -69,25 +90,6 @@ public class DefaultAccountUserApi implements AccountUserApi {
         return new DefaultAccount(account);
     }
 
-    @Override
-    public Account getAccountByKey(final String key, final TenantContext context) throws AccountApiException {
-        final AccountModelDao account = accountDao.getAccountByKey(key, internalCallContextFactory.createInternalTenantContext(context));
-        if (account == null) {
-            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, key);
-        }
-
-        return new DefaultAccount(account);
-    }
-
-    @Override
-    public Account getAccountById(final UUID id, final TenantContext context) throws AccountApiException {
-        final AccountModelDao account = accountDao.getById(id, internalCallContextFactory.createInternalTenantContext(context));
-        if (account == null) {
-            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, id);
-        }
-
-        return new DefaultAccount(account);
-    }
 
     @Override
     public Pagination<Account> searchAccounts(final String searchKey, final Long offset, final Long limit, final TenantContext context) {

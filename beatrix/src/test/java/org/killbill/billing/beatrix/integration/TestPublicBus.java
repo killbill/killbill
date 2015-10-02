@@ -85,8 +85,6 @@ public class TestPublicBus extends TestIntegrationBase {
 
         log.debug("RESET TEST FRAMEWORK");
 
-        controlCacheDispatcher.clearAll();
-
         overdueConfigCache.loadDefaultOverdueConfig((OverdueConfig) null);
 
         clock.resetDeltaFromReality();

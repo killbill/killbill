@@ -28,26 +28,28 @@ import org.killbill.billing.util.entity.dao.EntityDao;
 
 public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountApiException> {
 
-    public AccountModelDao getAccountByKey(String key, InternalTenantContext context);
+    AccountModelDao getAccountByKey(String key, InternalTenantContext context);
 
-    public Pagination<AccountModelDao> searchAccounts(String searchKey, Long offset, Long limit, InternalTenantContext context);
+    Pagination<AccountModelDao> searchAccounts(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
     /**
      * @throws AccountApiException when externalKey is null
      */
-    public UUID getIdFromKey(String externalKey, InternalTenantContext context) throws AccountApiException;
+    UUID getIdFromKey(String externalKey, InternalTenantContext context) throws AccountApiException;
 
     /**
      * @param accountId       the id of the account
      * @param paymentMethodId the is of the current default paymentMethod
      */
-    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws AccountApiException;
+    void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws AccountApiException;
 
-    public void update(AccountModelDao account, InternalCallContext context) throws AccountApiException;
+    void update(AccountModelDao account, InternalCallContext context) throws AccountApiException;
 
-    public void addEmail(AccountEmailModelDao email, InternalCallContext context) throws AccountApiException;
+    void addEmail(AccountEmailModelDao email, InternalCallContext context) throws AccountApiException;
 
-    public void removeEmail(AccountEmailModelDao email, InternalCallContext context);
+    void removeEmail(AccountEmailModelDao email, InternalCallContext context);
 
-    public List<AccountEmailModelDao> getEmailsByAccountId(UUID accountId, InternalTenantContext context);
+    List<AccountEmailModelDao> getEmailsByAccountId(UUID accountId, InternalTenantContext context);
+
+    Long getAccountBCD(UUID accountId, InternalTenantContext context);
 }

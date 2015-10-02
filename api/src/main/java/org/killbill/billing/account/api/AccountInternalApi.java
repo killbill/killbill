@@ -44,8 +44,6 @@ public interface AccountInternalApi {
 
     ImmutableAccountData getImmutableAccountDataById(UUID accountId, InternalTenantContext context) throws AccountApiException;
 
-    ImmutableAccountData getImmutableAccountDataByKey(String key, InternalTenantContext context) throws AccountApiException;
-
     ImmutableAccountData getImmutableAccountDataByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
 
 }
