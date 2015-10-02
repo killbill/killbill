@@ -51,5 +51,5 @@ public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountA
 
     List<AccountEmailModelDao> getEmailsByAccountId(UUID accountId, InternalTenantContext context);
 
-    Long getAccountBCD(UUID accountId, InternalTenantContext context);
+    Integer getAccountBCD(UUID accountId, InternalTenantContext context);
 }

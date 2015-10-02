@@ -42,7 +42,7 @@ public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
                              @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getBCD(@Bind("id") String accountId,
+    public Integer getBCD(@Bind("id") String accountId,
                        @BindBean final InternalTenantContext context);
 
     @SqlUpdate

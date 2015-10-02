@@ -92,6 +92,9 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
         if (currentAccount == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
         }
+        if (currentAccount.getBillCycleDayLocal() != DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_UPDATE_FAILED);
+        }
 
         final MutableAccountData mutableAccountData = currentAccount.toMutableAccountData();
         mutableAccountData.setBillCycleDayLocal(bcd);
@@ -157,8 +160,8 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
     }
 
     private int getBCDInternal(final UUID accountId, final InternalTenantContext context) {
-        final Long bcd = accountDao.getAccountBCD(accountId, context);
-        return bcd != null ? bcd.intValue() : DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
+        final Integer bcd = accountDao.getAccountBCD(accountId, context);
+        return bcd != null ? bcd : DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
     }
 
     private CacheLoaderArgument createImmutableAccountCacheLoaderArgument(final InternalTenantContext context) {

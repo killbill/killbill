@@ -164,9 +164,9 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
     }
 
     @Override
-    public Long getAccountBCD(final UUID accountId, final InternalTenantContext context) {
+    public Integer getAccountBCD(final UUID accountId, final InternalTenantContext context) {
         final AccountModelDao account = getById(accountId, context);
-        return account != null ? account.getBillingCycleDayLocal() : 0L;
+        return account != null ? account.getBillingCycleDayLocal() : 0;
     }
 
 }

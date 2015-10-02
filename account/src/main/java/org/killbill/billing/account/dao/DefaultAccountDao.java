@@ -247,10 +247,10 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
     }
 
     @Override
-    public Long getAccountBCD(final UUID accountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
+    public Integer getAccountBCD(final UUID accountId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Integer>() {
             @Override
-            public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+            public Integer inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getBCD(accountId.toString(), context);
             }
         });

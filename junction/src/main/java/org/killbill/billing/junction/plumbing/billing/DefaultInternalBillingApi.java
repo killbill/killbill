@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -191,6 +192,9 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 } catch (CatalogApiException e) {
                     log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
                               transition.getId().toString(), e);
+                } catch (AccountApiException e) {
+                    // This is unexpected  (failed to update BCD) but if this happens we don't want to ignore..
+                    throw e;
                 } catch (Exception e) {
                     log.warn("Failed while getting BillingEvent", e);
                 }
