@@ -99,6 +99,7 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
         final MutableAccountData mutableAccountData = currentAccount.toMutableAccountData();
         mutableAccountData.setBillCycleDayLocal(bcd);
         final AccountModelDao accountToUpdate = new AccountModelDao(currentAccount.getId(), mutableAccountData);
+        bcdCacheController.remove(currentAccount.getId());
         bcdCacheController.putIfAbsent(currentAccount.getId(), new Integer(bcd));
         accountDao.update(accountToUpdate, context);
     }
