@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -235,12 +236,14 @@ public class InvoiceDispatcher {
             if (billingEvents.isEmpty()) {
                 return null;
             }
+            final Iterable<UUID> filteredSubscriptionIdsForDryRun = getFilteredSubscriptionIdsForDryRun(dryRunArguments, billingEvents);
             final List<DateTime> candidateDateTimes = (inputTargetDateTime != null) ?
                                                       ImmutableList.of(inputTargetDateTime) :
-                                                      getUpcomingInvoiceCandidateDates(getFilteredSubscriptionIds(dryRunArguments, billingEvents), context);
+                                                      getUpcomingInvoiceCandidateDates(filteredSubscriptionIdsForDryRun, context);
             for (final DateTime curTargetDateTime : candidateDateTimes) {
                 final Invoice invoice = processAccountWithLockAndInputTargetDate(accountId, curTargetDateTime, billingEvents, isDryRun, context);
                 if (invoice != null) {
+                    filterInvoiceItemsForDryRun(filteredSubscriptionIdsForDryRun, invoice);
                     return invoice;
                 }
             }
@@ -251,9 +254,23 @@ public class InvoiceDispatcher {
         }
     }
 
+    private void filterInvoiceItemsForDryRun(final Iterable<UUID> filteredSubscriptionIdsForDryRun, final Invoice invoice) {
+        if (!filteredSubscriptionIdsForDryRun.iterator().hasNext()) {
+            return;
+        }
 
-    private Iterable<UUID> getFilteredSubscriptionIds(final DryRunArguments dryRunArguments, final BillingEventSet billingEvents) {
-        if (!dryRunArguments.getDryRunType().equals(DryRunType.UPCOMING_INVOICE) ||
+        final Iterator<InvoiceItem> it = invoice.getInvoiceItems().iterator();
+        while (it.hasNext()) {
+            final InvoiceItem cur = it.next();
+            if (!Iterables.contains(filteredSubscriptionIdsForDryRun, cur.getSubscriptionId())) {
+                it.remove();
+            }
+        }
+    }
+
+    private Iterable<UUID> getFilteredSubscriptionIdsForDryRun(@Nullable final DryRunArguments dryRunArguments, final BillingEventSet billingEvents) {
+        if (dryRunArguments == null ||
+            !dryRunArguments.getDryRunType().equals(DryRunType.UPCOMING_INVOICE) ||
             (dryRunArguments.getSubscriptionId() == null && dryRunArguments.getBundleId() == null)) {
             return ImmutableList.<UUID>of();
         }
