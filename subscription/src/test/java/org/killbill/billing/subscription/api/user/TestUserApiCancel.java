@@ -233,4 +233,29 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
         assertListenerStatus();
     }
+
+    @Test(groups = "slow", expectedExceptions = SubscriptionBaseApiException.class)
+    public void testCancelSubscriptionWithInvalidRequestedDate() throws SubscriptionBaseApiException {
+        final String prod = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        // CREATE
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, prod, term, planSet);
+        PlanPhase currentPhase = subscription.getCurrentPhase();
+        assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
+
+        // MOVE TO NEXT PHASE
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+        clock.addDeltaFromReality(it.toDurationMillis());
+        assertListenerStatus();
+        currentPhase = subscription.getCurrentPhase();
+        assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
+
+        final DateTime invalidDate = subscription.getBundleStartDate().minusDays(3);
+        // CANCEL in EVERGREEN period with an invalid Date (prior to the Creation Date)
+        subscription.cancelWithDate(invalidDate, callContext);
+    }
 }
