@@ -257,9 +257,5 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime invalidDate = subscription.getBundleStartDate().minusDays(3);
         // CANCEL in EVERGREEN period with an invalid Date (prior to the Creation Date)
         subscription.cancelWithDate(invalidDate, callContext);
-        assertListenerStatus();
-
-        testListener.pushExpectedEvent(NextEvent.CANCEL);
-        assertListenerStatus();
     }
 }
