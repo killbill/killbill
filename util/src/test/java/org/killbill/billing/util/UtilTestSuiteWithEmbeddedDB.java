@@ -59,8 +59,6 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @Inject
     protected PersistentBus eventBus;
     @Inject
-    protected CacheControllerDispatcher controlCacheDispatcher;
-    @Inject
     protected NonEntityDao nonEntityDao;
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
@@ -111,8 +109,6 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
         eventBus.start();
         eventBus.register(eventsListener);
-
-        controlCacheDispatcher.clearAll();
 
         // Make sure we start with a clean state
         assertListenerStatus();

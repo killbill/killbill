@@ -17,13 +17,12 @@
 package org.killbill.billing.invoice.generator;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
@@ -31,6 +30,6 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.junction.BillingEventSet;
 
 public interface InvoiceGenerator {
-    InvoiceWithMetadata generateInvoice(Account account, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
+    InvoiceWithMetadata generateInvoice(ImmutableAccountData account,  @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
                                         LocalDate targetDate, Currency targetCurrency, final InternalCallContext context) throws InvoiceApiException;
 }

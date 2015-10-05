@@ -21,23 +21,29 @@ import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.util.entity.Pagination;
 
 public interface AccountInternalApi {
 
-    public Account getAccountByKey(String key, InternalTenantContext context) throws AccountApiException;
+    Account getAccountByKey(String key, InternalTenantContext context) throws AccountApiException;
 
-    public Account getAccountById(UUID accountId, InternalTenantContext context) throws AccountApiException;
+    Account getAccountById(UUID accountId, InternalTenantContext context) throws AccountApiException;
 
-    public Account getAccountByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
+    Account getAccountByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
 
-    public void updateAccount(String key, AccountData accountData, InternalCallContext context) throws AccountApiException;
+    void updateBCD(String key, int bcd, InternalCallContext context) throws AccountApiException;
 
-    public List<AccountEmail> getEmails(UUID accountId, InternalTenantContext context);
+    int getBCD(UUID accountId, InternalTenantContext context) throws AccountApiException;
 
-    public void removePaymentMethod(UUID accountId, InternalCallContext context) throws AccountApiException;
+    List<AccountEmail> getEmails(UUID accountId, InternalTenantContext context);
 
-    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws AccountApiException;
+    void removePaymentMethod(UUID accountId, InternalCallContext context) throws AccountApiException;
 
-    public UUID getByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
+    void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws AccountApiException;
+
+    UUID getByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
+
+    ImmutableAccountData getImmutableAccountDataById(UUID accountId, InternalTenantContext context) throws AccountApiException;
+
+    ImmutableAccountData getImmutableAccountDataByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
+
 }

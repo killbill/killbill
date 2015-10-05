@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -61,7 +62,7 @@ public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
 
         return new BillingStateCalculator(invoiceApi, clock) {
             @Override
-            public BillingState calculateBillingState(final Account overdueable,
+            public BillingState calculateBillingState(final ImmutableAccountData overdueable,
                                                       final InternalTenantContext context) {
                 return null;
             }

@@ -21,12 +21,9 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.skife.jdbi.v2.IDBI;
-
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -37,6 +34,8 @@ import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.collect.ImmutableList;
 
@@ -57,22 +56,20 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
      * <p/>
      * This is a special method for EventsStreamBuilder to save some DAO calls.
      *
-     * @param subscriptionBlockingStatesOnDisk
-     *                                  blocking states on disk for that subscription
-     * @param allBlockingStatesOnDiskForAccount
-     *                                  all blocking states on disk for that account
-     * @param account                   account associated with the subscription
-     * @param bundle                    bundle associated with the subscription
-     * @param baseSubscription          base subscription (ProductCategory.BASE) associated with that bundle
-     * @param subscription              subscription for which to build blocking states
-     * @param allSubscriptionsForBundle all subscriptions associated with that bundle
-     * @param context                   call context
+     * @param subscriptionBlockingStatesOnDisk  blocking states on disk for that subscription
+     * @param allBlockingStatesOnDiskForAccount all blocking states on disk for that account
+     * @param account                           account associated with the subscription
+     * @param bundle                            bundle associated with the subscription
+     * @param baseSubscription                  base subscription (ProductCategory.BASE) associated with that bundle
+     * @param subscription                      subscription for which to build blocking states
+     * @param allSubscriptionsForBundle         all subscriptions associated with that bundle
+     * @param context                           call context
      * @return blocking states for that subscription
      * @throws EntitlementApiException
      */
     public List<BlockingState> getBlockingHistory(final List<BlockingState> subscriptionBlockingStatesOnDisk,
                                                   final List<BlockingState> allBlockingStatesOnDiskForAccount,
-                                                  final Account account,
+                                                  final ImmutableAccountData account,
                                                   final SubscriptionBaseBundle bundle,
                                                   @Nullable final SubscriptionBase baseSubscription,
                                                   final SubscriptionBase subscription,

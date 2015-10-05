@@ -19,6 +19,7 @@ package org.killbill.billing;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
@@ -40,6 +41,10 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @Inject
     protected IDBI dbi;
 
+    @Inject
+    protected CacheControllerDispatcher controlCacheDispatcher;
+
+
     @BeforeSuite(groups = "slow")
     public void beforeSuite() throws Exception {
         DBTestingHelper.get().start();
@@ -51,6 +56,7 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
             DBTestingHelper.get().getInstance().cleanupAllTables();
         } catch (final Exception ignored) {
         }
+        controlCacheDispatcher.clearAll();
     }
 
     @AfterSuite(groups = "slow")

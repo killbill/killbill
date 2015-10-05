@@ -246,4 +246,13 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         });
     }
 
+    @Override
+    public Integer getAccountBCD(final UUID accountId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Integer>() {
+            @Override
+            public Integer inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getBCD(accountId.toString(), context);
+            }
+        });
+    }
 }

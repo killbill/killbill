@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.entitlement.AccountEntitlements;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -37,7 +37,7 @@ public class DefaultAccountEntitlements implements AccountEntitlements {
     }
 
     @Override
-    public Account getAccount() {
+    public ImmutableAccountData getAccount() {
         return accountEventsStreams.getAccount();
     }
 

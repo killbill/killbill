@@ -20,14 +20,14 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 
 // Wrapper object to save on DAO calls
 public interface AccountEntitlements {
 
-    public Account getAccount();
+    public ImmutableAccountData getAccount();
 
     // Map bundle id -> bundle
     public Map<UUID, SubscriptionBaseBundle> getBundles();

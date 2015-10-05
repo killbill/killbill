@@ -40,6 +40,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -75,7 +76,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
 
-        TestDryRunArguments dryRun = new TestDryRunArguments("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
+        TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
                                                              SubscriptionEventType.START_BILLING, null, null, clock.getUTCNow(), null);
         Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -90,7 +91,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // ADD ADD_ON ON THE SAME DAY
         //
-        dryRun = new TestDryRunArguments("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, null, null,
+        dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, null, null,
                                          SubscriptionEventType.START_BILLING, null, bpSubscription.getBundleId(), clock.getUTCNow(), null);
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
@@ -106,7 +107,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
         // There is no invoice created as we only adjust the previous invoice.
         //
-        dryRun = new TestDryRunArguments(null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
+        dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
                                          bpSubscription.getBundleId(), clock.getUTCNow(), null);
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")));
@@ -153,7 +154,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
-        TestDryRunArguments dryRun = new TestDryRunArguments("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null, SubscriptionEventType.CHANGE,
+        TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null, SubscriptionEventType.CHANGE,
                                                              subscription.getId(), subscription.getBundleId(), clock.getUTCNow(), null);
         Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -173,7 +174,7 @@ public class TestIntegration extends TestIntegrationBase {
         setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 23, 59, 59, 0, testTimeZone));
 
         DateTime nextDate = clock.getUTCNow().plusDays(1);
-        dryRun = new TestDryRunArguments();
+        dryRun = new TestDryRunArguments(DryRunType.TARGET_DATE);
 
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("561.24")));
@@ -202,7 +203,7 @@ public class TestIntegration extends TestIntegrationBase {
 
 
         nextDate = clock.getUTCNow().plusDays(31);
-        dryRun = new TestDryRunArguments();
+        dryRun = new TestDryRunArguments(DryRunType.TARGET_DATE);
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 31), new LocalDate(2012, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
 
@@ -287,7 +288,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
 
 
-        TestDryRunArguments dryRun = new TestDryRunArguments("Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null, SubscriptionEventType.CHANGE,
+        TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null, SubscriptionEventType.CHANGE,
                                                              subscription.getId(), subscription.getBundleId(), null, null);
         try {
            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);

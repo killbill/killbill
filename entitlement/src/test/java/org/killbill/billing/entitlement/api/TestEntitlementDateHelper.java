@@ -42,6 +42,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
 
         account = Mockito.mock(Account.class);
         Mockito.when(accountInternalApi.getAccountByRecordId(Mockito.anyLong(), Mockito.<InternalTenantContext>any())).thenReturn(account);
+        Mockito.when(accountInternalApi.getImmutableAccountDataByRecordId(Mockito.anyLong(), Mockito.<InternalTenantContext>any())).thenReturn(account);
         dateHelper = new EntitlementDateHelper(accountInternalApi, clock);
         clock.resetDeltaFromReality();;
     }

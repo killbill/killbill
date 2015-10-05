@@ -20,13 +20,17 @@ import org.killbill.billing.util.cache.Cachable.CacheType;
 
 public interface CacheController<K, V> {
 
-    public void add(K key, V value);
+    void add(K key, V value);
 
-    public V get(K key, CacheLoaderArgument objectType);
+    V get(K key, CacheLoaderArgument objectType);
 
-    public boolean remove(K key);
+    V get(K key);
 
-    public int size();
+    boolean remove(K key);
+
+    void putIfAbsent(final K key, V value);
+
+    int size();
 
     void removeAll();
 

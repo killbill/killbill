@@ -26,9 +26,9 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -303,7 +303,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
                     }
 
                     final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, contextWithValidAccountRecordId);
-                    final Account account = accountApi.getAccountById(bundle.getAccountId(), contextWithValidAccountRecordId);
+                    final ImmutableAccountData account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), contextWithValidAccountRecordId);
                     final SubscriptionBase baseSubscription = subscriptionBaseInternalApi.getBaseSubscription(bundleId, contextWithValidAccountRecordId);
                     final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), baseSubscription.getStartDate(), contextWithValidAccountRecordId);
 
@@ -358,7 +358,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
                 try {
                     final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
                     final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, contextWithValidAccountRecordId);
-                    final Account account = accountApi.getAccountById(bundle.getAccountId(), contextWithValidAccountRecordId);
+                    final ImmutableAccountData account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), contextWithValidAccountRecordId);
                     final SubscriptionBase baseSubscription = subscriptionBaseInternalApi.getBaseSubscription(bundleId, contextWithValidAccountRecordId);
 
                     final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), baseSubscription.getStartDate(), contextWithValidAccountRecordId);

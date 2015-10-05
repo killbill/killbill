@@ -21,9 +21,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
@@ -69,9 +68,9 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
 
     @Override
     public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final BigDecimal balance, final Currency currency, final CallContext context) {
-        Account account;
+        ImmutableAccountData account;
         try {
-            account = accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+            account = accountUserApi.getImmutableAccountDataById(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
         } catch (AccountApiException e) {
             log.warn("Unable to find account for id {}", accountId);
             return null;

@@ -18,9 +18,7 @@
 
 package org.killbill.billing.invoice.generator;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,13 +28,12 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.junction.BillingEventSet;
@@ -66,7 +63,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      * adjusts target date to the maximum invoice target date, if future invoices exist
      */
     @Override
-    public InvoiceWithMetadata generateInvoice(final Account account, @Nullable final BillingEventSet events,
+    public InvoiceWithMetadata generateInvoice(final ImmutableAccountData account, @Nullable final BillingEventSet events,
                                                @Nullable final List<Invoice> existingInvoices,
                                                final LocalDate targetDate,
                                                final Currency targetCurrency, final InternalCallContext context) throws InvoiceApiException {

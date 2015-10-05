@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
@@ -31,11 +31,11 @@ import com.google.common.collect.ImmutableMap;
 
 public class DefaultAccountEventsStreams implements AccountEventsStreams {
 
-    private final Account account;
+    private final ImmutableAccountData account;
     private final Map<UUID, Collection<EventsStream>> eventsStreams;
     private final Map<UUID, SubscriptionBaseBundle> bundles = new HashMap<UUID, SubscriptionBaseBundle>();
 
-    public DefaultAccountEventsStreams(final Account account,
+    public DefaultAccountEventsStreams(final ImmutableAccountData account,
                                        final Iterable<SubscriptionBaseBundle> bundles,
                                        final Map<UUID, Collection<EventsStream>> eventsStreams) {
         this.account = account;
@@ -45,12 +45,12 @@ public class DefaultAccountEventsStreams implements AccountEventsStreams {
         }
     }
 
-    public DefaultAccountEventsStreams(final Account account) {
+    public DefaultAccountEventsStreams(final ImmutableAccountData account) {
         this(account, ImmutableList.<SubscriptionBaseBundle>of(), ImmutableMap.<UUID, Collection<EventsStream>>of());
     }
 
     @Override
-    public Account getAccount() {
+    public ImmutableAccountData getAccount() {
         return account;
     }
 

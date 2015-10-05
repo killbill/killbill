@@ -25,20 +25,22 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 public @interface Cachable {
 
-    public final String RECORD_ID_CACHE_NAME = "record-id";
-    public final String ACCOUNT_RECORD_ID_CACHE_NAME = "account-record-id";
-    public final String TENANT_RECORD_ID_CACHE_NAME = "tenant-record-id";
-    public final String OBJECT_ID_CACHE_NAME = "object-id";
-    public final String AUDIT_LOG_CACHE_NAME = "audit-log";
-    public final String AUDIT_LOG_VIA_HISTORY_CACHE_NAME = "audit-log-via-history";
-    public final String TENANT_CATALOG_CACHE_NAME = "tenant-catalog";
-    public final String TENANT_OVERDUE_CONFIG_CACHE_NAME = "tenant-overdue-config";
-    public final String TENANT_KV_CACHE_NAME = "tenant-kv";
-    public final String OVERRIDDEN_PLAN_CACHE_NAME = "overridden-plan";
+    String RECORD_ID_CACHE_NAME = "record-id";
+    String ACCOUNT_RECORD_ID_CACHE_NAME = "account-record-id";
+    String TENANT_RECORD_ID_CACHE_NAME = "tenant-record-id";
+    String OBJECT_ID_CACHE_NAME = "object-id";
+    String AUDIT_LOG_CACHE_NAME = "audit-log";
+    String AUDIT_LOG_VIA_HISTORY_CACHE_NAME = "audit-log-via-history";
+    String TENANT_CATALOG_CACHE_NAME = "tenant-catalog";
+    String TENANT_OVERDUE_CONFIG_CACHE_NAME = "tenant-overdue-config";
+    String TENANT_KV_CACHE_NAME = "tenant-kv";
+    String OVERRIDDEN_PLAN_CACHE_NAME = "overridden-plan";
+    String ACCOUNT_IMMUTABLE_CACHE_NAME = "account-immutable";
+    String ACCOUNT_BCD_CACHE_NAME = "account-bcd";
 
-    public CacheType value();
+    CacheType value();
 
-    public enum CacheType {
+    enum CacheType {
 
         /* Mapping from object 'id (UUID)' -> object 'recordId (Long' */
         RECORD_ID(RECORD_ID_CACHE_NAME, false),
@@ -68,7 +70,13 @@ public @interface Cachable {
         TENANT_KV(TENANT_KV_CACHE_NAME, false),
 
         /* Overwritten plans  */
-        OVERRIDDEN_PLAN(OVERRIDDEN_PLAN_CACHE_NAME, false);
+        OVERRIDDEN_PLAN(OVERRIDDEN_PLAN_CACHE_NAME, false),
+
+        /* Immutable account data config cache */
+        ACCOUNT_IMMUTABLE(ACCOUNT_IMMUTABLE_CACHE_NAME, false),
+
+        /* Account BCD config cache */
+        ACCOUNT_BCD(ACCOUNT_BCD_CACHE_NAME, false);
 
         private final String cacheName;
         private final boolean isKeyPrefixedWithTableName;

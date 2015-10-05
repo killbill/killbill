@@ -53,7 +53,7 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         accountDao = new MockAccountDao(Mockito.mock(PersistentBus.class));
-        accountUserApi = new DefaultAccountUserApi(internalFactory, accountDao);
+        accountUserApi = new DefaultAccountUserApi(accountDao, nonEntityDao, controllerDispatcher, internalFactory);
     }
 
     @Test(groups = "fast", description = "Test Account create API")

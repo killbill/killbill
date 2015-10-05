@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -63,7 +63,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     public FixedAndRecurringInvoiceItemGenerator() {
     }
 
-    public List<InvoiceItem> generateItems(final Account account, final UUID invoiceId, final BillingEventSet eventSet,
+    public List<InvoiceItem> generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
                                            @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
                                            final Currency targetCurrency, Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                            final InternalCallContext internalCallContext) throws InvoiceApiException {
@@ -165,15 +165,15 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
                     if (rate != null) {
                         final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
-                            final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
-                                                                                                accountId,
-                                                                                                thisEvent.getSubscription().getBundleId(),
-                                                                                                thisEvent.getSubscription().getId(),
-                                                                                                thisEvent.getPlan().getName(),
-                                                                                                thisEvent.getPlanPhase().getName(),
-                                                                                                itemDatum.getStartDate(), itemDatum.getEndDate(),
-                                                                                                amount, rate, currency);
-                            items.add(recurringItem);
+                        final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
+                                                                                            accountId,
+                                                                                            thisEvent.getSubscription().getBundleId(),
+                                                                                            thisEvent.getSubscription().getId(),
+                                                                                            thisEvent.getPlan().getName(),
+                                                                                            thisEvent.getPlanPhase().getName(),
+                                                                                            itemDatum.getStartDate(), itemDatum.getEndDate(),
+                                                                                            amount, rate, currency);
+                        items.add(recurringItem);
                     }
                 }
                 updatePerSubscriptionNextNotificationDate(thisEvent.getSubscription().getId(), itemDataWithNextBillingCycleDate.getNextBillingCycleDate(), items, billingMode, perSubscriptionFutureNotificationDate);
@@ -189,7 +189,6 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         }
         return items;
     }
-
 
     private void updatePerSubscriptionNextNotificationDate(final UUID subscriptionId, final LocalDate nextBillingCycleDate, final List<InvoiceItem> newProposedItems, final BillingMode billingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
 

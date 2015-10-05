@@ -16,7 +16,7 @@
 
 package org.killbill.billing.overdue.wrapper;
 
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -33,14 +33,15 @@ import org.killbill.clock.Clock;
 
 public class OverdueWrapper {
 
-    private final Account overdueable;
+    private final ImmutableAccountData overdueable;
     private final BlockingInternalApi api;
     private final Clock clock;
     private final OverdueStateSet overdueStateSet;
     private final BillingStateCalculator billingStateCalcuator;
     private final OverdueStateApplicator overdueStateApplicator;
 
-    public OverdueWrapper(final Account overdueable, final BlockingInternalApi api,
+    public OverdueWrapper(final ImmutableAccountData overdueable,
+                          final BlockingInternalApi api,
                           final OverdueStateSet overdueStateSet,
                           final Clock clock,
                           final BillingStateCalculator billingStateCalcuator,

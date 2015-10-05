@@ -168,6 +168,32 @@
                 properties=""/>
     </cache>
 
+    <cache name="account-immutable"
+           maxElementsInMemory="1000"
+           maxElementsOnDisk="0"
+           overflowToDisk="false"
+           diskPersistent="false"
+           memoryStoreEvictionPolicy="LFU"
+           statistics="true"
+            >
+        <cacheEventListenerFactory
+                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
+                properties=""/>
+    </cache>
+
+    <cache name="account-bcd"
+           maxElementsInMemory="1000"
+           maxElementsOnDisk="0"
+           overflowToDisk="false"
+           diskPersistent="false"
+           memoryStoreEvictionPolicy="LFU"
+           statistics="true"
+            >
+        <cacheEventListenerFactory
+                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
+                properties=""/>
+    </cache>
+
 
 </ehcache>
 

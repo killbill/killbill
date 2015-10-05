@@ -17,14 +17,13 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -42,7 +41,6 @@ import com.google.common.collect.Lists;
 
 public class DefaultBillingEvent implements BillingEvent {
 
-    private final Account account;
     private final int billCycleDayLocal;
     private final SubscriptionBase subscription;
     private final DateTime effectiveDate;
@@ -59,11 +57,10 @@ public class DefaultBillingEvent implements BillingEvent {
 
     private final List<Usage> usages;
 
-    public DefaultBillingEvent(final Account account, final EffectiveSubscriptionInternalEvent transition, final SubscriptionBase subscription, final int billCycleDayLocal, final Currency currency, final Catalog catalog) throws CatalogApiException {
+    public DefaultBillingEvent(final ImmutableAccountData account, final EffectiveSubscriptionInternalEvent transition, final SubscriptionBase subscription, final int billCycleDayLocal, final Currency currency, final Catalog catalog) throws CatalogApiException {
 
         final boolean isActive = transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL;
 
-        this.account = account;
         this.billCycleDayLocal = billCycleDayLocal;
         this.subscription = subscription;
         this.effectiveDate = transition.getEffectiveTransitionTime();
@@ -91,12 +88,11 @@ public class DefaultBillingEvent implements BillingEvent {
         this.usages = initializeUsage(isActive);
     }
 
-    public DefaultBillingEvent(final Account account, final SubscriptionBase subscription, final DateTime effectiveDate, final boolean isActive,
+    public DefaultBillingEvent(final SubscriptionBase subscription, final DateTime effectiveDate, final boolean isActive,
                                final Plan plan, final PlanPhase planPhase,
                                final BigDecimal fixedPrice, final BigDecimal recurringPrice, final Currency currency,
                                final BillingPeriod billingPeriod, final int billCycleDayLocal,
                                final String description, final long totalOrdering, final SubscriptionBaseTransitionType type, final DateTimeZone timeZone) {
-        this.account = account;
         this.subscription = subscription;
         this.effectiveDate = effectiveDate;
         this.plan = plan;
@@ -158,11 +154,6 @@ public class DefaultBillingEvent implements BillingEvent {
                 }
             }
         }
-    }
-
-    @Override
-    public Account getAccount() {
-        return account;
     }
 
     @Override
@@ -246,7 +237,6 @@ public class DefaultBillingEvent implements BillingEvent {
         sb.append(", planPhaseName=").append(planPhase.getName());
         sb.append(", subscriptionId=").append(subscription.getId());
         sb.append(", totalOrdering=").append(totalOrdering);
-        sb.append(", accountId=").append(account.getId());
         sb.append('}');
         return sb.toString();
     }
@@ -263,9 +253,6 @@ public class DefaultBillingEvent implements BillingEvent {
         final DefaultBillingEvent that = (DefaultBillingEvent) o;
 
         if (billCycleDayLocal != that.billCycleDayLocal) {
-            return false;
-        }
-        if (account != null ? !account.equals(that.account) : that.account != null) {
             return false;
         }
         if (billingPeriod != that.billingPeriod) {
@@ -310,8 +297,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
     @Override
     public int hashCode() {
-        int result = account != null ? account.hashCode() : 0;
-        result = 31 * result + billCycleDayLocal;
+        int result = 31 * billCycleDayLocal;
         result = 31 * result + (subscription != null ? subscription.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (planPhase != null ? planPhase.hashCode() : 0);

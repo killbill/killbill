@@ -19,12 +19,11 @@ package org.killbill.billing.overdue.wrapper;
 import java.util.UUID;
 
 import org.joda.time.Period;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.junction.BlockingInternalApi;
-import org.killbill.billing.overdue.OverdueService;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.overdue.applicator.OverdueStateApplicator;
@@ -65,8 +64,9 @@ public class OverdueWrapperFactory {
         this.clock = clock;
         this.overdueConfigCache = overdueConfigCache;
     }
+
     @SuppressWarnings("unchecked")
-    public OverdueWrapper createOverdueWrapperFor(final Account blockable, final InternalTenantContext context) throws OverdueException {
+    public OverdueWrapper createOverdueWrapperFor(final ImmutableAccountData blockable, final InternalTenantContext context) throws OverdueException {
         return (OverdueWrapper) new OverdueWrapper(blockable, api, getOverdueStateSet(context),
                                                    clock, billingStateCalculator, overdueStateApplicator);
     }
@@ -75,14 +75,13 @@ public class OverdueWrapperFactory {
     public OverdueWrapper createOverdueWrapperFor(final UUID id, final InternalTenantContext context) throws OverdueException {
 
         try {
-            final Account account = accountApi.getAccountById(id, context);
+            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(id, context);
             return new OverdueWrapper(account, api, getOverdueStateSet(context),
                                       clock, billingStateCalculator, overdueStateApplicator);
         } catch (AccountApiException e) {
             throw new OverdueException(e);
         }
     }
-
 
     private OverdueStateSet getOverdueStateSet(final InternalTenantContext context) throws OverdueException {
         final OverdueConfig overdueConfig;

@@ -51,6 +51,8 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
     @Inject
     public EhCacheCacheManagerProvider(final MetricRegistry metricRegistry,
                                        final CacheConfig cacheConfig,
+                                       final ImmutableAccountCacheLoader accountCacheLoader,
+                                       final AccountBCDCacheLoader accountBCDCacheLoader,
                                        final RecordIdCacheLoader recordIdCacheLoader,
                                        final AccountRecordIdCacheLoader accountRecordIdCacheLoader,
                                        final TenantRecordIdCacheLoader tenantRecordIdCacheLoader,
@@ -63,6 +65,8 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
                                        final OverriddenPlanCacheLoader overriddenPlanCacheLoader) {
         this.metricRegistry = metricRegistry;
         this.cacheConfig = cacheConfig;
+        cacheLoaders.add(accountCacheLoader);
+        cacheLoaders.add(accountBCDCacheLoader);
         cacheLoaders.add(recordIdCacheLoader);
         cacheLoaders.add(accountRecordIdCacheLoader);
         cacheLoaders.add(tenantRecordIdCacheLoader);
