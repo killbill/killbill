@@ -76,6 +76,9 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
 
         // Verify a default external key was set
         Assert.assertEquals(retrievedAccount.getExternalKey(), retrievedAccount.getId().toString());
+
+        // Verify a default time zone was set
+        Assert.assertEquals(retrievedAccount.getTimeZone(), DateTimeZone.UTC);
     }
 
     @Test(groups = "slow", description = "Test Account: basic DAO calls")
