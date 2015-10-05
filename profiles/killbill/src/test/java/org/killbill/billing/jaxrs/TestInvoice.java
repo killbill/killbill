@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -40,9 +38,9 @@ import org.killbill.billing.client.model.InvoiceItem;
 import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Invoices;
-import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
@@ -52,7 +50,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -95,7 +92,10 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(firstInvoiceByNumberJson, invoiceJson);
 
         // Then create a dryRun for next upcoming invoice
-        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), null, true, null, createdBy, reason, comment);
+        final InvoiceDryRun dryRunArg = new InvoiceDryRun(DryRunType.UPCOMING_INVOICE, null,
+                                                          null, null, null, null, null, null, null, null, null, null);
+
+        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), null, dryRunArg, createdBy, reason, comment);
         assertEquals(dryRunInvoice.getBalance(), new BigDecimal("249.95"));
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2012, 6, 25));
         assertEquals(dryRunInvoice.getItems().size(), 1);
@@ -112,7 +112,6 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(newInvoiceList.size(), 3);
     }
 
-
     @Test(groups = "slow", description = "Can create a subscription in dryRun mode and get an invoice back")
     public void testDryRunSubscriptionCreate() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
@@ -120,9 +119,9 @@ public class TestInvoice extends TestJaxrsBase {
 
         // "Assault-Rifle", BillingPeriod.ANNUAL, "rescue", BillingActionPolicy.IMMEDIATE,
         final Account accountJson = createAccountWithDefaultPaymentMethod();
-        final InvoiceDryRun dryRunArg = new InvoiceDryRun(SubscriptionEventType.START_BILLING,
+        final InvoiceDryRun dryRunArg = new InvoiceDryRun(DryRunType.TARGET_DATE, SubscriptionEventType.START_BILLING,
                                                           null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, null, null, null);
-        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone())), false, dryRunArg, createdBy, reason, comment);
+        final Invoice dryRunInvoice = killBillClient.createDryRunInvoice(accountJson.getAccountId(), new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone())), dryRunArg, createdBy, reason, comment);
         assertEquals(dryRunInvoice.getItems().size(), 1);
 
     }
@@ -351,7 +350,6 @@ public class TestInvoice extends TestJaxrsBase {
         // Verify the total number of invoices
         assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId()).size(), 3);
     }
-
 
     @Test(groups = "slow", description = "Can create multiple external charges")
     public void testExternalCharges() throws Exception {

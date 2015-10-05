@@ -52,6 +52,7 @@ import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.DryRunArguments;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -422,6 +423,11 @@ public class TestInvoiceHelper {
         }
 
         @Override
+        public DryRunType getDryRunType() {
+            return DryRunType.TARGET_DATE;
+        }
+
+        @Override
         public PlanPhaseSpecifier getPlanPhaseSpecifier() {
             return null;
         }
@@ -452,7 +458,7 @@ public class TestInvoiceHelper {
         }
 
         @Override
-        public List<PlanPhasePriceOverride> getPlanPhasePriceoverrides() {
+        public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
             return null;
         }
     }

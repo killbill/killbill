@@ -61,6 +61,7 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
@@ -710,6 +711,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     protected static class TestDryRunArguments implements DryRunArguments {
 
+        private final DryRunType dryRunType;
         private final PlanPhaseSpecifier spec;
         private final SubscriptionEventType action;
         private final UUID subscriptionId;
@@ -717,7 +719,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         private final DateTime effectiveDate;
         private final BillingActionPolicy billingPolicy;
 
-        public TestDryRunArguments() {
+        public TestDryRunArguments(final DryRunType dryRunType) {
+            this.dryRunType = dryRunType;
             this.spec = null;
             this.action = null;
             this.subscriptionId = null;
@@ -726,7 +729,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             this.billingPolicy = null;
         }
 
-        public TestDryRunArguments(final String productName,
+        public TestDryRunArguments(final DryRunType dryRunType,
+                                   final String productName,
                                    final ProductCategory category,
                                    final BillingPeriod billingPeriod,
                                    final String priceList,
@@ -736,12 +740,18 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                                    final UUID bundleId,
                                    final DateTime effectiveDate,
                                    final BillingActionPolicy billingPolicy) {
+            this.dryRunType = dryRunType;
             this.spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceList, phaseType);
             this.action = action;
             this.subscriptionId = subscriptionId;
             this.bundleId = bundleId;
             this.effectiveDate = effectiveDate;
             this.billingPolicy = billingPolicy;
+        }
+
+        @Override
+        public DryRunType getDryRunType() {
+            return dryRunType;
         }
 
         @Override
@@ -775,7 +785,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public List<PlanPhasePriceOverride> getPlanPhasePriceoverrides() {
+        public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
             return null;
         }
     }

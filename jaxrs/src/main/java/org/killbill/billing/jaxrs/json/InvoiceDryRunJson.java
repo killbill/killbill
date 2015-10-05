@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class InvoiceDryRunJson {
 
+    private final String dryRunType;
     private final String dryRunAction;
     private final String phaseType;
     private final String productName;
@@ -41,7 +42,8 @@ public class InvoiceDryRunJson {
     private final List<PhasePriceOverrideJson> priceOverrides;
 
     @JsonCreator
-    public InvoiceDryRunJson(@JsonProperty("dryRunAction") @Nullable final String dryRunAction,
+    public InvoiceDryRunJson(@JsonProperty("dryRunType") @Nullable final String dryRunType,
+                             @JsonProperty("dryRunAction") @Nullable final String dryRunAction,
                              @JsonProperty("phaseType") @Nullable final String phaseType,
                              @JsonProperty("productName") @Nullable final String productName,
                              @JsonProperty("productCategory") @Nullable final String productCategory,
@@ -52,6 +54,7 @@ public class InvoiceDryRunJson {
                              @JsonProperty("effectiveDate") @Nullable final LocalDate effectiveDate,
                              @JsonProperty("billingPolicy") @Nullable final String billingPolicy,
                              @JsonProperty("priceOverrides") @Nullable final List<PhasePriceOverrideJson> priceOverrides) {
+        this.dryRunType = dryRunType;
         this.dryRunAction = dryRunAction;
         this.phaseType = phaseType;
         this.productName = productName;
@@ -63,6 +66,10 @@ public class InvoiceDryRunJson {
         this.effectiveDate = effectiveDate;
         this.billingPolicy = billingPolicy;
         this.priceOverrides = priceOverrides;
+    }
+
+    public String getDryRunType() {
+        return dryRunType;
     }
 
     public String getDryRunAction() {
@@ -129,6 +136,9 @@ public class InvoiceDryRunJson {
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
+        if (dryRunType != null ? !dryRunType.equals(that.dryRunType) : that.dryRunType != null) {
+            return false;
+        }
         if (dryRunAction != null ? !dryRunAction.equals(that.dryRunAction) : that.dryRunAction != null) {
             return false;
         }
@@ -160,6 +170,7 @@ public class InvoiceDryRunJson {
     @Override
     public int hashCode() {
         int result = dryRunAction != null ? dryRunAction.hashCode() : 0;
+        result = 31 * result + (dryRunType != null ? dryRunType.hashCode() : 0);
         result = 31 * result + (phaseType != null ? phaseType.hashCode() : 0);
         result = 31 * result + (productName != null ? productName.hashCode() : 0);
         result = 31 * result + (productCategory != null ? productCategory.hashCode() : 0);
