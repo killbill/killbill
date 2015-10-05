@@ -74,7 +74,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         this.currency = currency;
         this.billingCycleDayLocal = billingCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
-        this.timeZone = timeZone;
+        this.timeZone = MoreObjects.firstNonNull(timeZone, DateTimeZone.UTC);
         this.locale = locale;
         this.address1 = address1;
         this.address2 = address2;
