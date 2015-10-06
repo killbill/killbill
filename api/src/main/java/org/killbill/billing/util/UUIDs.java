@@ -149,7 +149,7 @@ public abstract class UUIDs {
                 return new DigestRandomGenerator(MessageDigest.getInstance("SHA-1"));
             }
             catch (NoSuchAlgorithmException ex) {
-                throw new AssertionError("unexpeced missing SHA-1 digest", ex);
+                throw new Error("unexpeced missing SHA-1 digest", ex);
             }
         }
 
