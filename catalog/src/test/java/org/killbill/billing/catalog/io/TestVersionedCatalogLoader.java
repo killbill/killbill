@@ -38,9 +38,9 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import com.google.common.io.Files;
 import org.xml.sax.SAXException;
 
+import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
@@ -159,9 +159,8 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoadCatalogFromExternalFile() throws CatalogApiException, IOException, URISyntaxException {
-        URL originURL = Resources.getResource("SpyCarBasic.xml");
-        File originFile = new File(originURL.toURI());
-        File destinationFile = new File("/var/tmp/SpyCarBasic.xml");
+        File originFile = new File(Resources.getResource("SpyCarBasic.xml").toURI());
+        File destinationFile = new File(Files.createTempDir().toString() + "/SpyCarBasicRelocated.xml");
         destinationFile.deleteOnExit();
         Files.copy(originFile, destinationFile);
         final VersionedCatalog c = loader.loadDefaultCatalog(destinationFile.toURI().toString());
