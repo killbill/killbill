@@ -38,7 +38,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.weakref.jmx.internal.guava.io.Files;
+import com.google.common.io.Files;
 import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
