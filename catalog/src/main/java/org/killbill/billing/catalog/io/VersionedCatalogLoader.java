@@ -63,20 +63,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
             List<URI> xmlURIs;
             if (uriString.endsWith(XML_EXTENSION)) { // Assume its an xml file
                 xmlURIs = new ArrayList<URI>();
-                URI uri = new URI(uriString);
-
-                // Try to expand the full path, if possible
-                final String schemeSpecificPart = uri.getSchemeSpecificPart();
-                if (schemeSpecificPart != null) {
-                    final String[] split = schemeSpecificPart.split("/");
-                    final String fileName = split[split.length - 1];
-                    try {
-                        uri = new URI(Resources.getResource(fileName).toExternalForm());
-                    } catch (IllegalArgumentException ignored) {
-                    }
-                }
-
-                xmlURIs.add(uri);
+                xmlURIs.add(new URI(uriString));
             } else { // Assume its a directory
                 final String directoryContents = UriAccessor.accessUriAsString(uriString);
                 xmlURIs = findXmlReferences(directoryContents, new URL(uriString));

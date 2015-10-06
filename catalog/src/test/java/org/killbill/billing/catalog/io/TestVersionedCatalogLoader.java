@@ -18,6 +18,7 @@
 
 package org.killbill.billing.catalog.io;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -37,6 +38,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.weakref.jmx.internal.guava.io.Files;
 import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
@@ -125,5 +127,44 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
         Assert.assertEquals(it.next().getEffectiveDate(), dt.toDate());
         dt = new DateTime("2011-03-03T00:00:00+00:00");
         Assert.assertEquals(it.next().getEffectiveDate(), dt.toDate());
+    }
+
+    @Test(groups = "fast")
+    public void testLoadCatalogFromClasspathResourceFolder() throws CatalogApiException {
+        final VersionedCatalog c = loader.loadDefaultCatalog("SpyCarBasic.xml");
+        Assert.assertEquals(c.size(), 1);
+        DateTime dt = new DateTime("2013-02-08T00:00:00+00:00");
+        Assert.assertEquals(c.getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
+    }
+
+    @Test(groups = "fast", expectedExceptions = CatalogApiException.class)
+    public void testLoadCatalogFromClasspathResourceBadFolder() throws CatalogApiException {
+        loader.loadDefaultCatalog("com/acme/SpyCarCustom.xml");
+    }
+
+    @Test(groups = "fast")
+    public void testLoadCatalogFromInsideResourceFolder() throws CatalogApiException, URISyntaxException, IOException {
+        final VersionedCatalog c = loader.loadDefaultCatalog("com/acme/SpyCarCustom.xml");
+        Assert.assertEquals(c.size(), 1);
+        DateTime dt = new DateTime("2015-10-04T00:00:00+00:00");
+        Assert.assertEquals(c.getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.getCatalogName(), "SpyCarCustom");
+    }
+
+    @Test(groups = "fast", expectedExceptions = CatalogApiException.class)
+    public void testLoadCatalogFromInsideResourceWithBadFolderName() throws CatalogApiException {
+        loader.loadDefaultCatalog("com/acme2/SpyCarCustom.xml");
+    }
+
+    @Test(groups = "fast")
+    public void testLoadCatalogFromExternalFile() throws CatalogApiException, IOException, URISyntaxException {
+        URL originURL = Resources.getResource("SpyCarBasic.xml");
+        File originFile = new File(originURL.toURI());
+        File destinationFile = new File("C:/var/tmp/SpyCarBasic.xml");
+        destinationFile.deleteOnExit();
+        Files.copy(originFile, destinationFile);
+        final VersionedCatalog c = loader.loadDefaultCatalog(destinationFile.toURI().toString());
+        Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
     }
 }
