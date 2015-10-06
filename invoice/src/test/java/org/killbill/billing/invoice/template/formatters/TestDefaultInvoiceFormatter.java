@@ -34,7 +34,6 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
-import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
@@ -184,6 +183,127 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>1 499,95 €</strong></td>\n" +
                     "</tr>",
                     Locale.FRANCE);
+    }
+
+    @Test(groups = "fast")
+    public void testFormattedAmountFranceAndJPY() throws Exception {
+
+        final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             new LocalDate(), new BigDecimal("1500.00"), Currency.JPY);
+        final Invoice invoiceEUR = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.JPY);
+        invoiceEUR.addInvoiceItem(fixedItem);
+
+        checkOutput(invoiceEUR,
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedChargedAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedPaidAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
+                    "</tr>",
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>1 500,00 ￥</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>0,00 ￥</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>1 500,00 ￥</strong></td>\n" +
+                    "</tr>",
+                    Locale.FRANCE);
+    }
+
+    @Test(groups = "fast")
+    public void testFormattedAmountUSAndEUR() throws Exception {
+        final FixedPriceInvoiceItem fixedItemEUR = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             new LocalDate(), new BigDecimal("2635.14"), Currency.EUR);
+        final Invoice invoiceEUR = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.EUR);
+        invoiceEUR.addInvoiceItem(fixedItemEUR);
+
+        checkOutput(invoiceEUR,
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedChargedAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedPaidAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
+                    "</tr>",
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>€2,635.14</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>€0.00</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>€2,635.14</strong></td>\n" +
+                    "</tr>",
+                    Locale.US);
+    }
+
+    @Test(groups = "fast")
+    public void testFormattedAmountUSAndBRL() throws Exception {
+        final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             new LocalDate(), new BigDecimal("2635.14"), Currency.BRL);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.BRL);
+        invoice.addInvoiceItem(fixedItem);
+
+        checkOutput(invoice,
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedChargedAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedPaidAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
+                    "</tr>",
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>R$2,635.14</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>R$0.00</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>R$2,635.14</strong></td>\n" +
+                    "</tr>",
+                    Locale.US);
+    }
+
+    @Test(groups = "fast")
+    public void testFormattedAmountUSAndGBP() throws Exception {
+        final FixedPriceInvoiceItem fixedItemEUR = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             new LocalDate(), new BigDecimal("1499.95"), Currency.GBP);
+        final Invoice invoiceEUR = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.GBP);
+        invoiceEUR.addInvoiceItem(fixedItemEUR);
+
+        checkOutput(invoiceEUR,
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedChargedAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedPaidAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
+                    "</tr>",
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>£1,499.95</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>£0.00</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>£1,499.95</strong></td>\n" +
+                    "</tr>",
+                    Locale.US);
     }
 
     @Test(groups = "fast")
