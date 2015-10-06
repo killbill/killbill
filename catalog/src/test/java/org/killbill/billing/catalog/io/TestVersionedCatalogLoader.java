@@ -140,7 +140,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast", expectedExceptions = CatalogApiException.class)
     public void testLoadCatalogFromClasspathResourceBadFolder() throws CatalogApiException {
-        loader.loadDefaultCatalog("com/acme/SpyCarCustom.xml");
+        loader.loadDefaultCatalog("SpyCarCustom.xml");
     }
 
     @Test(groups = "fast")
@@ -161,7 +161,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
     public void testLoadCatalogFromExternalFile() throws CatalogApiException, IOException, URISyntaxException {
         URL originURL = Resources.getResource("SpyCarBasic.xml");
         File originFile = new File(originURL.toURI());
-        File destinationFile = new File("C:/var/tmp/SpyCarBasic.xml");
+        File destinationFile = new File("/var/tmp/SpyCarBasic.xml");
         destinationFile.deleteOnExit();
         Files.copy(originFile, destinationFile);
         final VersionedCatalog c = loader.loadDefaultCatalog(destinationFile.toURI().toString());
