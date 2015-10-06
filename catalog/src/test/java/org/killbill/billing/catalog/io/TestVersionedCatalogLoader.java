@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -133,7 +133,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
     public void testLoadCatalogFromClasspathResourceFolder() throws CatalogApiException {
         final VersionedCatalog c = loader.loadDefaultCatalog("SpyCarBasic.xml");
         Assert.assertEquals(c.size(), 1);
-        DateTime dt = new DateTime("2013-02-08T00:00:00+00:00");
+        final DateTime dt = new DateTime("2013-02-08T00:00:00+00:00");
         Assert.assertEquals(c.getEffectiveDate(), dt.toDate());
         Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
     }
@@ -147,7 +147,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
     public void testLoadCatalogFromInsideResourceFolder() throws CatalogApiException, URISyntaxException, IOException {
         final VersionedCatalog c = loader.loadDefaultCatalog("com/acme/SpyCarCustom.xml");
         Assert.assertEquals(c.size(), 1);
-        DateTime dt = new DateTime("2015-10-04T00:00:00+00:00");
+        final DateTime dt = new DateTime("2015-10-04T00:00:00+00:00");
         Assert.assertEquals(c.getEffectiveDate(), dt.toDate());
         Assert.assertEquals(c.getCatalogName(), "SpyCarCustom");
     }
@@ -159,8 +159,8 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoadCatalogFromExternalFile() throws CatalogApiException, IOException, URISyntaxException {
-        File originFile = new File(Resources.getResource("SpyCarBasic.xml").toURI());
-        File destinationFile = new File(Files.createTempDir().toString() + "/SpyCarBasicRelocated.xml");
+        final File originFile = new File(Resources.getResource("SpyCarBasic.xml").toURI());
+        final File destinationFile = new File(Files.createTempDir().toString() + "/SpyCarBasicRelocated.xml");
         destinationFile.deleteOnExit();
         Files.copy(originFile, destinationFile);
         final VersionedCatalog c = loader.loadDefaultCatalog(destinationFile.toURI().toString());
