@@ -1,3 +1,6 @@
+0.15.6
+    See https://github.com/killbill/killbill/releases/tag/killbill-0.15.6
+
 0.15.5
     Fix with issue with payment combo call where default account fields are not part of the request
 
