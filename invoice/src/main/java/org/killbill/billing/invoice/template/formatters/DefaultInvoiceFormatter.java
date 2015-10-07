@@ -21,13 +21,13 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
+import org.joda.money.CurrencyUnit;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
@@ -55,8 +55,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
-import static org.killbill.billing.util.DefaultAmountFormatter.round;
-
 /**
  * Format invoice fields
  */
@@ -71,20 +69,11 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     private final CurrencyConversionApi currencyConversionApi;
     private final InternalTenantContext context;
     private final ResourceBundleFactory bundleFactory;
+    private Map<java.util.Currency, Locale> currencyLocaleMap;
 
-    public static Map<java.util.Currency, Locale> currencyLocaleMap;
-    {
-        currencyLocaleMap = new HashMap<java.util.Currency, Locale>();
-        for (Locale localeItem : Locale.getAvailableLocales()) {
-            try {
-                java.util.Currency currency = java.util.Currency.getInstance(localeItem);
-                currencyLocaleMap.put(currency, localeItem);
-            }catch (Exception e){
-            }
-        }
-    }
-
-    public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, final CurrencyConversionApi currencyConversionApi, final ResourceBundleFactory bundleFactory, final InternalTenantContext context) {
+    public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale,
+                                   final CurrencyConversionApi currencyConversionApi, final ResourceBundleFactory bundleFactory,
+                                   final InternalTenantContext context, Map<java.util.Currency, Locale> currencyLocaleMap) {
         this.config = config;
         this.invoice = invoice;
         this.dateFormatter = DateTimeFormat.mediumDate().withLocale(locale);
@@ -92,6 +81,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         this.currencyConversionApi = currencyConversionApi;
         this.bundleFactory = bundleFactory;
         this.context = context;
+        this.currencyLocaleMap = currencyLocaleMap;
     }
 
     @Override
@@ -211,17 +201,17 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getChargedAmount() {
-        return round(Objects.firstNonNull(invoice.getChargedAmount(), BigDecimal.ZERO));
+        return Objects.firstNonNull(invoice.getChargedAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getOriginalChargedAmount() {
-        return round(Objects.firstNonNull(invoice.getOriginalChargedAmount(), BigDecimal.ZERO));
+        return Objects.firstNonNull(invoice.getOriginalChargedAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getBalance() {
-        return round(Objects.firstNonNull(invoice.getBalance(), BigDecimal.ZERO));
+        return Objects.firstNonNull(invoice.getBalance(), BigDecimal.ZERO);
     }
 
     @Override
@@ -239,22 +229,28 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         return getFormattedAmountByLocaleAndInvoiceCurrency(getBalance());
     }
 
-    /**
-     * Returns the amount with the correct currency symbol
-     *
-     * @param amount
-     * @return
-     */
+    // Returns the formatted amount with the correct currency symbol that is get from the invoice currency.
     private String getFormattedAmountByLocaleAndInvoiceCurrency(BigDecimal amount) {
-        final DecimalFormat number = (DecimalFormat) DecimalFormat.getCurrencyInstance(locale);
 
-        java.util.Currency currency = java.util.Currency.getInstance(invoice.getCurrency().toString());
-        DecimalFormatSymbols dfs = number.getDecimalFormatSymbols();
-        dfs.setInternationalCurrencySymbol(currency.getCurrencyCode());
-        dfs.setCurrencySymbol(currency.getSymbol(currencyLocaleMap.get(currency)));
-        number.setDecimalFormatSymbols(dfs);
+        String invoiceCurrencyCode = invoice.getCurrency().toString();
+        CurrencyUnit currencyUnit = CurrencyUnit.of(invoiceCurrencyCode);
 
-        return number.format(amount.doubleValue());
+        final DecimalFormat numberFormatter = (DecimalFormat) DecimalFormat.getCurrencyInstance(locale);
+        DecimalFormatSymbols dfs = numberFormatter.getDecimalFormatSymbols();
+        dfs.setInternationalCurrencySymbol(currencyUnit.getCurrencyCode());
+
+        try {
+            final java.util.Currency currency = java.util.Currency.getInstance(invoiceCurrencyCode);
+            dfs.setCurrencySymbol(currency.getSymbol(currencyLocaleMap.get(currency)));
+        } catch (Exception e) {
+            dfs.setCurrencySymbol(currencyUnit.getSymbol(locale));
+        }
+
+        numberFormatter.setDecimalFormatSymbols(dfs);
+        numberFormatter.setMinimumFractionDigits(currencyUnit.getDefaultFractionDigits());
+        numberFormatter.setMaximumFractionDigits(currencyUnit.getDefaultFractionDigits());
+
+        return numberFormatter.format(amount.doubleValue());
     }
 
     @Override
@@ -316,7 +312,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getPaidAmount() {
-        return round(Objects.firstNonNull(invoice.getPaidAmount(), BigDecimal.ZERO));
+        return Objects.firstNonNull(invoice.getPaidAmount(), BigDecimal.ZERO);
     }
 
     @Override
@@ -365,13 +361,18 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         return invoice;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
+    protected Map<java.util.Currency, Locale> getCurrencyLocaleMap() {
+        return currencyLocaleMap;
+    }
+
     @Override
     public BigDecimal getCreditedAmount() {
-        return round(Objects.firstNonNull(invoice.getCreditedAmount(), BigDecimal.ZERO));
+        return Objects.firstNonNull(invoice.getCreditedAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getRefundedAmount() {
-        return round(Objects.firstNonNull(invoice.getRefundedAmount(), BigDecimal.ZERO));
+        return Objects.firstNonNull(invoice.getRefundedAmount(), BigDecimal.ZERO);
     }
 }

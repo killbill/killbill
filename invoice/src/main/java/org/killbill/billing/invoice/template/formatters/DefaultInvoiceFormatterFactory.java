@@ -16,7 +16,10 @@
 
 package org.killbill.billing.invoice.template.formatters;
 
+import java.util.Currency;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
@@ -24,7 +27,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
-import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 
 public class DefaultInvoiceFormatterFactory implements InvoiceFormatterFactory {
@@ -32,6 +34,17 @@ public class DefaultInvoiceFormatterFactory implements InvoiceFormatterFactory {
     @Override
     public InvoiceFormatter createInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, CurrencyConversionApi currencyConversionApi,
                                                    final ResourceBundleFactory bundleFactory, final InternalTenantContext context) {
-        return new DefaultInvoiceFormatter(config, invoice, locale, currencyConversionApi, bundleFactory, context);
+
+        // this initialization relies on System.currentTimeMillis() instead of the Kill Bill clock (it won't be accurate when moving the clock)
+        Map<Currency, Locale> currencyLocaleMap = new HashMap<Currency, Locale>();
+        for (Locale localeItem : Locale.getAvailableLocales()) {
+            try {
+                java.util.Currency currency = java.util.Currency.getInstance(localeItem);
+                currencyLocaleMap.put(currency, localeItem);
+            }catch (Exception e){
+            }
+        }
+
+        return new DefaultInvoiceFormatter(config, invoice, locale, currencyConversionApi, bundleFactory, context, currencyLocaleMap);
     }
 }

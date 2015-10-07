@@ -88,7 +88,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(invoice.getCreditedAmount().doubleValue(), 0.00);
 
         // Verify the merge
-        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext);
+        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext, getAvailableLocales());
         final List<InvoiceItem> invoiceItems = formatter.getInvoiceItems();
         Assert.assertEquals(invoiceItems.size(), 1);
         Assert.assertEquals(invoiceItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
@@ -142,7 +142,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(invoice.getRefundedAmount().doubleValue(), -1.00);
 
         // Verify the merge
-        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext);
+        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext, getAvailableLocales());
         final List<InvoiceItem> invoiceItems = formatter.getInvoiceItems();
         Assert.assertEquals(invoiceItems.size(), 4);
         Assert.assertEquals(invoiceItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
@@ -159,7 +159,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     public void testFormattedAmount() throws Exception {
         final FixedPriceInvoiceItem fixedItemEUR = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                              UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-                                                                             new LocalDate(), new BigDecimal("1499.95"), Currency.EUR);
+                                                                             new LocalDate(), new BigDecimal("1499.952"), Currency.EUR);
         final Invoice invoiceEUR = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.EUR);
         invoiceEUR.addInvoiceItem(fixedItemEUR);
 
@@ -191,10 +191,10 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                              UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("1500.00"), Currency.JPY);
-        final Invoice invoiceEUR = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.JPY);
-        invoiceEUR.addInvoiceItem(fixedItem);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.JPY);
+        invoice.addInvoiceItem(fixedItem);
 
-        checkOutput(invoiceEUR,
+        checkOutput(invoice,
                     "<tr>\n" +
                     "    <td class=\"amount\"><strong>{{invoice.formattedChargedAmount}}</strong></td>\n" +
                     "</tr>\n" +
@@ -205,26 +205,57 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
                     "</tr>",
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 500,00 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 500 ￥</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>0,00 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>0 ￥</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 500,00 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 500 ￥</strong></td>\n" +
                     "</tr>",
                     Locale.FRANCE);
     }
 
     @Test(groups = "fast")
+    public void testFormattedAmountUSAndBTC() throws Exception {
+
+        final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          new LocalDate(), new BigDecimal("1105.28843439"), Currency.BTC);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.BTC);
+        invoice.addInvoiceItem(fixedItem);
+
+        checkOutput(invoice,
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedChargedAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedPaidAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
+                    "</tr>",
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>BTC1,105.28843439</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>BTC0.00000000</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>BTC1,105.28843439</strong></td>\n" +
+                    "</tr>",
+                    Locale.US);
+    }
+
+    @Test(groups = "fast")
     public void testFormattedAmountUSAndEUR() throws Exception {
-        final FixedPriceInvoiceItem fixedItemEUR = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
+        final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                              UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("2635.14"), Currency.EUR);
-        final Invoice invoiceEUR = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.EUR);
-        invoiceEUR.addInvoiceItem(fixedItemEUR);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.EUR);
+        invoice.addInvoiceItem(fixedItem);
 
-        checkOutput(invoiceEUR,
+        checkOutput(invoice,
                     "<tr>\n" +
                     "    <td class=\"amount\"><strong>{{invoice.formattedChargedAmount}}</strong></td>\n" +
                     "</tr>\n" +
@@ -278,13 +309,13 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testFormattedAmountUSAndGBP() throws Exception {
-        final FixedPriceInvoiceItem fixedItemEUR = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
+        final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                              UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("1499.95"), Currency.GBP);
-        final Invoice invoiceEUR = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.GBP);
-        invoiceEUR.addInvoiceItem(fixedItemEUR);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.GBP);
+        invoice.addInvoiceItem(fixedItem);
 
-        checkOutput(invoiceEUR,
+        checkOutput(invoice,
                     "<tr>\n" +
                     "    <td class=\"amount\"><strong>{{invoice.formattedChargedAmount}}</strong></td>\n" +
                     "</tr>\n" +
@@ -449,7 +480,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
         data.put("text", translator);
 
-        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, Locale.US, currencyConversionApi, resourceBundleFactory, internalCallContext));
+        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, Locale.US, currencyConversionApi, resourceBundleFactory, internalCallContext, getAvailableLocales()));
 
         final String formattedText = templateEngine.executeTemplateText(template, data);
 
@@ -458,9 +489,23 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     private void checkOutput(final Invoice invoice, final String template, final String expected, final Locale locale) {
         final Map<String, Object> data = new HashMap<String, Object>();
-        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, locale, null, resourceBundleFactory, internalCallContext));
+        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, locale, null, resourceBundleFactory, internalCallContext, getAvailableLocales()));
 
         final String formattedText = templateEngine.executeTemplateText(template, data);
         Assert.assertEquals(formattedText, expected);
     }
+
+    private Map<java.util.Currency, Locale> getAvailableLocales() {
+        Map<java.util.Currency, Locale> currencyLocaleMap = new HashMap<java.util.Currency, Locale>();
+
+        currencyLocaleMap.put(java.util.Currency.getInstance(Locale.US), Locale.US);
+        currencyLocaleMap.put(java.util.Currency.getInstance(Locale.FRANCE), Locale.FRANCE);
+        currencyLocaleMap.put(java.util.Currency.getInstance(Locale.JAPAN), Locale.JAPAN);
+        currencyLocaleMap.put(java.util.Currency.getInstance(Locale.UK), Locale.UK);
+        Locale brLocale = new Locale("pt", "BR");
+        currencyLocaleMap.put(java.util.Currency.getInstance(brLocale), brLocale);
+
+        return currencyLocaleMap;
+    }
+
 }
