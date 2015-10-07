@@ -54,12 +54,14 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     private TranslatorConfig config;
     private MustacheTemplateEngine templateEngine;
+    private DefaultInvoiceFormatterFactory defaultInvoiceFormatterFactory;
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
         config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();
+        defaultInvoiceFormatterFactory = new DefaultInvoiceFormatterFactory();
     }
 
     @Test(groups = "fast")
@@ -88,7 +90,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(invoice.getCreditedAmount().doubleValue(), 0.00);
 
         // Verify the merge
-        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext, getAvailableLocales());
+        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap());
         final List<InvoiceItem> invoiceItems = formatter.getInvoiceItems();
         Assert.assertEquals(invoiceItems.size(), 1);
         Assert.assertEquals(invoiceItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
@@ -142,7 +144,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(invoice.getRefundedAmount().doubleValue(), -1.00);
 
         // Verify the merge
-        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext, getAvailableLocales());
+        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap());
         final List<InvoiceItem> invoiceItems = formatter.getInvoiceItems();
         Assert.assertEquals(invoiceItems.size(), 4);
         Assert.assertEquals(invoiceItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
@@ -478,7 +480,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
         data.put("text", translator);
 
-        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, Locale.US, currencyConversionApi, resourceBundleFactory, internalCallContext, getAvailableLocales()));
+        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, Locale.US, currencyConversionApi, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap()));
 
         final String formattedText = templateEngine.executeTemplateText(template, data);
 
@@ -487,23 +489,9 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     private void checkOutput(final Invoice invoice, final String template, final String expected, final Locale locale) {
         final Map<String, Object> data = new HashMap<String, Object>();
-        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, locale, null, resourceBundleFactory, internalCallContext, getAvailableLocales()));
+        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, locale, null, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap()));
 
         final String formattedText = templateEngine.executeTemplateText(template, data);
         Assert.assertEquals(formattedText, expected);
     }
-
-    private Map<java.util.Currency, Locale> getAvailableLocales() {
-        Map<java.util.Currency, Locale> currencyLocaleMap = new HashMap<java.util.Currency, Locale>();
-
-        currencyLocaleMap.put(java.util.Currency.getInstance(Locale.US), Locale.US);
-        currencyLocaleMap.put(java.util.Currency.getInstance(Locale.FRANCE), Locale.FRANCE);
-        currencyLocaleMap.put(java.util.Currency.getInstance(Locale.JAPAN), Locale.JAPAN);
-        currencyLocaleMap.put(java.util.Currency.getInstance(Locale.UK), Locale.UK);
-        Locale brLocale = new Locale("pt", "BR");
-        currencyLocaleMap.put(java.util.Currency.getInstance(brLocale), brLocale);
-
-        return currencyLocaleMap;
-    }
-
 }

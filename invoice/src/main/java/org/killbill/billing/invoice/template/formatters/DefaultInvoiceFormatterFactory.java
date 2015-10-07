@@ -29,22 +29,31 @@ import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class DefaultInvoiceFormatterFactory implements InvoiceFormatterFactory {
 
-    @Override
-    public InvoiceFormatter createInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, CurrencyConversionApi currencyConversionApi,
-                                                   final ResourceBundleFactory bundleFactory, final InternalTenantContext context) {
+    private final Map<Currency, Locale> currencyLocaleMap = new HashMap<Currency, Locale>();
 
-        // this initialization relies on System.currentTimeMillis() instead of the Kill Bill clock (it won't be accurate when moving the clock)
-        Map<Currency, Locale> currencyLocaleMap = new HashMap<Currency, Locale>();
-        for (Locale localeItem : Locale.getAvailableLocales()) {
+    public DefaultInvoiceFormatterFactory() {
+        // This initialization relies on System.currentTimeMillis() instead of the Kill Bill clock (it won't be accurate when moving the clock)
+        for (final Locale localeItem : Locale.getAvailableLocales()) {
             try {
-                java.util.Currency currency = java.util.Currency.getInstance(localeItem);
+                final java.util.Currency currency = java.util.Currency.getInstance(localeItem);
                 currencyLocaleMap.put(currency, localeItem);
-            }catch (Exception e){
+            } catch (final Exception ignored) {
             }
         }
+    }
 
+    @Override
+    public InvoiceFormatter createInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, final CurrencyConversionApi currencyConversionApi,
+                                                   final ResourceBundleFactory bundleFactory, final InternalTenantContext context) {
         return new DefaultInvoiceFormatter(config, invoice, locale, currencyConversionApi, bundleFactory, context, currencyLocaleMap);
+    }
+
+    @VisibleForTesting
+    Map<Currency, Locale> getCurrencyLocaleMap() {
+        return currencyLocaleMap;
     }
 }

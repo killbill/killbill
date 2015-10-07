@@ -363,11 +363,6 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         return invoice;
     }
 
-    @SuppressWarnings("UnusedDeclaration")
-    protected Map<java.util.Currency, Locale> getCurrencyLocaleMap() {
-        return currencyLocaleMap;
-    }
-
     @Override
     public BigDecimal getCreditedAmount() {
         return MoreObjects.firstNonNull(invoice.getCreditedAmount(), BigDecimal.ZERO);
