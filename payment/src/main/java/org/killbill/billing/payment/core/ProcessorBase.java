@@ -204,16 +204,20 @@ public abstract class ProcessorBase {
         }
     }
 
-    protected static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final Callable<PluginDispatcherReturnType<ReturnType>> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
+    protected static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final String pluginIdentifier, final Callable<PluginDispatcherReturnType<ReturnType>> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
         final UUID accountId = account != null ? account.getId() : null;
         final String accountExternalKey = account != null ? account.getExternalKey() : "";
         try {
             return pluginFormDispatcher.dispatchWithTimeout(callable);
         } catch (final TimeoutException e) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, null);
+            final String errorMessage = "TimeoutException during the execution of the following plugin: " + pluginIdentifier;
+            log.error(errorMessage, e);
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, errorMessage, e.getMessage());
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            final String errorMessage = "InterruptedException during the execution of the following plugin: " + pluginIdentifier;
+            log.error(errorMessage, e);
+            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, errorMessage, e.getMessage());
         } catch (final ExecutionException e) {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
