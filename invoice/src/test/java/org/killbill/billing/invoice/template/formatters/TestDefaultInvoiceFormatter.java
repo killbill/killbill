@@ -188,6 +188,36 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
+    public void testFormattedAmountFranceAndOMR() throws Exception {
+        final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          new LocalDate(), new BigDecimal("1499.958"), Currency.OMR);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.OMR);
+        invoice.addInvoiceItem(fixedItem);
+
+        checkOutput(invoice,
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedChargedAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedPaidAmount}}</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
+                    "</tr>",
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>1 499,958 ر.ع.\u200F</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>0,000 ر.ع.\u200F</strong></td>\n" +
+                    "</tr>\n" +
+                    "<tr>\n" +
+                    "    <td class=\"amount\"><strong>1 499,958 ر.ع.\u200F</strong></td>\n" +
+                    "</tr>",
+                    Locale.FRANCE);
+    }
+
+    @Test(groups = "fast")
     public void testFormattedAmountFranceAndJPY() throws Exception {
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                           UUID.randomUUID().toString(), UUID.randomUUID().toString(),
