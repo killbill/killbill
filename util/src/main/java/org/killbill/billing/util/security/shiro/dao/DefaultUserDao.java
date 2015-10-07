@@ -28,6 +28,7 @@ import org.apache.shiro.util.ByteSource;
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.security.SecurityApiException;
+import org.killbill.billing.util.config.SecurityConfig;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 import org.killbill.clock.Clock;
 import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
@@ -43,17 +44,19 @@ import com.google.common.collect.Iterables;
 public class DefaultUserDao implements UserDao {
 
     private static final RandomNumberGenerator rng = new SecureRandomNumberGenerator();
+
     private final IDBI dbi;
     private final Clock clock;
+    private final SecurityConfig securityConfig;
 
     @Inject
-    public DefaultUserDao(final IDBI dbi, final Clock clock) {
+    public DefaultUserDao(final IDBI dbi, final Clock clock, final SecurityConfig securityConfig) {
         this.dbi = dbi;
         this.clock = clock;
+        this.securityConfig = securityConfig;
         ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(UserModelDao.class));
         ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(UserRolesModelDao.class));
         ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(RolesPermissionsModelDao.class));
-
     }
 
     @Override
@@ -61,7 +64,7 @@ public class DefaultUserDao implements UserDao {
 
         final ByteSource salt = rng.nextBytes();
         final String hashedPasswordBase64 = new SimpleHash(KillbillCredentialsMatcher.HASH_ALGORITHM_NAME,
-                                                           password, salt.toBase64(), KillbillCredentialsMatcher.HASH_ITERATIONS).toBase64();
+                                                           password, salt.toBase64(), securityConfig.getShiroNbHashIterations()).toBase64();
 
         final DateTime createdDate = clock.getUTCNow();
         dbi.inTransaction(new TransactionCallback<Void>() {
@@ -136,7 +139,7 @@ public class DefaultUserDao implements UserDao {
 
         final ByteSource salt = rng.nextBytes();
         final String hashedPasswordBase64 = new SimpleHash(KillbillCredentialsMatcher.HASH_ALGORITHM_NAME,
-                                                           password, salt.toBase64(), KillbillCredentialsMatcher.HASH_ITERATIONS).toBase64();
+                                                           password, salt.toBase64(), securityConfig.getShiroNbHashIterations()).toBase64();
 
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override

@@ -345,7 +345,7 @@ public class InvoiceDispatcher {
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
             final CallContext callContext = buildCallContext(context);
-            invoice.addInvoiceItems(invoicePluginDispatcher.getAdditionalInvoiceItems(invoice, callContext));
+            invoice.addInvoiceItems(invoicePluginDispatcher.getAdditionalInvoiceItems(invoice, isDryRun, callContext));
 
             if (!isDryRun) {
 

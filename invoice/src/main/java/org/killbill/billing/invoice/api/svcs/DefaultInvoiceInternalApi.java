@@ -143,7 +143,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
                 return ImmutableList.<Invoice>of(invoice);
             }
         };
-        final List<InvoiceItem> createdInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, withAccountLock, callContext);
+        final List<InvoiceItem> createdInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, callContext);
 
         return new DefaultInvoicePayment(refund);
     }

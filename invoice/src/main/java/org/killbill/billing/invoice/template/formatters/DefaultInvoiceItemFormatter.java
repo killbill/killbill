@@ -36,13 +36,9 @@ import org.killbill.billing.util.LocaleUtils;
 import org.killbill.billing.util.template.translation.DefaultCatalogTranslator;
 import org.killbill.billing.util.template.translation.Translator;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-
-import static org.killbill.billing.util.DefaultAmountFormatter.round;
 
 /**
  * Format invoice item fields
@@ -71,7 +67,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public BigDecimal getAmount() {
-        return round(Objects.firstNonNull(item.getAmount(), BigDecimal.ZERO));
+        return Objects.firstNonNull(item.getAmount(), BigDecimal.ZERO);
     }
 
     @Override
@@ -168,7 +164,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public BigDecimal getRate() {
-        return round(BigDecimal.ZERO);
+        return BigDecimal.ZERO;
     }
 
     @Override

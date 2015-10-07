@@ -309,7 +309,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
-        return invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, withAccountLock, context);
+        return invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, context);
     }
 
     @Override
@@ -365,7 +365,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
-        final List<InvoiceItem> creditInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, withAccountLock, context);
+        final List<InvoiceItem> creditInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, context);
         Preconditions.checkState(creditInvoiceItems.size() == 1, "Should have created a single credit invoice item: " + creditInvoiceItems);
 
         return creditInvoiceItems.get(0);
@@ -401,7 +401,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
-        final List<InvoiceItem> adjustmentInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, withAccountLock, context);
+        final List<InvoiceItem> adjustmentInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, context);
         Preconditions.checkState(adjustmentInvoiceItems.size() == 1, "Should have created a single adjustment item: " + adjustmentInvoiceItems);
 
         return adjustmentInvoiceItems.get(0);

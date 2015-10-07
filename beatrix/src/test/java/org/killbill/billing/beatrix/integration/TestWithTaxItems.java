@@ -194,7 +194,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         }
 
         @Override
-        public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
+        public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
             return addTaxItem.compareAndSet(true, false) ? ImmutableList.<InvoiceItem>of(createTaxInvoiceItem(invoice)) : ImmutableList.<InvoiceItem>of();
         }
 
@@ -205,5 +205,6 @@ public class TestWithTaxItems extends TestIntegrationBase {
         public void addTaxItem() {
             this.addTaxItem.set(true);
         }
+
     }
 }

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,17 +20,16 @@ package org.killbill.billing.tenant;
 
 import javax.inject.Named;
 
+import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.tenant.api.TenantUserApi;
-import org.killbill.billing.tenant.dao.NoCachingTenantBroadcastDao;
+import org.killbill.billing.tenant.dao.DefaultTenantDao;
 import org.killbill.billing.tenant.dao.TenantBroadcastDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
+import org.killbill.billing.tenant.glue.TestTenantModuleWithEmbeddedDB;
+import org.killbill.billing.util.config.SecurityConfig;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-
-import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import org.killbill.billing.tenant.dao.DefaultTenantDao;
-import org.killbill.billing.tenant.glue.TestTenantModuleWithEmbeddedDB;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -48,6 +49,9 @@ public class TenantTestSuiteWithEmbeddedDb extends GuicyKillbillTestSuiteWithEmb
 
     @Inject
     protected TenantBroadcastDao tenantBroadcastDao;
+
+    @Inject
+    protected SecurityConfig securityConfig;
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {

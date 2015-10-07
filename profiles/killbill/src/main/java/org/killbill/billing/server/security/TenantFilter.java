@@ -44,6 +44,7 @@ import org.killbill.billing.server.modules.KillbillPlatformModule;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantUserApi;
+import org.killbill.billing.util.config.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +60,8 @@ public class TenantFilter implements Filter {
 
     @Inject
     protected TenantUserApi tenantUserApi;
+    @Inject
+    protected SecurityConfig securityConfig;
 
     @Inject
     @Named(KillbillPlatformModule.SHIRO_DATA_SOURCE_ID_NAMED)
@@ -68,7 +71,7 @@ public class TenantFilter implements Filter {
 
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
-        final Realm killbillJdbcTenantRealm = new KillbillJdbcTenantRealm(dataSource);
+        final Realm killbillJdbcTenantRealm = new KillbillJdbcTenantRealm(dataSource, securityConfig);
         // We use Shiro to verify the api credentials - but the Shiro Subject is only used for RBAC
         modularRealmAuthenticator = new ModularRealmAuthenticator();
         modularRealmAuthenticator.setRealms(ImmutableList.<Realm>of(killbillJdbcTenantRealm));

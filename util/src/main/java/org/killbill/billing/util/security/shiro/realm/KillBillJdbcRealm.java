@@ -24,6 +24,7 @@ import javax.sql.DataSource;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.killbill.billing.platform.glue.KillBillPlatformModuleBase;
+import org.killbill.billing.util.config.SecurityConfig;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 
 public class KillBillJdbcRealm extends JdbcRealm {
@@ -33,11 +34,13 @@ public class KillBillJdbcRealm extends JdbcRealm {
     protected static final String KILLBILL_PERMISSIONS_QUERY = "select permission from roles_permissions where role_name = ? and is_active";
 
     private final DataSource dataSource;
+    private final SecurityConfig securityConfig;
 
     @Inject
-    public KillBillJdbcRealm(@Named(KillBillPlatformModuleBase.SHIRO_DATA_SOURCE_ID_NAMED) final DataSource dataSource) {
+    public KillBillJdbcRealm(@Named(KillBillPlatformModuleBase.SHIRO_DATA_SOURCE_ID_NAMED) final DataSource dataSource, final SecurityConfig securityConfig) {
         super();
         this.dataSource = dataSource;
+        this.securityConfig = securityConfig;
 
         // Tweak JdbcRealm defaults
         setPermissionsLookupEnabled(true);
@@ -56,7 +59,7 @@ public class KillBillJdbcRealm extends JdbcRealm {
 
     private void configureSecurity() {
         setSaltStyle(SaltStyle.COLUMN);
-        setCredentialsMatcher(KillbillCredentialsMatcher.getCredentialsMatcher());
+        setCredentialsMatcher(KillbillCredentialsMatcher.getCredentialsMatcher(securityConfig));
     }
 
     private void configureDataSource() {

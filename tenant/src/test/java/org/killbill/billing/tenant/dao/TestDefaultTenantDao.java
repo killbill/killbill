@@ -45,11 +45,11 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
 
         // Good combo
         final AuthenticationToken goodToken = new UsernamePasswordToken(tenant.getApiKey(), tenant.getApiSecret());
-        Assert.assertTrue(KillbillCredentialsMatcher.getCredentialsMatcher().doCredentialsMatch(goodToken, authenticationInfo));
+        Assert.assertTrue(KillbillCredentialsMatcher.getCredentialsMatcher(securityConfig).doCredentialsMatch(goodToken, authenticationInfo));
 
         // Bad combo
         final AuthenticationToken badToken = new UsernamePasswordToken(tenant.getApiKey(), tenant.getApiSecret() + "T");
-        Assert.assertFalse(KillbillCredentialsMatcher.getCredentialsMatcher().doCredentialsMatch(badToken, authenticationInfo));
+        Assert.assertFalse(KillbillCredentialsMatcher.getCredentialsMatcher(securityConfig).doCredentialsMatch(badToken, authenticationInfo));
     }
 
     @Test(groups = "slow")
