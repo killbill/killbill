@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
@@ -66,6 +67,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     private final AtomicBoolean makeNextInvoiceFailWithError = new AtomicBoolean(false);
     private final AtomicBoolean makeNextInvoiceFailWithException = new AtomicBoolean(false);
     private final AtomicBoolean makeAllInvoicesFailWithError = new AtomicBoolean(false);
+    private final AtomicInteger makePluginWaitSomeMilliseconds = new AtomicInteger(0);
 
     private final Map<String, InternalPaymentInfo> payments = new ConcurrentHashMap<String, InternalPaymentInfo>();
     private final Map<String, List<PaymentTransactionInfoPlugin>> paymentTransactions = new ConcurrentHashMap<String, List<PaymentTransactionInfoPlugin>>();
@@ -189,6 +191,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         makeNextInvoiceFailWithException.set(false);
         makeAllInvoicesFailWithError.set(false);
         makeNextInvoiceFailWithError.set(false);
+        makePluginWaitSomeMilliseconds.set(0);
         paymentMethods.clear();
         payments.clear();
         paymentTransactions.clear();
@@ -205,6 +208,10 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
 
     public void makeAllInvoicesFailWithError(final boolean failure) {
         makeAllInvoicesFailWithError.set(failure);
+    }
+
+    public void makePluginWaitSomeMilliseconds(final int milliseconds) {
+        makePluginWaitSomeMilliseconds.set(milliseconds);
     }
 
     public void updatePaymentTransactions(final UUID paymentId, final List<PaymentTransactionInfoPlugin> newTransactions) {
@@ -337,6 +344,15 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     private PaymentTransactionInfoPlugin getPaymentTransactionInfoPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType type, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> pluginProperties) throws PaymentPluginApiException {
+        if (makePluginWaitSomeMilliseconds.get() > 0) {
+            try {
+                Thread.sleep(makePluginWaitSomeMilliseconds.get());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new PaymentPluginApiException("An Interruption occurred while the Thread was sleeping.", e);
+            }
+        }
+
         if (makeNextInvoiceFailWithException.getAndSet(false)) {
             throw new PaymentPluginApiException("", "test error");
         }

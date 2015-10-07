@@ -17,7 +17,6 @@
 
 package org.killbill.billing.payment.core.sm.control;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -52,11 +51,14 @@ import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 
 public abstract class OperationControlCallback extends OperationCallbackBase<Payment, PaymentApiException> implements OperationCallback {
 
     private static final Logger logger = LoggerFactory.getLogger(OperationControlCallback.class);
+
+    private static final Joiner JOINER = Joiner.on(", ");
 
     protected final PaymentProcessor paymentProcessor;
     protected final PaymentStateControlContext paymentStateControlContext;
@@ -79,8 +81,10 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
+        final List<String> pluginNameList = paymentStateControlContext.getPaymentControlPluginNames();
+        final String pluginNames = JOINER.join(pluginNameList);
 
-        return dispatchWithAccountLockAndTimeout(new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
+        return dispatchWithAccountLockAndTimeout(pluginNames, new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
 
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {

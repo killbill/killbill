@@ -17,6 +17,8 @@
 
 package org.killbill.billing.payment.core.sm.control;
 
+import java.util.List;
+
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
@@ -32,10 +34,14 @@ import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 
+import com.google.common.base.Joiner;
+
 //
 // Used from AttemptCompletionTask to resume an incomplete payment that went through control API.
 //
 public class CompletionControlOperation extends OperationControlCallback {
+
+    private static final Joiner JOINER = Joiner.on(", ");
 
     public CompletionControlOperation(final GlobalLocker locker,
                                       final PluginDispatcher<OperationResult> paymentPluginDispatcher,
@@ -49,7 +55,10 @@ public class CompletionControlOperation extends OperationControlCallback {
     @Override
     public OperationResult doOperationCallback() throws OperationException {
 
-        return dispatchWithAccountLockAndTimeout(new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
+        final List<String> controlPluginNameList = paymentStateControlContext.getPaymentControlPluginNames();
+        final String controlPluginNames = JOINER.join(controlPluginNameList);
+
+        return dispatchWithAccountLockAndTimeout(controlPluginNames, new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
                 final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();
