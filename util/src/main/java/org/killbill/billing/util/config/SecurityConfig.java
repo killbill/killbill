@@ -28,6 +28,11 @@ public interface SecurityConfig extends KillbillConfig {
     @Description("Path to the shiro.ini file (classpath, url or file resource)")
     public String getShiroResourcePath();
 
+    @Config("org.killbill.security.shiroNbHashIterations")
+    @Default("200000")
+    @Description("Sets the number of times submitted credentials will be hashed before comparing to the credentials stored in the system")
+    public Integer getShiroNbHashIterations();
+
     // LDAP Realm
 
     @Config("org.killbill.security.ldap.userDnTemplate")

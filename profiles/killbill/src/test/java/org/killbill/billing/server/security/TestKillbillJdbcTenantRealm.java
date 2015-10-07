@@ -49,7 +49,7 @@ public class TestKillbillJdbcTenantRealm extends TestJaxrsBase {
         super.beforeMethod();
 
         // Create the tenant
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(dbi, clock, cacheControllerDispatcher, new DefaultNonEntityDao(dbi));
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(dbi, clock, cacheControllerDispatcher, new DefaultNonEntityDao(dbi), securityConfig);
         tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                    UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(new TenantModelDao(tenant), internalCallContext);
@@ -60,7 +60,7 @@ public class TestKillbillJdbcTenantRealm extends TestJaxrsBase {
         dbConfig.setUsername(helper.getUsername());
         dbConfig.setPassword(helper.getPassword());
 
-        final KillbillJdbcTenantRealm jdbcRealm = new KillbillJdbcTenantRealm(shiroDataSource);
+        final KillbillJdbcTenantRealm jdbcRealm = new KillbillJdbcTenantRealm(shiroDataSource, securityConfig);
         jdbcRealm.setDataSource(new HikariDataSource(dbConfig));
 
         securityManager = new DefaultSecurityManager(jdbcRealm);

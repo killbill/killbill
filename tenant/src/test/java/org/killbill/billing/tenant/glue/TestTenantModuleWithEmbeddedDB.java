@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,6 +21,8 @@ package org.killbill.billing.tenant.glue;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
+import org.killbill.billing.util.glue.SecurityModule;
+import org.killbill.billing.util.glue.TestUtilModuleNoDB.ShiroModuleNoDB;
 
 public class TestTenantModuleWithEmbeddedDB extends TestTenantModule {
 
@@ -34,5 +36,7 @@ public class TestTenantModuleWithEmbeddedDB extends TestTenantModule {
 
         install(new GuicyKillbillTestWithEmbeddedDBModule(configSource));
         install(new NonEntityDaoModule(configSource));
+        install(new SecurityModule(configSource));
+        install(new ShiroModuleNoDB(configSource));
     }
 }

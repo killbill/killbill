@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,23 +21,21 @@ package org.killbill.billing.util.security.shiro;
 import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.crypto.hash.Sha512Hash;
+import org.killbill.billing.util.config.SecurityConfig;
 
 public class KillbillCredentialsMatcher {
 
-    public static final String KILLBILL_TENANT_HASH_ITERATIONS_PROPERTY = "org.killbill.server.multitenant.hash_iterations";
-
     // See http://www.stormpath.com/blog/strong-password-hashing-apache-shiro and https://issues.apache.org/jira/browse/SHIRO-290
     public static final String HASH_ALGORITHM_NAME = Sha512Hash.ALGORITHM_NAME;
-    public static final Integer HASH_ITERATIONS = Integer.parseInt(System.getProperty(KILLBILL_TENANT_HASH_ITERATIONS_PROPERTY, "200000"));
 
     private KillbillCredentialsMatcher() {}
 
-    public static CredentialsMatcher getCredentialsMatcher() {
+    public static CredentialsMatcher getCredentialsMatcher(final SecurityConfig securityConfig) {
         // This needs to be in sync with DefaultTenantDao
         final HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher(HASH_ALGORITHM_NAME);
         // base64 encoding, not hex
         credentialsMatcher.setStoredCredentialsHexEncoded(false);
-        credentialsMatcher.setHashIterations(HASH_ITERATIONS);
+        credentialsMatcher.setHashIterations(securityConfig.getShiroNbHashIterations());
 
         return credentialsMatcher;
     }

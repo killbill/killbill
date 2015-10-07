@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -35,6 +37,7 @@ import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.config.SecurityConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -56,9 +59,12 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
 
     private final RandomNumberGenerator rng = new SecureRandomNumberGenerator();
 
+    private final SecurityConfig securityConfig;
+
     @Inject
-    public DefaultTenantDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+    public DefaultTenantDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final SecurityConfig securityConfig) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), TenantSqlDao.class);
+        this.securityConfig = securityConfig;
     }
 
     @Override
@@ -82,7 +88,7 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         final ByteSource salt = rng.nextBytes();
         // Hash the plain-text password with the random salt and multiple iterations and then Base64-encode the value (requires less space than Hex)
         final String hashedPasswordBase64 = new SimpleHash(KillbillCredentialsMatcher.HASH_ALGORITHM_NAME,
-                                                           entity.getApiSecret(), salt, KillbillCredentialsMatcher.HASH_ITERATIONS).toBase64();
+                                                           entity.getApiSecret(), salt, securityConfig.getShiroNbHashIterations()).toBase64();
 
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override

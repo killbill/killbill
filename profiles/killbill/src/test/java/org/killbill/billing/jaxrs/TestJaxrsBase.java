@@ -54,6 +54,7 @@ import org.killbill.billing.server.listeners.KillbillGuiceListener;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.SecurityConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.jdbi.guice.DaoConfig;
 import org.skife.config.ConfigurationObjectFactory;
@@ -95,6 +96,9 @@ public class TestJaxrsBase extends KillbillClient {
     @Inject
     @Named(KillbillServerModule.SHIRO_DATA_SOURCE_ID)
     protected DataSource shiroDataSource;
+
+    @Inject
+    protected SecurityConfig securityConfig;
 
     protected DaoConfig daoConfig;
     protected KillbillServerConfig serverConfig;
