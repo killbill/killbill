@@ -232,19 +232,18 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     // Returns the formatted amount with the correct currency symbol that is get from the invoice currency.
-    private String getFormattedAmountByLocaleAndInvoiceCurrency(BigDecimal amount) {
-
-        String invoiceCurrencyCode = invoice.getCurrency().toString();
-        CurrencyUnit currencyUnit = CurrencyUnit.of(invoiceCurrencyCode);
+    private String getFormattedAmountByLocaleAndInvoiceCurrency(final BigDecimal amount) {
+        final String invoiceCurrencyCode = invoice.getCurrency().toString();
+        final CurrencyUnit currencyUnit = CurrencyUnit.of(invoiceCurrencyCode);
 
         final DecimalFormat numberFormatter = (DecimalFormat) DecimalFormat.getCurrencyInstance(locale);
-        DecimalFormatSymbols dfs = numberFormatter.getDecimalFormatSymbols();
+        final DecimalFormatSymbols dfs = numberFormatter.getDecimalFormatSymbols();
         dfs.setInternationalCurrencySymbol(currencyUnit.getCurrencyCode());
 
         try {
             final java.util.Currency currency = java.util.Currency.getInstance(invoiceCurrencyCode);
             dfs.setCurrencySymbol(currency.getSymbol(currencyLocaleMap.get(currency)));
-        } catch (Exception e) {
+        } catch (final IllegalArgumentException e) {
             dfs.setCurrencySymbol(currencyUnit.getSymbol(locale));
         }
 
