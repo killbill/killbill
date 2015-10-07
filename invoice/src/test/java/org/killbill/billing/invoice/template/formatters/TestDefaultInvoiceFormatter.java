@@ -158,10 +158,10 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testFormattedAmount() throws Exception {
+    public void testFormattedAmountFranceAndEUR() throws Exception {
         final FixedPriceInvoiceItem fixedItemEUR = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                              UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-                                                                             new LocalDate(), new BigDecimal("1499.952"), Currency.EUR);
+                                                                             new LocalDate(), new BigDecimal("1499.95"), Currency.EUR);
         final Invoice invoiceEUR = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.EUR);
         invoiceEUR.addInvoiceItem(fixedItemEUR);
 
