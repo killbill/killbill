@@ -34,8 +34,8 @@ import org.killbill.billing.payment.api.TestPaymentMethodPlugin;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
-import org.killbill.billing.payment.plugin.api.NoOpPaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
@@ -54,7 +54,7 @@ import com.google.inject.Inject;
  * This MockPaymentProviderPlugin only works for a single accounts as we don't specify the accountId
  * for operations such as addPaymentMethod.
  */
-public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
+public class MockPaymentProviderPlugin implements PaymentPluginApi {
 
     public static final String PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE = "paymentPluginStatusOverride";
 
@@ -182,7 +182,6 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         clear();
     }
 
-    @Override
     public void clear() {
         makeNextInvoiceFailWithException.set(false);
         makeAllInvoicesFailWithError.set(false);
@@ -193,22 +192,18 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         paymentMethodsInfo.clear();
     }
 
-    @Override
     public void makeNextPaymentFailWithError() {
         makeNextInvoiceFailWithError.set(true);
     }
 
-    @Override
     public void makeNextPaymentFailWithException() {
         makeNextInvoiceFailWithException.set(true);
     }
 
-    @Override
     public void makeAllInvoicesFailWithError(final boolean failure) {
         makeAllInvoicesFailWithError.set(failure);
     }
 
-    @Override
     public void updatePaymentTransactions(final UUID paymentId, final List<PaymentTransactionInfoPlugin> newTransactions) {
         if (paymentTransactions.containsKey(paymentId.toString())) {
             paymentTransactions.put (paymentId.toString(), newTransactions);
