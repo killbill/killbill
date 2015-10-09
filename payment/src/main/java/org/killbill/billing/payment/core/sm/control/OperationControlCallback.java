@@ -53,6 +53,7 @@ import org.killbill.commons.request.RequestData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 
 public abstract class OperationControlCallback extends OperationCallbackBase<Payment, PaymentApiException> implements OperationCallback {
@@ -80,6 +81,8 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
+        final List<String> pluginNameList = paymentStateControlContext.getPaymentControlPluginNames();
+        final String pluginNames = Joiner.on(", ").join(pluginNameList);
 
         final RequestData requestData = Request.getPerThreadRequestData();
         final String requestId;
@@ -89,9 +92,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
             requestId = "notAvailableRequestId";
         }
 
-        // String pluginNames = paymentStateControlContext.getPaymentControlPluginNames();
-
-        return dispatchWithAccountLockAndTimeout("UNKNOWN", new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
+        return dispatchWithAccountLockAndTimeout(pluginNames, new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
 
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
