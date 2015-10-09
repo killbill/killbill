@@ -79,7 +79,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         final PaymentOperation pluginOperation = getPluginOperation();
 
         try {
-            pluginOperation.dispatchWithAccountLockAndTimeout(callback);
+            pluginOperation.dispatchWithAccountLockAndTimeout("pluginIdentifier", callback);
             Assert.fail();
         } catch (final OperationException e) {
             Assert.assertEquals(e.getOperationResult(), OperationResult.EXCEPTION);
@@ -93,7 +93,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         final PaymentOperation pluginOperation = getPluginOperation();
 
         try {
-            pluginOperation.dispatchWithAccountLockAndTimeout(callback);
+            pluginOperation.dispatchWithAccountLockAndTimeout("pluginIdentifier", callback);
             Assert.fail();
         } catch (final OperationException e) {
             Assert.assertEquals(e.getOperationResult(), OperationResult.EXCEPTION);
@@ -152,7 +152,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
                 if (shouldFailBecauseOfLockFailure) {
                     try {
-                        pluginOperation.dispatchWithAccountLockAndTimeout(callback);
+                        pluginOperation.dispatchWithAccountLockAndTimeout("pluginIdentifier", callback);
                         Assert.fail();
                     } catch (final OperationException e) {
                         Assert.assertTrue(e.getCause() instanceof PaymentApiException);
@@ -161,7 +161,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                     }
                 } else {
                     try {
-                        pluginOperation.dispatchWithAccountLockAndTimeout(callback);
+                        pluginOperation.dispatchWithAccountLockAndTimeout("pluginIdentifier", callback);
                     } catch (final OperationException e) {
                         Assert.fail(e.getMessage());
                     }

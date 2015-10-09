@@ -77,24 +77,15 @@ public class PaymentGatewayProcessor extends ProcessorBase {
     }
 
     public GatewayNotification processNotification(final String notification, final String pluginName, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
-
-        final String pluginIdentifier;
-        if (plugin != null) {
-            // the toString method is used, because pluginName is not everywhere available where
-            // dispatchWithExceptionHandling is called and we want a unified format for the plugin name
-            pluginIdentifier = plugin.toString();
-        } else {
-            throw new PaymentApiException(ErrorCode.UNEXPECTED_ERROR, "It wasn't possible to retrieve the following Plugin: " +  pluginName);
-        }
 
         return dispatchWithExceptionHandling(null,
-                                             pluginIdentifier,
+                                             pluginName,
                                              new Callable<PluginDispatcherReturnType<GatewayNotification>>() {
                                                  @Override
                                                  public PluginDispatcherReturnType<GatewayNotification> call() throws PaymentApiException {
 
                                                      try {
+                                                         final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
                                                          final GatewayNotification result = plugin.processNotification(notification, properties, callContext);
                                                          return PluginDispatcher.createPluginDispatcherReturnType(result == null ? new DefaultNoOpGatewayNotification() : result);
                                                      } catch (final PaymentPluginApiException e) {
@@ -105,23 +96,14 @@ public class PaymentGatewayProcessor extends ProcessorBase {
     }
 
     public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentMethodId, internalCallContext);
-
-        final String pluginIdentifier;
-        if (plugin != null) {
-            // the toString method is used, because paymentPluginServiceName is not everywhere available where
-            // dispatchWithExceptionHandling is called and we want a unified format for the plugin name
-            pluginIdentifier = plugin.toString();
-        } else {
-            throw new PaymentApiException(ErrorCode.UNEXPECTED_ERROR, "It wasn't possible to retrieve a plugin for payment method id: " +  paymentMethodId);
-        }
+        final String pluginName = getPaymentProviderPluginName(paymentMethodId, internalCallContext);
 
         return dispatchWithExceptionHandling(account,
-                                             pluginIdentifier,
+                                             pluginName,
                                              new Callable<PluginDispatcherReturnType<HostedPaymentPageFormDescriptor>>() {
                                                  @Override
                                                  public PluginDispatcherReturnType<HostedPaymentPageFormDescriptor> call() throws PaymentApiException {
-                                                     final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentMethodId, internalCallContext);
+                                                     final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
 
                                                      try {
                                                          final HostedPaymentPageFormDescriptor result = plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);

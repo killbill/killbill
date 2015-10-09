@@ -126,6 +126,16 @@ public class PaymentAutomatonDAOHelper {
         paymentStateContext.setPaymentTransactionModelDao(paymentDao.getPaymentTransaction(paymentStateContext.getPaymentTransactionModelDao().getId(), internalCallContext));
     }
 
+    public String getPaymentProviderPluginName() throws PaymentApiException {
+
+        final UUID paymentMethodId = paymentStateContext.getPaymentMethodId();
+        final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, internalCallContext);
+        if (methodDao == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
+        }
+        return methodDao.getPluginName();
+    }
+
     public PaymentPluginApi getPaymentProviderPlugin() throws PaymentApiException {
 
         final UUID paymentMethodId = paymentStateContext.getPaymentMethodId();
@@ -134,6 +144,14 @@ public class PaymentAutomatonDAOHelper {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
         return getPaymentPluginApi(methodDao.getPluginName());
+    }
+
+    public PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {
+        final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(pluginName);
+        if (pluginApi == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_PLUGIN, pluginName);
+        }
+        return pluginApi;
     }
 
     public PaymentModelDao getPayment() throws PaymentApiException {
@@ -183,13 +201,5 @@ public class PaymentAutomatonDAOHelper {
                                               paymentStateContext.getCurrency(),
                                               gatewayErrorCode,
                                               gatewayErrorMsg);
-    }
-
-    private PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {
-        final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(pluginName);
-        if (pluginApi == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_PLUGIN, pluginName);
-        }
-        return pluginApi;
     }
 }

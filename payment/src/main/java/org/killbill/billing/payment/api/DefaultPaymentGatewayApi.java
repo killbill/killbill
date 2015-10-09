@@ -36,6 +36,8 @@ import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.commons.request.Request;
+import org.killbill.commons.request.RequestData;
 
 public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentGatewayApi {
 
@@ -103,6 +105,14 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                             final CallContext callContext,
                                             final WithPaymentControlCallback<T> callback) throws PaymentApiException {
 
+        final RequestData requestData = Request.getPerThreadRequestData();
+        final String requestId;
+        if (requestData != null) {
+            requestId = requestData.getRequestId();
+        } else {
+            requestId = "NotAvailableRequestId";
+        }
+
         final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
         if (paymentControlPluginNames.isEmpty()) {
             return callback.doPaymentGatewayApiOperation(properties);
@@ -114,7 +124,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                                                           paymentMethodId,
                                                                           null, null, null, null,
                                                                           PaymentApiType.HPP, null, HPPType.BUILD_FORM_DESCRIPTOR,
-                                                                          null, null, true, paymentControlPluginNames, properties, callContext);
+                                                                          null, null, true, paymentControlPluginNames, properties, callContext, requestId);
 
         } catch (final PaymentControlApiException e) {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e);
@@ -126,14 +136,14 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                                             paymentMethodId,
                                                             null, null, null, null, null,
                                                             PaymentApiType.HPP, null, HPPType.BUILD_FORM_DESCRIPTOR,
-                                                            null, null, null, null, true, paymentControlPluginNames, priorCallResult.getAdjustedPluginProperties(), callContext);
+                                                            null, null, null, null, true, paymentControlPluginNames, priorCallResult.getAdjustedPluginProperties(), callContext, requestId);
             return result;
         } catch (final PaymentApiException e) {
             controlPluginRunner.executePluginOnFailureCalls(account,
                                                             paymentMethodId,
                                                             null, null, null, null,
                                                             PaymentApiType.HPP, null, HPPType.BUILD_FORM_DESCRIPTOR,
-                                                            null, null, true, paymentControlPluginNames, priorCallResult.getAdjustedPluginProperties(), callContext);
+                                                            null, null, true, paymentControlPluginNames, priorCallResult.getAdjustedPluginProperties(), callContext, requestId);
 
             throw e;
 

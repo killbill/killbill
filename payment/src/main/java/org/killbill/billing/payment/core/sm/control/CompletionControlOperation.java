@@ -17,6 +17,8 @@
 
 package org.killbill.billing.payment.core.sm.control;
 
+import java.util.List;
+
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
@@ -31,6 +33,10 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcher
 import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.request.Request;
+import org.killbill.commons.request.RequestData;
+
+import com.google.common.base.Joiner;
 
 //
 // Used from AttemptCompletionTask to resume an incomplete payment that went through control API.
@@ -49,7 +55,18 @@ public class CompletionControlOperation extends OperationControlCallback {
     @Override
     public OperationResult doOperationCallback() throws OperationException {
 
-        return dispatchWithAccountLockAndTimeout(new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
+        final List<String> controlPluginNameList = paymentStateControlContext.getPaymentControlPluginNames();
+        final String controlPluginNames = Joiner.on(", ").join(controlPluginNameList);
+
+        final RequestData requestData = Request.getPerThreadRequestData();
+        final String requestId;
+        if (requestData != null) {
+            requestId = requestData.getRequestId();
+        } else {
+            requestId = "NotAvailableRequestId";
+        }
+
+        return dispatchWithAccountLockAndTimeout(controlPluginNames, new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
                 final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();
@@ -70,7 +87,7 @@ public class CompletionControlOperation extends OperationControlCallback {
                                                                                                             paymentStateControlContext.isApiPayment(),
                                                                                                             paymentStateContext.getCallContext());
 
-                executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
+                executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext, requestId);
                 return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
             }
         });

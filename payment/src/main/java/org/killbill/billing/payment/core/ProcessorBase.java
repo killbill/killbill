@@ -54,6 +54,8 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
+import org.killbill.commons.request.Request;
+import org.killbill.commons.request.RequestData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,6 +136,15 @@ public abstract class ProcessorBase {
         return getPaymentPluginApi(methodDao.getPluginName());
     }
 
+    protected String getPaymentProviderPluginName(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
+        final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, context);
+        if (methodDao == null) {
+            log.error("PaymentMethod does not exist", paymentMethodId);
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
+        }
+        return methodDao.getPluginName();
+    }
+
     protected PaymentPluginApi getPaymentProviderPlugin(final Account account, final InternalTenantContext context) throws PaymentApiException {
         final UUID paymentMethodId = getDefaultPaymentMethodId(account);
         return getPaymentProviderPlugin(paymentMethodId, context);
@@ -204,20 +215,32 @@ public abstract class ProcessorBase {
         }
     }
 
-    protected static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final String pluginIdentifier, final Callable<PluginDispatcherReturnType<ReturnType>> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
+    protected static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final String pluginName, final Callable<PluginDispatcherReturnType<ReturnType>> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
         final UUID accountId = account != null ? account.getId() : null;
         final String accountExternalKey = account != null ? account.getExternalKey() : "";
+
+        final RequestData requestData = Request.getPerThreadRequestData();
+        final String requestId;
+        if (requestData != null) {
+            requestId = requestData.getRequestId();
+        } else {
+            requestId = "notAvailabeRequestId";
+        }
+
         try {
-            return pluginFormDispatcher.dispatchWithTimeout(callable);
+            log.debug("Calling plugin {} with requestId {}", pluginName, requestId);
+            ReturnType result = pluginFormDispatcher.dispatchWithTimeout(callable);
+            log.debug("Successful call of plugin {} for account {} with result {} and requestId {}", pluginName, account.getExternalKey(), result, requestId);
+            return result;
         } catch (final TimeoutException e) {
-            final String errorMessage = "TimeoutException during the execution of the following plugin: " + pluginIdentifier;
+            final String errorMessage = String.format("TimeoutException during the execution of plugin %s with requestId %s ", pluginName, requestId);
             log.error(errorMessage, e);
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, errorMessage, e.getMessage());
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, errorMessage);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            final String errorMessage = "InterruptedException during the execution of the following plugin: " + pluginIdentifier;
+            final String errorMessage = String.format("InterruptedException during the execution of plugin %s with requestId %s ", pluginName, requestId);
             log.error(errorMessage, e);
-            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, errorMessage, e.getMessage());
+            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), errorMessage));
         } catch (final ExecutionException e) {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();

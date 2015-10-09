@@ -103,18 +103,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                  final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
 
-        final PaymentPluginApi pluginApi = getPaymentPluginApi(paymentPluginServiceName);
-
-        final String pluginIdentifier;
-        if (pluginApi != null) {
-            // the toString method is used, because paymentPluginServiceName is not everywhere available where
-            // dispatchWithExceptionHandling is called and we want a unified format for the plugin name
-            pluginIdentifier = pluginApi.toString();
-        } else {
-            throw new PaymentApiException(ErrorCode.UNEXPECTED_ERROR, account.getId(), "It wasn't possible to retrieve the following Plugin: " + paymentPluginServiceName);
-        }
-
-        return dispatchWithExceptionHandling(account, pluginIdentifier,
+        return dispatchWithExceptionHandling(account, paymentPluginServiceName,
                                              new CallableWithAccountLock<UUID, PaymentApiException>(locker,
                                                                                                     account.getExternalKey(),
                                                                                                     paymentConfig,
@@ -125,6 +114,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                             PaymentMethod pm = null;
                                                                                                             try {
                                                                                                                 pm = new DefaultPaymentMethod(paymentMethodExternalKey, account.getId(), paymentPluginServiceName, paymentMethodProps);
+                                                                                                                final PaymentPluginApi pluginApi = getPaymentPluginApi(paymentPluginServiceName);
                                                                                                                 pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, properties, callContext);
 
                                                                                                                 final String actualPaymentMethodExternalKey = retrieveActualPaymentMethodExternalKey(account, pm, pluginApi, properties, callContext, context);

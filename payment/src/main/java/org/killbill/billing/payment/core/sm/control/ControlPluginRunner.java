@@ -14,7 +14,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package org.killbill.billing.payment.core.sm.control;
 
 import java.math.BigDecimal;
@@ -71,7 +70,8 @@ public class ControlPluginRunner {
                                                              final boolean isApiPayment,
                                                              final List<String> paymentControlPluginNames,
                                                              final Iterable<PluginProperty> pluginProperties,
-                                                             final CallContext callContext) throws PaymentControlApiException {
+                                                             final CallContext callContext,
+                                                             final String requestId) throws PaymentControlApiException {
         // Return as soon as the first plugin aborts, or the last result for the last plugin
         PriorPaymentControlResult prevResult = new DefaultPriorPaymentControlResult(false, amount, currency, paymentMethodId, pluginProperties);
 
@@ -98,7 +98,9 @@ public class ControlPluginRunner {
                 log.warn("Skipping unknown payment control plugin {} when fetching results", pluginName);
                 continue;
             }
+            log.debug("Calling priorCall of plugin {} for requestId {}", pluginName, requestId);
             prevResult = plugin.priorCall(inputPaymentControlContext, inputPluginProperties);
+            log.debug("Successful executed priorCall of plugin {} for requestId {}", pluginName, requestId);
             if (prevResult.getAdjustedPluginProperties() != null) {
                 inputPluginProperties = prevResult.getAdjustedPluginProperties();
             }
@@ -141,7 +143,8 @@ public class ControlPluginRunner {
                                                                      final boolean isApiPayment,
                                                                      final List<String> paymentControlPluginNames,
                                                                      final Iterable<PluginProperty> pluginProperties,
-                                                                     final CallContext callContext) {
+                                                                     final CallContext callContext,
+                                                                     final String requestId) {
 
         final PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(account,
                                                                                                   paymentMethodId,
@@ -164,7 +167,9 @@ public class ControlPluginRunner {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
+                    log.debug("Calling onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
                     final OnSuccessPaymentControlResult result = plugin.onSuccessCall(inputPaymentControlContext, inputPluginProperties);
+                    log.debug("Successful executed onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
                     if (result.getAdjustedPluginProperties() != null) {
                         inputPluginProperties = result.getAdjustedPluginProperties();
                     }
@@ -193,7 +198,8 @@ public class ControlPluginRunner {
                                                                      final boolean isApiPayment,
                                                                      final List<String> paymentControlPluginNames,
                                                                      final Iterable<PluginProperty> pluginProperties,
-                                                                     final CallContext callContext) {
+                                                                     final CallContext callContext,
+                                                                     final String requestId) {
 
         final PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(account,
                                                                                                   paymentMethodId,
@@ -216,7 +222,9 @@ public class ControlPluginRunner {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
+                    log.debug("Calling onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
                     final OnFailurePaymentControlResult result = plugin.onFailureCall(inputPaymentControlContext, inputPluginProperties);
+                    log.debug("Successful executed onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
                     if (candidate == null) {
                         candidate = result.getNextRetryDate();
                     } else if (result.getNextRetryDate() != null) {
