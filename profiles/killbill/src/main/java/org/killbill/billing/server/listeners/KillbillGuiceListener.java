@@ -47,8 +47,6 @@ import com.wordnik.swagger.jaxrs.config.BeanConfig;
 
 public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
-    private static final String ENABLE_HTTP_GZIP_RESPONSES = "org.killbill.server.http.gzip";
-
     private static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
 
     private static final String SWAGGER_PATH = "api-docs";
@@ -76,8 +74,7 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
         // In order to use the GZIPContentEncodingFilter, the jersey param "com.sun.jersey.config.feature.logging.DisableEntitylogging"
         // must not be set to false.
-
-        if (Boolean.valueOf(System.getProperty(ENABLE_HTTP_GZIP_RESPONSES, "false"))) {
+        if (config.isConfiguredToReturnGZIPResponses()) {
             logger.info("Enable http gzip responses");
             builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());
         }
