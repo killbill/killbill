@@ -44,12 +44,13 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
     }
 
     public DefaultTagDefinition(final UUID id, final String name, final String description, final Boolean isControlTag) {
-        this(id, name, description, isControlTag, ImmutableList.<ObjectType>copyOf(ObjectType.values()));
+        this(id, name, description, isControlTag, getApplicableObjectTypes(id, isControlTag));
     }
 
     public DefaultTagDefinition(final ControlTagType controlTag) {
         this(controlTag.getId(), controlTag.toString(), controlTag.getDescription(), true, controlTag.getApplicableObjectTypes());
     }
+
 
     @JsonCreator
     public DefaultTagDefinition(@JsonProperty("id") final UUID id,
@@ -130,5 +131,17 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
         result = 31 * result + (controlTag != null ? controlTag.hashCode() : 0);
         result = 31 * result + (applicableObjectTypes != null ? applicableObjectTypes.hashCode() : 0);
         return result;
+    }
+
+    private static List<ObjectType> getApplicableObjectTypes(final UUID id, final Boolean isControlTag) {
+        if (!isControlTag) {
+            return ImmutableList.<ObjectType>of();
+        }
+        for (final ControlTagType cur : ControlTagType.values()) {
+            if (cur.getId().equals(id)) {
+                return cur.getApplicableObjectTypes();
+            }
+        }
+        throw new IllegalStateException(String.format("ControlTag id %s does not seem to exist", id));
     }
 }
