@@ -42,6 +42,8 @@ import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.commons.request.Request;
+import org.killbill.commons.request.RequestData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,8 +72,7 @@ public class ControlPluginRunner {
                                                              final boolean isApiPayment,
                                                              final List<String> paymentControlPluginNames,
                                                              final Iterable<PluginProperty> pluginProperties,
-                                                             final CallContext callContext,
-                                                             final String requestId) throws PaymentControlApiException {
+                                                             final CallContext callContext) throws PaymentControlApiException {
         // Return as soon as the first plugin aborts, or the last result for the last plugin
         PriorPaymentControlResult prevResult = new DefaultPriorPaymentControlResult(false, amount, currency, paymentMethodId, pluginProperties);
 
@@ -90,6 +91,9 @@ public class ControlPluginRunner {
                                                                                             currency,
                                                                                             isApiPayment,
                                                                                             callContext);
+
+        final String requestId = Request.getPerThreadRequestData() != null
+                                 ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
 
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
@@ -143,8 +147,7 @@ public class ControlPluginRunner {
                                                                      final boolean isApiPayment,
                                                                      final List<String> paymentControlPluginNames,
                                                                      final Iterable<PluginProperty> pluginProperties,
-                                                                     final CallContext callContext,
-                                                                     final String requestId) {
+                                                                     final CallContext callContext) {
 
         final PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(account,
                                                                                                   paymentMethodId,
@@ -162,6 +165,10 @@ public class ControlPluginRunner {
                                                                                                   processedCurrency,
                                                                                                   isApiPayment,
                                                                                                   callContext);
+
+        final String requestId = Request.getPerThreadRequestData() != null
+                                ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
+
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
@@ -198,8 +205,7 @@ public class ControlPluginRunner {
                                                                      final boolean isApiPayment,
                                                                      final List<String> paymentControlPluginNames,
                                                                      final Iterable<PluginProperty> pluginProperties,
-                                                                     final CallContext callContext,
-                                                                     final String requestId) {
+                                                                     final CallContext callContext) {
 
         final PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(account,
                                                                                                   paymentMethodId,
@@ -217,6 +223,9 @@ public class ControlPluginRunner {
 
         DateTime candidate = null;
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
+
+        final String requestId = Request.getPerThreadRequestData() != null
+                                ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
 
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);

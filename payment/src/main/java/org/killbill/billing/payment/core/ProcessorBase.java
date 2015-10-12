@@ -55,7 +55,6 @@ import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 import org.killbill.commons.request.Request;
-import org.killbill.commons.request.RequestData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,12 +127,8 @@ public abstract class ProcessorBase {
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
-        final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, context);
-        if (methodDao == null) {
-            log.error("PaymentMethod does not exist", paymentMethodId);
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
-        }
-        return getPaymentPluginApi(methodDao.getPluginName());
+        final String pluginName = getPaymentProviderPluginName(paymentMethodId, context);
+        return getPaymentPluginApi(pluginName);
     }
 
     protected String getPaymentProviderPluginName(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
@@ -219,13 +214,8 @@ public abstract class ProcessorBase {
         final UUID accountId = account != null ? account.getId() : null;
         final String accountExternalKey = account != null ? account.getExternalKey() : "";
 
-        final RequestData requestData = Request.getPerThreadRequestData();
-        final String requestId;
-        if (requestData != null) {
-            requestId = requestData.getRequestId();
-        } else {
-            requestId = "notAvailabeRequestId";
-        }
+        final String requestId = Request.getPerThreadRequestData() != null
+                                 ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
 
         try {
             log.debug("Calling plugin {} with requestId {}", pluginName, requestId);

@@ -113,7 +113,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
                 final PriorPaymentControlResult pluginResult;
                 try {
-                    pluginResult = executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext, requestId);
+                    pluginResult = executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
                     if (pluginResult != null && pluginResult.isAborted()) {
                         // Transition to ABORTED
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.EXCEPTION);
@@ -147,17 +147,17 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                                 paymentStateControlContext.isApiPayment(),
                                                                                                                 paymentStateContext.getCallContext());
                     if (success) {
-                        executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext, requestId);
+                        executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
                     } else {
-                        throw new OperationException(null, executePluginOnFailureCallsAndSetRetryDate(updatedPaymentControlContext, requestId));
+                        throw new OperationException(null, executePluginOnFailureCallsAndSetRetryDate(updatedPaymentControlContext));
                     }
                 } catch (final PaymentApiException e) {
                     // Wrap PaymentApiException, and throw a new OperationException with an ABORTED/FAILURE state based on the retry result.
-                    throw new OperationException(e, executePluginOnFailureCallsAndSetRetryDate(paymentControlContext, requestId));
+                    throw new OperationException(e, executePluginOnFailureCallsAndSetRetryDate(paymentControlContext));
                 } catch (final RuntimeException e) {
                     // Attempts to set the retry date in context if needed.
-                    executePluginOnFailureCallsAndSetRetryDate(paymentControlContext, requestId);
+                    executePluginOnFailureCallsAndSetRetryDate(paymentControlContext);
                     throw e;
                 }
             }
@@ -191,7 +191,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         return operationResult;
     }
 
-    private PriorPaymentControlResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContextArg, String requestId) throws PaymentControlApiException {
+    private PriorPaymentControlResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContextArg) throws PaymentControlApiException {
 
         final PriorPaymentControlResult result = controlPluginRunner.executePluginPriorCalls(paymentStateContext.getAccount(),
                                                                                              paymentControlContextArg.getPaymentMethodId(),
@@ -207,14 +207,13 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                              paymentStateControlContext.isApiPayment(),
                                                                                              paymentControlPluginNames,
                                                                                              paymentStateContext.getProperties(),
-                                                                                             paymentStateContext.getCallContext(),
-                                                                                             requestId);
+                                                                                             paymentStateContext.getCallContext());
 
         adjustStateContextForPriorCall(paymentStateContext, result);
         return result;
     }
 
-    protected void executePluginOnSuccessCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext, final String requestId) {
+    protected void executePluginOnSuccessCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
         // Values that were obtained/changed after the payment call was made (paymentId, processedAmount, processedCurrency,... needs to be extracted from the paymentControlContext)
         // paymentId, paymentExternalKey, transactionAmount, transaction currency are extracted from  paymentControlContext which was update from the operation result.
         final OnSuccessPaymentControlResult result = controlPluginRunner.executePluginOnSuccessCalls(paymentStateContext.getAccount(),
@@ -234,20 +233,19 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                      paymentStateControlContext.isApiPayment(),
                                                                                                      paymentControlPluginNames,
                                                                                                      paymentStateContext.getProperties(),
-                                                                                                     paymentStateContext.getCallContext(),
-                                                                                                     requestId);
+                                                                                                     paymentStateContext.getCallContext());
         adjustStateContextPluginProperties(paymentStateContext, result.getAdjustedPluginProperties());
     }
 
-    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentControlContext paymentControlContext, final String requestId) {
-        final DateTime retryDate = executePluginOnFailureCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext, requestId);
+    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentControlContext paymentControlContext) {
+        final DateTime retryDate = executePluginOnFailureCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
         if (retryDate != null) {
             ((PaymentStateControlContext) paymentStateContext).setRetryDate(retryDate);
         }
         return getOperationResultOnException(paymentStateContext);
     }
 
-    private DateTime executePluginOnFailureCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext, final String requestId) {
+    private DateTime executePluginOnFailureCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContext) {
 
         final OnFailurePaymentControlResult result = controlPluginRunner.executePluginOnFailureCalls(paymentStateContext.getAccount(),
                                                                                                      paymentControlContext.getPaymentMethodId(),
@@ -263,8 +261,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                      paymentStateControlContext.isApiPayment(),
                                                                                                      paymentControlPluginNames,
                                                                                                      paymentStateContext.getProperties(),
-                                                                                                     paymentStateContext.getCallContext(),
-                                                                                                     requestId);
+                                                                                                     paymentStateContext.getCallContext());
         adjustStateContextPluginProperties(paymentStateContext, result.getAdjustedPluginProperties());
         return result.getNextRetryDate();
     }

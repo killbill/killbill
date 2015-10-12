@@ -83,9 +83,10 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                              new Callable<PluginDispatcherReturnType<GatewayNotification>>() {
                                                  @Override
                                                  public PluginDispatcherReturnType<GatewayNotification> call() throws PaymentApiException {
+                                                     final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
 
                                                      try {
-                                                         final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
+
                                                          final GatewayNotification result = plugin.processNotification(notification, properties, callContext);
                                                          return PluginDispatcher.createPluginDispatcherReturnType(result == null ? new DefaultNoOpGatewayNotification() : result);
                                                      } catch (final PaymentPluginApiException e) {

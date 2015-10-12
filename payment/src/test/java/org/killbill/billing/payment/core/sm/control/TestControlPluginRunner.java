@@ -64,8 +64,7 @@ public class TestControlPluginRunner extends PaymentTestSuiteNoDB {
                                                                                                            true,
                                                                                                            paymentControlPluginNames,
                                                                                                            pluginProperties,
-                                                                                                           callContext,
-                                                                                                           "dummyRequestId");
+                                                                                                           callContext);
         Assert.assertEquals(paymentControlResult.getAdjustedAmount(), amount);
         Assert.assertEquals(paymentControlResult.getAdjustedCurrency(), currency);
         Assert.assertEquals(paymentControlResult.getAdjustedPaymentMethodId(), paymentMethodId);

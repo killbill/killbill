@@ -87,7 +87,7 @@ public class CompletionControlOperation extends OperationControlCallback {
                                                                                                             paymentStateControlContext.isApiPayment(),
                                                                                                             paymentStateContext.getCallContext());
 
-                executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext, requestId);
+                executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
                 return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
             }
         });
