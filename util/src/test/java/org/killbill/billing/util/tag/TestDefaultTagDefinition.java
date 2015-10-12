@@ -19,11 +19,14 @@ package org.killbill.billing.util.tag;
 
 import java.util.UUID;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class TestDefaultTagDefinition extends UtilTestSuiteNoDB {
 
@@ -31,7 +34,8 @@ public class TestDefaultTagDefinition extends UtilTestSuiteNoDB {
     public void testDefaultTagDefinition() throws TagApiException, TagDefinitionApiException {
 
         final DefaultTagDefinition def1 = new DefaultTagDefinition(UUID.randomUUID(), "foo", "nothing", false);
-        Assert.assertTrue(def1.getApplicableObjectTypes().isEmpty());
+        Assert.assertFalse(def1.getApplicableObjectTypes().isEmpty());
+        Assert.assertEquals(ImmutableList.<ObjectType>copyOf(ObjectType.values()), def1.getApplicableObjectTypes());
 
         for (final ControlTagType cur : ControlTagType.values()) {
 

@@ -135,7 +135,7 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
 
     private static List<ObjectType> getApplicableObjectTypes(final UUID id, final Boolean isControlTag) {
         if (!isControlTag) {
-            return ImmutableList.<ObjectType>of();
+            return ImmutableList.<ObjectType>copyOf(ObjectType.values());
         }
         for (final ControlTagType cur : ControlTagType.values()) {
             if (cur.getId().equals(id)) {
