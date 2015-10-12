@@ -676,7 +676,8 @@ public class AccountResource extends JaxRsResourceBase {
             final BigDecimal amountToPay = (remainingRequestPayment.compareTo(invoice.getBalance()) >= 0) ?
                                            invoice.getBalance() : remainingRequestPayment;
             if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
-                createPurchaseForInvoice(account, invoice.getId(), amountToPay, externalPayment, pluginProperties, callContext);
+                final UUID paymentMethodId = externalPayment ? null : account.getPaymentMethodId();
+                createPurchaseForInvoice(account, invoice.getId(), amountToPay, paymentMethodId, externalPayment, pluginProperties, callContext);
             }
             remainingRequestPayment = remainingRequestPayment.subtract(amountToPay);
             if (remainingRequestPayment.compareTo(BigDecimal.ZERO) == 0) {
@@ -730,7 +731,7 @@ public class AccountResource extends JaxRsResourceBase {
         final UUID paymentMethodId = paymentApi.addPaymentMethod(account, data.getExternalKey(), data.getPluginName(), isDefault, data.getPluginDetail(), pluginProperties, callContext);
         if (payAllUnpaidInvoices && unpaidInvoices.size() > 0) {
             for (final Invoice invoice : unpaidInvoices) {
-                createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), false, pluginProperties, callContext);
+                createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), paymentMethodId, false, pluginProperties, callContext);
             }
         }
         return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
@@ -789,7 +790,7 @@ public class AccountResource extends JaxRsResourceBase {
         if (payAllUnpaidInvoices) {
             final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
             for (final Invoice invoice : unpaidInvoices) {
-                createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), false, pluginProperties, callContext);
+                createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), account.getPaymentMethodId(), false, pluginProperties, callContext);
             }
         }
         return Response.status(Status.OK).build();

@@ -386,7 +386,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return properties;
     }
 
-    protected Payment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final Boolean externalPayment, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
+    protected Payment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final UUID paymentMethodId, final Boolean externalPayment, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
 
         final List<PluginProperty> properties = new ArrayList<PluginProperty>();
         final Iterator<PluginProperty> pluginPropertyIterator = pluginProperties.iterator();
@@ -400,7 +400,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                                                   invoiceId.toString(), false);
         properties.add(invoiceProperty);
 
-        final UUID paymentMethodId = externalPayment ? null : account.getPaymentMethodId();
         return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
                                                            properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
     }
