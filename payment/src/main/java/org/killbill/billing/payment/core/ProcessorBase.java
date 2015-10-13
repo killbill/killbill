@@ -218,9 +218,9 @@ public abstract class ProcessorBase {
                                  ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
 
         try {
-            log.debug("Calling plugin {} with requestId {}", pluginName, requestId);
+            log.info("Calling plugin {} with requestId {}", pluginName, requestId);
             ReturnType result = pluginFormDispatcher.dispatchWithTimeout(callable);
-            log.debug("Successful call of plugin {} for account {} with result {} and requestId {}", pluginName, account.getExternalKey(), result, requestId);
+            log.info("Successful call of plugin {} for account {} with result {} and requestId {}", pluginName, account.getExternalKey(), result, requestId);
             return result;
         } catch (final TimeoutException e) {
             final String errorMessage = String.format("TimeoutException during the execution of plugin %s with requestId %s ", pluginName, requestId);

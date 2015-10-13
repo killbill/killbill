@@ -102,9 +102,9 @@ public class ControlPluginRunner {
                 log.warn("Skipping unknown payment control plugin {} when fetching results", pluginName);
                 continue;
             }
-            log.debug("Calling priorCall of plugin {} for requestId {}", pluginName, requestId);
+            log.info("Calling priorCall of plugin {} for requestId {}", pluginName, requestId);
             prevResult = plugin.priorCall(inputPaymentControlContext, inputPluginProperties);
-            log.debug("Successful executed priorCall of plugin {} for requestId {}", pluginName, requestId);
+            log.info("Successful executed priorCall of plugin {} for requestId {}", pluginName, requestId);
             if (prevResult.getAdjustedPluginProperties() != null) {
                 inputPluginProperties = prevResult.getAdjustedPluginProperties();
             }
@@ -174,9 +174,9 @@ public class ControlPluginRunner {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
-                    log.debug("Calling onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
+                    log.info("Calling onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
                     final OnSuccessPaymentControlResult result = plugin.onSuccessCall(inputPaymentControlContext, inputPluginProperties);
-                    log.debug("Successful executed onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
+                    log.info("Successful executed onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
                     if (result.getAdjustedPluginProperties() != null) {
                         inputPluginProperties = result.getAdjustedPluginProperties();
                     }
@@ -231,9 +231,9 @@ public class ControlPluginRunner {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
-                    log.debug("Calling onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
+                    log.info("Calling onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
                     final OnFailurePaymentControlResult result = plugin.onFailureCall(inputPaymentControlContext, inputPluginProperties);
-                    log.debug("Successful executed onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
+                    log.info("Successful executed onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
                     if (candidate == null) {
                         candidate = result.getNextRetryDate();
                     } else if (result.getNextRetryDate() != null) {

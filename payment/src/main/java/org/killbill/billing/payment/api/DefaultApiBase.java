@@ -29,6 +29,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.commons.request.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +79,13 @@ public class DefaultApiBase {
             if (currency != null) {
                 logLine.append(", currency = ")
                        .append(currency);
+            }
+
+            final String requestId = Request.getPerThreadRequestData() != null
+                                     ? Request.getPerThreadRequestData().getRequestId() : null;
+            if (requestId != null) {
+                logLine.append(", requestId = ")
+                       .append(requestId);
             }
             log.info(logLine.toString());
         }

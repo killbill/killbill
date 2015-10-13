@@ -64,22 +64,17 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
         final Account account = paymentStateContext.getAccount();
         logger.debug("Dispatching plugin call for account {}", account.getExternalKey());
 
-        final RequestData requestData = Request.getPerThreadRequestData();
-        final String requestId;
-        if (requestData != null) {
-            requestId = requestData.getRequestId();
-        } else {
-            requestId = "notAvailableRequestId";
-        }
+        final String requestId = Request.getPerThreadRequestData() != null
+                                 ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
 
         try {
             final Callable<PluginDispatcherReturnType<OperationResult>> task = new CallableWithAccountLock<OperationResult, ExceptionType>(locker,
                                                                                                                                            account.getExternalKey(),
                                                                                                                                            paymentConfig,
                                                                                                                                            callback);
-            logger.debug("Calling plugin {} with requestId {}", pluginName, requestId);
+            logger.info("Calling plugin {} with requestId {}", pluginName, requestId);
             final OperationResult operationResult = paymentPluginDispatcher.dispatchWithTimeout(task);
-            logger.debug("Successful plugin call of {} for account {} with result {} and requestId {}", pluginName, account.getExternalKey(), operationResult, requestId);
+            logger.info("Successful plugin call of {} for account {} with result {} and requestId {}", pluginName, account.getExternalKey(), operationResult, requestId);
             return operationResult;
         } catch (final ExecutionException e) {
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
