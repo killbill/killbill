@@ -84,14 +84,6 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         final List<String> pluginNameList = paymentStateControlContext.getPaymentControlPluginNames();
         final String pluginNames = Joiner.on(", ").join(pluginNameList);
 
-        final RequestData requestData = Request.getPerThreadRequestData();
-        final String requestId;
-        if (requestData != null) {
-            requestId = requestData.getRequestId();
-        } else {
-            requestId = "notAvailableRequestId";
-        }
-
         return dispatchWithAccountLockAndTimeout(pluginNames, new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
 
             @Override

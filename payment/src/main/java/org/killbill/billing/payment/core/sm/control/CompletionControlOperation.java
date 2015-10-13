@@ -58,14 +58,6 @@ public class CompletionControlOperation extends OperationControlCallback {
         final List<String> controlPluginNameList = paymentStateControlContext.getPaymentControlPluginNames();
         final String controlPluginNames = Joiner.on(", ").join(controlPluginNameList);
 
-        final RequestData requestData = Request.getPerThreadRequestData();
-        final String requestId;
-        if (requestData != null) {
-            requestId = requestData.getRequestId();
-        } else {
-            requestId = "NotAvailableRequestId";
-        }
-
         return dispatchWithAccountLockAndTimeout(controlPluginNames, new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
