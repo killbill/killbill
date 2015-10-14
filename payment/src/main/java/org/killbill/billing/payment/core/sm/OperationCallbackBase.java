@@ -31,7 +31,6 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcher
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.request.Request;
-import org.killbill.commons.request.RequestData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
