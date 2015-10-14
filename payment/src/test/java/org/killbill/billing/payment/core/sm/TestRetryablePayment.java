@@ -142,6 +142,11 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
             }
 
             @Override
+            public String getPluginName() {
+                return MockPaymentControlProviderPlugin.PLUGIN_NAME;
+            }
+
+            @Override
             public String getRegistrationName() {
                 return MockPaymentControlProviderPlugin.PLUGIN_NAME;
             }

@@ -87,6 +87,11 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
             }
 
             @Override
+            public String getPluginName() {
+                return "TestCatalogPluginApi";
+            }
+
+            @Override
             public String getRegistrationName() {
                 return "TestCatalogPluginApi";
             }

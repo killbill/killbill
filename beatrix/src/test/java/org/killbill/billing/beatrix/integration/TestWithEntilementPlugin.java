@@ -71,6 +71,11 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
             }
 
             @Override
+            public String getPluginName() {
+                return "TestEntitlementPluginApi";
+            }
+
+            @Override
             public String getRegistrationName() {
                 return "TestEntitlementPluginApi";
             }

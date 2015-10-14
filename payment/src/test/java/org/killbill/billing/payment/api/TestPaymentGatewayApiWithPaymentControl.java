@@ -83,6 +83,11 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
             }
 
             @Override
+            public String getPluginName() {
+                return TestPaymentGatewayApiControlPlugin.PLUGIN_NAME;
+            }
+
+            @Override
             public String getRegistrationName() {
                 return TestPaymentGatewayApiControlPlugin.PLUGIN_NAME;
             }
@@ -93,6 +98,11 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
             @Override
             public String getPluginSymbolicName() {
                 return null;
+            }
+
+            @Override
+            public String getPluginName() {
+                return TestPaymentGatewayApiValidationPlugin.VALIDATION_PLUGIN_NAME;
             }
 
             @Override

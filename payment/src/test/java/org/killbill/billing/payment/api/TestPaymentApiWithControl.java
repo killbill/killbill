@@ -65,6 +65,11 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
             }
 
             @Override
+            public String getPluginName() {
+                return TestPaymentControlPluginApi.PLUGIN_NAME;
+            }
+
+            @Override
             public String getRegistrationName() {
                 return TestPaymentControlPluginApi.PLUGIN_NAME;
             }

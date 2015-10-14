@@ -47,6 +47,12 @@ public class DefaultPaymentProviderPluginRegistryProvider implements Provider<OS
             public String getPluginSymbolicName() {
                 return null;
             }
+
+            @Override
+            public String getPluginName() {
+                return ExternalPaymentProviderPlugin.PLUGIN_NAME;
+            }
+
             @Override
             public String getRegistrationName() {
                 return ExternalPaymentProviderPlugin.PLUGIN_NAME;

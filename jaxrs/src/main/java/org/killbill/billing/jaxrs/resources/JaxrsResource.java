@@ -202,8 +202,11 @@ public interface JaxrsResource {
     public static final String EXPORT = "export";
     public static final String EXPORT_PATH = PREFIX + "/" + EXPORT;
 
-    public static final String PLUGINS = "plugins";
+    public static final String PLUGINS_INFO = "pluginsInfo";
+    public static final String PLUGINS_INFO_PATH = PREFIX + "/" + PLUGINS_INFO;
+
     // No PREFIX here!
+    public static final String PLUGINS = "plugins";
     public static final String PLUGINS_PATH = "/" + PLUGINS;
 
     public static final String TEST = "test";

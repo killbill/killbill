@@ -74,6 +74,11 @@ public class TestPaymentWithControl extends TestIntegrationBase {
             }
 
             @Override
+            public String getPluginName() {
+                return TEST_PAYMENT_WITH_CONTROL;
+            }
+
+            @Override
             public String getRegistrationName() {
                 return TEST_PAYMENT_WITH_CONTROL;
             }

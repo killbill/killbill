@@ -73,6 +73,11 @@ public class TestWithTaxItems extends TestIntegrationBase {
             }
 
             @Override
+            public String getPluginName() {
+                return "TaxInvoicePluginApi";
+            }
+
+            @Override
             public String getRegistrationName() {
                 return "TaxInvoicePluginApi";
             }

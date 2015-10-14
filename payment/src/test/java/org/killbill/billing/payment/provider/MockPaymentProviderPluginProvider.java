@@ -50,6 +50,12 @@ public class MockPaymentProviderPluginProvider implements Provider<MockPaymentPr
             public String getPluginSymbolicName() {
                 return null;
             }
+
+            @Override
+            public String getPluginName() {
+                return instanceName;
+            }
+
             @Override
             public String getRegistrationName() {
                 return instanceName;

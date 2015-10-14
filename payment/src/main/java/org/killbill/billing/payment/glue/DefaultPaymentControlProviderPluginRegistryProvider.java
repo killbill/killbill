@@ -51,6 +51,11 @@ public class DefaultPaymentControlProviderPluginRegistryProvider implements Prov
             }
 
             @Override
+            public String getPluginName() {
+                return DefaultPaymentControlProviderPlugin.PLUGIN_NAME;
+            }
+
+            @Override
             public String getRegistrationName() {
                 return DefaultPaymentControlProviderPlugin.PLUGIN_NAME;
             }
@@ -62,6 +67,11 @@ public class DefaultPaymentControlProviderPluginRegistryProvider implements Prov
             @Override
             public String getPluginSymbolicName() {
                 return null;
+            }
+
+            @Override
+            public String getPluginName() {
+                return InvoicePaymentControlPluginApi.PLUGIN_NAME;
             }
 
             @Override

@@ -51,6 +51,12 @@ public class NoOpInvoiceProviderPluginProvider implements Provider<DefaultNoOpIn
             public String getPluginSymbolicName() {
                 return null;
             }
+
+            @Override
+            public String getPluginName() {
+                return instanceName;
+            }
+
             @Override
             public String getRegistrationName() {
                 return instanceName;
