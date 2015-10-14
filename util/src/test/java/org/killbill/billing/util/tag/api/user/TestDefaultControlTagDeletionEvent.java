@@ -38,7 +38,7 @@ public class TestDefaultControlTagDeletionEvent extends UtilTestSuiteNoDB {
         final UUID tagDefinitionId = UUID.randomUUID();
         final String tagDefinitionName = UUID.randomUUID().toString();
         final String tagDefinitionDescription = UUID.randomUUID().toString();
-        final boolean controlTag = true;
+        final boolean controlTag = false;
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
@@ -69,7 +69,7 @@ public class TestDefaultControlTagDeletionEvent extends UtilTestSuiteNoDB {
         final UUID tagDefinitionId = UUID.randomUUID();
         final String tagDefinitionName = UUID.randomUUID().toString();
         final String tagDefinitionDescription = UUID.randomUUID().toString();
-        final boolean controlTag = true;
+        final boolean controlTag = false;
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 

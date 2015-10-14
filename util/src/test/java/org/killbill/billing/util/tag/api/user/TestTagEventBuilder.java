@@ -18,6 +18,8 @@ package org.killbill.billing.util.tag.api.user;
 
 import java.util.UUID;
 
+import org.killbill.billing.util.tag.ControlTag;
+import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -80,7 +82,7 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testNewControlTagDefinitionCreationEvent() throws Exception {
-        final UUID tagDefinitionId = UUID.randomUUID();
+        final UUID tagDefinitionId = ControlTagType.AUTO_PAY_OFF.getId();
         final String tagDefinitionName = UUID.randomUUID().toString();
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
@@ -99,7 +101,7 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testNewControlTagDefinitionDeletionEvent() throws Exception {
-        final UUID tagDefinitionId = UUID.randomUUID();
+        final UUID tagDefinitionId = ControlTagType.AUTO_PAY_OFF.getId();
         final String tagDefinitionName = UUID.randomUUID().toString();
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
@@ -165,7 +167,7 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
         final UUID tagId = UUID.randomUUID();
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.ACCOUNT_EMAIL;
-        final UUID tagDefinitionId = UUID.randomUUID();
+        final UUID tagDefinitionId = ControlTagType.AUTO_PAY_OFF.getId();
         final String tagDefinitionName = UUID.randomUUID().toString();
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
@@ -187,7 +189,7 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
         final UUID tagId = UUID.randomUUID();
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.ACCOUNT_EMAIL;
-        final UUID tagDefinitionId = UUID.randomUUID();
+        final UUID tagDefinitionId = ControlTagType.AUTO_PAY_OFF.getId();
         final String tagDefinitionName = UUID.randomUUID().toString();
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;

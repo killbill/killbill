@@ -161,6 +161,9 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentTransactionInfoPlugi
         if (gatewayError != null ? !gatewayError.equals(that.gatewayError) : that.gatewayError != null) {
             return false;
         }
+        if (gatewayErrorCode != null ? !gatewayErrorCode.equals(that.gatewayErrorCode) : that.gatewayErrorCode != null) {
+            return false;
+        }
         if (transactionType != null ? !transactionType.equals(that.transactionType) : that.transactionType != null) {
             return false;
         }
@@ -187,6 +190,7 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentTransactionInfoPlugi
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (gatewayError != null ? gatewayError.hashCode() : 0);
+        result = 31 * result + (gatewayErrorCode != null ? gatewayErrorCode.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         return result;
     }

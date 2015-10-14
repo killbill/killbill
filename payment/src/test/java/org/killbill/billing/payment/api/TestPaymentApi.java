@@ -50,6 +50,7 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -114,8 +115,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
-        assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
-        assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorMsg());
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorCode());
     }
 
     @Test(groups = "slow")
@@ -150,8 +151,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
-        assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
-        assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorMsg());
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorCode());
     }
 
     @Test(groups = "slow")
@@ -186,8 +187,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.AUTHORIZE);
-        assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
-        assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorMsg());
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorCode());
 
         final Payment payment2 = paymentApi.createCapture(account, payment.getId(), captureAmount, Currency.AED, transactionExternalKey2,
                                                           ImmutableList.<PluginProperty>of(), callContext);
@@ -211,8 +212,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         assertEquals(payment2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment2.getTransactions().get(1).getTransactionType(), TransactionType.CAPTURE);
-        assertNull(payment2.getTransactions().get(1).getGatewayErrorMsg());
-        assertNull(payment2.getTransactions().get(1).getGatewayErrorCode());
+        assertNotNull(payment2.getTransactions().get(1).getGatewayErrorMsg());
+        assertNotNull(payment2.getTransactions().get(1).getGatewayErrorCode());
     }
 
     @Test(groups = "slow")
@@ -261,8 +262,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment4.getTransactions().get(3).getProcessedCurrency(), Currency.USD);
         assertEquals(payment4.getTransactions().get(3).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment4.getTransactions().get(3).getTransactionType(), TransactionType.REFUND);
-        assertNull(payment4.getTransactions().get(3).getGatewayErrorMsg());
-        assertNull(payment4.getTransactions().get(3).getGatewayErrorCode());
+        assertNotNull(payment4.getTransactions().get(3).getGatewayErrorMsg());
+        assertNotNull(payment4.getTransactions().get(3).getGatewayErrorCode());
     }
 
     @Test(groups = "slow")
@@ -309,8 +310,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
-        assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
-        assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorMsg());
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorCode());
 
         // Not stricly an API test but interesting to verify that we indeed went through the attempt logic
         final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(payment.getExternalKey(), internalCallContext);
@@ -698,7 +699,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             final String payment3TransactionExternalKey = UUID.randomUUID().toString();
 
             final Payment pendingPayment1 = createPayment(transactionType, null, payment1ExternalKey, payment1TransactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
-            Assert.assertNotNull(pendingPayment1);
+            assertNotNull(pendingPayment1);
             Assert.assertEquals(pendingPayment1.getExternalKey(), payment1ExternalKey);
             Assert.assertEquals(pendingPayment1.getTransactions().size(), 1);
             Assert.assertEquals(pendingPayment1.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
@@ -709,7 +710,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
             // Attempt to create a second transaction for the same payment, but with a different transaction external key
             final Payment pendingPayment2 = createPayment(transactionType, null, payment1ExternalKey, payment2TransactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
-            Assert.assertNotNull(pendingPayment2);
+            assertNotNull(pendingPayment2);
             Assert.assertEquals(pendingPayment2.getId(), pendingPayment1.getId());
             Assert.assertEquals(pendingPayment2.getExternalKey(), payment1ExternalKey);
             Assert.assertEquals(pendingPayment2.getTransactions().size(), 2);
@@ -742,7 +743,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
             // Attempt to create a second transaction for a different payment
             final Payment pendingPayment3 = createPayment(transactionType, null, payment2ExternalKey, payment3TransactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
-            Assert.assertNotNull(pendingPayment3);
+            assertNotNull(pendingPayment3);
             Assert.assertNotEquals(pendingPayment3.getId(), pendingPayment1.getId());
             Assert.assertEquals(pendingPayment3.getExternalKey(), payment2ExternalKey);
             Assert.assertEquals(pendingPayment3.getTransactions().size(), 1);
@@ -774,7 +775,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, TransactionStatus.PENDING.toString(), false));
 
         final Payment payment = createPayment(TransactionType.PURCHASE, null, paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
-        Assert.assertNotNull(payment);
+        assertNotNull(payment);
         Assert.assertEquals(payment.getExternalKey(), paymentExternalKey);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertEquals(payment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
@@ -852,7 +853,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
 
         final Payment pendingPayment = createPayment(transactionType, null, paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
-        Assert.assertNotNull(pendingPayment);
+        assertNotNull(pendingPayment);
         Assert.assertEquals(pendingPayment.getExternalKey(), paymentExternalKey);
         Assert.assertEquals(pendingPayment.getTransactions().size(), 1);
         Assert.assertEquals(pendingPayment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
@@ -865,7 +866,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         verifyPaymentViaGetPath(pendingPayment);
 
         final Payment pendingPayment2 = createPayment(transactionType, pendingPayment.getId(), paymentExternalKey, paymentTransactionExternalKey, pendingAmount, PaymentPluginStatus.PENDING);
-        Assert.assertNotNull(pendingPayment2);
+        assertNotNull(pendingPayment2);
         Assert.assertEquals(pendingPayment2.getExternalKey(), paymentExternalKey);
         Assert.assertEquals(pendingPayment2.getTransactions().size(), 1);
         Assert.assertEquals(pendingPayment2.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
@@ -877,7 +878,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         verifyPaymentViaGetPath(pendingPayment2);
 
         final Payment completedPayment = createPayment(transactionType, pendingPayment.getId(), paymentExternalKey, paymentTransactionExternalKey, pendingAmount, PaymentPluginStatus.PROCESSED);
-        Assert.assertNotNull(completedPayment);
+        assertNotNull(completedPayment);
         Assert.assertEquals(completedPayment.getExternalKey(), paymentExternalKey);
         Assert.assertEquals(completedPayment.getTransactions().size(), 1);
         Assert.assertEquals(completedPayment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
