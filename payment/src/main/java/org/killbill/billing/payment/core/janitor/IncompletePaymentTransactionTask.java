@@ -112,6 +112,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                                                                                                                   rehydratedPaymentTransaction.getCreatedDate(),
                                                                                                                   rehydratedPaymentTransaction.getCreatedDate(),
                                                                                                                   PaymentPluginStatus.UNDEFINED,
+                                                                                                                  null,
                                                                                                                   null);
                 PaymentTransactionInfoPlugin paymentTransactionInfoPlugin;
                 try {

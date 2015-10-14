@@ -80,6 +80,7 @@ public class ChargebackOperation extends PaymentOperation {
                                                 null,
                                                 null,
                                                 status,
+                                                null,
                                                 null);
     }
 }

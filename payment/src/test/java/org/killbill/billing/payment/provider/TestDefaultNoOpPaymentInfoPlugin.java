@@ -41,15 +41,15 @@ public class TestDefaultNoOpPaymentInfoPlugin extends PaymentTestSuiteNoDB {
         final String error = UUID.randomUUID().toString();
 
         final DefaultNoOpPaymentInfoPlugin info = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.PURCHASE, amount, Currency.USD, effectiveDate, createdDate,
-                                                                                   status, error);
+                                                                                   status, error, null);
         Assert.assertEquals(info, info);
 
         final DefaultNoOpPaymentInfoPlugin sameInfo = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.PURCHASE, amount, Currency.USD, effectiveDate, createdDate,
-                                                                                       status, error);
+                                                                                       status, error, null);
         Assert.assertEquals(sameInfo, info);
 
         final DefaultNoOpPaymentInfoPlugin otherInfo = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.PURCHASE, amount, Currency.USD, effectiveDate, createdDate,
-                                                                                        status, UUID.randomUUID().toString());
+                                                                                        status, UUID.randomUUID().toString(), null);
         Assert.assertNotEquals(otherInfo, info);
     }
 }

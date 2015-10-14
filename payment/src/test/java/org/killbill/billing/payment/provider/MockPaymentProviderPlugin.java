@@ -56,6 +56,9 @@ import com.google.inject.Inject;
  */
 public class MockPaymentProviderPlugin implements PaymentPluginApi {
 
+    public static final String GATEWAY_ERROR_CODE = "gatewayErrorCode";
+    public static final String GATEWAY_ERROR = "gatewayError";
+
     public static final String PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE = "paymentPluginStatusOverride";
 
     public static final String PLUGIN_NAME = "__NO_OP__";
@@ -351,6 +354,8 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         } else {
             status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
         }
+        final String errorCode = status == PaymentPluginStatus.PROCESSED ? "" : GATEWAY_ERROR_CODE;
+        final String error = status == PaymentPluginStatus.PROCESSED ? "" : GATEWAY_ERROR;
 
         InternalPaymentInfo info = payments.get(kbPaymentId.toString());
         if (info == null) {
@@ -358,7 +363,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             payments.put(kbPaymentId.toString(), info);
         }
 
-        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, null);
+        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, errorCode, error);
         List<PaymentTransactionInfoPlugin> existingTransactions = paymentTransactions.get(kbPaymentId.toString());
         if (existingTransactions == null) {
             existingTransactions = new ArrayList<PaymentTransactionInfoPlugin>();

@@ -416,7 +416,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         // Artificially move the transaction status to PENDING AND update state on the plugin as well
         final List<PaymentTransactionInfoPlugin> paymentTransactions = mockPaymentProviderPlugin.getPaymentInfo(account.getId(), payment.getId(), ImmutableList.<PluginProperty>of(), callContext);
         final PaymentTransactionInfoPlugin oTx = paymentTransactions.remove(0);
-        final PaymentTransactionInfoPlugin updatePaymentTransaction = new DefaultNoOpPaymentInfoPlugin(oTx.getKbPaymentId(), oTx.getKbTransactionPaymentId(), oTx.getTransactionType(), oTx.getAmount(), oTx.getCurrency(), oTx.getCreatedDate(), oTx.getCreatedDate(), PaymentPluginStatus.PENDING, null);
+        final PaymentTransactionInfoPlugin updatePaymentTransaction = new DefaultNoOpPaymentInfoPlugin(oTx.getKbPaymentId(), oTx.getKbTransactionPaymentId(), oTx.getTransactionType(), oTx.getAmount(), oTx.getCurrency(), oTx.getCreatedDate(), oTx.getCreatedDate(), PaymentPluginStatus.PENDING, null, null);
         paymentTransactions.add(updatePaymentTransaction);
         mockPaymentProviderPlugin.updatePaymentTransactions(payment.getId(), paymentTransactions);
 

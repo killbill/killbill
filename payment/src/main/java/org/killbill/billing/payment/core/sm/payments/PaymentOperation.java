@@ -121,6 +121,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                 paymentStateContext.getCallContext().getCreatedDate(),
                                                                                                 paymentStateContext.getCallContext().getCreatedDate(),
                                                                                                 PaymentPluginStatus.UNDEFINED,
+                                                                                                null,
                                                                                                 null);
         paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
         return new OperationException(e, OperationResult.EXCEPTION);
@@ -199,6 +200,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                         paymentStateContext.getPaymentTransactionModelDao().getEffectiveDate(),
                                                                                                         paymentStateContext.getPaymentTransactionModelDao().getCreatedDate(),
                                                                                                         buildPaymentPluginStatusFromOperationResult(paymentStateContext.getOverridePluginOperationResult()),
+                                                                                                        null,
                                                                                                         null);
                 paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
                 return paymentStateContext.getOverridePluginOperationResult();
