@@ -115,7 +115,7 @@ public class TestTag extends TestJaxrsBase {
             killBillClient.createAccountTag(account.getAccountId(), controlTagType.getId(), createdBy, reason, comment);
         }
 
-        final TagDefinition bundleTagDefInput = new TagDefinition(null, false, "bundleTagDef", "nothing special", ImmutableList.<ObjectType>of());
+        final TagDefinition bundleTagDefInput = new TagDefinition(null, false, "bundletagdef", "nothing special", ImmutableList.<ObjectType>of());
         final TagDefinition bundleTagDef = killBillClient.createTagDefinition(bundleTagDefInput, createdBy, reason, comment);
 
         killBillClient.createBundleTag(subscriptionJson.getBundleId(), bundleTagDef.getId(), createdBy, reason, comment);
