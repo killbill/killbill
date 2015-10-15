@@ -33,16 +33,14 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 
-/**
- * Created by maguero on 14/10/15.
- */
+
 public class DefaultTagUserApiTest extends UtilTestSuiteNoDB {
 
     private DefaultTagUserApi tagUserApi;
     private TagDefinitionDao tagDefinitionDao;
     private CallContext context;
 
-    @BeforeMethod
+    @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         final TagDao tagDao = Mockito.mock(TagDao.class);
         final InternalCallContextFactory internalCallContextFactory = Mockito.mock(InternalCallContextFactory.class);
@@ -51,12 +49,22 @@ public class DefaultTagUserApiTest extends UtilTestSuiteNoDB {
         context = Mockito.mock(DefaultCallContext.class);
     }
 
-    @Test(expectedExceptions = TagDefinitionApiException.class, expectedExceptionsMessageRegExp = "The tag definition name must be in lowercase .*")
-    public void testCreateTagDefinitionWithUpperCase() throws Exception {
-        tagUserApi.createTagDefinition("someUpperCaseLetters", "description", context);
+    @Test(groups = "fast", expectedExceptions = TagDefinitionApiException.class, expectedExceptionsMessageRegExp = "The tag definition name must be in lowercase .*")
+    public void testCreateTagDefinitionWithMiddleUpperCase() throws Exception {
+        tagUserApi.createTagDefinition("inVaLid", "description", context);
     }
 
-    @Test
+    @Test(groups = "fast", expectedExceptions = TagDefinitionApiException.class, expectedExceptionsMessageRegExp = "The tag definition name must be in lowercase .*")
+    public void testCreateTagDefinitionWithFrontUpperCase() throws Exception {
+        tagUserApi.createTagDefinition("Invalid", "description", context);
+    }
+
+    @Test(groups = "fast", expectedExceptions = TagDefinitionApiException.class, expectedExceptionsMessageRegExp = "The tag definition name must be in lowercase .*")
+    public void testCreateTagDefinitionWithBackUpperCase() throws Exception {
+        tagUserApi.createTagDefinition("invaliD", "description", context);
+    }
+
+    @Test(groups = "fast")
     public void testCreateTagDefinitionWithLowerCase() throws Exception {
         final String tagDefinitionName = "lowercase";
         final TagDefinitionModelDao tagDefinitionModelDao = new TagDefinitionModelDao();
