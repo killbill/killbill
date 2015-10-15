@@ -85,6 +85,9 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public TagDefinition createTagDefinition(final String definitionName, final String description, final CallContext context) throws TagDefinitionApiException {
+        if (definitionName.matches(".*[A-Z].*")) {
+            throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_HAS_UPPERCASE, definitionName);
+        }
         final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.create(definitionName, description, internalCallContextFactory.createInternalCallContext(context));
         return new DefaultTagDefinition(tagDefinitionModelDao, TagModelDaoHelper.isControlTag(tagDefinitionModelDao.getName()));
     }
