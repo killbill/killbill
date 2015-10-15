@@ -30,7 +30,7 @@ public class TestLoggingHelper {
 
     public static SpyLogger withSpyLogger(Class loggingClass, Callable<Void> callable) throws Exception {
         final Logger regularLogger = LoggerFactory.getLogger(loggingClass);
-        final SpyLogger spyLogger = new SpyLogger(regularLogger);
+        final SpyLogger spyLogger = new SpyLogger(loggingClass.getName());
 
         try {
             injectLoggerIntoLoggerFactory(loggingClass, spyLogger);

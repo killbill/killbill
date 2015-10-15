@@ -883,8 +883,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             }
         });
 
-        assertTrue(spyLogger.contains("Calling plugin.*" + pluginName + ".*" + requestId, Optional.of(SpyLogger.LOG_LEVEL_INFO)));
-        assertTrue(spyLogger.contains("TimeoutException.*" + pluginName + ".*" + requestId, Optional.of(SpyLogger.LOG_LEVEL_ERROR)));
+        assertTrue(spyLogger.contains("Calling plugin.*" + pluginName + ".*" + requestId, Optional.of(SpyLogger.LOG_LEVEL_DEBUG)));
+        assertTrue(spyLogger.contains("TimeoutException.*" + pluginName + ".*" + requestId, Optional.of(SpyLogger.LOG_LEVEL_WARN)));
     }
 
     private void verifyRefund(final Payment refund, final String paymentExternalKey, final String paymentTransactionExternalKey, final String refundTransactionExternalKey, final BigDecimal requestedAmount, final BigDecimal refundAmount, final TransactionStatus transactionStatus) {
