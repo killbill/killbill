@@ -71,18 +71,18 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
                                                                                                                                            account.getExternalKey(),
                                                                                                                                            paymentConfig,
                                                                                                                                            callback);
-            logger.info("Calling plugin {} with requestId {}", pluginNames, requestId);
+            logger.debug("Calling plugin {} with requestId {}", pluginNames, requestId);
             final OperationResult operationResult = paymentPluginDispatcher.dispatchWithTimeout(task);
-            logger.info("Successful plugin call of {} for account {} with result {} and requestId {}", pluginNames, account.getExternalKey(), operationResult, requestId);
+            logger.debug("Successful plugin call of {} for account {} with result {} and requestId {}", pluginNames, account.getExternalKey(), operationResult, requestId);
             return operationResult;
         } catch (final ExecutionException e) {
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         } catch (final TimeoutException e) {
-            logger.error("TimeoutException while executing the plugin(s) {} with requestId {}", pluginNames, requestId);
+            logger.warn("TimeoutException while executing the plugin(s) {} with requestId {}", pluginNames, requestId);
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.error("InterruptedException while executing the following plugin(s): {}", pluginNames, requestId);
+            logger.warn("InterruptedException while executing the following plugin(s): {}", pluginNames, requestId);
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         }
     }

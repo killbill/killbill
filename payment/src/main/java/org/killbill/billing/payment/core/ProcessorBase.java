@@ -218,18 +218,18 @@ public abstract class ProcessorBase {
                                  ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
 
         try {
-            log.info("Calling plugin {} with requestId {}", pluginName, requestId);
+            log.debug("Calling plugin {} with requestId {}", pluginName, requestId);
             ReturnType result = pluginFormDispatcher.dispatchWithTimeout(callable);
-            log.info("Successful call of plugin {} for account {} with result {} and requestId {}", pluginName, account.getExternalKey(), result, requestId);
+            log.debug("Successful call of plugin {} for account {} with result {} and requestId {}", pluginName, account.getExternalKey(), result, requestId);
             return result;
         } catch (final TimeoutException e) {
             final String errorMessage = String.format("TimeoutException during the execution of plugin %s with requestId %s ", pluginName, requestId);
-            log.error(errorMessage, e);
+            log.warn(errorMessage, e);
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, errorMessage);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
             final String errorMessage = String.format("InterruptedException during the execution of plugin %s with requestId %s ", pluginName, requestId);
-            log.error(errorMessage, e);
+            log.warn(errorMessage, e);
             throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), errorMessage));
         } catch (final ExecutionException e) {
             if (e.getCause() instanceof PaymentApiException) {
