@@ -849,9 +849,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String paymentExternalKey = "ohhhh";
         final String transactionExternalKey = "naaahhh";
 
-        final String requestId = "testCreatePurchaseWithTimeout";
-        Request.setPerThreadRequestData(new RequestData(requestId));
-
         final String pluginName = mockPaymentProviderPlugin.PLUGIN_NAME;
 
         mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds(1100);
@@ -883,8 +880,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             }
         });
 
-        assertTrue(spyLogger.contains("Calling plugin.*" + pluginName + ".*" + requestId, Optional.of(SpyLogger.LOG_LEVEL_DEBUG)));
-        assertTrue(spyLogger.contains("TimeoutException.*" + pluginName + ".*" + requestId, Optional.of(SpyLogger.LOG_LEVEL_WARN)));
+        assertTrue(spyLogger.contains("Calling plugin.*" + pluginName, Optional.of(SpyLogger.LOG_LEVEL_DEBUG)));
+        assertTrue(spyLogger.contains("TimeoutException.*" + pluginName, Optional.of(SpyLogger.LOG_LEVEL_WARN)));
     }
 
     private void verifyRefund(final Payment refund, final String paymentExternalKey, final String paymentTransactionExternalKey, final String refundTransactionExternalKey, final BigDecimal requestedAmount, final BigDecimal refundAmount, final TransactionStatus transactionStatus) {

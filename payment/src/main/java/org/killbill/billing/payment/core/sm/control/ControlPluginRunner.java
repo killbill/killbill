@@ -42,7 +42,6 @@ import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.commons.request.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,9 +90,6 @@ public class ControlPluginRunner {
                                                                                             isApiPayment,
                                                                                             callContext);
 
-        final String requestId = Request.getPerThreadRequestData() != null
-                                 ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
-
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin == null) {
@@ -101,9 +97,9 @@ public class ControlPluginRunner {
                 log.warn("Skipping unknown payment control plugin {} when fetching results", pluginName);
                 continue;
             }
-            log.debug("Calling priorCall of plugin {} for requestId {}", pluginName, requestId);
+            log.debug("Calling priorCall of plugin {}", pluginName);
             prevResult = plugin.priorCall(inputPaymentControlContext, inputPluginProperties);
-            log.debug("Successful executed priorCall of plugin {} for requestId {}", pluginName, requestId);
+            log.debug("Successful executed priorCall of plugin {}", pluginName);
             if (prevResult.getAdjustedPluginProperties() != null) {
                 inputPluginProperties = prevResult.getAdjustedPluginProperties();
             }
@@ -165,17 +161,14 @@ public class ControlPluginRunner {
                                                                                                   isApiPayment,
                                                                                                   callContext);
 
-        final String requestId = Request.getPerThreadRequestData() != null
-                                ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
-
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
-                    log.debug("Calling onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
+                    log.debug("Calling onSuccessCall of plugin {}", pluginName);
                     final OnSuccessPaymentControlResult result = plugin.onSuccessCall(inputPaymentControlContext, inputPluginProperties);
-                    log.debug("Successful executed onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
+                    log.debug("Successful executed onSuccessCall of plugin {}", pluginName);
                     if (result.getAdjustedPluginProperties() != null) {
                         inputPluginProperties = result.getAdjustedPluginProperties();
                     }
@@ -223,16 +216,13 @@ public class ControlPluginRunner {
         DateTime candidate = null;
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
 
-        final String requestId = Request.getPerThreadRequestData() != null
-                                ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
-
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
-                    log.debug("Calling onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
+                    log.debug("Calling onSuccessCall of plugin {}", pluginName);
                     final OnFailurePaymentControlResult result = plugin.onFailureCall(inputPaymentControlContext, inputPluginProperties);
-                    log.debug("Successful executed onSuccessCall of plugin {} for requestId {}", pluginName, requestId);
+                    log.debug("Successful executed onSuccessCall of plugin {}", pluginName);
                     if (candidate == null) {
                         candidate = result.getNextRetryDate();
                     } else if (result.getNextRetryDate() != null) {

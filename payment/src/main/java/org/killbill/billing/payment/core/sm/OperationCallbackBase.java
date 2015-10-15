@@ -30,7 +30,6 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
-import org.killbill.commons.request.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,26 +62,23 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
         final Account account = paymentStateContext.getAccount();
         logger.debug("Dispatching plugin call for account {}", account.getExternalKey());
 
-        final String requestId = Request.getPerThreadRequestData() != null
-                                 ? Request.getPerThreadRequestData().getRequestId() : "NotAvailableRequestId";
-
         try {
             final Callable<PluginDispatcherReturnType<OperationResult>> task = new CallableWithAccountLock<OperationResult, ExceptionType>(locker,
                                                                                                                                            account.getExternalKey(),
                                                                                                                                            paymentConfig,
                                                                                                                                            callback);
-            logger.debug("Calling plugin {} with requestId {}", pluginNames, requestId);
+            logger.debug("Calling plugin {}", pluginNames);
             final OperationResult operationResult = paymentPluginDispatcher.dispatchWithTimeout(task);
-            logger.debug("Successful plugin call of {} for account {} with result {} and requestId {}", pluginNames, account.getExternalKey(), operationResult, requestId);
+            logger.debug("Successful plugin call of {} for account {} with result {}", pluginNames, account.getExternalKey(), operationResult);
             return operationResult;
         } catch (final ExecutionException e) {
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         } catch (final TimeoutException e) {
-            logger.warn("TimeoutException while executing the plugin(s) {} with requestId {}", pluginNames, requestId);
+            logger.warn("TimeoutException while executing the plugin(s) {}", pluginNames);
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.warn("InterruptedException while executing the following plugin(s): {}", pluginNames, requestId);
+            logger.warn("InterruptedException while executing the following plugin(s): {}", pluginNames);
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         }
     }
