@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TestPaymentMethodPlugin;
@@ -348,7 +349,8 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             try {
                 Thread.sleep(makePluginWaitSomeMilliseconds.get());
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
+                throw new PaymentPluginApiException("An Interruption occurred while the Thread was sleeping.", e);
             }
         }
 

@@ -33,8 +33,6 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcher
 import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
-import org.killbill.commons.request.Request;
-import org.killbill.commons.request.RequestData;
 
 import com.google.common.base.Joiner;
 
@@ -42,6 +40,8 @@ import com.google.common.base.Joiner;
 // Used from AttemptCompletionTask to resume an incomplete payment that went through control API.
 //
 public class CompletionControlOperation extends OperationControlCallback {
+
+    private static final Joiner JOINER = Joiner.on(", ");
 
     public CompletionControlOperation(final GlobalLocker locker,
                                       final PluginDispatcher<OperationResult> paymentPluginDispatcher,
@@ -56,7 +56,7 @@ public class CompletionControlOperation extends OperationControlCallback {
     public OperationResult doOperationCallback() throws OperationException {
 
         final List<String> controlPluginNameList = paymentStateControlContext.getPaymentControlPluginNames();
-        final String controlPluginNames = Joiner.on(", ").join(controlPluginNameList);
+        final String controlPluginNames = JOINER.join(controlPluginNameList);
 
         return dispatchWithAccountLockAndTimeout(controlPluginNames, new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
             @Override

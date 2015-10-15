@@ -30,8 +30,6 @@ import org.killbill.automaton.OperationException;
 import org.killbill.billing.payment.logging.SpyLogger;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
@@ -856,7 +854,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         final String pluginName = mockPaymentProviderPlugin.PLUGIN_NAME;
 
-        mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds(10000);
+        mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds(1100);
 
         SpyLogger spyLogger = withSpyLogger(OperationCallbackBase.class, new Callable<Void>() {
 

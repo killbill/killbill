@@ -26,9 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.impl.SimpleLoggerFactory;
 import org.slf4j.impl.StaticLoggerBinder;
 
-/**
- * Created by holger on 10/14/15.
- */
 public class TestLoggingHelper {
 
     public static SpyLogger withSpyLogger(Class loggingClass, Callable<Void> callable) throws Exception {
