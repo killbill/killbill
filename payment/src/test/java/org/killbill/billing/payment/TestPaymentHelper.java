@@ -37,7 +37,6 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
-import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.bus.api.PersistentBus;
