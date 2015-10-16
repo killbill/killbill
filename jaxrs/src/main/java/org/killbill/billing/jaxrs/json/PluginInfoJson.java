@@ -17,23 +17,93 @@
 
 package org.killbill.billing.jaxrs.json;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
+
+import org.killbill.billing.osgi.api.PluginInfo;
+import org.killbill.billing.osgi.api.PluginInfo.PluginServiceInfo;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public class PluginInfoJson {
 
-    private final Map<String, Iterable<String>> registeredPlugins;
+    private final String bundleSymbolicName;
 
-    public PluginInfoJson() {
-        this.registeredPlugins = new HashMap<String, Iterable<String>>();
+    private final String pluginName;
+
+    private final String version;
+
+    private final boolean running;
+
+    private final Set<PluginServiceInfoJson> services;
+
+    @JsonCreator
+    public PluginInfoJson(@JsonProperty("bundleSymbolicName") final String bundleSymbolicName,
+                          @JsonProperty("pluginName") final String pluginName,
+                          @JsonProperty("version") final String version,
+                          @JsonProperty("running") final boolean running,
+                          @JsonProperty("services") final Set<PluginServiceInfoJson> services) {
+        this.bundleSymbolicName = bundleSymbolicName;
+        this.pluginName = pluginName;
+        this.version = version;
+        this.running = running;
+        this.services = services;
     }
 
-    public void addEntriesForType(final String type, final Set<String> entries) {
-        registeredPlugins.put(type, entries);
+    public PluginInfoJson(final PluginInfo input) {
+        this(input.getBundleSymbolicName(),
+             input.getPluginName(),
+             input.getVersion(),
+             input.isRunning(),
+             ImmutableSet.copyOf(Iterables.transform(input.getServices(), new Function<PluginServiceInfo, PluginServiceInfoJson>() {
+                 @Override
+                 public PluginServiceInfoJson apply(final PluginServiceInfo input) {
+                     return new PluginServiceInfoJson(input.getServiceTypeName(), input.getRegistrationName());
+                 }
+             })));
     }
 
-    public Map<String, Iterable<String>> getRegisteredPlugins() {
-        return registeredPlugins;
+    public String getBundleSymbolicName() {
+        return bundleSymbolicName;
+    }
+
+    public String getPluginName() {
+        return pluginName;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public Set<PluginServiceInfoJson> getServices() {
+        return services;
+    }
+
+    public static class PluginServiceInfoJson {
+
+        private final String serviceTypeName;
+        private final String registrationName;
+
+        @JsonCreator
+        public PluginServiceInfoJson(@JsonProperty("serviceTypeName") final String serviceTypeName,
+                                     @JsonProperty("registrationName") final String registrationName) {
+            this.serviceTypeName = serviceTypeName;
+            this.registrationName = registrationName;
+        }
+
+        public String getServiceTypeName() {
+            return serviceTypeName;
+        }
+
+        public String getRegistrationName() {
+            return registrationName;
+        }
     }
 }

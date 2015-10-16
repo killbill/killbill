@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -29,8 +30,10 @@ import javax.ws.rs.core.Response.Status;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.jaxrs.json.BundleJson;
+import org.killbill.billing.jaxrs.json.PluginInfoJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -39,7 +42,9 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.clock.Clock;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
@@ -71,7 +76,12 @@ public class PluginInfoResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve the list of registered plugins", response = BundleJson.class)
     public Response getBundle(@PathParam("bundleId") final String bundleId,
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
-        return Response.status(Status.OK).entity(ImmutableList.copyOf(pluginsInfoApi.getPluginsInfo())).build();
+        return Response.status(Status.OK).entity(ImmutableList.copyOf(Iterables.transform(pluginsInfoApi.getPluginsInfo(), new Function<PluginInfo, PluginInfoJson>() {
+            @Override
+            public PluginInfoJson apply(final PluginInfo input) {
+                return new PluginInfoJson(input);
+            }
+        }))).build();
     }
 
 }
