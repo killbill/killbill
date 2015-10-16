@@ -223,7 +223,7 @@ public class PaymentAutomatonRunner {
             } else if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
             } else if (e.getCause() instanceof TimeoutException) {
-                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, invoiceId);
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, Objects.firstNonNull(e.getMessage(), ""));
             } else {
                 throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
             }
