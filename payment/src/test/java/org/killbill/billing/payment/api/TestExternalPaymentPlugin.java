@@ -22,12 +22,15 @@ import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.osgi.api.PaymentPluginApiWithTestControl;
+import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.entity.Pagination;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -63,7 +66,7 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         account = testHelper.createTestAccount("bob@gmail.com", false);
-        account = testHelper.addTestExternalPaymentMethod(account, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null));
+        account = addTestExternalPaymentMethod(account, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null));
     }
 
     @Test(groups = "slow")
@@ -100,22 +103,21 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
             Assert.assertEquals(noPluginInfoPaymentTransaction.getCurrency(), paymentTransaction.getCurrency());
             Assert.assertEquals(noPluginInfoPaymentTransaction.getExternalKey(), paymentTransaction.getExternalKey());
             Assert.assertEquals(noPluginInfoPaymentTransaction.getTransactionStatus(), paymentTransaction.getTransactionStatus());
-
-            Assert.assertNull(noPluginInfoPaymentTransaction.getPaymentInfoPlugin());
-            Assert.assertNull(paymentTransaction.getPaymentInfoPlugin());
+            Assert.assertEquals(noPluginInfoPaymentTransaction.getPaymentInfoPlugin(), paymentTransaction.getPaymentInfoPlugin());
         }
 
     }
 
     @Test(groups = "slow")
-    public void testGetPaymentmethodsWithAndWithoutPluginInfo() throws PaymentApiException, PaymentPluginApiException {
+    public void testGetPaymentMethodsWithAndWithoutPluginInfo() throws PaymentApiException, PaymentPluginApiException {
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         final String paymentExternalKey = "externalKey";
         final String transactionExternalKey = "transactionKey";
 
-        final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount,
+                                                          Currency.AED, paymentExternalKey, transactionExternalKey,
                                                           ImmutableList.<PluginProperty>of(), callContext);
 
         final Pagination<PaymentMethod> paymentMethods = paymentApi.getPaymentMethods(0L, 10L, false, null, callContext);
@@ -134,7 +136,16 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
 
         Assert.assertNull(paymentMethod.getPluginDetail());
         Assert.assertNotNull(paymentMethodPlugin.getPluginDetail());
+        Assert.assertTrue(paymentMethodPlugin.getPluginDetail().getProperties().isEmpty());
 
+    }
+
+    private Account addTestExternalPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo)
+            throws Exception {
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(),
+                                                                 ExternalPaymentProviderPlugin.PLUGIN_NAME, true,
+                                                                 paymentMethodInfo, ImmutableList.<PluginProperty>of(), callContext);
+        return accountApi.getAccountById(account.getId(), internalCallContext);
     }
 
 }
