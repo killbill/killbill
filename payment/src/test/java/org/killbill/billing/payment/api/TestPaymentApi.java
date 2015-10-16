@@ -23,6 +23,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeoutException;
+
+import org.killbill.automaton.OperationException;
+import org.killbill.billing.payment.logging.SpyLogger;
+import org.killbill.commons.request.Request;
+import org.killbill.commons.request.RequestData;
 
 import javax.annotation.Nullable;
 
@@ -36,6 +43,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
+import org.killbill.billing.payment.core.sm.OperationCallbackBase;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
@@ -47,8 +55,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import static org.killbill.billing.payment.logging.TestLoggingHelper.withSpyLogger;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
@@ -831,6 +841,47 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         verifyRefund(pendingRefund4, paymentExternalKey, paymentTransactionExternalKey, refundTransactionExternalKey, requestedAmount, requestedAmount, TransactionStatus.SUCCESS);
 
         verifyPaymentViaGetPath(pendingRefund4);
+    }
+
+    @Test(groups = "slow")
+    public void testCreatePurchaseWithTimeout() throws Exception {
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "ohhhh";
+        final String transactionExternalKey = "naaahhh";
+
+        final String pluginName = mockPaymentProviderPlugin.PLUGIN_NAME;
+
+        mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds(1100);
+
+        SpyLogger spyLogger = withSpyLogger(OperationCallbackBase.class, new Callable<Void>() {
+
+            @Override
+            public Void call() throws Exception {
+                PaymentApiException thrownException = null;
+
+                try {
+                    final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
+                                                                      ImmutableList.<PluginProperty>of(), callContext);
+                } catch (PaymentApiException e) {
+                    thrownException = e;
+                }
+
+                assertNotNull(thrownException);
+
+                Throwable operationException = thrownException.getCause();
+                assertNotNull(operationException);
+                assertTrue(operationException instanceof OperationException);
+
+                Throwable timeoutException = operationException.getCause();
+                assertNotNull(timeoutException);
+                assertTrue(timeoutException instanceof TimeoutException);
+
+                return null;
+            }
+        });
+
+        assertTrue(spyLogger.contains("Calling plugin.*" + pluginName, Optional.of(SpyLogger.LOG_LEVEL_DEBUG)));
+        assertTrue(spyLogger.contains("TimeoutException.*" + pluginName, Optional.of(SpyLogger.LOG_LEVEL_WARN)));
     }
 
     private void verifyRefund(final Payment refund, final String paymentExternalKey, final String paymentTransactionExternalKey, final String refundTransactionExternalKey, final BigDecimal requestedAmount, final BigDecimal refundAmount, final TransactionStatus transactionStatus) {

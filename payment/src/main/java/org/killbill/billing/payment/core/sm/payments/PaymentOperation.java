@@ -68,12 +68,12 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
-
         try {
-            this.plugin = daoHelper.getPaymentProviderPlugin();
+            final String pluginName = daoHelper.getPaymentProviderPluginName();
+            this.plugin = daoHelper.getPaymentPluginApi(pluginName);
 
             if (paymentStateContext.shouldLockAccountAndDispatch()) {
-                return doOperationCallbackWithDispatchAndAccountLock();
+                return doOperationCallbackWithDispatchAndAccountLock(pluginName);
             } else {
                 return doSimpleOperationCallback();
             }
@@ -152,8 +152,8 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
         return result;
     }
 
-    private OperationResult doOperationCallbackWithDispatchAndAccountLock() throws OperationException {
-        return dispatchWithAccountLockAndTimeout(new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
+    private OperationResult doOperationCallbackWithDispatchAndAccountLock(String pluginName) throws OperationException {
+        return dispatchWithAccountLockAndTimeout(pluginName, new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
                 final OperationResult result = doSimpleOperationCallback();
