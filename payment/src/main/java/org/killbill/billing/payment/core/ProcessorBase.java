@@ -54,6 +54,7 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
+import org.killbill.commons.request.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,12 +127,17 @@ public abstract class ProcessorBase {
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
+        final String pluginName = getPaymentProviderPluginName(paymentMethodId, context);
+        return getPaymentPluginApi(pluginName);
+    }
+
+    protected String getPaymentProviderPluginName(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
         final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, context);
         if (methodDao == null) {
             log.error("PaymentMethod does not exist", paymentMethodId);
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
-        return getPaymentPluginApi(methodDao.getPluginName());
+        return methodDao.getPluginName();
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final Account account, final InternalTenantContext context) throws PaymentApiException {
@@ -204,16 +210,24 @@ public abstract class ProcessorBase {
         }
     }
 
-    protected static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final Callable<PluginDispatcherReturnType<ReturnType>> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
+    protected static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final String pluginName, final Callable<PluginDispatcherReturnType<ReturnType>> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
         final UUID accountId = account != null ? account.getId() : null;
         final String accountExternalKey = account != null ? account.getExternalKey() : "";
+
         try {
-            return pluginFormDispatcher.dispatchWithTimeout(callable);
+            log.debug("Calling plugin {}", pluginName);
+            ReturnType result = pluginFormDispatcher.dispatchWithTimeout(callable);
+            log.debug("Successful call of plugin {} for account {} with result {}", pluginName, accountExternalKey, result);
+            return result;
         } catch (final TimeoutException e) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, null);
+            final String errorMessage = String.format("TimeoutException during the execution of plugin %s", pluginName);
+            log.warn(errorMessage, e);
+            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, errorMessage);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            final String errorMessage = String.format("InterruptedException during the execution of plugin %s", pluginName);
+            log.warn(errorMessage, e);
+            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), errorMessage));
         } catch (final ExecutionException e) {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();

@@ -58,7 +58,7 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
     // The dispatcher may throw a TimeoutException, ExecutionException, or InterruptedException; those will be handled in specific
     // callback to eventually throw a OperationException, that will be used to drive the state machine in the right direction.
     //
-    protected <ExceptionType extends Exception> OperationResult dispatchWithAccountLockAndTimeout(final DispatcherCallback<PluginDispatcherReturnType<OperationResult>, ExceptionType> callback) throws OperationException {
+    protected <ExceptionType extends Exception> OperationResult dispatchWithAccountLockAndTimeout(final String pluginNames, final DispatcherCallback<PluginDispatcherReturnType<OperationResult>, ExceptionType> callback) throws OperationException {
         final Account account = paymentStateContext.getAccount();
         logger.debug("Dispatching plugin call for account {}", account.getExternalKey());
 
@@ -67,15 +67,18 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
                                                                                                                                            account.getExternalKey(),
                                                                                                                                            paymentConfig,
                                                                                                                                            callback);
+            logger.debug("Calling plugin {}", pluginNames);
             final OperationResult operationResult = paymentPluginDispatcher.dispatchWithTimeout(task);
-            logger.debug("Successful plugin call for account {} with result {}", account.getExternalKey(), operationResult);
+            logger.debug("Successful plugin call of {} for account {} with result {}", pluginNames, account.getExternalKey(), operationResult);
             return operationResult;
         } catch (final ExecutionException e) {
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         } catch (final TimeoutException e) {
+            logger.warn("TimeoutException while executing the plugin(s) {}", pluginNames);
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
+            logger.warn("InterruptedException while executing the following plugin(s): {}", pluginNames);
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         }
     }

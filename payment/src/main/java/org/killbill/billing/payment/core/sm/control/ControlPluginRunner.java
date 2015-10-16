@@ -14,7 +14,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package org.killbill.billing.payment.core.sm.control;
 
 import java.math.BigDecimal;
@@ -98,7 +97,9 @@ public class ControlPluginRunner {
                 log.warn("Skipping unknown payment control plugin {} when fetching results", pluginName);
                 continue;
             }
+            log.debug("Calling priorCall of plugin {}", pluginName);
             prevResult = plugin.priorCall(inputPaymentControlContext, inputPluginProperties);
+            log.debug("Successful executed priorCall of plugin {}", pluginName);
             if (prevResult.getAdjustedPluginProperties() != null) {
                 inputPluginProperties = prevResult.getAdjustedPluginProperties();
             }
@@ -159,12 +160,15 @@ public class ControlPluginRunner {
                                                                                                   processedCurrency,
                                                                                                   isApiPayment,
                                                                                                   callContext);
+
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         for (final String pluginName : paymentControlPluginNames) {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
+                    log.debug("Calling onSuccessCall of plugin {}", pluginName);
                     final OnSuccessPaymentControlResult result = plugin.onSuccessCall(inputPaymentControlContext, inputPluginProperties);
+                    log.debug("Successful executed onSuccessCall of plugin {}", pluginName);
                     if (result.getAdjustedPluginProperties() != null) {
                         inputPluginProperties = result.getAdjustedPluginProperties();
                     }
@@ -216,7 +220,9 @@ public class ControlPluginRunner {
             final PaymentControlPluginApi plugin = paymentControlPluginRegistry.getServiceForName(pluginName);
             if (plugin != null) {
                 try {
+                    log.debug("Calling onSuccessCall of plugin {}", pluginName);
                     final OnFailurePaymentControlResult result = plugin.onFailureCall(inputPaymentControlContext, inputPluginProperties);
+                    log.debug("Successful executed onSuccessCall of plugin {}", pluginName);
                     if (candidate == null) {
                         candidate = result.getNextRetryDate();
                     } else if (result.getNextRetryDate() != null) {
