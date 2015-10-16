@@ -217,7 +217,7 @@ public abstract class ProcessorBase {
         try {
             log.debug("Calling plugin {}", pluginName);
             ReturnType result = pluginFormDispatcher.dispatchWithTimeout(callable);
-            log.debug("Successful call of plugin {} for account {} with result {}", pluginName, account.getExternalKey(), result);
+            log.debug("Successful call of plugin {} for account {} with result {}", pluginName, accountExternalKey, result);
             return result;
         } catch (final TimeoutException e) {
             final String errorMessage = String.format("TimeoutException during the execution of plugin %s", pluginName);
