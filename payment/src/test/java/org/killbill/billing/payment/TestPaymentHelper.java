@@ -162,17 +162,6 @@ public class TestPaymentHelper {
         }
     }
 
-    public Account addTestExternalPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(), ExternalPaymentProviderPlugin.PLUGIN_NAME, true, paymentMethodInfo, ImmutableList.<PluginProperty>of(), context);
-        if (isFastTest()) {
-            Mockito.when(account.getPaymentMethodId()).thenReturn(paymentMethodId);
-            return account;
-        } else {
-            // To reflect the payment method id change
-            return accountApi.getAccountById(account.getId(), context);
-        }
-    }
-
     // Unfortunately, this helper is shared across fast and slow tests
     private boolean isFastTest() {
         return Mockito.mockingDetails(accountInternalApi).isMock();
