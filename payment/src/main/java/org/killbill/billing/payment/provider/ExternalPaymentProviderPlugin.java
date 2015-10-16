@@ -117,7 +117,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
-        return ImmutableList.<PaymentMethodInfoPlugin>of();
+        throw new PaymentPluginApiException("Not implemented", "");
     }
 
     @Override
