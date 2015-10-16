@@ -17,20 +17,15 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.osgi.api.PaymentPluginApiWithTestControl;
-import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.entity.Pagination;
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -41,19 +36,6 @@ import com.google.common.collect.ImmutableList;
 public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
 
     private ExternalPaymentProviderPlugin plugin;
-
-    final PaymentOptions INVOICE_PAYMENT = new PaymentOptions() {
-        @Override
-        public boolean isExternalPayment() {
-            return false;
-        }
-
-        @Override
-        public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
-        }
-    };
-
     private Account account;
 
     @BeforeClass(groups = "slow")
