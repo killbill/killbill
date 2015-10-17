@@ -20,6 +20,15 @@ package org.killbill.billing.entitlement;
 
 import java.util.UUID;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.config.Ini;
+import org.apache.shiro.config.IniSecurityManagerFactory;
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.util.Factory;
+import org.apache.shiro.util.ThreadContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
@@ -41,6 +50,7 @@ import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.security.Permission;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
@@ -127,10 +137,50 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
 
         // Make sure we start with a clean state
         assertListenerStatus();
+
+        configureShiro();
+        login("EntitlementUser");
+    }
+
+    private void login(final String username) {
+        logout();
+        final AuthenticationToken token = new UsernamePasswordToken(username, "password");
+        final Subject currentUser = SecurityUtils.getSubject();
+        currentUser.login(token);
+    }
+
+    private void logout() {
+        final Subject currentUser = SecurityUtils.getSubject();
+        if (currentUser.isAuthenticated()) {
+            currentUser.logout();
+        }
+    }
+
+    protected void configureShiro() {
+        final Ini config = new Ini();
+        config.addSection("users");
+        config.getSection("users").put("EntitlementUser", "password, entitlement");
+        config.addSection("roles");
+        config.getSection("roles").put("entitlement", Permission.ACCOUNT_CAN_CREATE.toString() +
+                                                      "," + Permission.ENTITLEMENT_CAN_CREATE.toString() +
+                                                      "," + Permission.ENTITLEMENT_CAN_CHANGE_PLAN.toString() +
+                                                      "," + Permission.ENTITLEMENT_CAN_PAUSE_RESUME.toString() +
+                                                      "," + Permission.ENTITLEMENT_CAN_TRANSFER.toString() +
+                                                      "," + Permission.ENTITLEMENT_CAN_CANCEL.toString());
+
+        // Reset the security manager
+        ThreadContext.unbindSecurityManager();
+
+        final Factory<SecurityManager> factory = new IniSecurityManagerFactory(config);
+        final SecurityManager securityManager = factory.getInstance();
+        SecurityUtils.setSecurityManager(securityManager);
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+
+        logout();
+
         // Make sure we finish in a clean state
         assertListenerStatus();
 

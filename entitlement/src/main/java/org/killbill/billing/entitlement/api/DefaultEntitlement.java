@@ -21,10 +21,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.shiro.SecurityUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -35,35 +35,42 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.entitlement.api.EntitlementPluginExecution.WithEntitlementPlugin;
-import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
-import org.killbill.billing.entitlement.plugin.api.OperationType;
-import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EventsStream;
+import org.killbill.billing.entitlement.api.EntitlementPluginExecution.WithEntitlementPlugin;
 import org.killbill.billing.entitlement.block.BlockingChecker;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKey;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
 import org.killbill.billing.entitlement.engine.core.EventsStreamBuilder;
+import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
+import org.killbill.billing.entitlement.plugin.api.OperationType;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.junction.DefaultBlockingState;
-import org.killbill.notificationq.api.NotificationEvent;
-import org.killbill.notificationq.api.NotificationQueue;
-import org.killbill.notificationq.api.NotificationQueueService;
-import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.security.Logical;
+import org.killbill.billing.security.Permission;
+import org.killbill.billing.security.SecurityApiException;
+import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
+import org.killbill.notificationq.api.NotificationEvent;
+import org.killbill.notificationq.api.NotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService;
+import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+
+import com.google.common.collect.ImmutableList;
 
 public class DefaultEntitlement extends EntityBase implements Entitlement {
 
+    private final SecurityApi securityApi;
     protected final EventsStreamBuilder eventsStreamBuilder;
     protected final EntitlementDateHelper dateHelper;
     protected final InternalCallContextFactory internalCallContextFactory;
@@ -84,18 +91,18 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                               final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution, final BlockingStateDao blockingStateDao,
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
                               final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils,
-                              final EntitlementDateHelper dateHelper, final Clock clock,
+                              final EntitlementDateHelper dateHelper, final Clock clock, final SecurityApi securityApi,
                               final InternalCallContextFactory internalCallContextFactory, final TenantContext tenantContext) throws EntitlementApiException {
         this(eventsStreamBuilder.buildForEntitlement(entitlementId, tenantContext), eventsStreamBuilder,
              entitlementApi, pluginExecution, blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
-             entitlementUtils, dateHelper, clock, internalCallContextFactory);
+             entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory);
     }
 
     public DefaultEntitlement(final EventsStream eventsStream, final EventsStreamBuilder eventsStreamBuilder,
                               final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution, final BlockingStateDao blockingStateDao,
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
                               final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils,
-                              final EntitlementDateHelper dateHelper, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
+                              final EntitlementDateHelper dateHelper, final Clock clock, final SecurityApi securityApi, final InternalCallContextFactory internalCallContextFactory) {
         super(eventsStream.getEntitlementId(), eventsStream.getSubscriptionBase().getCreatedDate(), eventsStream.getSubscriptionBase().getUpdatedDate());
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.eventsStream = eventsStream;
@@ -105,6 +112,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         this.subscriptionInternalApi = subscriptionInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
+        this.securityApi = securityApi;
         this.checker = checker;
         this.blockingStateDao = blockingStateDao;
         this.notificationQueueService = notificationQueueService;
@@ -123,6 +131,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
              in.getEntitlementUtils(),
              in.getDateHelper(),
              in.getClock(),
+             in.getSecurityApi(),
              in.getInternalCallContextFactory());
     }
 
@@ -186,6 +195,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     public EntitlementUtils getEntitlementUtils() {
         return entitlementUtils;
+    }
+
+    public SecurityApi getSecurityApi() {
+        return securityApi;
     }
 
     @Override
@@ -253,8 +266,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         return getSubscriptionBase().getLastActiveCategory();
     }
 
+
     @Override
     public Entitlement cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
         // Get the latest state from disk - required to have the latest CTD
         refresh(callContext);
 
@@ -264,6 +279,9 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement cancelEntitlementWithDate(final LocalDate localCancelDate, final boolean overrideBillingEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
+
         // Get the latest state from disk
         refresh(callContext);
 
@@ -302,6 +320,9 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public void uncancelEntitlement(final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
+
         // Get the latest state from disk
         refresh(callContext);
 
@@ -341,6 +362,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement cancelEntitlementWithDateOverrideBillingPolicy(final LocalDate localCancelDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
 
         // Get the latest state from disk
         refresh(callContext);
@@ -405,6 +428,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+
+        checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
+
         // Get the latest state from disk
         refresh(callContext);
 
@@ -450,6 +477,9 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement changePlanWithDate(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final LocalDate localDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
+
         // Get the latest state from disk
         refresh(callContext);
 
@@ -495,6 +525,9 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final LocalDate localDate, final BillingActionPolicy actionPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
+
         // Get the latest state from disk
         refresh(callContext);
 
@@ -584,6 +617,23 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    //
+    // Unfortunately the permission checks for the entitlement api cannot *simply* rely on the KillBillShiroAopModule because some of the operations (CANCEL, CHANGE) are
+    // done through objects that are not injected by Guice, and so the check needs to happen explicitly.
+    //
+    private void checkForPermissions(final Permission permission, final CallContext callContext) throws EntitlementApiException {
+        //
+        // If authentication had been done (CorsBasicHttpAuthenticationFilter) we verify the correct permissions exist.
+        //
+        if (SecurityUtils.getSubject().isAuthenticated()) {
+            try {
+                securityApi.checkCurrentUserPermissions(ImmutableList.of(permission), Logical.AND, callContext);
+            } catch (final SecurityApiException e) {
+                throw new EntitlementApiException(ErrorCode.SECURITY_INVALID_PERMISSIONS, permission.toString());
+            }
         }
     }
 }

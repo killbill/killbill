@@ -22,6 +22,10 @@ import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
+import org.killbill.billing.util.glue.KillBillShiroAopModule;
+import org.killbill.billing.util.glue.KillBillShiroModule;
+import org.killbill.billing.util.glue.SecurityModule;
+import org.killbill.billing.util.glue.TestUtilModuleNoDB.ShiroModuleNoDB;
 
 public class TestEntitlementModule extends DefaultEntitlementModule {
 
@@ -38,5 +42,25 @@ public class TestEntitlementModule extends DefaultEntitlementModule {
         install(new CacheModule(configSource));
         install(new CallContextModule(configSource));
         install(new MockTenantModule(configSource));
+
+        install(new KillBillShiroModuleOnlyIniRealm(configSource));
+        install(new KillBillShiroAopModule());
+
+        install(new SecurityModule(configSource));
+
     }
+
+
+    private static class KillBillShiroModuleOnlyIniRealm extends KillBillShiroModule {
+
+        public KillBillShiroModuleOnlyIniRealm(final KillbillConfigSource configSource) {
+            super(configSource);
+        }
+        protected void configureJDBCRealm() {
+        }
+        protected void configureLDAPRealm() {
+        }
+
+    }
+
 }

@@ -29,6 +29,9 @@ import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
+import org.killbill.billing.util.glue.KillBillShiroAopModule;
+import org.killbill.billing.util.glue.KillBillShiroModule;
+import org.killbill.billing.util.glue.SecurityModule;
 
 public class TestJunctionModule extends DefaultJunctionModule {
 
@@ -43,6 +46,9 @@ public class TestJunctionModule extends DefaultJunctionModule {
         install(new CacheModule(configSource));
         install(new CallContextModule(configSource));
         install(new MockTenantModule(configSource));
+        // Needed because Entitlement depends on Security
+        install(new KillBillShiroModuleOnlyIniRealm(configSource));
+        install(new SecurityModule(configSource));
     }
 
     public class MockEntitlementModuleForJunction extends MockEntitlementModule {
@@ -64,6 +70,19 @@ public class TestJunctionModule extends DefaultJunctionModule {
         @Override
         public void installBlockingChecker() {
             bind(BlockingChecker.class).to(MockBlockingChecker.class).asEagerSingleton();
+        }
+    }
+
+    private static class KillBillShiroModuleOnlyIniRealm extends KillBillShiroModule {
+
+        public KillBillShiroModuleOnlyIniRealm(final KillbillConfigSource configSource) {
+            super(configSource);
+        }
+
+        protected void configureJDBCRealm() {
+        }
+
+        protected void configureLDAPRealm() {
         }
     }
 }

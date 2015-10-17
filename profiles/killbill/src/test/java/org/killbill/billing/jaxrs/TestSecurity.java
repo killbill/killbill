@@ -21,6 +21,7 @@ package org.killbill.billing.jaxrs;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Response.Status;
@@ -65,22 +66,22 @@ public class TestSecurity extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testDynamicUserRolesAllPermissions() throws Exception {
-        testDynamicUserRolesInternal("wqeqwe", "jdsh763s", "all", "*", true);
+        testDynamicUserRolesInternal("wqeqwe", "jdsh763s", "all", ImmutableList.of("*"), true);
     }
 
     @Test(groups = "slow")
     public void testDynamicUserRolesAllCatalogPermissions() throws Exception {
-        testDynamicUserRolesInternal("wqeqsdswe", "jsddsh763s", "allcatalog", "catalog:*", true);
+        testDynamicUserRolesInternal("wqeqsdswe", "jsddsh763s", "allcatalog", ImmutableList.of("catalog:*","tenant:add_keys"), true);
     }
 
     @Test(groups = "slow")
     public void testDynamicUserRolesCorrectCatalogPermissions() throws Exception {
-        testDynamicUserRolesInternal("wqeq23f6we", "jds5gh763s", "correctcatalog", "catalog:config_upload", true);
+        testDynamicUserRolesInternal("wqeq23f6we", "jds5gh763s", "correctcatalog", ImmutableList.of("catalog:config_upload","tenant:add_keys"), true);
     }
 
     @Test(groups = "slow")
     public void testDynamicUserRolesIncorrectPermissions() throws Exception {
-        testDynamicUserRolesInternal("wqsdeqwe", "jd23fsh63s", "incorrect", "account:*", false);
+        testDynamicUserRolesInternal("wqsdeqwe", "jd23fsh63s", "incorrect", ImmutableList.of("account:*"), false);
     }
 
     @Test(groups = "slow")
@@ -176,9 +177,9 @@ public class TestSecurity extends TestJaxrsBase {
 
     }
 
-    private void testDynamicUserRolesInternal(final String username, final String password, final String roleDefinition, final String permissions, final boolean expectPermissionSuccess) throws Exception {
+    private void testDynamicUserRolesInternal(final String username, final String password, final String roleDefinition, final List<String> permissions, final boolean expectPermissionSuccess) throws Exception {
 
-        Response response = killBillClient.addRoleDefinition(new RoleDefinition(roleDefinition, ImmutableList.of(permissions)), createdBy, reason, comment);
+        Response response = killBillClient.addRoleDefinition(new RoleDefinition(roleDefinition, permissions), createdBy, reason, comment);
         Assert.assertEquals(response.getStatusCode(), 201);
 
         response = killBillClient.addUserRoles(new UserRoles(username, password, ImmutableList.of(roleDefinition)), createdBy, reason, comment);

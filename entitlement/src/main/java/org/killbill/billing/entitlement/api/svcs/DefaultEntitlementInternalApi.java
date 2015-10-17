@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.api.EntitlementPluginExecution;
+import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.AccountEntitlements;
 import org.killbill.billing.entitlement.AccountEventsStreams;
@@ -59,6 +60,7 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
     private final EntitlementUtils entitlementUtils;
     private final NotificationQueueService notificationQueueService;
     private final EntitlementPluginExecution pluginExecution;
+    private final SecurityApi securityApi;
 
     @Inject
     public DefaultEntitlementInternalApi(final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution,
@@ -66,7 +68,7 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
                                          final SubscriptionBaseInternalApi subscriptionInternalApi,
                                          final AccountInternalApi accountApi, final BlockingStateDao blockingStateDao, final Clock clock,
                                          final BlockingChecker checker, final NotificationQueueService notificationQueueService,
-                                         final EventsStreamBuilder eventsStreamBuilder, final EntitlementUtils entitlementUtils) {
+                                         final EventsStreamBuilder eventsStreamBuilder, final EntitlementUtils entitlementUtils, final SecurityApi securityApi) {
         this.entitlementApi = entitlementApi;
         this.pluginExecution= pluginExecution;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -77,6 +79,7 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
         this.notificationQueueService = notificationQueueService;
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.entitlementUtils = entitlementUtils;
+        this.securityApi = securityApi;
         this.dateHelper = new EntitlementDateHelper(accountApi, clock);
     }
 
@@ -95,7 +98,7 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
             for (final EventsStream eventsStream : accountEventsStreams.getEventsStreams().get(bundleId)) {
                 final Entitlement entitlement = new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
                                                                        blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
-                                                                       entitlementUtils, dateHelper, clock, internalCallContextFactory);
+                                                                       entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory);
                 entitlementsPerBundle.get(bundleId).add(entitlement);
             }
         }

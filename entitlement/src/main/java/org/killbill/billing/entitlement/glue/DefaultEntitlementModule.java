@@ -40,6 +40,7 @@ import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
+import org.killbill.billing.util.glue.SecurityModule;
 
 import com.google.inject.TypeLiteral;
 
