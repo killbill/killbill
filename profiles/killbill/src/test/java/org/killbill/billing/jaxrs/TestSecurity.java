@@ -71,12 +71,12 @@ public class TestSecurity extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testDynamicUserRolesAllCatalogPermissions() throws Exception {
-        testDynamicUserRolesInternal("wqeqsdswe", "jsddsh763s", "allcatalog", ImmutableList.of("catalog:*","tenant:add_keys"), true);
+        testDynamicUserRolesInternal("wqeqsdswe", "jsddsh763s", "allcatalog", ImmutableList.of("catalog:*","tenant_kvs:add"), true);
     }
 
     @Test(groups = "slow")
     public void testDynamicUserRolesCorrectCatalogPermissions() throws Exception {
-        testDynamicUserRolesInternal("wqeq23f6we", "jds5gh763s", "correctcatalog", ImmutableList.of("catalog:config_upload","tenant:add_keys"), true);
+        testDynamicUserRolesInternal("wqeq23f6we", "jds5gh763s", "correctcatalog", ImmutableList.of("catalog:config_upload","tenant_kvs:add"), true);
     }
 
     @Test(groups = "slow")

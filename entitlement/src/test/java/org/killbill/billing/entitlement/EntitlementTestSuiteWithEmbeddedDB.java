@@ -51,6 +51,7 @@ import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.security.Permission;
+import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
@@ -115,6 +116,8 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected AuditUserApi auditUserApi;
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
+    @Inject
+    protected SecurityApi securityApi;
 
     protected Catalog catalog;
 
@@ -143,18 +146,9 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     }
 
     private void login(final String username) {
-        logout();
-        final AuthenticationToken token = new UsernamePasswordToken(username, "password");
-        final Subject currentUser = SecurityUtils.getSubject();
-        currentUser.login(token);
+        securityApi.login(username, "password");
     }
 
-    private void logout() {
-        final Subject currentUser = SecurityUtils.getSubject();
-        if (currentUser.isAuthenticated()) {
-            currentUser.logout();
-        }
-    }
 
     protected void configureShiro() {
         final Ini config = new Ini();
@@ -179,7 +173,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
 
-        logout();
+        securityApi.logout();
 
         // Make sure we finish in a clean state
         assertListenerStatus();

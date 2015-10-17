@@ -19,20 +19,12 @@ package org.killbill.billing.util;
 import javax.inject.Inject;
 
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.config.Ini;
 import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.Factory;
 import org.apache.shiro.util.ThreadContext;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.security.Permission;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -42,6 +34,10 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.glue.TestUtilModuleNoDB;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
+import org.killbill.bus.api.PersistentBus;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -87,20 +83,12 @@ public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     }
 
     // Security helpers
-
     protected void login(final String username) {
-        logout();
-
-        final AuthenticationToken token = new UsernamePasswordToken(username, "password");
-        final Subject currentUser = SecurityUtils.getSubject();
-        currentUser.login(token);
+        securityApi.login(username, "password");
     }
 
     protected void logout() {
-        final Subject currentUser = SecurityUtils.getSubject();
-        if (currentUser.isAuthenticated()) {
-            currentUser.logout();
-        }
+        securityApi.logout();
     }
 
     protected void configureShiro() {

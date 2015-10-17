@@ -68,7 +68,11 @@ public class DefaultSecurityApi implements SecurityApi {
 
     @Override
     public synchronized void login(final Object principal, final Object credentials) {
+
         final Subject currentUser = SecurityUtils.getSubject();
+        if (currentUser.isAuthenticated()) {
+            logout();
+        }
 
         // Workaround for https://issues.apache.org/jira/browse/SHIRO-510
         // TODO Not sure if it's a good fix?
@@ -100,7 +104,14 @@ public class DefaultSecurityApi implements SecurityApi {
     @Override
     public void logout() {
         final Subject currentUser = SecurityUtils.getSubject();
-        currentUser.logout();
+        if (currentUser != null && currentUser.isAuthenticated()) {
+            currentUser.logout();
+        }
+    }
+
+    @Override
+    public boolean isSubjectAuthenticated() {
+        return SecurityUtils.getSubject().isAuthenticated();
     }
 
     @Override

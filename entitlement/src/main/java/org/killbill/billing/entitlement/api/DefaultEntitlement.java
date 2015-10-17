@@ -628,11 +628,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         //
         // If authentication had been done (CorsBasicHttpAuthenticationFilter) we verify the correct permissions exist.
         //
-        if (SecurityUtils.getSubject().isAuthenticated()) {
+        if (securityApi.isSubjectAuthenticated()) {
             try {
                 securityApi.checkCurrentUserPermissions(ImmutableList.of(permission), Logical.AND, callContext);
             } catch (final SecurityApiException e) {
-                throw new EntitlementApiException(ErrorCode.SECURITY_INVALID_PERMISSIONS, permission.toString());
+                throw new EntitlementApiException(ErrorCode.SECURITY_NOT_ENOUGH_PERMISSIONS);
             }
         }
     }
