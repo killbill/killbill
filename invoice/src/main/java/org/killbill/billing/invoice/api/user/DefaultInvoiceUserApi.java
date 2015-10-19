@@ -45,6 +45,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.WithAccountLock;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -72,6 +73,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -365,10 +367,16 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
-        final List<InvoiceItem> creditInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, context);
+        final Collection<InvoiceItem> creditInvoiceItems = Collections2.<InvoiceItem>filter(invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, context),
+                                                                                            new Predicate<InvoiceItem>() {
+                                                                                                @Override
+                                                                                                public boolean apply(final InvoiceItem invoiceItem) {
+                                                                                                    return InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType());
+                                                                                                }
+                                                                                            });
         Preconditions.checkState(creditInvoiceItems.size() == 1, "Should have created a single credit invoice item: " + creditInvoiceItems);
 
-        return creditInvoiceItems.get(0);
+        return creditInvoiceItems.iterator().next();
     }
 
     @Override
@@ -401,10 +409,16 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
-        final List<InvoiceItem> adjustmentInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, context);
+        final Collection<InvoiceItem> adjustmentInvoiceItems = Collections2.<InvoiceItem>filter(invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, context),
+                                                                                                new Predicate<InvoiceItem>() {
+                                                                                                    @Override
+                                                                                                    public boolean apply(final InvoiceItem invoiceItem) {
+                                                                                                        return InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType());
+                                                                                                    }
+                                                                                                });
         Preconditions.checkState(adjustmentInvoiceItems.size() == 1, "Should have created a single adjustment item: " + adjustmentInvoiceItems);
 
-        return adjustmentInvoiceItems.get(0);
+        return adjustmentInvoiceItems.iterator().next();
     }
 
     @Override

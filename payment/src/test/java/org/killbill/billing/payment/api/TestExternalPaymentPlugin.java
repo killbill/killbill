@@ -41,7 +41,6 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
         super.beforeClass();
-        plugin = (ExternalPaymentProviderPlugin) registry.getServiceForName(ExternalPaymentProviderPlugin.PLUGIN_NAME);
     }
 
     @BeforeMethod(groups = "slow")
@@ -103,7 +102,7 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
                                                           ImmutableList.<PluginProperty>of(), callContext);
 
         final Pagination<PaymentMethod> paymentMethods = paymentApi.getPaymentMethods(0L, 10L, false, null, callContext);
-        final Pagination<PaymentMethod> paymentMethodsPlugin = paymentApi.getPaymentMethods(0L, 10L, true,  null,callContext);
+        final Pagination<PaymentMethod> paymentMethodsPlugin = paymentApi.getPaymentMethods(0L, 10L, true, null, callContext);
 
         Assert.assertTrue(paymentMethods.getTotalNbRecords() == 1);
         Assert.assertTrue(paymentMethodsPlugin.getTotalNbRecords() == 1);
