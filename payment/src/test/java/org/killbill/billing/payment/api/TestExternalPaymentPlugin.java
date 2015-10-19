@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 
 public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
 
-    private ExternalPaymentProviderPlugin plugin;
     private Account account;
 
     @BeforeClass(groups = "slow")
