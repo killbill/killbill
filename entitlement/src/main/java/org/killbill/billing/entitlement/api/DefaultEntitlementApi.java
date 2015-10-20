@@ -16,7 +16,6 @@
 
 package org.killbill.billing.entitlement.api;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,24 +25,19 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.AccountEventsStreams;
-import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.EntitlementService;
-import org.killbill.billing.entitlement.EntitlementTransitionType;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.EntitlementPluginExecution.WithEntitlementPlugin;
+import org.killbill.billing.entitlement.api.svcs.DefaultEntitlementApiBase;
 import org.killbill.billing.entitlement.block.BlockingChecker;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
-import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKey;
-import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
 import org.killbill.billing.entitlement.engine.core.EventsStreamBuilder;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
@@ -61,12 +55,8 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
-import org.killbill.notificationq.api.NotificationEvent;
-import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
-import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +66,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-public class DefaultEntitlementApi implements EntitlementApi {
+public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements EntitlementApi {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementApi.class);
 
@@ -99,7 +89,6 @@ public class DefaultEntitlementApi implements EntitlementApi {
     private final EntitlementPluginExecution pluginExecution;
     private final SecurityApi securityApi;
 
-
     @Inject
     public DefaultEntitlementApi(final PersistentBus eventBus, final InternalCallContextFactory internalCallContextFactory,
                                  final SubscriptionBaseTransferApi subscriptionTransferApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
@@ -108,6 +97,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
                                  final EventsStreamBuilder eventsStreamBuilder, final EntitlementUtils entitlementUtils,
                                  final EntitlementPluginExecution pluginExecution,
                                  final SecurityApi securityApi) {
+        super(eventBus, null, pluginExecution, internalCallContextFactory, subscriptionInternalApi, accountApi, blockingStateDao, clock, checker, notificationQueueService, eventsStreamBuilder, entitlementUtils, securityApi);
         this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
         this.subscriptionBaseInternalApi = subscriptionInternalApi;
@@ -227,11 +217,9 @@ public class DefaultEntitlementApi implements EntitlementApi {
     }
 
     @Override
-    public Entitlement getEntitlementForId(final UUID uuid, final TenantContext tenantContext) throws EntitlementApiException {
-        final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(uuid, tenantContext);
-        return new DefaultEntitlement(eventsStream, eventsStreamBuilder, this, pluginExecution,
-                                      blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
-                                      entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory);
+    public Entitlement getEntitlementForId(final UUID entitlementId, final TenantContext tenantContext) throws EntitlementApiException {
+        final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
+        return super.getEntitlementForId(entitlementId, contextWithValidAccountRecordId);
     }
 
     @Override
@@ -286,125 +274,16 @@ public class DefaultEntitlementApi implements EntitlementApi {
     @Override
     public void pause(final UUID bundleId, final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
 
-        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.PAUSE_SUBSCRIPTION,
-                                                                               null,
-                                                                               null,
-                                                                               bundleId,
-                                                                               null,
-                                                                               null,
-                                                                               null,
-                                                                               localEffectiveDate,
-                                                                               properties,
-                                                                               context);
-
-        final WithEntitlementPlugin<Void> pauseWithPlugin = new WithEntitlementPlugin<Void>() {
-            @Override
-            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-                try {
-                    final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
-                    final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
-                    if (currentState != null && currentState.getStateName().equals(ENT_STATE_BLOCKED)) {
-                        throw new EntitlementApiException(ErrorCode.ENT_ALREADY_BLOCKED, bundleId);
-                    }
-
-                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, contextWithValidAccountRecordId);
-                    final ImmutableAccountData account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), contextWithValidAccountRecordId);
-                    final SubscriptionBase baseSubscription = subscriptionBaseInternalApi.getBaseSubscription(bundleId, contextWithValidAccountRecordId);
-                    final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), baseSubscription.getStartDate(), contextWithValidAccountRecordId);
-
-                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone())) {
-                        recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, true, contextWithValidAccountRecordId);
-                        return null;
-                    }
-
-                    final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, true, effectiveDate);
-                    entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(state, contextWithValidAccountRecordId);
-
-                    // Should we send one event per entitlement in the bundle?
-                    // Code below only sends one event for the bundle and use the base entitlementId
-                    final DefaultEffectiveEntitlementEvent event = new DefaultEffectiveEntitlementEvent(state.getId(), baseSubscription.getId(), bundleId, bundle.getAccountId(), EntitlementTransitionType.BLOCK_BUNDLE,
-                                                                                                        effectiveDate, clock.getUTCNow(),
-                                                                                                        contextWithValidAccountRecordId.getAccountRecordId(), contextWithValidAccountRecordId.getTenantRecordId(),
-                                                                                                        contextWithValidAccountRecordId.getUserToken());
-
-                    try {
-                        eventBus.post(event);
-                    } catch (EventBusException e) {
-                        log.warn("Failed to post bus event for pause operation on bundle " + bundleId);
-                    }
-
-                } catch (SubscriptionBaseApiException e) {
-                    throw new EntitlementApiException(e);
-                } catch (AccountApiException e) {
-                    throw new EntitlementApiException(e);
-                }
-                return null;
-            }
-        };
-        pluginExecution.executeWithPlugin(pauseWithPlugin, pluginContext);
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
+        super.pause(bundleId, localEffectiveDate, properties, contextWithValidAccountRecordId);
     }
 
     @Override
     public void resume(final UUID bundleId, final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
 
-        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.RESUME_SUBSCRIPTION,
-                                                                               null,
-                                                                               null,
-                                                                               bundleId,
-                                                                               null,
-                                                                               null,
-                                                                               null,
-                                                                               localEffectiveDate,
-                                                                               properties,
-                                                                               context);
-        final WithEntitlementPlugin<Void> resumeWithPlugin = new WithEntitlementPlugin<Void>() {
-            @Override
-            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-                try {
-                    final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
-                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, contextWithValidAccountRecordId);
-                    final ImmutableAccountData account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), contextWithValidAccountRecordId);
-                    final SubscriptionBase baseSubscription = subscriptionBaseInternalApi.getBaseSubscription(bundleId, contextWithValidAccountRecordId);
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
+        super.resume(bundleId, localEffectiveDate, properties, contextWithValidAccountRecordId);
 
-                    final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), baseSubscription.getStartDate(), contextWithValidAccountRecordId);
-
-                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone())) {
-                        recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, false, contextWithValidAccountRecordId);
-                        return null;
-                    }
-
-                    final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
-                    if (currentState == null || currentState.getStateName().equals(ENT_STATE_CLEAR)) {
-                        // Nothing to do.
-                        log.warn("Current state is {}, nothing to resume", currentState);
-                        return null;
-                    }
-
-                    final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, effectiveDate);
-                    entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(state, contextWithValidAccountRecordId);
-
-                    // Should we send one event per entitlement in the bundle?
-                    // Code below only sends one event for the bundle and use the base entitlementId
-                    final DefaultEffectiveEntitlementEvent event = new DefaultEffectiveEntitlementEvent(state.getId(), baseSubscription.getId(), bundleId, bundle.getAccountId(), EntitlementTransitionType.UNBLOCK_BUNDLE,
-                                                                                                        effectiveDate, clock.getUTCNow(),
-                                                                                                        contextWithValidAccountRecordId.getAccountRecordId(), contextWithValidAccountRecordId.getTenantRecordId(),
-                                                                                                        contextWithValidAccountRecordId.getUserToken());
-
-                    try {
-                        eventBus.post(event);
-                    } catch (EventBusException e) {
-                        log.warn("Failed to post bus event for resume operation on bundle " + bundleId);
-                    }
-
-                } catch (SubscriptionBaseApiException e) {
-                    throw new EntitlementApiException(e);
-                } catch (AccountApiException e) {
-                    throw new EntitlementApiException(e);
-                }
-                return null;
-            }
-        };
-        pluginExecution.executeWithPlugin(resumeWithPlugin, pluginContext);
     }
 
     @Override
@@ -473,22 +352,5 @@ public class DefaultEntitlementApi implements EntitlementApi {
             }
         };
         return pluginExecution.executeWithPlugin(transferWithPlugin, pluginContext);
-    }
-
-    private void recordPauseResumeNotificationEntry(final UUID entitlementId, final UUID bundleId, final DateTime effectiveDate, final boolean isPause, final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
-        final NotificationEvent notificationEvent = new EntitlementNotificationKey(entitlementId,
-                                                                                   bundleId,
-                                                                                   isPause ? EntitlementNotificationKeyAction.PAUSE : EntitlementNotificationKeyAction.RESUME,
-                                                                                   effectiveDate);
-
-        try {
-            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
-                                                                                                           DefaultEntitlementService.NOTIFICATION_QUEUE_NAME);
-            subscriptionEventQueue.recordFutureNotification(effectiveDate, notificationEvent, contextWithValidAccountRecordId.getUserToken(), contextWithValidAccountRecordId.getAccountRecordId(), contextWithValidAccountRecordId.getTenantRecordId());
-        } catch (final NoSuchNotificationQueue e) {
-            throw new EntitlementApiException(e, ErrorCode.__UNKNOWN_ERROR_CODE);
-        } catch (final IOException e) {
-            throw new EntitlementApiException(e, ErrorCode.__UNKNOWN_ERROR_CODE);
-        }
     }
 }

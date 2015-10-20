@@ -25,7 +25,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.entitlement.api.DefaultBlockingTransitionInternalEvent;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
-import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.entitlement.engine.core.BlockingTransitionNotificationKey;
@@ -59,7 +58,7 @@ public class DefaultEntitlementService implements EntitlementService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementService.class);
 
-    private final EntitlementApi entitlementApi;
+    private final EntitlementInternalApi entitlementInternalApi;
     private final BlockingStateDao blockingStateDao;
     private final PersistentBus eventBus;
     private final NotificationQueueService notificationQueueService;
@@ -68,12 +67,12 @@ public class DefaultEntitlementService implements EntitlementService {
     private NotificationQueue entitlementEventQueue;
 
     @Inject
-    public DefaultEntitlementService(final EntitlementApi entitlementApi,
+    public DefaultEntitlementService(final EntitlementInternalApi entitlementInternalApi,
                                      final BlockingStateDao blockingStateDao,
                                      final PersistentBus eventBus,
                                      final NotificationQueueService notificationQueueService,
                                      final InternalCallContextFactory internalCallContextFactory) {
-        this.entitlementApi = entitlementApi;
+        this.entitlementInternalApi = entitlementInternalApi;
         this.blockingStateDao = blockingStateDao;
         this.eventBus = eventBus;
         this.notificationQueueService = notificationQueueService;
@@ -117,7 +116,7 @@ public class DefaultEntitlementService implements EntitlementService {
     private void processEntitlementNotification(final EntitlementNotificationKey key, final InternalCallContext internalCallContext, final CallContext callContext) {
         final Entitlement entitlement;
         try {
-            entitlement = entitlementApi.getEntitlementForId(key.getEntitlementId(), callContext);
+            entitlement = entitlementInternalApi.getEntitlementForId(key.getEntitlementId(), internalCallContext);
         } catch (final EntitlementApiException e) {
             log.error("Error retrieving entitlement for id " + key.getEntitlementId(), e);
             return;
@@ -134,9 +133,9 @@ public class DefaultEntitlementService implements EntitlementService {
                 EntitlementNotificationKeyAction.CANCEL.equals(entitlementNotificationKeyAction)) {
                 ((DefaultEntitlement) entitlement).blockAddOnsIfRequired(key.getEffectiveDate(), callContext, internalCallContext);
             } else if (EntitlementNotificationKeyAction.PAUSE.equals(entitlementNotificationKeyAction)) {
-                entitlementApi.pause(key.getBundleId(), key.getEffectiveDate().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
+                entitlementInternalApi.pause(key.getBundleId(), key.getEffectiveDate().toLocalDate(), ImmutableList.<PluginProperty>of(), internalCallContext);
             } else if (EntitlementNotificationKeyAction.RESUME.equals(entitlementNotificationKeyAction)) {
-                entitlementApi.resume(key.getBundleId(), key.getEffectiveDate().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
+                entitlementInternalApi.resume(key.getBundleId(), key.getEffectiveDate().toLocalDate(), ImmutableList.<PluginProperty>of(), internalCallContext);
             }
         } catch (final EntitlementApiException e) {
             log.error("Error processing event for entitlement {}" + entitlement.getId(), e);

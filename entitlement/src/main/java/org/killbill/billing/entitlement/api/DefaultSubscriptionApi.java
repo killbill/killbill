@@ -95,13 +95,14 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
-    public Subscription getSubscriptionForEntitlementId(final UUID entitlementId, final TenantContext context) throws SubscriptionApiException {
-        final UUID accountId = internalCallContextFactory.getAccountId(entitlementId, ObjectType.SUBSCRIPTION, context);
+    public Subscription getSubscriptionForEntitlementId(final UUID entitlementId, final TenantContext tenantContext) throws SubscriptionApiException {
 
         // Retrieve entitlements
         final AccountEntitlements accountEntitlements;
         try {
-            accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccountId(accountId, context);
+            final UUID accountId = internalCallContextFactory.getAccountId(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
+            final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
+            accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccountId(accountId, internalTenantContextWithValidAccountRecordId);
         } catch (final EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         }
@@ -119,10 +120,14 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundle(final UUID bundleId, final TenantContext context) throws SubscriptionApiException {
-        final UUID accountId = internalCallContextFactory.getAccountId(bundleId, ObjectType.BUNDLE, context);
+    public SubscriptionBundle getSubscriptionBundle(final UUID bundleId, final TenantContext tenantContext) throws SubscriptionApiException {
 
-        final Optional<SubscriptionBundle> bundleOptional = Iterables.<SubscriptionBundle>tryFind(getSubscriptionBundlesForAccount(accountId, context),
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
+
+
+        final UUID accountId = internalCallContextFactory.getAccountId(bundleId, ObjectType.BUNDLE, tenantContext);
+
+        final Optional<SubscriptionBundle> bundleOptional = Iterables.<SubscriptionBundle>tryFind(getSubscriptionBundlesForAccount(accountId, tenantContext),
                                                                                                   new Predicate<SubscriptionBundle>() {
                                                                                                       @Override
                                                                                                       public boolean apply(final SubscriptionBundle bundle) {
@@ -239,7 +244,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         // Retrieve entitlements
         final AccountEntitlements accountEntitlements;
         try {
-            accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccountId(accountId, tenantContext);
+            final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
+            accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccountId(accountId, internalTenantContextWithValidAccountRecordId);
         } catch (final EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         }

@@ -18,10 +18,20 @@ package org.killbill.billing.entitlement;
 
 import java.util.UUID;
 
+import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
-import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.payment.api.PluginProperty;
 
 public interface EntitlementInternalApi {
 
-    public AccountEntitlements getAllEntitlementsForAccountId(UUID accountId, TenantContext context) throws EntitlementApiException;
+    AccountEntitlements getAllEntitlementsForAccountId(UUID accountId, InternalTenantContext context) throws EntitlementApiException;
+
+    Entitlement getEntitlementForId(final UUID uuid, final InternalTenantContext tenantContext) throws EntitlementApiException;
+
+    void pause(UUID bundleId, LocalDate effectiveDate, Iterable<PluginProperty> properties, InternalCallContext context) throws EntitlementApiException;
+
+    void resume(UUID bundleId, LocalDate localEffectiveDate, Iterable<PluginProperty> properties, InternalCallContext context) throws EntitlementApiException;
 }
