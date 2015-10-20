@@ -27,6 +27,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
+import org.killbill.billing.jaxrs.json.AccountJson;
 import org.killbill.billing.jaxrs.json.PluginInfoJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -70,7 +71,7 @@ public class PluginInfoResource extends JaxRsResourceBase {
     @Timed
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve the list of registered plugins", response = PluginInfoResource.class)
+    @ApiOperation(value = "Retrieve the list of registered plugins", response = PluginInfoJson.class, responseContainer = "List")
     public Response getPluginsInfo(@javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         return Response.status(Status.OK).entity(ImmutableList.copyOf(Iterables.transform(pluginsInfoApi.getPluginsInfo(), new Function<PluginInfo, PluginInfoJson>() {
             @Override
