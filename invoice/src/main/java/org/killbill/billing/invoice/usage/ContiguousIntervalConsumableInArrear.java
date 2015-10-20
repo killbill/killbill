@@ -164,7 +164,7 @@ public class ContiguousIntervalConsumableInArrear {
         Preconditions.checkState(isBuilt.get());
 
         if (transitionTimes.size() < 2) {
-            return new ConsumableInArrearItemsAndNextNotificationDate(ImmutableList.<InvoiceItem>of(), null);
+            return new ConsumableInArrearItemsAndNextNotificationDate(ImmutableList.<InvoiceItem>of(), computeNextNotificationDate());
         }
 
         final List<InvoiceItem> result = Lists.newLinkedList();
