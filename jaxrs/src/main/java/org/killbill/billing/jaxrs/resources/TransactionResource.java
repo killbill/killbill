@@ -57,7 +57,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-@Path(JaxrsResource.PAYMENT_TRANSACTIONS)
+@Path(JaxrsResource.PAYMENT_TRANSACTIONS_PATH)
 @Api(value = JaxrsResource.PAYMENT_TRANSACTIONS, description = "Operations on payment transactions")
 public class TransactionResource extends JaxRsResourceBase {
 
