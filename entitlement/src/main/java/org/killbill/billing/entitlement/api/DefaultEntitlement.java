@@ -327,7 +327,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         refresh(callContext);
 
         if (eventsStream.isSubscriptionCancelled()) {
-            throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
+            throw new EntitlementApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, getId());
         }
 
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
@@ -347,7 +347,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             }
         } else {
             // Entitlement is NOT cancelled (or future cancelled), there is nothing to do
-            throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
+            throw new EntitlementApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, getId());
         }
 
         // If billing was previously cancelled, reactivate
