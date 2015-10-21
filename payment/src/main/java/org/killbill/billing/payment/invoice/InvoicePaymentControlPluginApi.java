@@ -300,6 +300,19 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                                                                               amountToBeRefunded,
                                                                                                               paymentControlPluginContext.getAmount())));
         }
+
+        final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
+        final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
+        if (isAdjusted) {
+            try {
+                invoiceApi.validateInvoiceItemAdjustments(paymentControlPluginContext.getPaymentId(), idWithAmount, internalContext);
+            } catch (InvoiceApiException e) {
+                throw new PaymentControlApiException(String.format("Refund for payment %s aborted", payment.getId()),
+                                                     new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getMessage()));
+            }
+        }
+
+        return new DefaultPriorPaymentControlResult(isAborted, amountToBeRefunded);
     }
 
     private Map<UUID, BigDecimal> extractIdsWithAmountFromProperties(final Iterable<PluginProperty> properties) {

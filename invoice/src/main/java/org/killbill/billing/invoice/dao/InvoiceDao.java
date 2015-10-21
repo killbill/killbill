@@ -75,6 +75,10 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     InvoiceItemModelDao doCBAComplexity(InvoiceModelDao invoice, InternalCallContext context) throws InvoiceApiException;
 
+    Map<UUID, BigDecimal> computeItemAdjustments(final String invoiceId,
+                                                 final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts,
+                                                 final InternalTenantContext context) throws InvoiceApiException;
+
     /**
      * Create a refund.
      *

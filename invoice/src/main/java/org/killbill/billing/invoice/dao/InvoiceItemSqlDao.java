@@ -37,4 +37,9 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId,
                                                             @BindBean final InternalTenantContext context);
+
+
+    @SqlQuery
+    List<InvoiceItemModelDao> getAdjustedOrRepairedInvoiceItemsByLinkedId(@Bind("linkedItemId") final String linkedItemId,
+                                                            @BindBean final InternalTenantContext context);
 }

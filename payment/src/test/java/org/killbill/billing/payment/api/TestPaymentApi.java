@@ -415,7 +415,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                         createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
             Assert.fail("Unexpected success");
         } catch (final PaymentApiException e) {
-            assertTrue(e.getCause() instanceof PaymentControlApiException);
         }
     }
 

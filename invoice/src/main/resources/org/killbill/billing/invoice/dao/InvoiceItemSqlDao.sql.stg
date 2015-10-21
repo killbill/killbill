@@ -58,3 +58,12 @@ getInvoiceItemsBySubscription() ::= <<
   <AND_CHECK_TENANT()>
   ;
 >>
+
+getAdjustedOrRepairedInvoiceItemsByLinkedId() ::= <<
+  SELECT <allTableFields()>
+  FROM <tableName()>
+  WHERE linked_item_id = :linkedItemId
+  AND type IN ('ITEM_ADJ', 'REPAIR_ADJ')
+  <AND_CHECK_TENANT()>
+  ;
+>>

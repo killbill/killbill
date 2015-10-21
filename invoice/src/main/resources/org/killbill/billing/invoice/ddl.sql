@@ -29,6 +29,7 @@ CREATE UNIQUE INDEX invoice_items_id ON invoice_items(id);
 CREATE INDEX invoice_items_subscription_id ON invoice_items(subscription_id ASC);
 CREATE INDEX invoice_items_invoice_id ON invoice_items(invoice_id ASC);
 CREATE INDEX invoice_items_account_id ON invoice_items(account_id ASC);
+CREATE INDEX invoice_items_linked_item_id ON invoice_items(linked_item_id ASC);
 CREATE INDEX invoice_items_tenant_account_record_id ON invoice_items(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS invoices;

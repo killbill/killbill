@@ -19,8 +19,10 @@ package org.killbill.billing.invoice.api;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -52,6 +54,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class InvoiceApiHelper {
@@ -119,9 +122,12 @@ public class InvoiceApiHelper {
      * @param effectiveDate       adjustment effective date, in the account timezone
      * @return the adjustment item
      */
-    public InvoiceItem createAdjustmentItem(final Invoice invoiceToBeAdjusted, final UUID invoiceItemId,
-                                            @Nullable final BigDecimal positiveAdjAmount, @Nullable final Currency currency,
-                                            final LocalDate effectiveDate, final InternalCallContext context) throws InvoiceApiException {
+    public InvoiceItem createAdjustmentItem(final Invoice invoiceToBeAdjusted,
+                                            final UUID invoiceItemId,
+                                            @Nullable final BigDecimal positiveAdjAmount,
+                                            @Nullable final Currency currency,
+                                            final LocalDate effectiveDate,
+                                            final InternalCallContext context) throws InvoiceApiException {
         final InvoiceItem invoiceItemToBeAdjusted = Iterables.<InvoiceItem>tryFind(invoiceToBeAdjusted.getInvoiceItems(),
                                                                                    new Predicate<InvoiceItem>() {
                                                                                        @Override
@@ -133,14 +139,20 @@ public class InvoiceApiHelper {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
         }
 
-        // Retrieve the amount and currency if needed
-        final BigDecimal amountToAdjust = Objects.firstNonNull(positiveAdjAmount, invoiceItemToBeAdjusted.getAmount());
         // Check the specified currency matches the one of the existing invoice
         final Currency currencyForAdjustment = Objects.firstNonNull(currency, invoiceItemToBeAdjusted.getCurrency());
         if (invoiceItemToBeAdjusted.getCurrency() != currencyForAdjustment) {
             throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, currency, invoiceItemToBeAdjusted.getCurrency());
         }
 
+        // Reuse the same logic we have for the refun with item adjustment
+        final Map<UUID, BigDecimal> input = new HashMap<UUID, BigDecimal>();
+        input.put(invoiceItemId, positiveAdjAmount);
+
+        final Map<UUID, BigDecimal> output = dao.computeItemAdjustments(invoiceToBeAdjusted.getId().toString(), input, context);
+
+        // If we pass that stage, it means the validation succeeded so we just need to extract resulting amount and negate the result.
+        final BigDecimal amountToAdjust = output.get(invoiceItemId).negate();
         // Finally, create the adjustment
         return new ItemAdjInvoiceItem(UUIDs.randomUUID(),
                                       context.getCreatedDate(),
@@ -148,8 +160,7 @@ public class InvoiceApiHelper {
                                       invoiceItemToBeAdjusted.getAccountId(),
                                       effectiveDate,
                                       null,
-                                      // Note! The amount is negated here!
-                                      amountToAdjust.negate(),
+                                      amountToAdjust,
                                       currencyForAdjustment,
                                       invoiceItemToBeAdjusted.getId());
     }

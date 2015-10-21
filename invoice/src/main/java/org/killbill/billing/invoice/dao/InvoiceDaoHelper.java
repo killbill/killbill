@@ -34,7 +34,6 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
@@ -43,7 +42,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap.Builder;
 
 public class InvoiceDaoHelper {
 
@@ -65,9 +63,9 @@ public class InvoiceDaoHelper {
                                                         final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts,
                                                         final InternalTenantContext context) throws InvoiceApiException {
         // Populate the missing amounts for individual items, if needed
-        final Builder<UUID, BigDecimal> invoiceItemIdsWithAmountsBuilder = new Builder<UUID, BigDecimal>();
+        final Map<UUID, BigDecimal> outputItemIdsWithAmounts = new HashMap<UUID, BigDecimal>();
         if (invoiceItemIdsWithNullAmounts.size() == 0) {
-            return invoiceItemIdsWithAmountsBuilder.build();
+            return outputItemIdsWithAmounts;
         }
 
         // Retrieve invoice before the Refund
@@ -82,53 +80,50 @@ public class InvoiceDaoHelper {
         // If we have an item amount, we 'd like to use it, but we need to check first that it is lesser or equal than maximum allowed
         //If, not we compute maximum value we can adjust per item
         for (final UUID invoiceItemId : invoiceItemIdsWithNullAmounts.keySet()) {
-            final BigDecimal originalItemAmount = getInvoiceItemAmountForId(invoice, invoiceItemId);
-            final BigDecimal maxAdjAmount = computeItemAdjustmentAmount(invoiceItemId, originalItemAmount, invoice.getInvoiceItems());
+            final List<InvoiceItemModelDao> adjustedOrRepairedItems = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class).getAdjustedOrRepairedInvoiceItemsByLinkedId(invoiceItemId.toString(), context);
+            computeItemAdjustmentsForTargetInvoiceItem(getInvoiceItemForId(invoice, invoiceItemId), adjustedOrRepairedItems, invoiceItemIdsWithNullAmounts, outputItemIdsWithAmounts);
+        }
+        return outputItemIdsWithAmounts;
+    }
 
-            final BigDecimal proposedItemAmount = invoiceItemIdsWithNullAmounts.get(invoiceItemId);
-            if (proposedItemAmount != null && proposedItemAmount.compareTo(maxAdjAmount) > 0) {
-                throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID, proposedItemAmount, maxAdjAmount);
-            }
 
-            final BigDecimal itemAmountToAdjust = Objects.firstNonNull(proposedItemAmount, maxAdjAmount);
-            if (itemAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
-                invoiceItemIdsWithAmountsBuilder.put(invoiceItemId, itemAmountToAdjust);
-            }
+    private static void computeItemAdjustmentsForTargetInvoiceItem(final InvoiceItemModelDao targetInvoiceItem, final List<InvoiceItemModelDao> adjustedOrRepairedItems, final Map<UUID, BigDecimal> inputAdjInvoiceItem, final Map<UUID, BigDecimal> outputAdjInvoiceItem) throws InvoiceApiException {
+        final BigDecimal originalItemAmount = targetInvoiceItem.getAmount();
+        final BigDecimal maxAdjLeftAmount = computeItemAdjustmentAmount(originalItemAmount, adjustedOrRepairedItems);
+
+        final BigDecimal proposedItemAmount = inputAdjInvoiceItem.get(targetInvoiceItem.getId());
+        if (proposedItemAmount != null && proposedItemAmount.compareTo(maxAdjLeftAmount) > 0) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID, proposedItemAmount, maxAdjLeftAmount);
         }
 
-        return invoiceItemIdsWithAmountsBuilder.build();
+        final BigDecimal itemAmountToAdjust = Objects.firstNonNull(proposedItemAmount, maxAdjLeftAmount);
+        if (itemAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
+            outputAdjInvoiceItem.put(targetInvoiceItem.getId(), itemAmountToAdjust);
+        }
     }
 
     /**
-     * @param invoiceItem                     item we are adjusting
      * @param requestedPositiveAmountToAdjust amount we are adjusting for that item
-     * @param invoiceItems                    list of all invoice items on this invoice
+     * @param adjustedOrRepairedItems        list of all adjusted or repaired linking to this item
      * @return the amount we should really adjust based on whether or not the item got repaired
      */
-    private BigDecimal computeItemAdjustmentAmount(final UUID invoiceItem, final BigDecimal requestedPositiveAmountToAdjust, final List<InvoiceItemModelDao> invoiceItems) {
+    private static BigDecimal computeItemAdjustmentAmount(final BigDecimal requestedPositiveAmountToAdjust, final List<InvoiceItemModelDao> adjustedOrRepairedItems) {
 
-        BigDecimal positiveRepairedAmount = BigDecimal.ZERO;
+        BigDecimal positiveAdjustedOrRepairedAmount = BigDecimal.ZERO;
 
-        final Collection<InvoiceItemModelDao> repairedItems = Collections2.filter(invoiceItems, new Predicate<InvoiceItemModelDao>() {
-            @Override
-            public boolean apply(final InvoiceItemModelDao input) {
-                return (input.getType() == InvoiceItemType.REPAIR_ADJ && input.getLinkedItemId().equals(invoiceItem));
-            }
-        });
-        for (final InvoiceItemModelDao cur : repairedItems) {
-            // Repair item are negative so we negate to make it positive
-            positiveRepairedAmount = positiveRepairedAmount.add(cur.getAmount().negate());
+        for (final InvoiceItemModelDao cur : adjustedOrRepairedItems) {
+            // Adjustment or repair items are negative so we negate to make it positive
+            positiveAdjustedOrRepairedAmount = positiveAdjustedOrRepairedAmount.add(cur.getAmount().negate());
         }
-        return (positiveRepairedAmount.compareTo(requestedPositiveAmountToAdjust) >= 0) ? BigDecimal.ZERO : requestedPositiveAmountToAdjust.subtract(positiveRepairedAmount);
+        return (positiveAdjustedOrRepairedAmount.compareTo(requestedPositiveAmountToAdjust) >= 0) ? BigDecimal.ZERO : requestedPositiveAmountToAdjust.subtract(positiveAdjustedOrRepairedAmount);
     }
 
-    private BigDecimal getInvoiceItemAmountForId(final InvoiceModelDao invoice, final UUID invoiceItemId) throws InvoiceApiException {
+    private InvoiceItemModelDao getInvoiceItemForId(final InvoiceModelDao invoice, final UUID invoiceItemId) throws InvoiceApiException {
         for (final InvoiceItemModelDao invoiceItem : invoice.getInvoiceItems()) {
             if (invoiceItem.getId().equals(invoiceItemId)) {
-                return invoiceItem.getAmount();
+                return invoiceItem;
             }
         }
-
         throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
     }
 

@@ -394,7 +394,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                                          amount,
                                                                                          currency,
                                                                                          effectiveDate,
-                                                                                         internalCallContextFactory.createInternalCallContext(context));
+                                                                                         internalCallContextFactory.createInternalCallContext(accountId, context));
                 invoice.addInvoiceItem(adjustmentItem);
 
                 return ImmutableList.<Invoice>of(invoice);

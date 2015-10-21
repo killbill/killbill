@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.api.svcs;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -41,6 +42,8 @@ import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.WithAccountLock;
 import org.killbill.billing.invoice.dao.InvoiceDao;
+import org.killbill.billing.invoice.dao.InvoiceDaoHelper;
+import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.model.DefaultInvoice;
@@ -156,6 +159,12 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) throws InvoiceApiException {
         dao.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, context);
+    }
+
+    @Override
+    public Map<UUID, BigDecimal> validateInvoiceItemAdjustments(final UUID paymentId, final Map<UUID, BigDecimal> idWithAmount, final InternalTenantContext context) throws InvoiceApiException {
+        final InvoicePayment invoicePayment = getInvoicePayment(paymentId, InvoicePaymentType.ATTEMPT, context);
+        return dao.computeItemAdjustments(invoicePayment.getInvoiceId().toString(), idWithAmount, context);
     }
 
     private InvoicePayment getInvoicePayment(final UUID paymentId, final InvoicePaymentType type, final InternalTenantContext context) throws InvoiceApiException {
