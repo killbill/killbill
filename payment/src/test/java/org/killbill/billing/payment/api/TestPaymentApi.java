@@ -28,6 +28,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.killbill.automaton.OperationException;
 import org.killbill.billing.payment.logging.SpyLogger;
+import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
 
@@ -96,6 +97,18 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testUniqueExternalPaymentMethod() throws PaymentApiException {
+        paymentApi.addPaymentMethod(account, "thisonewillwork", ExternalPaymentProviderPlugin.PLUGIN_NAME, true, null, ImmutableList.<PluginProperty>of(), callContext);
+
+        try {
+            paymentApi.addPaymentMethod(account, "thisonewillnotwork", ExternalPaymentProviderPlugin.PLUGIN_NAME, true, null, ImmutableList.<PluginProperty>of(), callContext);
+
+        } catch (PaymentApiException e) {
+            assertEquals(e.getCode(), ErrorCode.PAYMENT_EXTERNAL_PAYMENT_METHOD_ALREADY_EXISTS.getCode());
+        }
+    }
+
+        @Test(groups = "slow")
     public void testCreateSuccessPurchase() throws PaymentApiException {
 
         final BigDecimal requestedAmount = BigDecimal.TEN;

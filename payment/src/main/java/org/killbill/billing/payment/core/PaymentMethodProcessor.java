@@ -66,8 +66,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
@@ -113,6 +115,9 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                         public PluginDispatcherReturnType<UUID> doOperation() throws PaymentApiException {
                                                                                                             PaymentMethod pm = null;
                                                                                                             try {
+
+                                                                                                                validateUniqueExternalPaymentMethod(account.getId(), paymentPluginServiceName);
+
                                                                                                                 pm = new DefaultPaymentMethod(paymentMethodExternalKey, account.getId(), paymentPluginServiceName, paymentMethodProps);
                                                                                                                 final PaymentPluginApi pluginApi = getPaymentPluginApi(paymentPluginServiceName);
                                                                                                                 pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, properties, callContext);
@@ -137,6 +142,21 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                                 throw new PaymentApiException(e);
                                                                                                             }
                                                                                                             return PluginDispatcher.createPluginDispatcherReturnType(pm.getId());
+                                                                                                        }
+
+
+                                                                                                        private void validateUniqueExternalPaymentMethod(final UUID accountId, final String pluginName) throws PaymentApiException {
+                                                                                                            if (ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(pluginName)) {
+                                                                                                                final List<PaymentMethodModelDao> accountPaymentMethods = paymentDao.getPaymentMethods(accountId, context);
+                                                                                                                if (Iterables.any(accountPaymentMethods, new Predicate<PaymentMethodModelDao>() {
+                                                                                                                    @Override
+                                                                                                                    public boolean apply(final PaymentMethodModelDao input) {
+                                                                                                                        return ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(input.getPluginName());
+                                                                                                                    }
+                                                                                                                })) {
+                                                                                                                    throw new PaymentApiException(ErrorCode.PAYMENT_EXTERNAL_PAYMENT_METHOD_ALREADY_EXISTS, accountId);
+                                                                                                                }
+                                                                                                            }
                                                                                                         }
                                                                                                     }),
                                              uuidPluginNotificationDispatcher);
