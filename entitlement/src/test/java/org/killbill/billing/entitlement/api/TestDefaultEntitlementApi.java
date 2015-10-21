@@ -439,4 +439,50 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(newBaseEntitlement.getEffectiveEndDate(), null);
     }
 
+    @Test(groups = "slow")
+    public void testCreateEntitlementInThePast() throws AccountApiException, EntitlementApiException, SubscriptionBaseApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        final LocalDate clockDate = new LocalDate(2013, 10, 7);
+        clock.setDay(clockDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.PHASE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(entitlement.getAccountId(), account.getId());
+        assertEquals(entitlement.getExternalKey(), account.getExternalKey());
+
+        assertEquals(entitlement.getEffectiveStartDate(), initialDate);
+        assertNull(entitlement.getEffectiveEndDate());
+
+        assertEquals(entitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(entitlement.getLastActivePhase().getName(), "shotgun-monthly-evergreen");
+        assertEquals(entitlement.getLastActivePlan().getName(), "shotgun-monthly");
+        assertEquals(entitlement.getLastActiveProductCategory(), ProductCategory.BASE);
+
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
+
+        assertEquals(entitlement.getLastActivePlan().getName(), "shotgun-monthly");
+        assertEquals(entitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(entitlement.getLastActiveProductCategory(), ProductCategory.BASE);
+
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
+
+        List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(entitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 1);
+
+        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
+        assertEquals(bundleEntitlements.size(), 1);
+
+    }
+
 }
