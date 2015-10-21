@@ -29,16 +29,23 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
+import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
+import org.killbill.billing.control.plugin.api.PaymentControlContext;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -52,12 +59,6 @@ import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
-import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
-import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
-import org.killbill.billing.control.plugin.api.PaymentControlApiException;
-import org.killbill.billing.control.plugin.api.PaymentControlContext;
-import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
-import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -240,7 +241,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final PluginProperty invoiceProp = getPluginProperty(pluginProperties, PROP_IPCD_INVOICE_ID);
         if (invoiceProp == null ||
             !(invoiceProp.getValue() instanceof String)) {
-            throw new PaymentControlApiException("Need to specify a valid invoiceId in property " + PROP_IPCD_INVOICE_ID);
+            throw new PaymentControlApiException("Failed to retrieve invoiceId: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, String.format("Need to specify a valid invoiceId in property ", PROP_IPCD_INVOICE_ID)));
         }
         return UUID.fromString((String) invoiceProp.getValue());
     }
@@ -257,9 +258,11 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             }
 
             if (paymentControlPluginContext.isApiPayment() && isAborted) {
-                throw new PaymentControlApiException("Payment for invoice " + invoice.getId() +
-                                                     " aborted : invoice balance is = " + invoice.getBalance() +
-                                                     ", requested payment amount is = " + paymentControlPluginContext.getAmount());
+                throw new PaymentControlApiException("Abort purchase call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
+                                                                                                     String.format("Payment for invoice %s aborted : invoice balance is = %s, requested payment amount is = %s",
+                                                                                                                   invoice.getId(),
+                                                                                                                   invoice.getBalance(),
+                                                                                                                   paymentControlPluginContext.getAmount())));
             } else {
                 return new DefaultPriorPaymentControlResult(isAborted, requestedAmount);
             }
@@ -274,26 +277,28 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
         if ((paymentControlPluginContext.getAmount() == null || paymentControlPluginContext.getAmount().compareTo(BigDecimal.ZERO) == 0) &&
             idWithAmount.size() == 0) {
-            throw new PaymentControlApiException("Refund for payment, key = " + paymentControlPluginContext.getPaymentExternalKey() +
-                                                 " aborted: requested refund amount is = " + paymentControlPluginContext.getAmount());
+            throw new PaymentControlApiException("Abort refund call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
+                                                                                                  String.format("Refund for payment, key = %s, aborted: requested refund amount is = %s",
+                                                                                                                paymentControlPluginContext.getPaymentExternalKey(),
+                                                                                                                paymentControlPluginContext.getAmount())));
         }
 
         final PaymentModelDao payment = paymentDao.getPayment(paymentControlPluginContext.getPaymentId(), internalContext);
         if (payment == null) {
-            throw new PaymentControlApiException();
+            throw new PaymentControlApiException("Unexpected null payment");
         }
         // This will calculate the upper bound on the refund amount based on the invoice items associated with that payment.
-        // Note that we are not checking that other (partial) refund occurred, but if the refund ends up being greater than waht is allowed
+        // Note that we are not checking that other (partial) refund occurred, but if the refund ends up being greater than what is allowed
         // the call to the gateway would fail; it would need noce to validate on our side though...
         final BigDecimal amountToBeRefunded = computeRefundAmount(payment.getId(), paymentControlPluginContext.getAmount(), idWithAmount, internalContext);
         final boolean isAborted = amountToBeRefunded.compareTo(BigDecimal.ZERO) == 0;
 
         if (paymentControlPluginContext.isApiPayment() && isAborted) {
-            throw new PaymentControlApiException("Refund for payment " + payment.getId() +
-                                                 " aborted : invoice item sum amount is " + amountToBeRefunded +
-                                                 ", requested refund amount is = " + paymentControlPluginContext.getAmount());
-        } else {
-            return new DefaultPriorPaymentControlResult(isAborted, amountToBeRefunded);
+            throw new PaymentControlApiException("Abort refund call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
+                                                                                                String.format("Refund for payment %s aborted : invoice item sum amount is %s, requested refund amount is = %s",
+                                                                                                              payment.getId(),
+                                                                                                              amountToBeRefunded,
+                                                                                                              paymentControlPluginContext.getAmount())));
         }
     }
 
@@ -318,24 +323,22 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                            final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final InternalTenantContext context)
             throws PaymentControlApiException {
 
-        if (invoiceItemIdsWithAmounts.size() == 0) {
-            if (specifiedRefundAmount == null || specifiedRefundAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new PaymentControlApiException("You need to specify positive a refund amount");
+        if (specifiedRefundAmount != null) {
+            if (specifiedRefundAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new PaymentControlApiException("Failed to compute refund:", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "You need to specify positive a refund amount"));
             }
             return specifiedRefundAmount;
         }
 
-        final List<InvoiceItem> items;
         try {
-            items = invoiceApi.getInvoiceForPaymentId(paymentId, context).getInvoiceItems();
-
+            final List<InvoiceItem> items = invoiceApi.getInvoiceForPaymentId(paymentId, context).getInvoiceItems();
             BigDecimal amountFromItems = BigDecimal.ZERO;
             for (final UUID itemId : invoiceItemIdsWithAmounts.keySet()) {
                 final BigDecimal specifiedItemAmount = invoiceItemIdsWithAmounts.get(itemId);
                 final BigDecimal itemAmount = getAmountFromItem(items, itemId);
                 if (specifiedItemAmount != null &&
                     (specifiedItemAmount.compareTo(BigDecimal.ZERO) <= 0 || specifiedItemAmount.compareTo(itemAmount) > 0)) {
-                    throw new PaymentControlApiException("You need to specify valid invoice item amount ");
+                    throw new PaymentControlApiException("Failed to compute refund:", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "You need to specify valid invoice item amount "));
                 }
                 amountFromItems = amountFromItems.add(Objects.firstNonNull(specifiedItemAmount, itemAmount));
             }
@@ -351,7 +354,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return item.getAmount();
             }
         }
-        throw new PaymentControlApiException("Unable to find invoice item for id " + itemId);
+        throw new PaymentControlApiException(String.format("Unable to find invoice item for id %s", itemId), new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "Invalid plugin properties"));
     }
 
     private DateTime computeNextRetryDate(final String paymentExternalKey, final boolean isApiAPayment, final InternalCallContext internalContext) {

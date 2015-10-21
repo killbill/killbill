@@ -31,10 +31,12 @@ import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
+import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.Payment;
@@ -124,12 +126,15 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
         } catch (final OperationException e) {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
-            // If the result is set (and cause is null), that means we created a Payment but the associated transaction status is 'XXX_FAILURE',
-            // we don't throw, and return the failed Payment instead to be consistent with what happens when we don't go through control api.
+            // If the control plugin tries to pass us back a PaymentApiException we throw it
+            } else if (e.getCause() instanceof PaymentControlApiException && e.getCause().getCause() instanceof PaymentApiException) {
+                throw (PaymentApiException) e.getCause().getCause();
             } else if (e.getCause() != null || paymentStateContext.getResult() == null) {
                 throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
             }
         }
+        // If the result is set (and cause is null), that means we created a Payment but the associated transaction status is 'XXX_FAILURE',
+        // we don't throw, and return the failed Payment instead to be consistent with what happens when we don't go through control api.
         return paymentStateContext.getResult();
     }
 
