@@ -19,6 +19,8 @@ package org.killbill.billing.server.filters;
 
 import java.util.List;
 
+import javax.ws.rs.core.HttpHeaders;
+
 import org.killbill.billing.util.UUIDs;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
@@ -32,12 +34,13 @@ import com.sun.jersey.spi.container.ContainerResponseFilter;
 @Singleton
 public class RequestDataFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
+    private static final String REQUEST_ID_HEADER = "X-Request-Id";
 
-    private static final String REQUEST_ID_HEADER_REQ = "X-Killbill-Request-Id-Req";
+    private static final String LEGACY_REQUEST_ID_HEADER = "X-Killbill-Request-Id-Req";
 
     @Override
     public ContainerRequest filter(final ContainerRequest request) {
-        final List<String> requestIdHeaderRequests = request.getRequestHeader(REQUEST_ID_HEADER_REQ);
+        final List<String> requestIdHeaderRequests = getRequestId(request);
         final String requestId = (requestIdHeaderRequests == null || requestIdHeaderRequests.isEmpty()) ? UUIDs.randomUUID().toString() : requestIdHeaderRequests.get(0);
         Request.setPerThreadRequestData(new RequestData(requestId));
         return request;
@@ -47,5 +50,13 @@ public class RequestDataFilter implements ContainerRequestFilter, ContainerRespo
     public ContainerResponse filter(final ContainerRequest request, final ContainerResponse response) {
         Request.resetPerThreadRequestData();
         return response;
+    }
+
+    private List<String> getRequestId(final HttpHeaders requestHeaders) {
+        List<String> requestIds = requestHeaders.getRequestHeader(REQUEST_ID_HEADER);
+        if (requestIds == null || requestIds.isEmpty()) {
+            requestIds = requestHeaders.getRequestHeader(LEGACY_REQUEST_ID_HEADER);
+        }
+        return requestIds;
     }
 }
