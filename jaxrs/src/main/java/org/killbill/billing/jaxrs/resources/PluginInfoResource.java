@@ -27,7 +27,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
-import org.killbill.billing.jaxrs.json.AccountJson;
 import org.killbill.billing.jaxrs.json.PluginInfoJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
