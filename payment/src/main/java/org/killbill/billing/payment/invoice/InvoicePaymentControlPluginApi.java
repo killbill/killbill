@@ -151,7 +151,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     final UUID invoiceId = getInvoiceId(pluginProperties);
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null && existingInvoicePayment.isSuccess()) {
-                        log.info("onSuccessCall was already completed for payment purchase :" + paymentControlContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for payment purchase: " + paymentControlContext.getPaymentId());
                     } else {
                         invoiceApi.notifyOfPayment(invoiceId,
                                                    paymentControlContext.getAmount(),
@@ -167,7 +167,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 case REFUND:
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForRefund(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
-                        log.info("onSuccessCall was already completed for payment refund :" + paymentControlContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for payment refund: " + paymentControlContext.getPaymentId());
                     } else {
                         final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
                         final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
@@ -179,7 +179,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 case CHARGEBACK:
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForChargeback(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
-                        log.info("onSuccessCall was already completed for payment chargeback :" + paymentControlContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for payment chargeback: " + paymentControlContext.getPaymentId());
                     } else {
                         invoiceApi.createChargeback(paymentControlContext.getPaymentId(), paymentControlContext.getProcessedAmount(), paymentControlContext.getProcessedCurrency(), internalContext);
                     }
@@ -241,7 +241,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final PluginProperty invoiceProp = getPluginProperty(pluginProperties, PROP_IPCD_INVOICE_ID);
         if (invoiceProp == null ||
             !(invoiceProp.getValue() instanceof String)) {
-            throw new PaymentControlApiException("Failed to retrieve invoiceId: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, String.format("Need to specify a valid invoiceId in property ", PROP_IPCD_INVOICE_ID)));
+            throw new PaymentControlApiException("Failed to retrieve invoiceId: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, String.format("Need to specify a valid invoiceId in property %s", PROP_IPCD_INVOICE_ID)));
         }
         return UUID.fromString((String) invoiceProp.getValue());
     }
@@ -338,7 +338,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
         if (specifiedRefundAmount != null) {
             if (specifiedRefundAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new PaymentControlApiException("Failed to compute refund:", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "You need to specify positive a refund amount"));
+                throw new PaymentControlApiException("Failed to compute refund: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "You need to specify a positive refund amount"));
             }
             return specifiedRefundAmount;
         }
@@ -351,7 +351,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 final BigDecimal itemAmount = getAmountFromItem(items, itemId);
                 if (specifiedItemAmount != null &&
                     (specifiedItemAmount.compareTo(BigDecimal.ZERO) <= 0 || specifiedItemAmount.compareTo(itemAmount) > 0)) {
-                    throw new PaymentControlApiException("Failed to compute refund:", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "You need to specify valid invoice item amount "));
+                    throw new PaymentControlApiException("Failed to compute refund: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "You need to specify a valid invoice item amount"));
                 }
                 amountFromItems = amountFromItems.add(Objects.firstNonNull(specifiedItemAmount, itemAmount));
             }
