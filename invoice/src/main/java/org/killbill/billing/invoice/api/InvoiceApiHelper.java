@@ -145,7 +145,7 @@ public class InvoiceApiHelper {
             throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, currency, invoiceItemToBeAdjusted.getCurrency());
         }
 
-        // Reuse the same logic we have for the refun with item adjustment
+        // Reuse the same logic we have for refund with item adjustment
         final Map<UUID, BigDecimal> input = new HashMap<UUID, BigDecimal>();
         input.put(invoiceItemId, positiveAdjAmount);
 
