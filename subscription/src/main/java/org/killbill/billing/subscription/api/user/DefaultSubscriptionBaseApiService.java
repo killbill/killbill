@@ -19,8 +19,10 @@
 package org.killbill.billing.subscription.api.user;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -46,6 +48,7 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.alignment.PlanAligner;
 import org.killbill.billing.subscription.alignment.TimedPhase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -70,7 +73,9 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiService {
@@ -102,6 +107,52 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         createFromSubscription(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate, processedDate, false, context);
         return subscription;
+    }
+
+    @Override
+    public DefaultSubscriptionBase createPlans(final Iterable<SubscriptionEspecifier> subscriptions, final CallContext context) throws SubscriptionBaseApiException {
+
+        Map<UUID, List<SubscriptionBaseEvent>> eventsMap = new HashMap<UUID, List<SubscriptionBaseEvent>>();
+        List<DefaultSubscriptionBase> subscriptionBaseList = new ArrayList<DefaultSubscriptionBase>();
+        for (SubscriptionEspecifier subscription : subscriptions) {
+
+            try {
+                final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(subscription.getBuilder(), this, clock);
+                final InternalCallContext internalCallContext = createCallContextFromBundleId(subscriptionBase.getBundleId(), context);
+                final List<SubscriptionBaseEvent> events = getEventsOnCreation(subscriptionBase.getBundleId(), subscriptionBase.getId(), subscriptionBase.getAlignStartDate(),
+                                                                               subscriptionBase.getBundleStartDate(), subscriptionBase.getActiveVersion(), subscription.getPlan(),
+                                                                               subscription.getInitialPhase(), subscription.getRealPriceList(), subscription.getRequestedDate(),
+                                                                               subscription.getEffectiveDate(), subscription.getProcessedDate(), false, internalCallContext);
+
+                eventsMap.put(subscriptionBase.getId(), events);
+                subscriptionBaseList.add(subscriptionBase);
+
+            } catch (final CatalogApiException e) {
+                throw new SubscriptionBaseApiException(e);
+            }
+        }
+
+        final InternalCallContext internalCallContext = createCallContextFromBundleId(subscriptionBaseList.get(0).getBundleId(), context);
+        dao.createSubscriptionWithAddOns(subscriptionBaseList, eventsMap, internalCallContext);
+
+        try {
+            for (DefaultSubscriptionBase subscriptionBase : subscriptionBaseList) {
+                subscriptionBase.rebuildTransitions(dao.getEventsForSubscription(subscriptionBase.getId(), internalCallContext), catalogService.getFullCatalog(internalCallContext));
+            }
+        } catch (CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
+
+        return findBaseSubscription(subscriptionBaseList);
+    }
+
+    private DefaultSubscriptionBase findBaseSubscription(final List<DefaultSubscriptionBase> subscriptionBaseList) {
+        return Iterables.tryFind(subscriptionBaseList, new Predicate<DefaultSubscriptionBase>() {
+            @Override
+            public boolean apply(final DefaultSubscriptionBase subscription) {
+                return ProductCategory.BASE.equals(subscription.getCategory());
+            }
+        }).orNull();
     }
 
     @Deprecated

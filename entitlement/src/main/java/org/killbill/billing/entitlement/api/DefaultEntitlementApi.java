@@ -31,6 +31,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EventsStream;
@@ -153,6 +154,58 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             }
         };
         return pluginExecution.executeWithPlugin(createBaseEntitlementWithPlugin, pluginContext);
+    }
+
+    @Override
+    public Entitlement createBaseEntitlementWithAddOns(final UUID accountId, final Iterable<EntitlementSpecifier> entitlementSpecifier, final LocalDate effectiveDate,
+                                                             final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        final EntitlementSpecifier baseSpecifier = Iterables.tryFind(entitlementSpecifier, new Predicate<EntitlementSpecifier>() {
+            @Override
+            public boolean apply(final EntitlementSpecifier specifier) {
+                return specifier.getPlanPhaseSpecifier() != null && ProductCategory.BASE.equals(specifier.getPlanPhaseSpecifier().getProductCategory());
+            }
+        }).orNull();
+
+        if (baseSpecifier == null) {
+            throw new EntitlementApiException(new IllegalArgumentException(), ErrorCode.SUB_CREATE_NO_BP.getCode(), "Missing Base Subscription.");
+        }
+
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CREATE_SUBSCRIPTION,
+                                                                               accountId,
+                                                                               null,
+                                                                               null,
+                                                                               baseSpecifier.getPlanPhaseSpecifier(),
+                                                                               baseSpecifier.getExternalkey(),
+                                                                               baseSpecifier.getOverrides(),
+                                                                               effectiveDate,
+                                                                               properties,
+                                                                               callContext);
+
+        final WithEntitlementPlugin<Entitlement> createBaseEntitlementWithAddOn = new WithEntitlementPlugin<Entitlement>() {
+            @Override
+            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+                final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+
+                try {
+                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.createBundleForAccount(accountId, baseSpecifier.getExternalkey(), contextWithValidAccountRecordId);
+
+                    final DateTime referenceTime = clock.getUTCNow();
+                    final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), referenceTime, contextWithValidAccountRecordId);
+                    final SubscriptionBase subscription = subscriptionBaseInternalApi.createBaseSubscriptionWithAddOns(bundle.getId(), entitlementSpecifier, requestedDate, contextWithValidAccountRecordId);
+
+                    return new DefaultEntitlement(subscription.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
+                                                  blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
+                                                  entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
+
+
+                } catch (SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
+                }
+
+            }
+        };
+        return pluginExecution.executeWithPlugin(createBaseEntitlementWithAddOn, pluginContext);
     }
 
     @Override

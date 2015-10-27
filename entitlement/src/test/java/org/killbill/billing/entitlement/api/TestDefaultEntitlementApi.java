@@ -16,6 +16,7 @@
 
 package org.killbill.billing.entitlement.api;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,7 +43,10 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -482,6 +486,108 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
         assertEquals(bundleEntitlements.size(), 1);
+
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseEntitlementWithAddOns() throws AccountApiException, EntitlementApiException, SubscriptionBaseApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Cleaning", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier("baseExternalKey", baseSpec, null);
+        EntitlementSpecifier addOnEntitlementSpecifier = new DefaultEntitlementSpecifier("addOnExternalKey", addOnSpec, null);
+
+        final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
+        specifierList.add(baseEntitlementSpecifier);
+        specifierList.add(addOnEntitlementSpecifier);
+
+        // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertNotNull(entitlement);
+
+        final List<Entitlement> allEntitlementsForBundle = entitlementApi.getAllEntitlementsForBundle(entitlement.getBundleId(), callContext);
+        assertTrue(allEntitlementsForBundle.size() == 2);
+
+        final Entitlement baseEntitlement = allEntitlementsForBundle.get(0);
+        final Entitlement addOnEntitlement = allEntitlementsForBundle.get(1);
+
+        assertEquals(baseEntitlement.getLastActiveProduct().getName(), "Pistol");
+        assertEquals(baseEntitlement.getLastActiveProductCategory(), ProductCategory.BASE);
+
+        assertEquals(addOnEntitlement.getLastActiveProduct().getName(), "Cleaning");
+        assertEquals(addOnEntitlement.getLastActiveProductCategory(), ProductCategory.ADD_ON);
+
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseEntitlementWithInvalidAddOn() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Invalid", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier("baseExternalKey", baseSpec, null);
+        EntitlementSpecifier addOnEntitlementSpecifier = new DefaultEntitlementSpecifier("addOnExternalKey", addOnSpec, null);
+
+        final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
+        specifierList.add(baseEntitlementSpecifier);
+        specifierList.add(addOnEntitlementSpecifier);
+
+        // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
+        testListener.pushExpectedEvents();
+        try {
+            entitlementApi.createBaseEntitlementWithAddOns(account.getId(), specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+            fail();
+        } catch (EntitlementApiException e) {
+            assertEquals(e.getMessage(), "Could not find any product named 'Invalid'");
+        }
+        assertListenerStatus();
+
+        final List<Entitlement> allEntitlementsForAccount = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        assertTrue(allEntitlementsForAccount.size() == 0);
+
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseEntitlementWithoutBaseEntitlement() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Cleaning", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Bullets", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier("addOnExternalKey", baseSpec, null);
+        EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier("addOnExternalKey2", addOnSpec, null);
+
+        final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
+        specifierList.add(addOnEntitlementSpecifier1);
+        specifierList.add(addOnEntitlementSpecifier2);
+
+        // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
+        testListener.pushExpectedEvents();
+        try {
+            entitlementApi.createBaseEntitlementWithAddOns(account.getId(), specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+            fail();
+        } catch (EntitlementApiException e) {
+            assertEquals(e.getMessage(), "Missing Base Subscription.");
+        }
+        assertListenerStatus();
+
+        final List<Entitlement> allEntitlementsForAccount = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        assertTrue(allEntitlementsForAccount.size() == 0);
 
     }
 
