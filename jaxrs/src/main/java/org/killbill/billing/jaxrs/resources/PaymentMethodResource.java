@@ -280,7 +280,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve payment method custom fields", response = CustomFieldJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
     public Response getCustomFields(@PathParam("paymentMethodId") final String paymentMethodId,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
