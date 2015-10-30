@@ -21,7 +21,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 
-public class SubscriptionEspecifier {
+public class SubscriptionSpecifier {
 
     private SubscriptionBuilder builder;
     private Plan plan;
@@ -31,13 +31,13 @@ public class SubscriptionEspecifier {
     private DateTime effectiveDate;
     private DateTime processedDate;
 
-    public SubscriptionEspecifier() {
+    public SubscriptionSpecifier() {
     }
 
-    public SubscriptionEspecifier(final SubscriptionBuilder builder, final Plan plan,
-                                  final PhaseType initialPhase, final String realPriceList,
-                                  final DateTime requestedDate, final DateTime effectiveDate,
-                                  final DateTime processedDate) {
+    public SubscriptionSpecifier(final SubscriptionBuilder builder, final Plan plan,
+                                 final PhaseType initialPhase, final String realPriceList,
+                                 final DateTime requestedDate, final DateTime effectiveDate,
+                                 final DateTime processedDate) {
         this.builder = builder;
         this.plan = plan;
         this.initialPhase = initialPhase;

@@ -188,6 +188,10 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
 
                 try {
+                    if (entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(baseSpecifier.getExternalkey(), contextWithValidAccountRecordId) != null) {
+                        throw new EntitlementApiException(new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, baseSpecifier.getExternalkey()));
+                    }
+
                     final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.createBundleForAccount(accountId, baseSpecifier.getExternalkey(), contextWithValidAccountRecordId);
 
                     final DateTime referenceTime = clock.getUTCNow();

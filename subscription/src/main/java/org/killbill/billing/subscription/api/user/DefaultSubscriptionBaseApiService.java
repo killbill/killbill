@@ -48,7 +48,6 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.alignment.PlanAligner;
 import org.killbill.billing.subscription.alignment.TimedPhase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -110,11 +109,11 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public DefaultSubscriptionBase createPlans(final Iterable<SubscriptionEspecifier> subscriptions, final CallContext context) throws SubscriptionBaseApiException {
+    public DefaultSubscriptionBase createPlans(final Iterable<SubscriptionSpecifier> subscriptions, final CallContext context) throws SubscriptionBaseApiException {
 
         Map<UUID, List<SubscriptionBaseEvent>> eventsMap = new HashMap<UUID, List<SubscriptionBaseEvent>>();
         List<DefaultSubscriptionBase> subscriptionBaseList = new ArrayList<DefaultSubscriptionBase>();
-        for (SubscriptionEspecifier subscription : subscriptions) {
+        for (SubscriptionSpecifier subscription : subscriptions) {
 
             try {
                 final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(subscription.getBuilder(), this, clock);
@@ -135,15 +134,15 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscriptionBaseList.get(0).getBundleId(), context);
         dao.createSubscriptionWithAddOns(subscriptionBaseList, eventsMap, internalCallContext);
 
+        final DefaultSubscriptionBase baseSubscription = findBaseSubscription(subscriptionBaseList);
         try {
-            for (DefaultSubscriptionBase subscriptionBase : subscriptionBaseList) {
-                subscriptionBase.rebuildTransitions(dao.getEventsForSubscription(subscriptionBase.getId(), internalCallContext), catalogService.getFullCatalog(internalCallContext));
-            }
+            baseSubscription.rebuildTransitions(dao.getEventsForSubscription(baseSubscription.getId(), internalCallContext),
+                                                catalogService.getFullCatalog(internalCallContext));
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
 
-        return findBaseSubscription(subscriptionBaseList);
+        return baseSubscription;
     }
 
     private DefaultSubscriptionBase findBaseSubscription(final List<DefaultSubscriptionBase> subscriptionBaseList) {

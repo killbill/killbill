@@ -506,7 +506,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         specifierList.add(baseEntitlementSpecifier);
         specifierList.add(addOnEntitlementSpecifier);
 
-        // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE);
         final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
@@ -544,15 +543,12 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         specifierList.add(baseEntitlementSpecifier);
         specifierList.add(addOnEntitlementSpecifier);
 
-        // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
-        testListener.pushExpectedEvents();
         try {
             entitlementApi.createBaseEntitlementWithAddOns(account.getId(), specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
             fail();
         } catch (EntitlementApiException e) {
             assertEquals(e.getMessage(), "Could not find any product named 'Invalid'");
         }
-        assertListenerStatus();
 
         final List<Entitlement> allEntitlementsForAccount = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
         assertTrue(allEntitlementsForAccount.size() == 0);
@@ -576,15 +572,12 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         specifierList.add(addOnEntitlementSpecifier1);
         specifierList.add(addOnEntitlementSpecifier2);
 
-        // Keep the same object for the whole test, to make sure we refresh its state before r/w calls
-        testListener.pushExpectedEvents();
         try {
             entitlementApi.createBaseEntitlementWithAddOns(account.getId(), specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
             fail();
         } catch (EntitlementApiException e) {
             assertEquals(e.getMessage(), "Missing Base Subscription.");
         }
-        assertListenerStatus();
 
         final List<Entitlement> allEntitlementsForAccount = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
         assertTrue(allEntitlementsForAccount.size() == 0);

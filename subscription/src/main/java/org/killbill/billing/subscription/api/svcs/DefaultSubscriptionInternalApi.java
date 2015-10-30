@@ -63,7 +63,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
-import org.killbill.billing.subscription.api.user.SubscriptionEspecifier;
+import org.killbill.billing.subscription.api.user.SubscriptionSpecifier;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
@@ -170,7 +170,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
 
         try {
-            final List<SubscriptionEspecifier> subscriptions = new ArrayList<SubscriptionEspecifier>();
+            final List<SubscriptionSpecifier> subscriptions = new ArrayList<SubscriptionSpecifier>();
             final Catalog catalog = catalogService.getFullCatalog(context);
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
 
@@ -193,7 +193,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
                 }
 
-                SubscriptionEspecifier subscription = new SubscriptionEspecifier();
+                SubscriptionSpecifier subscription = new SubscriptionSpecifier();
                 subscription.setRealPriceList(realPriceList);
                 subscription.setRequestedDate(requestedDate);
                 subscription.setEffectiveDate(requestedDate);

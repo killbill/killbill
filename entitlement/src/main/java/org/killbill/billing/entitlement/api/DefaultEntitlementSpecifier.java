@@ -21,17 +21,16 @@ import java.util.List;
 
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 
 public class DefaultEntitlementSpecifier implements EntitlementSpecifier {
 
-    private String externalkey;
-    private PlanPhaseSpecifier PlanPhaseSpecifier;
-    private List<PlanPhasePriceOverride> overrides;
+    private final String externalkey;
+    private final PlanPhaseSpecifier planPhaseSpecifier;
+    private final List<PlanPhasePriceOverride> overrides;
 
-    public DefaultEntitlementSpecifier(final String externalkey, final org.killbill.billing.catalog.api.PlanPhaseSpecifier planPhaseSpecifier, final List<PlanPhasePriceOverride> overrides) {
+    public DefaultEntitlementSpecifier(final String externalkey, final PlanPhaseSpecifier planPhaseSpecifier, final List<PlanPhasePriceOverride> overrides) {
         this.externalkey = externalkey;
-        PlanPhaseSpecifier = planPhaseSpecifier;
+        this.planPhaseSpecifier = planPhaseSpecifier;
         this.overrides = overrides;
     }
 
@@ -42,7 +41,7 @@ public class DefaultEntitlementSpecifier implements EntitlementSpecifier {
 
     @Override
     public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-        return PlanPhaseSpecifier;
+        return planPhaseSpecifier;
     }
 
     @Override
