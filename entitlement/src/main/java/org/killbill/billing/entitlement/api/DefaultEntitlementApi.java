@@ -286,6 +286,21 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
     }
 
+
+    @Override
+    public void block(UUID bundleId, String serviceName, LocalDate effectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, CallContext context)
+            throws EntitlementApiException {
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
+        super.block(bundleId, serviceName, effectiveDate, blockBilling, blockEntitlement, blockChange, contextWithValidAccountRecordId);
+    }
+
+    @Override
+    public void unblock(UUID bundleId, String serviceName, LocalDate effectiveDate, CallContext context)
+            throws EntitlementApiException {
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
+        super.unblock(bundleId, serviceName, effectiveDate, contextWithValidAccountRecordId);
+    }
+
     @Override
     public UUID transferEntitlements(final UUID sourceAccountId, final UUID destAccountId, final String externalKey, final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
         return transferEntitlementsOverrideBillingPolicy(sourceAccountId, destAccountId, externalKey, effectiveDate, BillingActionPolicy.IMMEDIATE, properties, context);
