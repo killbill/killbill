@@ -23,25 +23,30 @@ import java.util.List;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.entitlement.api.SubscriptionEventType;
-import org.killbill.billing.invoice.api.DryRunType;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
+import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestSubscription extends TestIntegrationBase {
 
@@ -174,5 +179,61 @@ public class TestSubscription extends TestIntegrationBase {
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         checkNoMoreInvoiceToGenerate(account);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateSubscriptionWithAddOns() throws Exception {
+        final LocalDate initialDate = new LocalDate(2015, 10, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier("baseExternalKey", baseSpec, null);
+        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier("", addOnSpec1, null);
+        EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier("", addOnSpec2, null);
+
+        final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
+        specifierList.add(baseEntitlementSpecifier);
+        specifierList.add(addOnEntitlementSpecifier1);
+        specifierList.add(addOnEntitlementSpecifier2);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        checkNoMoreInvoiceToGenerate(account);
+
+        assertNotNull(entitlement);
+
+        final List<Entitlement> allEntitlementsForBundle = entitlementApi.getAllEntitlementsForBundle(entitlement.getBundleId(), callContext);
+        assertTrue(allEntitlementsForBundle.size() == 3);
+
+        final Entitlement baseEntitlement = allEntitlementsForBundle.get(0);
+        final Entitlement addOnEntitlement1 = allEntitlementsForBundle.get(1);
+        final Entitlement addOnEntitlement2 = allEntitlementsForBundle.get(2);
+
+        assertEquals(baseEntitlement.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(baseEntitlement.getLastActiveProductCategory(), ProductCategory.BASE);
+
+        assertEquals(addOnEntitlement1.getLastActiveProduct().getName(), "Telescopic-Scope");
+        assertEquals(addOnEntitlement1.getLastActiveProductCategory(), ProductCategory.ADD_ON);
+
+        assertEquals(addOnEntitlement2.getLastActiveProduct().getName(), "Laser-Scope");
+        assertEquals(addOnEntitlement2.getLastActiveProductCategory(), ProductCategory.ADD_ON);
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        assertTrue(invoices.size() == 1); // ONLY ONE INVOICE
+        assertTrue(invoices.get(0).getInvoiceItems().size() == 3);
+
+        final ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("387.05")), // amount=387.05, rate=399.95 -> Telescopic-Scope
+                new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("967.69")), // amount=967.69, rate=999.95 -> Laser-Scope
+                new ExpectedInvoiceItemCheck(initialDate, null, InvoiceItemType.FIXED, new BigDecimal("0"))); // Shotgun
+
+        invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
+
     }
 }
