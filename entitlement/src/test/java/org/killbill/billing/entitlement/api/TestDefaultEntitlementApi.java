@@ -21,11 +21,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -38,11 +33,16 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -353,6 +353,36 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         }
     }
 
+    @Test(groups = "slow", description = "Test pause in the past")
+    public void testPauseInThePast() throws AccountApiException, EntitlementApiException {
+
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        // Create entitlement
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Get the phase event out of the way
+        testListener.pushExpectedEvents(NextEvent.PHASE);
+        clock.setDay(new LocalDate(2013, 9, 7));
+        assertListenerStatus();
+
+        // Move clock 4 days ahead
+        clock.setDay(new LocalDate(2013, 9, 11));
+
+        try {
+            final LocalDate pauseDateInThePast = new LocalDate(2013, 9, 10);
+            entitlementApi.pause(baseEntitlement.getBundleId(), pauseDateInThePast, ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail("Operation pause with date in the past should fail");
+        } catch (final EntitlementApiException expected) {
+        }
+    }
+
     @Test(groups = "slow", description = "Test pause / unpause in the future")
     public void testPauseUnpauseInTheFuture() throws AccountApiException, EntitlementApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
@@ -382,7 +412,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertListenerStatus();
 
         testListener.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
-        clock.setDay(pauseDate.plusDays(1));
+        clock.setDay(pauseDate);
         assertListenerStatus();
 
         // Verify blocking state
@@ -390,7 +420,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(baseEntitlementPaused.getState(), EntitlementState.BLOCKED);
 
         testListener.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
-        clock.setDay(resumeDate.plusDays(1));
+        clock.setDay(resumeDate);
         assertListenerStatus();
 
         // Verify blocking state
@@ -440,6 +470,78 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
     }
 
     @Test(groups = "slow")
+    public void testBlockBundle() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addDays(5);
+
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.block(baseEntitlement.getBundleId(), "foo", new LocalDate(clock.getUTCNow()), true, true, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 1);
+        assertEquals(bundleEntitlements.get(0).getState(), EntitlementState.BLOCKED);
+
+        final BlockingState blockingState = blockingInternalApi.getBlockingStateForService(baseEntitlement.getBundleId(), BlockingStateType.SUBSCRIPTION_BUNDLE, "foo", internalCallContext);
+        assertTrue(blockingState.isBlockBilling());
+        assertTrue(blockingState.isBlockChange());
+        assertTrue(blockingState.isBlockEntitlement());
+
+
+        // Check unblocking on another service will not bring the sate back to ACTIVE
+        clock.addDays(1);
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.unblock(baseEntitlement.getBundleId(), "bar", new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 1);
+        assertEquals(bundleEntitlements.get(0).getState(), EntitlementState.BLOCKED);
+
+
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.unblock(baseEntitlement.getBundleId(), "foo", new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 1);
+        assertEquals(bundleEntitlements.get(0).getState(), EntitlementState.ACTIVE);
+
+        blockingInternalApi.getBlockingStateForService(baseEntitlement.getBundleId(), BlockingStateType.SUBSCRIPTION_BUNDLE, "foo", internalCallContext);
+        clock.addDays(1);
+
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.block(baseEntitlement.getBundleId(), "foo", new LocalDate(clock.getUTCNow()), true, true, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 1);
+        assertEquals(bundleEntitlements.get(0).getState(), EntitlementState.BLOCKED);
+
+        // Same day but happened after so should take precedence
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.unblock(baseEntitlement.getBundleId(), "foo", new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 1);
+        assertEquals(bundleEntitlements.get(0).getState(), EntitlementState.ACTIVE);
+    }
+
+
+
+        @Test(groups = "slow")
     public void testCreateEntitlementInThePast() throws AccountApiException, EntitlementApiException, SubscriptionBaseApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         final LocalDate clockDate = new LocalDate(2013, 10, 7);
