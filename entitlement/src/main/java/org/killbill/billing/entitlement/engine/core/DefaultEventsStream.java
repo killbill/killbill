@@ -446,18 +446,17 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     private void computeEntitlementBlockingStates() {
-        subscriptionEntitlementStates = filterBlockingStatesForEntitlementService(BlockingStateType.SUBSCRIPTION, subscription.getId());
-        bundleEntitlementStates = filterBlockingStatesForEntitlementService(BlockingStateType.SUBSCRIPTION_BUNDLE, subscription.getBundleId());
-        accountEntitlementStates = filterBlockingStatesForEntitlementService(BlockingStateType.ACCOUNT, account.getId());
+        subscriptionEntitlementStates = filterBlockingStatesForTypeAndId(BlockingStateType.SUBSCRIPTION, subscription.getId());
+        bundleEntitlementStates = filterBlockingStatesForTypeAndId(BlockingStateType.SUBSCRIPTION_BUNDLE, subscription.getBundleId());
+        accountEntitlementStates = filterBlockingStatesForTypeAndId(BlockingStateType.ACCOUNT, account.getId());
     }
 
-    private List<BlockingState> filterBlockingStatesForEntitlementService(final BlockingStateType blockingStateType, @Nullable final UUID blockableId) {
+    private List<BlockingState> filterBlockingStatesForTypeAndId(final BlockingStateType blockingStateType, @Nullable final UUID blockableId) {
         return ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStates,
                                                                                    new Predicate<BlockingState>() {
                                                                                        @Override
                                                                                        public boolean apply(final BlockingState input) {
                                                                                            return blockingStateType.equals(input.getType()) &&
-                                                                                                  EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
                                                                                                   input.getBlockedId().equals(blockableId);
                                                                                        }
                                                                                    }));
