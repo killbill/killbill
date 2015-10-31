@@ -33,7 +33,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
 
     private static BlockingState clearState = null;
 
-    private final UUID blockingId;
+    private final UUID blockedId;
     private final String stateName;
     private final String service;
     private final boolean blockChange;
@@ -52,7 +52,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
 
     // Used by the DAO
     public DefaultBlockingState(final UUID id,
-                                final UUID blockingId,
+                                final UUID blockedId,
                                 final BlockingStateType type,
                                 final String stateName,
                                 final String service,
@@ -64,7 +64,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
                                 final DateTime updatedDate,
                                 final Long totalOrdering) {
         super(id, createDate, updatedDate);
-        this.blockingId = blockingId;
+        this.blockedId = blockedId;
         this.type = type;
         this.stateName = stateName;
         this.service = service;
@@ -75,7 +75,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         this.totalOrdering = totalOrdering;
     }
 
-    public DefaultBlockingState(final UUID blockingId,
+    public DefaultBlockingState(final UUID blockedId,
                                 final BlockingStateType type,
                                 final String stateName,
                                 final String service,
@@ -84,7 +84,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
                                 final boolean blockBilling,
                                 final DateTime effectiveDate) {
         this(UUIDs.randomUUID(),
-             blockingId,
+             blockedId,
              type,
              stateName,
              service,
@@ -99,7 +99,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
 
     @Override
     public UUID getBlockedId() {
-        return blockingId;
+        return blockedId;
     }
 
     @Override
@@ -192,7 +192,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         if (blockEntitlement != that.blockEntitlement) {
             return false;
         }
-        if (blockingId != null ? !blockingId.equals(that.blockingId) : that.blockingId != null) {
+        if (blockedId != null ? !blockedId.equals(that.blockedId) : that.blockedId != null) {
             return false;
         }
         if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
@@ -217,7 +217,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (blockingId != null ? blockingId.hashCode() : 0);
+        result = 31 * result + (blockedId != null ? blockedId.hashCode() : 0);
         result = 31 * result + (stateName != null ? stateName.hashCode() : 0);
         result = 31 * result + (service != null ? service.hashCode() : 0);
         result = 31 * result + (blockChange ? 1 : 0);
@@ -248,7 +248,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
 
     @Override
     public String toString() {
-        return "BlockingState [blockingId=" + blockingId + ", stateName=" + stateName + ", service="
+        return "BlockingState [blockedId=" + blockedId + ", stateName=" + stateName + ", service="
                + service + ", blockChange=" + blockChange + ", blockEntitlement=" + blockEntitlement
                + ", blockBilling=" + blockBilling + ", effectiveDate=" + effectiveDate + "]";
     }
