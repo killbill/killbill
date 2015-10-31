@@ -474,6 +474,8 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
+        final String stateName = "something";
+
         final Account account = accountApi.createAccount(getAccountData(7), callContext);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
@@ -486,7 +488,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         clock.addDays(5);
 
         testListener.pushExpectedEvents(NextEvent.BLOCK);
-        entitlementApi.block(baseEntitlement.getBundleId(), "foo", new LocalDate(clock.getUTCNow()), true, true, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.block(baseEntitlement.getBundleId(), stateName, "foo", new LocalDate(clock.getUTCNow()), true, true, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);
@@ -502,7 +504,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         // Check unblocking on another service will not bring the sate back to ACTIVE
         clock.addDays(1);
         testListener.pushExpectedEvents(NextEvent.BLOCK);
-        entitlementApi.unblock(baseEntitlement.getBundleId(), "bar", new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.unblock(baseEntitlement.getBundleId(), stateName, "bar", new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);
@@ -511,7 +513,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
 
         testListener.pushExpectedEvents(NextEvent.BLOCK);
-        entitlementApi.unblock(baseEntitlement.getBundleId(), "foo", new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.unblock(baseEntitlement.getBundleId(), stateName, "foo", new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);
@@ -522,7 +524,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         clock.addDays(1);
 
         testListener.pushExpectedEvents(NextEvent.BLOCK);
-        entitlementApi.block(baseEntitlement.getBundleId(), "foo", new LocalDate(clock.getUTCNow()), true, true, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.block(baseEntitlement.getBundleId(), stateName, "foo", new LocalDate(clock.getUTCNow()), true, true, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);
@@ -531,7 +533,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         // Same day but happened after so should take precedence
         testListener.pushExpectedEvents(NextEvent.BLOCK);
-        entitlementApi.unblock(baseEntitlement.getBundleId(), "foo", new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.unblock(baseEntitlement.getBundleId(), stateName, "foo", new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(baseEntitlement.getBundleId(), callContext);

@@ -268,14 +268,14 @@ public class DefaultEntitlementApiBase {
         pluginExecution.executeWithPlugin(resumeWithPlugin, pluginContext);
     }
 
-    public void block(final UUID bundleId, final String serviceName, final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext)
+    public void block(final UUID bundleId, final String stateName, final String serviceName, final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext)
             throws EntitlementApiException {
-        blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_BLOCKED, serviceName, localEffectiveDate, blockBilling, blockEntitlement, blockChange, null, internalCallContext);
+        blockUnblockBundle(bundleId, stateName, serviceName, localEffectiveDate, blockBilling, blockEntitlement, blockChange, null, internalCallContext);
     }
 
-    public void unblock(final UUID bundleId, final String serviceName, final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext)
+    public void unblock(final UUID bundleId, final String stateName, final String serviceName, final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext)
             throws EntitlementApiException {
-        blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_CLEAR, serviceName, localEffectiveDate, false, false, false, null, internalCallContext);
+        blockUnblockBundle(bundleId, stateName, serviceName, localEffectiveDate, false, false, false, null, internalCallContext);
     }
 
     private UUID blockUnblockBundle(final UUID bundleId, final String stateName, final String serviceName, final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, @Nullable final SubscriptionBase inputBaseSubscription, final InternalCallContext internalCallContext)
