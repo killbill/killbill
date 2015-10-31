@@ -393,7 +393,7 @@ public class DefaultEventsStream implements EventsStream {
             }
 
             if (currentBlockingStatePerService.get(blockingState.getService()) == null ||
-                currentBlockingStatePerService.get(blockingState.getService()).getEffectiveDate().isBefore(blockingState.getEffectiveDate())) {
+                !currentBlockingStatePerService.get(blockingState.getService()).getEffectiveDate().isAfter(blockingState.getEffectiveDate())) {
                 currentBlockingStatePerService.put(blockingState.getService(), blockingState);
             }
         }
