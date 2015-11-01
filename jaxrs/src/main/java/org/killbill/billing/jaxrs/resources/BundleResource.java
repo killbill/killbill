@@ -49,6 +49,7 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
+import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.TagJson;
@@ -238,6 +239,41 @@ public class BundleResource extends JaxRsResourceBase {
         entitlementApi.resume(bundleId, inputLocalDate, pluginProperties, callContext);
         return Response.status(Status.OK).build();
     }
+
+    @Timed
+    @PUT
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + BLOCK)
+    @Consumes(APPLICATION_JSON)
+    @ApiOperation(value = "Block a bundle")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
+                           @ApiResponse(code = 404, message = "Bundle not found")})
+    public Response addBundleBlockingState(final BlockingStateJson json,
+                                           @PathParam(ID_PARAM_NAME) final String id,
+                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                           @HeaderParam(HDR_REASON) final String reason,
+                                           @HeaderParam(HDR_COMMENT) final String comment,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID bundleId = UUID.fromString(id);
+
+        final boolean isBlockBilling = (json.isBlockBilling() != null && json.isBlockBilling());
+        final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
+        final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
+
+        final boolean isBlockOperation = isBlockBilling || isBlockEntitlement || isBlockChange;
+
+        if (isBlockOperation) {
+            entitlementApi.block(bundleId, json.getStateName(), json.getService(), json.getEffectiveDate(), isBlockBilling, isBlockEntitlement, isBlockChange, pluginProperties, callContext);
+        } else {
+            entitlementApi.unblock(bundleId, json.getStateName(), json.getService(), json.getEffectiveDate(), pluginProperties, callContext);
+        }
+        return Response.status(Status.OK).build();
+    }
+
+
 
     @Timed
     @GET

@@ -22,13 +22,17 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
+import org.killbill.billing.client.model.BlockingState;
 import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Bundles;
 import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -115,6 +119,42 @@ public class TestBundle extends TestJaxrsBase {
         assertEquals(newBundle.getExternalKey(), originalBundle.getExternalKey());
         assertEquals(newBundle.getAccountId(), newAccount.getAccountId());
     }
+
+
+    @Test(groups = "slow", description = "Block a bundle")
+    public void testBlockBundle() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String bundleExternalKey = "93199";
+
+        final Subscription entitlement = createEntitlement(accountJson.getAccountId(), bundleExternalKey, productName,
+                                                                       ProductCategory.BASE, term, true);
+
+        final Bundle bundle = killBillClient.getBundle(bundleExternalKey);
+        assertEquals(bundle.getAccountId(), accountJson.getAccountId());
+        assertEquals(bundle.getExternalKey(), bundleExternalKey);
+
+        final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "state", "service", false, true, true, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), BlockingStateType.SUBSCRIPTION_BUNDLE, null);
+        killBillClient.blockBundle(bundle.getBundleId(), blockingState, createdBy, reason, comment);
+
+        final Subscription subscription = killBillClient.getSubscription(entitlement.getSubscriptionId());
+        assertEquals(subscription.getState(), EntitlementState.BLOCKED);
+
+        clock.addDays(1);
+
+        final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "state", "service", false, false, false, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), BlockingStateType.SUBSCRIPTION_BUNDLE, null);
+        killBillClient.blockBundle(bundle.getBundleId(), unblockingState, createdBy, reason, comment);
+
+        final Subscription subscription2 = killBillClient.getSubscription(entitlement.getSubscriptionId());
+        assertEquals(subscription2.getState(), EntitlementState.ACTIVE);
+    }
+
+
 
     @Test(groups = "slow", description = "Can paginate and search through all bundles")
     public void testBundlesPagination() throws Exception {
