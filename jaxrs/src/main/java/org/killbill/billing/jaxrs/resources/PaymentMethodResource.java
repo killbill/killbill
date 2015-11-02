@@ -26,21 +26,25 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.PaymentMethodJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -49,6 +53,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
+import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
@@ -268,6 +273,53 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         paymentApi.deletePaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, pluginProperties, callContext);
 
         return Response.status(Status.OK).build();
+    }
+
+    @Timed
+    @GET
+    @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve payment method custom fields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
+    public Response getCustomFields(@PathParam("paymentMethodId") final String paymentMethodId,
+                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                    @javax.ws.rs.core.Context final HttpServletRequest request) {
+        return super.getCustomFields(UUID.fromString(paymentMethodId), auditMode, context.createContext(request));
+    }
+
+    @Timed
+    @POST
+    @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add custom fields to payment method")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
+    public Response createCustomFields(@PathParam("paymentMethodId") final String paymentMethodId,
+                                       final List<CustomFieldJson> customFields,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
+        return super.createCustomFields(UUID.fromString(paymentMethodId), customFields,
+                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+    }
+
+    @Timed
+    @DELETE
+    @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Remove custom fields from payment method")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
+    public Response deleteCustomFields(@PathParam("paymentMethodId") final String paymentMethodId,
+                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+        return super.deleteCustomFields(UUID.fromString(paymentMethodId), customFieldList,
+                                        context.createContext(createdBy, reason, comment, request));
     }
 
     @Override
