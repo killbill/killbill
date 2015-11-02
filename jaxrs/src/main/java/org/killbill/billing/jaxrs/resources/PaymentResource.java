@@ -69,8 +69,9 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.MetricTag;
+import org.killbill.commons.metrics.TimedResource;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
@@ -99,7 +100,7 @@ public class PaymentResource extends ComboPaymentResource {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
@@ -120,7 +121,7 @@ public class PaymentResource extends ComboPaymentResource {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve a payment by id", response = PaymentJson.class)
@@ -139,7 +140,7 @@ public class PaymentResource extends ComboPaymentResource {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -182,7 +183,7 @@ public class PaymentResource extends ComboPaymentResource {
                                                );
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -228,7 +229,7 @@ public class PaymentResource extends ComboPaymentResource {
                                                );
     }
 
-    @Timed
+    @TimedResource
     @PUT
     @Path("/{paymentId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
@@ -248,7 +249,7 @@ public class PaymentResource extends ComboPaymentResource {
         return completeTransactionInternal(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
-    @Timed
+    @TimedResource
     @PUT
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -372,7 +373,7 @@ public class PaymentResource extends ComboPaymentResource {
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", initialPayment.getId());
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
@@ -391,7 +392,7 @@ public class PaymentResource extends ComboPaymentResource {
         return captureAuthorizationInternal(json, paymentIdStr, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -431,7 +432,7 @@ public class PaymentResource extends ComboPaymentResource {
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
@@ -450,7 +451,7 @@ public class PaymentResource extends ComboPaymentResource {
         return refundPaymentInternal(json, paymentIdStr, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
@@ -493,7 +494,7 @@ public class PaymentResource extends ComboPaymentResource {
 
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
@@ -512,7 +513,7 @@ public class PaymentResource extends ComboPaymentResource {
         return voidPaymentInternal(json, paymentIdStr, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -547,7 +548,7 @@ public class PaymentResource extends ComboPaymentResource {
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
@@ -566,7 +567,7 @@ public class PaymentResource extends ComboPaymentResource {
         return chargebackPaymentInternal(json, paymentIdStr, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
@@ -606,14 +607,14 @@ public class PaymentResource extends ComboPaymentResource {
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/" + COMBO)
     @ApiOperation(value = "Combo api to create a new payment transaction on a existing (or not) account ")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
-    public Response createComboPayment(final ComboPaymentTransactionJson json,
+    public Response createComboPayment(@MetricTag(tag = "type", property = "transactionType") final ComboPaymentTransactionJson json,
                                        @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
