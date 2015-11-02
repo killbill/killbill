@@ -61,8 +61,8 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.TimedResource;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -92,7 +92,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -115,7 +115,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve a payment method by external key", response = PaymentMethodJson.class)
@@ -135,7 +135,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -191,7 +191,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                                );
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -250,7 +250,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                                );
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Produces(APPLICATION_JSON)
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
@@ -275,7 +275,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
@@ -287,7 +287,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return super.getCustomFields(UUID.fromString(paymentMethodId), auditMode, context.createContext(request));
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -305,7 +305,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment, request), uriInfo);
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)

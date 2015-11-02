@@ -44,10 +44,10 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.TimedResource;
 import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.wordnik.swagger.annotations.Api;
@@ -77,7 +77,7 @@ public class OverdueResource extends JaxRsResourceBase {
         this.overdueApi = overdueApi;
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Produces(APPLICATION_XML)
     @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class, hidden = true)
@@ -87,7 +87,7 @@ public class OverdueResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(XMLWriter.writeXML((DefaultOverdueConfig )overdueApi.getOverdueConfig(tenantContext), DefaultOverdueConfig.class)).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Consumes(APPLICATION_XML)
     @ApiOperation(value = "Upload the full overdue config as XML")
