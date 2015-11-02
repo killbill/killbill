@@ -24,10 +24,17 @@ import java.util.UUID;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PriceListSet;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.junction.DefaultBlockingState;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -35,6 +42,8 @@ import org.testng.annotations.Test;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+
+import static org.testng.Assert.assertEquals;
 
 public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -72,7 +81,6 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testApiHistory() throws Exception {
-        final UUID uuid = UUID.randomUUID();
         final String overdueStateName = "WayPassedItMan";
         final String service = "TEST";
 
@@ -84,7 +92,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
+        final BlockingState state1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state1, internalCallContext);
         assertListenerStatus();
 
@@ -92,7 +100,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final String overdueStateName2 = "NoReallyThisCantGoOn";
-        final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
+        final BlockingState state2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state2, internalCallContext);
         assertListenerStatus();
 
@@ -108,5 +116,75 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertEquals(history.size(), 2);
         Assert.assertEquals(history.get(0).getStateName(), overdueStateName);
         Assert.assertEquals(history.get(1).getStateName(), overdueStateName2);
+    }
+
+
+    @Test(groups = "slow")
+    public void testBlockingAcrossTypes() throws Exception {
+
+        final String stateNameBlock = "stateBlock";
+        final String stateNameUnBlock = "stateUnBlock";
+        final String service = "SVC_BLOC_TYPES";
+
+        final boolean blockChange = false;
+        final boolean blockEntitlement = true;
+        final boolean blockBilling = false;
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState state1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, stateNameBlock, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
+        blockingInternalApi.setBlockingState(state1, internalCallContext);
+        assertListenerStatus();
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
+
+        // Add blocking at bundle level.
+        clock.addDays(1);
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        entitlementApi.block(baseEntitlement.getBundleId(), stateNameBlock, service, clock.getUTCToday(), blockBilling, blockEntitlement, blockChange, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+
+        baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
+
+        // Remove blocking at account level
+        clock.addDays(1);
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState state2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, stateNameUnBlock, service, false, false, false, clock.getUTCNow());
+        blockingInternalApi.setBlockingState(state2, internalCallContext);
+        assertListenerStatus();
+
+        baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
+
+
+        // Remove blocking at bundle level.
+        clock.addDays(1);
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        entitlementApi.unblock(baseEntitlement.getBundleId(), stateNameUnBlock, service, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
+
+        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAllForAccount(internalCallContext);
+        final List<BlockingState> history = ImmutableList.<BlockingState>copyOf(Collections2.<BlockingState>filter(blockingAll,
+                                                                                                                   new Predicate<BlockingState>() {
+                                                                                                                       @Override
+                                                                                                                       public boolean apply(final BlockingState input) {
+                                                                                                                           return input.getService().equals(service);
+                                                                                                                       }
+                                                                                                                   }));
+
+        Assert.assertEquals(history.size(), 4);
     }
 }

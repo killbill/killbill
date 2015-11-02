@@ -302,6 +302,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     }
 
     @Override
+    public Iterable<BlockingState> getBlockingStatesForServiceAndType(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final TenantContext tenantContext) {
+        // Not implemented see #431
+        return null;
+    }
+
+    @Override
     public UUID transferEntitlements(final UUID sourceAccountId, final UUID destAccountId, final String externalKey, final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
         return transferEntitlementsOverrideBillingPolicy(sourceAccountId, destAccountId, externalKey, effectiveDate, BillingActionPolicy.IMMEDIATE, properties, context);
     }

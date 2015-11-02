@@ -139,7 +139,7 @@ public class TestBundle extends TestJaxrsBase {
         assertEquals(bundle.getAccountId(), accountJson.getAccountId());
         assertEquals(bundle.getExternalKey(), bundleExternalKey);
 
-        final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "state", "service", false, true, true, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), BlockingStateType.SUBSCRIPTION_BUNDLE, null);
+        final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "block", "service", false, true, true, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), BlockingStateType.SUBSCRIPTION_BUNDLE, null);
         killBillClient.blockBundle(bundle.getBundleId(), blockingState, createdBy, reason, comment);
 
         final Subscription subscription = killBillClient.getSubscription(entitlement.getSubscriptionId());
@@ -147,7 +147,7 @@ public class TestBundle extends TestJaxrsBase {
 
         clock.addDays(1);
 
-        final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "state", "service", false, false, false, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), BlockingStateType.SUBSCRIPTION_BUNDLE, null);
+        final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "unblock", "service", false, false, false, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), BlockingStateType.SUBSCRIPTION_BUNDLE, null);
         killBillClient.blockBundle(bundle.getBundleId(), unblockingState, createdBy, reason, comment);
 
         final Subscription subscription2 = killBillClient.getSubscription(entitlement.getSubscriptionId());
