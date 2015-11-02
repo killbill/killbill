@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,13 +19,18 @@
 package org.killbill.billing.jaxrs;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.model.Account;
+import org.killbill.billing.client.model.CustomField;
+import org.killbill.billing.client.model.CustomFields;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethods;
 import org.killbill.billing.client.model.PluginProperty;
+import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -95,6 +100,41 @@ public class TestPaymentMethod extends TestJaxrsBase {
             page = page.getNext();
         }
         Assert.assertNull(page);
+    }
+
+    @Test(groups = "slow", description = "Can create, retrieve and delete custom fields")
+    public void testPaymentMethodCustomFields() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        final CustomField customField = new CustomField();
+        customField.setObjectId(paymentMethodId);
+        customField.setObjectType(ObjectType.PAYMENT_METHOD);
+        customField.setName("testKey");
+        customField.setValue("testValue");
+
+        // Create custom field
+        final CustomFields createdCustomFields = killBillClient.createPaymentMethodCustomField(paymentMethodId, customField, createdBy, reason, comment);
+        Assert.assertEquals(createdCustomFields.size(), 1);
+        final CustomField createdCustomField = createdCustomFields.get(0);
+        Assert.assertEquals(createdCustomField.getName(), "testKey");
+        Assert.assertEquals(createdCustomField.getValue(), "testValue");
+        Assert.assertEquals(createdCustomField.getObjectId(), paymentMethodId);
+        Assert.assertEquals(createdCustomField.getObjectType(), ObjectType.PAYMENT_METHOD);
+
+        // Retrieve custom field
+        final CustomFields retrievedCustomFields = killBillClient.getPaymentMethodCustomFields(paymentMethodId, AuditLevel.NONE);
+        Assert.assertEquals(retrievedCustomFields.size(), 1);
+        final CustomField retrievedCustomField = retrievedCustomFields.get(0);
+        Assert.assertEquals(retrievedCustomField.getName(), "testKey");
+        Assert.assertEquals(retrievedCustomField.getValue(), "testValue");
+        Assert.assertEquals(retrievedCustomField.getObjectId(), paymentMethodId);
+        Assert.assertEquals(retrievedCustomField.getObjectType(), ObjectType.PAYMENT_METHOD);
+
+        // Delete custom field
+        killBillClient.deletePaymentMethodCustomFields(paymentMethodId, Collections.<UUID>singletonList(createdCustomField.getCustomFieldId()), createdBy, reason, comment);
+        final CustomFields deletedCustomFields = killBillClient.getPaymentMethodCustomFields(paymentMethodId, AuditLevel.NONE);
+        Assert.assertEquals(deletedCustomFields.size(), 0);
     }
 
     private void doSearch(final String searchKey, final PaymentMethod paymentMethodJson) throws Exception {
