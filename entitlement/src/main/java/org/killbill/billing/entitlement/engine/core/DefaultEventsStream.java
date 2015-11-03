@@ -359,18 +359,21 @@ public class DefaultEventsStream implements EventsStream {
 
     private void computeBlockingAggregator() {
 
-        final List<BlockingState> currentSubscriptionBlockingStatesForServices = filterCurrentBlockableStatePerService(BlockingStateType.SUBSCRIPTION);
-        final List<BlockingState> currentBundleBlockingStatesForServices = filterCurrentBlockableStatePerService(BlockingStateType.SUBSCRIPTION_BUNDLE);
-        final List<BlockingState> currentAccountBlockingStatesForServices = filterCurrentBlockableStatePerService(BlockingStateType.ACCOUNT);
+        final List<BlockingState> currentSubscriptionBlockingStatesForServices = filterCurrentBlockableStatePerService(BlockingStateType.SUBSCRIPTION, subscription.getId());
+        final List<BlockingState> currentBundleBlockingStatesForServices = filterCurrentBlockableStatePerService(BlockingStateType.SUBSCRIPTION_BUNDLE, subscription.getBundleId());
+        final List<BlockingState> currentAccountBlockingStatesForServices = filterCurrentBlockableStatePerService(BlockingStateType.ACCOUNT, account.getId());
         blockingAggregator = blockingChecker.getBlockedStatus(currentAccountBlockingStatesForServices,
                                                               currentBundleBlockingStatesForServices,
                                                               currentSubscriptionBlockingStatesForServices,
                                                               internalTenantContext);
     }
 
-    private List<BlockingState> filterCurrentBlockableStatePerService(final BlockingStateType type) {
+    private List<BlockingState> filterCurrentBlockableStatePerService(final BlockingStateType type, final UUID blockableId) {
         final Map<String, BlockingState> currentBlockingStatePerService = new HashMap<String, BlockingState>();
         for (final BlockingState blockingState : blockingStates) {
+            if (!blockingState.getBlockedId().equals(blockableId)) {
+                continue;
+            }
             if (blockingState.getType() != type) {
                 continue;
             }
