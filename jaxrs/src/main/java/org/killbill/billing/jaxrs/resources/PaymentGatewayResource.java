@@ -53,8 +53,8 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.TimedResource;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Strings;
 import com.google.inject.Singleton;
 import com.wordnik.swagger.annotations.Api;
@@ -86,7 +86,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
         this.paymentGatewayApi = paymentGatewayApi;
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/" + HOSTED + "/" + FORM)
     @Consumes(APPLICATION_JSON)
@@ -121,7 +121,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/" + HOSTED + "/" + FORM + "/{" + QUERY_ACCOUNT_ID + ":" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
@@ -156,7 +156,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/" + NOTIFICATION + "/{" + QUERY_PAYMENT_PLUGIN_NAME + ":" + ANYTHING_PATTERN + "}")
     @Consumes(WILDCARD)

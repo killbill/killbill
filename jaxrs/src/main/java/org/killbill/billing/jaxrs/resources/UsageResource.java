@@ -54,8 +54,8 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.TimedResource;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;
@@ -90,7 +90,7 @@ public class UsageResource extends JaxRsResourceBase {
         this.entitlementApi = entitlementApi;
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -119,7 +119,7 @@ public class UsageResource extends JaxRsResourceBase {
         return Response.status(Status.CREATED).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/{unitType}")
     @Produces(APPLICATION_JSON)
@@ -144,7 +144,7 @@ public class UsageResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)

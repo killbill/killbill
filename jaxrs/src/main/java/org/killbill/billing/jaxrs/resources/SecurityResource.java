@@ -51,8 +51,8 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.TimedResource;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -84,7 +84,7 @@ public class SecurityResource extends JaxRsResourceBase {
         this.securityApi = securityApi;
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/permissions")
     @Produces(APPLICATION_JSON)
@@ -98,7 +98,7 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/subject")
     @Produces(APPLICATION_JSON)
@@ -110,7 +110,7 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(subjectJson).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/users")
     @Consumes(APPLICATION_JSON)
@@ -126,7 +126,7 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.CREATED).build();
     }
 
-    @Timed
+    @TimedResource
     @PUT
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -144,7 +144,7 @@ public class SecurityResource extends JaxRsResourceBase {
     }
 
 
-    @Timed
+    @TimedResource
     @PUT
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -161,7 +161,7 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -179,7 +179,7 @@ public class SecurityResource extends JaxRsResourceBase {
 
 
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/roles")
     @Consumes(APPLICATION_JSON)

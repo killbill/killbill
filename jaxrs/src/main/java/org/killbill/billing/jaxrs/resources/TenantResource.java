@@ -52,8 +52,8 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.TimedResource;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.wordnik.swagger.annotations.Api;
@@ -85,7 +85,7 @@ public class TenantResource extends JaxRsResourceBase {
         this.tenantApi = tenantApi;
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{tenantId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -97,7 +97,7 @@ public class TenantResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve a tenant by its API key", response = TenantJson.class)
@@ -107,7 +107,7 @@ public class TenantResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -128,7 +128,7 @@ public class TenantResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Consumes(APPLICATION_JSON)
@@ -144,7 +144,7 @@ public class TenantResource extends JaxRsResourceBase {
         return insertTenantKey(TenantKey.PUSH_NOTIFICATION_CB,  null,  notificationCallback, uriInfo,"getPushNotificationCallbacks", createdBy, reason, comment, request);
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Produces(APPLICATION_JSON)
@@ -154,7 +154,7 @@ public class TenantResource extends JaxRsResourceBase {
         return getTenantKey(TenantKey.PUSH_NOTIFICATION_CB, null, request);
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @ApiOperation(value = "Delete a push notification")
@@ -166,7 +166,7 @@ public class TenantResource extends JaxRsResourceBase {
         return deleteTenantKey(TenantKey.PUSH_NOTIFICATION_CB, null, createdBy, reason, comment, request);
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @Consumes(TEXT_PLAIN)
@@ -183,7 +183,7 @@ public class TenantResource extends JaxRsResourceBase {
         return insertTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, pluginConfig, uriInfo, "getPluginConfiguration", createdBy, reason, comment, request);
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -194,7 +194,7 @@ public class TenantResource extends JaxRsResourceBase {
         return getTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, request);
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @ApiOperation(value = "Delete a per tenant configuration for a plugin")
@@ -208,7 +208,7 @@ public class TenantResource extends JaxRsResourceBase {
     }
 
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
     @Consumes(TEXT_PLAIN)
@@ -227,7 +227,7 @@ public class TenantResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getUserKeyValue", key);
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -242,7 +242,7 @@ public class TenantResource extends JaxRsResourceBase {
     }
 
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
     @ApiOperation(value = "Delete  a per tenant user key/value")
