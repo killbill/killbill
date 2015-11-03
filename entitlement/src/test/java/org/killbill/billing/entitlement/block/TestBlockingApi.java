@@ -149,7 +149,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Add blocking at bundle level.
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        entitlementApi.block(baseEntitlement.getBundleId(), stateNameBlock, service, clock.getUTCToday(), blockBilling, blockEntitlement, blockChange, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameBlock, service, clock.getUTCToday(), blockBilling, blockEntitlement, blockChange, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
 
@@ -170,7 +170,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Remove blocking at bundle level.
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        entitlementApi.unblock(baseEntitlement.getBundleId(), stateNameUnBlock, service, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameUnBlock, service, clock.getUTCToday(), false, false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);

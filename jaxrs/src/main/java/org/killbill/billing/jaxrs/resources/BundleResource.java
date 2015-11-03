@@ -263,13 +263,8 @@ public class BundleResource extends JaxRsResourceBase {
         final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
         final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
 
-        final boolean isBlockOperation = isBlockBilling || isBlockEntitlement || isBlockChange;
+        entitlementApi.setBlockingState(bundleId, json.getStateName(), json.getService(), json.getEffectiveDate(), isBlockBilling, isBlockEntitlement, isBlockChange, pluginProperties, callContext);
 
-        if (isBlockOperation) {
-            entitlementApi.block(bundleId, json.getStateName(), json.getService(), json.getEffectiveDate(), isBlockBilling, isBlockEntitlement, isBlockChange, pluginProperties, callContext);
-        } else {
-            entitlementApi.unblock(bundleId, json.getStateName(), json.getService(), json.getEffectiveDate(), pluginProperties, callContext);
-        }
         return Response.status(Status.OK).build();
     }
 

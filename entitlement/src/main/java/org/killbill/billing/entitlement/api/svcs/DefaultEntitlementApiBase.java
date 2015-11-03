@@ -268,14 +268,9 @@ public class DefaultEntitlementApiBase {
         pluginExecution.executeWithPlugin(resumeWithPlugin, pluginContext);
     }
 
-    public void block(final UUID bundleId, final String stateName, final String serviceName, final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext)
+    public void setBlockingState(final UUID bundleId, final String stateName, final String serviceName, final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext)
             throws EntitlementApiException {
         blockUnblockBundle(bundleId, stateName, serviceName, localEffectiveDate, blockBilling, blockEntitlement, blockChange, null, internalCallContext);
-    }
-
-    public void unblock(final UUID bundleId, final String stateName, final String serviceName, final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext)
-            throws EntitlementApiException {
-        blockUnblockBundle(bundleId, stateName, serviceName, localEffectiveDate, false, false, false, null, internalCallContext);
     }
 
     private UUID blockUnblockBundle(final UUID bundleId, final String stateName, final String serviceName, final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, @Nullable final SubscriptionBase inputBaseSubscription, final InternalCallContext internalCallContext)

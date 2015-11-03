@@ -288,18 +288,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
 
     @Override
-    public void block(final UUID bundleId, final String stateName, final String serviceName, final LocalDate effectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, final Iterable<PluginProperty> properties, final CallContext context)
+    public void setBlockingState(final UUID bundleId, final String stateName, final String serviceName, final LocalDate effectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, final Iterable<PluginProperty> properties, final CallContext context)
             throws EntitlementApiException {
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
-        super.block(bundleId, stateName, serviceName, effectiveDate, blockBilling, blockEntitlement, blockChange, properties, contextWithValidAccountRecordId);
+        super.setBlockingState(bundleId, stateName, serviceName, effectiveDate, blockBilling, blockEntitlement, blockChange, properties, contextWithValidAccountRecordId);
     }
 
-    @Override
-    public void unblock(final UUID bundleId, final String stateName, final String serviceName, final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext context)
-            throws EntitlementApiException {
-        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
-        super.unblock(bundleId, stateName, serviceName, effectiveDate, properties, contextWithValidAccountRecordId);
-    }
 
     @Override
     public Iterable<BlockingState> getBlockingStatesForServiceAndType(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final TenantContext tenantContext) {
