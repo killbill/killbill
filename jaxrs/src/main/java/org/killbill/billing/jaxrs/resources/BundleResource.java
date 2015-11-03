@@ -240,7 +240,7 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    @TimedResource
     @PUT
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
@@ -270,7 +270,7 @@ public class BundleResource extends JaxRsResourceBase {
 
 
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)

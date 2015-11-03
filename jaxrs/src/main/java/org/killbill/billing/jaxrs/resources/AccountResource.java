@@ -111,6 +111,7 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.MetricTag;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Function;
@@ -823,7 +824,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
-    @TimedResource
+    @TimedResource(name = "processPayment")
     @POST
     @Path("/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
@@ -831,7 +832,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Trigger a payment using the account external key (authorization, purchase or credit)")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account external key supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response processPaymentByExternalKey(final PaymentTransactionJson json,
+    public Response processPaymentByExternalKey(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                                 @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                                 @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
                                                 @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
@@ -847,7 +848,7 @@ public class AccountResource extends JaxRsResourceBase {
         return processPayment(json, account, paymentMethodIdStr, paymentControlPluginNames, pluginPropertiesString, uriInfo, callContext);
     }
 
-    @TimedResource
+    @TimedResource(name = "processPayment")
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
@@ -855,7 +856,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Trigger a payment (authorization, purchase or credit)")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response processPayment(final PaymentTransactionJson json,
+    public Response processPayment(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                    @PathParam(QUERY_ACCOUNT_ID) final String accountIdStr,
                                    @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
                                    @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,

@@ -92,7 +92,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
-    @TimedResource
+    @TimedResource(name = "getPaymentMethod")
     @GET
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -115,7 +115,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @TimedResource
+    @TimedResource(name = "getPaymentMethod")
     @GET
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve a payment method by external key", response = PaymentMethodJson.class)
