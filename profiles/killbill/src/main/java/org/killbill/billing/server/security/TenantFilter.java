@@ -134,8 +134,7 @@ public class TenantFilter implements Filter {
 
         if (request instanceof HttpServletRequest) {
             final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-            // TODO Wrong - See https://github.com/killbill/killbill/issues/221
-            final String path = httpServletRequest.getRequestURI();
+            final String path = httpServletRequest.getPathInfo();
             final String httpMethod = httpServletRequest.getMethod();
             if (    // Chicken - egg problem
                     isTenantCreationRequest(path, httpMethod) ||
