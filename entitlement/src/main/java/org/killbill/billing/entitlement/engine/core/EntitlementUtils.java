@@ -89,11 +89,11 @@ public class EntitlementUtils {
      * @param context call context
      */
     public void setBlockingStateAndPostBlockingTransitionEvent(final BlockingState state, final InternalCallContext context) {
-        final BlockingAggregator previousState = getBlockingStateFor(state.getBlockedId(), state.getType(), context);
+        final BlockingAggregator previousState = getBlockingStateFor(state.getBlockedId(), state.getType(), clock.getUTCNow(), context);
 
         dao.setBlockingState(state, clock, context);
 
-        final BlockingAggregator currentState = getBlockingStateFor(state.getBlockedId(), state.getType(), context);
+        final BlockingAggregator currentState = getBlockingStateFor(state.getBlockedId(), state.getType(), state.getEffectiveDate(), context);
         if (previousState != null && currentState != null) {
             postBlockingTransitionEvent(state.getId(), state.getEffectiveDate(), state.getBlockedId(), state.getType(), state.getService(), previousState, currentState, context);
         }
@@ -118,9 +118,9 @@ public class EntitlementUtils {
     }
 
 
-    private BlockingAggregator getBlockingStateFor(final UUID blockableId, final BlockingStateType type, final InternalCallContext context) {
+    private BlockingAggregator getBlockingStateFor(final UUID blockableId, final BlockingStateType type, final DateTime effectiveDate, final InternalCallContext context) {
         try {
-            return blockingChecker.getBlockedStatus(blockableId, type, context);
+            return blockingChecker.getBlockedStatus(blockableId, type, effectiveDate, context);
         } catch (BlockingApiException e) {
             log.warn("Failed to retrieve blocking state for {} {}", blockableId, type);
             return null;

@@ -453,18 +453,19 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
                 }
 
-                final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-                try {
-                    checker.checkBlockedChange(getSubscriptionBase(), context);
-                } catch (BlockingApiException e) {
-                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
-                }
 
                 final DateTime effectiveChangeDate;
                 try {
                     effectiveChangeDate = getSubscriptionBase().changePlan(productName, billingPeriod, priceList, overrides, callContext);
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
+                }
+
+                final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+                try {
+                    checker.checkBlockedChange(getSubscriptionBase(), effectiveChangeDate, context);
+                } catch (BlockingApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
                 blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
@@ -502,18 +503,19 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-                try {
-                    checker.checkBlockedChange(getSubscriptionBase(), context);
-                } catch (BlockingApiException e) {
-                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
-                }
-
                 final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), getSubscriptionBase().getStartDate(), context);
                 try {
                     getSubscriptionBase().changePlanWithDate(productName, billingPeriod, priceList, overrides, effectiveChangeDate, callContext);
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
+
+                try {
+                    checker.checkBlockedChange(getSubscriptionBase(), effectiveChangeDate, context);
+                } catch (BlockingApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                }
+
 
                 blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
 
@@ -550,17 +552,18 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-                try {
-                    checker.checkBlockedChange(getSubscriptionBase(), context);
-                } catch (BlockingApiException e) {
-                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
-                }
 
                 final DateTime effectiveChangeDate;
                 try {
                     effectiveChangeDate = getSubscriptionBase().changePlanWithPolicy(productName, billingPeriod, priceList, overrides, actionPolicy, callContext);
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
+                }
+
+                try {
+                    checker.checkBlockedChange(getSubscriptionBase(), effectiveChangeDate, context);
+                } catch (BlockingApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
                 blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
