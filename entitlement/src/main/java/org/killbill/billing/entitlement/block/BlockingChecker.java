@@ -19,6 +19,7 @@ package org.killbill.billing.entitlement.block;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.api.Blockable;
 import org.killbill.billing.entitlement.api.BlockingApiException;
@@ -47,11 +48,11 @@ public interface BlockingChecker {
     public BlockingAggregator getBlockedStatus(List<BlockingState> currentAccountEntitlementStatePerService, List<BlockingState> currentBundleEntitlementStatePerService,
                                                List<BlockingState> currentSubscriptionEntitlementStatePerService, InternalTenantContext internalTenantContext);
 
-    public BlockingAggregator getBlockedStatus(final UUID blockableId, final BlockingStateType type, final InternalTenantContext context) throws BlockingApiException;
+    public BlockingAggregator getBlockedStatus(final UUID blockableId, final BlockingStateType type, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException;
 
-    public void checkBlockedChange(Blockable blockable, InternalTenantContext context) throws BlockingApiException;
+    public void checkBlockedChange(Blockable blockable, final DateTime upToDate, InternalTenantContext context) throws BlockingApiException;
 
-    public void checkBlockedEntitlement(Blockable blockable, InternalTenantContext context) throws BlockingApiException;
+    public void checkBlockedEntitlement(Blockable blockable, final DateTime upToDate, InternalTenantContext context) throws BlockingApiException;
 
-    public void checkBlockedBilling(Blockable blockable, InternalTenantContext context) throws BlockingApiException;
+    public void checkBlockedBilling(Blockable blockable, final DateTime upToDate, InternalTenantContext context) throws BlockingApiException;
 }

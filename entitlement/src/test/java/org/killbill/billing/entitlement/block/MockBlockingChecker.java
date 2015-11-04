@@ -19,6 +19,7 @@ package org.killbill.billing.entitlement.block;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.api.Blockable;
 import org.killbill.billing.entitlement.api.BlockingApiException;
@@ -33,19 +34,19 @@ public class MockBlockingChecker implements BlockingChecker {
     }
 
     @Override
-    public BlockingAggregator getBlockedStatus(final UUID blockableId, final BlockingStateType type, final InternalTenantContext context) throws BlockingApiException {
+    public BlockingAggregator getBlockedStatus(final UUID blockableId, final BlockingStateType type, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
         return null;
     }
 
     @Override
-    public void checkBlockedChange(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
+    public void checkBlockedChange(final Blockable blockable, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
     }
 
     @Override
-    public void checkBlockedEntitlement(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
+    public void checkBlockedEntitlement(final Blockable blockable, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
     }
 
     @Override
-    public void checkBlockedBilling(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
+    public void checkBlockedBilling(final Blockable blockable, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
     }
 }

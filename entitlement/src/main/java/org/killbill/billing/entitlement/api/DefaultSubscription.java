@@ -18,22 +18,15 @@
 
 package org.killbill.billing.entitlement.api;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-
 public class DefaultSubscription extends DefaultEntitlement implements Subscription {
-
-    private final Collection<BlockingState> currentSubscriptionBlockingStatesForServices;
 
     DefaultSubscription(final DefaultEntitlement entitlement) {
         super(entitlement);
-        this.currentSubscriptionBlockingStatesForServices = eventsStream.getCurrentSubscriptionEntitlementBlockingStatesForServices();
     }
 
     @Override
@@ -64,22 +57,6 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
     @Override
     public LocalDate getChargedThroughDate() {
         return getSubscriptionBase().getChargedThroughDate() != null ? new LocalDate(getSubscriptionBase().getChargedThroughDate(), getAccountTimeZone()) : null;
-    }
-
-    @Override
-    public String getCurrentStateForService(final String serviceName) {
-        if (currentSubscriptionBlockingStatesForServices == null) {
-            return null;
-        } else {
-            final BlockingState blockingState = Iterables.<BlockingState>tryFind(currentSubscriptionBlockingStatesForServices,
-                                                                                 new Predicate<BlockingState>() {
-                                                                                     @Override
-                                                                                     public boolean apply(final BlockingState input) {
-                                                                                         return serviceName.equals(input.getService());
-                                                                                     }
-                                                                                 }).orNull();
-            return blockingState == null ? null : blockingState.getService();
-        }
     }
 
     @Override

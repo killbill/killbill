@@ -71,11 +71,6 @@ public class DefaultEventsStream implements EventsStream {
 
     private BlockingAggregator blockingAggregator;
     private List<BlockingState> subscriptionEntitlementStates;
-    private List<BlockingState> bundleEntitlementStates;
-    private List<BlockingState> accountEntitlementStates;
-    private List<BlockingState> currentSubscriptionEntitlementBlockingStatesForServices;
-    private List<BlockingState> currentBundleEntitlementBlockingStatesForServices;
-    private List<BlockingState> currentAccountEntitlementBlockingStatesForServices;
     private LocalDate entitlementEffectiveEndDate;
     private BlockingState entitlementCancelEvent;
     private EntitlementState entitlementState;
@@ -152,11 +147,6 @@ public class DefaultEventsStream implements EventsStream {
         return blockingAggregator.isBlockChange();
     }
 
-    @Override
-    public List<BlockingState> getCurrentSubscriptionEntitlementBlockingStatesForServices() {
-        return currentSubscriptionEntitlementBlockingStatesForServices;
-    }
-
     public boolean isEntitlementFutureCancelled() {
         return entitlementCancelEvent != null && entitlementCancelEvent.getEffectiveDate().isAfter(utcNow);
     }
@@ -187,34 +177,27 @@ public class DefaultEventsStream implements EventsStream {
 
     @Override
     public Collection<BlockingState> getPendingEntitlementCancellationEvents() {
-        return getPendingEntitlementEvents(DefaultEntitlementApi.ENT_STATE_CANCELLED);
-    }
 
-    @Override
-    public BlockingState getEntitlementCancellationEvent() {
-        return entitlementCancelEvent;
-    }
-
-    public Collection<BlockingState> getPendingEntitlementEvents(final String... types) {
-        final List<String> typeList = ImmutableList.<String>copyOf(types);
         return Collections2.<BlockingState>filter(subscriptionEntitlementStates,
                                                   new Predicate<BlockingState>() {
                                                       @Override
                                                       public boolean apply(final BlockingState input) {
                                                           return !input.getEffectiveDate().isBefore(utcNow) &&
-                                                                 typeList.contains(input.getStateName()) &&
+                                                                 DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName()) &&
                                                                  (
                                                                          // ... for that subscription
                                                                          BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(subscription.getId()) ||
                                                                          // ... for the associated base subscription
-                                                                         BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(baseSubscription.getId()) ||
-                                                                         // ... for that bundle
-                                                                         BlockingStateType.SUBSCRIPTION_BUNDLE.equals(input.getType()) && input.getBlockedId().equals(bundle.getId()) ||
-                                                                         // ... for that account
-                                                                         BlockingStateType.ACCOUNT.equals(input.getType()) && input.getBlockedId().equals(account.getId())
+                                                                         BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(baseSubscription.getId())
                                                                  );
                                                       }
                                                   });
+
+    }
+
+    @Override
+    public BlockingState getEntitlementCancellationEvent() {
+        return entitlementCancelEvent;
     }
 
     public BlockingState getEntitlementCancellationEvent(final UUID subscriptionId) {
@@ -370,30 +353,36 @@ public class DefaultEventsStream implements EventsStream {
     private void setup() {
         computeEntitlementBlockingStates();
         computeBlockingAggregator();
-        computeEntitlementEffectiveEndDate();
         computeEntitlementCancelEvent();
         computeStateForEntitlement();
     }
 
     private void computeBlockingAggregator() {
-        currentAccountEntitlementBlockingStatesForServices = filterCurrentBlockableStatePerService(accountEntitlementStates);
-        currentBundleEntitlementBlockingStatesForServices = filterCurrentBlockableStatePerService(bundleEntitlementStates);
-        currentSubscriptionEntitlementBlockingStatesForServices = filterCurrentBlockableStatePerService(subscriptionEntitlementStates);
-        blockingAggregator = blockingChecker.getBlockedStatus(currentAccountEntitlementBlockingStatesForServices,
-                                                              currentBundleEntitlementBlockingStatesForServices,
-                                                              currentSubscriptionEntitlementBlockingStatesForServices,
+
+        final List<BlockingState> currentSubscriptionBlockingStatesForServices = filterCurrentBlockableStatePerService(BlockingStateType.SUBSCRIPTION, subscription.getId());
+        final List<BlockingState> currentBundleBlockingStatesForServices = filterCurrentBlockableStatePerService(BlockingStateType.SUBSCRIPTION_BUNDLE, subscription.getBundleId());
+        final List<BlockingState> currentAccountBlockingStatesForServices = filterCurrentBlockableStatePerService(BlockingStateType.ACCOUNT, account.getId());
+        blockingAggregator = blockingChecker.getBlockedStatus(currentAccountBlockingStatesForServices,
+                                                              currentBundleBlockingStatesForServices,
+                                                              currentSubscriptionBlockingStatesForServices,
                                                               internalTenantContext);
     }
 
-    private List<BlockingState> filterCurrentBlockableStatePerService(final Iterable<BlockingState> allBlockingStates) {
+    private List<BlockingState> filterCurrentBlockableStatePerService(final BlockingStateType type, final UUID blockableId) {
         final Map<String, BlockingState> currentBlockingStatePerService = new HashMap<String, BlockingState>();
-        for (final BlockingState blockingState : allBlockingStates) {
+        for (final BlockingState blockingState : blockingStates) {
+            if (!blockingState.getBlockedId().equals(blockableId)) {
+                continue;
+            }
+            if (blockingState.getType() != type) {
+                continue;
+            }
             if (blockingState.getEffectiveDate().isAfter(utcNow)) {
                 continue;
             }
 
             if (currentBlockingStatePerService.get(blockingState.getService()) == null ||
-                currentBlockingStatePerService.get(blockingState.getService()).getEffectiveDate().isBefore(blockingState.getEffectiveDate())) {
+                !currentBlockingStatePerService.get(blockingState.getService()).getEffectiveDate().isAfter(blockingState.getEffectiveDate())) {
                 currentBlockingStatePerService.put(blockingState.getService(), blockingState);
             }
         }
@@ -401,29 +390,6 @@ public class DefaultEventsStream implements EventsStream {
         return ImmutableList.<BlockingState>copyOf(currentBlockingStatePerService.values());
     }
 
-    private void computeEntitlementEffectiveEndDate() {
-        LocalDate result = null;
-        BlockingState lastEntry;
-
-        lastEntry = (!subscriptionEntitlementStates.isEmpty()) ? subscriptionEntitlementStates.get(subscriptionEntitlementStates.size() - 1) : null;
-        if (lastEntry != null && DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(lastEntry.getStateName())) {
-            result = new LocalDate(lastEntry.getEffectiveDate(), account.getTimeZone());
-        }
-
-        lastEntry = (!bundleEntitlementStates.isEmpty()) ? bundleEntitlementStates.get(bundleEntitlementStates.size() - 1) : null;
-        if (lastEntry != null && DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(lastEntry.getStateName())) {
-            final LocalDate localDate = new LocalDate(lastEntry.getEffectiveDate(), account.getTimeZone());
-            result = ((result == null) || (localDate.compareTo(result) < 0)) ? localDate : result;
-        }
-
-        lastEntry = (!accountEntitlementStates.isEmpty()) ? accountEntitlementStates.get(accountEntitlementStates.size() - 1) : null;
-        if (lastEntry != null && DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(lastEntry.getStateName())) {
-            final LocalDate localDate = new LocalDate(lastEntry.getEffectiveDate(), account.getTimeZone());
-            result = ((result == null) || (localDate.compareTo(result) < 0)) ? localDate : result;
-        }
-
-        entitlementEffectiveEndDate = result;
-    }
 
     private void computeEntitlementCancelEvent() {
         entitlementCancelEvent = Iterables.<BlockingState>tryFind(subscriptionEntitlementStates,
@@ -433,6 +399,7 @@ public class DefaultEventsStream implements EventsStream {
                                                                           return DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
                                                                       }
                                                                   }).orNull();
+        entitlementEffectiveEndDate = entitlementCancelEvent != null ?  new LocalDate(entitlementCancelEvent.getEffectiveDate(), account.getTimeZone()) : null;
     }
 
     private void computeStateForEntitlement() {
@@ -447,8 +414,6 @@ public class DefaultEventsStream implements EventsStream {
 
     private void computeEntitlementBlockingStates() {
         subscriptionEntitlementStates = filterBlockingStatesForEntitlementService(BlockingStateType.SUBSCRIPTION, subscription.getId());
-        bundleEntitlementStates = filterBlockingStatesForEntitlementService(BlockingStateType.SUBSCRIPTION_BUNDLE, subscription.getBundleId());
-        accountEntitlementStates = filterBlockingStatesForEntitlementService(BlockingStateType.ACCOUNT, account.getId());
     }
 
     private List<BlockingState> filterBlockingStatesForEntitlementService(final BlockingStateType blockingStateType, @Nullable final UUID blockableId) {

@@ -49,6 +49,7 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
+import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.TagJson;
@@ -67,8 +68,8 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.TimedResource;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -104,7 +105,7 @@ public class BundleResource extends JaxRsResourceBase {
         this.subscriptionApi = subscriptionApi;
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -119,7 +120,7 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve a bundle by external key", response = BundleJson.class)
@@ -131,7 +132,7 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -159,7 +160,7 @@ public class BundleResource extends JaxRsResourceBase {
                                                 nextPageUri);
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -189,7 +190,7 @@ public class BundleResource extends JaxRsResourceBase {
                                                 nextPageUri);
     }
 
-    @Timed
+    @TimedResource
     @PUT
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + PAUSE)
     @Consumes(APPLICATION_JSON)
@@ -214,7 +215,7 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    @TimedResource
     @PUT
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + RESUME)
     @Consumes(APPLICATION_JSON)
@@ -239,7 +240,37 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    @TimedResource
+    @PUT
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + BLOCK)
+    @Consumes(APPLICATION_JSON)
+    @ApiOperation(value = "Block a bundle")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
+                           @ApiResponse(code = 404, message = "Bundle not found")})
+    public Response addBundleBlockingState(final BlockingStateJson json,
+                                           @PathParam(ID_PARAM_NAME) final String id,
+                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                           @HeaderParam(HDR_REASON) final String reason,
+                                           @HeaderParam(HDR_COMMENT) final String comment,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID bundleId = UUID.fromString(id);
+
+        final boolean isBlockBilling = (json.isBlockBilling() != null && json.isBlockBilling());
+        final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
+        final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
+
+        entitlementApi.setBlockingState(bundleId, json.getStateName(), json.getService(), json.getEffectiveDate(), isBlockBilling, isBlockEntitlement, isBlockChange, pluginProperties, callContext);
+
+        return Response.status(Status.OK).build();
+    }
+
+
+
+    @TimedResource
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
@@ -251,7 +282,7 @@ public class BundleResource extends JaxRsResourceBase {
         return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -269,7 +300,7 @@ public class BundleResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment, request), uriInfo);
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -286,7 +317,7 @@ public class BundleResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment, request));
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
@@ -303,7 +334,7 @@ public class BundleResource extends JaxRsResourceBase {
         return super.getTags(bundle.getAccountId(), bundleId, auditMode, includedDeleted, tenantContext);
     }
 
-    @Timed
+    @TimedResource
     @PUT
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
@@ -337,7 +368,7 @@ public class BundleResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundleId, uriInfo.getBaseUri().toString());
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
@@ -355,7 +386,7 @@ public class BundleResource extends JaxRsResourceBase {
                                 context.createContext(createdBy, reason, comment, request));
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)

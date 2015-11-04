@@ -19,6 +19,7 @@ package org.killbill.billing.entitlement.dao;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.clock.Clock;
@@ -48,7 +49,7 @@ public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, Block
      * @param context           call context
      * @return list of current blocking states for that blockable object
      */
-    public List<BlockingState> getBlockingState(UUID blockableId, BlockingStateType blockingStateType, InternalTenantContext context);
+    public List<BlockingState> getBlockingState(UUID blockableId, BlockingStateType blockingStateType, DateTime upToDate, InternalTenantContext context);
 
     /**
      * Return all events (past and future) across all services) for a given callcontext (account_record_id)

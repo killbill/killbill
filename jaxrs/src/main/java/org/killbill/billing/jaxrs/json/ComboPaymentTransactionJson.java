@@ -45,6 +45,14 @@ public class ComboPaymentTransactionJson extends ComboPaymentJson {
         return transaction;
     }
 
+    public String getTransactionType() {
+        if (transaction != null) {
+            return transaction.getTransactionType();
+        }
+
+        return null;
+    }
+
     public Iterable<PluginPropertyJson> getTransactionPluginProperties() {
         return transactionPluginProperties;
     }

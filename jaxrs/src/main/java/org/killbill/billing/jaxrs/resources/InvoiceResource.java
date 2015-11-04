@@ -106,10 +106,10 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockUtil;
+import org.killbill.commons.metrics.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -167,7 +167,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         this.defaultLocale = Locale.getDefault();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
@@ -190,7 +190,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{invoiceNumber:" + NUMBER_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
@@ -212,7 +212,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/html")
     @Produces(TEXT_HTML)
@@ -223,7 +223,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(invoiceApi.getInvoiceAsHTML(UUID.fromString(invoiceId), context.createContext(request))).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -255,7 +255,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                );
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -288,7 +288,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                );
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -316,7 +316,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/" + DRY_RUN)
     @Consumes(APPLICATION_JSON)
@@ -379,7 +379,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{invoiceId:" + UUID_PATTERN + "}" + "/{invoiceItemId:" + UUID_PATTERN + "}/cba")
     @Consumes(APPLICATION_JSON)
@@ -403,7 +403,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{invoiceId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
@@ -447,7 +447,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId());
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
@@ -540,7 +540,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
@@ -581,7 +581,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
@@ -616,7 +616,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
     @Consumes(APPLICATION_JSON)
@@ -644,7 +644,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + INVOICE_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Produces(TEXT_PLAIN)
@@ -656,7 +656,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return getTemplateResource(localeStr, TenantKey.INVOICE_TRANSLATION_, request);
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Produces(TEXT_PLAIN)
     @Consumes(TEXT_PLAIN)
@@ -683,7 +683,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                       uriInfo);
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + INVOICE_CATALOG_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Produces(TEXT_PLAIN)
@@ -695,7 +695,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return getTemplateResource(localeStr, TenantKey.CATALOG_TRANSLATION_, request);
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Produces(TEXT_PLAIN)
     @Consumes(TEXT_PLAIN)
@@ -723,7 +723,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                       uriInfo);
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + INVOICE_TEMPLATE)
     @Produces(TEXT_HTML)
@@ -733,7 +733,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return getTemplateResource(null, TenantKey.INVOICE_TEMPLATE, request);
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Produces(TEXT_HTML)
     @Consumes(TEXT_HTML)
@@ -759,7 +759,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                       uriInfo);
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + INVOICE_MP_TEMPLATE)
     @Produces(TEXT_HTML)
@@ -770,7 +770,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return getTemplateResource(null, TenantKey.INVOICE_MP_TEMPLATE, request);
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Produces(TEXT_HTML)
     @Consumes(TEXT_HTML)
@@ -841,7 +841,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return result.isEmpty() ? Response.status(Status.NOT_FOUND).build() : Response.status(Status.OK).entity(result.get(0)).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
@@ -853,7 +853,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -871,7 +871,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment, request), uriInfo);
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -888,7 +888,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment, request));
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
@@ -905,7 +905,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         return super.getTags(invoice.getAccountId(), invoiceId, auditMode, includedDeleted, tenantContext);
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
@@ -923,7 +923,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                 context.createContext(createdBy, reason, comment, request));
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)

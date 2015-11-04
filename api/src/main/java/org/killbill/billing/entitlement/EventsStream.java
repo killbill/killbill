@@ -56,8 +56,6 @@ public interface EventsStream {
 
     boolean isSubscriptionCancelled();
 
-    Collection<BlockingState> getCurrentSubscriptionEntitlementBlockingStatesForServices();
-
     Collection<BlockingState> getPendingEntitlementCancellationEvents();
 
     BlockingState getEntitlementCancellationEvent();

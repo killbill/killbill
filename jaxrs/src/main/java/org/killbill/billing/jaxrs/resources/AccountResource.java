@@ -49,7 +49,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -112,8 +111,9 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.MetricTag;
+import org.killbill.commons.metrics.TimedResource;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -171,7 +171,7 @@ public class AccountResource extends JaxRsResourceBase {
         this.jaxrsConfig = jaxrsConfig;
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -190,7 +190,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(accountJson).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + PAGINATION)
     @Produces(APPLICATION_JSON)
@@ -219,7 +219,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                );
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -250,7 +250,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                );
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
     @Produces(APPLICATION_JSON)
@@ -278,7 +278,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve an account by external key", response = AccountJson.class)
@@ -309,7 +309,7 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -328,7 +328,7 @@ public class AccountResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId());
     }
 
-    @Timed
+    @TimedResource
     @PUT
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -350,7 +350,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     // Not supported
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -371,7 +371,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TIMELINE)
     @Produces(APPLICATION_JSON)
@@ -507,7 +507,7 @@ public class AccountResource extends JaxRsResourceBase {
     * ************************** EMAIL NOTIFICATIONS FOR INVOICES ********************************
     */
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
     @Produces(APPLICATION_JSON)
@@ -522,7 +522,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(invoiceEmailJson).build();
     }
 
-    @Timed
+    @TimedResource
     @PUT
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
     @Consumes(APPLICATION_JSON)
@@ -553,7 +553,7 @@ public class AccountResource extends JaxRsResourceBase {
     /*
      * ************************** INVOICE CBA REBALANCING ********************************
      */
-    @Timed
+    @TimedResource
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CBA_REBALANCING)
     @Consumes(APPLICATION_JSON)
@@ -578,7 +578,7 @@ public class AccountResource extends JaxRsResourceBase {
      * ************************** INVOICES ********************************
      */
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICES)
     @Produces(APPLICATION_JSON)
@@ -615,7 +615,7 @@ public class AccountResource extends JaxRsResourceBase {
      */
 
     // STEPH should refactor code since very similar to @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
     @Produces(APPLICATION_JSON)
@@ -642,7 +642,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
@@ -694,7 +694,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Consumes(APPLICATION_JSON)
@@ -737,7 +737,7 @@ public class AccountResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Produces(APPLICATION_JSON)
@@ -765,7 +765,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    @TimedResource
     @PUT
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -799,7 +799,7 @@ public class AccountResource extends JaxRsResourceBase {
     /*
      * ************************* PAYMENTS *****************************
      */
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
@@ -824,7 +824,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
-    @Timed
+    @TimedResource(name = "processPayment")
     @POST
     @Path("/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
@@ -832,7 +832,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Trigger a payment using the account external key (authorization, purchase or credit)")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account external key supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response processPaymentByExternalKey(final PaymentTransactionJson json,
+    public Response processPaymentByExternalKey(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                                 @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                                 @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
                                                 @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
@@ -848,7 +848,7 @@ public class AccountResource extends JaxRsResourceBase {
         return processPayment(json, account, paymentMethodIdStr, paymentControlPluginNames, pluginPropertiesString, uriInfo, callContext);
     }
 
-    @Timed
+    @TimedResource(name = "processPayment")
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
@@ -856,7 +856,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Trigger a payment (authorization, purchase or credit)")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response processPayment(final PaymentTransactionJson json,
+    public Response processPayment(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                    @PathParam(QUERY_ACCOUNT_ID) final String accountIdStr,
                                    @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
                                    @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
@@ -923,7 +923,7 @@ public class AccountResource extends JaxRsResourceBase {
     /*
      * ************************** OVERDUE ********************************
      */
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + OVERDUE)
     @Produces(APPLICATION_JSON)
@@ -944,7 +944,7 @@ public class AccountResource extends JaxRsResourceBase {
      * *************************      CUSTOM FIELDS     *****************************
      */
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
@@ -956,7 +956,7 @@ public class AccountResource extends JaxRsResourceBase {
         return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -974,7 +974,7 @@ public class AccountResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment, request), uriInfo);
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -995,7 +995,7 @@ public class AccountResource extends JaxRsResourceBase {
      * *************************     TAGS     *****************************
      */
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
@@ -1010,7 +1010,7 @@ public class AccountResource extends JaxRsResourceBase {
         return super.getTags(accountId, accountId, auditMode, includedDeleted, context.createContext(request));
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + ALL_TAGS)
     @Produces(APPLICATION_JSON)
@@ -1031,7 +1031,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
@@ -1048,7 +1048,7 @@ public class AccountResource extends JaxRsResourceBase {
                                 context.createContext(createdBy, reason, comment, request));
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
@@ -1088,7 +1088,7 @@ public class AccountResource extends JaxRsResourceBase {
      * *************************     EMAILS     *****************************
      */
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
     @Produces(APPLICATION_JSON)
@@ -1106,7 +1106,7 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(emailsJson).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
     @Consumes(APPLICATION_JSON)
@@ -1148,7 +1148,7 @@ public class AccountResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getEmails", json.getAccountId());
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS + "/{email}")
     @Produces(APPLICATION_JSON)

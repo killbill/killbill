@@ -63,7 +63,6 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.io.ByteStreams;
@@ -98,7 +97,6 @@ public class PluginResource extends JaxRsResourceBase {
         this.osgiServlet = osgiServlet;
     }
 
-    @Timed
     @DELETE
     public Response doDELETE(@javax.ws.rs.core.Context final HttpServletRequest request,
                              @javax.ws.rs.core.Context final HttpServletResponse response,
@@ -108,7 +106,6 @@ public class PluginResource extends JaxRsResourceBase {
         return serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
     }
 
-    @Timed
     @GET
     public Response doGET(@javax.ws.rs.core.Context final HttpServletRequest request,
                           @javax.ws.rs.core.Context final HttpServletResponse response,
@@ -118,7 +115,6 @@ public class PluginResource extends JaxRsResourceBase {
         return serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
     }
 
-    @Timed
     @OPTIONS
     public Response doOPTIONS(@javax.ws.rs.core.Context final HttpServletRequest request,
                               @javax.ws.rs.core.Context final HttpServletResponse response,
@@ -128,7 +124,6 @@ public class PluginResource extends JaxRsResourceBase {
         return serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
     }
 
-    @Timed
     @POST
     @Consumes("application/x-www-form-urlencoded")
     public Response doFormPOST(final MultivaluedMap<String, String> form,
@@ -140,7 +135,6 @@ public class PluginResource extends JaxRsResourceBase {
         return serviceViaOSGIPlugin(form, request, response, servletContext, servletConfig, uriInfo);
     }
 
-    @Timed
     @POST
     public Response doPOST(@javax.ws.rs.core.Context final HttpServletRequest request,
                            @javax.ws.rs.core.Context final HttpServletResponse response,
@@ -150,7 +144,6 @@ public class PluginResource extends JaxRsResourceBase {
         return serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
     }
 
-    @Timed
     @PUT
     public Response doPUT(@javax.ws.rs.core.Context final HttpServletRequest request,
                           @javax.ws.rs.core.Context final HttpServletResponse response,
@@ -160,7 +153,6 @@ public class PluginResource extends JaxRsResourceBase {
         return serviceViaOSGIPlugin(request, response, servletContext, servletConfig, uriInfo);
     }
 
-    @Timed
     @HEAD
     public Response doHEAD(@javax.ws.rs.core.Context final HttpServletRequest request,
                            @javax.ws.rs.core.Context final HttpServletResponse response,

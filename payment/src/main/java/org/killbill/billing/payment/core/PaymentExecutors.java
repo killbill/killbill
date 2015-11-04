@@ -33,6 +33,8 @@ public class PaymentExecutors {
 
     private static final long TIMEOUT_EXECUTOR_SEC = 3L;
 
+    private static final int DEFAULT_MIN_PLUGIN_THREADS = 5;
+
     private static final String PLUGIN_THREAD_PREFIX = "Plugin-th-";
     private static final String PAYMENT_PLUGIN_TH_GROUP_NAME = "pay-plugin-grp";
 
@@ -76,7 +78,8 @@ public class PaymentExecutors {
     }
 
     private ExecutorService createPluginExecutorService() {
-        return new WithProfilingThreadPoolExecutor(paymentConfig.getPaymentPluginThreadNb(),
+        final int minThreadNb = DEFAULT_MIN_PLUGIN_THREADS < paymentConfig.getPaymentPluginThreadNb() ? DEFAULT_MIN_PLUGIN_THREADS : paymentConfig.getPaymentPluginThreadNb();
+        return new WithProfilingThreadPoolExecutor(minThreadNb,
                                                    paymentConfig.getPaymentPluginThreadNb(),
                                                    0L,
                                                    TimeUnit.MILLISECONDS,

@@ -89,17 +89,17 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
         setStateSubscription(false, false, false);
-        blockingChecker.checkBlockedChange(subscription, internalCallContext);
-        blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
-        blockingChecker.checkBlockedBilling(subscription, internalCallContext);
+        blockingChecker.checkBlockedChange(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedEntitlement(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(subscription, clock.getUTCNow(), internalCallContext);
 
         //BLOCKED SUBSCRIPTION
         clock.addDays(1);
         setStateSubscription(true, false, false);
-        blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
-        blockingChecker.checkBlockedBilling(subscription, internalCallContext);
+        blockingChecker.checkBlockedEntitlement(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(subscription, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedChange(subscription, internalCallContext);
+            blockingChecker.checkBlockedChange(subscription, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -107,10 +107,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateSubscription(false, true, false);
-        blockingChecker.checkBlockedChange(subscription, internalCallContext);
-        blockingChecker.checkBlockedBilling(subscription, internalCallContext);
+        blockingChecker.checkBlockedChange(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(subscription, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
+            blockingChecker.checkBlockedEntitlement(subscription, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -118,10 +118,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateSubscription(false, false, true);
-        blockingChecker.checkBlockedChange(subscription, internalCallContext);
-        blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
+        blockingChecker.checkBlockedChange(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedEntitlement(subscription, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedBilling(subscription, internalCallContext);
+            blockingChecker.checkBlockedBilling(subscription, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -131,10 +131,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         clock.addDays(1);
         setStateSubscription(false, false, false);
         setStateBundle(true, false, false);
-        blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
-        blockingChecker.checkBlockedBilling(subscription, internalCallContext);
+        blockingChecker.checkBlockedEntitlement(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(subscription, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedChange(subscription, internalCallContext);
+            blockingChecker.checkBlockedChange(subscription, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -142,10 +142,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateBundle(false, true, false);
-        blockingChecker.checkBlockedChange(subscription, internalCallContext);
-        blockingChecker.checkBlockedBilling(subscription, internalCallContext);
+        blockingChecker.checkBlockedChange(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(subscription, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
+            blockingChecker.checkBlockedEntitlement(subscription, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -153,10 +153,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateBundle(false, false, true);
-        blockingChecker.checkBlockedChange(subscription, internalCallContext);
-        blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
+        blockingChecker.checkBlockedChange(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedEntitlement(subscription, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedBilling(subscription, internalCallContext);
+            blockingChecker.checkBlockedBilling(subscription, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -167,10 +167,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
-        blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
-        blockingChecker.checkBlockedBilling(subscription, internalCallContext);
+        blockingChecker.checkBlockedEntitlement(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(subscription, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedChange(subscription, internalCallContext);
+            blockingChecker.checkBlockedChange(subscription, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -178,10 +178,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateAccount(false, true, false);
-        blockingChecker.checkBlockedChange(subscription, internalCallContext);
-        blockingChecker.checkBlockedBilling(subscription, internalCallContext);
+        blockingChecker.checkBlockedChange(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(subscription, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
+            blockingChecker.checkBlockedEntitlement(subscription, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -189,10 +189,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateAccount(false, false, true);
-        blockingChecker.checkBlockedChange(subscription, internalCallContext);
-        blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
+        blockingChecker.checkBlockedChange(subscription, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedEntitlement(subscription, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedBilling(subscription, internalCallContext);
+            blockingChecker.checkBlockedBilling(subscription, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -204,18 +204,18 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
         setStateSubscription(false, false, false);
-        blockingChecker.checkBlockedChange(bundle, internalCallContext);
-        blockingChecker.checkBlockedEntitlement(bundle, internalCallContext);
-        blockingChecker.checkBlockedBilling(bundle, internalCallContext);
+        blockingChecker.checkBlockedChange(bundle, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedEntitlement(bundle, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(bundle, clock.getUTCNow(), internalCallContext);
 
         //BLOCKED BUNDLE
         clock.addDays(1);
         setStateSubscription(false, false, false);
         setStateBundle(true, false, false);
-        blockingChecker.checkBlockedEntitlement(bundle, internalCallContext);
-        blockingChecker.checkBlockedBilling(bundle, internalCallContext);
+        blockingChecker.checkBlockedEntitlement(bundle, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(bundle, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedChange(bundle, internalCallContext);
+            blockingChecker.checkBlockedChange(bundle, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -223,10 +223,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateBundle(false, true, false);
-        blockingChecker.checkBlockedChange(bundle, internalCallContext);
-        blockingChecker.checkBlockedBilling(bundle, internalCallContext);
+        blockingChecker.checkBlockedChange(bundle, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(bundle, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedEntitlement(bundle, internalCallContext);
+            blockingChecker.checkBlockedEntitlement(bundle, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -234,10 +234,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateBundle(false, false, true);
-        blockingChecker.checkBlockedChange(bundle, internalCallContext);
-        blockingChecker.checkBlockedEntitlement(bundle, internalCallContext);
+        blockingChecker.checkBlockedChange(bundle, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedEntitlement(bundle, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedBilling(bundle, internalCallContext);
+            blockingChecker.checkBlockedBilling(bundle, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -248,10 +248,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
-        blockingChecker.checkBlockedEntitlement(bundle, internalCallContext);
-        blockingChecker.checkBlockedBilling(bundle, internalCallContext);
+        blockingChecker.checkBlockedEntitlement(bundle, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(bundle, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedChange(bundle, internalCallContext);
+            blockingChecker.checkBlockedChange(bundle, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -259,10 +259,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateAccount(false, true, false);
-        blockingChecker.checkBlockedChange(bundle, internalCallContext);
-        blockingChecker.checkBlockedBilling(bundle, internalCallContext);
+        blockingChecker.checkBlockedChange(bundle, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(bundle, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedEntitlement(bundle, internalCallContext);
+            blockingChecker.checkBlockedEntitlement(bundle, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -270,10 +270,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateAccount(false, false, true);
-        blockingChecker.checkBlockedChange(bundle, internalCallContext);
-        blockingChecker.checkBlockedEntitlement(bundle, internalCallContext);
+        blockingChecker.checkBlockedChange(bundle, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedEntitlement(bundle, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedBilling(bundle, internalCallContext);
+            blockingChecker.checkBlockedBilling(bundle, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -286,19 +286,19 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
         setStateSubscription(false, false, false);
-        blockingChecker.checkBlockedChange(account, internalCallContext);
-        blockingChecker.checkBlockedEntitlement(account, internalCallContext);
-        blockingChecker.checkBlockedBilling(account, internalCallContext);
+        blockingChecker.checkBlockedChange(account, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedEntitlement(account, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(account, clock.getUTCNow(), internalCallContext);
 
         //BLOCKED ACCOUNT
         clock.addDays(1);
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
-        blockingChecker.checkBlockedEntitlement(account, internalCallContext);
-        blockingChecker.checkBlockedBilling(account, internalCallContext);
+        blockingChecker.checkBlockedEntitlement(account, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(account, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedChange(account, internalCallContext);
+            blockingChecker.checkBlockedChange(account, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -306,10 +306,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateAccount(false, true, false);
-        blockingChecker.checkBlockedChange(account, internalCallContext);
-        blockingChecker.checkBlockedBilling(account, internalCallContext);
+        blockingChecker.checkBlockedChange(account, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedBilling(account, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedEntitlement(account, internalCallContext);
+            blockingChecker.checkBlockedEntitlement(account, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -317,10 +317,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         clock.addDays(1);
         setStateAccount(false, false, true);
-        blockingChecker.checkBlockedChange(account, internalCallContext);
-        blockingChecker.checkBlockedEntitlement(account, internalCallContext);
+        blockingChecker.checkBlockedChange(account, clock.getUTCNow(), internalCallContext);
+        blockingChecker.checkBlockedEntitlement(account, clock.getUTCNow(), internalCallContext);
         try {
-            blockingChecker.checkBlockedBilling(account, internalCallContext);
+            blockingChecker.checkBlockedBilling(account, clock.getUTCNow(), internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior

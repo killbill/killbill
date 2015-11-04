@@ -50,8 +50,8 @@ import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.TimedResource;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.wordnik.swagger.annotations.Api;
@@ -78,7 +78,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "List tag definitions", response = TagDefinitionJson.class, responseContainer = "List")
@@ -97,7 +97,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
-    @Timed
+    @TimedResource
     @GET
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -113,7 +113,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @Timed
+    @TimedResource
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -134,7 +134,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId());
     }
 
-    @Timed
+    @TimedResource
     @DELETE
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)

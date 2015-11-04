@@ -343,6 +343,21 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
     }
 
+
+    @Override
+    public void setBlockingState(final UUID bundleId, final String stateName, final String serviceName, final LocalDate effectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, final Iterable<PluginProperty> properties, final CallContext context)
+            throws EntitlementApiException {
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
+        super.setBlockingState(bundleId, stateName, serviceName, effectiveDate, blockBilling, blockEntitlement, blockChange, properties, contextWithValidAccountRecordId);
+    }
+
+
+    @Override
+    public Iterable<BlockingState> getBlockingStatesForServiceAndType(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final TenantContext tenantContext) {
+        // Not implemented see #431
+        return null;
+    }
+
     @Override
     public UUID transferEntitlements(final UUID sourceAccountId, final UUID destAccountId, final String externalKey, final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
         return transferEntitlementsOverrideBillingPolicy(sourceAccountId, destAccountId, externalKey, effectiveDate, BillingActionPolicy.IMMEDIATE, properties, context);

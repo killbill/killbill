@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -120,67 +121,67 @@ public class DefaultBlockingChecker implements BlockingChecker {
         this.dao = dao;
     }
 
-    private DefaultBlockingAggregator getBlockedStateSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws BlockingApiException {
+    private DefaultBlockingAggregator getBlockedStateSubscriptionId(final UUID subscriptionId, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
         final SubscriptionBase subscription;
         try {
             subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
-            return getBlockedStateSubscription(subscription, context);
+            return getBlockedStateSubscription(subscription, upToDate, context);
         } catch (SubscriptionBaseApiException e) {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
 
-    private DefaultBlockingAggregator getBlockedStateSubscription(final SubscriptionBase subscription, final InternalTenantContext context) throws BlockingApiException {
+    private DefaultBlockingAggregator getBlockedStateSubscription(final SubscriptionBase subscription, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
         final DefaultBlockingAggregator result = new DefaultBlockingAggregator();
         if (subscription != null) {
-            final DefaultBlockingAggregator subscriptionState = getBlockedStateForId(subscription.getId(), BlockingStateType.SUBSCRIPTION, context);
+            final DefaultBlockingAggregator subscriptionState = getBlockedStateForId(subscription.getId(), BlockingStateType.SUBSCRIPTION, upToDate, context);
             if (subscriptionState != null) {
                 result.or(subscriptionState);
             }
             if (subscription.getBundleId() != null) {
                 // Recursive call to also fetch account state
-                result.or(getBlockedStateBundleId(subscription.getBundleId(), context));
+                result.or(getBlockedStateBundleId(subscription.getBundleId(), upToDate, context));
             }
         }
         return result;
     }
 
-    private DefaultBlockingAggregator getBlockedStateBundleId(final UUID bundleId, final InternalTenantContext context) throws BlockingApiException {
+    private DefaultBlockingAggregator getBlockedStateBundleId(final UUID bundleId, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
 
         final SubscriptionBaseBundle bundle;
         try {
             bundle = subscriptionApi.getBundleFromId(bundleId, context);
-            return getBlockedStateBundle(bundle, context);
+            return getBlockedStateBundle(bundle, upToDate, context);
         } catch (SubscriptionBaseApiException e) {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
 
-    private DefaultBlockingAggregator getBlockedStateBundle(final SubscriptionBaseBundle bundle, final InternalTenantContext context) {
-        final DefaultBlockingAggregator result = getBlockedStateAccountId(bundle.getAccountId(), context);
-        final DefaultBlockingAggregator bundleState = getBlockedStateForId(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, context);
+    private DefaultBlockingAggregator getBlockedStateBundle(final SubscriptionBaseBundle bundle, final DateTime upToDate, final InternalTenantContext context) {
+        final DefaultBlockingAggregator result = getBlockedStateAccountId(bundle.getAccountId(), upToDate, context);
+        final DefaultBlockingAggregator bundleState = getBlockedStateForId(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, upToDate, context);
         if (bundleState != null) {
             result.or(bundleState);
         }
         return result;
     }
 
-    private DefaultBlockingAggregator getBlockedStateAccount(final Account account, final InternalTenantContext context) {
+    private DefaultBlockingAggregator getBlockedStateAccount(final Account account, final DateTime upToDate, final InternalTenantContext context) {
         if (account != null) {
-            return getBlockedStateForId(account.getId(), BlockingStateType.ACCOUNT, context);
+            return getBlockedStateForId(account.getId(), BlockingStateType.ACCOUNT, upToDate, context);
         }
         return new DefaultBlockingAggregator();
     }
 
-    private DefaultBlockingAggregator getBlockedStateAccountId(final UUID accountId, final InternalTenantContext context) {
-        return getBlockedStateForId(accountId, BlockingStateType.ACCOUNT, context);
+    private DefaultBlockingAggregator getBlockedStateAccountId(final UUID accountId, final DateTime upToDate, final InternalTenantContext context) {
+        return getBlockedStateForId(accountId, BlockingStateType.ACCOUNT, upToDate, context);
     }
 
-    private DefaultBlockingAggregator getBlockedStateForId(@Nullable final UUID blockableId, final BlockingStateType blockingStateType, final InternalTenantContext context) {
+    private DefaultBlockingAggregator getBlockedStateForId(@Nullable final UUID blockableId, final BlockingStateType blockingStateType, final DateTime upToDate, final InternalTenantContext context) {
         // Last states across services
         final List<BlockingState> blockableState;
         if (blockableId != null) {
-            blockableState = dao.getBlockingState(blockableId, blockingStateType, context);
+            blockableState = dao.getBlockingState(blockableId, blockingStateType, upToDate, context);
         } else {
             blockableState = ImmutableList.<BlockingState>of();
         }
@@ -196,13 +197,13 @@ public class DefaultBlockingChecker implements BlockingChecker {
     }
 
     @Override
-    public BlockingAggregator getBlockedStatus(final UUID blockableId, final BlockingStateType type, final InternalTenantContext context) throws BlockingApiException {
+    public BlockingAggregator getBlockedStatus(final UUID blockableId, final BlockingStateType type, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
         if (type == BlockingStateType.SUBSCRIPTION) {
-            return getBlockedStateSubscriptionId(blockableId, context);
+            return getBlockedStateSubscriptionId(blockableId, upToDate, context);
         } else if (type == BlockingStateType.SUBSCRIPTION_BUNDLE) {
-            return getBlockedStateBundleId(blockableId, context);
+            return getBlockedStateBundleId(blockableId, upToDate, context);
         } else { // BlockingStateType.ACCOUNT {
-            return getBlockedStateAccountId(blockableId, context);
+            return getBlockedStateAccountId(blockableId, upToDate, context);
         }
     }
 
@@ -215,34 +216,34 @@ public class DefaultBlockingChecker implements BlockingChecker {
     }
 
     @Override
-    public void checkBlockedChange(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
-        if (blockable instanceof SubscriptionBase && getBlockedStateSubscription((SubscriptionBase) blockable, context).isBlockChange()) {
+    public void checkBlockedChange(final Blockable blockable, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
+        if (blockable instanceof SubscriptionBase && getBlockedStateSubscription((SubscriptionBase) blockable, upToDate, context).isBlockChange()) {
             throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_SUBSCRIPTION, blockable.getId().toString());
-        } else if (blockable instanceof SubscriptionBaseBundle && getBlockedStateBundle((SubscriptionBaseBundle) blockable, context).isBlockChange()) {
+        } else if (blockable instanceof SubscriptionBaseBundle && getBlockedStateBundle((SubscriptionBaseBundle) blockable, upToDate, context).isBlockChange()) {
             throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_BUNDLE, blockable.getId().toString());
-        } else if (blockable instanceof Account && getBlockedStateAccount((Account) blockable, context).isBlockChange()) {
+        } else if (blockable instanceof Account && getBlockedStateAccount((Account) blockable, upToDate, context).isBlockChange()) {
             throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_ACCOUNT, blockable.getId().toString());
         }
     }
 
     @Override
-    public void checkBlockedEntitlement(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
-        if (blockable instanceof SubscriptionBase && getBlockedStateSubscription((SubscriptionBase) blockable, context).isBlockEntitlement()) {
+    public void checkBlockedEntitlement(final Blockable blockable, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
+        if (blockable instanceof SubscriptionBase && getBlockedStateSubscription((SubscriptionBase) blockable, upToDate, context).isBlockEntitlement()) {
             throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_SUBSCRIPTION, blockable.getId().toString());
-        } else if (blockable instanceof SubscriptionBaseBundle && getBlockedStateBundle((SubscriptionBaseBundle) blockable, context).isBlockEntitlement()) {
+        } else if (blockable instanceof SubscriptionBaseBundle && getBlockedStateBundle((SubscriptionBaseBundle) blockable, upToDate, context).isBlockEntitlement()) {
             throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_BUNDLE, blockable.getId().toString());
-        } else if (blockable instanceof Account && getBlockedStateAccount((Account) blockable, context).isBlockEntitlement()) {
+        } else if (blockable instanceof Account && getBlockedStateAccount((Account) blockable, upToDate, context).isBlockEntitlement()) {
             throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_ACCOUNT, blockable.getId().toString());
         }
     }
 
     @Override
-    public void checkBlockedBilling(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
-        if (blockable instanceof SubscriptionBase && getBlockedStateSubscription((SubscriptionBase) blockable, context).isBlockBilling()) {
+    public void checkBlockedBilling(final Blockable blockable, final DateTime upToDate, final InternalTenantContext context) throws BlockingApiException {
+        if (blockable instanceof SubscriptionBase && getBlockedStateSubscription((SubscriptionBase) blockable, upToDate, context).isBlockBilling()) {
             throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_SUBSCRIPTION, blockable.getId().toString());
-        } else if (blockable instanceof SubscriptionBaseBundle && getBlockedStateBundle((SubscriptionBaseBundle) blockable, context).isBlockBilling()) {
+        } else if (blockable instanceof SubscriptionBaseBundle && getBlockedStateBundle((SubscriptionBaseBundle) blockable, upToDate, context).isBlockBilling()) {
             throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_BUNDLE, blockable.getId().toString());
-        } else if (blockable instanceof Account && getBlockedStateAccount((Account) blockable, context).isBlockBilling()) {
+        } else if (blockable instanceof Account && getBlockedStateAccount((Account) blockable, upToDate, context).isBlockBilling()) {
             throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_ACCOUNT, blockable.getId().toString());
         }
     }

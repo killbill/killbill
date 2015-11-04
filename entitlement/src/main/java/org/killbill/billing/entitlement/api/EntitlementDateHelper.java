@@ -58,4 +58,5 @@ public class EntitlementDateHelper {
         final LocalDate targetDateInAccountTimezone = new LocalDate(inputDate, accountTimeZone);
         return targetDateInAccountTimezone.compareTo(localDateNowInAccountTimezone) <= 0;
     }
+
 }

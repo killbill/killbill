@@ -27,8 +27,10 @@ import javax.inject.Named;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.entitlement.EntitlementTransitionType;
+import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.events.AccountCreationInternalEvent;
+import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.BusInternalEvent.BusInternalEventType;
 import org.killbill.billing.events.ControlTagCreationInternalEvent;
@@ -140,6 +142,19 @@ public class BeatrixListener {
                 } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.UNCANCEL) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_UNCANCEL;
                 }
+                break;
+
+            case BLOCKING_STATE:
+                final BlockingTransitionInternalEvent realEventBS = (BlockingTransitionInternalEvent) event;
+                if (realEventBS.getBlockingType() == BlockingStateType.ACCOUNT) {
+                    objectType = ObjectType.ACCOUNT;
+                } else if (realEventBS.getBlockingType() == BlockingStateType.SUBSCRIPTION_BUNDLE) {
+                    objectType = ObjectType.BUNDLE;
+                } else if (realEventBS.getBlockingType() == BlockingStateType.SUBSCRIPTION) {
+                    objectType = ObjectType.SUBSCRIPTION;
+                }
+                objectId = realEventBS.getBlockableId();
+                // Probably we should serialize the isTransitionedTo* from BlockingTransitionInternalEvent into the metdata section
                 break;
 
             case ENTITLEMENT_TRANSITION:
