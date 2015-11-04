@@ -162,14 +162,23 @@ public class SubscriptionResource extends JaxRsResourceBase {
                              entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        SubscriptionBundle bundle = null;
         final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
         if (createAddOnEntitlement) {
-            verifyNonNullOrEmpty(entitlement.getBundleId(), "SubscriptionJson bundleId should be specified for ADD_ON");
+            verifyNonNullOrEmpty(entitlement.getExternalKey(), "SubscriptionJson externalKey should be specified for ADD_ON");
+            try {
+                bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(entitlement.getExternalKey(), callContext);
+            } catch (SubscriptionApiException e) {
+                // converting SubscriptionApiException to force this exception type
+                throw new IllegalArgumentException(e.getMessage());
+            }
         } else {
             verifyNonNullOrEmpty(entitlement.getAccountId(), "SubscriptionJson accountId should be specified for BP");
         }
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID bundleId = (bundle != null) ? bundle.getId() : null;
 
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
@@ -181,7 +190,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
 
                 final LocalDate inputLocalDate = toLocalDate(account, requestedDate, callContext);
-                final UUID bundleId = entitlement.getBundleId() != null ? UUID.fromString(entitlement.getBundleId()) : null;
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
                                                                  ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
