@@ -25,6 +25,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.shiro.util.ThreadContext;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.ProfilingData;
@@ -53,7 +54,7 @@ public class PluginDispatcher<ReturnType> {
         final ExecutorService pluginExecutor = paymentExecutors.getPluginExecutorService();
 
         // Wrap existing callable to keep the original requestId
-        final Callable<PluginDispatcherReturnType<ReturnType>> callableWithRequestData = new CallableWithRequestData(Request.getPerThreadRequestData(), task);
+        final Callable<PluginDispatcherReturnType<ReturnType>> callableWithRequestData = new CallableWithRequestData(Request.getPerThreadRequestData(), ThreadContext.getSecurityManager(), ThreadContext.getSubject(), task);
 
         final Future<PluginDispatcherReturnType<ReturnType>> future = pluginExecutor.submit(callableWithRequestData);
         final PluginDispatcherReturnType<ReturnType> pluginDispatcherResult = future.get(timeout, unit);

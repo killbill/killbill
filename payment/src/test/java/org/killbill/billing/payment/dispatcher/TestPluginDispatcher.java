@@ -18,7 +18,6 @@ package org.killbill.billing.payment.dispatcher;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -26,7 +25,6 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
-import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
 import org.testng.Assert;
@@ -136,7 +134,9 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
         };
 
         final CallableWithRequestData<PluginDispatcherReturnType<String>> callable = new CallableWithRequestData<PluginDispatcherReturnType<String>>(new RequestData(requestId),
-                                                                                                                                                        delegate);
+                                                                                                                                                     null,
+                                                                                                                                                     null,
+                                                                                                                                                     delegate);
 
         final String actualRequestId = stringPluginDispatcher.dispatchWithTimeout(callable, 100, TimeUnit.MILLISECONDS);
         Assert.assertEquals(actualRequestId, requestId);

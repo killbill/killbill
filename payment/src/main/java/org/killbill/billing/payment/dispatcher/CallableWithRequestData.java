@@ -19,16 +19,23 @@ package org.killbill.billing.payment.dispatcher;
 
 import java.util.concurrent.Callable;
 
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.util.ThreadContext;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
 
 public class CallableWithRequestData<T> implements Callable<T> {
 
     private final RequestData requestData;
+    private final SecurityManager securityManager;
+    private final Subject subject;
     private final Callable<T> delegate;
 
-    public CallableWithRequestData(final RequestData requestData, final Callable<T> delegate) {
+    public CallableWithRequestData(final RequestData requestData, final SecurityManager securityManager, final Subject subject, final Callable<T> delegate) {
         this.requestData = requestData;
+        this.securityManager = securityManager;
+        this.subject = subject;
         this.delegate = delegate;
     }
 
@@ -36,9 +43,13 @@ public class CallableWithRequestData<T> implements Callable<T> {
     public T call() throws Exception {
         try {
             Request.setPerThreadRequestData(requestData);
+            ThreadContext.bind(securityManager);
+            ThreadContext.bind(subject);
             return delegate.call();
         } finally {
             Request.resetPerThreadRequestData();
+            ThreadContext.unbindSecurityManager();
+            ThreadContext.unbindSubject();
         }
     }
 }
