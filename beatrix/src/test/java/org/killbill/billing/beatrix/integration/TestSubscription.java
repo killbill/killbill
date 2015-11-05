@@ -192,9 +192,10 @@ public class TestSubscription extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
-        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier("baseExternalKey", baseSpec, null);
-        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier("", addOnSpec1, null);
-        EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier("", addOnSpec2, null);
+        final String externalKey = "baseExternalKey";
+        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
+        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
+        EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2, null);
 
         final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
         specifierList.add(baseEntitlementSpecifier);
@@ -202,7 +203,7 @@ public class TestSubscription extends TestIntegrationBase {
         specifierList.add(addOnEntitlementSpecifier2);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         checkNoMoreInvoiceToGenerate(account);
 

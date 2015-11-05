@@ -290,11 +290,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     EntitlementSpecifier specifier = new EntitlementSpecifier() {
 
                         @Override
-                        public String getExternalkey() {
-                            return entitlement.getExternalKey();
-                        }
-
-                        @Override
                         public PlanPhaseSpecifier getPlanPhaseSpecifier() {
                             return planPhaseSpecifier;
                         }
@@ -309,8 +304,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 }
 
                 final LocalDate inputLocalDate = toLocalDate(account, requestedDate, callContext);
-                return entitlementApi.createBaseEntitlementWithAddOns(account.getId(), entitlementSpecifierList, inputLocalDate,
-                                                                      pluginProperties, callContext);
+                return entitlementApi.createBaseEntitlementWithAddOns(account.getId(), baseEntitlement.getExternalKey(), entitlementSpecifierList,
+                                                                      inputLocalDate, pluginProperties, callContext);
             }
 
             @Override

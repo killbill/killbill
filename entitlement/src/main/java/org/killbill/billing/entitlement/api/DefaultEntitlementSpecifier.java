@@ -24,19 +24,12 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 
 public class DefaultEntitlementSpecifier implements EntitlementSpecifier {
 
-    private final String externalkey;
     private final PlanPhaseSpecifier planPhaseSpecifier;
     private final List<PlanPhasePriceOverride> overrides;
 
-    public DefaultEntitlementSpecifier(final String externalkey, final PlanPhaseSpecifier planPhaseSpecifier, final List<PlanPhasePriceOverride> overrides) {
-        this.externalkey = externalkey;
+    public DefaultEntitlementSpecifier(final PlanPhaseSpecifier planPhaseSpecifier, final List<PlanPhasePriceOverride> overrides) {
         this.planPhaseSpecifier = planPhaseSpecifier;
         this.overrides = overrides;
-    }
-
-    @Override
-    public String getExternalkey() {
-        return externalkey;
     }
 
     @Override

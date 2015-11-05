@@ -157,8 +157,9 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     }
 
     @Override
-    public Entitlement createBaseEntitlementWithAddOns(final UUID accountId, final Iterable<EntitlementSpecifier> entitlementSpecifier, final LocalDate effectiveDate,
-                                                             final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement createBaseEntitlementWithAddOns(final UUID accountId, final String externalKey, final Iterable<EntitlementSpecifier> entitlementSpecifier,
+                                                       final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext)
+            throws EntitlementApiException {
 
         final EntitlementSpecifier baseSpecifier = Iterables.tryFind(entitlementSpecifier, new Predicate<EntitlementSpecifier>() {
             @Override
@@ -176,7 +177,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                null,
                                                                                null,
                                                                                baseSpecifier.getPlanPhaseSpecifier(),
-                                                                               baseSpecifier.getExternalkey(),
+                                                                               externalKey,
                                                                                baseSpecifier.getOverrides(),
                                                                                effectiveDate,
                                                                                properties,
@@ -188,11 +189,11 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
 
                 try {
-                    if (entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(baseSpecifier.getExternalkey(), contextWithValidAccountRecordId) != null) {
-                        throw new EntitlementApiException(new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, baseSpecifier.getExternalkey()));
+                    if (entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(externalKey, contextWithValidAccountRecordId) != null) {
+                        throw new EntitlementApiException(new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, externalKey));
                     }
 
-                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.createBundleForAccount(accountId, baseSpecifier.getExternalkey(), contextWithValidAccountRecordId);
+                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.createBundleForAccount(accountId, externalKey, contextWithValidAccountRecordId);
 
                     final DateTime referenceTime = clock.getUTCNow();
                     final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), referenceTime, contextWithValidAccountRecordId);
