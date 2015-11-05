@@ -34,6 +34,8 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.EntitlementPluginApi;
 import org.killbill.billing.entitlement.plugin.api.EntitlementPluginApiException;
@@ -138,15 +140,14 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
         @Override
         public PriorEntitlementResult priorCall(final EntitlementContext entitlementContext, final Iterable<PluginProperty> properties) throws EntitlementPluginApiException {
             if (planPhasePriceOverride != null) {
+                final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(null, planPhasePriceOverride);
+                final List<EntitlementSpecifier> entitlementSpecifiers = new ArrayList<EntitlementSpecifier>();
+                entitlementSpecifiers.add(entitlementSpecifier);
+
                 return new PriorEntitlementResult() {
                     @Override
                     public boolean isAborted() {
                         return false;
-                    }
-
-                    @Override
-                    public PlanPhaseSpecifier getAdjustedPlanPhaseSpecifier() {
-                        return null;
                     }
 
                     @Override
@@ -155,8 +156,8 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
                     }
 
                     @Override
-                    public List<PlanPhasePriceOverride> getAdjustedPlanPhasePriceOverride() {
-                        return planPhasePriceOverride;
+                    public List<EntitlementSpecifier> getAdjustedEntitlementSpecifiers() {
+                        return entitlementSpecifiers;
                     }
 
                     @Override

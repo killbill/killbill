@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.shiro.SecurityUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -372,7 +371,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                getAccountId(),
                                                                                null,
                                                                                getBundleId(),
-                                                                               null,
                                                                                getExternalKey(),
                                                                                null,
                                                                                localCancelDate,
@@ -439,7 +437,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                getAccountId(),
                                                                                null,
                                                                                getBundleId(),
-                                                                               null,
                                                                                getExternalKey(),
                                                                                null,
                                                                                null,
@@ -488,7 +485,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                getAccountId(),
                                                                                null,
                                                                                getBundleId(),
-                                                                               null,
                                                                                getExternalKey(),
                                                                                null,
                                                                                localDate,
@@ -537,7 +533,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                getAccountId(),
                                                                                null,
                                                                                getBundleId(),
-                                                                               null,
                                                                                getExternalKey(),
                                                                                null,
                                                                                localDate,
