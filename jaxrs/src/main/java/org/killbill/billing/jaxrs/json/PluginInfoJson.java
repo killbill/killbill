@@ -20,7 +20,7 @@ package org.killbill.billing.jaxrs.json;
 import java.util.Set;
 
 import org.killbill.billing.osgi.api.PluginInfo;
-import org.killbill.billing.osgi.api.PluginInfo.PluginServiceInfo;
+import org.killbill.billing.osgi.api.PluginServiceInfo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

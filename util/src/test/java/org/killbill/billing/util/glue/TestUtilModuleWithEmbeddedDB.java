@@ -20,7 +20,15 @@ package org.killbill.billing.util.glue;
 
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
+import org.killbill.billing.osgi.api.PluginInfo;
+import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
+import org.killbill.billing.util.info.DefaultKillbillInfoApi;
+import org.killbill.billing.util.info.DefaultKillbillInfoService;
+import org.killbill.billing.util.info.KillbillInfoApi;
+import org.killbill.billing.util.info.KillbillInfoService;
+import org.mockito.Mockito;
 
 public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
 
@@ -34,6 +42,7 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
         install(new GuicyKillbillTestWithEmbeddedDBModule(configSource));
 
         install(new AuditModule(configSource));
+        install(new InfoModuleWithPluginInfoApi(configSource));
         install(new TagStoreModule(configSource));
         install(new CustomFieldModule(configSource));
         install(new NonEntityDaoModule(configSource));
@@ -49,6 +58,18 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
         }
 
         protected void installSecurityService() {
+        }
+    }
+
+    private static class InfoModuleWithPluginInfoApi extends InfoModule {
+
+        public InfoModuleWithPluginInfoApi(final KillbillConfigSource configSource) {
+            super(configSource);
+        }
+
+        protected void installUserApi() {
+            bind(PluginsInfoApi.class).toInstance(Mockito.mock(PluginsInfoApi.class));
+            super.installUserApi();
         }
 
     }

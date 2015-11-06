@@ -288,3 +288,16 @@ CREATE TABLE roles_permissions (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX roles_permissions_idx ON roles_permissions(role_name, permission);
+
+
+DROP TABLE IF EXISTS node_infos;
+CREATE TABLE node_infos (
+    record_id serial unique,
+    node_name varchar(50) NOT NULL,
+    boot_date datetime NOT NULL,
+    updated_date datetime DEFAULT NULL,
+    node_info text NOT NULL,
+    is_active boolean default true,
+    PRIMARY KEY(record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE UNIQUE INDEX node_name_idx ON node_infos(node_name);

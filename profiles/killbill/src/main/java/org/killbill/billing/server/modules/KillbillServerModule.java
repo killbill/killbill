@@ -73,6 +73,7 @@ import org.killbill.billing.util.glue.ClockModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
+import org.killbill.billing.util.glue.InfoModule;
 import org.killbill.billing.util.glue.KillBillShiroAopModule;
 import org.killbill.billing.util.glue.KillbillApiAopModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
@@ -137,6 +138,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
 
     protected void installKillbillModules() {
         install(new AuditModule(configSource));
+        install(new InfoModule(configSource));
         install(new BeatrixModule(configSource));
         install(new CacheModule(configSource));
         install(new CallContextModule(configSource));

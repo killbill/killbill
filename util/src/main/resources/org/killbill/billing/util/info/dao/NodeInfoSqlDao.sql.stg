@@ -1,0 +1,71 @@
+group NodeInfoSqlDao;
+
+tableName() ::= "node_infos"
+
+tableFields(prefix) ::= <<
+  <prefix>node_name
+, <prefix>boot_date
+, <prefix>updated_date
+, <prefix>node_info
+, <prefix>is_active
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+
+tableValues() ::= <<
+  :nodeName
+, :bootDate
+, :updatedDate
+, :nodeInfo
+, :isActive
+>>
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields()>
+)
+values (
+<tableValues()>
+)
+;
+>>
+
+getByNodeName() ::= <<
+select <allTableFields()>
+from <tableName()>
+where node_name = :nodeName
+and is_active
+;
+>>
+
+getAll() ::= <<
+select <allTableFields()>
+from <tableName()>
+where is_active
+order by node_name asc
+;
+>>
+
+updateNodeInfo() ::= <<
+update <tableName()>
+set node_info = :nodeInfo
+, updated_date = :updatedDate
+where node_name = :nodeName
+;
+>>
+
+delete() ::= <<
+delete
+from <tableName()>
+where node_name = :nodeName
+;
+>>
