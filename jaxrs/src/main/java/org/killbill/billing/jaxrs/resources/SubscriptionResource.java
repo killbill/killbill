@@ -87,6 +87,8 @@ import org.killbill.commons.metrics.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -167,9 +169,14 @@ public class SubscriptionResource extends JaxRsResourceBase {
         SubscriptionBundle bundle = null;
         final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
         if (createAddOnEntitlement) {
-            verifyNonNullOrEmpty(entitlement.getExternalKey(), "SubscriptionJson externalKey should be specified for ADD_ON");
+            final boolean expression = !Strings.isNullOrEmpty(entitlement.getExternalKey()) || !Strings.isNullOrEmpty(entitlement.getBundleId());
+            Preconditions.checkArgument(expression, "SubscriptionJson bundleId or externalKey should be specified for ADD_ON");
             try {
-                bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(entitlement.getExternalKey(), callContext);
+                if (!Strings.isNullOrEmpty(entitlement.getBundleId())) {
+                    bundle = subscriptionApi.getSubscriptionBundle(UUID.fromString(entitlement.getBundleId()), callContext);
+                } else {
+                    bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(entitlement.getExternalKey(), callContext);
+                }
             } catch (SubscriptionApiException e) {
                 // converting SubscriptionApiException to force this exception type
                 throw new IllegalArgumentException(e.getMessage());
