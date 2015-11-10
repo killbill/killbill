@@ -22,6 +22,7 @@ import java.util.EventListener;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -196,6 +197,9 @@ public class TestJaxrsBase extends KillbillClient {
         clock.resetDeltaFromReality();
         clock.setDay(new LocalDate(2012, 8, 25));
 
+        // Make sure to re-generate the api key and secret (could be cached by Shiro)
+        DEFAULT_API_KEY = UUID.randomUUID().toString();
+        DEFAULT_API_SECRET = UUID.randomUUID().toString();
         loginTenant(DEFAULT_API_KEY, DEFAULT_API_SECRET);
 
         // Recreate the tenant (tables have been cleaned-up)
