@@ -23,13 +23,18 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
+import org.apache.shiro.authc.pam.ModularRealmAuthenticatorWith540;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.guice.web.ShiroWebModuleWith435;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
+import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.apache.shiro.web.mgt.WebSecurityManager;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.apache.shiro.web.util.WebUtils;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
+import org.killbill.billing.server.security.FirstSuccessfulStrategyWith540;
 import org.killbill.billing.util.config.RbacConfig;
 import org.killbill.billing.util.glue.EhCacheManagerProvider;
 import org.killbill.billing.util.glue.IniRealmProvider;
@@ -42,7 +47,13 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
+import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.matcher.Matchers;
+import com.google.inject.spi.InjectionListener;
+import com.google.inject.spi.TypeEncounter;
+import com.google.inject.spi.TypeListener;
 
 // For Kill Bill server only.
 // See org.killbill.billing.util.glue.KillBillShiroModule for Kill Bill library.
@@ -74,6 +85,29 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
         if (KillBillShiroModule.isRBACEnabled()) {
             addFilterChain(JaxrsResource.PREFIX + "/**", Key.get(CorsBasicHttpAuthenticationFilter.class));
         }
+
+        bindListener(new AbstractMatcher<TypeLiteral<?>>() {
+                         @Override
+                         public boolean matches(final TypeLiteral<?> o) {
+                             return Matchers.subclassesOf(WebSecurityManager.class).matches(o.getRawType());
+                         }
+                     },
+                     new TypeListener() {
+                         @Override
+                         public <I> void hear(final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
+                             typeEncounter.register(new InjectionListener<I>() {
+                                 @Override
+                                 public void afterInjection(final Object o) {
+                                     final DefaultWebSecurityManager webSecurityManager = (DefaultWebSecurityManager) o;
+                                     if (webSecurityManager.getAuthenticator() instanceof ModularRealmAuthenticator) {
+                                         final ModularRealmAuthenticator authenticator = (ModularRealmAuthenticator) webSecurityManager.getAuthenticator();
+                                         authenticator.setAuthenticationStrategy(new FirstSuccessfulStrategyWith540());
+                                         webSecurityManager.setAuthenticator(new ModularRealmAuthenticatorWith540(authenticator));
+                                     }
+                                 }
+                             });
+                         }
+                     });
     }
 
     @Override
