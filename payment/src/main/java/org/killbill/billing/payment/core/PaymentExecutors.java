@@ -81,8 +81,8 @@ public class PaymentExecutors {
         final int minThreadNb = DEFAULT_MIN_PLUGIN_THREADS < paymentConfig.getPaymentPluginThreadNb() ? DEFAULT_MIN_PLUGIN_THREADS : paymentConfig.getPaymentPluginThreadNb();
         return new WithProfilingThreadPoolExecutor(minThreadNb,
                                                    paymentConfig.getPaymentPluginThreadNb(),
-                                                   0L,
-                                                   TimeUnit.MILLISECONDS,
+                                                   10,
+                                                   TimeUnit.MINUTES,
                                                    new LinkedBlockingQueue<Runnable>(),
                                                    new ThreadFactory() {
 
