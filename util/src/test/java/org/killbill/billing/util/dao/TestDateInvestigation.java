@@ -68,7 +68,7 @@ public class TestDateInvestigation /* extends UtilTestSuiteWithEmbeddedDB */ {
     }
 
     @BeforeTest(groups = "slow")
-    public void beforeTest() {
+    public void beforeTest() throws SQLException {
         rawSource = getRawSource(DataSourceType.MYSQL_MARIADB, "killbill", "root", "root");
     }
 
@@ -171,7 +171,7 @@ public class TestDateInvestigation /* extends UtilTestSuiteWithEmbeddedDB */ {
         }
     }
 
-    private DataSource getRawSource(final DataSourceType type, final String dbName, final String user, final String pwd) {
+    private DataSource getRawSource(final DataSourceType type, final String dbName, final String user, final String pwd) throws SQLException {
         if (type == DataSourceType.MYSQL_JDBC2) {
             return getRawMysqlDataSource(dbName, user, pwd);
         } else if (type == DataSourceType.MYSQL_MARIADB) {
@@ -191,7 +191,7 @@ public class TestDateInvestigation /* extends UtilTestSuiteWithEmbeddedDB */ {
         return rawSource;
     }
 
-    private DataSource getRawMariaDBDataSource(final String dbName, final String user, final String pwd) {
+    private DataSource getRawMariaDBDataSource(final String dbName, final String user, final String pwd) throws SQLException {
         final org.mariadb.jdbc.MySQLDataSource rawSource = new org.mariadb.jdbc.MySQLDataSource();
         rawSource.setDatabaseName(dbName);
         rawSource.setUser(user);
