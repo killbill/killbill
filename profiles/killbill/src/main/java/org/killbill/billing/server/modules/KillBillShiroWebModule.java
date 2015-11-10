@@ -24,7 +24,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.cache.CacheManager;
-import org.apache.shiro.guice.web.ShiroWebModule;
+import org.apache.shiro.guice.web.ShiroWebModuleWith435;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
@@ -46,7 +46,7 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 
 // For Kill Bill server only.
 // See org.killbill.billing.util.glue.KillBillShiroModule for Kill Bill library.
-public class KillBillShiroWebModule extends ShiroWebModule {
+public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
     private final ConfigSource configSource;
 
