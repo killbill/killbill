@@ -53,17 +53,26 @@ public class IniRealmProvider implements Provider<IniRealm> {
             // by going through IniSecurityManagerFactory.
             final DefaultSecurityManager securityManager = (DefaultSecurityManager) factory.getInstance();
             final Collection<Realm> realms = securityManager.getRealms();
-            if (realms == null || realms.isEmpty()) {
-                return new IniRealm(securityConfig.getShiroResourcePath());
-            }
 
-            for (final Realm cur : realms) {
-                if (cur instanceof IniRealm) {
-                    return (IniRealm) cur;
+            IniRealm iniRealm = null;
+            if (realms == null || realms.isEmpty()) {
+                iniRealm = new IniRealm(securityConfig.getShiroResourcePath());
+            } else {
+                for (final Realm cur : realms) {
+                    if (cur instanceof IniRealm) {
+                        iniRealm = (IniRealm) cur;
+                        break;
+                    }
                 }
             }
-            throw new ConfigurationException();
+            if (iniRealm != null) {
+                // See JavaDoc warning: https://shiro.apache.org/static/1.2.3/apidocs/org/apache/shiro/realm/AuthenticatingRealm.html
+                iniRealm.setAuthenticationCachingEnabled(true);
 
+                return iniRealm;
+            } else {
+                throw new ConfigurationException();
+            }
         } catch (final ConfigurationException e) {
             log.warn("Unable to configure RBAC", e);
             return new IniRealm();

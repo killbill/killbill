@@ -42,6 +42,10 @@ public class KillBillJdbcRealm extends JdbcRealm {
         this.dataSource = dataSource;
         this.securityConfig = securityConfig;
 
+        // TODO Enable when we add support for cache invalidation
+        // See JavaDoc warning: https://shiro.apache.org/static/1.2.3/apidocs/org/apache/shiro/realm/AuthenticatingRealm.html
+        //setAuthenticationCachingEnabled(true);
+
         // Tweak JdbcRealm defaults
         setPermissionsLookupEnabled(true);
         setAuthenticationQuery(KILLBILL_SALTED_AUTHENTICATION_QUERY);

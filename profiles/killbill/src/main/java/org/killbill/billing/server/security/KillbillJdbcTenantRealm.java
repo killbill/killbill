@@ -46,6 +46,10 @@ public class KillbillJdbcTenantRealm extends JdbcRealm {
         this.dataSource = dataSource;
         this.securityConfig = securityConfig;
 
+        // Note: we don't support updating tenants credentials via API
+        // See JavaDoc warning: https://shiro.apache.org/static/1.2.3/apidocs/org/apache/shiro/realm/AuthenticatingRealm.html
+        setAuthenticationCachingEnabled(true);
+
         configureSecurity();
         configureQueries();
         configureDataSource();

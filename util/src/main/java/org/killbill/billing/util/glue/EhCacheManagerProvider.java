@@ -24,27 +24,16 @@ import javax.inject.Provider;
 import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.ehcache.InstrumentedEhcache;
-import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
 
 public class EhCacheManagerProvider implements Provider<EhCacheManager> {
 
-    private static final Logger logger = LoggerFactory.getLogger(EhCacheManagerProvider.class);
-
-    private final MetricRegistry metricRegistry;
     private final SecurityManager securityManager;
     private final CacheManager ehCacheCacheManager;
 
     @Inject
-    public EhCacheManagerProvider(final MetricRegistry metricRegistry, final SecurityManager securityManager, final CacheManager ehCacheCacheManager) {
-        this.metricRegistry = metricRegistry;
+    public EhCacheManagerProvider(final SecurityManager securityManager, final CacheManager ehCacheCacheManager) {
         this.securityManager = securityManager;
         this.ehCacheCacheManager = ehCacheCacheManager;
     }
@@ -55,21 +44,8 @@ public class EhCacheManagerProvider implements Provider<EhCacheManager> {
         // Same EhCache manager instance as the rest of the system
         shiroEhCacheManager.setCacheManager(ehCacheCacheManager);
 
-        // It looks like Shiro's cache manager is not thread safe. Concurrent requests on startup
-        // can throw org.apache.shiro.cache.CacheException: net.sf.ehcache.ObjectExistsException: Cache shiro-activeSessionCache already exists
-        // As a workaround, create the cache manually here
-        shiroEhCacheManager.getCache(CachingSessionDAO.ACTIVE_SESSION_CACHE_NAME);
-
-        // Instrument the cache
-        final Ehcache shiroActiveSessionEhcache = ehCacheCacheManager.getEhcache(CachingSessionDAO.ACTIVE_SESSION_CACHE_NAME);
-        final Ehcache decoratedCache = InstrumentedEhcache.instrument(metricRegistry, shiroActiveSessionEhcache);
-        try {
-            ehCacheCacheManager.replaceCacheWithDecoratedCache(shiroActiveSessionEhcache, decoratedCache);
-        } catch (final CacheException e) {
-            logger.warn("Unable to instrument cache {}: {}", shiroActiveSessionEhcache.getName(), e.getMessage());
-        }
-
         if (securityManager instanceof DefaultSecurityManager) {
+            // For RBAC only (see also KillbillJdbcTenantRealmProvider)
             ((DefaultSecurityManager) securityManager).setCacheManager(shiroEhCacheManager);
         }
 
