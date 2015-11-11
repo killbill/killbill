@@ -24,8 +24,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
 import org.killbill.billing.entitlement.plugin.api.PriorEntitlementResult;
@@ -41,9 +39,8 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private final UUID accountId;
     private final UUID destinationAccountId;
     private final UUID bundleId;
-    private final PlanPhaseSpecifier spec;
     private final String externalKey;
-    private final List<PlanPhasePriceOverride> planPhasePriceOverrides;
+    private final List<EntitlementSpecifier> entitlementSpecifiers;
     private final LocalDate effectiveDate;
     private final Iterable<PluginProperty> pluginProperties;
     private final UUID userToken;
@@ -63,9 +60,8 @@ public class DefaultEntitlementContext implements EntitlementContext {
              prev.getAccountId(),
              prev.getDestinationAccountId(),
              prev.getBundleId(),
-             pluginResult != null && pluginResult.getAdjustedPlanPhaseSpecifier() != null ? pluginResult.getAdjustedPlanPhaseSpecifier() : prev.getPlanPhaseSpecifier(),
              prev.getExternalKey(),
-             pluginResult != null && pluginResult.getAdjustedPlanPhasePriceOverride() != null ? pluginResult.getAdjustedPlanPhasePriceOverride() : prev.getPlanPhasePriceOverride(),
+             pluginResult != null && pluginResult.getAdjustedEntitlementSpecifiers() != null ? pluginResult.getAdjustedEntitlementSpecifiers() : prev.getEntitlementSpecifiers(),
              pluginResult != null && pluginResult.getAdjustedEffectiveDate() != null ? pluginResult.getAdjustedEffectiveDate() : prev.getEffectiveDate(),
              pluginResult != null && pluginResult.getAdjustedPluginProperties() != null ? pluginResult.getAdjustedPluginProperties() : prev.getPluginProperties(),
              prev);
@@ -75,13 +71,12 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      final UUID accountId,
                                      final UUID destinationAccountId,
                                      final UUID bundleId,
-                                     final PlanPhaseSpecifier spec,
                                      final String externalKey,
-                                     final List<PlanPhasePriceOverride> planPhasePriceOverrides,
+                                     final List<EntitlementSpecifier> entitlementSpecifiers,
                                      final LocalDate effectiveDate,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final CallContext callContext) {
-        this(operationType, accountId, destinationAccountId, bundleId, spec, externalKey, planPhasePriceOverrides, effectiveDate, pluginProperties,
+        this(operationType, accountId, destinationAccountId, bundleId, externalKey, entitlementSpecifiers, effectiveDate, pluginProperties,
              callContext.getUserToken(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(),
              callContext.getComments(), callContext.getCreatedDate(), callContext.getUpdatedDate(), callContext.getTenantId());
     }
@@ -91,9 +86,8 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      final UUID accountId,
                                      final UUID destinationAccountId,
                                      final UUID bundleId,
-                                     final PlanPhaseSpecifier spec,
                                      final String externalKey,
-                                     final List<PlanPhasePriceOverride> planPhasePriceOverrides,
+                                     final List<EntitlementSpecifier> entitlementSpecifiers,
                                      final LocalDate effectiveDate,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final UUID userToken,
@@ -109,9 +103,8 @@ public class DefaultEntitlementContext implements EntitlementContext {
         this.accountId = accountId;
         this.destinationAccountId = destinationAccountId;
         this.bundleId = bundleId;
-        this.spec = spec;
         this.externalKey = externalKey;
-        this.planPhasePriceOverrides = planPhasePriceOverrides;
+        this.entitlementSpecifiers = entitlementSpecifiers;
         this.effectiveDate = effectiveDate;
         this.pluginProperties = pluginProperties;
         this.userToken = userToken;
@@ -146,18 +139,13 @@ public class DefaultEntitlementContext implements EntitlementContext {
     }
 
     @Override
-    public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-        return spec;
-    }
-
-    @Override
     public String getExternalKey() {
         return externalKey;
     }
 
     @Override
-    public List<PlanPhasePriceOverride> getPlanPhasePriceOverride() {
-        return planPhasePriceOverrides;
+    public List<EntitlementSpecifier> getEntitlementSpecifiers() {
+        return entitlementSpecifiers;
     }
 
     @Override

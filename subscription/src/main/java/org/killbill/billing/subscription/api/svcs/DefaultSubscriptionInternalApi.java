@@ -46,6 +46,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
@@ -62,6 +63,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
+import org.killbill.billing.subscription.api.user.SubscriptionSpecifier;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
@@ -156,6 +158,59 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                  .setBundleStartDate(bundleStartDate)
                                                  .setAlignStartDate(effectiveDate),
                                          plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now, callContext);
+        } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
+    }
+
+    @Override
+    public SubscriptionBase createBaseSubscriptionWithAddOns(final UUID bundleId, final Iterable<EntitlementSpecifier> entitlements, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
+
+        final DateTime now = clock.getUTCNow();
+        final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
+
+        try {
+            final List<SubscriptionSpecifier> subscriptions = new ArrayList<SubscriptionSpecifier>();
+            final Catalog catalog = catalogService.getFullCatalog(context);
+            final CallContext callContext = internalCallContextFactory.createCallContext(context);
+
+            for (EntitlementSpecifier entitlement : entitlements) {
+
+                final PlanPhaseSpecifier spec = entitlement.getPlanPhaseSpecifier();
+                final String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
+
+                final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(entitlement.getOverrides(), callContext);
+
+                final Plan plan = catalog.createOrFindPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, requestedDate);
+                final PlanPhase phase = plan.getAllPhases()[0];
+                if (phase == null) {
+                    throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
+                                                                  spec.getProductName(), spec.getBillingPeriod().toString(), realPriceList));
+                }
+
+                final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(bundleId, context);
+                if (bundle == null) {
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
+                }
+
+                SubscriptionSpecifier subscription = new SubscriptionSpecifier();
+                subscription.setRealPriceList(realPriceList);
+                subscription.setRequestedDate(requestedDate);
+                subscription.setEffectiveDate(requestedDate);
+                subscription.setProcessedDate(now);
+                subscription.setPlan(plan);
+                subscription.setInitialPhase(spec.getPhaseType());
+                subscription.setBuilder(new SubscriptionBuilder()
+                                                .setId(UUIDs.randomUUID())
+                                                .setBundleId(bundleId)
+                                                .setCategory(plan.getProduct().getCategory())
+                                                .setBundleStartDate(requestedDate)
+                                                .setAlignStartDate(requestedDate));
+
+                subscriptions.add(subscription);
+            }
+
+            return apiService.createPlans(subscriptions, callContext);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }

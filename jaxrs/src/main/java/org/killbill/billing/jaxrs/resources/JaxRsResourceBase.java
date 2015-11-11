@@ -470,4 +470,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             Preconditions.checkArgument(expression, errorMessage);
         }
     }
+
+    protected void verifyNumberOfElements(int actual, int expected, String errorMessage) {
+        Preconditions.checkArgument(actual == expected, errorMessage);
+    }
+
 }
