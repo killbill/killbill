@@ -18,13 +18,36 @@
 package org.killbill.billing.tenant.api.user;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.killbill.billing.tenant.TenantTestSuiteWithEmbeddedDb;
+import org.killbill.billing.tenant.api.DefaultTenant;
+import org.killbill.billing.tenant.api.Tenant;
+import org.killbill.billing.tenant.api.TenantData;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestDefaultTenantUserApi extends TenantTestSuiteWithEmbeddedDb {
+
+
+    @Test(groups = "slow")
+    public void testTenant() throws Exception {
+        final TenantData tenantdata = new DefaultTenant(UUID.randomUUID(), clock.getUTCNow(), clock.getUTCNow(), "er44TT-yy4r", "TTR445ee2", "dskjhfs^^54R");
+        tenantUserApi.createTenant(tenantdata, callContext);
+
+        final Tenant tenant = tenantUserApi.getTenantByApiKey(tenantdata.getApiKey());
+
+        Assert.assertEquals(tenant.getApiKey(), tenantdata.getApiKey());
+        Assert.assertEquals(tenant.getExternalKey(), tenantdata.getExternalKey());
+
+
+        // The second time, the value is already in the cache so the TenantCacheLoader is not invoked
+        final Tenant tenant2 = tenantUserApi.getTenantByApiKey(tenantdata.getApiKey());
+
+        Assert.assertEquals(tenant2.getApiKey(), tenantdata.getApiKey());
+        Assert.assertEquals(tenant2.getExternalKey(), tenantdata.getExternalKey());
+    }
 
     @Test(groups = "slow")
     public void testUserKey() throws Exception {

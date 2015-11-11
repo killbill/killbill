@@ -56,8 +56,13 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
     }
 
     @Override
-    public TenantModelDao getTenantByApiKey(final String key) {
-        throw new IllegalStateException("Not implemented by NoCachingTenantDao");
+    public TenantModelDao getTenantByApiKey(final String apiKey) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantModelDao>() {
+            @Override
+            public TenantModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(TenantSqlDao.class).getByApiKey(apiKey);
+            }
+        });
     }
 
     @Override

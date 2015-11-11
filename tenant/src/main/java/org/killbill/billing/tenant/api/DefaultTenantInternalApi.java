@@ -23,9 +23,11 @@ import java.util.Locale;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.dao.TenantDao;
+import org.killbill.billing.tenant.dao.TenantModelDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.util.LocaleUtils;
 
@@ -103,6 +105,16 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
     @Override
     public List<String> getTenantValuesForKey(final String key, final InternalTenantContext tenantContext) {
         return tenantDao.getTenantValueForKey(key, tenantContext);
+    }
+
+
+    @Override
+    public Tenant getTenantByApiKey(final String key) throws TenantApiException {
+        final TenantModelDao tenant = tenantDao.getTenantByApiKey(key);
+        if (tenant == null) {
+            throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_API_KEY, key);
+        }
+        return new DefaultTenant(tenant);
     }
 
 

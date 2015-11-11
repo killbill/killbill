@@ -67,12 +67,15 @@ public class DefaultTenantUserApi implements TenantUserApi {
     private final TenantDao tenantDao;
     private final InternalCallContextFactory internalCallContextFactory;
     private final CacheController<Object, Object> tenantKVCache;
+    private final CacheController<Object, Object> tenantCache;
+
 
     @Inject
     public DefaultTenantUserApi(final TenantDao tenantDao, final InternalCallContextFactory internalCallContextFactory, final CacheControllerDispatcher cacheControllerDispatcher) {
         this.tenantDao = tenantDao;
         this.internalCallContextFactory = internalCallContextFactory;
         this.tenantKVCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT_KV);
+        this.tenantCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT);
     }
 
     @Override
@@ -84,17 +87,16 @@ public class DefaultTenantUserApi implements TenantUserApi {
         } catch (final TenantApiException e) {
             throw new TenantApiException(e, ErrorCode.TENANT_CREATION_FAILED);
         }
-
         return tenant;
     }
 
     @Override
     public Tenant getTenantByApiKey(final String key) throws TenantApiException {
-        final TenantModelDao tenant = tenantDao.getTenantByApiKey(key);
+        final Tenant tenant = (Tenant) tenantCache.get(key, new CacheLoaderArgument(ObjectType.TENANT));
         if (tenant == null) {
             throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_API_KEY, key);
         }
-        return new DefaultTenant(tenant);
+        return tenant;
     }
 
     @Override
