@@ -166,30 +166,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
                              entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set",
                              entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
                              entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+        // For BP we need an externalKey and for ADD_ON we can provide externalKey or the bundleId
+        Preconditions.checkArgument(entitlement.getExternalKey() != null || entitlement.getBundleId() != null, "SubscriptionJson bundleId or externalKey should be specified");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        SubscriptionBundle bundle = null;
         final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
-        if (createAddOnEntitlement) {
-            final boolean expression = !Strings.isNullOrEmpty(entitlement.getExternalKey()) || !Strings.isNullOrEmpty(entitlement.getBundleId());
-            Preconditions.checkArgument(expression, "SubscriptionJson bundleId or externalKey should be specified for ADD_ON");
-            try {
-                if (!Strings.isNullOrEmpty(entitlement.getBundleId())) {
-                    bundle = subscriptionApi.getSubscriptionBundle(UUID.fromString(entitlement.getBundleId()), callContext);
-                } else {
-                    bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(entitlement.getExternalKey(), callContext);
-                }
-            } catch (SubscriptionApiException e) {
-                // converting SubscriptionApiException to force this exception type
-                throw new IllegalArgumentException(e.getMessage());
-            }
-        } else {
-            verifyNonNullOrEmpty(entitlement.getAccountId(), "SubscriptionJson accountId should be specified for BP");
-        }
-
-        final UUID bundleId = (bundle != null) ? bundle.getId() : null;
 
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
@@ -207,8 +190,18 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
                 return createAddOnEntitlement ?
-                       entitlementApi.addEntitlement(bundleId, spec, overrides, inputLocalDate, pluginProperties, callContext) :
+                       entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, inputLocalDate, pluginProperties, callContext) :
                        entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, inputLocalDate, pluginProperties, callContext);
+            }
+
+            private UUID getBundleIdForAddOnCreation(final SubscriptionJson entitlement) throws SubscriptionApiException {
+
+                if (entitlement.getBundleId() != null) {
+                    return UUID.fromString(entitlement.getBundleId());
+                }
+                // If user only specified the externalKey we need to fech the bundle (expensive operation) to extract the bundleId
+                final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(entitlement.getExternalKey(), callContext);
+                return bundle.getId();
             }
 
             @Override
