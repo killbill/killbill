@@ -167,8 +167,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                              entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
                              entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
         // For BP we need an externalKey and for ADD_ON we can provide externalKey or the bundleId
-        Preconditions.checkArgument(entitlement.getExternalKey() != null || entitlement.getBundleId() != null,
-                                    "SubscriptionJson bundleId or externalKey should be specified");
+        Preconditions.checkArgument(entitlement.getExternalKey() != null || entitlement.getBundleId() != null, "SubscriptionJson bundleId or externalKey should be specified");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
@@ -201,7 +200,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     return UUID.fromString(entitlement.getBundleId());
                 }
                 // If user only specified the externalKey we need to fech the bundle (expensive operation) to extract the bundleId
-                final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(entitlement.getExternalKey(), callContext).getId()
+                final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(entitlement.getExternalKey(), callContext);
                 return bundle.getId();
             }
 
