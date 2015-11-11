@@ -45,7 +45,7 @@ public class EhCacheManagerProvider implements Provider<EhCacheManager> {
         shiroEhCacheManager.setCacheManager(ehCacheCacheManager);
 
         if (securityManager instanceof DefaultSecurityManager) {
-            // For RBAC only (see also KillbillJdbcTenantRealm)
+            // For RBAC only (see also KillbillJdbcTenantRealmProvider)
             ((DefaultSecurityManager) securityManager).setCacheManager(shiroEhCacheManager);
         }
 
