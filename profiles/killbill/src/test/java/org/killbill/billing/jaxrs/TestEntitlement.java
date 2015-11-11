@@ -31,9 +31,9 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
+import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.PhasePriceOverride;
 import org.killbill.billing.client.model.Subscription;
@@ -226,6 +226,116 @@ public class TestEntitlement extends TestJaxrsBase {
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+    }
+
+    @Test(groups = "slow", description = "Create base and addOn subscription with bundle external key")
+    public void testBaseAndAddOnEntitlementsCreation() throws Exception {
+        final DateTime initialDate = new DateTime(2015, 11, 1, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String externalKey = "bundleKey";
+
+        final Subscription baseEntitlementJson = createEntitlement(accountJson.getAccountId(), externalKey, "Shotgun",
+                                                               ProductCategory.BASE, term, true);
+
+        final Subscription addOnEntitlementJson = createEntitlement(accountJson.getAccountId(), externalKey, "Telescopic-Scope",
+                                                                   ProductCategory.ADD_ON, term, true);
+
+        // Retrieves with GET
+        Bundle objFromJson = killBillClient.getBundle(externalKey);
+        final List<Subscription> subscriptions = objFromJson.getSubscriptions();
+
+        assertEquals(subscriptions.size(), 2);
+        assertTrue(baseEntitlementJson.equals(subscriptions.get(0)));
+        assertTrue(addOnEntitlementJson.equals(subscriptions.get(1)));
+
+    }
+
+    @Test(groups = "slow", description = "Create base and addOn subscription with bundle id")
+    public void testBaseAndAddOnEntitlementsCreationWithBundleId() throws Exception {
+        final DateTime initialDate = new DateTime(2015, 11, 1, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String externalKey = "bundleKey";
+
+        final Subscription baseEntitlementJson = createEntitlement(accountJson.getAccountId(), externalKey, "Shotgun",
+                                                                   ProductCategory.BASE, term, true);
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setBundleId(baseEntitlementJson.getBundleId());
+        input.setExternalKey("ignoreExternalkey");
+        input.setProductName("Telescopic-Scope");
+        input.setProductCategory(ProductCategory.ADD_ON);
+        input.setBillingPeriod(term);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        final Subscription addOnEntitlementJson = killBillClient.createSubscription(input, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+
+        // Retrieves with GET
+        Bundle bundleJson = killBillClient.getBundle(externalKey);
+        final List<Subscription> subscriptions = bundleJson.getSubscriptions();
+
+        assertEquals(subscriptions.size(), 2);
+        assertTrue(baseEntitlementJson.equals(subscriptions.get(0)));
+        assertTrue(addOnEntitlementJson.equals(subscriptions.get(1)));
+
+    }
+
+    @Test(groups = "slow", description = "Try to create an ADD_ON subscription for an invalid bundle external key",
+            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "Could not find a bundle matching key invalidKey")
+    public void testAddOnEntitlementInvalidKey() throws Exception {
+        final DateTime initialDate = new DateTime(2015, 11, 1, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+        createEntitlement(accountJson.getAccountId(), "invalidKey", "Telescopic-Scope",
+                          ProductCategory.ADD_ON, BillingPeriod.MONTHLY, true);
+    }
+
+    @Test(groups = "slow", description = "Try to create an ADD_ON subscription for an invalid bundle external key",
+            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "Object id=.* type=BUNDLE doesn't exist!")
+    public void testAddOnEntitlementInvalidBundleId() throws Exception {
+        final DateTime initialDate = new DateTime(2015, 11, 1, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setBundleId(UUID.randomUUID()); // <--- invalid bundleId
+        input.setProductName("Telescopic-Scope");
+        input.setProductCategory(ProductCategory.ADD_ON);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        killBillClient.createSubscription(input, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+    }
+
+    @Test(groups = "slow", description = "Try to create an ADD_ON subscription without bundle info",
+            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "SubscriptionJson bundleId or externalKey should be specified for ADD_ON")
+    public void testAddOnEntitlementNoBundle() throws Exception {
+        final DateTime initialDate = new DateTime(2015, 11, 1, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setExternalKey(null);
+        input.setBundleId(null);
+        input.setProductName("Telescopic-Scope");
+        input.setProductCategory(ProductCategory.ADD_ON);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        killBillClient.createSubscription(input, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
     }
 
 }
