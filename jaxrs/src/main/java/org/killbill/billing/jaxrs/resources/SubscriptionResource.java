@@ -166,13 +166,15 @@ public class SubscriptionResource extends JaxRsResourceBase {
                              entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set",
                              entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
                              entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
-        // For BP we need an externalKey and for ADD_ON we can provide externalKey or the bundleId
-        Preconditions.checkArgument(entitlement.getExternalKey() != null || entitlement.getBundleId() != null, "SubscriptionJson bundleId or externalKey should be specified");
+        // For ADD_ON we can provide externalKey or the bundleId
+        final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
+        if (createAddOnEntitlement) {
+            Preconditions.checkArgument(entitlement.getExternalKey() != null || entitlement.getBundleId() != null, "SubscriptionJson bundleId or externalKey should be specified for ADD_ON");
+        }
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
 
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
