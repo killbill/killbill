@@ -34,6 +34,7 @@ public @interface Cachable {
     String TENANT_CATALOG_CACHE_NAME = "tenant-catalog";
     String TENANT_OVERDUE_CONFIG_CACHE_NAME = "tenant-overdue-config";
     String TENANT_KV_CACHE_NAME = "tenant-kv";
+    String TENANT_CACHE_NAME = "tenant";
     String OVERRIDDEN_PLAN_CACHE_NAME = "overridden-plan";
     String ACCOUNT_IMMUTABLE_CACHE_NAME = "account-immutable";
     String ACCOUNT_BCD_CACHE_NAME = "account-bcd";
@@ -66,8 +67,11 @@ public @interface Cachable {
         /* Tenant overdue config cache */
         TENANT_OVERDUE_CONFIG(TENANT_OVERDUE_CONFIG_CACHE_NAME, false),
 
-        /* Tenant overdue config cache */
+        /* Tenant config cache */
         TENANT_KV(TENANT_KV_CACHE_NAME, false),
+
+        /* Tenant config cache */
+        TENANT(TENANT_CACHE_NAME, false),
 
         /* Overwritten plans  */
         OVERRIDDEN_PLAN(OVERRIDDEN_PLAN_CACHE_NAME, false),

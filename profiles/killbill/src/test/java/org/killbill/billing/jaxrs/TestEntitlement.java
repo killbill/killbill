@@ -31,9 +31,9 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
+import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.PhasePriceOverride;
 import org.killbill.billing.client.model.Subscription;
@@ -226,6 +226,51 @@ public class TestEntitlement extends TestJaxrsBase {
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+    }
+
+    @Test(groups = "slow", description = "Create a base entitlement and also addOns entitlements under the same bundle")
+    public void testEntitlementWithAddOns() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+
+        final Subscription base = new Subscription();
+        base.setAccountId(accountJson.getAccountId());
+        base.setExternalKey("base");
+        base.setProductName("Shotgun");
+        base.setProductCategory(ProductCategory.BASE);
+        base.setBillingPeriod(BillingPeriod.MONTHLY);
+        base.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        final Subscription addOn1 = new Subscription();
+        addOn1.setAccountId(accountJson.getAccountId());
+        addOn1.setExternalKey("");
+        addOn1.setProductName("Telescopic-Scope");
+        addOn1.setProductCategory(ProductCategory.ADD_ON);
+        addOn1.setBillingPeriod(BillingPeriod.MONTHLY);
+        addOn1.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        final Subscription addOn2 = new Subscription();
+        addOn2.setAccountId(accountJson.getAccountId());
+        addOn2.setExternalKey("");
+        addOn2.setProductName("Laser-Scope");
+        addOn2.setProductCategory(ProductCategory.ADD_ON);
+        addOn2.setBillingPeriod(BillingPeriod.MONTHLY);
+        addOn2.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        final List<Subscription> subscriptions = new ArrayList<Subscription>();
+        subscriptions.add(base);
+        subscriptions.add(addOn1);
+        subscriptions.add(addOn2);
+        final Bundle bundle = killBillClient.createSubscriptionWithAddOns(subscriptions, initialDate, 10, "createdBy", "", "");
+        assertNotNull(bundle);
+        assertEquals(bundle.getExternalKey(), "base");
+        assertEquals(bundle.getSubscriptions().size(), 3);
+
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
+        assertEquals(invoices.size(), 1);
     }
 
 }

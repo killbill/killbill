@@ -62,6 +62,7 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
                                        final TenantCatalogCacheLoader tenantCatalogCacheLoader,
                                        final TenantOverdueConfigCacheLoader tenantOverdueConfigCacheLoader,
                                        final TenantKVCacheLoader tenantKVCacheLoader,
+                                       final TenantCacheLoader tenantCacheLoader,
                                        final OverriddenPlanCacheLoader overriddenPlanCacheLoader) {
         this.metricRegistry = metricRegistry;
         this.cacheConfig = cacheConfig;
@@ -76,6 +77,7 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
         cacheLoaders.add(tenantCatalogCacheLoader);
         cacheLoaders.add(tenantOverdueConfigCacheLoader);
         cacheLoaders.add(tenantKVCacheLoader);
+        cacheLoaders.add(tenantCacheLoader);
         cacheLoaders.add(overriddenPlanCacheLoader);
     }
 

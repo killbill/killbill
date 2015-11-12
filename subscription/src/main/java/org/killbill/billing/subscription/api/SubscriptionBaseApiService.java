@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
+import org.killbill.billing.subscription.api.user.SubscriptionSpecifier;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -44,6 +45,9 @@ public interface SubscriptionBaseApiService {
     public DefaultSubscriptionBase createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
                                               String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
                                               CallContext context)
+            throws SubscriptionBaseApiException;
+
+    public DefaultSubscriptionBase createPlans(Iterable<SubscriptionSpecifier> subscriptions, CallContext context)
             throws SubscriptionBaseApiException;
 
     @Deprecated

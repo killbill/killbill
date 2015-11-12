@@ -19,14 +19,14 @@ package org.killbill.billing.util.security.shiro.dao;
 
 import java.util.Date;
 
+import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
-@UseStringTemplate3StatementLocator
+@EntitySqlDaoStringTemplate
 public interface UsersSqlDao extends Transactional<UsersSqlDao> {
 
     @SqlQuery

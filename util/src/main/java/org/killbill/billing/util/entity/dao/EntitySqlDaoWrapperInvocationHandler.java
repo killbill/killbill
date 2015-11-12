@@ -104,7 +104,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.nonEntityDao = nonEntityDao;
-        this.prof = new Profiling<Object>();
+        this.prof = new Profiling<Object, Throwable>();
     }
 
     @Override
