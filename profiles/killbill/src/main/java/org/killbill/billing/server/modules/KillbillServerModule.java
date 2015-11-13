@@ -68,6 +68,7 @@ import org.killbill.billing.util.dao.RecordIdIdMappingsMapper;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
+import org.killbill.billing.util.glue.BroadcastModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ClockModule;
@@ -140,6 +141,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
     protected void installKillbillModules() {
         install(new AuditModule(configSource));
         install(new InfoModule(configSource));
+        install(new BroadcastModule(configSource));
         install(new BeatrixModule(configSource));
         install(new CacheModule(configSource));
         install(new CallContextModule(configSource));

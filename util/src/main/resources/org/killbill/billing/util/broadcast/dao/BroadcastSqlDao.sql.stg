@@ -1,0 +1,59 @@
+group BroadcastSqlDao;
+
+tableName() ::= "service_broadcasts"
+
+
+tableFields(prefix) ::= <<
+  <prefix>service_name
+, <prefix>type
+, <prefix>event
+, <prefix>created_date
+, <prefix>created_by
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+tableValues() ::= <<
+  :serviceName
+, :type
+, :event
+, :createdDate
+, :createdBy
+>>
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields()>
+)
+values (
+<tableValues()>
+)
+;
+>>
+
+
+getLatestEntries() ::= <<
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where record_id > :recordId
+<defaultOrderBy("t.")>
+;
+>>
+
+
+getLatestEntry() ::= <<
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where record_id = (select max(record_id) from <tableName()>)
+;
+>>

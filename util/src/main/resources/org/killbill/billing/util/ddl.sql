@@ -301,3 +301,15 @@ CREATE TABLE node_infos (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX node_name_idx ON node_infos(node_name);
+
+
+DROP TABLE IF EXISTS service_broadcasts;
+CREATE TABLE service_broadcasts (
+    record_id serial unique,
+    service_name varchar(50) NOT NULL,
+    type varchar(64) NOT NULL,
+    event text NOT NULL,
+    created_date datetime NOT NULL,
+    created_by varchar(50) NOT NULL,
+    PRIMARY KEY(record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;

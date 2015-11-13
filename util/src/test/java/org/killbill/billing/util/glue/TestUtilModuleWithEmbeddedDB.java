@@ -43,6 +43,7 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
 
         install(new AuditModule(configSource));
         install(new InfoModuleWithPluginInfoApi(configSource));
+        install(new BroadcastModule(configSource));
         install(new TagStoreModule(configSource));
         install(new CustomFieldModule(configSource));
         install(new NonEntityDaoModule(configSource));

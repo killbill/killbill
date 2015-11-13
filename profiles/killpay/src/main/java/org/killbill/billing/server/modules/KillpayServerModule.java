@@ -51,6 +51,7 @@ import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
+import org.killbill.billing.util.glue.BroadcastModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
@@ -74,6 +75,7 @@ public class KillpayServerModule extends KillbillServerModule {
     protected void installKillbillModules() {
         install(new AuditModule(configSource));
         install(new InfoModule(configSource));
+        install(new BroadcastModule(configSource));
         install(new BeatrixModule(configSource));
         install(new CacheModule(configSource));
         install(new CallContextModule(configSource));
