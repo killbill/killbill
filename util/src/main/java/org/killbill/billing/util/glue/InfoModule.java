@@ -22,6 +22,7 @@ import org.killbill.billing.util.info.DefaultKillbillInfoApi;
 import org.killbill.billing.util.info.DefaultKillbillInfoService;
 import org.killbill.billing.util.info.KillbillInfoApi;
 import org.killbill.billing.util.info.KillbillInfoService;
+import org.killbill.billing.util.info.NodeInfoMapper;
 import org.killbill.billing.util.info.dao.DefaultNodeInfoDao;
 import org.killbill.billing.util.info.dao.NodeInfoDao;
 
@@ -38,6 +39,7 @@ public class InfoModule extends KillBillModule {
     protected void installUserApi() {
         bind(KillbillInfoApi.class).to(DefaultKillbillInfoApi.class).asEagerSingleton();
         bind(KillbillInfoService.class).to(DefaultKillbillInfoService.class).asEagerSingleton();
+        bind(NodeInfoMapper.class).asEagerSingleton();
     }
 
 

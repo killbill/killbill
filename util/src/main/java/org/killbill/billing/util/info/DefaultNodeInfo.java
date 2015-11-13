@@ -17,39 +17,89 @@
 
 package org.killbill.billing.util.info;
 
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
+import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginInfo;
+import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginServiceInfo;
 import org.killbill.billing.osgi.api.PluginInfo;
+import org.killbill.billing.osgi.api.PluginServiceInfo;
+import org.killbill.billing.util.info.dao.NodeInfoModelDao;
+import org.killbill.billing.util.info.json.NodeInfoModelJson;
+import org.killbill.billing.util.info.json.PluginInfoModelJson;
+import org.killbill.billing.util.info.json.PluginServiceInfoModelJson;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public class DefaultNodeInfo implements NodeInfo {
 
     private final String nodeName;
     private final DateTime bootTime;
-    private final DateTime updatedDate;
+    private final DateTime lastUpdatedDate;
     private final String killbillVersion;
     private final String apiVersion;
-    private final String pluginApiVersion;
-    private final String commonVersion;
     private final String platformVersion;
+    private final String commonVersion;
+    private final String pluginApiVersion;
     private final Iterable<PluginInfo> pluginInfo;
 
     public DefaultNodeInfo(final String nodeName,
                            final DateTime bootTime,
-                           final DateTime updatedDate,
+                           final DateTime lastUpdatedDate,
                            final String killbillVersion,
                            final String apiVersion,
-                           final String pluginApiVersion,
-                           final String commonVersion,
                            final String platformVersion,
+                           final String commonVersion,
+                           final String pluginApiVersion,
                            final Iterable<PluginInfo> pluginInfo) {
         this.nodeName = nodeName;
         this.bootTime = bootTime;
-        this.updatedDate = updatedDate;
+        this.lastUpdatedDate = lastUpdatedDate;
         this.killbillVersion = killbillVersion;
         this.apiVersion = apiVersion;
-        this.pluginApiVersion = pluginApiVersion;
-        this.commonVersion = commonVersion;
         this.platformVersion = platformVersion;
+        this.commonVersion = commonVersion;
+        this.pluginApiVersion = pluginApiVersion;
         this.pluginInfo = pluginInfo;
+    }
+
+    public DefaultNodeInfo(final NodeInfoModelJson in) {
+        this(in.getNodeName(),
+             in.getBootTime(),
+             in.getBootTime(),
+             in.getKillbillVersion(),
+             in.getApiVersion(),
+             in.getPlatformVersion(),
+             in.getCommonVersion(),
+             in.getPluginApiVersion(),
+             toPluginInfo(in.getPluginInfo()));
+    }
+
+    private static Set<PluginServiceInfo> toPluginServiceInfo(final Set<PluginServiceInfoModelJson> services) {
+        return ImmutableSet.<PluginServiceInfo>copyOf(Iterables.transform(services, new Function<PluginServiceInfoModelJson, PluginServiceInfo>() {
+
+            @Nullable
+            @Override
+            public PluginServiceInfo apply(final PluginServiceInfoModelJson input) {
+                return new DefaultPluginServiceInfo(input.getServiceTypeName(), input.getRegistrationName());
+            }
+        }));
+    }
+
+    private static Iterable<PluginInfo> toPluginInfo(final Iterable<PluginInfoModelJson> plugins) {
+        return Iterables.transform(plugins, new Function<PluginInfoModelJson, PluginInfo>() {
+            @Override
+            public PluginInfo apply(final PluginInfoModelJson input) {
+
+                return new DefaultPluginInfo(input.getBundleSymbolicName(), input.getPluginName(), input.getVersion(), input.isRunning(), toPluginServiceInfo(input.getServices()));
+            }
+        });
     }
 
     @Override
@@ -64,7 +114,7 @@ public class DefaultNodeInfo implements NodeInfo {
 
     @Override
     public DateTime getLastUpdatedDate() {
-        return updatedDate;
+        return lastUpdatedDate;
     }
 
     @Override

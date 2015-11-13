@@ -29,15 +29,16 @@ import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.billing.util.info.dao.NodeInfoDao;
 import org.killbill.billing.util.info.dao.NodeInfoModelDao;
+import org.killbill.billing.util.info.json.NodeInfoModelJson;
+import org.killbill.billing.util.info.json.PluginInfoModelJson;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class DefaultKillbillInfoService implements KillbillInfoService {
 
@@ -45,21 +46,17 @@ public class DefaultKillbillInfoService implements KillbillInfoService {
 
     public static final String INFO_SERVICE_NAME = "info-service";
 
-    private final ObjectMapper mapper;
-
     private final NodeInfoDao nodeInfoDao;
     private final PluginsInfoApi pluginInfoApi;
     private final Clock clock;
+    private final NodeInfoMapper mapper;
 
     @Inject
-    public DefaultKillbillInfoService(final NodeInfoDao nodeInfoDao, final PluginsInfoApi pluginInfoApi, final Clock clock) {
+    public DefaultKillbillInfoService(final NodeInfoDao nodeInfoDao, final PluginsInfoApi pluginInfoApi, final Clock clock, final NodeInfoMapper mapper) {
         this.nodeInfoDao = nodeInfoDao;
         this.pluginInfoApi = pluginInfoApi;
         this.clock = clock;
-        this.mapper = new ObjectMapper();
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
+        this.mapper = mapper;
     }
 
     @Override
@@ -91,8 +88,17 @@ public class DefaultKillbillInfoService implements KillbillInfoService {
         final String kbPluginApiVersion  = org.killbill.billing.util.info.KillbillVersions.getPluginApiVersion();
         final String kbPlatformVersion  = org.killbill.billing.util.info.KillbillVersions.getPlatformVersion();
         final String kbCommonVersion  = org.killbill.billing.util.info.KillbillVersions.getCommonVersion();
-        final NodeInfo nodeInfo = new DefaultNodeInfo(CreatorName.get(), bootTime, bootTime, kbVersion, kbApiVersion, kbPluginApiVersion, kbCommonVersion, kbPlatformVersion, pluginInfo);
-        final String nodeInfoValue = mapper.writeValueAsString(nodeInfo);
+
+
+        final NodeInfoModelJson nodeInfo = new NodeInfoModelJson(CreatorName.get(), bootTime, bootTime, kbVersion, kbApiVersion, kbPluginApiVersion, kbCommonVersion, kbPlatformVersion,
+             ImmutableList.copyOf(Iterables.transform(pluginInfo, new Function<PluginInfo, PluginInfoModelJson>() {
+                 @Override
+                 public PluginInfoModelJson apply(final PluginInfo input) {
+                     return new PluginInfoModelJson(input);
+                 }
+             })));
+
+        final String nodeInfoValue = mapper.serialize(nodeInfo);
         final NodeInfoModelDao bootNodeInfo = new NodeInfoModelDao(CreatorName.get(), clock.getUTCNow(), nodeInfoValue);
         nodeInfoDao.create(bootNodeInfo);
     }

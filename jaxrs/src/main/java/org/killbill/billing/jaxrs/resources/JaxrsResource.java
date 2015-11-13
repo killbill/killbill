@@ -205,6 +205,9 @@ public interface JaxrsResource {
     public static final String PLUGINS_INFO = "pluginsInfo";
     public static final String PLUGINS_INFO_PATH = PREFIX + "/" + PLUGINS_INFO;
 
+    public static final String NODES_INFO = "nodesInfo";
+    public static final String NODES_INFO_PATH = PREFIX + "/" + NODES_INFO;
+
     // No PREFIX here!
     public static final String PLUGINS = "plugins";
     public static final String PLUGINS_PATH = "/" + PLUGINS;
