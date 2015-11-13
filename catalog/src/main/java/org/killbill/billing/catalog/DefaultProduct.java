@@ -16,6 +16,9 @@
 
 package org.killbill.billing.catalog;
 
+import java.net.URI;
+import java.util.Arrays;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -23,10 +26,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
-import java.net.URI;
-import java.util.Arrays;
 
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -40,9 +40,6 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @XmlAttribute(required = true)
     @XmlID
     private String name;
-
-    @XmlAttribute(required = false)
-    private Boolean retired = false;
 
     @XmlElement(required = true)
     private ProductCategory category;
@@ -67,11 +64,6 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @Override
     public String getCatalogName() {
         return catalogName;
-    }
-
-    @Override
-    public boolean isRetired() {
-        return retired;
     }
 
     @Override
@@ -191,14 +183,9 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         return this;
     }
 
-    public DefaultProduct setRetired(final boolean retired) {
-        this.retired = retired;
-        return this;
-    }
-
     @Override
     public String toString() {
-        return "DefaultProduct [name=" + name + ", retired=" + retired + ", category=" + category + ", included="
+        return "DefaultProduct [name=" + name + ", category=" + category + ", included="
                 + Arrays.toString(included) + ", available=" + Arrays.toString(available) + ", catalogName="
                 + catalogName + "]";
     }
@@ -232,9 +219,6 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-        if (retired != null ? !retired.equals(that.retired) : that.retired != null) {
-            return false;
-        }
 
         return true;
     }
@@ -242,7 +226,6 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (retired != null ? retired.hashCode() : 0);
         result = 31 * result + (category != null ? category.hashCode() : 0);
         result = 31 * result + (included != null ? Arrays.hashCode(included) : 0);
         result = 31 * result + (available != null ? Arrays.hashCode(available) : 0);

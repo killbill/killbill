@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -90,11 +89,6 @@ public class MockPlan implements Plan {
     @Override
     public PlanPhase findPhase(final String name) throws CatalogApiException {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isRetired() {
-        return false;
     }
 
     @Override
