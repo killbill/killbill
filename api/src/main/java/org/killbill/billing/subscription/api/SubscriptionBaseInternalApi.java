@@ -28,6 +28,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -39,6 +40,9 @@ public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBase createSubscription(UUID bundleId, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, DateTime requestedDateWithMs,
                                                InternalCallContext context) throws SubscriptionBaseApiException;
+
+    public SubscriptionBase createBaseSubscriptionWithAddOns(UUID bundleId, Iterable<EntitlementSpecifier> entitlements, DateTime requestedDateWithMs,
+                                                             InternalCallContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, InternalCallContext context)
             throws SubscriptionBaseApiException;

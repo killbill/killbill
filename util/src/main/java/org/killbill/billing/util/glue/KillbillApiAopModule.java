@@ -42,7 +42,7 @@ public class KillbillApiAopModule extends AbstractModule {
 
     public static class ProfilingMethodInterceptor implements MethodInterceptor {
 
-        private final Profiling prof = new Profiling<Object>();
+        private final Profiling prof = new Profiling<Object, Throwable>();
 
         @Override
         public Object invoke(final MethodInvocation invocation) throws Throwable {

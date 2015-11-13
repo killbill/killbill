@@ -16,6 +16,9 @@
 
 package org.killbill.billing.tenant.dao;
 
+import org.killbill.billing.util.cache.Cachable;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CachableKey;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 

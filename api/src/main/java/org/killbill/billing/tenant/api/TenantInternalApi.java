@@ -22,7 +22,6 @@ import java.util.Locale;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
-import org.killbill.billing.util.callcontext.TenantContext;
 
 public interface TenantInternalApi {
 
@@ -53,4 +52,7 @@ public interface TenantInternalApi {
     public String getPluginConfig(String pluginName, InternalTenantContext tenantContext);
 
     public List<String> getTenantValuesForKey(final String key, final InternalTenantContext tenantContext);
+
+    public Tenant getTenantByApiKey(final String key) throws TenantApiException;
+
 }

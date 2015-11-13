@@ -157,7 +157,6 @@ public class DefaultEntitlementApiBase {
                                                                                bundleId,
                                                                                null,
                                                                                null,
-                                                                               null,
                                                                                localEffectiveDate,
                                                                                properties,
                                                                                internalCallContextFactory.createCallContext(internalCallContext));
@@ -214,7 +213,6 @@ public class DefaultEntitlementApiBase {
                                                                                null,
                                                                                null,
                                                                                bundleId,
-                                                                               null,
                                                                                null,
                                                                                null,
                                                                                localEffectiveDate,

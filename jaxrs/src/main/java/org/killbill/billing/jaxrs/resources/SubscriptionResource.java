@@ -19,6 +19,7 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -54,6 +55,7 @@ import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
@@ -87,6 +89,10 @@ import org.killbill.commons.metrics.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -160,16 +166,15 @@ public class SubscriptionResource extends JaxRsResourceBase {
                              entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set",
                              entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
                              entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
-
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        // For ADD_ON we can provide externalKey or the bundleId
         final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
         if (createAddOnEntitlement) {
-            verifyNonNullOrEmpty(entitlement.getBundleId(), "SubscriptionJson bundleId should be specified for ADD_ON");
-        } else {
-            verifyNonNullOrEmpty(entitlement.getAccountId(), "SubscriptionJson accountId should be specified for BP");
+            Preconditions.checkArgument(entitlement.getExternalKey() != null || entitlement.getBundleId() != null, "SubscriptionJson bundleId or externalKey should be specified for ADD_ON");
         }
 
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
 
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
@@ -181,15 +186,24 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
 
                 final LocalDate inputLocalDate = toLocalDate(account, requestedDate, callContext);
-                final UUID bundleId = entitlement.getBundleId() != null ? UUID.fromString(entitlement.getBundleId()) : null;
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
                                                                  ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
 
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
                 return createAddOnEntitlement ?
-                       entitlementApi.addEntitlement(bundleId, spec, overrides, inputLocalDate, pluginProperties, callContext) :
+                       entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, inputLocalDate, pluginProperties, callContext) :
                        entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, inputLocalDate, pluginProperties, callContext);
+            }
+
+            private UUID getBundleIdForAddOnCreation(final SubscriptionJson entitlement) throws SubscriptionApiException {
+
+                if (entitlement.getBundleId() != null) {
+                    return UUID.fromString(entitlement.getBundleId());
+                }
+                // If user only specified the externalKey we need to fech the bundle (expensive operation) to extract the bundleId
+                final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(entitlement.getExternalKey(), callContext);
+                return bundle.getId();
             }
 
             @Override
@@ -207,7 +221,117 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
+    @TimedResource
+    @POST
+    @Path("/createEntitlementWithAddOns")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Create an entitlement with addOn products")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
+    public Response createEntitlementWithAddOns(final List<SubscriptionJson> entitlements,
+                                      @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                      @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+                                      @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                      @HeaderParam(HDR_REASON) final String reason,
+                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request,
+                                      @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
 
+        Preconditions.checkArgument(Iterables.size(entitlements) > 0, "Subscription list mustn't be null or empty.");
+
+        for (SubscriptionJson entitlement : entitlements) {
+            verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified for each element");
+            verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set for each element",
+                                 entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set for each element",
+                                 entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set for each element",
+                                 entitlement.getPriceList(), "SubscriptionJson priceList needs to be set for each element");
+        }
+
+        final int baseSubscriptionsSize = Iterables.size(Iterables.filter(entitlements, new Predicate<SubscriptionJson>() {
+            @Override
+            public boolean apply(final SubscriptionJson subscription) {
+                return subscription.getProductCategory().equals(ProductCategory.BASE.toString());
+            }
+        }));
+        verifyNumberOfElements(baseSubscriptionsSize, 1, "Only one BASE product is allowed.");
+
+        final int addOnSubscriptionsSize = Iterables.size(Iterables.filter(entitlements, new Predicate<SubscriptionJson>() {
+            @Override
+            public boolean apply(final SubscriptionJson subscription) {
+                return subscription.getProductCategory().equals(ProductCategory.ADD_ON.toString());
+            }
+        }));
+        verifyNumberOfElements(addOnSubscriptionsSize, entitlements.size() - 1, "It should be " + (entitlements.size() - 1) + " ADD_ON products.");
+
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final SubscriptionJson baseEntitlement = Iterables.tryFind(entitlements, new Predicate<SubscriptionJson>() {
+                    @Override
+                    public boolean apply(final SubscriptionJson subscription) {
+                        return ProductCategory.BASE.toString().equalsIgnoreCase(subscription.getProductCategory());
+                    }
+            }).orNull();
+
+        verifyNonNull(baseEntitlement.getAccountId(), "SubscriptionJson accountId needs to be set for BASE product.");
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
+
+            @Override
+            public Entitlement doOperation(final CallContext ctx) throws InterruptedException, TimeoutException, EntitlementApiException, SubscriptionApiException, AccountApiException {
+
+                List<EntitlementSpecifier> entitlementSpecifierList = new ArrayList<EntitlementSpecifier>();
+                final Account account = getAccountFromSubscriptionJson(baseEntitlement, callContext);
+
+                for (final SubscriptionJson entitlement : entitlements) {
+
+                    final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(entitlement.getProductName(),
+                                                                                         ProductCategory.valueOf(entitlement.getProductCategory()),
+                                                                                         BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
+
+                    final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
+                                                                    ProductCategory.valueOf(entitlement.getProductCategory()),
+                                                                    BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
+                    final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
+
+                    EntitlementSpecifier specifier = new EntitlementSpecifier() {
+
+                        @Override
+                        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+                            return planPhaseSpecifier;
+                        }
+
+                        @Override
+                        public List<PlanPhasePriceOverride> getOverrides() {
+                            return overrides;
+                        }
+                    };
+
+                    entitlementSpecifierList.add(specifier);
+                }
+
+                final LocalDate inputLocalDate = toLocalDate(account, requestedDate, callContext);
+                return entitlementApi.createBaseEntitlementWithAddOns(account.getId(), baseEntitlement.getExternalKey(), entitlementSpecifierList,
+                                                                      inputLocalDate, pluginProperties, callContext);
+            }
+
+            @Override
+            public boolean isImmOperation() {
+                return true;
+            }
+
+            @Override
+            public Response doResponseOk(final Entitlement entitlement) {
+                return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", entitlement.getBundleId());
+            }
+
+        };
+
+        final EntitlementCallCompletion<Entitlement> callCompletionCreation = new EntitlementCallCompletion<Entitlement>();
+        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
+    }
 
     @TimedResource
     @PUT

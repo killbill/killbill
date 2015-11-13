@@ -175,7 +175,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
 
         private TypeOut withCaching(final OperationRetrieval<TypeIn, TypeOut> op, @Nullable final TypeIn objectOrRecordId, final ObjectType objectType, final TableName tableName, @Nullable final CacheController<Object, Object> cache) {
 
-            final Profiling<TypeOut> prof = new Profiling<TypeOut>();
+            final Profiling<TypeOut, RuntimeException> prof = new Profiling<TypeOut, RuntimeException>();
             if (objectOrRecordId == null) {
                 return null;
             }
@@ -186,18 +186,13 @@ public class DefaultNonEntityDao implements NonEntityDao {
                 return (TypeOut) cache.get(key, new CacheLoaderArgument(objectType));
             }
             final TypeOut result;
-            try {
-                result = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, "NonEntityDao (type = " + objectType + ") cache miss", new WithProfilingCallback<TypeOut>() {
-                    @Override
-                    public <ExceptionType extends Throwable> TypeOut execute() throws ExceptionType {
-                        return op.doRetrieve(objectOrRecordId, objectType);
-                    }
-                });
-                return result;
-            } catch (final Throwable throwable) {
-                // This is only because WithProfilingCallback throws a Throwable...
-                throw new RuntimeException(throwable);
-            }
+            result = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, "NonEntityDao (type = " + objectType + ") cache miss", new WithProfilingCallback<TypeOut, RuntimeException>() {
+                @Override
+                public TypeOut execute() throws RuntimeException {
+                    return op.doRetrieve(objectOrRecordId, objectType);
+                }
+            });
+            return result;
         }
     }
 }
