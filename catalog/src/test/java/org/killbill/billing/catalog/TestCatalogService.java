@@ -33,7 +33,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
             public String getCatalogURI() {
-                return "file:src/test/resources/versionedCatalog";
+                return "file:catalog/src/test/resources/versionedCatalog";
             }
 
         }, tenantInternalApi, catalogCache, cacheInvalidationCallback);
@@ -47,7 +47,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
             public String getCatalogURI() {
-                return "file:src/test/resources/WeaponsHire.xml";
+                return "file:catalog/src/test/resources/WeaponsHire.xml";
             }
 
         },  tenantInternalApi, catalogCache, cacheInvalidationCallback);
