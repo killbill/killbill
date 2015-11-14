@@ -15,7 +15,7 @@
  * under the License.
  */
 
-package org.killbill.billing.util.info.json;
+package org.killbill.billing.util.nodes.json;
 
 import java.util.List;
 

@@ -15,32 +15,27 @@
  * under the License.
  */
 
-package org.killbill.billing.util.glue;
+package org.killbill.billing.util.broadcast;
 
+import javax.inject.Inject;
+
+import org.joda.time.DateTime;
 import org.killbill.billing.broadcast.BroadcastApi;
-import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.broadcast.DefaultBroadcastApi;
 import org.killbill.billing.util.broadcast.dao.BroadcastDao;
-import org.killbill.billing.util.broadcast.dao.DefaultBroadcastDao;
+import org.killbill.billing.util.broadcast.dao.BroadcastModelDao;
 
-public class BroadcastModule extends KillBillModule {
+public class DefaultBroadcastApi implements BroadcastApi {
 
-    public BroadcastModule(final KillbillConfigSource configSource) {
-        super(configSource);
+    private final BroadcastDao dao;
+
+    @Inject
+    public DefaultBroadcastApi(final BroadcastDao dao) {
+        this.dao = dao;
     }
-
-    protected void installDaos() {
-        bind(BroadcastDao.class).to(DefaultBroadcastDao.class).asEagerSingleton();
-    }
-
-    protected void installUserApi() {
-        bind(BroadcastApi.class).to(DefaultBroadcastApi.class).asEagerSingleton();
-    }
-
 
     @Override
-    protected void configure() {
-        installDaos();
-        installUserApi();
+    public void broadcast(final String serviceName, final String type, final String event, final DateTime createdDate, final String createdBy) {
+        final BroadcastModelDao modelDao = new BroadcastModelDao(serviceName, type, event, createdDate, createdBy);
+        dao.create(modelDao);
     }
 }

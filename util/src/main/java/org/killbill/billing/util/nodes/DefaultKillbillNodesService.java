@@ -15,7 +15,7 @@
  * under the License.
  */
 
-package org.killbill.billing.util.info;
+package org.killbill.billing.util.nodes;
 
 import java.util.List;
 
@@ -27,10 +27,10 @@ import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
-import org.killbill.billing.util.info.dao.NodeInfoDao;
-import org.killbill.billing.util.info.dao.NodeInfoModelDao;
-import org.killbill.billing.util.info.json.NodeInfoModelJson;
-import org.killbill.billing.util.info.json.PluginInfoModelJson;
+import org.killbill.billing.util.nodes.dao.NodeInfoDao;
+import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
+import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
+import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,11 +40,11 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class DefaultKillbillInfoService implements KillbillInfoService {
+public class DefaultKillbillNodesService implements KillbillNodesService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultKillbillInfoService.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultKillbillNodesService.class);
 
-    public static final String INFO_SERVICE_NAME = "info-service";
+    public static final String NODES_SERVICE_NAME = "nodes-service";
 
     private final NodeInfoDao nodeInfoDao;
     private final PluginsInfoApi pluginInfoApi;
@@ -52,7 +52,7 @@ public class DefaultKillbillInfoService implements KillbillInfoService {
     private final NodeInfoMapper mapper;
 
     @Inject
-    public DefaultKillbillInfoService(final NodeInfoDao nodeInfoDao, final PluginsInfoApi pluginInfoApi, final Clock clock, final NodeInfoMapper mapper) {
+    public DefaultKillbillNodesService(final NodeInfoDao nodeInfoDao, final PluginsInfoApi pluginInfoApi, final Clock clock, final NodeInfoMapper mapper) {
         this.nodeInfoDao = nodeInfoDao;
         this.pluginInfoApi = pluginInfoApi;
         this.clock = clock;
@@ -61,7 +61,7 @@ public class DefaultKillbillInfoService implements KillbillInfoService {
 
     @Override
     public String getName() {
-        return INFO_SERVICE_NAME;
+        return NODES_SERVICE_NAME;
     }
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.START_SERVICE)
@@ -83,11 +83,11 @@ public class DefaultKillbillInfoService implements KillbillInfoService {
         final DateTime bootTime = clock.getUTCNow();
         final Iterable<PluginInfo> rawPluginInfo = pluginInfoApi.getPluginsInfo();
         final List<PluginInfo> pluginInfo = rawPluginInfo.iterator().hasNext() ? ImmutableList.<PluginInfo>copyOf(rawPluginInfo) : ImmutableList.<PluginInfo>of();
-        final String kbVersion = org.killbill.billing.util.info.KillbillVersions.getKillbillVersion();
-        final String kbApiVersion  = org.killbill.billing.util.info.KillbillVersions.getApiVersion();
-        final String kbPluginApiVersion  = org.killbill.billing.util.info.KillbillVersions.getPluginApiVersion();
-        final String kbPlatformVersion  = org.killbill.billing.util.info.KillbillVersions.getPlatformVersion();
-        final String kbCommonVersion  = org.killbill.billing.util.info.KillbillVersions.getCommonVersion();
+        final String kbVersion = org.killbill.billing.util.nodes.KillbillVersions.getKillbillVersion();
+        final String kbApiVersion  = org.killbill.billing.util.nodes.KillbillVersions.getApiVersion();
+        final String kbPluginApiVersion  = org.killbill.billing.util.nodes.KillbillVersions.getPluginApiVersion();
+        final String kbPlatformVersion  = org.killbill.billing.util.nodes.KillbillVersions.getPlatformVersion();
+        final String kbCommonVersion  = org.killbill.billing.util.nodes.KillbillVersions.getCommonVersion();
 
 
         final NodeInfoModelJson nodeInfo = new NodeInfoModelJson(CreatorName.get(), bootTime, bootTime, kbVersion, kbApiVersion, kbPluginApiVersion, kbCommonVersion, kbPlatformVersion,
@@ -98,7 +98,7 @@ public class DefaultKillbillInfoService implements KillbillInfoService {
                  }
              })));
 
-        final String nodeInfoValue = mapper.serialize(nodeInfo);
+        final String nodeInfoValue = mapper.serializeNodeInfo(nodeInfo);
         final NodeInfoModelDao bootNodeInfo = new NodeInfoModelDao(CreatorName.get(), clock.getUTCNow(), nodeInfoValue);
         nodeInfoDao.create(bootNodeInfo);
     }

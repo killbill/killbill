@@ -15,7 +15,7 @@
  * under the License.
  */
 
-package org.killbill.billing.util.info.dao;
+package org.killbill.billing.util.nodes.dao;
 
 import java.util.List;
 

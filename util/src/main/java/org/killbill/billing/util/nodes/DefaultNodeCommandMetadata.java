@@ -15,9 +15,24 @@
  * under the License.
  */
 
-package org.killbill.billing.util.info;
+package org.killbill.billing.util.nodes;
 
-import org.killbill.billing.platform.api.KillbillService;
+import java.util.List;
 
-public interface KillbillInfoService extends KillbillService {
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class DefaultNodeCommandMetadata implements NodeCommandMetadata {
+
+    final List<NodeCommandProperty> properties;
+
+    @JsonCreator
+    public DefaultNodeCommandMetadata(@JsonProperty("properties") final List<NodeCommandProperty> properties) {
+        this.properties = properties;
+    }
+
+    @Override
+    public List<NodeCommandProperty> getProperties() {
+        return properties;
+    }
 }

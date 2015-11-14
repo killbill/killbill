@@ -20,14 +20,8 @@ package org.killbill.billing.util.glue;
 
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
-import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
-import org.killbill.billing.util.info.DefaultKillbillInfoApi;
-import org.killbill.billing.util.info.DefaultKillbillInfoService;
-import org.killbill.billing.util.info.KillbillInfoApi;
-import org.killbill.billing.util.info.KillbillInfoService;
 import org.mockito.Mockito;
 
 public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
@@ -62,7 +56,7 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
         }
     }
 
-    private static class InfoModuleWithPluginInfoApi extends InfoModule {
+    private static class InfoModuleWithPluginInfoApi extends NodesModule {
 
         public InfoModuleWithPluginInfoApi(final KillbillConfigSource configSource) {
             super(configSource);

@@ -37,7 +37,6 @@ import org.killbill.billing.tenant.dao.TenantBroadcastDao;
 import org.killbill.billing.tenant.dao.TenantBroadcastModelDao;
 import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.tenant.dao.TenantKVModelDao;
-import org.killbill.billing.tenant.dao.TenantModelDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.util.config.TenantConfig;
 import org.killbill.bus.api.PersistentBus;

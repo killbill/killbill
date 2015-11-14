@@ -18,17 +18,17 @@
 package org.killbill.billing.util.glue;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.info.DefaultKillbillInfoApi;
-import org.killbill.billing.util.info.DefaultKillbillInfoService;
-import org.killbill.billing.util.info.KillbillInfoApi;
-import org.killbill.billing.util.info.KillbillInfoService;
-import org.killbill.billing.util.info.NodeInfoMapper;
-import org.killbill.billing.util.info.dao.DefaultNodeInfoDao;
-import org.killbill.billing.util.info.dao.NodeInfoDao;
+import org.killbill.billing.util.nodes.DefaultKillbillNodesApi;
+import org.killbill.billing.util.nodes.DefaultKillbillNodesService;
+import org.killbill.billing.util.nodes.KillbillNodesService;
+import org.killbill.billing.util.nodes.KillbillNodesApi;
+import org.killbill.billing.util.nodes.NodeInfoMapper;
+import org.killbill.billing.util.nodes.dao.DefaultNodeInfoDao;
+import org.killbill.billing.util.nodes.dao.NodeInfoDao;
 
-public class InfoModule extends KillBillModule {
+public class NodesModule extends KillBillModule {
 
-    public InfoModule(final KillbillConfigSource configSource) {
+    public NodesModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
@@ -37,8 +37,8 @@ public class InfoModule extends KillBillModule {
     }
 
     protected void installUserApi() {
-        bind(KillbillInfoApi.class).to(DefaultKillbillInfoApi.class).asEagerSingleton();
-        bind(KillbillInfoService.class).to(DefaultKillbillInfoService.class).asEagerSingleton();
+        bind(KillbillNodesApi.class).to(DefaultKillbillNodesApi.class).asEagerSingleton();
+        bind(KillbillNodesService.class).to(DefaultKillbillNodesService.class).asEagerSingleton();
         bind(NodeInfoMapper.class).asEagerSingleton();
     }
 

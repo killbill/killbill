@@ -15,18 +15,21 @@
  * under the License.
  */
 
-package org.killbill.billing.util.info;
+package org.killbill.billing.util.nodes;
 
 import java.io.IOException;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.util.info.json.NodeInfoModelJson;
+import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class NodeInfoMapper {
 
@@ -40,12 +43,30 @@ public class NodeInfoMapper {
 
     }
 
-    public String serialize(final NodeInfoModelJson nodeInfo) throws JsonProcessingException {
+    public String serializeNodeInfo(final NodeInfoModelJson nodeInfo) throws JsonProcessingException {
         return mapper.writeValueAsString(nodeInfo);
     }
 
-
-    public NodeInfoModelJson deserialize(final String nodeInfo) throws IOException {
+    public NodeInfoModelJson deserializeNodeInfo(final String nodeInfo) throws IOException {
         return mapper.readValue(nodeInfo, NodeInfoModelJson.class);
     }
+
+    public String serializeNodeCommand(final NodeCommandMetadata nodeCommandMetadata) throws JsonProcessingException {
+        return mapper.writeValueAsString(nodeCommandMetadata);
+    }
+
+    public NodeCommandMetadata deserializeNodeCommand(final String nodeCommand, final String type) throws IOException {
+
+        final SystemNodeCommandType systemType = Iterables.tryFind(ImmutableList.copyOf(SystemNodeCommandType.values()), new Predicate<SystemNodeCommandType>() {
+            @Override
+            public boolean apply(final SystemNodeCommandType input) {
+                return input.name().equals(type);
+            }
+        }).orNull();
+
+        return (systemType != null) ?
+               mapper.readValue(nodeCommand, systemType.getCommandMetadataClass()) :
+               mapper.readValue(nodeCommand, DefaultNodeCommandMetadata.class);
+    }
+
 }

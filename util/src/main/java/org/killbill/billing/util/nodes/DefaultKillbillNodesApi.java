@@ -15,28 +15,35 @@
  * under the License.
  */
 
-package org.killbill.billing.util.info;
+package org.killbill.billing.util.nodes;
 
 import java.io.IOException;
 import java.util.List;
 
+import org.killbill.billing.broadcast.BroadcastApi;
 import org.killbill.billing.osgi.api.PluginInfo;
-import org.killbill.billing.util.info.dao.NodeInfoDao;
-import org.killbill.billing.util.info.dao.NodeInfoModelDao;
-import org.killbill.billing.util.info.json.NodeInfoModelJson;
+import org.killbill.billing.util.nodes.dao.NodeInfoDao;
+import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
+import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
+import org.killbill.clock.Clock;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
-public class DefaultKillbillInfoApi implements KillbillInfoApi {
+public class DefaultKillbillNodesApi implements KillbillNodesApi {
 
     private final NodeInfoDao nodeInfoDao;
+    private final BroadcastApi broadcastApi;
     private final NodeInfoMapper mapper;
+    private final Clock clock;
 
     @Inject
-    public DefaultKillbillInfoApi(final NodeInfoDao nodeInfoDao, final NodeInfoMapper mapper) {
+    public DefaultKillbillNodesApi(final NodeInfoDao nodeInfoDao, final BroadcastApi broadcastApi, final NodeInfoMapper mapper, final Clock clock) {
         this.nodeInfoDao = nodeInfoDao;
+        this.broadcastApi = broadcastApi;
+        this.clock = clock;
         this.mapper = mapper;
     }
 
@@ -48,7 +55,7 @@ public class DefaultKillbillInfoApi implements KillbillInfoApi {
             @Override
             public NodeInfoModelJson apply(final NodeInfoModelDao input) {
                 try {
-                    return mapper.deserialize(input.getNodeInfo());
+                    return mapper.deserializeNodeInfo(input.getNodeInfo());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -64,7 +71,20 @@ public class DefaultKillbillInfoApi implements KillbillInfoApi {
     }
 
     @Override
-    public void updatePluginInfo(final Iterable<PluginInfo> plugins) {
+    public void triggerNodeCommand(final NodeCommand nodeCommand) {
+
+        final String event;
+        try {
+            event = mapper.serializeNodeCommand(nodeCommand.getNodeCommandMetadata());
+            broadcastApi.broadcast(DefaultKillbillNodesService.NODES_SERVICE_NAME, nodeCommand.getNodeCommandType(), event, clock.getUTCNow(), "unset");
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void notifyPluginChanged(final Iterable<PluginInfo> iterable) {
 
     }
 }

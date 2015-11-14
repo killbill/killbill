@@ -41,8 +41,8 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
-import org.killbill.billing.util.info.KillbillInfoApi;
-import org.killbill.billing.util.info.NodeInfo;
+import org.killbill.billing.util.nodes.KillbillNodesApi;
+import org.killbill.billing.util.nodes.NodeInfo;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
@@ -59,7 +59,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Api(value = JaxrsResource.NODES_INFO_PATH, description = "Operations to retrieve nodes info")
 public class NodesInfoResource extends JaxRsResourceBase {
 
-    private final KillbillInfoApi killbillInfoApi;
+    private final KillbillNodesApi killbillInfoApi;
 
     @Inject
     public NodesInfoResource(final JaxrsUriBuilder uriBuilder,
@@ -68,7 +68,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
                              final AuditUserApi auditUserApi,
                              final AccountUserApi accountUserApi,
                              final PaymentApi paymentApi,
-                             final KillbillInfoApi killbillInfoApi,
+                             final KillbillNodesApi killbillInfoApi,
                              final Clock clock,
                              final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);

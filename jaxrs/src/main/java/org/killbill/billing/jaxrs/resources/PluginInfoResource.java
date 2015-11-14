@@ -48,7 +48,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PLUGINS_INFO_PATH)
-@Api(value = JaxrsResource.PLUGINS_INFO_PATH, description = "Operations on plugins (info)")
+@Api(value = JaxrsResource.PLUGINS_INFO_PATH, description = "Operations on plugins")
 public class PluginInfoResource extends JaxRsResourceBase {
 
     private final PluginsInfoApi pluginsInfoApi;

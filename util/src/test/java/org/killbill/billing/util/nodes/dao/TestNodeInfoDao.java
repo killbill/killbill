@@ -15,13 +15,12 @@
  * under the License.
  */
 
-package org.killbill.billing.util.info.dao;
+package org.killbill.billing.util.nodes.dao;
 
 import java.util.List;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;

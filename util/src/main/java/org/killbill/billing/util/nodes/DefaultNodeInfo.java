@@ -15,9 +15,8 @@
  * under the License.
  */
 
-package org.killbill.billing.util.info;
+package org.killbill.billing.util.nodes;
 
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -27,13 +26,11 @@ import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginInfo;
 import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginServiceInfo;
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginServiceInfo;
-import org.killbill.billing.util.info.dao.NodeInfoModelDao;
-import org.killbill.billing.util.info.json.NodeInfoModelJson;
-import org.killbill.billing.util.info.json.PluginInfoModelJson;
-import org.killbill.billing.util.info.json.PluginServiceInfoModelJson;
+import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
+import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
+import org.killbill.billing.util.nodes.json.PluginServiceInfoModelJson;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 

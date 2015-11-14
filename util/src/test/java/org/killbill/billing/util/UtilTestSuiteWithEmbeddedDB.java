@@ -32,7 +32,7 @@ import org.killbill.billing.util.customfield.dao.CustomFieldDao;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.export.dao.DatabaseExportDao;
 import org.killbill.billing.util.glue.TestUtilModuleWithEmbeddedDB;
-import org.killbill.billing.util.info.dao.NodeInfoDao;
+import org.killbill.billing.util.nodes.dao.NodeInfoDao;
 import org.killbill.billing.util.tag.dao.DefaultTagDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionDao;
 import org.killbill.bus.api.PersistentBus;

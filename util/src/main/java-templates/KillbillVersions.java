@@ -1,4 +1,4 @@
-package org.killbill.billing.util.info;
+package org.killbill.billing.util.nodes;
 
 public final class KillbillVersions {
 
