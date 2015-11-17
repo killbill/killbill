@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.events.BroadcastInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -92,6 +93,7 @@ public class TestApiListener {
     public enum NextEvent {
         MIGRATE_ENTITLEMENT,
         MIGRATE_BILLING,
+        BROADCAST_SERVICE,
         CREATE,
         TRANSFER,
         RE_CREATE,
@@ -113,6 +115,15 @@ public class TestApiListener {
         TAG_DEFINITION,
         CUSTOM_FIELD,
     }
+
+
+    @Subscribe
+    public void handleBroadcastEvents(final BroadcastInternalEvent event) {
+        log.info(String.format("Got BroadcastInternalEvent event %s", event.toString()));
+        assertEqualsNicely(NextEvent.BROADCAST_SERVICE);
+        notifyIfStackEmpty();
+    }
+
 
     @Subscribe
     public void handleRepairSubscriptionEvents(final RepairSubscriptionInternalEvent event) {

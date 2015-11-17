@@ -99,6 +99,7 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
@@ -253,6 +254,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     @Inject
     protected TenantUserApi tenantUserApi;
+
+    @Inject
+    protected KillbillNodesApi nodesApi;
 
     protected void assertListenerStatus() {
         busHandler.assertListenerStatus();

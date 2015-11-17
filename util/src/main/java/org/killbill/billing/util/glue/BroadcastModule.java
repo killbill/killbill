@@ -19,9 +19,13 @@ package org.killbill.billing.util.glue;
 
 import org.killbill.billing.broadcast.BroadcastApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.broadcast.BroadcastService;
 import org.killbill.billing.util.broadcast.DefaultBroadcastApi;
+import org.killbill.billing.util.broadcast.DefaultBroadcastService;
 import org.killbill.billing.util.broadcast.dao.BroadcastDao;
 import org.killbill.billing.util.broadcast.dao.DefaultBroadcastDao;
+import org.killbill.billing.util.config.BroadcastConfig;
+import org.skife.config.ConfigurationObjectFactory;
 
 public class BroadcastModule extends KillBillModule {
 
@@ -34,12 +38,16 @@ public class BroadcastModule extends KillBillModule {
     }
 
     protected void installUserApi() {
+
+        bind(BroadcastService.class).to(DefaultBroadcastService.class).asEagerSingleton();
         bind(BroadcastApi.class).to(DefaultBroadcastApi.class).asEagerSingleton();
     }
 
-
     @Override
     protected void configure() {
+        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final BroadcastConfig broadcastConfig = factory.build(BroadcastConfig.class);
+        bind(BroadcastConfig.class).toInstance(broadcastConfig);
         installDaos();
         installUserApi();
     }

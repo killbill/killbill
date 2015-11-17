@@ -33,6 +33,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 import org.killbill.billing.overdue.api.OverdueConfig;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.DefaultTenant;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantData;
@@ -40,9 +41,16 @@ import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.nodes.NodeCommand;
+import org.killbill.billing.util.nodes.NodeCommandMetadata;
+import org.killbill.billing.util.nodes.NodeCommandProperty;
+import org.killbill.billing.util.nodes.PluginNodeCommandMetadata;
+import org.killbill.billing.util.nodes.SystemNodeCommandType;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 
 import static com.jayway.awaitility.Awaitility.await;
@@ -54,6 +62,15 @@ public class TestPublicBus extends TestIntegrationBase {
     private PublicListener publicListener;
 
     private AtomicInteger externalBusCount;
+
+    @Override
+    protected KillbillConfigSource getConfigSource() {
+        ImmutableMap additionalProperties = new ImmutableMap.Builder()
+                .put("org.killbill.billing.util.broadcast.rate", "500ms")
+                .build();
+        return getConfigSource("/beatrix.properties", additionalProperties);
+    }
+
 
     public class PublicListener {
 
@@ -80,8 +97,6 @@ public class TestPublicBus extends TestIntegrationBase {
             DBTestingHelper.get().getInstance().cleanupAllTables();
         } catch (final Exception ignored) {
         }
-
-        super.beforeMethod();
 
         log.debug("RESET TEST FRAMEWORK");
 
@@ -156,6 +171,40 @@ public class TestPublicBus extends TestIntegrationBase {
             @Override
             public Boolean call() throws Exception {
                 // expecting  TENANT_CONFIG_CHANGE
+                return externalBusCount.get() == 1;
+            }
+        });
+    }
+
+
+    @Test(groups = "{slow}")
+    public void testBroadcastEvent() throws Exception {
+
+
+        final NodeCommand nodeCommand = new NodeCommand() {
+            @Override
+            public boolean isSystemCommandType() {
+                return true;
+            }
+            @Override
+            public String getNodeCommandType() {
+                return SystemNodeCommandType.START_PLUGIN.name();
+            }
+            @Override
+            public NodeCommandMetadata getNodeCommandMetadata() {
+                return new PluginNodeCommandMetadata("pluginName", "4.5.6", ImmutableList.of(new NodeCommandProperty("key", "value")));
+            }
+        };
+
+        // Verify the internal bus first
+        busHandler.pushExpectedEvent(NextEvent.BROADCAST_SERVICE);
+        nodesApi.triggerNodeCommand(nodeCommand);
+        assertListenerStatus();
+
+        // Verify the public bus
+        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
                 return externalBusCount.get() == 1;
             }
         });

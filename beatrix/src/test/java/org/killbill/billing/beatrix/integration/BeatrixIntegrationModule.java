@@ -46,6 +46,7 @@ import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
+import org.killbill.billing.util.glue.BroadcastModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
@@ -53,6 +54,7 @@ import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.glue.KillBillShiroModule;
+import org.killbill.billing.util.glue.NodesModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
@@ -97,6 +99,8 @@ public class BeatrixIntegrationModule extends KillBillModule {
         install(new RecordIdModule(configSource));
         install(new UsageModule(configSource));
         install(new SecurityModule(configSource));
+        install(new NodesModule(configSource));
+        install(new BroadcastModule(configSource));
         install(new KillBillShiroModuleOnlyIniRealm(configSource));
         install(new BeatrixModule(configSource));
 

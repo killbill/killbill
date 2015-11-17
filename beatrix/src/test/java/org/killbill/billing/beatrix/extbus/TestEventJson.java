@@ -60,4 +60,16 @@ public class TestEventJson extends BeatrixTestSuite {
         Assert.assertTrue(obj.getObjectId().equals(UUID.fromString("273ff2ed-5442-4d10-971f-3cc2414fe33b")));
         Assert.assertNull(obj.getMetaData());
     }
+
+
+    @Test(groups = "fast")
+    public void testBusExternalEventWithJsonMetadata() throws Exception {
+        final String eventWithJsonMetadata = "{\"objectId\":null,\"objectType\":\"SERVICE_BROADCAST\",\"eventType\":\"BROADCAST_SERVICE\",\"accountId\":null,\"tenantId\":null,\"metaData\":\"{\\\"service\\\":\\\"nodes-service\\\",\\\"commandType\\\":\\\"START_PLUGIN\\\",\\\"eventJson\\\":\\\"{\\\\\\\"pluginName\\\\\\\":\\\\\\\"pluginName\\\\\\\",\\\\\\\"pluginVersion\\\\\\\":\\\\\\\"4.5.6\\\\\\\",\\\\\\\"properties\\\\\\\":[{\\\\\\\"key\\\\\\\":\\\\\\\"key\\\\\\\",\\\\\\\"value\\\\\\\":\\\\\\\"value\\\\\\\"}]}\\\"}\"}";
+        final Class<?> claz = Class.forName(DefaultBusExternalEvent.class.getName());
+        final ExtBusEvent obj = (ExtBusEvent) mapper.readValue(eventWithJsonMetadata, claz);
+        Assert.assertTrue(obj.getObjectType().equals(ObjectType.SERVICE_BROADCAST));
+        Assert.assertTrue(obj.getEventType().equals(ExtBusEventType.BROADCAST_SERVICE));
+        Assert.assertNotNull(obj.getMetaData());
+        Assert.assertTrue(obj.getMetaData().equals("{\"service\":\"nodes-service\",\"commandType\":\"START_PLUGIN\",\"eventJson\":\"{\\\"pluginName\\\":\\\"pluginName\\\",\\\"pluginVersion\\\":\\\"4.5.6\\\",\\\"properties\\\":[{\\\"key\\\":\\\"key\\\",\\\"value\\\":\\\"value\\\"}]}\"}"));
+    }
 }

@@ -25,6 +25,7 @@ public interface BusInternalEvent extends BusEvent {
         ACCOUNT_CHANGE,
         ACCOUNT_CREATE,
         BLOCKING_STATE,
+        BROADCAST_SERVICE,
         BUNDLE_REPAIR,
         CONTROL_TAGDEFINITION_CREATION,
         CONTROL_TAGDEFINITION_DELETION,

@@ -31,6 +31,7 @@ import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.events.AccountCreationInternalEvent;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
+import org.killbill.billing.events.BroadcastInternalEvent;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.BusInternalEvent.BusInternalEventType;
 import org.killbill.billing.events.ControlTagCreationInternalEvent;
@@ -51,6 +52,7 @@ import org.killbill.billing.events.TenantConfigDeletionInternalEvent;
 import org.killbill.billing.events.UserTagCreationInternalEvent;
 import org.killbill.billing.events.UserTagDeletionInternalEvent;
 import org.killbill.billing.lifecycle.glue.BusModule;
+import org.killbill.billing.notification.plugin.api.BroadcastMetadata;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -63,6 +65,7 @@ import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
@@ -99,10 +102,12 @@ public class BeatrixListener {
             }
         } catch (final EventBusException e) {
             log.warn("Failed to dispatch external bus events", e);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to dispatch external bus events", e);
         }
     }
 
-    private BusEvent computeExtBusEventEntryFromBusInternalEvent(final BusInternalEvent event, final InternalCallContext context) {
+    private BusEvent computeExtBusEventEntryFromBusInternalEvent(final BusInternalEvent event, final InternalCallContext context) throws JsonProcessingException {
         ObjectType objectType = null;
         UUID objectId = null;
         ExtBusEventType eventBusType = null;
@@ -276,6 +281,15 @@ public class BeatrixListener {
                 objectId = null;
                 eventBusType = ExtBusEventType.TENANT_CONFIG_DELETION;
                 metaData = realTenantConfigEventDel.getKey();
+                break;
+
+            case BROADCAST_SERVICE:
+                final BroadcastInternalEvent realBroadcastEvent = (BroadcastInternalEvent) event;
+                objectType = ObjectType.SERVICE_BROADCAST;
+                objectId = null;
+                eventBusType = ExtBusEventType.BROADCAST_SERVICE;
+                final BroadcastMetadata metaDataObj = new BroadcastMetadata(realBroadcastEvent.getServiceName(), realBroadcastEvent.getType(), realBroadcastEvent.getJsonEvent());
+                metaData = objectMapper.writeValueAsString(metaDataObj);
                 break;
 
             default:
