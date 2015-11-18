@@ -438,6 +438,10 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
                     }
 
+                    if (!paymentMethodModel.getAccountId().equals(account.getId())) {
+                        throw new PaymentApiException(ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID, paymentMethodId);
+                    }
+
                     try {
                         final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, context);
 
