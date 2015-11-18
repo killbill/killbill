@@ -766,6 +766,40 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @TimedResource
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS + "/refresh")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Refresh account payment methods", response = PaymentMethodJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response refreshPaymentMethods(@PathParam("accountId") final String accountId,
+                                          @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                          @HeaderParam(HDR_REASON) final String reason,
+                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
+        final List<PaymentMethod> refreshedPaymentMethods = paymentApi.refreshPaymentMethods(account, pluginName, pluginProperties, callContext);
+
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), callContext);
+
+        final List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(refreshedPaymentMethods, new Function<PaymentMethod, PaymentMethodJson>() {
+            @Override
+            public PaymentMethodJson apply(final PaymentMethod input) {
+                return PaymentMethodJson.toPaymentMethodJson(account, input, accountAuditLogs);
+            }
+        }));
+
+        return Response.status(Status.OK).entity(json).build();
+    }
+
+
+    @TimedResource
     @PUT
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
