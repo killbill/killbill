@@ -50,11 +50,13 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
     private final PluginsInfoApi pluginInfoApi;
     private final Clock clock;
     private final NodeInfoMapper mapper;
+    private final KillbillNodesApi nodesApi;
 
     @Inject
-    public DefaultKillbillNodesService(final NodeInfoDao nodeInfoDao, final PluginsInfoApi pluginInfoApi, final Clock clock, final NodeInfoMapper mapper) {
+    public DefaultKillbillNodesService(final NodeInfoDao nodeInfoDao, final PluginsInfoApi pluginInfoApi, final KillbillNodesApi nodesApi, final Clock clock, final NodeInfoMapper mapper) {
         this.nodeInfoDao = nodeInfoDao;
         this.pluginInfoApi = pluginInfoApi;
+        this.nodesApi = nodesApi;
         this.clock = clock;
         this.mapper = mapper;
     }

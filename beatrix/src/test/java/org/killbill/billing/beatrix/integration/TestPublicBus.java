@@ -91,7 +91,6 @@ public class TestPublicBus extends TestIntegrationBase {
         of the publicBus event;
         TODO modify sequence to allow optional registration of publicListener
          */
-        //super.beforeMethod();
 
         try {
             DBTestingHelper.get().getInstance().cleanupAllTables();

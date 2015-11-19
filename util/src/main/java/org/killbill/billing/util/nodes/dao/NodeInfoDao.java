@@ -28,4 +28,6 @@ public interface NodeInfoDao {
     public void delete(final String nodeName);
 
     public List<NodeInfoModelDao> getAll();
+
+    public NodeInfoModelDao getByNodeName(final String nodeName);
 }

@@ -20,29 +20,39 @@ package org.killbill.billing.util.nodes;
 import java.io.IOException;
 import java.util.List;
 
+import org.killbill.CreatorName;
 import org.killbill.billing.broadcast.BroadcastApi;
 import org.killbill.billing.osgi.api.PluginInfo;
+import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.util.nodes.dao.NodeInfoDao;
 import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
+import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
 import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class DefaultKillbillNodesApi implements KillbillNodesApi {
 
+    private final Logger logger = LoggerFactory.getLogger(DefaultKillbillNodesApi.class);
+
     private final NodeInfoDao nodeInfoDao;
     private final BroadcastApi broadcastApi;
     private final NodeInfoMapper mapper;
     private final Clock clock;
+    private final PluginsInfoApi pluginInfoApi;
 
     @Inject
-    public DefaultKillbillNodesApi(final NodeInfoDao nodeInfoDao, final BroadcastApi broadcastApi, final NodeInfoMapper mapper, final Clock clock) {
+    public DefaultKillbillNodesApi(final NodeInfoDao nodeInfoDao, final BroadcastApi broadcastApi, final NodeInfoMapper mapper, final Clock clock, final PluginsInfoApi pluginInfoApi) {
         this.nodeInfoDao = nodeInfoDao;
         this.broadcastApi = broadcastApi;
+        this.pluginInfoApi = pluginInfoApi;
         this.clock = clock;
         this.mapper = mapper;
     }
@@ -84,7 +94,41 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     }
 
     @Override
-    public void notifyPluginChanged(final Iterable<PluginInfo> iterable) {
+    public void notifyPluginChanged(final PluginInfo plugin) {
+        final String updatedNodeInfoJson;
+        try {
+            updatedNodeInfoJson = computeLatestNodeInfo();
+            nodeInfoDao.updateNodeInfo(CreatorName.get(), updatedNodeInfoJson);
+        } catch (final IOException e) {
+            logger.warn("Failed to update nodeInfo after plugin change", e);
+        }
+    }
 
+
+    private String computeLatestNodeInfo() throws IOException {
+
+        final NodeInfoModelDao nodeInfo = nodeInfoDao.getByNodeName(CreatorName.get());
+        NodeInfoModelJson nodeInfoJson = mapper.deserializeNodeInfo(nodeInfo.getNodeInfo());
+
+        final Iterable<PluginInfo> rawPluginInfo = pluginInfoApi.getPluginsInfo();
+        final List<PluginInfo> pluginInfo = rawPluginInfo.iterator().hasNext() ? ImmutableList.<PluginInfo>copyOf(rawPluginInfo) : ImmutableList.<PluginInfo>of();
+
+        final NodeInfoModelJson updatedNodeInfoJson = new NodeInfoModelJson(CreatorName.get(),
+                                                                            nodeInfoJson.getBootTime(),
+                                                                            clock.getUTCNow(),
+                                                                            nodeInfoJson.getKillbillVersion(),
+                                                                            nodeInfoJson.getApiVersion(),
+                                                                            nodeInfoJson.getPluginApiVersion(),
+                                                                            nodeInfoJson.getCommonVersion(),
+                                                                            nodeInfoJson.getPlatformVersion(),
+                                                                            ImmutableList.copyOf(Iterables.transform(pluginInfo, new Function<PluginInfo, PluginInfoModelJson>() {
+                                                                                @Override
+                                                                                public PluginInfoModelJson apply(final PluginInfo input) {
+                                                                                    return new PluginInfoModelJson(input);
+                                                                                }
+                                                                            })));
+
+        final String nodeInfoValue = mapper.serializeNodeInfo(updatedNodeInfoJson);
+        return nodeInfoValue;
     }
 }

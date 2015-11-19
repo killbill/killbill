@@ -96,4 +96,15 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
         });
     }
 
+    @Override
+    public NodeInfoModelDao getByNodeName(final String nodeName) {
+        return dbi.inTransaction(new TransactionCallback<NodeInfoModelDao>() {
+            @Override
+            public NodeInfoModelDao inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
+                final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
+                return sqlDao.getByNodeName(nodeName);
+            }
+        });
+    }
+
 }
