@@ -52,5 +52,8 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
             final DBTestingHelper dbTestingHelper = DBTestingHelper.get();
             configureEmbeddedDB(dbTestingHelper);
         }
+        protected void configureKillbillNodesApi() {
+
+        }
     }
 }
