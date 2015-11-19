@@ -272,7 +272,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>templating-maven-plugin</artifactId>
-                <version>1.0-alpha-3</version>
                 <executions>
                     <execution>
                         <id>generate-verion-class</id>
