@@ -201,7 +201,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
             }
         }
 
-        if (pluginName != null && pluginVersion != null) {
+        if (pluginName != null) {
             return new PluginNodeCommandMetadata(pluginName, pluginVersion, input.getNodeCommandProperties());
         } else {
             return new NodeCommandMetadata() {
