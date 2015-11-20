@@ -17,19 +17,29 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
+import org.killbill.billing.jaxrs.json.AccountJson;
+import org.killbill.billing.jaxrs.json.NodeCommandJson;
 import org.killbill.billing.jaxrs.json.NodeInfoJson;
 import org.killbill.billing.jaxrs.json.PluginInfoJson;
 import org.killbill.billing.jaxrs.json.PluginInfoJson.PluginServiceInfoJson;
@@ -42,7 +52,11 @@ import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
+import org.killbill.billing.util.nodes.NodeCommand;
+import org.killbill.billing.util.nodes.NodeCommandMetadata;
+import org.killbill.billing.util.nodes.NodeCommandProperty;
 import org.killbill.billing.util.nodes.NodeInfo;
+import org.killbill.billing.util.nodes.PluginNodeCommandMetadata;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
@@ -52,6 +66,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -120,4 +136,80 @@ public class NodesInfoResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(nodeInfosJson).build();
     }
 
+
+
+    @TimedResource
+    @POST
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Trigger a node command")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid node command supplied")})
+    public Response triggerNodeCommand(final NodeCommandJson json,
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
+
+        final NodeCommandMetadata metadata = toNodeCommandMetadata(json);
+
+        final NodeCommand nodeCommand = new NodeCommand() {
+            @Override
+            public boolean isSystemCommandType() {
+                return json.isSystemCommandType();
+            }
+            @Override
+            public String getNodeCommandType() {
+                return json.getNodeCommandType();
+            }
+            @Override
+            public NodeCommandMetadata getNodeCommandMetadata() {
+                return metadata;
+            }
+        };
+
+        killbillInfoApi.triggerNodeCommand(nodeCommand);
+        return Response.status(Status.CREATED).build();
+    }
+
+
+    private NodeCommandMetadata toNodeCommandMetadata(final NodeCommandJson input) {
+
+        if (input.getNodeCommandProperties() == null || input.getNodeCommandProperties().isEmpty()) {
+            return new NodeCommandMetadata() {
+                @Override
+                public List<NodeCommandProperty> getProperties() {
+                    return ImmutableList.<NodeCommandProperty>of();
+                }
+            };
+        }
+
+        String pluginName = null;
+        String pluginVersion = null;
+        final Iterator<NodeCommandProperty> it = input.getNodeCommandProperties().iterator();
+        while (it.hasNext()) {
+            final NodeCommandProperty cur = it.next();
+            if (PluginNodeCommandMetadata.PLUGIN_NAME.equals(cur.getKey())) {
+                pluginName = (String) cur.getValue();
+                it.remove();
+            } else if (PluginNodeCommandMetadata.PLUGIN_VERSION.equals(cur.getKey())) {
+                pluginVersion = (String) cur.getValue();
+                it.remove();
+            }
+            if (pluginName != null && pluginVersion != null) {
+                break;
+            }
+        }
+
+        if (pluginName != null && pluginVersion != null) {
+            return new PluginNodeCommandMetadata(pluginName, pluginVersion, input.getNodeCommandProperties());
+        } else {
+            return new NodeCommandMetadata() {
+                @Override
+                public List<NodeCommandProperty> getProperties() {
+                    return input.getNodeCommandProperties();
+                }
+            };
+        }
+    }
 }
