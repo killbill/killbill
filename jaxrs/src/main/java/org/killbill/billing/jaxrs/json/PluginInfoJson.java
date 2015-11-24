@@ -36,7 +36,7 @@ public class PluginInfoJson {
 
     private final String version;
 
-    private final boolean running;
+    private final String state;
 
     private final Set<PluginServiceInfoJson> services;
 
@@ -44,12 +44,12 @@ public class PluginInfoJson {
     public PluginInfoJson(@JsonProperty("bundleSymbolicName") final String bundleSymbolicName,
                           @JsonProperty("pluginName") final String pluginName,
                           @JsonProperty("version") final String version,
-                          @JsonProperty("running") final boolean running,
+                          @JsonProperty("state") final String state,
                           @JsonProperty("services") final Set<PluginServiceInfoJson> services) {
         this.bundleSymbolicName = bundleSymbolicName;
         this.pluginName = pluginName;
         this.version = version;
-        this.running = running;
+        this.state = state;
         this.services = services;
     }
 
@@ -57,7 +57,7 @@ public class PluginInfoJson {
         this(input.getBundleSymbolicName(),
              input.getPluginName(),
              input.getVersion(),
-             input.isRunning(),
+             input.getPluginState().name(),
              ImmutableSet.copyOf(Iterables.transform(input.getServices(), new Function<PluginServiceInfo, PluginServiceInfoJson>() {
                  @Override
                  public PluginServiceInfoJson apply(final PluginServiceInfo input) {
@@ -78,8 +78,8 @@ public class PluginInfoJson {
         return version;
     }
 
-    public boolean isRunning() {
-        return running;
+    public String getState() {
+        return state;
     }
 
     public Set<PluginServiceInfoJson> getServices() {

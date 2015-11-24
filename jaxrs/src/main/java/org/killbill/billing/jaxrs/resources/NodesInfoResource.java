@@ -119,7 +119,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
                         return new PluginInfoJson(input.getBundleSymbolicName(),
                                                   input.getPluginName(),
                                                   input.getVersion(),
-                                                  input.isRunning(),
+                                                  input.getPluginState().name(),
                                                   servicesJson);
                     }
                 }));

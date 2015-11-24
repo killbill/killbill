@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginServiceInfo;
+import org.killbill.billing.osgi.api.PluginState;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -36,7 +37,7 @@ public class PluginInfoModelJson {
 
     private final String version;
 
-    private final boolean running;
+    private final PluginState state;
 
     private final Set<PluginServiceInfoModelJson> services;
 
@@ -44,12 +45,12 @@ public class PluginInfoModelJson {
     public PluginInfoModelJson(@JsonProperty("bundleSymbolicName") final String bundleSymbolicName,
                                @JsonProperty("pluginName") final String pluginName,
                                @JsonProperty("version") final String version,
-                               @JsonProperty("running") final boolean running,
+                               @JsonProperty("state") final PluginState state,
                                @JsonProperty("services") final Set<PluginServiceInfoModelJson> services) {
         this.bundleSymbolicName = bundleSymbolicName;
         this.pluginName = pluginName;
         this.version = version;
-        this.running = running;
+        this.state = state;
         this.services = services;
     }
 
@@ -57,7 +58,7 @@ public class PluginInfoModelJson {
         this(input.getBundleSymbolicName(),
              input.getPluginName(),
              input.getVersion(),
-             input.isRunning(),
+             input.getPluginState(),
              ImmutableSet.copyOf(Iterables.transform(input.getServices(), new Function<PluginServiceInfo, PluginServiceInfoModelJson>() {
                  @Override
                  public PluginServiceInfoModelJson apply(final PluginServiceInfo input) {
@@ -78,8 +79,8 @@ public class PluginInfoModelJson {
         return version;
     }
 
-    public boolean isRunning() {
-        return running;
+    public PluginState getState() {
+        return state;
     }
 
     public Set<PluginServiceInfoModelJson> getServices() {
@@ -97,10 +98,10 @@ public class PluginInfoModelJson {
 
         final PluginInfoModelJson that = (PluginInfoModelJson) o;
 
-        if (running != that.running) {
+        if (bundleSymbolicName != null ? !bundleSymbolicName.equals(that.bundleSymbolicName) : that.bundleSymbolicName != null) {
             return false;
         }
-        if (bundleSymbolicName != null ? !bundleSymbolicName.equals(that.bundleSymbolicName) : that.bundleSymbolicName != null) {
+        if (state != null ? !state.equals(that.state) : that.state != null) {
             return false;
         }
         if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
@@ -118,7 +119,7 @@ public class PluginInfoModelJson {
         int result = bundleSymbolicName != null ? bundleSymbolicName.hashCode() : 0;
         result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
         result = 31 * result + (version != null ? version.hashCode() : 0);
-        result = 31 * result + (running ? 1 : 0);
+        result = 31 * result + (state != null ? state.hashCode() : 0);
         result = 31 * result + (services != null ? services.hashCode() : 0);
         return result;
     }

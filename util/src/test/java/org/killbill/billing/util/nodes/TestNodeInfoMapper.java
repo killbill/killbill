@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.osgi.api.PluginState;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
@@ -47,7 +48,7 @@ public class TestNodeInfoMapper extends UtilTestSuiteNoDB {
         services1.add(svc);
 
         final List<PluginInfoModelJson> pluginInfos = new ArrayList<PluginInfoModelJson>();
-        final PluginInfoModelJson info1 = new PluginInfoModelJson("sym1", "name1", "vers1", true, services1);
+        final PluginInfoModelJson info1 = new PluginInfoModelJson("sym1", "name1", "vers1", PluginState.INSTALLED, services1);
         pluginInfos.add(info1);
         final NodeInfoModelJson input = new NodeInfoModelJson("nodeName", clock.getUTCNow(), clock.getUTCNow(), "1.0", "1.0", "1.0", "1.0", "1.0", pluginInfos);
 

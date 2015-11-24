@@ -19,9 +19,12 @@ package org.killbill.billing.beatrix.integration;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
@@ -42,6 +45,8 @@ import org.killbill.billing.osgi.api.config.PluginConfig;
 import org.killbill.billing.osgi.api.config.PluginConfigServiceApi;
 import org.killbill.billing.osgi.api.config.PluginLanguage;
 import org.killbill.billing.osgi.api.config.PluginType;
+import org.killbill.billing.osgi.config.OSGIConfig;
+import org.killbill.billing.osgi.pluginconf.PluginConfigException;
 import org.killbill.billing.osgi.pluginconf.PluginFinder;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.jackson.ObjectMapper;
@@ -83,6 +88,9 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
     @Inject
     private PluginsInfoApi pluginsInfoApi;
 
+    @Inject
+    private PluginFinder pluginFinder;
+
     @Override
     protected KillbillConfigSource getConfigSource() {
         ImmutableMap additionalProperties = new ImmutableMap.Builder()
@@ -111,6 +119,7 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
                     final BroadcastMetadata broadcastMetadata = objectMapper.readValue(metadata, BroadcastMetadata.class);
 
                     final PluginNodeCommandMetadata nodeCommandMetadata = (PluginNodeCommandMetadata) nodeInfoMapper.deserializeNodeCommand(broadcastMetadata.getEventJson(), broadcastMetadata.getCommandType());
+                    ((FakePluginFinder) pluginFinder).addPlugin(createPluginConfig(nodeCommandMetadata));
 
                     pluginsInfoApi.notifyOfStateChanged(PluginStateChange.NEW_VERSION, nodeCommandMetadata.getPluginName(), nodeCommandMetadata.getPluginVersion(), PluginLanguage.JAVA);
 
@@ -121,7 +130,89 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
         }
     }
 
+    private PluginConfig createPluginConfig(final PluginNodeCommandMetadata nodeCommandMetadata) {
+        return new PluginConfig() {
+            @Override
+            public int compareTo(final PluginConfig o) {
+                return 0;
+            }
+
+            @Override
+            public String getPluginName() {
+                return nodeCommandMetadata.getPluginName();
+            }
+
+            @Override
+            public PluginType getPluginType() {
+                return PluginType.NOTIFICATION;
+            }
+
+            @Override
+            public String getVersion() {
+                return nodeCommandMetadata.getPluginVersion();
+            }
+
+            @Override
+            public String getPluginVersionnedName() {
+                return getPluginName() + "-" + getVersion();
+            }
+
+            @Override
+            public File getPluginVersionRoot() {
+                return null;
+            }
+
+            @Override
+            public PluginLanguage getPluginLanguage() {
+                return PluginLanguage.JAVA;
+            }
+
+            @Override
+            public boolean isSelectedForStart() {
+                return true;
+            }
+
+            @Override
+            public boolean isDisabled() {
+                return false;
+            }
+        };
+    }
+
     // We override the  BundleRegistry to bypass the bundle installation and yet return our new bundle as being installed.
+    private static class FakePluginFinder extends PluginFinder {
+
+        @Inject
+        public FakePluginFinder(final OSGIConfig osgiConfig) {
+            super(osgiConfig);
+        }
+
+        public void reloadPlugins() throws PluginConfigException, IOException {
+        }
+
+        public void addPlugin(final PluginConfig newPlugin) {
+            final Map<String, LinkedList<PluginConfig>> allPluginField = getAllPluginField();
+
+            allPluginField.clear();
+            if (allPluginField.get(newPlugin.getPluginName()) == null) {
+                allPluginField.put(newPlugin.getPluginName(), new LinkedList<PluginConfig>());
+            }
+            allPluginField.get(newPlugin.getPluginName()).add(newPlugin);
+        }
+
+        private Map<String, LinkedList<PluginConfig>> getAllPluginField() {
+            try {
+                final Field f = PluginFinder.class.getDeclaredField("allPlugins");
+                f.setAccessible(true);
+                return (Map<String, LinkedList<PluginConfig>>) f.get(this);
+            } catch (NoSuchFieldException e) {
+                throw new RuntimeException("Failed to retrieve private field allPlugins from PluginFinder class ", e);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Failed to retrieve private field allPlugins from PluginFinder class ", e);
+            }
+        }
+    }
+
     private static class FakeBundleRegistry extends BundleRegistry {
 
         private final List<BundleWithMetadata> bundles;
@@ -138,28 +229,48 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
 
             final BundleWithConfig config = new BundleWithConfig(bundle, new PluginConfig() {
                 @Override
+                public int compareTo(final PluginConfig o) {
+                    return 0;
+                }
+
+                @Override
                 public String getPluginName() {
                     return pluginName;
                 }
+
                 @Override
                 public PluginType getPluginType() {
                     return PluginType.NOTIFICATION;
                 }
+
                 @Override
                 public String getVersion() {
                     return version;
                 }
+
                 @Override
                 public String getPluginVersionnedName() {
                     return null;
                 }
+
                 @Override
                 public File getPluginVersionRoot() {
                     return null;
                 }
+
                 @Override
                 public PluginLanguage getPluginLanguage() {
                     return pluginLanguage;
+                }
+
+                @Override
+                public boolean isSelectedForStart() {
+                    return true;
+                }
+
+                @Override
+                public boolean isDisabled() {
+                    return false;
                 }
             });
             bundles.add(new BundleWithMetadata(config));
@@ -184,6 +295,7 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
         @Override
         public void configure(final Binder binder) {
             binder.bind(BundleRegistry.class).to(FakeBundleRegistry.class).asEagerSingleton();
+            binder.bind(PluginFinder.class).to(FakePluginFinder.class).asEagerSingleton();
         }
     }
 
@@ -261,4 +373,5 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
             }
         });
     }
+
 }
