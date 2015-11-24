@@ -24,21 +24,20 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
-import org.killbill.billing.jaxrs.json.AccountJson;
 import org.killbill.billing.jaxrs.json.NodeCommandJson;
 import org.killbill.billing.jaxrs.json.NodeInfoJson;
 import org.killbill.billing.jaxrs.json.PluginInfoJson;
@@ -136,8 +135,6 @@ public class NodesInfoResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(nodeInfosJson).build();
     }
 
-
-
     @TimedResource
     @POST
     @Consumes(APPLICATION_JSON)
@@ -145,11 +142,12 @@ public class NodesInfoResource extends JaxRsResourceBase {
     @ApiOperation(value = "Trigger a node command")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid node command supplied")})
     public Response triggerNodeCommand(final NodeCommandJson json,
-                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                  @HeaderParam(HDR_REASON) final String reason,
-                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request,
-                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
+                                       @QueryParam(QUERY_LOCAL_NODE_ONLY) @DefaultValue("false") final Boolean localNodeOnly,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
 
         final NodeCommandMetadata metadata = toNodeCommandMetadata(json);
 
@@ -168,7 +166,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
             }
         };
 
-        killbillInfoApi.triggerNodeCommand(nodeCommand);
+        killbillInfoApi.triggerNodeCommand(nodeCommand, localNodeOnly);
         return Response.status(Status.CREATED).build();
     }
 

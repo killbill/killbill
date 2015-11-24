@@ -20,5 +20,5 @@ package org.killbill.billing.broadcast;
 import org.joda.time.DateTime;
 
 public interface BroadcastApi {
-    public void broadcast(String serviceName, String type, String event, DateTime createdDate, String createdBy);
+    public void broadcast(String serviceName, String type, String event, DateTime createdDate, String createdBy, boolean localNodeOnly);
 }

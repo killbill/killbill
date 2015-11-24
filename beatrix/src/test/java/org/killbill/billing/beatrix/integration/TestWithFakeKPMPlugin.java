@@ -348,7 +348,7 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
             }
         };
         busHandler.pushExpectedEvent(NextEvent.BROADCAST_SERVICE);
-        nodesApi.triggerNodeCommand(nodeCommand);
+        nodesApi.triggerNodeCommand(nodeCommand, false);
         assertListenerStatus();
 
         // Exit condition is based on the new config being updated on disk

@@ -81,12 +81,12 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     }
 
     @Override
-    public void triggerNodeCommand(final NodeCommand nodeCommand) {
+    public void triggerNodeCommand(final NodeCommand nodeCommand, final boolean localNodeOnly) {
 
         final String event;
         try {
             event = mapper.serializeNodeCommand(nodeCommand.getNodeCommandMetadata());
-            broadcastApi.broadcast(DefaultKillbillNodesService.NODES_SERVICE_NAME, nodeCommand.getNodeCommandType(), event, clock.getUTCNow(), "unset");
+            broadcastApi.broadcast(DefaultKillbillNodesService.NODES_SERVICE_NAME, nodeCommand.getNodeCommandType(), event, clock.getUTCNow(), "unset", localNodeOnly);
 
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

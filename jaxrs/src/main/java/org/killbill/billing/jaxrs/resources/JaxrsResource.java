@@ -61,6 +61,9 @@ public interface JaxrsResource {
     /*
      * Query parameters
      */
+
+
+    public static final String QUERY_LOCAL_NODE_ONLY = "localNodeOnly";
     public static final String QUERY_EXTERNAL_KEY = "externalKey";
     public static final String QUERY_API_KEY = "apiKey";
     public static final String QUERY_REQUESTED_DT = "requestedDate";

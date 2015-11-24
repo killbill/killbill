@@ -197,7 +197,7 @@ public class TestPublicBus extends TestIntegrationBase {
 
         // Verify the internal bus first
         busHandler.pushExpectedEvent(NextEvent.BROADCAST_SERVICE);
-        nodesApi.triggerNodeCommand(nodeCommand);
+        nodesApi.triggerNodeCommand(nodeCommand, false);
         assertListenerStatus();
 
         // Verify the public bus
