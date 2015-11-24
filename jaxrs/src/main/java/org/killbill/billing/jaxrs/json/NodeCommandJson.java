@@ -28,12 +28,12 @@ public class NodeCommandJson {
 
     private final boolean systemCommandType;
     private final String nodeCommandType;
-    private final List<NodeCommandProperty> nodeCommandProperties;
+    private final List<NodeCommandPropertyJson> nodeCommandProperties;
 
     @JsonCreator
     public NodeCommandJson(@JsonProperty("systemCommandType") final boolean systemCommandType,
                            @JsonProperty("nodeCommandType") final String nodeCommandType,
-                           @JsonProperty("nodeCommandProperties") final List<NodeCommandProperty> nodeCommandProperties) {
+                           @JsonProperty("nodeCommandProperties") final List<NodeCommandPropertyJson> nodeCommandProperties) {
         this.systemCommandType = systemCommandType;
         this.nodeCommandType = nodeCommandType;
         this.nodeCommandProperties = nodeCommandProperties;
@@ -47,7 +47,7 @@ public class NodeCommandJson {
         return nodeCommandType;
     }
 
-    public List<NodeCommandProperty> getNodeCommandProperties() {
+    public List<NodeCommandPropertyJson> getNodeCommandProperties() {
         return nodeCommandProperties;
     }
 }

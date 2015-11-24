@@ -39,6 +39,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.jaxrs.json.NodeCommandJson;
+import org.killbill.billing.jaxrs.json.NodeCommandPropertyJson;
 import org.killbill.billing.jaxrs.json.NodeInfoJson;
 import org.killbill.billing.jaxrs.json.PluginInfoJson;
 import org.killbill.billing.jaxrs.json.PluginInfoJson.PluginServiceInfoJson;
@@ -184,7 +185,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
 
         String pluginName = null;
         String pluginVersion = null;
-        final Iterator<NodeCommandProperty> it = input.getNodeCommandProperties().iterator();
+        final Iterator<NodeCommandPropertyJson> it = input.getNodeCommandProperties().iterator();
         while (it.hasNext()) {
             final NodeCommandProperty cur = it.next();
             if (PluginNodeCommandMetadata.PLUGIN_NAME.equals(cur.getKey())) {
@@ -200,14 +201,23 @@ public class NodesInfoResource extends JaxRsResourceBase {
         }
 
         if (pluginName != null) {
-            return new PluginNodeCommandMetadata(pluginName, pluginVersion, input.getNodeCommandProperties());
+            return new PluginNodeCommandMetadata(pluginName, pluginVersion, toNodeCommandProperties(input.getNodeCommandProperties()));
         } else {
             return new NodeCommandMetadata() {
                 @Override
                 public List<NodeCommandProperty> getProperties() {
-                    return input.getNodeCommandProperties();
+                    return toNodeCommandProperties(input.getNodeCommandProperties());
                 }
             };
         }
+    }
+
+    private List<NodeCommandProperty> toNodeCommandProperties(final List<NodeCommandPropertyJson> input) {
+        return ImmutableList.copyOf(Iterables.transform(input, new Function<NodeCommandPropertyJson, NodeCommandProperty>() {
+            @Override
+            public NodeCommandProperty apply(final NodeCommandPropertyJson input) {
+                return (NodeCommandProperty) input;
+            }
+        }));
     }
 }
