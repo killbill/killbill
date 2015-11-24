@@ -19,11 +19,16 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class NodeInfoJson {
 
+    private final String nodeName;
+    private final DateTime bootTime;
+    private final DateTime lastUpdatedDate;
     private final String kbVersion;
     private final String apiVersion;
     private final String pluginApiVersion;
@@ -32,18 +37,36 @@ public class NodeInfoJson {
     private final List<PluginInfoJson> pluginsInfo;
 
     @JsonCreator
-    public NodeInfoJson(@JsonProperty("kbVersion") final String kbVersion,
+    public NodeInfoJson(@JsonProperty("nodeName") final String nodeName,
+                        @JsonProperty("bootTime") final DateTime bootTime,
+                        @JsonProperty("lastUpdatedDate") final DateTime lastUpdatedDate,
+                        @JsonProperty("kbVersion") final String kbVersion,
                         @JsonProperty("apiVersion") final String apiVersion,
                         @JsonProperty("pluginApiVersion") final String pluginApiVersion,
                         @JsonProperty("commonVersion") final String commonVersion,
                         @JsonProperty("platformVersion") final String platformVersion,
                         @JsonProperty("pluginsInfo") final List<PluginInfoJson> pluginsInfo) {
+        this.nodeName = nodeName;
+        this.bootTime = bootTime;
+        this.lastUpdatedDate = lastUpdatedDate;
         this.kbVersion = kbVersion;
         this.apiVersion = apiVersion;
         this.pluginApiVersion = pluginApiVersion;
         this.commonVersion = commonVersion;
         this.platformVersion = platformVersion;
         this.pluginsInfo = pluginsInfo;
+    }
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public DateTime getBootTime() {
+        return bootTime;
+    }
+
+    public DateTime getLastUpdatedDate() {
+        return lastUpdatedDate;
     }
 
     public String getKbVersion() {

@@ -124,7 +124,10 @@ public class NodesInfoResource extends JaxRsResourceBase {
                     }
                 }));
 
-                return new NodeInfoJson(input.getKillbillVersion(),
+                return new NodeInfoJson(input.getNodeName(),
+                                        input.getBootTime(),
+                                        input.getLastUpdatedDate(),
+                                        input.getKillbillVersion(),
                                         input.getApiVersion(),
                                         input.getPluginApiVersion(),
                                         input.getCommonVersion(),
