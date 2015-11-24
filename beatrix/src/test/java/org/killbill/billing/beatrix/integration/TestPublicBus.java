@@ -122,7 +122,7 @@ public class TestPublicBus extends TestIntegrationBase {
 
     }
 
-    @Test(groups = "{slow}")
+    @Test(groups = "slow")
     public void testSimple() throws Exception {
 
         final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
@@ -155,7 +155,7 @@ public class TestPublicBus extends TestIntegrationBase {
         });
     }
 
-    @Test(groups = "{slow}")
+    @Test(groups = "slow")
     public void testTenantKVChange() throws Exception {
 
         final TenantData tenantData = new DefaultTenant(null, clock.getUTCNow(), clock.getUTCNow(), "MY_TENANT", "key", "s3Cr3T");
@@ -176,7 +176,7 @@ public class TestPublicBus extends TestIntegrationBase {
     }
 
 
-    @Test(groups = "{slow}")
+    @Test(groups = "slow")
     public void testBroadcastEvent() throws Exception {
 
 
