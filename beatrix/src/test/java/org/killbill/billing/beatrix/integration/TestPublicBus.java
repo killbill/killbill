@@ -46,6 +46,7 @@ import org.killbill.billing.util.nodes.NodeCommandMetadata;
 import org.killbill.billing.util.nodes.NodeCommandProperty;
 import org.killbill.billing.util.nodes.PluginNodeCommandMetadata;
 import org.killbill.billing.util.nodes.SystemNodeCommandType;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -119,7 +120,12 @@ public class TestPublicBus extends TestIntegrationBase {
 
         // Make sure we start with a clean state
         assertListenerStatus();
+    }
 
+    @AfterMethod(groups = "slow")
+    public void afterMethod() throws Exception {
+        externalBus.unregister(publicListener);
+        super.afterMethod();
     }
 
     @Test(groups = "slow")
@@ -150,7 +156,7 @@ public class TestPublicBus extends TestIntegrationBase {
             @Override
             public Boolean call() throws Exception {
                 // expecting ACCOUNT_CREATE, ACCOUNT_CHANGE, SUBSCRIPTION_CREATION, INVOICE_CREATION
-                return externalBusCount.get() == 4;
+                return externalBusCount.get() >= 4;
             }
         });
     }
@@ -174,39 +180,4 @@ public class TestPublicBus extends TestIntegrationBase {
             }
         });
     }
-
-
-    @Test(groups = "slow")
-    public void testBroadcastEvent() throws Exception {
-
-
-        final NodeCommand nodeCommand = new NodeCommand() {
-            @Override
-            public boolean isSystemCommandType() {
-                return true;
-            }
-            @Override
-            public String getNodeCommandType() {
-                return SystemNodeCommandType.START_PLUGIN.name();
-            }
-            @Override
-            public NodeCommandMetadata getNodeCommandMetadata() {
-                return new PluginNodeCommandMetadata("pluginName", "4.5.6", ImmutableList.of(new NodeCommandProperty("key", "value")));
-            }
-        };
-
-        // Verify the internal bus first
-        busHandler.pushExpectedEvent(NextEvent.BROADCAST_SERVICE);
-        nodesApi.triggerNodeCommand(nodeCommand, false);
-        assertListenerStatus();
-
-        // Verify the public bus
-        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return externalBusCount.get() == 1;
-            }
-        });
-    }
-
 }
