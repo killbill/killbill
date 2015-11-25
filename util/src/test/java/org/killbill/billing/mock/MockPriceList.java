@@ -25,22 +25,15 @@ import org.killbill.billing.catalog.api.Product;
 
 public class MockPriceList implements PriceList {
     private final String name;
-    private final Boolean isRetired;
     private final Plan plan;
 
     public MockPriceList() {
-        this(false, UUID.randomUUID().toString(), new MockPlan());
+        this(UUID.randomUUID().toString(), new MockPlan());
     }
 
-    public MockPriceList(final Boolean retired, final String name, final Plan plan) {
-        isRetired = retired;
+    public MockPriceList(final String name, final Plan plan) {
         this.name = name;
         this.plan = plan;
-    }
-
-    @Override
-    public boolean isRetired() {
-        return isRetired;
     }
 
     @Override

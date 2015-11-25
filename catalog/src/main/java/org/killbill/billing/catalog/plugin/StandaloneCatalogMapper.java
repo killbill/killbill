@@ -382,7 +382,6 @@ public class StandaloneCatalogMapper {
         final DefaultPriceList result = new DefaultPriceList();
         result.setName(input.getName());
         result.setPlans(toFilterDefaultPlans(ImmutableList.copyOf(input.getPlans())));
-        result.setRetired(input.isRetired());
         return result;
     }
 
@@ -393,7 +392,6 @@ public class StandaloneCatalogMapper {
         final PriceListDefault result = new PriceListDefault();
         result.setName(input.getName());
         result.setPlans(toFilterDefaultPlans(ImmutableList.copyOf(input.getPlans())));
-        result.setRetired(input.isRetired());
         return result;
     }
 
@@ -414,7 +412,6 @@ public class StandaloneCatalogMapper {
         result.setCatalogName(catalogName);
         result.setCatagory(input.getCategory());
         result.setName(input.getName());
-        result.setRetired(input.isRetired());
         return result;
     }
 
@@ -430,7 +427,6 @@ public class StandaloneCatalogMapper {
         }
         final DefaultPlan result = new DefaultPlan();
         result.setName(input.getName());
-        result.setRetired(input.isRetired());
         result.setEffectiveDateForExistingSubscriptons(input.getEffectiveDateForExistingSubscriptons());
         result.setFinalPhase(toDefaultPlanPhase(input.getFinalPhase()));
         result.setInitialPhases(toDefaultPlanPhases(ImmutableList.copyOf(input.getInitialPhases())));
