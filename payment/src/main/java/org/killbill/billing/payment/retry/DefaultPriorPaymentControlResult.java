@@ -53,8 +53,8 @@ public class DefaultPriorPaymentControlResult implements PriorPaymentControlResu
     }
 
 
-    public DefaultPriorPaymentControlResult(final PriorPaymentControlResult input, final Iterable<PluginProperty> adjustedPluginProperties) {
-        this(input.isAborted(), input.getAdjustedAmount(), input.getAdjustedCurrency(), input.getAdjustedPaymentMethodId(), adjustedPluginProperties);
+    public DefaultPriorPaymentControlResult(final boolean isAborted, final UUID adjustedPaymentMethodId, final BigDecimal adjustedAmount, final Currency adjustedCurrency, final Iterable<PluginProperty> adjustedPluginProperties) {
+        this(isAborted, adjustedAmount, adjustedCurrency, adjustedPaymentMethodId, adjustedPluginProperties);
     }
 
     @Override

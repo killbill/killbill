@@ -147,7 +147,8 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
         validationPlugin.setExpectedProperties(expectedProperties);
 
-        paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, account.getPaymentMethodId(), ImmutableList.<PluginProperty>of(), initialProperties, paymentOptions, callContext);
+        // Set a random UUID to verify the plugin will successfully override it
+        paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, UUID.randomUUID(), ImmutableList.<PluginProperty>of(), initialProperties, paymentOptions, callContext);
 
     }
 
@@ -205,7 +206,7 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
     }
 
-    public static class TestPaymentGatewayApiControlPlugin implements PaymentControlPluginApi {
+    public class TestPaymentGatewayApiControlPlugin implements PaymentControlPluginApi {
 
         public static final String PLUGIN_NAME = "TestPaymentGatewayApiControlPlugin";
 
@@ -234,7 +235,7 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
         @Override
         public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
-            return new DefaultPriorPaymentControlResult(false, null, null, null, getAdjustedProperties(properties, newPriorCallProperties, removedPriorCallProperties));
+            return new DefaultPriorPaymentControlResult(false, account.getPaymentMethodId(), null, null, getAdjustedProperties(properties, newPriorCallProperties, removedPriorCallProperties));
         }
 
         @Override
@@ -247,7 +248,7 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
             return new DefaultFailureCallResult(null, getAdjustedProperties(properties, newOnResultProperties, removedOnResultProperties));
         }
 
-        private static Iterable<PluginProperty> getAdjustedProperties(final Iterable<PluginProperty> input, final Iterable<PluginProperty> newProperties, final Iterable<PluginProperty> removedProperties) {
+        private Iterable<PluginProperty> getAdjustedProperties(final Iterable<PluginProperty> input, final Iterable<PluginProperty> newProperties, final Iterable<PluginProperty> removedProperties) {
             final Iterable<PluginProperty> filtered = Iterables.filter(input, new Predicate<PluginProperty>() {
                 @Override
                 public boolean apply(final PluginProperty p) {

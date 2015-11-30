@@ -76,6 +76,9 @@ public class ControlPluginRunner {
         PriorPaymentControlResult prevResult = new DefaultPriorPaymentControlResult(false, amount, currency, paymentMethodId, pluginProperties);
 
         // Those values are adjusted prior each call with the result of what previous call to plugin returned
+        UUID inputPaymentMethodId = paymentMethodId;
+        BigDecimal inputAmount = amount;
+        Currency inputCurrency = currency;
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(account,
                                                                                             paymentMethodId,
@@ -101,6 +104,15 @@ public class ControlPluginRunner {
             log.debug("Calling priorCall of plugin {}", pluginName);
             prevResult = plugin.priorCall(inputPaymentControlContext, inputPluginProperties);
             log.debug("Successful executed priorCall of plugin {}", pluginName);
+            if (prevResult.getAdjustedPaymentMethodId() != null) {
+                inputPaymentMethodId = prevResult.getAdjustedPaymentMethodId();
+            }
+            if (prevResult.getAdjustedAmount() != null) {
+                inputAmount = prevResult.getAdjustedAmount();
+            }
+            if (prevResult.getAdjustedCurrency() != null) {
+                inputCurrency = prevResult.getAdjustedCurrency();
+            }
             if (prevResult.getAdjustedPluginProperties() != null) {
                 inputPluginProperties = prevResult.getAdjustedPluginProperties();
             }
@@ -108,7 +120,7 @@ public class ControlPluginRunner {
                 break;
             }
             inputPaymentControlContext = new DefaultPaymentControlContext(account,
-                                                                          prevResult.getAdjustedPaymentMethodId() != null ? prevResult.getAdjustedPaymentMethodId() : paymentMethodId,
+                                                                          inputPaymentMethodId,
                                                                           paymentAttemptId,
                                                                           paymentId,
                                                                           paymentExternalKey,
@@ -116,13 +128,13 @@ public class ControlPluginRunner {
                                                                           paymentApiType,
                                                                           transactionType,
                                                                           hppType,
-                                                                          prevResult.getAdjustedAmount() != null ? prevResult.getAdjustedAmount() : amount,
-                                                                          prevResult.getAdjustedCurrency() != null ? prevResult.getAdjustedCurrency() : currency,
+                                                                          inputAmount,
+                                                                          inputCurrency,
                                                                           isApiPayment,
                                                                           callContext);
         }
         // Rebuild latest result to include inputPluginProperties
-        prevResult = new DefaultPriorPaymentControlResult(prevResult, inputPluginProperties);
+        prevResult = new DefaultPriorPaymentControlResult(prevResult.isAborted(), inputPaymentMethodId, inputAmount, inputCurrency, inputPluginProperties);
         return prevResult;
     }
 

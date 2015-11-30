@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -74,6 +75,11 @@ public class PaymentGatewayProcessor extends ProcessorBase {
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentPluginFormDispatcher = new PluginDispatcher<HostedPaymentPageFormDescriptor>(paymentPluginTimeoutSec, executors);
         this.paymentPluginNotificationDispatcher = new PluginDispatcher<GatewayNotification>(paymentPluginTimeoutSec, executors);
+    }
+
+    public GatewayNotification processNotification(final String notification, final UUID paymentMethodId, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        final String pluginName = getPaymentProviderPluginName(paymentMethodId, internalCallContextFactory.createInternalCallContext(paymentMethodId, ObjectType.PAYMENT_METHOD, callContext));
+        return processNotification(notification, pluginName, properties, callContext);
     }
 
     public GatewayNotification processNotification(final String notification, final String pluginName, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {

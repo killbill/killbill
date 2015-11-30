@@ -70,8 +70,8 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
 
         return executeWithPaymentControl(account, paymentMethodId, properties, paymentOptions, callContext, new WithPaymentControlCallback<HostedPaymentPageFormDescriptor>() {
             @Override
-            public HostedPaymentPageFormDescriptor doPaymentGatewayApiOperation(final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {
-                return buildFormDescriptor(account, paymentMethodId, customFields, adjustedPluginProperties, callContext);
+            public HostedPaymentPageFormDescriptor doPaymentGatewayApiOperation(final UUID adjustedPaymentMethodId, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {
+                return buildFormDescriptor(account, adjustedPaymentMethodId, customFields, adjustedPluginProperties, callContext);
             }
         });
     }
@@ -85,15 +85,19 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
     public GatewayNotification processNotificationWithPaymentControl(final String notification, final String pluginName, final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
         return executeWithPaymentControl(null, null, properties, paymentOptions, callContext, new WithPaymentControlCallback<GatewayNotification>() {
             @Override
-            public GatewayNotification doPaymentGatewayApiOperation(final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {
-                return processNotification(notification, pluginName, adjustedPluginProperties, callContext);
+            public GatewayNotification doPaymentGatewayApiOperation(final UUID adjustedPaymentMethodId, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {
+                if (adjustedPaymentMethodId == null) {
+                    return paymentGatewayProcessor.processNotification(notification, pluginName, properties, callContext);
+                } else {
+                    return paymentGatewayProcessor.processNotification(notification, adjustedPaymentMethodId, properties, callContext);
+                }
             }
         });
     }
 
-
     private interface WithPaymentControlCallback<T> {
-        T doPaymentGatewayApiOperation(final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException;
+
+        T doPaymentGatewayApiOperation(final UUID adjustedPaymentMethodId, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException;
     }
 
     private <T> T executeWithPaymentControl(@Nullable final Account account,
@@ -105,7 +109,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
 
         final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
         if (paymentControlPluginNames.isEmpty()) {
-            return callback.doPaymentGatewayApiOperation(properties);
+            return callback.doPaymentGatewayApiOperation(paymentMethodId, properties);
         }
 
         final PriorPaymentControlResult priorCallResult;
@@ -121,7 +125,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
         }
 
         try {
-            final T result = callback.doPaymentGatewayApiOperation(priorCallResult.getAdjustedPluginProperties());
+            final T result = callback.doPaymentGatewayApiOperation(priorCallResult.getAdjustedPaymentMethodId(), priorCallResult.getAdjustedPluginProperties());
             controlPluginRunner.executePluginOnSuccessCalls(account,
                                                             paymentMethodId,
                                                             null, null, null, null, null,
