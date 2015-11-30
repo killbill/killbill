@@ -40,9 +40,6 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     @XmlID
     private String name;
 
-    @XmlAttribute(required = false)
-    private Boolean retired = false;
-
     @XmlElementWrapper(name = "plans", required = true)
     @XmlIDREF
     @XmlElement(name = "plan", required = true)
@@ -59,11 +56,6 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public DefaultPlan[] getPlans() {
         return plans;
-    }
-
-    @Override
-    public boolean isRetired() {
-        return retired;
     }
 
     /* (non-Javadoc)
@@ -113,11 +105,6 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         return count;
     }
 
-    public DefaultPriceList setRetired(final boolean retired) {
-        this.retired = retired;
-        return this;
-    }
-
     public DefaultPriceList setName(final String name) {
         this.name = name;
         return this;
@@ -145,9 +132,6 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         if (!Arrays.equals(plans, that.plans)) {
             return false;
         }
-        if (retired != null ? !retired.equals(that.retired) : that.retired != null) {
-            return false;
-        }
 
         return true;
     }
@@ -155,7 +139,6 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (retired != null ? retired.hashCode() : 0);
         result = 31 * result + (plans != null ? Arrays.hashCode(plans) : 0);
         return result;
     }

@@ -22,7 +22,6 @@ public class MockPriceList extends DefaultPriceList {
 
     public MockPriceList() {
         setName(PriceListSet.DEFAULT_PRICELIST_NAME);
-        setRetired(false);
         setPlans(MockPlan.createAll());
     }
 }

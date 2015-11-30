@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -32,7 +31,6 @@ import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -52,9 +50,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlAttribute(required = true)
     @XmlID
     private String name;
-
-    @XmlAttribute(required = false)
-    private Boolean retired;
 
     //TODO MDW Validation - effectiveDateForExistingSubscriptons > catalog effectiveDate
     @XmlElement(required = false)
@@ -81,12 +76,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     public DefaultPlan() {
         initialPhases = new DefaultPlanPhase[0];
-        retired = false;
     }
 
     public DefaultPlan(final String planName, final DefaultPlan in, final PlanPhasePriceOverride[] overrides) {
         this.name = planName;
-        this.retired = in.isRetired();
         this.effectiveDateForExistingSubscriptons = in.getEffectiveDateForExistingSubscriptons();
         this.product = (DefaultProduct) in.getProduct();
         this.initialPhases = new DefaultPlanPhase[in.getInitialPhases().length];
@@ -126,11 +119,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public String getName() {
         return name;
-    }
-
-    @Override
-    public boolean isRetired() {
-        return retired;
     }
 
     @Override
@@ -243,11 +231,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return this;
     }
 
-    public DefaultPlan setRetired(final boolean retired) {
-        this.retired = retired;
-        return this;
-    }
-
     public DefaultPlan setPlansAllowedInBundle(final Integer plansAllowedInBundle) {
         this.plansAllowedInBundle = plansAllowedInBundle;
         return this;
@@ -304,16 +287,12 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         if (product != null ? !product.equals(that.product) : that.product != null) {
             return false;
         }
-        if (retired != null ? !retired.equals(that.retired) : that.retired != null) {
-            return false;
-        }
         return true;
     }
 
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (retired != null ? retired.hashCode() : 0);
         result = 31 * result + (effectiveDateForExistingSubscriptons != null ? effectiveDateForExistingSubscriptons.hashCode() : 0);
         result = 31 * result + (initialPhases != null ? Arrays.hashCode(initialPhases) : 0);
         result = 31 * result + (finalPhase != null ? finalPhase.hashCode() : 0);
@@ -323,7 +302,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     @Override
     public String toString() {
-        return "DefaultPlan [name=" + name + ", retired=" + retired + ", effectiveDateForExistingSubscriptons="
+        return "DefaultPlan [name=" + name + ", effectiveDateForExistingSubscriptons="
                 + effectiveDateForExistingSubscriptons + ", product=" + product + ", initialPhases="
                 + Arrays.toString(initialPhases) + ", finalPhase=" + finalPhase + ", plansAllowedInBundle="
                 + plansAllowedInBundle + "]";
