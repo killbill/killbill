@@ -769,7 +769,7 @@ public class AccountResource extends JaxRsResourceBase {
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS + "/refresh")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Refresh account payment methods", response = PaymentMethodJson.class, responseContainer = "List")
+    @ApiOperation(value = "Refresh account payment methods")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response refreshPaymentMethods(@PathParam("accountId") final String accountId,
@@ -783,7 +783,12 @@ public class AccountResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
-        paymentApi.refreshPaymentMethods(account, pluginName, pluginProperties, callContext);
+
+        if (pluginName != null) {
+            paymentApi.refreshPaymentMethods(account, pluginName, pluginProperties, callContext);
+        } else {
+            paymentApi.refreshPaymentMethods(account, pluginProperties, callContext);
+        }
 
         return Response.status(Status.OK).build();
     }
