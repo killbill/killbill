@@ -23,6 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.joda.time.DateTime;
+import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Catalog;
 import org.killbill.billing.client.model.Plan;
 import org.killbill.billing.client.model.PlanDetail;
@@ -84,4 +86,13 @@ public class TestCatalog extends TestJaxrsBase {
         }
         Assert.assertEquals(foundBasePlans, allBasePlans);
     }
+
+    @Test(groups = "slow", description = "Try to retrieve a json version of the catalog with an invalid date",
+            expectedExceptions = KillBillClientException.class,
+            expectedExceptionsMessageRegExp = "There is no catalog version that applies for the given date.*")
+    public void testCatalogInvalidDate() throws Exception {
+        final Catalog catalogJson = killBillClient.getJSONCatalog(DateTime.parse("2008-01-01"));
+        Assert.fail();
+    }
+
 }

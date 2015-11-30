@@ -35,6 +35,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.VersionedCatalog;
@@ -126,10 +128,16 @@ public class CatalogResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve the catalog as JSON", response = StaticCatalog.class)
     @ApiResponses(value = {})
-    public Response getCatalogJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+    public Response getCatalogJson(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+        DateTime catalogDateVersion = clock.getUTCNow();
+        if (requestedDate != null) {
+            catalogDateVersion = DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC);
+        }
+
         final TenantContext tenantContext = context.createContext(request);
         final Catalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
-        final CatalogJson json = new CatalogJson((VersionedCatalog) catalog);
+        final CatalogJson json = new CatalogJson((VersionedCatalog) catalog, catalogDateVersion);
         return Response.status(Status.OK).entity(json).build();
     }
 

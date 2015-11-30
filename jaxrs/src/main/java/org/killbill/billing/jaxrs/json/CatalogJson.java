@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -66,13 +67,13 @@ public class CatalogJson {
     }
 
 
-    public CatalogJson(final VersionedCatalog catalog) throws CatalogApiException {
+    public CatalogJson(final VersionedCatalog catalog, final DateTime requestedDate) throws CatalogApiException {
         name = catalog.getCatalogName();
-        effectiveDate = catalog.getEffectiveDate();
-        currencies = Arrays.asList(catalog.getCurrentSupportedCurrencies());
+        effectiveDate = catalog.getEffectiveDate(requestedDate);
+        currencies = Arrays.asList(catalog.getSupportedCurrencies(requestedDate));
         priceLists = new ArrayList<PriceListJson>();
 
-        final Plan[] plans = catalog.getCurrentPlans();
+        final Plan[] plans = catalog.getPlans(requestedDate);
         final Map<String, ProductJson> productMap = new HashMap<String, ProductJson>();
         for (final Plan plan : plans) {
             // Build the product associated with this plan
@@ -106,7 +107,7 @@ public class CatalogJson {
 
         products = ImmutableList.<ProductJson>copyOf(productMap.values());
 
-        final DefaultPriceListSet priceLists = catalog.getVersions().get(0).getStandaloneCatalog().getPriceLists();
+        final DefaultPriceListSet priceLists = catalog.getPriceLists(requestedDate);
         for (PriceList childPriceList : priceLists.getAllPriceLists()) {
             this.priceLists.add(new PriceListJson(childPriceList));
         }
