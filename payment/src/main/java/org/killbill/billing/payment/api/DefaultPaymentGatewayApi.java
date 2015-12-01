@@ -73,13 +73,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
 
     @Override
     public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        final UUID paymentMethodIdToUse = paymentMethodId != null ? paymentMethodId : account.getPaymentMethodId();
-
-        if (paymentMethodId == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, paymentMethodId, "should not be null");
-        }
-
-        return paymentGatewayProcessor.buildFormDescriptor(account, paymentMethodIdToUse, customFields, properties, callContext, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
+        return buildFormDescriptor(true, account, paymentMethodId, customFields, properties, callContext);
     }
 
     @Override
@@ -87,14 +81,14 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
         return executeWithPaymentControl(account, paymentMethodId, properties, paymentOptions, callContext, paymentPluginFormDispatcher, new WithPaymentControlCallback<HostedPaymentPageFormDescriptor>() {
             @Override
             public HostedPaymentPageFormDescriptor doPaymentGatewayApiOperation(final UUID adjustedPaymentMethodId, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {
-                return buildFormDescriptor(account, adjustedPaymentMethodId, customFields, adjustedPluginProperties, callContext);
+                return buildFormDescriptor(false, account, adjustedPaymentMethodId, customFields, adjustedPluginProperties, callContext);
             }
         });
     }
 
     @Override
     public GatewayNotification processNotification(final String notification, final String pluginName, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return paymentGatewayProcessor.processNotification(notification, pluginName, properties, callContext);
+        return paymentGatewayProcessor.processNotification(true, notification, pluginName, properties, callContext);
     }
 
     @Override
@@ -103,12 +97,21 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
             @Override
             public GatewayNotification doPaymentGatewayApiOperation(final UUID adjustedPaymentMethodId, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {
                 if (adjustedPaymentMethodId == null) {
-                    return paymentGatewayProcessor.processNotification(notification, pluginName, properties, callContext);
+                    return paymentGatewayProcessor.processNotification(false, notification, pluginName, properties, callContext);
                 } else {
-                    return paymentGatewayProcessor.processNotification(notification, adjustedPaymentMethodId, properties, callContext);
+                    return paymentGatewayProcessor.processNotification(false, notification, adjustedPaymentMethodId, properties, callContext);
                 }
             }
         });
+    }
+
+    private HostedPaymentPageFormDescriptor buildFormDescriptor(final boolean shouldDispatch, final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        final UUID paymentMethodIdToUse = paymentMethodId != null ? paymentMethodId : account.getPaymentMethodId();
+        if (paymentMethodIdToUse == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, paymentMethodId, "should not be null");
+        }
+
+        return paymentGatewayProcessor.buildFormDescriptor(shouldDispatch, account, paymentMethodIdToUse, customFields, properties, callContext, internalCallContextFactory.createInternalCallContext(account.getId(), callContext));
     }
 
     private interface WithPaymentControlCallback<T> {

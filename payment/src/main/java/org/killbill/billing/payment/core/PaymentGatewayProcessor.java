@@ -74,48 +74,66 @@ public class PaymentGatewayProcessor extends ProcessorBase {
         this.paymentPluginNotificationDispatcher = new PluginDispatcher<GatewayNotification>(paymentPluginTimeoutSec, executors);
     }
 
-    public GatewayNotification processNotification(final String notification, final UUID paymentMethodId, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+    public GatewayNotification processNotification(final boolean shouldDispatch, final String notification, final UUID paymentMethodId, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         final String pluginName = getPaymentProviderPluginName(paymentMethodId, internalCallContextFactory.createInternalCallContext(paymentMethodId, ObjectType.PAYMENT_METHOD, callContext));
-        return processNotification(notification, pluginName, properties, callContext);
+        return processNotification(shouldDispatch, notification, pluginName, properties, callContext);
     }
 
-    public GatewayNotification processNotification(final String notification, final String pluginName, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
-        return dispatchWithExceptionHandling(null,
-                                             pluginName,
-                                             new Callable<PluginDispatcherReturnType<GatewayNotification>>() {
-                                                 @Override
-                                                 public PluginDispatcherReturnType<GatewayNotification> call() throws PaymentApiException {
-                                                     final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
+    public GatewayNotification processNotification(final boolean shouldDispatch, final String notification, final String pluginName, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+        if (shouldDispatch) {
+            return dispatchWithExceptionHandling(null,
+                                                 pluginName,
+                                                 new Callable<PluginDispatcherReturnType<GatewayNotification>>() {
+                                                     @Override
+                                                     public PluginDispatcherReturnType<GatewayNotification> call() throws PaymentApiException {
+                                                         final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
 
-                                                     try {
-                                                         final GatewayNotification result = plugin.processNotification(notification, properties, callContext);
-                                                         return PluginDispatcher.createPluginDispatcherReturnType(result == null ? new DefaultNoOpGatewayNotification() : result);
-                                                     } catch (final PaymentPluginApiException e) {
-                                                         throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                                                         try {
+                                                             final GatewayNotification result = plugin.processNotification(notification, properties, callContext);
+                                                             return PluginDispatcher.createPluginDispatcherReturnType(result == null ? new DefaultNoOpGatewayNotification() : result);
+                                                         } catch (final PaymentPluginApiException e) {
+                                                             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                                                         }
                                                      }
-                                                 }
-                                             }, paymentPluginNotificationDispatcher);
+                                                 }, paymentPluginNotificationDispatcher);
+        } else {
+            final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
+            try {
+                return plugin.processNotification(notification, properties, callContext);
+            } catch (final PaymentPluginApiException e) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+            }
+        }
     }
 
-    public HostedPaymentPageFormDescriptor buildFormDescriptor(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+    public HostedPaymentPageFormDescriptor buildFormDescriptor(final boolean shouldDispatch, final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         final String pluginName = getPaymentProviderPluginName(paymentMethodId, internalCallContext);
 
-        return dispatchWithExceptionHandling(account,
-                                             pluginName,
-                                             new Callable<PluginDispatcherReturnType<HostedPaymentPageFormDescriptor>>() {
-                                                 @Override
-                                                 public PluginDispatcherReturnType<HostedPaymentPageFormDescriptor> call() throws PaymentApiException {
-                                                     final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
+        if (shouldDispatch) {
+            return dispatchWithExceptionHandling(account,
+                                                 pluginName,
+                                                 new Callable<PluginDispatcherReturnType<HostedPaymentPageFormDescriptor>>() {
+                                                     @Override
+                                                     public PluginDispatcherReturnType<HostedPaymentPageFormDescriptor> call() throws PaymentApiException {
+                                                         final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
 
-                                                     try {
-                                                         final HostedPaymentPageFormDescriptor result = plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
-                                                         return PluginDispatcher.createPluginDispatcherReturnType(result == null ? new DefaultNoOpHostedPaymentPageFormDescriptor(account.getId()) : result);
-                                                     } catch (final RuntimeException e) {
-                                                         throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
-                                                     } catch (final PaymentPluginApiException e) {
-                                                         throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                                                         try {
+                                                             final HostedPaymentPageFormDescriptor result = plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
+                                                             return PluginDispatcher.createPluginDispatcherReturnType(result == null ? new DefaultNoOpHostedPaymentPageFormDescriptor(account.getId()) : result);
+                                                         } catch (final RuntimeException e) {
+                                                             throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+                                                         } catch (final PaymentPluginApiException e) {
+                                                             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                                                         }
                                                      }
-                                                 }
-                                             }, paymentPluginFormDispatcher);
+                                                 }, paymentPluginFormDispatcher);
+        } else {
+            final PaymentPluginApi plugin = getPaymentPluginApi(pluginName);
+            try {
+                return plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
+            } catch (final PaymentPluginApiException e) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+            }
+        }
     }
 }
