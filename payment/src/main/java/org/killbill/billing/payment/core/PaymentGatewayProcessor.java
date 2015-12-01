@@ -50,6 +50,8 @@ import org.killbill.commons.locker.GlobalLocker;
 
 import com.google.common.base.Objects;
 
+import static org.killbill.billing.payment.dispatcher.PaymentPluginDispatcher.dispatchWithExceptionHandling;
+
 // We don't take any lock here because the call needs to be re-entrant
 // from the plugin: for example, the BitPay plugin will create the payment during the
 // processNotification call, while the PayU plugin will create it during buildFormDescriptor.

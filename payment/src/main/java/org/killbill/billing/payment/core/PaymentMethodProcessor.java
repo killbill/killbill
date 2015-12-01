@@ -72,6 +72,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
+import static org.killbill.billing.payment.dispatcher.PaymentPluginDispatcher.dispatchWithExceptionHandling;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationFromPlugins;
 

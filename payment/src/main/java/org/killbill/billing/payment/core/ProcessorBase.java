@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
@@ -38,7 +36,6 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
-import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
@@ -54,12 +51,10 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
-import org.killbill.commons.request.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
 import com.google.common.collect.Collections2;
 
 public abstract class ProcessorBase {
@@ -209,36 +204,4 @@ public abstract class ProcessorBase {
             }
         }
     }
-
-    protected static <ReturnType> ReturnType dispatchWithExceptionHandling(@Nullable final Account account, final String pluginName, final Callable<PluginDispatcherReturnType<ReturnType>> callable, PluginDispatcher<ReturnType> pluginFormDispatcher) throws PaymentApiException {
-        final UUID accountId = account != null ? account.getId() : null;
-        final String accountExternalKey = account != null ? account.getExternalKey() : "";
-
-        try {
-            log.debug("Calling plugin {}", pluginName);
-            final ReturnType result = pluginFormDispatcher.dispatchWithTimeout(callable);
-            log.debug("Successful call of plugin {} for account {} with result {}", pluginName, accountExternalKey, result);
-            return result;
-        } catch (final TimeoutException e) {
-            final String errorMessage = String.format("TimeoutException during the execution of plugin %s", pluginName);
-            log.warn(errorMessage, e);
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, errorMessage);
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            final String errorMessage = String.format("InterruptedException during the execution of plugin %s", pluginName);
-            log.warn(errorMessage, e);
-            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), errorMessage));
-        } catch (final ExecutionException e) {
-            if (e.getCause() instanceof PaymentApiException) {
-                throw (PaymentApiException) e.getCause();
-            } else if (e.getCause() instanceof LockFailedException) {
-                final String format = String.format("Failed to lock account %s", accountExternalKey);
-                log.error(format, e);
-                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
-            } else {
-                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
-            }
-        }
-    }
-
 }
