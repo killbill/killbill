@@ -784,7 +784,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
 
-        if (pluginName != null) {
+        if (pluginName != null && !pluginName.isEmpty()) {
             paymentApi.refreshPaymentMethods(account, pluginName, pluginProperties, callContext);
         } else {
             paymentApi.refreshPaymentMethods(account, pluginProperties, callContext);

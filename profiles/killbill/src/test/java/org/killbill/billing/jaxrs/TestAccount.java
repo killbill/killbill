@@ -36,10 +36,13 @@ import org.killbill.billing.client.model.CustomField;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
+import org.killbill.billing.client.model.PaymentMethods;
 import org.killbill.billing.client.model.Tag;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -265,6 +268,37 @@ public class TestAccount extends TestJaxrsBase {
 
         final List<CustomField> remainingCustomFields = killBillClient.getAccountCustomFields(accountJson.getAccountId());
         assertEquals(remainingCustomFields.size(), 0);
+    }
+
+    @Test(groups = "slow", description = "refresh payment methods")
+    public void testRefreshPaymentMethods() throws Exception {
+        Account account = createAccountWithDefaultPaymentMethod("someExternalKey");
+
+        final PaymentMethods paymentMethodsBeforeRefreshing = killBillClient.getPaymentMethodsForAccount(account.getAccountId());
+        assertEquals(1,  paymentMethodsBeforeRefreshing .size());
+        assertEquals("someExternalKey",  paymentMethodsBeforeRefreshing.get(0).getExternalKey());
+
+        // WITH NAME OF AN EXISTING PLUGIN
+        killBillClient.refreshPaymentMethods(account.getAccountId(), PLUGIN_NAME, ImmutableMap.<String, String>of(), createdBy, reason, comment);
+
+        final PaymentMethods paymentMethodsAfterExistingPluginCall = killBillClient.getPaymentMethodsForAccount(account.getAccountId());
+        assertEquals(1, paymentMethodsAfterExistingPluginCall.size());
+        assertEquals("someExternalKey", paymentMethodsAfterExistingPluginCall.get(0).getExternalKey());
+
+        // WITHOUT PLUGIN NAME
+        killBillClient.refreshPaymentMethods(account.getAccountId(), ImmutableMap.<String, String>of(), createdBy, reason, comment);
+
+        final PaymentMethods paymentMethodsAfterNoPluginNameCall = killBillClient.getPaymentMethodsForAccount(account.getAccountId());
+        assertEquals(1, paymentMethodsAfterNoPluginNameCall.size());
+        assertEquals("someExternalKey", paymentMethodsAfterNoPluginNameCall.get(0).getExternalKey());
+
+        // WITH WRONG PLUGIN NAME
+        try {
+            killBillClient.refreshPaymentMethods(account.getAccountId(), "GreatestPluginEver", ImmutableMap.<String, String>of(), createdBy, reason, comment);
+            Assert.fail();
+        } catch (KillBillClientException e) {
+            Assert.assertEquals(e.getBillingException().getCode(), (Integer) ErrorCode.PAYMENT_NO_SUCH_PAYMENT_PLUGIN.getCode());
+        }
     }
 
     @Test(groups = "slow", description = "Can paginate through all accounts")
