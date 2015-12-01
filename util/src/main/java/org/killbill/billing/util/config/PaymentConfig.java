@@ -57,7 +57,7 @@ public interface PaymentConfig extends KillbillConfig {
     TimeSpan getPaymentPluginTimeout();
 
     @Config("org.killbill.payment.plugin.threads.nb")
-    @Default("10")
+    @Default("100")
     @Description("Number of threads for plugin executor dispatcher")
     int getPaymentPluginThreadNb();
 
