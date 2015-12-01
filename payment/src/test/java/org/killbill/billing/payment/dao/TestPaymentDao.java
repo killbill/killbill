@@ -498,7 +498,6 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         final Iterator<PaymentTransactionModelDao> iterator = result.iterator();
         for (int i = 0; i < NB_ENTRIES; i++) {
-            System.out.println("i = " + i);
             Assert.assertTrue(iterator.hasNext());
             final PaymentTransactionModelDao nextEntry = iterator.next();
             Assert.assertEquals(nextEntry.getTransactionStatus(), TransactionStatus.UNKNOWN);
