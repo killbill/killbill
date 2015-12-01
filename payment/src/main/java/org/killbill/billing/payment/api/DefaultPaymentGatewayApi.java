@@ -105,7 +105,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
         });
     }
 
-    private HostedPaymentPageFormDescriptor buildFormDescriptor(final boolean shouldDispatch, final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
+    private HostedPaymentPageFormDescriptor buildFormDescriptor(final boolean shouldDispatch, final Account account, @Nullable final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         final UUID paymentMethodIdToUse = paymentMethodId != null ? paymentMethodId : account.getPaymentMethodId();
         if (paymentMethodIdToUse == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, paymentMethodId, "should not be null");
