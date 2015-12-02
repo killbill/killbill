@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -38,11 +39,16 @@ import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.PaymentMethods;
 import org.killbill.billing.client.model.Tag;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
+import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -51,6 +57,18 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestAccount extends TestJaxrsBase {
+
+    @Inject
+    protected OSGIServiceRegistration<PaymentPluginApi> registry;
+
+    private MockPaymentProviderPlugin mockPaymentProviderPlugin;
+
+    @BeforeMethod(groups = "slow")
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
+        mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
+        mockPaymentProviderPlugin.clear();
+    }
 
     @Test(groups = "slow", description = "Verify no PII data is required")
     public void testEmptyAccount() throws Exception {
@@ -275,22 +293,30 @@ public class TestAccount extends TestJaxrsBase {
         Account account = createAccountWithDefaultPaymentMethod("someExternalKey");
 
         final PaymentMethods paymentMethodsBeforeRefreshing = killBillClient.getPaymentMethodsForAccount(account.getAccountId());
-        assertEquals(1,  paymentMethodsBeforeRefreshing .size());
-        assertEquals("someExternalKey",  paymentMethodsBeforeRefreshing.get(0).getExternalKey());
+        assertEquals(paymentMethodsBeforeRefreshing.size(), 1);
+        assertEquals(paymentMethodsBeforeRefreshing.get(0).getExternalKey(), "someExternalKey");
 
         // WITH NAME OF AN EXISTING PLUGIN
         killBillClient.refreshPaymentMethods(account.getAccountId(), PLUGIN_NAME, ImmutableMap.<String, String>of(), createdBy, reason, comment);
 
         final PaymentMethods paymentMethodsAfterExistingPluginCall = killBillClient.getPaymentMethodsForAccount(account.getAccountId());
-        assertEquals(1, paymentMethodsAfterExistingPluginCall.size());
-        assertEquals("someExternalKey", paymentMethodsAfterExistingPluginCall.get(0).getExternalKey());
+
+        System.err.println("PAYMENT METHODS (2)");
+        final Iterator it = paymentMethodsAfterExistingPluginCall.iterator();
+        while (it.hasNext()) {
+            PaymentMethod pm = (PaymentMethod) it.next();
+            System.err.println("PAYMENT METHOD " + pm.toString());
+        }
+
+        assertEquals(paymentMethodsAfterExistingPluginCall.size(), 1);
+        assertEquals(paymentMethodsAfterExistingPluginCall.get(0).getExternalKey(), "someExternalKey");
 
         // WITHOUT PLUGIN NAME
         killBillClient.refreshPaymentMethods(account.getAccountId(), ImmutableMap.<String, String>of(), createdBy, reason, comment);
 
         final PaymentMethods paymentMethodsAfterNoPluginNameCall = killBillClient.getPaymentMethodsForAccount(account.getAccountId());
-        assertEquals(1, paymentMethodsAfterNoPluginNameCall.size());
-        assertEquals("someExternalKey", paymentMethodsAfterNoPluginNameCall.get(0).getExternalKey());
+        assertEquals(paymentMethodsAfterNoPluginNameCall.size(), 1);
+        assertEquals(paymentMethodsAfterNoPluginNameCall.get(0).getExternalKey(), "someExternalKey");
 
         // WITH WRONG PLUGIN NAME
         try {
