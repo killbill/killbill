@@ -172,7 +172,7 @@ public class CatalogJson {
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+        if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
             return false;
         }
         if (currencies != null ? !currencies.equals(that.currencies) : that.currencies != null) {
