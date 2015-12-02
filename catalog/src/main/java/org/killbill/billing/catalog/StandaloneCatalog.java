@@ -347,9 +347,9 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         final Plan plan = createOrFindCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName(), null);
         final DefaultPriceList priceList = findCurrentPriceList(specifier.getPriceListName());
 
-        return (!product.isRetired()) &&
-               (!plan.isRetired()) &&
-               (!priceList.isRetired());
+        return (product != null) &&
+               (plan != null) &&
+               (priceList != null);
     }
 
     @Override

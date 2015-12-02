@@ -31,9 +31,11 @@ import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.ProfilingData;
 import org.killbill.commons.request.Request;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class PluginDispatcher<ReturnType> {
 
-    private final TimeUnit DEEFAULT_PLUGIN_TIMEOUT_UNIT = TimeUnit.SECONDS;
+    private final TimeUnit DEFAULT_PLUGIN_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
     private final long timeoutSeconds;
     private final PaymentExecutors paymentExecutors;
@@ -45,10 +47,11 @@ public class PluginDispatcher<ReturnType> {
 
     // TODO Once we switch fully to automata, should this throw PaymentPluginApiException instead?
     public ReturnType dispatchWithTimeout(final Callable<PluginDispatcherReturnType<ReturnType>> task) throws TimeoutException, ExecutionException, InterruptedException {
-        return dispatchWithTimeout(task, timeoutSeconds, DEEFAULT_PLUGIN_TIMEOUT_UNIT);
+        return dispatchWithTimeout(task, timeoutSeconds, DEFAULT_PLUGIN_TIMEOUT_UNIT);
     }
 
-    public ReturnType dispatchWithTimeout(final Callable<PluginDispatcherReturnType<ReturnType>> task, final long timeout, final TimeUnit unit)
+    @VisibleForTesting
+    ReturnType dispatchWithTimeout(final Callable<PluginDispatcherReturnType<ReturnType>> task, final long timeout, final TimeUnit unit)
             throws TimeoutException, ExecutionException, InterruptedException {
 
         final ExecutorService pluginExecutor = paymentExecutors.getPluginExecutorService();

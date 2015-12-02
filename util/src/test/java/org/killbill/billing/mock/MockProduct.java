@@ -60,11 +60,6 @@ public class MockProduct implements Product {
     }
 
     @Override
-    public boolean isRetired() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Product[] getAvailable() {
         return available;
     }
