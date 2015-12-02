@@ -137,7 +137,7 @@ public class CatalogResource extends JaxRsResourceBase {
 
         final TenantContext tenantContext = context.createContext(request);
         final Catalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
-        final CatalogJson json = new CatalogJson((VersionedCatalog) catalog, catalogDateVersion);
+        final CatalogJson json = new CatalogJson(catalog, catalogDateVersion);
         return Response.status(Status.OK).entity(json).build();
     }
 

@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
+import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.rules.DefaultCaseCancelPolicy;
 import org.killbill.billing.catalog.rules.DefaultCaseChangePlanAlignment;
@@ -88,6 +89,11 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
+    public Date getStandaloneCatalogEffectiveDate(final DateTime dateTime) throws CatalogApiException {
+        return getEffectiveDate();
+    }
+
+    @Override
     public Currency[] getSupportedCurrencies(final DateTime requestedDate) throws CatalogApiException {
         return getCurrentSupportedCurrencies();
     }
@@ -100,6 +106,11 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     @Override
     public Plan[] getPlans(final DateTime requestedDate) throws CatalogApiException {
         return getCurrentPlans();
+    }
+
+    @Override
+    public PriceListSet getPriceLists(final DateTime dateTime) throws CatalogApiException {
+        return getPriceLists();
     }
 
     @Override

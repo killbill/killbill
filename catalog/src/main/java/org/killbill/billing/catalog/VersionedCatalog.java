@@ -52,6 +52,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
+import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
@@ -253,7 +254,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
         return versionForDate(requestedDate).getCurrentPlans();
     }
 
-    public DefaultPriceListSet getPriceLists(final DateTime requestedDate) throws CatalogApiException {
+    @Override
+    public PriceListSet getPriceLists(final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).getStandaloneCatalog().getPriceLists();
     }
 
@@ -400,7 +402,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
         return versionForDate(clock.getUTCNow()).getEffectiveDate();
     }
 
-    public Date getEffectiveDate(final DateTime requestedDate) throws CatalogApiException {
+    @Override
+    public Date getStandaloneCatalogEffectiveDate(final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).getEffectiveDate();
     }
 

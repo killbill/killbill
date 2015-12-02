@@ -30,6 +30,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -37,6 +38,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.catalog.api.PriceList;
+import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -67,9 +69,9 @@ public class CatalogJson {
     }
 
 
-    public CatalogJson(final VersionedCatalog catalog, final DateTime requestedDate) throws CatalogApiException {
+    public CatalogJson(final Catalog catalog, final DateTime requestedDate) throws CatalogApiException {
         name = catalog.getCatalogName();
-        effectiveDate = catalog.getEffectiveDate(requestedDate);
+        effectiveDate = catalog.getStandaloneCatalogEffectiveDate(requestedDate);
         currencies = Arrays.asList(catalog.getSupportedCurrencies(requestedDate));
         priceLists = new ArrayList<PriceListJson>();
 
@@ -107,7 +109,7 @@ public class CatalogJson {
 
         products = ImmutableList.<ProductJson>copyOf(productMap.values());
 
-        final DefaultPriceListSet priceLists = catalog.getPriceLists(requestedDate);
+        final PriceListSet priceLists = catalog.getPriceLists(requestedDate);
         for (PriceList childPriceList : priceLists.getAllPriceLists()) {
             this.priceLists.add(new PriceListJson(childPriceList));
         }

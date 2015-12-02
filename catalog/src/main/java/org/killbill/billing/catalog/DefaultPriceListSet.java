@@ -26,6 +26,7 @@ import java.util.List;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
@@ -34,7 +35,7 @@ import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
+public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> implements PriceListSet {
     @XmlElement(required = true, name = "defaultPriceList")
     private PriceListDefault defaultPricelist;
 
@@ -103,6 +104,7 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
         return childPriceLists;
     }
 
+    @Override
     public List<PriceList> getAllPriceLists() {
         final List<PriceList> result = new ArrayList<PriceList>(childPriceLists.length + 1);
         result.add(getDefaultPricelist());
@@ -138,5 +140,10 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
         int result = defaultPricelist != null ? defaultPricelist.hashCode() : 0;
         result = 31 * result + (childPriceLists != null ? Arrays.hashCode(childPriceLists) : 0);
         return result;
+    }
+
+    @Override
+    public Plan getPlanListFrom(final String s, final Product product, final BillingPeriod billingPeriod) {
+        return null;
     }
 }
