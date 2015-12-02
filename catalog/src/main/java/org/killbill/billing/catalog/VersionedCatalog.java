@@ -48,7 +48,6 @@ import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
@@ -254,6 +253,10 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
         return versionForDate(requestedDate).getCurrentPlans();
     }
 
+    public DefaultPriceListSet getPriceLists(final DateTime requestedDate) throws CatalogApiException {
+        return versionForDate(requestedDate).getStandaloneCatalog().getPriceLists();
+    }
+
     //
     // Find a plan
     //
@@ -395,6 +398,10 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     @Override
     public Date getEffectiveDate() throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).getEffectiveDate();
+    }
+
+    public Date getEffectiveDate(final DateTime requestedDate) throws CatalogApiException {
+        return versionForDate(requestedDate).getEffectiveDate();
     }
 
     @Override
