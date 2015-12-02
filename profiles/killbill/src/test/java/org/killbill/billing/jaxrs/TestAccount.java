@@ -20,7 +20,6 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -300,13 +299,6 @@ public class TestAccount extends TestJaxrsBase {
         killBillClient.refreshPaymentMethods(account.getAccountId(), PLUGIN_NAME, ImmutableMap.<String, String>of(), createdBy, reason, comment);
 
         final PaymentMethods paymentMethodsAfterExistingPluginCall = killBillClient.getPaymentMethodsForAccount(account.getAccountId());
-
-        System.err.println("PAYMENT METHODS (2)");
-        final Iterator it = paymentMethodsAfterExistingPluginCall.iterator();
-        while (it.hasNext()) {
-            PaymentMethod pm = (PaymentMethod) it.next();
-            System.err.println("PAYMENT METHOD " + pm.toString());
-        }
 
         assertEquals(paymentMethodsAfterExistingPluginCall.size(), 1);
         assertEquals(paymentMethodsAfterExistingPluginCall.get(0).getExternalKey(), "someExternalKey");
