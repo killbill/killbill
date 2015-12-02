@@ -766,6 +766,35 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @TimedResource
+    @POST
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS + "/refresh")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Refresh account payment methods")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response refreshPaymentMethods(@PathParam("accountId") final String accountId,
+                                          @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                          @HeaderParam(HDR_REASON) final String reason,
+                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
+
+        if (pluginName != null && !pluginName.isEmpty()) {
+            paymentApi.refreshPaymentMethods(account, pluginName, pluginProperties, callContext);
+        } else {
+            paymentApi.refreshPaymentMethods(account, pluginProperties, callContext);
+        }
+
+        return Response.status(Status.OK).build();
+    }
+
+
+    @TimedResource
     @PUT
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)

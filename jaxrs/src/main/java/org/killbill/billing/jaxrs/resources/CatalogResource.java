@@ -35,14 +35,17 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.jaxrs.json.CatalogJsonSimple;
+import org.killbill.billing.jaxrs.json.CatalogJson;
 import org.killbill.billing.jaxrs.json.PlanDetailJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -123,12 +126,19 @@ public class CatalogResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve the full catalog as JSON", response = StaticCatalog.class)
+    @ApiOperation(value = "Retrieve the catalog as JSON", response = StaticCatalog.class)
     @ApiResponses(value = {})
-    public Response getCatalogJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+    public Response getCatalogJson(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+        DateTime catalogDateVersion = clock.getUTCNow();
+        if (requestedDate != null) {
+            catalogDateVersion = DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC);
+        }
+
         final TenantContext tenantContext = context.createContext(request);
-        final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
-        return Response.status(Status.OK).entity(catalog).build();
+        final Catalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
+        final CatalogJson json = new CatalogJson((VersionedCatalog) catalog, catalogDateVersion);
+        return Response.status(Status.OK).entity(json).build();
     }
 
     // Need to figure out dependency on StandaloneCatalog
@@ -181,16 +191,4 @@ public class CatalogResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(details).build();
     }
 
-    @TimedResource
-    @GET
-    @Path("/simpleCatalog")
-    @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a summarized version of the catalog as JSON", response = CatalogJsonSimple.class)
-    @ApiResponses(value = {})
-    public Response getSimpleCatalog(@javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
-        final TenantContext tenantContext = context.createContext(request);
-        final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
-        final CatalogJsonSimple json = new CatalogJsonSimple(catalog);
-        return Response.status(Status.OK).entity(json).build();
-    }
 }
