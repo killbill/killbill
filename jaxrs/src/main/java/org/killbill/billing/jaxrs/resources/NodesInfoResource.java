@@ -193,10 +193,8 @@ public class NodesInfoResource extends JaxRsResourceBase {
             final NodeCommandProperty cur = it.next();
             if (PluginNodeCommandMetadata.PLUGIN_NAME.equals(cur.getKey())) {
                 pluginName = (String) cur.getValue();
-                it.remove();
             } else if (PluginNodeCommandMetadata.PLUGIN_VERSION.equals(cur.getKey())) {
                 pluginVersion = (String) cur.getValue();
-                it.remove();
             }
             if (pluginName != null && pluginVersion != null) {
                 break;
@@ -204,6 +202,8 @@ public class NodesInfoResource extends JaxRsResourceBase {
         }
 
         if (pluginName != null) {
+            input.getNodeCommandProperties().remove(PluginNodeCommandMetadata.PLUGIN_NAME);
+            input.getNodeCommandProperties().remove(PluginNodeCommandMetadata.PLUGIN_VERSION);
             return new PluginNodeCommandMetadata(pluginName, pluginVersion, toNodeCommandProperties(input.getNodeCommandProperties()));
         } else {
             return new NodeCommandMetadata() {
