@@ -24,7 +24,7 @@ import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.Price;
-import org.killbill.billing.jaxrs.json.CatalogJsonSimple.PriceJson;
+import org.killbill.billing.jaxrs.json.CatalogJson.PriceJson;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

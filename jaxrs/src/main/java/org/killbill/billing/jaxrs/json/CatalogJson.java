@@ -34,12 +34,14 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
+import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.TimeUnit;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -99,7 +101,15 @@ public class CatalogJson {
                     }
                 }
 
-                final PhaseJson phaseJson = new PhaseJson(phase.getPhaseType().toString(), prices);
+                final List<PriceJson> fixedPrices = new LinkedList<PriceJson>();
+                if (phase.getFixed() != null && phase.getFixed().getPrice() != null) {
+                    for (final Price price : phase.getFixed().getPrice().getPrices()) {
+                        fixedPrices.add(new PriceJson(price));
+                    }
+                }
+
+                final DurationJson durationJson = new DurationJson(phase.getDuration().getUnit(), phase.getDuration().getNumber());
+                final PhaseJson phaseJson = new PhaseJson(phase.getPhaseType().toString(), prices, fixedPrices, durationJson);
                 phases.add(phaseJson);
             }
 
@@ -369,12 +379,18 @@ public class CatalogJson {
 
         private final String type;
         private final List<PriceJson> prices;
+        private final List<PriceJson> fixedPrices;
+        private final DurationJson duration;
 
         @JsonCreator
         public PhaseJson(@JsonProperty("type") final String type,
-                         @JsonProperty("prices") final List<PriceJson> prices) {
+                         @JsonProperty("prices") final List<PriceJson> prices,
+                         @JsonProperty("fixedPrices") final List<PriceJson> fixedPrices,
+                         @JsonProperty("duration") final DurationJson duration) {
             this.type = type;
             this.prices = prices;
+            this.fixedPrices = fixedPrices;
+            this.duration = duration;
         }
 
         public String getType() {
@@ -383,12 +399,20 @@ public class CatalogJson {
         public List<PriceJson> getPrices() {
             return prices;
         }
+        public List<PriceJson> getFixedPrices() {
+            return fixedPrices;
+        }
+        public DurationJson getDuration() {
+            return duration;
+        }
 
         @Override
         public String toString() {
             final StringBuilder sb = new StringBuilder("PhaseJson{");
             sb.append("type='").append(type).append('\'');
             sb.append(", prices=").append(prices);
+            sb.append(", fixedPrices=").append(fixedPrices);
+            sb.append(", duration=").append(duration);
             sb.append('}');
             return sb.toString();
         }
@@ -407,7 +431,13 @@ public class CatalogJson {
             if (prices != null ? !prices.equals(phaseJson.prices) : phaseJson.prices != null) {
                 return false;
             }
+            if (fixedPrices != null ? !fixedPrices.equals(phaseJson.fixedPrices) : phaseJson.fixedPrices != null) {
+                return false;
+            }
             if (type != null ? !type.equals(phaseJson.type) : phaseJson.type != null) {
+                return false;
+            }
+            if (duration != null ? !duration.equals(phaseJson.duration) : phaseJson.duration != null) {
                 return false;
             }
 
@@ -418,6 +448,8 @@ public class CatalogJson {
         public int hashCode() {
             int result = type != null ? type.hashCode() : 0;
             result = 31 * result + (prices != null ? prices.hashCode() : 0);
+            result = 31 * result + (fixedPrices != null ? fixedPrices.hashCode() : 0);
+            result = 31 * result + (duration != null ? duration.hashCode() : 0);
             return result;
         }
     }
@@ -547,5 +579,65 @@ public class CatalogJson {
             return result;
         }
 
+    }
+
+    public static class DurationJson {
+
+        private final TimeUnit unit;
+        private final int number;
+
+        @JsonCreator
+        public DurationJson(@JsonProperty("unit") final TimeUnit unit,
+                            @JsonProperty("number") final int number) {
+            this.unit = unit;
+            this.number = number;
+        }
+
+        public DurationJson(final Duration duration) throws CurrencyValueNull {
+            this(duration.getUnit(), duration.getNumber());
+        }
+
+        public TimeUnit getUnit() {
+            return unit;
+        }
+
+        public int getNumber() {
+            return number;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("DurationJson{");
+            sb.append("unit='").append(unit).append('\'');
+            sb.append(", number=").append(number);
+            sb.append('}');
+            return sb.toString();
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final DurationJson that = (DurationJson) o;
+
+            if (unit != null ? !unit.equals(that.unit) : that.unit != null) {
+                return false;
+            }
+
+            return number == that.number;
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = unit != null ? unit.hashCode() : 0;
+            result = 31 * result + number;
+            return result;
+        }
     }
 }
