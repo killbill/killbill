@@ -146,7 +146,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                                                                                                        null, null, true, paymentControlPluginNames, properties, callContext);
 
                                                      } catch (final PaymentControlApiException e) {
-                                                         throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e);
+                                                         throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e);
                                                      }
 
                                                      try {
