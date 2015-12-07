@@ -71,6 +71,7 @@ select
 <allTableFields("")>
 from <tableName()>
 where external_key = :externalKey
+<AND_CHECK_TENANT()>
 ;
 >>
 
@@ -88,6 +89,7 @@ select
 from <tableName()> t
 join payment_methods pm on pm.id = t.payment_method_id
 where pm.plugin_name = :pluginName
+<AND_CHECK_TENANT("t.")>
 order by t.record_id asc
 limit :rowCount offset :offset
 ;
@@ -99,6 +101,7 @@ select
 from <tableName()> t
 join payment_methods pm on pm.id = t.payment_method_id
 where pm.plugin_name = :pluginName
+<AND_CHECK_TENANT("t.")>
 ;
 >>
 
