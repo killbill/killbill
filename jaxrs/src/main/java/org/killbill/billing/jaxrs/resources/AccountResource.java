@@ -814,12 +814,13 @@ public class AccountResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
-        paymentApi.setDefaultPaymentMethod(account, UUID.fromString(paymentMethodId), pluginProperties, callContext);
+        final UUID newPaymentMethodId = UUID.fromString(paymentMethodId);
+        paymentApi.setDefaultPaymentMethod(account, newPaymentMethodId, pluginProperties, callContext);
 
         if (payAllUnpaidInvoices) {
             final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
             for (final Invoice invoice : unpaidInvoices) {
-                createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), account.getPaymentMethodId(), false, pluginProperties, callContext);
+                createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), newPaymentMethodId, false, pluginProperties, callContext);
             }
         }
         return Response.status(Status.OK).build();
