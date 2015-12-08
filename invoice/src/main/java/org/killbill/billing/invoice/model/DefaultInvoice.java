@@ -54,6 +54,8 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     private final Currency processedCurrency;
 
+
+
     // Used to create a new invoice
     public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
         this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
@@ -64,22 +66,8 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice);
     }
 
-    // Used to hydrate invoice from persistence layer
-    public DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
-                          @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
-                          final LocalDate targetDate, final Currency currency, final Currency processedCurrency, final boolean isMigrationInvoice) {
-        super(invoiceId, createdDate, createdDate);
-        this.accountId = accountId;
-        this.invoiceNumber = invoiceNumber;
-        this.invoiceDate = invoiceDate;
-        this.targetDate = targetDate;
-        this.currency = currency;
-        this.processedCurrency = processedCurrency;
-        this.migrationInvoice = isMigrationInvoice;
-        this.invoiceItems = new ArrayList<InvoiceItem>();
-        this.payments = new ArrayList<InvoicePayment>();
-    }
 
+    // This CTOR is used to return an existing invoice and must include everything (items, payments, tags,..)
     public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
         this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
              invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
@@ -97,6 +85,22 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
             }
         }));
     }
+
+    private DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
+                          @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
+                          final LocalDate targetDate, final Currency currency, final Currency processedCurrency, final boolean isMigrationInvoice) {
+        super(invoiceId, createdDate, createdDate);
+        this.accountId = accountId;
+        this.invoiceNumber = invoiceNumber;
+        this.invoiceDate = invoiceDate;
+        this.targetDate = targetDate;
+        this.currency = currency;
+        this.processedCurrency = processedCurrency;
+        this.migrationInvoice = isMigrationInvoice;
+        this.invoiceItems = new ArrayList<InvoiceItem>();
+        this.payments = new ArrayList<InvoicePayment>();
+    }
+
 
     // Semi deep copy where we copy the lists but not the elements in the lists since they are immutables.
     @Override

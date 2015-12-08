@@ -367,9 +367,10 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     Locale.US);
     }
 
+
     @Test(groups = "fast")
     public void testProcessedCurrencyExists() throws Exception {
-        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), clock.getUTCNow(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.BRL, Currency.USD, false);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.BRL, false);
 
         checkOutput(invoice,
                     "{{#invoice.processedCurrency}}" +
@@ -385,7 +386,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testProcessedCurrencyDoesNotExist() throws Exception {
-        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), clock.getUTCNow(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.USD, Currency.USD, false);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.USD, false);
 
         checkOutput(invoice,
                     "{{#invoice.processedCurrency}}" +
@@ -404,7 +405,8 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         final FixedPriceInvoiceItem fixedItemBRL = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                              UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("1499.95"), Currency.BRL);
-        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), clock.getUTCNow(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.BRL, Currency.BRL, false);
+
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.BRL,  false);
         invoice.addInvoiceItem(fixedItemBRL);
 
         final String template = "<html>\n" +
