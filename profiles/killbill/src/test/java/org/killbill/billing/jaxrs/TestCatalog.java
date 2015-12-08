@@ -55,7 +55,7 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogJson.getEffectiveDate(), Date.valueOf("2011-01-01"));
         Assert.assertEquals(catalogJson.getCurrencies().size(), 3);
         Assert.assertEquals(catalogJson.getProducts().size(), 11);
-        Assert.assertEquals(catalogJson.getPriceLists().size(), 3);
+        Assert.assertEquals(catalogJson.getPriceLists().size(), 4);
 
         for (final Product productJson : catalogJson.getProducts()) {
             if (!"BASE".equals(productJson.getType())) {

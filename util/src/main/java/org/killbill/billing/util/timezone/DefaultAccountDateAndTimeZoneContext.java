@@ -21,23 +21,21 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
-
-import org.killbill.clock.Clock;
+import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 
 /**
  * Used by entitlement and invoice to calculate:
  * - a LocalDate from DateTime and the timeZone set on the account
  * - A DateTime from a LocalDate and the referenceTime attached to the account.
  */
-public final class DateAndTimeZoneContext {
+public final class DefaultAccountDateAndTimeZoneContext implements AccountDateAndTimeZoneContext {
 
     private final LocalTime referenceTime;
     private final int offsetFromUtc;
     private final DateTimeZone accountTimeZone;
-    private final Clock clock;
 
-    public DateAndTimeZoneContext(final DateTime effectiveDateTime, final DateTimeZone accountTimeZone, final Clock clock) {
-        this.clock = clock;
+    /// effectiveDateTime is compute from first billing event and so offsetFromUtc will remain constant with regard to daylight saving time
+    public DefaultAccountDateAndTimeZoneContext(final DateTime effectiveDateTime, final DateTimeZone accountTimeZone) {
         this.referenceTime = effectiveDateTime != null ? effectiveDateTime.toLocalTime() : null;
         this.accountTimeZone = accountTimeZone;
         this.offsetFromUtc = computeOffsetFromUtc(effectiveDateTime, accountTimeZone);
@@ -49,11 +47,13 @@ public final class DateAndTimeZoneContext {
         return Days.daysBetween(localDateInUTC, localDateInAccountTimeZone).getDays();
     }
 
-    public LocalDate computeTargetDate(final DateTime targetDateTime) {
-        return new LocalDate(targetDateTime, accountTimeZone);
+    @Override
+    public LocalDate computeLocalDateFromFixedAccountOffset(final DateTime targetDateTime) {
+        final DateTime dateWithOriginalAccountTimeZoneOffset = targetDateTime.plusDays(offsetFromUtc);
+        return  dateWithOriginalAccountTimeZoneOffset.toLocalDate();
     }
 
-
+    @Override
     public DateTime computeUTCDateTimeFromLocalDate(final LocalDate invoiceItemEndDate) {
         //
         // Since we create the targetDate for next invoice using the date from the notificationQ, we need to make sure
@@ -72,11 +72,7 @@ public final class DateAndTimeZoneContext {
         return invoiceItemEndDate.toDateTime(referenceTime, DateTimeZone.UTC).plusDays(-offsetFromUtc);
     }
 
-    public DateTime computeUTCDateTimeFromNow() {
-        final LocalDate now = computeTargetDate(clock.getUTCNow());
-        return computeUTCDateTimeFromLocalDate(now);
-    }
-
+    @Override
     public DateTimeZone getAccountTimeZone() {
         return accountTimeZone;
     }

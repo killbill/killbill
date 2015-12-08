@@ -41,6 +41,8 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.util.AccountDateAndTimeZoneContext;
+import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 
@@ -71,7 +73,8 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     }
 
     protected ContiguousIntervalConsumableInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
-        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, accountId, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()));
+        final AccountDateAndTimeZoneContext accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC);
+        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, accountId, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()), accountDateAndTimeZoneContext);
         for (BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
         }

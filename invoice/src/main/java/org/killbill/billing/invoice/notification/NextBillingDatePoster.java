@@ -22,15 +22,15 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
 
 public interface NextBillingDatePoster {
 
     void insertNextBillingNotificationFromTransaction(EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, UUID accountId,
-                                                      UUID subscriptionId, DateTime futureNotificationTime, final DateAndTimeZoneContext accountDateAndTimeZoneContext, InternalCallContext internalCallContext);
+                                                      UUID subscriptionId, DateTime futureNotificationTime, final AccountDateAndTimeZoneContext accountDateAndTimeZoneContext, InternalCallContext internalCallContext);
 
     void insertNextBillingDryRunNotificationFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
-                                                            final UUID subscriptionId, final DateTime futureNotificationTime, final DateTime targetDate, final DateAndTimeZoneContext accountDateAndTimeZoneContext, final InternalCallContext internalCallContext);
+                                                            final UUID subscriptionId, final DateTime futureNotificationTime, final DateTime targetDate, final AccountDateAndTimeZoneContext accountDateAndTimeZoneContext, final InternalCallContext internalCallContext);
 
 }

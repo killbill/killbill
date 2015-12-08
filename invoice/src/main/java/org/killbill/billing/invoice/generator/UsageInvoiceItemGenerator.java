@@ -94,7 +94,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             while (events.hasNext()) {
                 final BillingEvent event = events.next();
                 // Skip events that are posterior to the targetDate
-                final LocalDate eventLocalEffectiveDate = new LocalDate(event.getEffectiveDate(), account.getTimeZone());
+                final LocalDate eventLocalEffectiveDate = eventSet.getAccountDateAndTimeZoneContext().computeLocalDateFromFixedAccountOffset(event.getEffectiveDate());
                 if (eventLocalEffectiveDate.isAfter(targetDate)) {
                     continue;
                 }
@@ -118,7 +118,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
 
                 final UUID subscriptionId = event.getSubscription().getId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
-                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(account.getId(), invoiceId, curEvents, rawUsageOptimizerResult.getRawUsage(), targetDate, rawUsageOptimizerResult.getRawUsageStartDate());
+                    final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(account.getId(), invoiceId, curEvents, rawUsageOptimizerResult.getRawUsage(), targetDate, rawUsageOptimizerResult.getRawUsageStartDate(), eventSet.getAccountDateAndTimeZoneContext());
                     final List<InvoiceItem> consumableInUsageArrearItems = perSubscriptionConsumableInArrearUsageItems.get(curSubscriptionId);
 
                     final SubscriptionConsumableInArrearItemsAndNextNotificationDate subscriptionResult = subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(consumableInUsageArrearItems != null ? consumableInUsageArrearItems : ImmutableList.<InvoiceItem>of());
@@ -131,7 +131,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                 curEvents.add(event);
             }
             if (curSubscriptionId != null) {
-                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(account.getId(), invoiceId, curEvents, rawUsageOptimizerResult.getRawUsage(), targetDate, rawUsageOptimizerResult.getRawUsageStartDate());
+                final SubscriptionConsumableInArrear subscriptionConsumableInArrear = new SubscriptionConsumableInArrear(account.getId(), invoiceId, curEvents, rawUsageOptimizerResult.getRawUsage(), targetDate, rawUsageOptimizerResult.getRawUsageStartDate(), eventSet.getAccountDateAndTimeZoneContext());
                 final List<InvoiceItem> consumableInUsageArrearItems = perSubscriptionConsumableInArrearUsageItems.get(curSubscriptionId);
 
                 final SubscriptionConsumableInArrearItemsAndNextNotificationDate subscriptionResult = subscriptionConsumableInArrear.computeMissingUsageInvoiceItems(consumableInUsageArrearItems != null ? consumableInUsageArrearItems : ImmutableList.<InvoiceItem>of());
@@ -156,7 +156,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                 minDate = cur.getEffectiveDate();
             }
         }
-        return new LocalDate(minDate, accountTimeZone);
+        return eventSet.getAccountDateAndTimeZoneContext().computeLocalDateFromFixedAccountOffset(minDate);
     }
 
     private void updatePerSubscriptionNextNotificationUsageDate(final UUID subscriptionId, final Map<String, LocalDate> nextBillingCycleDates, final BillingMode usageBillingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {

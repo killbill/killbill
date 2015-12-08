@@ -58,7 +58,6 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoicePayment;
-import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceItemSqlDao;
@@ -81,7 +80,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
-import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
+import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.mockito.Mockito;
@@ -286,7 +285,7 @@ public class TestInvoiceHelper {
                                                                                                                                          }));
 
         // The test does not use the invoice callback notifier hence the empty map
-        final DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC, clock);
+        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC);
         invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
     }
 

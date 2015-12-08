@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 
 public interface BillingEventSet extends SortedSet<BillingEvent> {
 
@@ -31,6 +32,8 @@ public interface BillingEventSet extends SortedSet<BillingEvent> {
     public BillingMode getRecurringBillingMode();
 
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff();
+
+    public AccountDateAndTimeZoneContext getAccountDateAndTimeZoneContext();
 
     public Map<String, Usage> getUsages();
 }

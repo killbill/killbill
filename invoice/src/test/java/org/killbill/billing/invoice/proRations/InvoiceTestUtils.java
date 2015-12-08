@@ -42,7 +42,7 @@ import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
-import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
+import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.killbill.clock.Clock;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -106,7 +106,7 @@ public class InvoiceTestUtils {
         }
         Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
 
-        final DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC, clock);
+        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC);
 
         invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
 

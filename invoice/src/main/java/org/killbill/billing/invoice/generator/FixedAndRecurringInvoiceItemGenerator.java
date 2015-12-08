@@ -45,6 +45,7 @@ import org.killbill.billing.invoice.model.RecurringInvoiceItemDataWithNextBillin
 import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,11 +112,11 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             if (!events.getSubscriptionIdsWithAutoInvoiceOff().
                     contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
                 final BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-                final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, logStringBuilder, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate);
+                final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, logStringBuilder, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate, events.getAccountDateAndTimeZoneContext());
                 proposedItems.addAll(newProposedItems);
             }
         }
-        final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, nextEvent, null, targetDate, currency, logStringBuilder, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate);
+        final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, nextEvent, null, targetDate, currency, logStringBuilder, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate, events.getAccountDateAndTimeZoneContext());
         proposedItems.addAll(newProposedItems);
 
         log.info(logStringBuilder.toString());
@@ -128,7 +129,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         while (eventIt.hasNext()) {
             final BillingEvent thisEvent = eventIt.next();
 
-            final InvoiceItem fixedPriceInvoiceItem = generateFixedPriceItem(invoiceId, accountId, thisEvent, targetDate, currency);
+            final InvoiceItem fixedPriceInvoiceItem = generateFixedPriceItem(invoiceId, accountId, thisEvent, targetDate, currency, events.getAccountDateAndTimeZoneContext());
             if (fixedPriceInvoiceItem != null) {
                 proposedItems.add(fixedPriceInvoiceItem);
             }
@@ -140,16 +141,17 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     private List<InvoiceItem> processRecurringEvent(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
                                                     final LocalDate targetDate, final Currency currency,
                                                     final StringBuilder logStringBuilder, final BillingMode billingMode,
-                                                    final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate) throws InvoiceApiException {
+                                                    final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
+                                                    final AccountDateAndTimeZoneContext dateAndTimeZoneContext) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
         // Handle recurring items
         final BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
         if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-            final LocalDate startDate = new LocalDate(thisEvent.getEffectiveDate(), thisEvent.getTimeZone());
+            final LocalDate startDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(thisEvent.getEffectiveDate());
 
             if (!startDate.isAfter(targetDate)) {
-                final LocalDate endDate = (nextEvent == null) ? null : new LocalDate(nextEvent.getEffectiveDate(), nextEvent.getTimeZone());
+                final LocalDate endDate = (nextEvent == null) ? null : dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(nextEvent.getEffectiveDate());
 
                 final int billCycleDayLocal = thisEvent.getBillCycleDayLocal();
 
@@ -316,8 +318,8 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     }
 
     private InvoiceItem generateFixedPriceItem(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent,
-                                               final LocalDate targetDate, final Currency currency) {
-        final LocalDate roundedStartDate = new LocalDate(thisEvent.getEffectiveDate(), thisEvent.getTimeZone());
+                                               final LocalDate targetDate, final Currency currency, final AccountDateAndTimeZoneContext dateAndTimeZoneContext) {
+        final LocalDate roundedStartDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(thisEvent.getEffectiveDate());
         if (roundedStartDate.isAfter(targetDate)) {
             return null;
         } else {

@@ -17,39 +17,66 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.billing.util.AccountDateAndTimeZoneContext;
+import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements SortedSet<BillingEvent>, BillingEventSet {
 
     private static final long serialVersionUID = 1L;
 
-    private boolean accountAutoInvoiceOff = false;
-    private List<UUID> subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
-    private BillingMode recurringBillingMode;
+    private final boolean accountAutoInvoiceOff;
+    private final List<UUID> subscriptionIdsWithAutoInvoiceOff;
+    private final BillingMode recurringBillingMode;
+    private final DateTimeZone accountTimeZone;
+
+    private DefaultAccountDateAndTimeZoneContext dateTimeZoneContext;
+
+    public DefaultBillingEventSet(final boolean accountAutoInvoiceOff, final BillingMode recurringBillingMode, final DateTimeZone timeZone) {
+        this.accountAutoInvoiceOff = accountAutoInvoiceOff;
+        this.recurringBillingMode = recurringBillingMode;
+        this.accountTimeZone = timeZone;
+        this.subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
+    }
+
+    @Override
+    public boolean add(final BillingEvent e) {
+        if (dateTimeZoneContext == null) {
+            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), accountTimeZone);
+        }
+        return super.add(e);
+    }
+
+    @Override
+    public boolean addAll(final Collection<? extends BillingEvent> all) {
+        if (dateTimeZoneContext == null) {
+            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), accountTimeZone);
+        }
+        return super.addAll(all);
+    }
 
     /* (non-Javadoc)
-    * @see org.killbill.billing.junction.plumbing.billing.BillingEventSet#isAccountAutoInvoiceOff()
-    */
+        * @see org.killbill.billing.junction.plumbing.billing.BillingEventSet#isAccountAutoInvoiceOff()
+        */
     @Override
     public boolean isAccountAutoInvoiceOff() {
         return accountAutoInvoiceOff;
@@ -66,6 +93,14 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     @Override
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
+    }
+
+    @Override
+    public AccountDateAndTimeZoneContext getAccountDateAndTimeZoneContext() {
+        if (dateTimeZoneContext == null) {
+            throw new IllegalArgumentException("AccountDateAndTimeZoneContext is not initialized because there is no billing event");
+        }
+        return dateTimeZoneContext;
     }
 
     @Override
@@ -86,13 +121,6 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
         return result;
     }
 
-    public void setAccountAutoInvoiceIsOff(final boolean accountAutoInvoiceIsOff) {
-        this.accountAutoInvoiceOff = accountAutoInvoiceIsOff;
-    }
-
-    public void setRecurringBillingMode(final BillingMode recurringBillingMode) {
-        this.recurringBillingMode = recurringBillingMode;
-    }
 
     @Override
     public String toString() {
@@ -100,5 +128,4 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
                + ", subscriptionIdsWithAutoInvoiceOff=" + subscriptionIdsWithAutoInvoiceOff + ", Events="
                + super.toString() + "]";
     }
-
 }

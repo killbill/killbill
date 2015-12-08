@@ -189,6 +189,31 @@
     </rules>
 
     <plans>
+        <plan name="blowdart-monthly-notrial">
+            <product>Blowdart</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
         <plan name="blowdart-monthly">
             <product>Blowdart</product>
             <initialPhases>
@@ -1106,6 +1131,11 @@
         <childPriceList name="rescue">
             <plans>
                 <plan>assault-rifle-annual-rescue</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="notrial">
+            <plans>
+                <plan>blowdart-monthly-notrial</plan>
             </plans>
         </childPriceList>
     </priceLists>

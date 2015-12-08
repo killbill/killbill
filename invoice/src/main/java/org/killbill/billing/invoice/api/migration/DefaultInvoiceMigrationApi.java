@@ -25,7 +25,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
-import org.killbill.billing.util.timezone.DateAndTimeZoneContext;
+import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +82,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
                                                                                  targetDate, null, balance, null, currency, null);
 
         final DateTime wrongEffectiveDateButDoesNotMatter = null;
-        final DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(wrongEffectiveDateButDoesNotMatter, account.getTimeZone(), clock);
+        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(wrongEffectiveDateButDoesNotMatter, account.getTimeZone());
         dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),
                           true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContextFactory.createInternalCallContext(accountId, context));
 

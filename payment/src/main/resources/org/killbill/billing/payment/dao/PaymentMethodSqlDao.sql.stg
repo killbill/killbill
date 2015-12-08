@@ -71,6 +71,7 @@ getPaymentMethodIncludedDelete(accountId) ::= <<
 select <allTableFields()>
 from <tableName()>
 where id = :id
+<AND_CHECK_TENANT()>
 ;
 >>
 
@@ -80,6 +81,7 @@ select
 from <tableName()>
 where account_id = :accountId
 and is_active = true
+<AND_CHECK_TENANT()>
 ;
 >>
 
@@ -88,6 +90,7 @@ select
 <allTableFields()>
 from <tableName()>
 where account_id = :accountId
+<AND_CHECK_TENANT()>
 ;
 >>
 
@@ -104,6 +107,7 @@ select
 from <tableName()> t
 where t.plugin_name = :pluginName
 and t.is_active = true
+<AND_CHECK_TENANT("t.")>
 order by t.record_id
 limit :rowCount offset :offset
 ;
@@ -115,5 +119,6 @@ select
 from <tableName()> t
 where t.plugin_name = :pluginName
 and t.is_active = true
+<AND_CHECK_TENANT("t.")>
 ;
 >>

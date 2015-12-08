@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
@@ -44,6 +45,7 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -707,6 +709,5 @@ public class TestIntegration extends TestIntegrationBase {
         assertListenerStatus();
 
         checkNoMoreInvoiceToGenerate(account);
-
     }
 }

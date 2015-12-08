@@ -25,7 +25,6 @@ import javax.annotation.Nullable;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -82,26 +81,26 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     @Override
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException {
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException {
         final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
-        final DefaultBillingEventSet result = new DefaultBillingEventSet();
         final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(context);
-        result.setRecurringBillingMode(currentCatalog.getRecurringBillingMode());
+
+        final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
+        final DefaultBillingEventSet result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode(), account.getTimeZone());
+
+
 
         try {
-            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
+
 
             // Check to see if billing is off for the account
             final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
             final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
             if (found_AUTO_INVOICING_OFF) {
-                result.setAccountAutoInvoiceIsOff(true);
-                return result; // billing is off, we are done
+                return new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode(), account.getTimeZone()); // billing is off, we are done
             }
 
             addBillingEventsForBundles(bundles, account, dryRunArguments, context, result);
-        } catch (AccountApiException e) {
-            log.warn("Failed while getting BillingEvent", e);
         } catch (SubscriptionBaseApiException e) {
             log.warn("Failed while getting BillingEvent", e);
         }
