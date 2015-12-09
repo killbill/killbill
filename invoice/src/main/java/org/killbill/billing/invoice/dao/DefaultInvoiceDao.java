@@ -104,14 +104,16 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              final CacheControllerDispatcher cacheControllerDispatcher,
                              final NonEntityDao nonEntityDao,
                              final InvoiceConfig invoiceConfig,
+                             final InvoiceDaoHelper invoiceDaoHelper,
+                             final CBADao cbaDao,
                              final InternalCallContextFactory internalCallContextFactory) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), InvoiceSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.eventBus = eventBus;
         this.invoiceConfig = invoiceConfig;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.invoiceDaoHelper = new InvoiceDaoHelper();
-        this.cbaDao = new CBADao();
+        this.invoiceDaoHelper = invoiceDaoHelper;
+        this.cbaDao = cbaDao;
         this.clock = clock;
     }
 

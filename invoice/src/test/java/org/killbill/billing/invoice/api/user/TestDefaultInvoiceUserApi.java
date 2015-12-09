@@ -61,6 +61,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceId = invoiceUtil.generateRegularInvoice(account, clock.getUTCNow(), callContext);
     }
 
+
+
     @Test(groups = "slow")
     public void testPostExternalChargeOnNewInvoice() throws Exception {
         // Initial account balance
@@ -342,14 +344,25 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testAddRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
+
+        final Invoice originalInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
+        assertEquals(originalInvoice.getBalance(), new BigDecimal("0.77"));
+
         invoiceUserApi.tagInvoiceAsWrittenOff(invoiceId, callContext);
 
         List<Tag> tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, false, callContext);
         assertEquals(tags.size(), 1);
         assertEquals(tags.get(0).getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
 
+        final Invoice invoiceWithTag = invoiceUserApi.getInvoice(invoiceId, callContext);
+        assertEquals(invoiceWithTag.getBalance(), BigDecimal.ZERO);
+
+
         invoiceUserApi.tagInvoiceAsNotWrittenOff(invoiceId, callContext);
         tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, false, callContext);
         assertEquals(tags.size(), 0);
+
+        final Invoice invoiceAfterTagRemoval = invoiceUserApi.getInvoice(invoiceId, callContext);
+        assertEquals(invoiceAfterTagRemoval.getBalance(), new BigDecimal("0.77"));
     }
 }

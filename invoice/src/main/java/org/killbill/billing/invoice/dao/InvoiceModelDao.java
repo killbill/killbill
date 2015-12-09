@@ -46,6 +46,8 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     private List<InvoicePaymentModelDao> invoicePayments = new LinkedList<InvoicePaymentModelDao>();
     private Currency processedCurrency;
 
+    private boolean isWrittenOff;
+
     public InvoiceModelDao() { /* For the DAO mapper */ }
 
     public InvoiceModelDao(final UUID id, @Nullable final DateTime createdDate, final UUID accountId,
@@ -58,6 +60,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.targetDate = targetDate;
         this.currency = currency;
         this.migrated = migrated;
+        this.isWrittenOff = false;
     }
 
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final boolean migrated) {
@@ -155,6 +158,14 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
 
     public void setInvoicePayments(final List<InvoicePaymentModelDao> invoicePayments) {
         this.invoicePayments = invoicePayments;
+    }
+
+    public boolean isWrittenOff() {
+        return isWrittenOff;
+    }
+
+    public void setIsWrittenOff(final boolean isWrittenOff) {
+        this.isWrittenOff = isWrittenOff;
     }
 
     @Override

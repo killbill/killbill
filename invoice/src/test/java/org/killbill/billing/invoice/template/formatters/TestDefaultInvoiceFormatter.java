@@ -35,6 +35,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
+import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
@@ -370,7 +371,12 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testProcessedCurrencyExists() throws Exception {
-        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.BRL, false);
+
+        // Use InvoiceModelDao to build the invoice to be able to set the processedCurrency (No suitable CTOR for DefaultInvoice on purpose)
+        final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.BRL);
+        invoiceModelDao.setProcessedCurrency(Currency.USD);
+
+        final Invoice invoice = new DefaultInvoice(invoiceModelDao);
 
         checkOutput(invoice,
                     "{{#invoice.processedCurrency}}" +

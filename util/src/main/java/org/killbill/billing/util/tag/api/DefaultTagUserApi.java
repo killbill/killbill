@@ -188,7 +188,7 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public List<Tag> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final boolean includedDeleted, final TenantContext context) {
-        return withModelTransform(tagDao.getTagsForAccountType(accountId, objectType, includedDeleted, internalCallContextFactory.createInternalTenantContext(accountId, context)));
+        return withModelTransform(tagDao.getTagsForAccountType(objectType, includedDeleted, internalCallContextFactory.createInternalTenantContext(accountId, context)));
     }
 
     @Override

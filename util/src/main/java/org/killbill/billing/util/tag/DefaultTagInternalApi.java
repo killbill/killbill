@@ -35,6 +35,7 @@ import org.killbill.billing.util.tag.dao.TagModelDaoHelper;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class DefaultTagInternalApi implements TagInternalApi {
 
@@ -61,15 +62,12 @@ public class DefaultTagInternalApi implements TagInternalApi {
 
     @Override
     public List<Tag> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        return ImmutableList.<Tag>copyOf(Collections2.transform(tagDao.getTagsForObject(objectId, objectType, false, context),
-                                                                new Function<TagModelDao, Tag>() {
-                                                                    @Override
-                                                                    public Tag apply(final TagModelDao input) {
-                                                                        return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
-                                                                               new DefaultControlTag(ControlTagType.getTypeFromId(input.getTagDefinitionId()), objectType, objectId, input.getCreatedDate()) :
-                                                                               new DescriptiveTag(input.getTagDefinitionId(), objectType, objectId, input.getCreatedDate());
-                                                                    }
-                                                                }));
+        return toTagList(tagDao.getTagsForObject(objectId, objectType, false, context));
+    }
+
+    @Override
+    public List<Tag> getTagsForAccountType(final ObjectType objectType, final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
+        return toTagList(tagDao.getTagsForAccountType(objectType, includedDeleted, internalTenantContext));
     }
 
     @Override
@@ -85,4 +83,17 @@ public class DefaultTagInternalApi implements TagInternalApi {
             throws TagApiException {
         tagDao.deleteTag(objectId, objectType, tagDefinitionId, context);
     }
+
+    private List<Tag> toTagList(final List<TagModelDao> input) {
+        return ImmutableList.<Tag>copyOf(Iterables.transform(input, new Function<TagModelDao, Tag>() {
+            @Override
+            public Tag apply(final TagModelDao input) {
+                return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
+                       new DefaultControlTag(ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
+                       new DescriptiveTag(input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
+            }
+        }));
+    }
+
+
 }

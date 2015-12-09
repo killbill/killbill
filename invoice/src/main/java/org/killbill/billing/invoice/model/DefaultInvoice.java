@@ -51,6 +51,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     private final LocalDate targetDate;
     private final Currency currency;
     private final boolean migrationInvoice;
+    private final boolean isWrittenOff;
 
     private final Currency processedCurrency;
 
@@ -63,7 +64,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     public DefaultInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
                           final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice) {
-        this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice);
+        this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice, false);
     }
 
 
@@ -71,7 +72,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
         this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
              invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
-             invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated());
+             invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated(), invoiceModelDao.isWrittenOff());
         addInvoiceItems(Collections2.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final InvoiceItemModelDao input) {
@@ -88,7 +89,8 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     private DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
                           @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
-                          final LocalDate targetDate, final Currency currency, final Currency processedCurrency, final boolean isMigrationInvoice) {
+                          final LocalDate targetDate, final Currency currency, final Currency processedCurrency,
+                           final boolean isMigrationInvoice, final boolean isWrittenOff) {
         super(invoiceId, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -97,6 +99,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this.currency = currency;
         this.processedCurrency = processedCurrency;
         this.migrationInvoice = isMigrationInvoice;
+        this.isWrittenOff = isWrittenOff;
         this.invoiceItems = new ArrayList<InvoiceItem>();
         this.payments = new ArrayList<InvoicePayment>();
     }
@@ -105,7 +108,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     // Semi deep copy where we copy the lists but not the elements in the lists since they are immutables.
     @Override
     public Object clone() {
-        final Invoice clonedInvoice = new DefaultInvoice(getId(),  getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice());
+        final Invoice clonedInvoice = new DefaultInvoice(getId(),  getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice(), isWrittenOff());
         clonedInvoice.getInvoiceItems().addAll(getInvoiceItems());
         clonedInvoice.getPayments().addAll(getPayments());
         return clonedInvoice;
@@ -228,12 +231,17 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     @Override
     public BigDecimal getBalance() {
-        return InvoiceCalculatorUtils.computeInvoiceBalance(currency, invoiceItems, payments);
+        return isWrittenOff ? BigDecimal.ZERO : InvoiceCalculatorUtils.computeInvoiceBalance(currency, invoiceItems, payments);
+    }
+
+    public boolean isWrittenOff() {
+        return isWrittenOff;
     }
 
     @Override
     public String toString() {
         return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + "]";
     }
+
 }
 

@@ -36,8 +36,10 @@ import org.killbill.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import org.killbill.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
 import org.killbill.billing.invoice.api.svcs.DefaultInvoiceInternalApi;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceUserApi;
+import org.killbill.billing.invoice.dao.CBADao;
 import org.killbill.billing.invoice.dao.DefaultInvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceDao;
+import org.killbill.billing.invoice.dao.InvoiceDaoHelper;
 import org.killbill.billing.invoice.generator.DefaultInvoiceGenerator;
 import org.killbill.billing.invoice.generator.FixedAndRecurringInvoiceItemGenerator;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
@@ -70,6 +72,8 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
 
     protected void installInvoiceDao() {
         bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
+        bind(InvoiceDaoHelper.class).asEagerSingleton();
+        bind(CBADao.class).asEagerSingleton();
     }
 
     @Override
@@ -162,7 +166,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoiceMigrationApi();
         installResourceBundleFactory();
         bind(RawUsageOptimizer.class).asEagerSingleton();
-        ;
         bind(InvoiceApiHelper.class).asEagerSingleton();
     }
 }

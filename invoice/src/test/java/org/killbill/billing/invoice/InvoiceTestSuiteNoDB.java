@@ -27,6 +27,7 @@ import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.dao.InvoiceDao;
+import org.killbill.billing.invoice.dao.InvoiceDaoHelper;
 import org.killbill.billing.invoice.generator.FixedAndRecurringInvoiceItemGenerator;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.TestInvoiceModuleNoDB;
@@ -98,6 +99,8 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected ResourceBundleFactory resourceBundleFactory;
     @Inject
     protected RawUsageOptimizer rawUsageOptimizer;
+    @Inject
+    protected InvoiceDaoHelper invoiceDaoHelper;
     @Inject
     protected FixedAndRecurringInvoiceItemGenerator fixedAndRecurringInvoiceItemGenerator;
     @Override

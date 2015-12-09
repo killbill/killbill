@@ -35,7 +35,7 @@ public interface TagDao extends EntityDao<TagModelDao, Tag, TagApiException> {
 
     List<TagModelDao> getTagsForObject(UUID objectId, ObjectType objectType, boolean includedDeleted, InternalTenantContext internalTenantContext);
 
-    List<TagModelDao> getTagsForAccountType(UUID accountId, ObjectType objectType, boolean includedDeleted, InternalTenantContext internalTenantContext);
+    List<TagModelDao> getTagsForAccountType(ObjectType objectType, boolean includedDeleted, InternalTenantContext internalTenantContext);
 
     List<TagModelDao> getTagsForAccount(boolean includedDeleted, InternalTenantContext internalTenantContext);
 }

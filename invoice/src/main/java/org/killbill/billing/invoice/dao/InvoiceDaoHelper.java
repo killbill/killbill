@@ -28,22 +28,35 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.billing.util.tag.Tag;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class InvoiceDaoHelper {
+
+    private final TagInternalApi tagInternalApi;
+
+    @Inject
+    public InvoiceDaoHelper(final TagInternalApi tagInternalApi) {
+        this.tagInternalApi = tagInternalApi;
+    }
 
     /**
      * Find amounts to adjust for individual items, if not specified.
@@ -204,11 +217,13 @@ public class InvoiceDaoHelper {
     public void populateChildren(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         getInvoiceItemsWithinTransaction(ImmutableList.<InvoiceModelDao>of(invoice), entitySqlDaoWrapperFactory, context);
         getInvoicePaymentsWithinTransaction(ImmutableList.<InvoiceModelDao>of(invoice), entitySqlDaoWrapperFactory, context);
+        setInvoiceWrittenOff(invoice, context);
     }
 
     public void populateChildren(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         getInvoiceItemsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
         getInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
+        setInvoicesWrittenOff(invoices, context);
     }
 
     public List<InvoiceModelDao> getAllInvoicesByAccountFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
@@ -267,4 +282,37 @@ public class InvoiceDaoHelper {
             }
         }
     }
+
+    private void setInvoicesWrittenOff(final Iterable<InvoiceModelDao> invoices, final InternalTenantContext internalTenantContext) {
+
+        final List<Tag> tags = tagInternalApi.getTagsForAccountType(ObjectType.INVOICE, false, internalTenantContext);
+        final Iterable<Tag> writtenOffTags = filterForWrittenOff(tags);
+        for (final Tag cur : writtenOffTags) {
+            final InvoiceModelDao foundInvoice = Iterables.tryFind(invoices, new Predicate<InvoiceModelDao>() {
+                @Override
+                public boolean apply(final InvoiceModelDao input) {
+                    return input.getId().equals(cur.getObjectId());
+                }
+            }).orNull();
+            if (foundInvoice != null) {
+                foundInvoice.setIsWrittenOff(true);
+            }
+        }
+    }
+
+    private void setInvoiceWrittenOff(final InvoiceModelDao invoice, final InternalTenantContext internalTenantContext) {
+        final List<Tag> tags =  tagInternalApi.getTags(invoice.getId(), ObjectType.INVOICE, internalTenantContext);
+        final Iterable<Tag> writtenOffTags = filterForWrittenOff(tags);
+        invoice.setIsWrittenOff(writtenOffTags.iterator().hasNext());
+    }
+
+    private Iterable<Tag> filterForWrittenOff(final List<Tag> tags) {
+        return Iterables.filter(tags, new Predicate<Tag>() {
+            @Override
+            public boolean apply(final Tag input) {
+                return  input.getTagDefinitionId().equals(ControlTagType.WRITTEN_OFF.getId());
+            }
+        });
+    }
+
 }

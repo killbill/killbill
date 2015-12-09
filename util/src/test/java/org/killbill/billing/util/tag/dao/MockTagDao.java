@@ -87,7 +87,7 @@ public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiExcept
     }
 
     @Override
-    public List<TagModelDao> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
+    public List<TagModelDao> getTagsForAccountType(final ObjectType objectType, final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
         throw new UnsupportedOperationException();
     }
 

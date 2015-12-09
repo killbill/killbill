@@ -84,7 +84,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     }
 
     @Override
-    public List<TagModelDao> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
+    public List<TagModelDao> getTagsForAccountType(final ObjectType objectType, final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
         final List<TagModelDao> allTags = getTagsForAccount(includedDeleted, internalTenantContext);
         return ImmutableList.<TagModelDao>copyOf(Collections2.filter(allTags, new Predicate<TagModelDao>() {
             @Override

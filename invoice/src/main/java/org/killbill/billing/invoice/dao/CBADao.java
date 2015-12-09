@@ -21,6 +21,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -34,8 +36,9 @@ public class CBADao {
 
     private final InvoiceDaoHelper invoiceDaoHelper;
 
-    public CBADao() {
-        this.invoiceDaoHelper = new InvoiceDaoHelper();
+    @Inject
+    public CBADao(final InvoiceDaoHelper invoiceDaoHelper) {
+        this.invoiceDaoHelper = invoiceDaoHelper;
     }
 
 
