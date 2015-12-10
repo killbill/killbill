@@ -147,6 +147,21 @@ public class TestWithTimeZones extends TestIntegrationBase {
         // Verify first entitlement is correctly cancelled on the right date
         Assert.assertEquals(entitlement.getEffectiveEndDate(), cancellationDate);
 
+        // We move the clock to the date of the next invoice notification 2015-12-01 07:01:01 (invoice is using a fixed offset of 7 hours and all billing events are converted using that offset)
+        clock.setTime(new DateTime("2015-12-01T07:01:02"));
+        // Unfortunately we did not plug NullInvoice events so we cannot synchronize on that (See https://github.com/killbill/killbill/issues/448)
+        assertListenerStatus();
+
+        // We now move the clock to the date of the cancellation (one hour later), which match the cancellation day from the client point of view
+        //
+        // For curious reader, the reason why the time end up being '8:01:0' comes from (https://github.com/killbill/killbill-commons/blob/master/clock/src/main/java/org/killbill/clock/ClockUtil.java#L51):
+        // We compute a DateTime in the account timezone by specifying explicitly the year-month-day we want to end up in, and shoving *a time*. The reason why we end up on an 8:01:02 is not necessarily so important,
+        // What's important is that by construction that DateTime is guaranteed to match a LocalDate of 2015-12-01
+        //
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
+        clock.setTime(new DateTime("2015-12-01T08:01:02"));
+        assertListenerStatus();
+
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01"
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         Assert.assertEquals(invoices.size(), 1);
@@ -188,9 +203,16 @@ public class TestWithTimeZones extends TestIntegrationBase {
         // Verify first entitlement is correctly cancelled on the right date
         Assert.assertEquals(entitlement.getEffectiveEndDate(), cancellationDate);
 
+
+        // We now move the clock to the date of the cancellation  which match the cancellation day from the client point of view
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
+        clock.setTime(new DateTime("2015-03-01T08:01:02"));
+        assertListenerStatus();
+
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01"
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         Assert.assertEquals(invoices.size(), 1);
+
     }
 
 }

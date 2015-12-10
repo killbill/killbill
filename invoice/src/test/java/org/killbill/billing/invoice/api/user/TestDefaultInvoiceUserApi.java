@@ -346,7 +346,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     public void testAddRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
 
         final Invoice originalInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
-        assertEquals(originalInvoice.getBalance(), new BigDecimal("0.77"));
+        assertEquals(originalInvoice.getBalance().compareTo(BigDecimal.ZERO), 1);
 
         invoiceUserApi.tagInvoiceAsWrittenOff(invoiceId, callContext);
 
@@ -355,7 +355,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(tags.get(0).getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
 
         final Invoice invoiceWithTag = invoiceUserApi.getInvoice(invoiceId, callContext);
-        assertEquals(invoiceWithTag.getBalance(), BigDecimal.ZERO);
+        assertEquals(invoiceWithTag.getBalance().compareTo(BigDecimal.ZERO), 0);
 
 
         invoiceUserApi.tagInvoiceAsNotWrittenOff(invoiceId, callContext);
@@ -363,6 +363,6 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(tags.size(), 0);
 
         final Invoice invoiceAfterTagRemoval = invoiceUserApi.getInvoice(invoiceId, callContext);
-        assertEquals(invoiceAfterTagRemoval.getBalance(), new BigDecimal("0.77"));
+        assertEquals(invoiceAfterTagRemoval.getBalance().compareTo(BigDecimal.ZERO), 1);
     }
 }
