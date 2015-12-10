@@ -79,7 +79,10 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
             }
         });
 
+        eventsListener.pushExpectedEvent(NextEvent.TAG);
         tagUserApi.removeTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.WRITTEN_OFF.getId()), callContext);
+        assertListenerStatus();
+
         List<Tag> remainingTags = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, false, callContext);
         Assert.assertEquals(remainingTags.size(), 0);
 
@@ -88,13 +91,18 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
         // Add again the tag
         eventsListener.pushExpectedEvent(NextEvent.TAG);
         tagUserApi.addTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.WRITTEN_OFF.getId()), callContext);
+        assertListenerStatus();
+
         remainingTags = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, false, callContext);
         Assert.assertEquals(remainingTags.size(), 1);
 
         checkPagination(1);
 
         // Delete again
+        eventsListener.pushExpectedEvent(NextEvent.TAG);
         tagUserApi.removeTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.WRITTEN_OFF.getId()), callContext);
+        assertListenerStatus();
+
         remainingTags = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, false, callContext);
         Assert.assertEquals(remainingTags.size(), 0);
 
