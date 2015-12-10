@@ -33,6 +33,7 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.export.dao.DatabaseExportDao;
 import org.killbill.billing.util.glue.TestUtilModuleWithEmbeddedDB;
 import org.killbill.billing.util.nodes.dao.NodeInfoDao;
+import org.killbill.billing.util.tag.api.DefaultTagUserApi;
 import org.killbill.billing.util.tag.dao.DefaultTagDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionDao;
 import org.killbill.bus.api.PersistentBus;
@@ -64,6 +65,8 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected NonEntityDao nonEntityDao;
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
+    @Inject
+    protected DefaultTagUserApi tagUserApi;
     @Inject
     protected DefaultCustomFieldUserApi customFieldUserApi;
     @Inject

@@ -118,7 +118,7 @@ public class MockAccountUserApi implements AccountUserApi {
                 results.add(account);
             }
         }
-        return DefaultPagination.<Account>build(offset, limit, results);
+        return DefaultPagination.<Account>build(offset, limit, accounts.size(), results);
     }
 
     @Override

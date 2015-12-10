@@ -64,6 +64,7 @@ userAndSystemTagDefinitions() ::= <<
   , name
   , description
   from tag_definitions
+  where is_active
   union
   select
     \'00000000-0000-0000-0000-000000000001\' id
@@ -114,6 +115,7 @@ select
 from <tableName()> t
 join (<userAndSystemTagDefinitions()>) td on td.id = t.tag_definition_id
 where (<searchQuery(tagAlias="t.", tagDefinitionAlias="td.")>)
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 order by <recordIdField("t.")> ASC
 limit :rowCount offset :offset
@@ -126,6 +128,7 @@ select
 from <tableName()> t
 join (<userAndSystemTagDefinitions()>) td on td.id = t.tag_definition_id
 where (<searchQuery(tagAlias="t.", tagDefinitionAlias="td.")>)
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
 >>

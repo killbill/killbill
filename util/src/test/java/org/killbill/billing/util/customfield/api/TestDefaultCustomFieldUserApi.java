@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,16 +23,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.tweak.HandleCallback;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.customfield.StringCustomField;
+import org.killbill.billing.util.entity.Pagination;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -52,12 +54,16 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
             }
         });
 
+        checkPagination(0);
+
         final String cfName = UUID.randomUUID().toString().substring(1, 4);
         final String cfValue = UUID.randomUUID().toString().substring(1, 4);
         final CustomField customField = new StringCustomField(cfName, cfValue, ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
         eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
         customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField), callContext);
         assertListenerStatus();
+
+        checkPagination(1);
 
         // Verify the field was saved
         final List<CustomField> customFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
@@ -82,6 +88,8 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         List<CustomField> remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
         Assert.assertEquals(remainingCustomFields.size(), 0);
 
+        checkPagination(0);
+
         // Add again the custom field
         final CustomField newCustomField = new StringCustomField(cfName, cfValue, ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
 
@@ -90,10 +98,25 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
         Assert.assertEquals(remainingCustomFields.size(), 1);
 
+        checkPagination(1);
+
         // Delete again
         customFieldUserApi.removeCustomFields(remainingCustomFields, callContext);
         remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
         Assert.assertEquals(remainingCustomFields.size(), 0);
 
+        checkPagination(0);
+    }
+
+    private void checkPagination(final long nbRecords) {
+        final Pagination<CustomField> foundCustomFields = customFieldUserApi.searchCustomFields("ACCOUNT", 0L, nbRecords + 1L, callContext);
+        Assert.assertEquals(foundCustomFields.iterator().hasNext(), nbRecords > 0);
+        Assert.assertEquals(foundCustomFields.getMaxNbRecords(), (Long) nbRecords);
+        Assert.assertEquals(foundCustomFields.getTotalNbRecords(), (Long) nbRecords);
+
+        final Pagination<CustomField> gotCustomFields = customFieldUserApi.getCustomFields(0L, nbRecords + 1L, callContext);
+        Assert.assertEquals(gotCustomFields.iterator().hasNext(), nbRecords > 0);
+        Assert.assertEquals(gotCustomFields.getMaxNbRecords(), (Long) nbRecords);
+        Assert.assertEquals(gotCustomFields.getTotalNbRecords(), (Long) nbRecords);
     }
 }

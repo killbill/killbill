@@ -268,6 +268,7 @@ select
 <allTableFields("t.")>
 from <tableName()> t
 where (<searchQuery("t.")>)
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 order by <recordIdField("t.")> ASC
 limit :rowCount offset :offset
@@ -279,6 +280,7 @@ select
   count(1) as count
 from <tableName()> t
 where (<searchQuery("t.")>)
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
 >>

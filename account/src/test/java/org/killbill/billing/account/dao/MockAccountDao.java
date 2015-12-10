@@ -107,7 +107,9 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
     @Override
     public Pagination<AccountModelDao> searchAccounts(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         final List<AccountModelDao> results = new LinkedList<AccountModelDao>();
+        int maxNbRecords = 0;
         for (final AccountModelDao account : getAll(context)) {
+            maxNbRecords++;
             if ((account.getName() != null && account.getName().contains(searchKey)) ||
                 (account.getEmail() != null && account.getEmail().contains(searchKey)) ||
                 (account.getExternalKey() != null && account.getExternalKey().contains(searchKey)) ||
@@ -116,7 +118,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
             }
         }
 
-        return DefaultPagination.<AccountModelDao>build(offset, limit, results);
+        return DefaultPagination.<AccountModelDao>build(offset, limit, maxNbRecords, results);
     }
 
     @Override

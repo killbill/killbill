@@ -42,7 +42,7 @@ public class DefaultPaginationHelper {
         public abstract Pagination<E> build(final Long offset, final Long limit, final String pluginName) throws T;
     }
 
-    public static <E extends Entity, T extends BillingExceptionBase> Pagination<E> getEntityPaginationFromPlugins(final Iterable<String> plugins, final Long offset, final Long limit, final EntityPaginationBuilder<E, T> entityPaginationBuilder) {
+    public static <E extends Entity, T extends BillingExceptionBase> Pagination<E> getEntityPaginationFromPlugins(final boolean maxStatsCrossPlugins, final Iterable<String> plugins, final Long offset, final Long limit, final EntityPaginationBuilder<E, T> entityPaginationBuilder) {
         // Note that we cannot easily do streaming here, since we would have to rely on the statistics
         // returned by the Pagination objects from the plugins and we probably don't want to do that (if
         // one plugin gets it wrong, it may starve the others).
@@ -67,7 +67,12 @@ public class DefaultPaginationHelper {
                 // Make sure not to start at 0 for subsequent plugins if previous ones didn't yield any result
                 firstSearch = allResults.isEmpty();
                 totalNbRecords += pages.getTotalNbRecords();
-                maxNbRecords += pages.getMaxNbRecords();
+                if (!maxStatsCrossPlugins) {
+                    maxNbRecords += pages.getMaxNbRecords();
+                } else {
+                    // getPayments and getPaymentMethods return MaxNbRecords across all plugins -- make sure we don't double count
+                    maxNbRecords = Math.max(maxNbRecords, pages.getMaxNbRecords());
+                }
             } catch (final BillingExceptionBase e) {
                 log.warn("Error while searching plugin " + pluginName, e);
                 // Non-fatal, continue to search other plugins

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2015 Groupon, Inc
+ * Copyright 2014-2015 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -61,6 +63,9 @@ public class DefaultPaginationSqlDaoHelper {
 
     public abstract static class PaginationIteratorBuilder<M extends EntityModelDao<E>, E extends Entity, S extends EntitySqlDao<M, E>> {
 
+        // Determine the totalNbRecords:
+        // - For search queries, return the "SearchCount", i.e. the number of records matching the search query.
+        // - For get calls, return the total number of records (totalNbRecords == maxNbRecords)
         public abstract Long getCount(final S sqlDao, final InternalTenantContext context);
 
         public abstract Iterator<M> build(final S sqlDao, final Long limit, final InternalTenantContext context);

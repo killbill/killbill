@@ -26,15 +26,10 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
-import org.killbill.automaton.OperationException;
-import org.killbill.billing.payment.logging.SpyLogger;
-import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
-import org.killbill.commons.request.Request;
-import org.killbill.commons.request.RequestData;
-
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.automaton.OperationException;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -48,8 +43,11 @@ import org.killbill.billing.payment.core.sm.OperationCallbackBase;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.logging.SpyLogger;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.util.entity.Pagination;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -108,7 +106,22 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
     }
 
-        @Test(groups = "slow")
+    @Test(groups = "slow")
+    public void testAddRemovePaymentMethod() throws Exception {
+        final Long baseNbRecords = paymentApi.getPaymentMethods(0L, 1000L, false, ImmutableList.<PluginProperty>of(), callContext).getMaxNbRecords();
+        Assert.assertEquals(baseNbRecords, (Long) 1L);
+
+        final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
+
+        paymentApi.deletePaymentMethod(account, paymentMethodId, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords, true);
+    }
+
+    @Test(groups = "slow")
     public void testCreateSuccessPurchase() throws PaymentApiException {
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
@@ -1030,5 +1043,48 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final List<PluginProperty> result = new ArrayList<PluginProperty>();
         result.add(new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
         return result;
+    }
+
+    // Search by a key supported by the search in MockPaymentProviderPlugin
+    private void checkPaymentMethodPagination(final UUID paymentMethodId, final Long maxNbRecords, final boolean deleted) throws PaymentApiException {
+        final Pagination<PaymentMethod> foundPaymentMethods = paymentApi.searchPaymentMethods(paymentMethodId.toString(), 0L, maxNbRecords + 1, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(foundPaymentMethods.iterator().hasNext(), !deleted);
+        Assert.assertEquals(foundPaymentMethods.getMaxNbRecords(), maxNbRecords);
+        Assert.assertEquals(foundPaymentMethods.getTotalNbRecords(), (Long) (!deleted ? 1L : 0L));
+
+        final Pagination<PaymentMethod> foundPaymentMethodsWithPluginInfo = paymentApi.searchPaymentMethods(paymentMethodId.toString(), 0L, maxNbRecords + 1, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(foundPaymentMethodsWithPluginInfo.iterator().hasNext(), !deleted);
+        Assert.assertEquals(foundPaymentMethodsWithPluginInfo.getMaxNbRecords(), maxNbRecords);
+        Assert.assertEquals(foundPaymentMethodsWithPluginInfo.getTotalNbRecords(), (Long) (!deleted ? 1L : 0L));
+
+        final Pagination<PaymentMethod> foundPaymentMethods2 = paymentApi.searchPaymentMethods(paymentMethodId.toString(), 0L, maxNbRecords + 1, MockPaymentProviderPlugin.PLUGIN_NAME, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(foundPaymentMethods2.iterator().hasNext(), !deleted);
+        Assert.assertEquals(foundPaymentMethods2.getMaxNbRecords(), maxNbRecords);
+        Assert.assertEquals(foundPaymentMethods2.getTotalNbRecords(), (Long) (!deleted ? 1L : 0L));
+
+        final Pagination<PaymentMethod> foundPaymentMethods2WithPluginInfo = paymentApi.searchPaymentMethods(paymentMethodId.toString(), 0L, maxNbRecords + 1, MockPaymentProviderPlugin.PLUGIN_NAME, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(foundPaymentMethods2WithPluginInfo.iterator().hasNext(), !deleted);
+        Assert.assertEquals(foundPaymentMethods2WithPluginInfo.getMaxNbRecords(), maxNbRecords);
+        Assert.assertEquals(foundPaymentMethods2WithPluginInfo.getTotalNbRecords(), (Long) (!deleted ? 1L : 0L));
+
+        final Pagination<PaymentMethod> gotPaymentMethods = paymentApi.getPaymentMethods(0L, maxNbRecords + 1L, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(gotPaymentMethods.iterator().hasNext(), maxNbRecords > 0);
+        Assert.assertEquals(gotPaymentMethods.getMaxNbRecords(), maxNbRecords);
+        Assert.assertEquals(gotPaymentMethods.getTotalNbRecords(), maxNbRecords);
+
+        final Pagination<PaymentMethod> gotPaymentMethodsWithPluginInfo = paymentApi.getPaymentMethods(0L, maxNbRecords + 1L, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(gotPaymentMethodsWithPluginInfo.iterator().hasNext(), maxNbRecords > 0);
+        Assert.assertEquals(gotPaymentMethodsWithPluginInfo.getMaxNbRecords(), maxNbRecords);
+        Assert.assertEquals(gotPaymentMethodsWithPluginInfo.getTotalNbRecords(), maxNbRecords);
+
+        final Pagination<PaymentMethod> gotPaymentMethods2 = paymentApi.getPaymentMethods(0L, maxNbRecords + 1L, MockPaymentProviderPlugin.PLUGIN_NAME, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(gotPaymentMethods2.iterator().hasNext(), maxNbRecords > 0);
+        Assert.assertEquals(gotPaymentMethods2.getMaxNbRecords(), maxNbRecords);
+        Assert.assertEquals(gotPaymentMethods2.getTotalNbRecords(), maxNbRecords);
+
+        final Pagination<PaymentMethod> gotPaymentMethods2WithPluginInfo = paymentApi.getPaymentMethods(0L, maxNbRecords + 1L, MockPaymentProviderPlugin.PLUGIN_NAME, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(gotPaymentMethods2WithPluginInfo.iterator().hasNext(), maxNbRecords > 0);
+        Assert.assertEquals(gotPaymentMethods2WithPluginInfo.getMaxNbRecords(), maxNbRecords);
+        Assert.assertEquals(gotPaymentMethods2WithPluginInfo.getTotalNbRecords(), maxNbRecords);
     }
 }

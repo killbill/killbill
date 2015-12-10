@@ -33,9 +33,13 @@ public class DefaultPagination<T> implements Pagination<T> {
     private final Long maxNbRecords;
     private final Iterator<T> delegateIterator;
 
-    // Builder when the streaming API can't be used (should only be used for tests)
+    // Builders when the streaming API can't be used (should only be used for tests)
     // Notes: elements should be the entire records set (regardless of filtering) otherwise maxNbRecords won't be accurate
     public static <T> Pagination<T> build(final Long offset, final Long limit, final Collection<T> elements) {
+        return build(offset, limit, elements.size(), elements);
+    }
+
+    public static <T> Pagination<T> build(final Long offset, final Long limit, final Integer maxNbRecords, final Collection<T> elements) {
         final List<T> allResults = ImmutableList.<T>copyOf(elements);
 
         final List<T> results;
@@ -46,7 +50,7 @@ public class DefaultPagination<T> implements Pagination<T> {
         } else {
             results = allResults.subList(offset.intValue(), offset.intValue() + limit.intValue());
         }
-        return new DefaultPagination<T>(offset, limit, (long) results.size(), (long) allResults.size(), results.iterator());
+        return new DefaultPagination<T>(offset, limit, (long) results.size(), (long) maxNbRecords, results.iterator());
     }
 
     // Constructor for DAO -> API bridge

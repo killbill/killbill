@@ -60,6 +60,7 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.EntityPaginationBuilder;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
@@ -72,6 +73,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 
@@ -206,7 +208,8 @@ public class PaymentProcessor extends ProcessorBase {
 
     public Pagination<Payment> getPayments(final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties,
                                            final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
-        return getEntityPaginationFromPlugins(getAvailablePlugins(),
+        return getEntityPaginationFromPlugins(true,
+                                              getAvailablePlugins(),
                                               offset,
                                               limit,
                                               new EntityPaginationBuilder<Payment, PaymentApiException>() {
@@ -240,74 +243,80 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
-        return getEntityPaginationFromPlugins(getAvailablePlugins(),
-                                              offset,
-                                              limit,
-                                              new EntityPaginationBuilder<Payment, PaymentApiException>() {
-                                                  @Override
-                                                  public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      return searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, properties, tenantContext, internalTenantContext);
+        if (withPluginInfo) {
+            return getEntityPaginationFromPlugins(false,
+                                                  getAvailablePlugins(),
+                                                  offset,
+                                                  limit,
+                                                  new EntityPaginationBuilder<Payment, PaymentApiException>() {
+                                                      @Override
+                                                      public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
+                                                          return searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, properties, tenantContext, internalTenantContext);
+                                                      }
                                                   }
-                                              }
-                                             );
+                                                 );
+        } else {
+            try {
+                return getEntityPagination(limit,
+                                           new SourcePaginationBuilder<PaymentModelDao, PaymentApiException>() {
+                                               @Override
+                                               public Pagination<PaymentModelDao> build() {
+                                                   return paymentDao.searchPayments(searchKey, offset, limit, internalTenantContext);
+                                               }
+                                           },
+                                           new Function<PaymentModelDao, Payment>() {
+                                               @Override
+                                               public Payment apply(final PaymentModelDao paymentModelDao) {
+                                                   return toPayment(paymentModelDao.getId(), null, internalTenantContext);
+                                               }
+                                           }
+                                          );
+            } catch (final PaymentApiException e) {
+                log.warn("Unable to search through payments", e);
+                return new DefaultPagination<Payment>(offset, limit, null, null, Iterators.<Payment>emptyIterator());
+            }
+        }
     }
 
     public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
-        if (withPluginInfo) {
-            final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
+        final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
 
-            return getEntityPagination(limit,
-                                       new SourcePaginationBuilder<PaymentTransactionInfoPlugin, PaymentApiException>() {
-                                           @Override
-                                           public Pagination<PaymentTransactionInfoPlugin> build() throws PaymentApiException {
-                                               try {
-                                                   return pluginApi.searchPayments(searchKey, offset, limit, properties, tenantContext);
-                                               } catch (final PaymentPluginApiException e) {
-                                                   throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENTS, pluginName, searchKey);
-                                               }
-                                           }
-
-                                       },
-                                       new Function<PaymentTransactionInfoPlugin, Payment>() {
-                                           final List<PaymentTransactionInfoPlugin> cachedPaymentTransactions = new LinkedList<PaymentTransactionInfoPlugin>();
-
-                                           @Override
-                                           public Payment apply(final PaymentTransactionInfoPlugin pluginTransaction) {
-                                               if (pluginTransaction.getKbPaymentId() == null) {
-                                                   // Garbage from the plugin?
-                                                   log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
-                                                   return null;
-                                               }
-
-                                               if (cachedPaymentTransactions.isEmpty() ||
-                                                   (cachedPaymentTransactions.get(0).getKbPaymentId().equals(pluginTransaction.getKbPaymentId()))) {
-                                                   cachedPaymentTransactions.add(pluginTransaction);
-                                                   return null;
-                                               } else {
-                                                   final Payment result = toPayment(pluginTransaction.getKbPaymentId(), ImmutableList.<PaymentTransactionInfoPlugin>copyOf(cachedPaymentTransactions), internalTenantContext);
-                                                   cachedPaymentTransactions.clear();
-                                                   cachedPaymentTransactions.add(pluginTransaction);
-                                                   return result;
-                                               }
+        return getEntityPagination(limit,
+                                   new SourcePaginationBuilder<PaymentTransactionInfoPlugin, PaymentApiException>() {
+                                       @Override
+                                       public Pagination<PaymentTransactionInfoPlugin> build() throws PaymentApiException {
+                                           try {
+                                               return pluginApi.searchPayments(searchKey, offset, limit, properties, tenantContext);
+                                           } catch (final PaymentPluginApiException e) {
+                                               throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENTS, pluginName, searchKey);
                                            }
                                        }
-                                      );
-        } else {
-            return getEntityPagination(limit,
-                                       new SourcePaginationBuilder<PaymentModelDao, PaymentApiException>() {
-                                           @Override
-                                           public Pagination<PaymentModelDao> build() {
-                                               return paymentDao.searchPayments(searchKey, offset, limit, internalTenantContext);
+
+                                   },
+                                   new Function<PaymentTransactionInfoPlugin, Payment>() {
+                                       final List<PaymentTransactionInfoPlugin> cachedPaymentTransactions = new LinkedList<PaymentTransactionInfoPlugin>();
+
+                                       @Override
+                                       public Payment apply(final PaymentTransactionInfoPlugin pluginTransaction) {
+                                           if (pluginTransaction.getKbPaymentId() == null) {
+                                               // Garbage from the plugin?
+                                               log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
+                                               return null;
                                            }
-                                       },
-                                       new Function<PaymentModelDao, Payment>() {
-                                           @Override
-                                           public Payment apply(final PaymentModelDao paymentModelDao) {
-                                               return toPayment(paymentModelDao.getId(), null, internalTenantContext);
+
+                                           if (cachedPaymentTransactions.isEmpty() ||
+                                               (cachedPaymentTransactions.get(0).getKbPaymentId().equals(pluginTransaction.getKbPaymentId()))) {
+                                               cachedPaymentTransactions.add(pluginTransaction);
+                                               return null;
+                                           } else {
+                                               final Payment result = toPayment(pluginTransaction.getKbPaymentId(), withPluginInfo ? ImmutableList.<PaymentTransactionInfoPlugin>copyOf(cachedPaymentTransactions) : ImmutableList.<PaymentTransactionInfoPlugin>of(), internalTenantContext);
+                                               cachedPaymentTransactions.clear();
+                                               cachedPaymentTransactions.add(pluginTransaction);
+                                               return result;
                                            }
                                        }
-                                      );
-        }
+                                   }
+                                  );
     }
 
     private Payment performOperation(final boolean isApiPayment, @Nullable final UUID attemptId,

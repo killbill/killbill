@@ -126,7 +126,9 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     @Override
     public Pagination<SubscriptionBundleModelDao> searchSubscriptionBundles(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         final List<SubscriptionBundleModelDao> results = new LinkedList<SubscriptionBundleModelDao>();
+        int maxNbRecords = 0;
         for (final SubscriptionBundleModelDao bundleModelDao : getAll(context)) {
+            maxNbRecords++;
             if (bundleModelDao.getId().toString().equals(searchKey) ||
                 bundleModelDao.getExternalKey().equals(searchKey) ||
                 bundleModelDao.getAccountId().toString().equals(searchKey)) {
@@ -134,7 +136,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
             }
         }
 
-        return DefaultPagination.<SubscriptionBundleModelDao>build(offset, limit, results);
+        return DefaultPagination.<SubscriptionBundleModelDao>build(offset, limit, maxNbRecords, results);
     }
 
     @Override

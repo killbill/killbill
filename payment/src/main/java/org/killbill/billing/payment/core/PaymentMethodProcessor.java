@@ -56,6 +56,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.EntityPaginationBuilder;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
@@ -70,6 +71,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.payment.dispatcher.PaymentPluginDispatcher.dispatchWithExceptionHandling;
@@ -236,7 +238,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
     }
 
     public Pagination<PaymentMethod> getPaymentMethods(final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
-        return getEntityPaginationFromPlugins(getAvailablePlugins(),
+        return getEntityPaginationFromPlugins(true,
+                                              getAvailablePlugins(),
                                               offset,
                                               limit,
                                               new EntityPaginationBuilder<PaymentMethod, PaymentApiException>() {
@@ -279,69 +282,75 @@ public class PaymentMethodProcessor extends ProcessorBase {
     }
 
     public Pagination<PaymentMethod> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
-        return getEntityPaginationFromPlugins(getAvailablePlugins(),
-                                              offset,
-                                              limit,
-                                              new EntityPaginationBuilder<PaymentMethod, PaymentApiException>() {
-                                                  @Override
-                                                  public Pagination<PaymentMethod> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      return searchPaymentMethods(searchKey, offset, limit, pluginName, withPluginInfo, properties, tenantContext, internalTenantContext);
+        if (withPluginInfo) {
+            return getEntityPaginationFromPlugins(false,
+                                                  getAvailablePlugins(),
+                                                  offset,
+                                                  limit,
+                                                  new EntityPaginationBuilder<PaymentMethod, PaymentApiException>() {
+                                                      @Override
+                                                      public Pagination<PaymentMethod> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
+                                                          return searchPaymentMethods(searchKey, offset, limit, pluginName, withPluginInfo, properties, tenantContext, internalTenantContext);
+                                                      }
                                                   }
-                                              }
-                                             );
+                                                 );
+        } else {
+            try {
+                return getEntityPagination(limit,
+                                           new SourcePaginationBuilder<PaymentMethodModelDao, PaymentApiException>() {
+                                               @Override
+                                               public Pagination<PaymentMethodModelDao> build() {
+                                                   return paymentDao.searchPaymentMethods(searchKey, offset, limit, internalTenantContext);
+                                               }
+                                           },
+                                           new Function<PaymentMethodModelDao, PaymentMethod>() {
+                                               @Override
+                                               public PaymentMethod apply(final PaymentMethodModelDao paymentMethodModelDao) {
+                                                   return new DefaultPaymentMethod(paymentMethodModelDao, null);
+                                               }
+                                           }
+                                          );
+            } catch (final PaymentApiException e) {
+                log.warn("Unable to search through payment methods", e);
+                return new DefaultPagination<PaymentMethod>(offset, limit, null, null, Iterators.<PaymentMethod>emptyIterator());
+            }
+        }
     }
 
-    public Pagination<PaymentMethod> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final String pluginName,
-                                                          final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
-        if (withPluginInfo) {
-            final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
+    public Pagination<PaymentMethod> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo,
+                                                          final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
 
-            return getEntityPagination(limit,
-                                       new SourcePaginationBuilder<PaymentMethodPlugin, PaymentApiException>() {
-                                           @Override
-                                           public Pagination<PaymentMethodPlugin> build() throws PaymentApiException {
-                                               try {
-                                                   return pluginApi.searchPaymentMethods(searchKey, offset, limit, properties, tenantContext);
-                                               } catch (final PaymentPluginApiException e) {
-                                                   throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENT_METHODS, pluginName, searchKey);
-                                               }
-                                           }
-                                       },
-                                       new Function<PaymentMethodPlugin, PaymentMethod>() {
-                                           @Override
-                                           public PaymentMethod apply(final PaymentMethodPlugin paymentMethodPlugin) {
-                                               if (paymentMethodPlugin.getKbPaymentMethodId() == null) {
-                                                   // Garbage from the plugin?
-                                                   log.debug("Plugin {} returned a payment method without a kbPaymentMethodId for searchKey {}", pluginName, searchKey);
-                                                   return null;
-                                               }
-
-                                               final PaymentMethodModelDao paymentMethodModelDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodPlugin.getKbPaymentMethodId(), internalTenantContext);
-                                               if (paymentMethodModelDao == null) {
-                                                   log.warn("Unable to find payment method id " + paymentMethodPlugin.getKbPaymentMethodId() + " present in plugin " + pluginName);
-                                                   return null;
-                                               }
-
-                                               return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);
+        return getEntityPagination(limit,
+                                   new SourcePaginationBuilder<PaymentMethodPlugin, PaymentApiException>() {
+                                       @Override
+                                       public Pagination<PaymentMethodPlugin> build() throws PaymentApiException {
+                                           try {
+                                               return pluginApi.searchPaymentMethods(searchKey, offset, limit, properties, tenantContext);
+                                           } catch (final PaymentPluginApiException e) {
+                                               throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENT_METHODS, pluginName, searchKey);
                                            }
                                        }
-                                      );
-        } else {
-            return getEntityPagination(limit,
-                                       new SourcePaginationBuilder<PaymentMethodModelDao, PaymentApiException>() {
-                                           @Override
-                                           public Pagination<PaymentMethodModelDao> build() {
-                                               return paymentDao.searchPaymentMethods(searchKey, offset, limit, internalTenantContext);
+                                   },
+                                   new Function<PaymentMethodPlugin, PaymentMethod>() {
+                                       @Override
+                                       public PaymentMethod apply(final PaymentMethodPlugin paymentMethodPlugin) {
+                                           if (paymentMethodPlugin.getKbPaymentMethodId() == null) {
+                                               // Garbage from the plugin?
+                                               log.debug("Plugin {} returned a payment method without a kbPaymentMethodId for searchKey {}", pluginName, searchKey);
+                                               return null;
                                            }
-                                       },
-                                       new Function<PaymentMethodModelDao, PaymentMethod>() {
-                                           @Override
-                                           public PaymentMethod apply(final PaymentMethodModelDao paymentMethodModelDao) {
-                                               return new DefaultPaymentMethod(paymentMethodModelDao, null);
+
+                                           final PaymentMethodModelDao paymentMethodModelDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodPlugin.getKbPaymentMethodId(), internalTenantContext);
+                                           if (paymentMethodModelDao == null) {
+                                               log.warn("Unable to find payment method id " + paymentMethodPlugin.getKbPaymentMethodId() + " present in plugin " + pluginName);
+                                               return null;
                                            }
+
+                                           return new DefaultPaymentMethod(paymentMethodModelDao, withPluginInfo ? paymentMethodPlugin : null);
                                        }
-                                      );
-        }
+                                   }
+                                  );
     }
 
     public PaymentMethod getExternalPaymentMethod(final UUID accountId, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {

@@ -305,7 +305,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
                 return (input.getKbPaymentMethodId().toString().equals(searchKey));
             }
         }));
-        return DefaultPagination.<PaymentMethodPlugin>build(offset, limit, results);
+        return DefaultPagination.<PaymentMethodPlugin>build(offset, limit, paymentMethods.size(), results);
     }
 
     @Override

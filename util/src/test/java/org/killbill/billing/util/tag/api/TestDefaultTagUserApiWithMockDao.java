@@ -33,8 +33,7 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 
-
-public class DefaultTagUserApiTest extends UtilTestSuiteNoDB {
+public class TestDefaultTagUserApiWithMockDao extends UtilTestSuiteNoDB {
 
     private DefaultTagUserApi tagUserApi;
     private TagDefinitionDao tagDefinitionDao;
