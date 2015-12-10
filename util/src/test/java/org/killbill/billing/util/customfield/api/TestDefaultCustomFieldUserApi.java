@@ -84,7 +84,9 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
             }
         });
 
+        eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
         customFieldUserApi.removeCustomFields(customFields, callContext);
+        assertListenerStatus();
         List<CustomField> remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
         Assert.assertEquals(remainingCustomFields.size(), 0);
 
@@ -95,13 +97,16 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
 
         eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
         customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(newCustomField), callContext);
+        assertListenerStatus();
         remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
         Assert.assertEquals(remainingCustomFields.size(), 1);
 
         checkPagination(1);
 
         // Delete again
+        eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
         customFieldUserApi.removeCustomFields(remainingCustomFields, callContext);
+        assertListenerStatus();
         remainingCustomFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
         Assert.assertEquals(remainingCustomFields.size(), 0);
 

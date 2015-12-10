@@ -102,7 +102,13 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class).markTagAsDeleted(customFieldId.toString(), context);
+                final CustomFieldSqlDao sqlDao = entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class);
+
+                final CustomFieldModelDao customField = sqlDao.getById(customFieldId.toString(), context);
+                sqlDao.markTagAsDeleted(customFieldId.toString(), context);
+
+                postBusEventFromTransaction(customField, customField, ChangeType.DELETE, entitySqlDaoWrapperFactory, context);
+
                 return null;
             }
         });
