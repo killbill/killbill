@@ -95,6 +95,7 @@
         <stateMachine name="CAPTURE">
             <states>
                 <state name="CAPTURE_INIT"/>
+                <state name="CAPTURE_PENDING"/>
                 <state name="CAPTURE_SUCCESS"/>
                 <state name="CAPTURE_FAILED"/>
                 <state name="CAPTURE_ERRORED"/>
@@ -111,6 +112,30 @@
                     <operation>OP_CAPTURE</operation>
                     <operationResult>FAILURE</operationResult>
                     <finalState>CAPTURE_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CAPTURE_INIT</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>CAPTURE_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>CAPTURE_PENDING</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>CAPTURE_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>CAPTURE_PENDING</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>CAPTURE_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CAPTURE_PENDING</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>CAPTURE_ERRORED</finalState>
                 </transition>
                 <transition>
                     <initialState>CAPTURE_INIT</initialState>
@@ -298,6 +323,7 @@
         <stateMachine name="VOID">
             <states>
                 <state name="VOID_INIT"/>
+                <state name="VOID_PENDING"/>
                 <state name="VOID_SUCCESS"/>
                 <state name="VOID_FAILED"/>
                 <state name="VOID_ERRORED"/>
@@ -318,6 +344,30 @@
                 <transition>
                     <initialState>VOID_INIT</initialState>
                     <operation>OP_VOID</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>VOID_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>VOID_PENDING</initialState>
+                    <operation>OP_VOID</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>VOID_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>VOID_PENDING</initialState>
+                    <operation>OP_VOID</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>VOID_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>VOID_PENDING</initialState>
+                    <operation>OP_VOID</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>VOID_ERRORED</finalState>
+                </transition>
+                <transition>
+                    <initialState>VOID_INIT</initialState>
+                    <operation>OP_VOID</operation>
                     <operationResult>EXCEPTION</operationResult>
                     <finalState>VOID_ERRORED</finalState>
                 </transition>
@@ -329,6 +379,7 @@
         <stateMachine name="CHARGEBACK">
             <states>
                 <state name="CHARGEBACK_INIT"/>
+                <state name="CHARGEBACK_PENDING"/>
                 <state name="CHARGEBACK_SUCCESS"/>
                 <state name="CHARGEBACK_FAILED"/>
                 <state name="CHARGEBACK_ERRORED"/>
@@ -345,6 +396,30 @@
                     <operation>OP_CHARGEBACK</operation>
                     <operationResult>FAILURE</operationResult>
                     <finalState>CHARGEBACK_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CHARGEBACK_INIT</initialState>
+                    <operation>OP_CHARGEBACK</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>CHARGEBACK_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>CHARGEBACK_PENDING</initialState>
+                    <operation>OP_CHARGEBACK</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>CHARGEBACK_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>CHARGEBACK_PENDING</initialState>
+                    <operation>OP_CHARGEBACK</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>CHARGEBACK_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CHARGEBACK_PENDING</initialState>
+                    <operation>OP_CHARGEBACK</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>CHARGEBACK_ERRORED</finalState>
                 </transition>
                 <transition>
                     <initialState>CHARGEBACK_INIT</initialState>
