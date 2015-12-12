@@ -41,16 +41,20 @@ public class PluginInfoModelJson {
 
     private final Set<PluginServiceInfoModelJson> services;
 
+    private final Boolean isSelectedForStart;
+
     @JsonCreator
     public PluginInfoModelJson(@JsonProperty("bundleSymbolicName") final String bundleSymbolicName,
                                @JsonProperty("pluginName") final String pluginName,
                                @JsonProperty("version") final String version,
                                @JsonProperty("state") final PluginState state,
+                               @JsonProperty("isSelectedForStart") final Boolean isSelectedForStart,
                                @JsonProperty("services") final Set<PluginServiceInfoModelJson> services) {
         this.bundleSymbolicName = bundleSymbolicName;
         this.pluginName = pluginName;
         this.version = version;
         this.state = state;
+        this.isSelectedForStart = isSelectedForStart;
         this.services = services;
     }
 
@@ -59,6 +63,7 @@ public class PluginInfoModelJson {
              input.getPluginName(),
              input.getVersion(),
              input.getPluginState(),
+             input.isSelectedForStart(),
              ImmutableSet.copyOf(Iterables.transform(input.getServices(), new Function<PluginServiceInfo, PluginServiceInfoModelJson>() {
                  @Override
                  public PluginServiceInfoModelJson apply(final PluginServiceInfo input) {
@@ -83,6 +88,11 @@ public class PluginInfoModelJson {
         return state;
     }
 
+    @JsonProperty("isSelectedForStart")
+    public boolean isSelectedForStart() {
+        return isSelectedForStart;
+    }
+
     public Set<PluginServiceInfoModelJson> getServices() {
         return services;
     }
@@ -102,6 +112,9 @@ public class PluginInfoModelJson {
             return false;
         }
         if (state != null ? !state.equals(that.state) : that.state != null) {
+            return false;
+        }
+        if (isSelectedForStart != that.isSelectedForStart) {
             return false;
         }
         if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {

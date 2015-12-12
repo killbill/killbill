@@ -94,8 +94,7 @@ public class DefaultNodeInfo implements NodeInfo {
         return Iterables.transform(plugins, new Function<PluginInfoModelJson, PluginInfo>() {
             @Override
             public PluginInfo apply(final PluginInfoModelJson input) {
-
-                return new DefaultPluginInfo(input.getBundleSymbolicName(), input.getPluginName(), input.getVersion(), input.getState(), toPluginServiceInfo(input.getServices()));
+                return new DefaultPluginInfo(input.getBundleSymbolicName(), input.getPluginName(), input.getVersion(), input.getState(), input.isSelectedForStart(), toPluginServiceInfo(input.getServices()));
             }
         });
     }

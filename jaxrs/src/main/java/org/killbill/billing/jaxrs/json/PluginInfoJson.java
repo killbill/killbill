@@ -40,16 +40,20 @@ public class PluginInfoJson {
 
     private final Set<PluginServiceInfoJson> services;
 
+    private final Boolean isSelectedForStart;
+
     @JsonCreator
     public PluginInfoJson(@JsonProperty("bundleSymbolicName") final String bundleSymbolicName,
                           @JsonProperty("pluginName") final String pluginName,
                           @JsonProperty("version") final String version,
                           @JsonProperty("state") final String state,
+                          @JsonProperty("isSelectedForStart") final Boolean isSelectedForStart,
                           @JsonProperty("services") final Set<PluginServiceInfoJson> services) {
         this.bundleSymbolicName = bundleSymbolicName;
         this.pluginName = pluginName;
         this.version = version;
         this.state = state;
+        this.isSelectedForStart = isSelectedForStart;
         this.services = services;
     }
 
@@ -58,6 +62,7 @@ public class PluginInfoJson {
              input.getPluginName(),
              input.getVersion(),
              input.getPluginState().name(),
+             input.isSelectedForStart(),
              ImmutableSet.copyOf(Iterables.transform(input.getServices(), new Function<PluginServiceInfo, PluginServiceInfoJson>() {
                  @Override
                  public PluginServiceInfoJson apply(final PluginServiceInfo input) {
@@ -80,6 +85,11 @@ public class PluginInfoJson {
 
     public String getState() {
         return state;
+    }
+
+    @JsonProperty("isSelectedForStart")
+    public Boolean isSelectedForStart() {
+        return isSelectedForStart;
     }
 
     public Set<PluginServiceInfoJson> getServices() {

@@ -120,6 +120,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
                                                   input.getPluginName(),
                                                   input.getVersion(),
                                                   input.getPluginState().name(),
+                                                  input.isSelectedForStart(),
                                                   servicesJson);
                     }
                 }));
