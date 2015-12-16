@@ -58,9 +58,6 @@ public class TestOverdueHelper {
             "           <externalMessage>Reached OD3</externalMessage>" +
             "           <blockChanges>true</blockChanges>" +
             "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
-            "           <autoReevaluationInterval>" +
-            "               <unit>DAYS</unit><number>5</number>" +
-            "           </autoReevaluationInterval>" +
             "       </state>" +
             "       <state name=\"OD2\">" +
             "           <condition>" +

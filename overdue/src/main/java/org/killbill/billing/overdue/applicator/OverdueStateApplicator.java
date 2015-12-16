@@ -138,7 +138,7 @@ public class OverdueStateApplicator {
                                                         (firstOverdueState != null && billingState != null && billingState.getDateOfEarliestUnpaidInvoice() != null);
 
             if (conditionForNextNotfication) {
-                final Period reevaluationInterval = nextOverdueState.isClearState() ? overdueStateSet.getInitialReevaluationInterval() : nextOverdueState.getAutoReevaluationInterval();
+                final Period reevaluationInterval = getReevaluationInterval(overdueStateSet, nextOverdueState);
                 // If there is no configuration in the config, we assume this is because the overdue conditions are not time based and so there is nothing to retry
                 if (reevaluationInterval == null) {
                     log.debug("OverdueStateApplicator <notificationQ> : Missing InitialReevaluationInterval from config, NOT inserting notification for account " + account.getId());
@@ -147,7 +147,6 @@ public class OverdueStateApplicator {
                     log.debug("OverdueStateApplicator <notificationQ> : inserting notification for account " + account.getId() + ", time = " + clock.getUTCNow().plus(reevaluationInterval));
                     createFutureNotification(account, clock.getUTCNow().plus(reevaluationInterval), context);
                 }
-
             } else if (nextOverdueState.isClearState()) {
                 clearFutureNotification(account, context);
             }
@@ -166,11 +165,7 @@ public class OverdueStateApplicator {
             // on the bus to which invoice will react. We need the latest state (including AUTO_INVOICE_OFF tag for example)
             // to be present in the database first.
             storeNewState(account, nextOverdueState, context);
-        } catch (final OverdueApiException e) {
-            if (e.getCode() != ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
-                throw new OverdueException(e);
-            }
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             throw new OverdueException(e);
         }
         try {
@@ -178,6 +173,22 @@ public class OverdueStateApplicator {
                                         isUnblockBillingTransition(previousOverdueState, nextOverdueState), context));
         } catch (final Exception e) {
             log.error("Error posting overdue change event to bus", e);
+        }
+    }
+
+    private Period getReevaluationInterval(final OverdueStateSet overdueStateSet, final OverdueState nextOverdueState) throws OverdueException {
+        try {
+            if (nextOverdueState.isClearState()) {
+                return overdueStateSet.getInitialReevaluationInterval();
+            } else {
+                return nextOverdueState.getAutoReevaluationInterval();
+            }
+        } catch (final OverdueApiException e) {
+            if (e.getCode() == ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
+                return null;
+            } else {
+                throw new OverdueException(e);
+            }
         }
     }
 
