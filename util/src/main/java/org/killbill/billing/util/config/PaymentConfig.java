@@ -38,17 +38,17 @@ public interface PaymentConfig extends KillbillConfig {
 
     @Config("org.killbill.payment.failure.retry.start.sec")
     @Default("300")
-    @Description("Specify the interval of time in seconds before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...")
+    @Description("Specify the interval of time in seconds before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...)")
     int getPluginFailureInitialRetryInSec();
 
     @Config("org.killbill.payment.failure.retry.multiplier")
     @Default("2")
-    @Description("Specify the multiplier to apply between in retry before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...")
+    @Description("Specify the multiplier to apply between in retry before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...)")
     int getPluginFailureRetryMultiplier();
 
     @Config("org.killbill.payment.failure.retry.max.attempts")
     @Default("8")
-    @Description("Specify the max number of attempts before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...\"")
+    @Description("Specify the max number of attempts before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...)")
     int getPluginFailureRetryMaxAttempts();
 
     @Config("org.killbill.payment.plugin.timeout")
