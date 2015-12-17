@@ -48,7 +48,7 @@ public class TestNodeInfoMapper extends UtilTestSuiteNoDB {
         services1.add(svc);
 
         final List<PluginInfoModelJson> pluginInfos = new ArrayList<PluginInfoModelJson>();
-        final PluginInfoModelJson info1 = new PluginInfoModelJson("sym1", "name1", "vers1", PluginState.STOPPED, true, services1);
+        final PluginInfoModelJson info1 = new PluginInfoModelJson("sym1", "key1", "name1", "vers1", PluginState.STOPPED, true, services1);
         pluginInfos.add(info1);
         final NodeInfoModelJson input = new NodeInfoModelJson("nodeName", clock.getUTCNow(), clock.getUTCNow(), "1.0", "1.0", "1.0", "1.0", "1.0", pluginInfos);
 
@@ -63,7 +63,7 @@ public class TestNodeInfoMapper extends UtilTestSuiteNoDB {
     public void testNodeSystemCommandSerialization() throws Exception {
 
         final NodeCommandProperty prop = new NodeCommandProperty("something", "nothing");
-        final PluginNodeCommandMetadata nodeCommandMetadata = new PluginNodeCommandMetadata("foo", "1.2.3", ImmutableList.<NodeCommandProperty>of(prop));
+        final PluginNodeCommandMetadata nodeCommandMetadata = new PluginNodeCommandMetadata("foo", "key1", "1.2.3", ImmutableList.<NodeCommandProperty>of(prop));
 
         final String nodeCmdStr = nodeInfoMapper.serializeNodeCommand(nodeCommandMetadata);
 

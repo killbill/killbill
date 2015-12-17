@@ -33,6 +33,8 @@ public class PluginInfoModelJson {
 
     private final String bundleSymbolicName;
 
+    private final String pluginKey;
+
     private final String pluginName;
 
     private final String version;
@@ -45,12 +47,14 @@ public class PluginInfoModelJson {
 
     @JsonCreator
     public PluginInfoModelJson(@JsonProperty("bundleSymbolicName") final String bundleSymbolicName,
+                               @JsonProperty("pluginKey") final String pluginKey,
                                @JsonProperty("pluginName") final String pluginName,
                                @JsonProperty("version") final String version,
                                @JsonProperty("state") final PluginState state,
                                @JsonProperty("isSelectedForStart") final Boolean isSelectedForStart,
                                @JsonProperty("services") final Set<PluginServiceInfoModelJson> services) {
         this.bundleSymbolicName = bundleSymbolicName;
+        this.pluginKey = pluginKey;
         this.pluginName = pluginName;
         this.version = version;
         this.state = state;
@@ -60,6 +64,7 @@ public class PluginInfoModelJson {
 
     public PluginInfoModelJson(final PluginInfo input) {
         this(input.getBundleSymbolicName(),
+             input.getPluginKey(),
              input.getPluginName(),
              input.getVersion(),
              input.getPluginState(),
@@ -86,6 +91,10 @@ public class PluginInfoModelJson {
 
     public PluginState getState() {
         return state;
+    }
+
+    public String getPluginKey() {
+        return pluginKey;
     }
 
     @JsonProperty("isSelectedForStart")
@@ -117,6 +126,9 @@ public class PluginInfoModelJson {
         if (isSelectedForStart != that.isSelectedForStart) {
             return false;
         }
+        if (pluginKey != null ? !pluginKey.equals(that.pluginKey) : that.pluginKey != null) {
+            return false;
+        }
         if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
             return false;
         }
@@ -130,6 +142,7 @@ public class PluginInfoModelJson {
     @Override
     public int hashCode() {
         int result = bundleSymbolicName != null ? bundleSymbolicName.hashCode() : 0;
+        result = 31 * result + (pluginKey != null ? pluginKey.hashCode() : 0);
         result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
         result = 31 * result + (version != null ? version.hashCode() : 0);
         result = 31 * result + (state != null ? state.hashCode() : 0);

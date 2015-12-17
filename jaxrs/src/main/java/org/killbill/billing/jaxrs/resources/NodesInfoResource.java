@@ -117,6 +117,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
                             }
                         }));
                         return new PluginInfoJson(input.getBundleSymbolicName(),
+                                                  input.getPluginKey(),
                                                   input.getPluginName(),
                                                   input.getVersion(),
                                                   input.getPluginState().name(),
@@ -187,6 +188,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
             };
         }
 
+        String pluginKey = null;
         String pluginName = null;
         String pluginVersion = null;
         final Iterator<NodeCommandPropertyJson> it = input.getNodeCommandProperties().iterator();
@@ -196,16 +198,17 @@ public class NodesInfoResource extends JaxRsResourceBase {
                 pluginName = (String) cur.getValue();
             } else if (PluginNodeCommandMetadata.PLUGIN_VERSION.equals(cur.getKey())) {
                 pluginVersion = (String) cur.getValue();
+            } else if (PluginNodeCommandMetadata.PLUGIN_KEY.equals(cur.getKey())) {
+                pluginKey = (String) cur.getValue();
             }
-            if (pluginName != null && pluginVersion != null) {
+            if (pluginName != null && pluginVersion != null && pluginKey != null) {
                 break;
             }
         }
 
-        if (pluginName != null) {
-            input.getNodeCommandProperties().remove(PluginNodeCommandMetadata.PLUGIN_NAME);
-            input.getNodeCommandProperties().remove(PluginNodeCommandMetadata.PLUGIN_VERSION);
-            return new PluginNodeCommandMetadata(pluginName, pluginVersion, toNodeCommandProperties(input.getNodeCommandProperties()));
+        if (pluginName != null || pluginKey != null) {
+            removeFirstClassProperties(input.getNodeCommandProperties(), PluginNodeCommandMetadata.PLUGIN_NAME, PluginNodeCommandMetadata.PLUGIN_VERSION, PluginNodeCommandMetadata.PLUGIN_KEY);
+            return new PluginNodeCommandMetadata(pluginKey, pluginName, pluginVersion, toNodeCommandProperties(input.getNodeCommandProperties()));
         } else {
             return new NodeCommandMetadata() {
                 @Override
@@ -216,6 +219,18 @@ public class NodesInfoResource extends JaxRsResourceBase {
         }
     }
 
+    private void removeFirstClassProperties(final List<NodeCommandPropertyJson> properties, final String... toBeRemoved) {
+        final Iterator<NodeCommandPropertyJson> it = properties.iterator();
+        while (it.hasNext()) {
+            final NodeCommandPropertyJson cur = it.next();
+            for (String p : toBeRemoved) {
+                if (cur.getKey().equals(p)) {
+                    it.remove();
+                    break;
+                }
+            }
+        }
+    }
     private List<NodeCommandProperty> toNodeCommandProperties(final List<NodeCommandPropertyJson> input) {
         return ImmutableList.copyOf(Iterables.transform(input, new Function<NodeCommandPropertyJson, NodeCommandProperty>() {
             @Override

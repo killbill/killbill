@@ -121,7 +121,7 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
                     final PluginNodeCommandMetadata nodeCommandMetadata = (PluginNodeCommandMetadata) nodeInfoMapper.deserializeNodeCommand(broadcastMetadata.getEventJson(), broadcastMetadata.getCommandType());
                     ((FakePluginFinder) pluginFinder).addPlugin(createPluginConfig(nodeCommandMetadata));
 
-                    pluginsInfoApi.notifyOfStateChanged(PluginStateChange.NEW_VERSION, nodeCommandMetadata.getPluginName(), nodeCommandMetadata.getPluginVersion(), PluginLanguage.JAVA);
+                    pluginsInfoApi.notifyOfStateChanged(PluginStateChange.NEW_VERSION, nodeCommandMetadata.getPluginKey(), nodeCommandMetadata.getPluginName(), nodeCommandMetadata.getPluginVersion(), PluginLanguage.JAVA);
 
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -135,6 +135,11 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
             @Override
             public int compareTo(final PluginConfig o) {
                 return 0;
+            }
+
+            @Override
+            public String getPluginKey() {
+                return nodeCommandMetadata.getPluginKey();
             }
 
             @Override
@@ -231,6 +236,11 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
                 @Override
                 public int compareTo(final PluginConfig o) {
                     return 0;
+                }
+
+                @Override
+                public String getPluginKey() {
+                    return null;
                 }
 
                 @Override
@@ -344,7 +354,7 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
 
             @Override
             public NodeCommandMetadata getNodeCommandMetadata() {
-                return new PluginNodeCommandMetadata(NEW_PLUGIN_NAME, NEW_PLUGIN_VERSION, ImmutableList.<NodeCommandProperty>of());
+                return new PluginNodeCommandMetadata(NEW_PLUGIN_NAME, NEW_PLUGIN_NAME, NEW_PLUGIN_VERSION, ImmutableList.<NodeCommandProperty>of());
             }
         };
         busHandler.pushExpectedEvent(NextEvent.BROADCAST_SERVICE);

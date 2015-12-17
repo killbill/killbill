@@ -32,6 +32,8 @@ public class PluginInfoJson {
 
     private final String bundleSymbolicName;
 
+    private final String pluginKey;
+
     private final String pluginName;
 
     private final String version;
@@ -44,12 +46,14 @@ public class PluginInfoJson {
 
     @JsonCreator
     public PluginInfoJson(@JsonProperty("bundleSymbolicName") final String bundleSymbolicName,
+                          @JsonProperty("pluginKey") final String pluginKey,
                           @JsonProperty("pluginName") final String pluginName,
                           @JsonProperty("version") final String version,
                           @JsonProperty("state") final String state,
                           @JsonProperty("isSelectedForStart") final Boolean isSelectedForStart,
                           @JsonProperty("services") final Set<PluginServiceInfoJson> services) {
         this.bundleSymbolicName = bundleSymbolicName;
+        this.pluginKey = pluginKey;
         this.pluginName = pluginName;
         this.version = version;
         this.state = state;
@@ -59,6 +63,7 @@ public class PluginInfoJson {
 
     public PluginInfoJson(final PluginInfo input) {
         this(input.getBundleSymbolicName(),
+             input.getPluginKey(),
              input.getPluginName(),
              input.getVersion(),
              input.getPluginState().name(),
@@ -77,6 +82,10 @@ public class PluginInfoJson {
 
     public String getPluginName() {
         return pluginName;
+    }
+
+    public String getPluginKey() {
+        return pluginKey;
     }
 
     public String getVersion() {
