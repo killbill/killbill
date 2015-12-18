@@ -32,6 +32,7 @@ import org.killbill.billing.account.api.DefaultAccountEmail;
 import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.dao.AccountEmailModelDao;
 import org.killbill.billing.account.dao.AccountModelDao;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -84,8 +85,14 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
             throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, data.getExternalKey());
         }
 
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
+
+        if (data.getParentAccountId() != null) {
+            getAccountById(data.getParentAccountId(), internalContext);
+        }
+
         final AccountModelDao account = new AccountModelDao(data);
-        accountDao.create(account, internalCallContextFactory.createInternalCallContext(context));
+        accountDao.create(account, internalContext);
 
         return new DefaultAccount(account);
     }

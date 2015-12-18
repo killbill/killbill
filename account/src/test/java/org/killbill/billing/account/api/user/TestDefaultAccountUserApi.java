@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 
 import org.killbill.billing.account.AccountTestSuiteWithEmbeddedDB;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.account.api.DefaultMutableAccountData;
@@ -70,7 +71,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
         // Update the address and leave other fields null
-        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, 0, null,
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, 0, null,
                                                                                     null, null, null, null, null, null,
                                                                                     null, null, null, null, false, false);
         final String newAddress1 = UUID.randomUUID().toString();
@@ -129,4 +130,34 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
             return accountCreationInternalEvents;
         }
     }
+
+    @Test(groups = "slow", description = "Test Account create Parent and Child")
+    public void testCreateParentAndChildAccounts() throws Exception {
+
+        final Account parentAccount = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
+
+        final AccountModelDao childAccountModel = createTestAccount();
+        childAccountModel.setParentAccountId(parentAccount.getId());
+        final AccountData childAccountData = new DefaultAccount(childAccountModel);
+        final Account childAccount = accountUserApi.createAccount(childAccountData, callContext);
+
+        final Account retrievedChildAccount = accountUserApi.getAccountById(childAccount.getId(), callContext);
+
+        Assert.assertNull(parentAccount.getParentAccountId());
+        Assert.assertNotNull(retrievedChildAccount.getParentAccountId());
+        Assert.assertEquals(retrievedChildAccount.getId(), childAccount.getId());
+        Assert.assertEquals(retrievedChildAccount.getParentAccountId(), parentAccount.getId());
+    }
+
+    @Test(groups = "slow", description = "Test Account create Child with a non existing Parent",
+            expectedExceptions = AccountApiException.class, expectedExceptionsMessageRegExp = "Account does not exist for id .*")
+    public void testCreateChildAccountWithInvalidParent() throws Exception {
+
+        final AccountModelDao childAccountModel = createTestAccount();
+        childAccountModel.setParentAccountId(UUID.randomUUID());
+        final AccountData childAccountData = new DefaultAccount(childAccountModel);
+        final Account childAccount = accountUserApi.createAccount(childAccountData, callContext);
+
+    }
+
 }

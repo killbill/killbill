@@ -313,6 +313,11 @@ public class MockAccountBuilder {
             }
 
             @Override
+            public UUID getParentAccountId() {
+                return null;
+            }
+
+            @Override
             public UUID getId() {
                 return id;
             }

@@ -64,7 +64,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     public void testMinimalFields() throws Exception {
         final String email = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
-        final AccountData accountData = new DefaultMutableAccountData(null, email, name, 0, null,
+        final AccountData accountData = new DefaultMutableAccountData(null, email, name, 0, null, null,
                                                                       0, null, null, null, null,
                                                                       null, null, null, null, null,
                                                                       null, null, false, true);

@@ -33,6 +33,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private String name;
     private Integer firstNameLength;
     private Currency currency;
+    private UUID parentAccountId;
     private int billCycleDayLocal;
     private UUID paymentMethodId;
     private DateTimeZone timeZone;
@@ -49,7 +50,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private Boolean isNotifiedForInvoices;
 
     public DefaultMutableAccountData(final String externalKey, final String email, final String name,
-                                     final int firstNameLength, final Currency currency, final int billCycleDayLocal,
+                                     final int firstNameLength, final Currency currency,
+                                     final UUID parentAccountId, final int billCycleDayLocal,
                                      final UUID paymentMethodId, final DateTimeZone timeZone,
                                      final String locale, final String address1, final String address2,
                                      final String companyName, final String city, final String stateOrProvince,
@@ -60,6 +62,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.name = name;
         this.firstNameLength = firstNameLength;
         this.currency = currency;
+        this.parentAccountId = parentAccountId;
         this.billCycleDayLocal = billCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
@@ -82,6 +85,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.name = accountData.getName();
         this.firstNameLength = accountData.getFirstNameLength();
         this.currency = accountData.getCurrency();
+        this.parentAccountId = accountData.getParentAccountId();
         this.billCycleDayLocal = accountData.getBillCycleDayLocal() == null ? DEFAULT_BILLING_CYCLE_DAY_LOCAL : accountData.getBillCycleDayLocal();
         this.paymentMethodId = accountData.getPaymentMethodId();
         this.timeZone = accountData.getTimeZone();
@@ -287,4 +291,15 @@ public class DefaultMutableAccountData implements MutableAccountData {
     public void setIsNotifiedForInvoices(final boolean isNotifiedForInvoices) {
         this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
+
+    @Override
+    public UUID getParentAccountId() {
+        return parentAccountId;
+    }
+
+    @Override
+    public void setParentAccountId(final UUID parentAccountId) {
+        this.parentAccountId = parentAccountId;
+    }
+
 }
