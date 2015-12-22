@@ -255,4 +255,14 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             }
         });
     }
+
+    @Override
+    public List<AccountModelDao> getAccountsByParentId(final UUID parentAccountId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AccountModelDao>>() {
+            @Override
+            public List<AccountModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountsByParentId(parentAccountId, context);
+            }
+        });
+    }
 }

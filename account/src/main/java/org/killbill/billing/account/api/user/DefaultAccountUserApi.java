@@ -195,4 +195,16 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
     public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
         accountDao.removeEmail(new AccountEmailModelDao(email, false), internalCallContextFactory.createInternalCallContext(accountId, context));
     }
+
+    @Override
+    public List<Account> getChildAccounts(final UUID parentAccountId, final TenantContext context) throws AccountApiException {
+        getAccountById(parentAccountId, context);
+        return ImmutableList.<Account>copyOf(Collections2.transform(accountDao.getAccountsByParentId(parentAccountId, internalCallContextFactory.createInternalTenantContext(context)),
+                                                                         new Function<AccountModelDao, Account>() {
+                                                                             @Override
+                                                                             public Account apply(final AccountModelDao input) {
+                                                                                 return new DefaultAccount(input);
+                                                                             }
+                                                                         }));
+    }
 }

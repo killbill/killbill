@@ -108,3 +108,8 @@ getIdFromKey() ::= <<
     WHERE external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
+getAccountsByParentId() ::= <<
+    select <allTableFields()>
+    from accounts
+    where parent_account_id = :parentAccountId <AND_CHECK_TENANT()>;
+>>
