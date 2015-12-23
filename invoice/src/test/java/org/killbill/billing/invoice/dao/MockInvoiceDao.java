@@ -362,4 +362,18 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     public void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final InternalCallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public List<InvoiceModelDao> getInvoicesByParentAccount(final UUID parentAccountId, final LocalDate startDate, final LocalDate endDate, final InternalTenantContext context) {
+        final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
+
+        synchronized (monitor) {
+            for (final InvoiceModelDao invoice : invoices.values()) {
+                // TODO filter by parent account id
+                // if (invoice.account.parentAccountId.equals(parentAccountId)) { ... }
+                result.add(invoice);
+            }
+        }
+        return result;
+    }
 }

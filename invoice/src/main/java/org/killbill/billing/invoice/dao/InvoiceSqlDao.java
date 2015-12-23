@@ -16,6 +16,7 @@
 
 package org.killbill.billing.invoice.dao;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,5 +39,15 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
     @SqlQuery
     UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId,
                                  @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    List<InvoiceModelDao> getInvoicesByParentAccount(@Bind("parentAccountId") final UUID parentAccountId,
+                                                     @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    List<InvoiceModelDao> getInvoicesByParentAccountDateRange(@Bind("parentAccountId") final UUID parentAccountId,
+                                                              @Bind("startDate") final Date startDate,
+                                                              @Bind("endDate") final Date endDate,
+                                                              @BindBean final InternalTenantContext context);
 }
 

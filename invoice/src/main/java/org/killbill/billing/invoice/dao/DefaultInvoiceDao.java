@@ -853,4 +853,27 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_ITEM_INVALID, invoiceItemToBeAdjusted.getId());
         }
     }
+
+    @Override
+    public List<InvoiceModelDao> getInvoicesByParentAccount(final UUID parentAccountId, final LocalDate startDate,
+                                                            final LocalDate endDate, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
+            @Override
+            public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
+                List<InvoiceModelDao> invoices = null;
+                if (startDate != null && endDate != null) {
+                    invoices = invoiceDao.getInvoicesByParentAccountDateRange(parentAccountId, startDate.toDate(),
+                                                                              endDate.toDate(), context);
+                } else {
+                    invoices = invoiceDao.getInvoicesByParentAccount(parentAccountId, context);
+                }
+
+                invoiceDaoHelper.populateChildren(invoices, entitySqlDaoWrapperFactory, context);
+
+                return invoices;
+            }
+        });
+    }
 }

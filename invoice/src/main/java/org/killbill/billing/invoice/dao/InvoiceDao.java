@@ -138,4 +138,6 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @param context   the callcontext
      */
     public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context);
+
+    List<InvoiceModelDao> getInvoicesByParentAccount(UUID parentAccountId, LocalDate startDate, LocalDate endDate, InternalTenantContext context);
 }

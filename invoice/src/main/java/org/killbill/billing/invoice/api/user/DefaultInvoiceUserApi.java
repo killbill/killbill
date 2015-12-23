@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.api.user;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -480,5 +481,28 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, currency, invoice.getCurrency());
         }
         return invoice;
+    }
+
+    @Override
+    public List<Invoice> getInvoicesByParentAccount(final UUID parentAccountId, final LocalDate startDate, LocalDate endDate,
+                                                    final TenantContext context) throws InvoiceApiException {
+        // date validations
+        if (startDate != null && endDate == null) {
+            endDate = LocalDate.now();
+        }
+
+        if (startDate != null) {
+            if (startDate.isAfter(LocalDate.now()) || startDate.isAfter(endDate)) {
+                throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_RANGE, startDate, endDate);
+            }
+        }
+
+        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final List<InvoiceModelDao> invoicesByParentAccount = dao.getInvoicesByParentAccount(parentAccountId, startDate, endDate, tenantContext);
+        final List<Invoice> invoices = new ArrayList<Invoice>();
+        for (InvoiceModelDao invoice : invoicesByParentAccount) {
+            invoices.add(new DefaultInvoice(invoice));
+        }
+        return invoices;
     }
 }
