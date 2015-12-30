@@ -27,7 +27,6 @@ public class SubscriptionSpecifier {
     private Plan plan;
     private PhaseType initialPhase;
     private String realPriceList;
-    private DateTime requestedDate;
     private DateTime effectiveDate;
     private DateTime processedDate;
 
@@ -36,13 +35,12 @@ public class SubscriptionSpecifier {
 
     public SubscriptionSpecifier(final SubscriptionBuilder builder, final Plan plan,
                                  final PhaseType initialPhase, final String realPriceList,
-                                 final DateTime requestedDate, final DateTime effectiveDate,
+                                 final DateTime effectiveDate,
                                  final DateTime processedDate) {
         this.builder = builder;
         this.plan = plan;
         this.initialPhase = initialPhase;
         this.realPriceList = realPriceList;
-        this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
         this.processedDate = processedDate;
     }
@@ -77,14 +75,6 @@ public class SubscriptionSpecifier {
 
     public void setRealPriceList(final String realPriceList) {
         this.realPriceList = realPriceList;
-    }
-
-    public DateTime getRequestedDate() {
-        return requestedDate;
-    }
-
-    public void setRequestedDate(final DateTime requestedDate) {
-        this.requestedDate = requestedDate;
     }
 
     public DateTime getEffectiveDate() {

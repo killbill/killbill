@@ -85,7 +85,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(phases[1].getStartPhase(), defaultSubscriptionBase.getBundleStartDate().plusDays(30));
 
         // Verify the next phase via the other API
-        final TimedPhase nextTimePhase = planAligner.getNextTimedPhase(defaultSubscriptionBase, effectiveDate, effectiveDate, internalCallContext);
+        final TimedPhase nextTimePhase = planAligner.getNextTimedPhase(defaultSubscriptionBase, effectiveDate, internalCallContext);
         Assert.assertEquals(nextTimePhase.getStartPhase(), defaultSubscriptionBase.getBundleStartDate().plusDays(30));
 
         // Now look at the past, before the bundle started
@@ -96,7 +96,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
         // Verify the next phase via the other API
         try {
-            planAligner.getNextTimedPhase(defaultSubscriptionBase, effectiveDateInThePast, effectiveDateInThePast, internalCallContext);
+            planAligner.getNextTimedPhase(defaultSubscriptionBase, effectiveDateInThePast, internalCallContext);
             Assert.fail("Can't use getNextTimedPhase(): the effective date is before the initial plan");
         } catch (SubscriptionBaseError e) {
             Assert.assertTrue(true);
@@ -130,7 +130,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(phases[1].getStartPhase(), defaultSubscriptionBase.getStartDate().plusMonths(1));
 
         // Verify the next phase via the other API
-        final TimedPhase nextTimePhase = planAligner.getNextTimedPhase(defaultSubscriptionBase, effectiveDate, effectiveDate, internalCallContext);
+        final TimedPhase nextTimePhase = planAligner.getNextTimedPhase(defaultSubscriptionBase, effectiveDate, internalCallContext);
         Assert.assertEquals(nextTimePhase.getStartPhase(), defaultSubscriptionBase.getStartDate().plusMonths(1));
 
         // Now look at the past, before the subscription started
@@ -141,7 +141,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
         // Verify the next phase via the other API
         try {
-            planAligner.getNextTimedPhase(defaultSubscriptionBase, effectiveDateInThePast, effectiveDateInThePast, internalCallContext);
+            planAligner.getNextTimedPhase(defaultSubscriptionBase, effectiveDateInThePast, internalCallContext);
             Assert.fail("Can't use getNextTimedPhase(): the effective date is before the initial plan");
         } catch (SubscriptionBaseError e) {
             Assert.assertTrue(true);
@@ -232,7 +232,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         // The date is used for different catalog versions - we don't care here
         final Plan newPlan = catalogService.getFullCatalog(internalCallContext).findPlan(newProductName, clock.getUTCNow());
 
-        return planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, priceList, effectiveChangeDate, effectiveChangeDate, internalCallContext);
+        return planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, priceList, effectiveChangeDate, internalCallContext);
     }
 
     private TimedPhase[] getTimedPhasesOnCreate(final String productName,
@@ -244,7 +244,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
         // Same here for the requested date
         final TimedPhase[] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(defaultSubscriptionBase.getAlignStartDate(), defaultSubscriptionBase.getBundleStartDate(),
-                                                                                    plan, initialPhase, priceList, clock.getUTCNow(), effectiveDate, internalCallContext);
+                                                                                    plan, initialPhase, priceList, effectiveDate, internalCallContext);
         Assert.assertEquals(phases.length, 2);
 
         return phases;

@@ -125,19 +125,18 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         try {
             final String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final DateTime now = clock.getUTCNow();
-            final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
+            final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
             /*
             if (requestedDate.isAfter(now)) {
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, now.toString(), requestedDate.toString());
             }
             */
-            final DateTime effectiveDate = requestedDate;
 
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
             final Catalog catalog = catalogService.getFullCatalog(context);
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, callContext);
 
-            final Plan plan = catalog.createOrFindPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, requestedDate);
+            final Plan plan = catalog.createOrFindPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, effectiveDate);
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
@@ -150,14 +149,14 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             }
 
             final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundleId, context);
-            final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, requestedDate, effectiveDate, context);
+            final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, effectiveDate, context);
             return apiService.createPlan(new SubscriptionBuilder()
                                                  .setId(UUIDs.randomUUID())
                                                  .setBundleId(bundleId)
                                                  .setCategory(plan.getProduct().getCategory())
                                                  .setBundleStartDate(bundleStartDate)
                                                  .setAlignStartDate(effectiveDate),
-                                         plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now, callContext);
+                                         plan, spec.getPhaseType(), realPriceList, effectiveDate, now, callContext);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
@@ -167,7 +166,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     public SubscriptionBase createBaseSubscriptionWithAddOns(final UUID bundleId, final Iterable<EntitlementSpecifier> entitlements, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
 
         final DateTime now = clock.getUTCNow();
-        final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
+        final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
 
         try {
             final List<SubscriptionSpecifier> subscriptions = new ArrayList<SubscriptionSpecifier>();
@@ -181,7 +180,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(entitlement.getOverrides(), callContext);
 
-                final Plan plan = catalog.createOrFindPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, requestedDate);
+                final Plan plan = catalog.createOrFindPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, effectiveDate);
                 final PlanPhase phase = plan.getAllPhases()[0];
                 if (phase == null) {
                     throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
@@ -195,8 +194,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 SubscriptionSpecifier subscription = new SubscriptionSpecifier();
                 subscription.setRealPriceList(realPriceList);
-                subscription.setRequestedDate(requestedDate);
-                subscription.setEffectiveDate(requestedDate);
+                subscription.setEffectiveDate(effectiveDate);
                 subscription.setProcessedDate(now);
                 subscription.setPlan(plan);
                 subscription.setInitialPhase(spec.getPhaseType());
@@ -204,8 +202,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                 .setId(UUIDs.randomUUID())
                                                 .setBundleId(bundleId)
                                                 .setCategory(plan.getProduct().getCategory())
-                                                .setBundleStartDate(requestedDate)
-                                                .setAlignStartDate(requestedDate));
+                                                .setBundleStartDate(effectiveDate)
+                                                .setAlignStartDate(effectiveDate));
 
                 subscriptions.add(subscription);
             }
@@ -485,10 +483,10 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                         final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundleId, context);
                         final DateTime startEffectiveDate = dryRunArguments.getEffectiveDate() != null ? dryRunArguments.getEffectiveDate() : utcNow;
-                        final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, startEffectiveDate, context);
+                        final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, context);
                         final UUID subscriptionId = UUIDs.randomUUID();
                         dryRunEvents = apiService.getEventsOnCreation(bundleId, subscriptionId, startEffectiveDate, bundleStartDate, 1L, plan, inputSpec.getPhaseType(), realPriceList,
-                                                                      utcNow, startEffectiveDate, utcNow, false, context);
+                                                                      startEffectiveDate, utcNow, false, context);
                         final SubscriptionBuilder builder = new SubscriptionBuilder()
                                 .setId(subscriptionId)
                                 .setBundleId(bundleId)
@@ -514,7 +512,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                             }
                             changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy);
                         }
-                        dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, realPriceList, utcNow, changeEffectiveDate, utcNow, true, context);
+                        dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, realPriceList, changeEffectiveDate, utcNow, true, context);
                         break;
 
                     case STOP_BILLING:
@@ -534,7 +532,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                             }
                             cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy);
                         }
-                        dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, utcNow, cancelEffectiveDate, utcNow, true, context);
+                        dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, cancelEffectiveDate, utcNow, true, context);
                         break;
 
                     default:
@@ -587,14 +585,14 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     private DateTime getBundleStartDateWithSanity(final UUID bundleId, @Nullable final DefaultSubscriptionBase baseSubscription, final Plan plan,
-                                                  final DateTime requestedDate, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
+                                                  final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
         switch (plan.getProduct().getCategory()) {
             case BASE:
                 if (baseSubscription != null &&
                     baseSubscription.getState() == EntitlementState.ACTIVE) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
                 }
-                return requestedDate;
+                return effectiveDate;
 
             case ADD_ON:
                 if (baseSubscription == null) {
@@ -603,7 +601,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 if (effectiveDate.isBefore(baseSubscription.getStartDate())) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, effectiveDate.toString(), baseSubscription.getStartDate().toString());
                 }
-                addonUtils.checkAddonCreationRights(baseSubscription, plan, requestedDate, context);
+                addonUtils.checkAddonCreationRights(baseSubscription, plan, effectiveDate, context);
                 return baseSubscription.getStartDate();
 
             case STANDALONE:
@@ -611,7 +609,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
                 }
                 // Not really but we don't care, there is no alignment for STANDALONE subscriptions
-                return requestedDate;
+                return effectiveDate;
 
             default:
                 throw new SubscriptionBaseError(String.format("Can't create subscription of type %s",
