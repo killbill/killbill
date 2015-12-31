@@ -631,7 +631,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
             nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
             nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getEffectiveDate(), getAlignStartDate()) : null;
-            nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, cur.getEffectiveDate()) : null;
+
+            // See issue https://github.com/killbill/killbill/issues/464
+            final DateTime catalogEffectiveDateForPriceList = transitions.isEmpty() ? cur.getEffectiveDate() : transitions.get(0).getEffectiveTransitionTime();
+            nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, catalogEffectiveDateForPriceList) : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, cur.getType(), apiEventType,
