@@ -629,13 +629,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             PlanPhase nextPhase = null;
             PriceList nextPriceList = null;
 
-            nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getRequestedDate(), getAlignStartDate()) : null;
-            nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getAlignStartDate()) : null;
-            nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, cur.getRequestedDate()) : null;
+            nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
+            nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getEffectiveDate(), getAlignStartDate()) : null;
+            nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, cur.getEffectiveDate()) : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, cur.getType(), apiEventType,
-                    cur.getRequestedDate(), cur.getEffectiveDate(),
+                    cur.getEffectiveDate(),
                     prevEventId, prevCreatedDate,
                     previousState, previousPlan, previousPhase,
                     previousPriceList,

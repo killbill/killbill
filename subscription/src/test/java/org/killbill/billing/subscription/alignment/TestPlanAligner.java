@@ -219,7 +219,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         eventBuilder.setEventPriceList(priceList);
 
         // We don't really use the following but the code path requires it
-        eventBuilder.setRequestedDate(effectiveDate);
         eventBuilder.setFromDisk(true);
         eventBuilder.setActiveVersion(activeVersion);
 

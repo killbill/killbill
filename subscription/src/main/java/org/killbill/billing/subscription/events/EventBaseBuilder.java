@@ -29,7 +29,6 @@ public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     private UUID subscriptionId;
     private DateTime createdDate;
     private DateTime updatedDate;
-    private DateTime requestedDate;
     private DateTime effectiveDate;
 
     private long activeVersion;
@@ -44,7 +43,6 @@ public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     public EventBaseBuilder(final SubscriptionBaseEvent event) {
         this.uuid = event.getId();
         this.subscriptionId = event.getSubscriptionId();
-        this.requestedDate = event.getRequestedDate();
         this.effectiveDate = event.getEffectiveDate();
         this.createdDate = event.getCreatedDate();
         this.updatedDate = event.getUpdatedDate();
@@ -56,7 +54,6 @@ public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     public EventBaseBuilder(final EventBaseBuilder<?> copy) {
         this.uuid = copy.uuid;
         this.subscriptionId = copy.subscriptionId;
-        this.requestedDate = copy.requestedDate;
         this.effectiveDate = copy.effectiveDate;
         this.createdDate = copy.getCreatedDate();
         this.updatedDate = copy.getUpdatedDate();
@@ -87,11 +84,6 @@ public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
     public T setSubscriptionId(final UUID subscriptionId) {
         this.subscriptionId = subscriptionId;
-        return (T) this;
-    }
-
-    public T setRequestedDate(final DateTime requestedDate) {
-        this.requestedDate = requestedDate;
         return (T) this;
     }
 
@@ -128,10 +120,6 @@ public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
     public UUID getSubscriptionId() {
         return subscriptionId;
-    }
-
-    public DateTime getRequestedDate() {
-        return requestedDate;
     }
 
     public DateTime getEffectiveDate() {

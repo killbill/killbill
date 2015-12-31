@@ -38,8 +38,6 @@ public interface SubscriptionBaseEvent extends Comparable<SubscriptionBaseEvent>
 
     public boolean isActive();
 
-    public DateTime getRequestedDate();
-
     public DateTime getEffectiveDate();
 
     public UUID getSubscriptionId();

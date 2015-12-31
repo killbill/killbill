@@ -62,7 +62,7 @@ public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent 
                                              final Long searchKey1,
                                              final Long searchKey2,
                                              final UUID userToken) {
-        this(nextEvent.getId(), nextEvent.getSubscriptionId(), subscription.getBundleId(), nextEvent.getRequestedDate(), nextEvent.getEffectiveDate(),
+        this(nextEvent.getId(), nextEvent.getSubscriptionId(), subscription.getBundleId(), nextEvent.getEffectiveDate(), nextEvent.getEffectiveDate(),
              null, null, null, null, null, null, null, null, nextEvent.getTotalOrdering(), transitionType, 0, null, searchKey1, searchKey2, userToken);
     }
 }

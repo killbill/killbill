@@ -50,19 +50,17 @@ public class PhaseEventData extends EventBase implements PhaseEvent {
                 + ", phaseName=" + phaseName
                 + ", getType()=" + getType()
                 + ", getPhase()=" + getPhase()
-                + ", getRequestedDate()=" + getRequestedDate()
                 + ", getEffectiveDate()=" + getEffectiveDate()
                 + ", getActiveVersion()=" + getActiveVersion()
                 + ", getSubscriptionId()=" + getSubscriptionId()
                 + ", isActive()=" + isActive() + "]\n";
     }
 
-    public static PhaseEvent createNextPhaseEvent(final UUID subscriptionId, final long activeVersion, final String phaseName,  final DateTime now, final DateTime effectiveDate) {
+    public static PhaseEvent createNextPhaseEvent(final UUID subscriptionId, final long activeVersion, final String phaseName, final DateTime effectiveDate) {
         return (phaseName == null) ?
                 null :
                 new PhaseEventData(new PhaseEventBuilder()
                                            .setSubscriptionId(subscriptionId)
-                                           .setRequestedDate(now)
                                            .setEffectiveDate(effectiveDate)
                                            .setActiveVersion(activeVersion)
                                            .setPhaseName(phaseName));

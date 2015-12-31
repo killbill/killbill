@@ -35,7 +35,7 @@ public class TestEventJson extends GuicyKillbillTestSuiteNoDB {
     @Test(groups = "fast")
     public void testSubscriptionEvent() throws Exception {
 
-        final EffectiveSubscriptionInternalEvent e = new DefaultEffectiveSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
+        final EffectiveSubscriptionInternalEvent e = new DefaultEffectiveSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(),
                                                                                            EntitlementState.ACTIVE, "pro", "TRIAL", "DEFAULT", EntitlementState.CANCELLED, null, null, null, 3L,
                                                                                            SubscriptionBaseTransitionType.CANCEL, 0, new DateTime(), 1L, 2L, null);
 

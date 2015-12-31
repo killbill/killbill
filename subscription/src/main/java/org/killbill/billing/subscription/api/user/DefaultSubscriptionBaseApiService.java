@@ -286,7 +286,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final SubscriptionBaseEvent uncancelEvent = new ApiEventUncancel(new ApiEventBuilder()
                                                                                  .setSubscriptionId(subscription.getId())
                                                                                  .setActiveVersion(subscription.getActiveVersion())
-                                                                                 .setRequestedDate(now)
                                                                                  .setEffectiveDate(now)
                                                                                  .setFromDisk(true));
 
@@ -296,7 +295,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, internalCallContext);
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                                          PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(), nextTimedPhase.getPhase().getName(), now, nextTimedPhase.getStartPhase()) :
+                                          PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(), nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                           null;
         if (nextPhaseEvent != null) {
             uncancelEvents.add(nextPhaseEvent);
@@ -431,13 +430,12 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 .setEventPriceList(realPriceList)
                 .setActiveVersion(activeVersion)
                 .setEffectiveDate(effectiveDate)
-                .setRequestedDate(effectiveDate)
                 .setFromDisk(true);
         final ApiEvent creationEvent = (reCreate) ? new ApiEventReCreate(createBuilder) : new ApiEventCreate(createBuilder);
 
         final TimedPhase nextTimedPhase = curAndNextPhases[1];
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                                          PhaseEventData.createNextPhaseEvent(subscriptionId, activeVersion, nextTimedPhase.getPhase().getName(), processedDate, nextTimedPhase.getStartPhase()) :
+                                          PhaseEventData.createNextPhaseEvent(subscriptionId, activeVersion, nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                           null;
         final List<SubscriptionBaseEvent> events = new ArrayList<SubscriptionBaseEvent>();
         events.add(creationEvent);
@@ -460,13 +458,12 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                              .setEventPriceList(newPriceList)
                                                                              .setActiveVersion(subscription.getActiveVersion())
                                                                              .setEffectiveDate(effectiveDate)
-                                                                             .setRequestedDate(effectiveDate)
                                                                              .setFromDisk(true));
 
         final TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList, effectiveDate, internalTenantContext);
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                                           PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(),
-                                                                              nextTimedPhase.getPhase().getName(), processedDate, nextTimedPhase.getStartPhase()) :
+                                                                              nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                           null;
 
         final List<SubscriptionBaseEvent> changeEvents = new ArrayList<SubscriptionBaseEvent>();
@@ -492,7 +489,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                              .setSubscriptionId(subscription.getId())
                                                                              .setActiveVersion(subscription.getActiveVersion())
                                                                              .setEffectiveDate(effectiveDate)
-                                                                             .setRequestedDate(effectiveDate)
                                                                              .setFromDisk(true));
         cancelEvents.add(cancelEvent);
         if (subscription.getCategory() == ProductCategory.BASE && addCancellationAddOnForEventsIfRequired) {
@@ -543,7 +539,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                                      .setSubscriptionId(cur.getId())
                                                                                      .setActiveVersion(cur.getActiveVersion())
                                                                                      .setEffectiveDate(effectiveDate)
-                                                                                     .setRequestedDate(effectiveDate)
                                                                                      .setFromDisk(true));
                 subscriptionsToBeCancelled.add(cur);
                 events.add(cancelEvent);

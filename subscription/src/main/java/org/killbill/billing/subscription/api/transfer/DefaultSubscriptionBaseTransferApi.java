@@ -103,7 +103,6 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 .setEventPriceList(spec.getPriceListName())
                 .setActiveVersion(subscription.getActiveVersion())
                 .setEffectiveDate(effectiveDate)
-                .setRequestedDate(effectiveDate)
                 .setFromDisk(true);
 
         switch (existingEvent.getSubscriptionTransitionType()) {
@@ -121,7 +120,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
             case PHASE:
                 newEvent = firstEvent ? new ApiEventTransfer(apiBuilder) :
-                           PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(), currentPhase.getName(), clock.getUTCNow(), effectiveDate);
+                           PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(), currentPhase.getName(), effectiveDate);
                 break;
 
             // Ignore these events except if it's the first event for the new subscription
@@ -241,7 +240,6 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                                                          .setSubscriptionId(cur.getId())
                                                                                          .setActiveVersion(cur.getActiveVersion())
                                                                                          .setEffectiveDate(effectiveCancelDate)
-                                                                                         .setRequestedDate(effectiveTransferDate)
                                                                                          .setFromDisk(true));
 
                     TransferCancelData cancelData = new TransferCancelData(oldSubscription, cancelEvent);
