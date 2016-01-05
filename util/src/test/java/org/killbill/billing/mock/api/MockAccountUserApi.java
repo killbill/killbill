@@ -167,4 +167,10 @@ public class MockAccountUserApi implements AccountUserApi {
             throws AccountApiException {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public List<Account> getChildAccounts(final UUID uuid, final TenantContext tenantContext) throws AccountApiException {
+        // TODO implement
+        return null;
+    }
 }
