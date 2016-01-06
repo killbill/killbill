@@ -83,7 +83,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
         return executeWithPaymentControl(account, paymentMethodId, mergedProperties, paymentOptions, callContext, paymentPluginFormDispatcher, new WithPaymentControlCallback<HostedPaymentPageFormDescriptor>() {
             @Override
             public HostedPaymentPageFormDescriptor doPaymentGatewayApiOperation(final UUID adjustedPaymentMethodId, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {
-                return buildFormDescriptor(false, account, adjustedPaymentMethodId, mergedProperties, adjustedPluginProperties, callContext);
+                return buildFormDescriptor(false, account, adjustedPaymentMethodId, customFields, adjustedPluginProperties, callContext);
             }
         });
     }
