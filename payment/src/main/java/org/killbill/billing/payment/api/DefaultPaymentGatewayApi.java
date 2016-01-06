@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -38,6 +38,7 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
+import org.killbill.billing.util.PluginProperties;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.PaymentConfig;
@@ -78,10 +79,11 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
 
     @Override
     public HostedPaymentPageFormDescriptor buildFormDescriptorWithPaymentControl(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> customFields, final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
-        return executeWithPaymentControl(account, paymentMethodId, properties, paymentOptions, callContext, paymentPluginFormDispatcher, new WithPaymentControlCallback<HostedPaymentPageFormDescriptor>() {
+        final Iterable<PluginProperty> mergedProperties = PluginProperties.merge(customFields, properties);
+        return executeWithPaymentControl(account, paymentMethodId, mergedProperties, paymentOptions, callContext, paymentPluginFormDispatcher, new WithPaymentControlCallback<HostedPaymentPageFormDescriptor>() {
             @Override
             public HostedPaymentPageFormDescriptor doPaymentGatewayApiOperation(final UUID adjustedPaymentMethodId, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {
-                return buildFormDescriptor(false, account, adjustedPaymentMethodId, customFields, adjustedPluginProperties, callContext);
+                return buildFormDescriptor(false, account, adjustedPaymentMethodId, mergedProperties, adjustedPluginProperties, callContext);
             }
         });
     }
