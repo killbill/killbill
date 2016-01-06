@@ -99,9 +99,9 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
             @Override
             public GatewayNotification doPaymentGatewayApiOperation(final UUID adjustedPaymentMethodId, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {
                 if (adjustedPaymentMethodId == null) {
-                    return paymentGatewayProcessor.processNotification(false, notification, pluginName, properties, callContext);
+                    return paymentGatewayProcessor.processNotification(false, notification, pluginName, adjustedPluginProperties, callContext);
                 } else {
-                    return paymentGatewayProcessor.processNotification(false, notification, adjustedPaymentMethodId, properties, callContext);
+                    return paymentGatewayProcessor.processNotification(false, notification, adjustedPaymentMethodId, adjustedPluginProperties, callContext);
                 }
             }
         });
