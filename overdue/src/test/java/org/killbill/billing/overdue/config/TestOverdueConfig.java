@@ -35,19 +35,6 @@ public class TestOverdueConfig extends OverdueTestSuiteNoDB {
                            "       <initialReevaluationInterval>" +
                            "           <unit>DAYS</unit><number>1</number>" +
                            "       </initialReevaluationInterval>" +
-                           "       <state name=\"OD1\">" +
-                           "           <condition>" +
-                           "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                           "                   <unit>MONTHS</unit><number>1</number>" +
-                           "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                           "           </condition>" +
-                           "           <externalMessage>Reached OD1</externalMessage>" +
-                           "           <blockChanges>true</blockChanges>" +
-                           "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
-                           "           <autoReevaluationInterval>" +
-                           "               <unit>DAYS</unit><number>15</number>" +
-                           "           </autoReevaluationInterval>" +
-                           "       </state>" +
                            "       <state name=\"OD2\">" +
                            "           <condition>" +
                            "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
@@ -64,20 +51,35 @@ public class TestOverdueConfig extends OverdueTestSuiteNoDB {
                            "               <subject>ToTo</subject><templateName>Titi</templateName>" +
                            "           </enterStateEmailNotification>" +
                            "       </state>" +
+                           "       <state name=\"OD1\">" +
+                           "           <condition>" +
+                           "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                           "                   <unit>MONTHS</unit><number>1</number>" +
+                           "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                           "           </condition>" +
+                           "           <externalMessage>Reached OD1</externalMessage>" +
+                           "           <blockChanges>true</blockChanges>" +
+                           "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
+                           "           <autoReevaluationInterval>" +
+                           "               <unit>DAYS</unit><number>15</number>" +
+                           "           </autoReevaluationInterval>" +
+                           "       </state>" +
                            "   </accountOverdueStates>" +
                            "</overdueConfig>";
         final InputStream is = new ByteArrayInputStream(xml.getBytes());
         final DefaultOverdueConfig c = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
         Assert.assertEquals(c.getOverdueStatesAccount().size(), 2);
 
-        Assert.assertNull(c.getOverdueStatesAccount().getStates()[0].getEmailNotification());
+        Assert.assertNull(c.getOverdueStatesAccount().getStates()[1].getEmailNotification());
 
         Assert.assertNotNull(c.getOverdueStatesAccount().getInitialReevaluationInterval());
         Assert.assertEquals(c.getOverdueStatesAccount().getInitialReevaluationInterval().getDays(), 1);
 
-        final EmailNotification secondNotification = c.getOverdueStatesAccount().getStates()[1].getEmailNotification();
+        final EmailNotification secondNotification = c.getOverdueStatesAccount().getStates()[0].getEmailNotification();
         Assert.assertEquals(secondNotification.getSubject(), "ToTo");
         Assert.assertEquals(secondNotification.getTemplateName(), "Titi");
         Assert.assertFalse(secondNotification.isHTML());
+
+        Assert.assertEquals(c.getOverdueStatesAccount().getFirstState().getName(), "OD1");
     }
 }

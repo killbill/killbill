@@ -96,6 +96,6 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOve
 
     @Override
     public OverdueState getFirstState() {
-        return getStates()[0];
+        return getStates()[size() - 1];
     }
 }
