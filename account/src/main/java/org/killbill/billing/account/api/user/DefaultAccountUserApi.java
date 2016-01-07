@@ -152,8 +152,6 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
         }
 
-        // TODO verify that parent is not modified
-
         updateAccount(currentAccount, accountData, context);
     }
 
