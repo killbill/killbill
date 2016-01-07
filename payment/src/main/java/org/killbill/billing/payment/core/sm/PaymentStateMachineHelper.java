@@ -58,9 +58,12 @@ public class PaymentStateMachineHelper {
     private static final String CHARGEBACK_SUCCESS = "CHARGEBACK_SUCCESS";
 
     private static final String AUTHORIZE_PENDING = "AUTH_PENDING";
+    private static final String CAPTURE_PENDING = "CAPTURE_PENDING";
     private static final String PURCHASE_PENDING = "PURCHASE_PENDING";
     private static final String REFUND_PENDING = "REFUND_PENDING";
     private static final String CREDIT_PENDING = "CREDIT_PENDING";
+    private static final String VOID_PENDING = "VOID_PENDING";
+    private static final String CHARGEBACK_PENDING = "CHARGEBACK_PENDING";
 
     private static final String AUTHORIZE_FAILED = "AUTH_FAILED";
     private static final String CAPTURE_FAILED = "CAPTURE_FAILED";
@@ -119,12 +122,18 @@ public class PaymentStateMachineHelper {
         switch (transactionType) {
             case AUTHORIZE:
                 return AUTHORIZE_PENDING;
+            case CAPTURE:
+                return CAPTURE_PENDING;
             case PURCHASE:
                 return PURCHASE_PENDING;
             case REFUND:
                 return REFUND_PENDING;
             case CREDIT:
                 return CREDIT_PENDING;
+            case VOID:
+                return VOID_PENDING;
+            case CHARGEBACK:
+                return CHARGEBACK_PENDING;
             default:
                 throw new IllegalStateException("No PENDING state for transaction type " + transactionType);
         }
