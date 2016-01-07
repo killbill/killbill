@@ -110,7 +110,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                     apiType = userEV.getApiEventType();
                     planName = userEV.getEventPlan();
                     planPhaseName = userEV.getEventPlanPhase();
-                    final Plan plan = (userEV.getEventPlan() != null) ? catalog.findPlan(userEV.getEventPlan(), cur.getRequestedDate(), startDate) : null;
+                    final Plan plan = (userEV.getEventPlan() != null) ? catalog.findPlan(userEV.getEventPlan(), cur.getEffectiveDate(), startDate) : null;
                     phaseType = (userEV.getEventPlanPhase() != null) ? catalog.findPhase(userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate).getPhaseType() : prevPhaseType;
                     productName = (plan != null) ? plan.getProduct().getName() : prevProductName;
                     billingPeriod = (userEV.getEventPlanPhase() != null) ? getBillingPeriod(catalog, userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate) : prevBillingPeriod;
@@ -131,7 +131,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
                 @Override
                 public DateTime getRequestedDate() {
-                    return cur.getRequestedDate();
+                    return cur.getEffectiveDate();
                 }
 
                 @Override

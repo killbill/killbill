@@ -185,10 +185,10 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     private void onPhaseEvent(final DefaultSubscriptionBase subscription, final InternalCallContext context) {
         try {
             final DateTime now = clock.getUTCNow();
-            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now, context);
+            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, context);
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                                               PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(),
-                                                                                  nextTimedPhase.getPhase().getName(), now, nextTimedPhase.getStartPhase()) :
+                                                                                  nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                               null;
             if (nextPhaseEvent != null) {
                 dao.createNextPhaseEvent(subscription, nextPhaseEvent, context);

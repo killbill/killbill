@@ -421,7 +421,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             default:
                 throw new RuntimeException("Unsupported policy " + entitlementPolicy);
         }
-        return cancellationDate;
+        return (cancellationDate.compareTo(getEffectiveStartDate()) < 0) ? getEffectiveStartDate() : cancellationDate;
     }
 
     @Override

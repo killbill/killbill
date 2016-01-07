@@ -24,6 +24,7 @@ import java.util.List;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -34,7 +35,11 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
+import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
+import org.killbill.billing.entitlement.api.Subscription;
+import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
@@ -235,6 +240,43 @@ public class TestSubscription extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(initialDate, null, InvoiceItemType.FIXED, new BigDecimal("0"))); // Shotgun
 
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
+
+    }
+
+
+
+    @Test(groups = "slow")
+    public void testCancelFutureSubscription() throws Exception {
+
+        final LocalDate initialDate = new LocalDate(2015, 9, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        final LocalDate futureDate = new LocalDate(2015, 10, 1);
+
+        // No CREATE event as this is set in the future
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
+        assertEquals(createdEntitlement.getEffectiveEndDate(), null);
+
+
+        final Entitlement cancelledEntitlement = createdEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, null, callContext);
+        assertEquals(cancelledEntitlement.getEffectiveEndDate().compareTo(futureDate), 0);
+        assertListenerStatus();
+
+        // Move off trial and reach start/cancellation date
+        // NextEvent.INVOICE is required because of #467
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.BLOCK, NextEvent.CANCEL);
+        clock.addDays(30);
+
+        assertListenerStatus();
+
+        // Just to make sure we really don't invoice for anything move to next month
+        clock.addMonths(1);
+        assertListenerStatus();
 
     }
 }

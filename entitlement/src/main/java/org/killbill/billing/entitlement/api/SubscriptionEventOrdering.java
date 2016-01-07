@@ -154,7 +154,6 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
         return new DefaultSubscriptionEvent(in.getId(),
                                             in.getSubscriptionId(),
                                             in.getEffectiveTransitionTime(),
-                                            in.getRequestedTransitionTime(),
                                             eventType,
                                             false,
                                             false,

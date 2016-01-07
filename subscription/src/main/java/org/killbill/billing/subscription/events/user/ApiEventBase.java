@@ -77,7 +77,6 @@ public class ApiEventBase extends EventBase implements ApiEvent {
                + ", getEventPlan()=" + getEventPlan()
                + ", getEventPlanPhase()=" + getEventPlanPhase()
                + ", getType()=" + getType()
-               + ", getRequestedDate()=" + getRequestedDate()
                + ", getEffectiveDate()=" + getEffectiveDate()
                + ", getActiveVersion()=" + getActiveVersion()
                + ", getSubscriptionId()=" + getSubscriptionId()

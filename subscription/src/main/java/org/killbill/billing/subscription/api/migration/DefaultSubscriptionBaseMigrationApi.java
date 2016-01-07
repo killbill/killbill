@@ -206,13 +206,12 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
                     .setEventPriceList(cur.getPriceList())
                     .setActiveVersion(defaultSubscriptionBase.getActiveVersion())
                     .setEffectiveDate(cur.getEventTime())
-                    .setRequestedDate(now)
                     .setFromDisk(true);
 
             if (cur.getEventType() == EventType.PHASE) {
                 nextEventDate = nextEventDate != null && nextEventDate.compareTo(cur.getEventTime()) < 0 ? nextEventDate : cur.getEventTime();
                 final PhaseEvent nextPhaseEvent = PhaseEventData.createNextPhaseEvent(defaultSubscriptionBase.getId(), defaultSubscriptionBase.getActiveVersion(),
-                                                                                      cur.getPhase().getName(), now, cur.getEventTime());
+                                                                                      cur.getPhase().getName(), cur.getEventTime());
                 events.add(nextPhaseEvent);
 
             } else if (cur.getEventType() == EventType.API_USER) {

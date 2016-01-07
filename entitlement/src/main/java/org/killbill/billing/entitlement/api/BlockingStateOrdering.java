@@ -241,7 +241,6 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
         return new DefaultSubscriptionEvent(in.getId(),
                                             entitlementId,
                                             in.getEffectiveDate(),
-                                            in.getCreatedDate(),
                                             eventType,
                                             in.isBlockEntitlement(),
                                             in.isBlockBilling(),

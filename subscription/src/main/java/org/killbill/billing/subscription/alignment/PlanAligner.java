@@ -70,7 +70,6 @@ public class PlanAligner extends BaseAligner {
      * @param plan            the current Plan
      * @param initialPhase    the initialPhase on which we should create that subscription. can be null
      * @param priceList       the priceList
-     * @param requestedDate   the requested date (only used to loadDefaultCatalog the catalog)
      * @param effectiveDate   the effective creation date (driven by the catalog policy, i.e. when the creation occurs)
      * @return the current and next phases
      * @throws CatalogApiException         for catalog errors
@@ -81,7 +80,6 @@ public class PlanAligner extends BaseAligner {
                                                             final Plan plan,
                                                             @Nullable final PhaseType initialPhase,
                                                             final String priceList,
-                                                            final DateTime requestedDate,
                                                             final DateTime effectiveDate,
                                                             final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
         final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(alignStartDate,
@@ -89,7 +87,7 @@ public class PlanAligner extends BaseAligner {
                                                                    plan,
                                                                    initialPhase,
                                                                    priceList,
-                                                                   requestedDate,
+                                                                   effectiveDate,
                                                                    context);
         final TimedPhase[] result = new TimedPhase[2];
         result[0] = getTimedPhase(timedPhases, effectiveDate, WhichPhase.CURRENT);
@@ -104,7 +102,6 @@ public class PlanAligner extends BaseAligner {
      *                      are looked at)
      * @param plan          the current Plan
      * @param priceList     the priceList on which we should change that subscription.
-     * @param requestedDate the requested date
      * @param effectiveDate the effective change date (driven by the catalog policy, i.e. when the change occurs)
      * @return the current phase
      * @throws CatalogApiException         for catalog errors
@@ -113,10 +110,9 @@ public class PlanAligner extends BaseAligner {
     public TimedPhase getCurrentTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
                                                    final Plan plan,
                                                    final String priceList,
-                                                   final DateTime requestedDate,
                                                    final DateTime effectiveDate,
                                                    final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
-        return getTimedPhaseOnChange(subscription, plan, priceList, requestedDate, effectiveDate, WhichPhase.CURRENT, context);
+        return getTimedPhaseOnChange(subscription, plan, priceList, effectiveDate, WhichPhase.CURRENT, context);
     }
 
     /**
@@ -126,7 +122,6 @@ public class PlanAligner extends BaseAligner {
      *                      are looked at)
      * @param plan          the current Plan
      * @param priceList     the priceList on which we should change that subscription.
-     * @param requestedDate the requested date
      * @param effectiveDate the effective change date (driven by the catalog policy, i.e. when the change occurs)
      * @return the next phase
      * @throws CatalogApiException         for catalog errors
@@ -135,21 +130,18 @@ public class PlanAligner extends BaseAligner {
     public TimedPhase getNextTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
                                                 final Plan plan,
                                                 final String priceList,
-                                                final DateTime requestedDate,
                                                 final DateTime effectiveDate,
                                                 final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
-        return getTimedPhaseOnChange(subscription, plan, priceList, requestedDate, effectiveDate, WhichPhase.NEXT, context);
+        return getTimedPhaseOnChange(subscription, plan, priceList, effectiveDate, WhichPhase.NEXT, context);
     }
 
     /**
      * Returns next Phase for that SubscriptionBase at a point in time
      *
      * @param subscription  the subscription for which we need to compute the next Phase event
-     * @param requestedDate the requested date
-     * @param effectiveDate the date at which we look to compute that event. effective needs to be after last Plan change or initial Plan
      * @return the next phase
      */
-    public TimedPhase getNextTimedPhase(final DefaultSubscriptionBase subscription, final DateTime requestedDate, final DateTime effectiveDate, final InternalTenantContext context) {
+    public TimedPhase getNextTimedPhase(final DefaultSubscriptionBase subscription, final DateTime effectiveDate, final InternalTenantContext context) {
         try {
             final SubscriptionBaseTransitionData lastPlanTransition = subscription.getLastTransitionForCurrentPlan();
             if (effectiveDate.isBefore(lastPlanTransition.getEffectiveTransitionTime())) {
@@ -168,10 +160,9 @@ public class PlanAligner extends BaseAligner {
                                                                                lastPlanTransition.getNextPlan(),
                                                                                lastPlanTransition.getNextPhase().getPhaseType(),
                                                                                lastPlanTransition.getNextPriceList().getName(),
-                                                                               requestedDate,
+                                                                               effectiveDate,
                                                                                context);
                     return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
-                // If we went through Plan changes, borrow the logic for changePlanWithRequestedDate alignment
                 case CHANGE:
                     return getTimedPhaseOnChange(subscription.getAlignStartDate(),
                                                  subscription.getBundleStartDate(),
@@ -180,7 +171,6 @@ public class PlanAligner extends BaseAligner {
                                                  lastPlanTransition.getPreviousPriceList().getName(),
                                                  lastPlanTransition.getNextPlan(),
                                                  lastPlanTransition.getNextPriceList().getName(),
-                                                 requestedDate,
                                                  effectiveDate,
                                                  lastPlanTransition.getEffectiveTransitionTime(),
                                                  WhichPhase.NEXT,
@@ -199,7 +189,7 @@ public class PlanAligner extends BaseAligner {
                                                    final Plan plan,
                                                    @Nullable final PhaseType initialPhase,
                                                    final String priceList,
-                                                   final DateTime requestedDate,
+                                                   final DateTime effectiveDate,
                                                    final InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException {
         final Catalog catalog = catalogService.getFullCatalog(context);
@@ -210,7 +200,7 @@ public class PlanAligner extends BaseAligner {
                                                               priceList);
 
         final DateTime planStartDate;
-        final PlanAlignmentCreate alignment = catalog.planCreateAlignment(planSpecifier, requestedDate);
+        final PlanAlignmentCreate alignment = catalog.planCreateAlignment(planSpecifier, effectiveDate);
         switch (alignment) {
             case START_OF_SUBSCRIPTION:
                 planStartDate = subscriptionStartDate;
@@ -228,7 +218,6 @@ public class PlanAligner extends BaseAligner {
     private TimedPhase getTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
                                              final Plan nextPlan,
                                              final String nextPriceList,
-                                             final DateTime requestedDate,
                                              final DateTime effectiveDate,
                                              final WhichPhase which,
                                              final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
@@ -239,7 +228,6 @@ public class PlanAligner extends BaseAligner {
                                      subscription.getCurrentPriceList().getName(),
                                      nextPlan,
                                      nextPriceList,
-                                     requestedDate,
                                      effectiveDate,
                                      // This method is only called while doing the change, hence we want to pass the change effective date
                                      effectiveDate,
@@ -254,7 +242,6 @@ public class PlanAligner extends BaseAligner {
                                              final String currentPriceList,
                                              final Plan nextPlan,
                                              final String priceList,
-                                             final DateTime requestedDate,
                                              final DateTime effectiveDate,
                                              final DateTime lastOrCurrentChangeEffectiveDate,
                                              final WhichPhase which,
@@ -273,7 +260,7 @@ public class PlanAligner extends BaseAligner {
                                                                 priceList);
 
         final DateTime planStartDate;
-        final PlanAlignmentChange alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier, requestedDate);
+        final PlanAlignmentChange alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier, effectiveDate);
         switch (alignment) {
             case START_OF_SUBSCRIPTION:
                 planStartDate = subscriptionStartDate;

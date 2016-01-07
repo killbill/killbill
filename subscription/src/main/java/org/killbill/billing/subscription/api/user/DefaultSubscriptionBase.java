@@ -492,10 +492,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return getFutureEndDate() != null;
     }
 
-    public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy) {
+    public DateTime getPlanChangeEffectiveDate(final DateTime subscriptionStartDate, final BillingActionPolicy policy) {
+
+        final DateTime candidateResult;
         switch (policy) {
             case IMMEDIATE:
-                return clock.getUTCNow();
+                candidateResult =  clock.getUTCNow();
+                break;
             case END_OF_TERM:
                 //
                 // If we have a chargedThroughDate that is 'up to date' we use it, if not default to now
@@ -503,11 +506,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 // 1. account is not being invoiced, for e.g AUTO_INVOICING_OFF nis set
                 // 2. In the case if FIXED item CTD is set using startDate of the service period
                 //
-                return (chargedThroughDate != null && chargedThroughDate.isAfter(clock.getUTCNow())) ? chargedThroughDate : clock.getUTCNow();
+                candidateResult =  (chargedThroughDate != null && chargedThroughDate.isAfter(clock.getUTCNow())) ? chargedThroughDate : clock.getUTCNow();
+                break;
             default:
                 throw new SubscriptionBaseError(String.format(
                         "Unexpected policy type %s", policy.toString()));
         }
+        return (candidateResult.compareTo(subscriptionStartDate) < 0) ? subscriptionStartDate : candidateResult;
     }
 
     public DateTime getCurrentPhaseStart() {
@@ -629,13 +634,16 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             PlanPhase nextPhase = null;
             PriceList nextPriceList = null;
 
-            nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getRequestedDate(), getAlignStartDate()) : null;
-            nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getAlignStartDate()) : null;
-            nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, cur.getRequestedDate()) : null;
+            nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
+            nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getEffectiveDate(), getAlignStartDate()) : null;
+
+            // See issue https://github.com/killbill/killbill/issues/464
+            final DateTime catalogEffectiveDateForPriceList = transitions.isEmpty() ? cur.getEffectiveDate() : transitions.get(0).getEffectiveTransitionTime();
+            nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, catalogEffectiveDateForPriceList) : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, cur.getType(), apiEventType,
-                    cur.getRequestedDate(), cur.getEffectiveDate(),
+                    cur.getEffectiveDate(),
                     prevEventId, prevCreatedDate,
                     previousState, previousPlan, previousPhase,
                     previousPriceList,

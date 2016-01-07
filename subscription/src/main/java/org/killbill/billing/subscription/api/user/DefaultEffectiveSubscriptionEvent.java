@@ -37,7 +37,6 @@ public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent 
     public DefaultEffectiveSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
                                              @JsonProperty("subscriptionId") final UUID subscriptionId,
                                              @JsonProperty("bundleId") final UUID bundleId,
-                                             @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
                                              @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
                                              @JsonProperty("previousState") final EntitlementState previousState,
                                              @JsonProperty("previousPlan") final String previousPlan,
@@ -54,7 +53,7 @@ public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent 
                                              @JsonProperty("searchKey1") final Long searchKey1,
                                              @JsonProperty("searchKey2") final Long searchKey2,
                                              @JsonProperty("userToken") final UUID userToken) {
-        super(eventId, subscriptionId, bundleId, requestedTransitionTime, effectiveTransitionTime, previousState, previousPlan,
+        super(eventId, subscriptionId, bundleId, effectiveTransitionTime, effectiveTransitionTime, previousState, previousPlan,
               previousPhase, previousPriceList, nextState, nextPlan, nextPhase, nextPriceList, totalOrdering,
               transitionType, remainingEventsForUserOperation, startDate, searchKey1, searchKey2, userToken);
     }

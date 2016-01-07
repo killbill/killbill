@@ -55,7 +55,6 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     public DefaultSubscriptionEvent(final UUID id,
                                     final UUID entitlementId,
                                     final DateTime effectiveDate,
-                                    final DateTime requestedDate,
                                     final SubscriptionEventType eventType,
                                     final boolean blockingEntitlement,
                                     final boolean blockingBilling,
@@ -76,7 +75,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         this.id = id;
         this.entitlementId = entitlementId;
         this.effectiveDate = effectiveDate;
-        this.requestedDate = requestedDate;
+        this.requestedDate = effectiveDate;
         this.eventType = eventType;
         this.isBlockingEntitlement = blockingEntitlement;
         this.isBlockingBilling = blockingBilling;

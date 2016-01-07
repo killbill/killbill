@@ -642,7 +642,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                                                                                                                    entitySqlDaoWrapperFactory,
                                                                                                                                                    context);
 
-                cancelFutureEventsFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
+                cancelFutureEventsFromTransaction(subscriptionId, changeEvents.get(0).getEffectiveDate(), entitySqlDaoWrapperFactory, context);
 
                 for (final SubscriptionBaseEvent cur : changeEventsTweakedWithMigrateBilling) {
 
@@ -728,7 +728,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     .setSubscriptionId(migrateBillingEvent.getSubscriptionId())
                     .setCreatedDate(now)
                     .setUpdatedDate(now)
-                    .setRequestedDate(migrateBillingEvent.getRequestedDate())
                     .setEffectiveDate(migrateBillingEvent.getEffectiveDate())
                     .setActiveVersion(migrateBillingEvent.getCurrentVersion())
                     .setEventPlan(prevPlan)
@@ -777,7 +776,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     private void cancelSubscriptionFromTransaction(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent cancelEvent, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context, final int seqId)
             throws EntityPersistenceException {
         final UUID subscriptionId = subscription.getId();
-        cancelFutureEventsFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
+        cancelFutureEventsFromTransaction(subscriptionId, cancelEvent.getEffectiveDate(), entitySqlDaoWrapperFactory, context);
         entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).create(new SubscriptionEventModelDao(cancelEvent), context);
 
         final boolean isBusEvent = cancelEvent.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0;
@@ -791,9 +790,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         cancelFutureEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, EventType.PHASE, null, context);
     }
 
-    private void cancelFutureEventsFromTransaction(final UUID subscriptionId, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
-        final Date now = clock.getUTCNow().toDate();
-        final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
+    private void cancelFutureEventsFromTransaction(final UUID subscriptionId, final DateTime effectiveDate, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
+        final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), effectiveDate.toDate(), context);
         for (final SubscriptionEventModelDao cur : eventModels) {
             unactivateEventFromTransaction(cur, entitySqlDaoWrapperFactory, context);
         }
@@ -936,7 +934,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                                                                   .setSubscriptionId(reloaded.getId())
                                                                                                   .setActiveVersion(((DefaultSubscriptionBase) reloaded).getActiveVersion())
                                                                                                   .setEffectiveDate(baseTriggerEventForAddOnCancellation.getEffectiveDate())
-                                                                                                  .setRequestedDate(now)
                                                                                                   .setCreatedDate(baseTriggerEventForAddOnCancellation.getCreatedDate())
                                                                                                   // This event is only there to indicate the ADD_ON is future canceled, but it is not there
                                                                                                   // on disk until the base plan cancellation becomes effective

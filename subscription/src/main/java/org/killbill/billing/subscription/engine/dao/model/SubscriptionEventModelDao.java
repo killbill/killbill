@@ -47,7 +47,7 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
     private long totalOrdering;
     private EventType eventType;
     private ApiEventType userType;
-    private DateTime requestedDate;
+    private DateTime requestedDate; // deprecated (similar to effectiveDate)
     private DateTime effectiveDate;
     private UUID subscriptionId;
     private String planName;
@@ -83,7 +83,7 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         this.totalOrdering = src.getTotalOrdering();
         this.eventType = src.getType();
         this.userType = eventType == EventType.API_USER ? ((ApiEvent) src).getApiEventType() : null;
-        this.requestedDate = src.getRequestedDate();
+        this.requestedDate = src.getEffectiveDate();
         this.effectiveDate = src.getEffectiveDate();
         this.subscriptionId = src.getSubscriptionId();
         this.planName = eventType == EventType.API_USER ? ((ApiEvent) src).getEventPlan() : null;
@@ -200,7 +200,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
                 .setSubscriptionId(src.getSubscriptionId())
                 .setCreatedDate(src.getCreatedDate())
                 .setUpdatedDate(src.getUpdatedDate())
-                .setRequestedDate(src.getRequestedDate())
                 .setEffectiveDate(src.getEffectiveDate())
                 .setActiveVersion(src.getCurrentVersion())
                 .setActive(src.isActive());

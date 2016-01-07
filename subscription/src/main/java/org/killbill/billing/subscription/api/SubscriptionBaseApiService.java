@@ -43,7 +43,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 public interface SubscriptionBaseApiService {
 
     public DefaultSubscriptionBase createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
-                                              String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
+                                              String realPriceList, DateTime effectiveDate, DateTime processedDate,
                                               CallContext context)
             throws SubscriptionBaseApiException;
 
@@ -91,16 +91,16 @@ public interface SubscriptionBaseApiService {
     //
     public List<SubscriptionBaseEvent> getEventsOnCreation(UUID bundleId, UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate, long activeVersion,
                                                            Plan plan, PhaseType initialPhase,
-                                                           String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
+                                                           String realPriceList, DateTime effectiveDate, DateTime processedDate,
                                                            boolean reCreate, InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
 
     public List<SubscriptionBaseEvent> getEventsOnChangePlan(DefaultSubscriptionBase subscription, Plan newPlan,
-                                                             String newPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
+                                                             String newPriceList, DateTime effectiveDate, DateTime processedDate,
                                                              boolean addCancellationAddOnForEventsIfRequired, InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
 
     public List<SubscriptionBaseEvent> getEventsOnCancelPlan(final DefaultSubscriptionBase subscription,
-                                                             final DateTime requestedDate, final DateTime effectiveDate, final DateTime processedDate,
-                                                             final boolean addCancellationAddOnForEventsIfRequired, final InternalTenantContext context) throws CatalogApiException;
+                                                             final DateTime effectiveDate, final DateTime processedDate,
+                                                             final boolean addCancellationAddOnForEventsIfRequired, final InternalTenantContext internalTenantContext) throws CatalogApiException;
 }

@@ -28,7 +28,6 @@ public abstract class EventBase implements SubscriptionBaseEvent {
     private final UUID subscriptionId;
     private final DateTime createdDate;
     private final DateTime updatedDate;
-    private final DateTime requestedDate;
     private final DateTime effectiveDate;
 
     private final long totalOrdering;
@@ -41,15 +40,9 @@ public abstract class EventBase implements SubscriptionBaseEvent {
         this.subscriptionId = builder.getSubscriptionId();
         this.createdDate = builder.getCreatedDate();
         this.updatedDate = builder.getUpdatedDate();
-        this.requestedDate = builder.getRequestedDate();
         this.effectiveDate = builder.getEffectiveDate();
         this.activeVersion = builder.getActiveVersion();
         this.isActive = builder.isActive();
-    }
-
-    @Override
-    public DateTime getRequestedDate() {
-        return requestedDate;
     }
 
     @Override
@@ -110,10 +103,6 @@ public abstract class EventBase implements SubscriptionBaseEvent {
         if (effectiveDate.isBefore(other.getEffectiveDate())) {
             return -1;
         } else if (effectiveDate.isAfter(other.getEffectiveDate())) {
-            return 1;
-        } else if (requestedDate.isBefore(other.getRequestedDate())) {
-            return -1;
-        } else if (requestedDate.isAfter(other.getRequestedDate())) {
             return 1;
         } else if (getType() != other.getType()) {
             return (getType() == EventType.PHASE) ? -1 : 1;

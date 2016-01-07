@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -248,6 +250,77 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         checkSubscriptionEventAuditLog(transitions, 7, SubscriptionEventType.STOP_ENTITLEMENT);
         checkSubscriptionEventAuditLog(transitions, 8, SubscriptionEventType.STOP_BILLING);
     }
+
+
+    @Test(groups = "slow")
+    public void testSubscriptionCreationWithFutureDate() throws AccountApiException, SubscriptionApiException, EntitlementApiException {
+        final String externalKey = "vritti";
+
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        //2013-08-07
+        final LocalDate effectiveDate = initialDate.plusMonths(1);
+
+        // Create entitlement and check each field
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, null, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
+
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+
+        final List<SubscriptionEvent> events = subscription.getSubscriptionEvents();
+        assertEquals(events.size(), 3);
+
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(0).getEffectiveDate().compareTo(effectiveDate), 0);
+        assertEquals(events.get(0).getRequestedDate().compareTo(effectiveDate), 0);
+
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(1).getEffectiveDate().compareTo(effectiveDate), 0);
+        assertEquals(events.get(1).getRequestedDate().compareTo(effectiveDate), 0);
+
+        assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
+        assertEquals(events.get(2).getEffectiveDate().compareTo(effectiveDate.plusMonths(1)), 0);
+        assertEquals(events.get(2).getRequestedDate().compareTo(effectiveDate.plusMonths(1)), 0);
+
+        assertListenerStatus();
+
+    }
+
+
+    @Test(groups = "slow")
+    public void testCancelFutureSubscription() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        final LocalDate futureDate = new LocalDate(2013, 9, 1);
+
+        // No CREATE event as this is set in the future
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
+        assertEquals(createdEntitlement.getEffectiveEndDate(), null);
+
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        assertEquals(baseEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
+        assertEquals(baseEntitlement.getEffectiveEndDate(), null);
+
+        final Entitlement cancelledEntitlement = baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, null, callContext);
+        assertEquals(cancelledEntitlement.getEffectiveEndDate().compareTo(futureDate), 0);
+
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
+        assertEquals(subscription.getEffectiveEndDate().compareTo(futureDate), 0);
+
+        assertListenerStatus();
+    }
+
 
     private void checkSubscriptionEventAuditLog(final List<SubscriptionEvent> transitions, final int idx, final SubscriptionEventType expectedType) {
         assertEquals(transitions.get(idx).getSubscriptionEventType(), expectedType);

@@ -36,7 +36,6 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     private final UUID eventId;
     private final EventType eventType;
     private final ApiEventType apiEventType;
-    private final DateTime requestedTransitionTime;
     private final DateTime effectiveTransitionTime;
     private final EntitlementState previousState;
     private final PriceList previousPriceList;
@@ -60,7 +59,6 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
                                           final UUID bundleId,
                                           final EventType eventType,
                                           final ApiEventType apiEventType,
-                                          final DateTime requestedTransitionTime,
                                           final DateTime effectiveTransitionTime,
                                           final UUID previousEventId,
                                           final DateTime previousEventCreatedDate,
@@ -83,7 +81,6 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         this.bundleId = bundleId;
         this.eventType = eventType;
         this.apiEventType = apiEventType;
-        this.requestedTransitionTime = requestedTransitionTime;
         this.effectiveTransitionTime = effectiveTransitionTime;
         this.previousState = previousState;
         this.previousPriceList = previousPriceList;
@@ -116,7 +113,6 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         this.bundleId = input.getBundleId();
         this.eventType = eventType;
         this.apiEventType = apiEventType;
-        this.requestedTransitionTime = input.getRequestedTransitionTime();
         this.effectiveTransitionTime = input.getEffectiveTransitionTime();
         this.previousEventId = input.getPreviousEventId();
         this.previousEventCreatedDate = input.getPreviousEventCreatedDate();
@@ -241,11 +237,6 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     }
 
     @Override
-    public DateTime getRequestedTransitionTime() {
-        return requestedTransitionTime;
-    }
-
-    @Override
     public DateTime getEffectiveTransitionTime() {
         return effectiveTransitionTime;
     }
@@ -276,7 +267,6 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         sb.append(", bundleId=").append(bundleId);
         sb.append(", eventId=").append(eventId);
         sb.append(", eventType=").append(eventType);
-        sb.append(", requestedTransitionTime=").append(requestedTransitionTime);
         sb.append(", effectiveTransitionTime=").append(effectiveTransitionTime);
         sb.append(", previousState=").append(previousState);
         sb.append(", previousPriceList=").append(previousPriceList);
@@ -349,9 +339,6 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         if (remainingEventsForUserOperation != null ? !remainingEventsForUserOperation.equals(that.remainingEventsForUserOperation) : that.remainingEventsForUserOperation != null) {
             return false;
         }
-        if (requestedTransitionTime != null ? requestedTransitionTime.compareTo(that.requestedTransitionTime) != 0 : that.requestedTransitionTime != null) {
-            return false;
-        }
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
         }
@@ -373,7 +360,6 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         result = 31 * result + (eventId != null ? eventId.hashCode() : 0);
         result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
         result = 31 * result + (apiEventType != null ? apiEventType.hashCode() : 0);
-        result = 31 * result + (requestedTransitionTime != null ? requestedTransitionTime.hashCode() : 0);
         result = 31 * result + (effectiveTransitionTime != null ? effectiveTransitionTime.hashCode() : 0);
         result = 31 * result + (previousState != null ? previousState.hashCode() : 0);
         result = 31 * result + (previousPriceList != null ? previousPriceList.hashCode() : 0);

@@ -56,7 +56,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
         this(in.getId(),
              in.getSubscriptionId(),
              in.getBundleId(),
-             in.getRequestedTransitionTime(),
+             in.getEffectiveTransitionTime(),
              in.getEffectiveTransitionTime(),
              in.getPreviousState(),
              (in.getPreviousPlan() != null) ? in.getPreviousPlan().getName() : null,
@@ -185,7 +185,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
 
     @Override
     public DateTime getRequestedTransitionTime() {
-        return requestedTransitionTime;
+        return effectiveTransitionTime;
     }
 
     @Override
