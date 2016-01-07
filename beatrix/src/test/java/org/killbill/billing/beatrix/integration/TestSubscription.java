@@ -21,8 +21,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -45,6 +47,7 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -246,7 +249,7 @@ public class TestSubscription extends TestIntegrationBase {
 
 
     @Test(groups = "slow")
-    public void testCancelFutureSubscription() throws Exception {
+    public void testCancelFutureSubscriptionWithPolicy() throws Exception {
 
         final LocalDate initialDate = new LocalDate(2015, 9, 1);
         clock.setDay(initialDate);
@@ -261,6 +264,7 @@ public class TestSubscription extends TestIntegrationBase {
         final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
+        assertListenerStatus();
 
 
         final Entitlement cancelledEntitlement = createdEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, null, callContext);
@@ -271,7 +275,48 @@ public class TestSubscription extends TestIntegrationBase {
         // NextEvent.INVOICE is required because of #467
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.BLOCK, NextEvent.CANCEL);
         clock.addDays(30);
+        assertListenerStatus();
 
+        // Just to make sure we really don't invoice for anything move to next month
+        clock.addMonths(1);
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow")
+    public void testCancelFutureSubscriptionWithRequestedDate() throws Exception {
+
+        final LocalDate initialDate = new LocalDate(2015, 9, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        final LocalDate futureDate = new LocalDate(2015, 10, 1);
+
+        // No CREATE event as this is set in the future
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
+        assertEquals(createdEntitlement.getEffectiveEndDate(), null);
+        assertListenerStatus();
+
+
+        final LocalDate invalidCancelDate = initialDate.plusDays(1);
+        try {
+            createdEntitlement.cancelEntitlementWithDate(invalidCancelDate, true, null, callContext);
+            Assert.fail("Should not succeed to cancel subscription prior startDate");
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode());
+        }
+
+        final Entitlement cancelledEntitlement = createdEntitlement.cancelEntitlementWithDate(futureDate, true, null, callContext);
+        assertEquals(cancelledEntitlement.getEffectiveEndDate().compareTo(futureDate), 0);
+        assertListenerStatus();
+
+        // Move off trial and reach start/cancellation date
+        // NextEvent.INVOICE is required because of #467
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.BLOCK, NextEvent.CANCEL);
+        clock.addDays(30);
         assertListenerStatus();
 
         // Just to make sure we really don't invoice for anything move to next month

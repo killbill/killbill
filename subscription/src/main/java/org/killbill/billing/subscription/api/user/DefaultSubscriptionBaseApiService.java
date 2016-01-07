@@ -222,7 +222,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         try {
             final InternalTenantContext internalCallContext = createTenantContextFromBundleId(subscription.getBundleId(), context);
             final BillingActionPolicy policy = catalogService.getFullCatalog(internalCallContext).planCancelPolicy(planPhase, now);
-            final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(subscription.getStartDate(), policy);
+            final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy);
 
             return doCancelPlan(subscription, now, effectiveDate, context);
         } catch (final CatalogApiException e) {
@@ -248,7 +248,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
         }
         final DateTime now = clock.getUTCNow();
-        final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(subscription.getStartDate(), policy);
+        final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy);
 
         return doCancelPlan(subscription, now, effectiveDate, context);
     }
@@ -319,7 +319,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         validateEntitlementState(subscription);
 
         final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, productName, term, priceList, now, context);
-        final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(subscription.getStartDate(), planChangeResult.getPolicy());
+        final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(planChangeResult.getPolicy());
         validateEffectiveDate(subscription, effectiveDate);
 
         try {
@@ -354,7 +354,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         validateEntitlementState(subscription);
 
-        final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(subscription.getStartDate(), policy);
+        final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy);
         try {
             return doChangePlan(subscription, productName, term, priceList, overrides, now, effectiveDate, context);
         } catch (final CatalogApiException e) {
@@ -548,10 +548,14 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     private void validateEffectiveDate(final DefaultSubscriptionBase subscription, final DateTime effectiveDate) throws SubscriptionBaseApiException {
+
         final SubscriptionBaseTransition previousTransition = subscription.getPreviousTransition();
-        if (previousTransition != null && previousTransition.getEffectiveTransitionTime().isAfter(effectiveDate)) {
+
+        // Our effectiveDate must be after or equal the last transition that already occured (START, PHASE1, PHASE2,...) or the startDate for future started subscription
+        final DateTime earliestValidDate = previousTransition != null ? previousTransition.getEffectiveTransitionTime() : subscription.getStartDate();
+        if (effectiveDate.isBefore(earliestValidDate)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE,
-                                                   effectiveDate.toString(), previousTransition.getEffectiveTransitionTime());
+                                                   effectiveDate.toString(), previousTransition != null ? previousTransition.getEffectiveTransitionTime() : "null");
         }
     }
 

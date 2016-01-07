@@ -510,7 +510,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                                                                          dryRunArguments.getPlanPhaseSpecifier().getPriceListName(), utcNow, tenantContext);
                                 policy = planChangeResult.getPolicy();
                             }
-                            changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(subscriptionForChange.getStartDate(), policy);
+                            changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy);
                         }
                         dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, realPriceList, changeEffectiveDate, utcNow, true, context);
                         break;
@@ -530,7 +530,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                                                        subscriptionForCancellation.getCurrentPhase().getPhaseType());
                                 policy = catalogService.getFullCatalog(context).planCancelPolicy(spec, utcNow);
                             }
-                            cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(subscriptionForCancellation.getStartDate(), policy);
+                            cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy);
                         }
                         dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, cancelEffectiveDate, utcNow, true, context);
                         break;
