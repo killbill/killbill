@@ -53,7 +53,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         final Boolean isNotifiedForInvoice = false;
 
         final AccountJson accountJson = new AccountJson(accountId, name, length, externalKey,
-                                                        email, billCycleDayLocal, currency, null, paymentMethodId,
+                                                        email, billCycleDayLocal, currency, null, false, paymentMethodId,
                                                         timeZone, address1, address2, postalCode, company, city, state,
                                                         country, locale, phone, isMigrated, isNotifiedForInvoice, null, null, null);
         Assert.assertEquals(accountJson.getAccountId(), accountId);

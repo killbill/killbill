@@ -318,6 +318,11 @@ public class MockAccountBuilder {
             }
 
             @Override
+            public Boolean isPaymentDelegatedToParent() {
+                return false;
+            }
+
+            @Override
             public UUID getId() {
                 return id;
             }

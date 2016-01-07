@@ -34,6 +34,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private Integer firstNameLength;
     private Currency currency;
     private UUID parentAccountId;
+    private Boolean isPaymentDelegatedToParent;
     private int billCycleDayLocal;
     private UUID paymentMethodId;
     private DateTimeZone timeZone;
@@ -51,8 +52,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
 
     public DefaultMutableAccountData(final String externalKey, final String email, final String name,
                                      final int firstNameLength, final Currency currency,
-                                     final UUID parentAccountId, final int billCycleDayLocal,
-                                     final UUID paymentMethodId, final DateTimeZone timeZone,
+                                     final UUID parentAccountId, final Boolean isPaymentDelegatedToParent,
+                                     final int billCycleDayLocal, final UUID paymentMethodId, final DateTimeZone timeZone,
                                      final String locale, final String address1, final String address2,
                                      final String companyName, final String city, final String stateOrProvince,
                                      final String country, final String postalCode, final String phone,
@@ -63,6 +64,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.firstNameLength = firstNameLength;
         this.currency = currency;
         this.parentAccountId = parentAccountId;
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
         this.billCycleDayLocal = billCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
@@ -86,6 +88,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.firstNameLength = accountData.getFirstNameLength();
         this.currency = accountData.getCurrency();
         this.parentAccountId = accountData.getParentAccountId();
+        this.isPaymentDelegatedToParent = accountData.isPaymentDelegatedToParent();
         this.billCycleDayLocal = accountData.getBillCycleDayLocal() == null ? DEFAULT_BILLING_CYCLE_DAY_LOCAL : accountData.getBillCycleDayLocal();
         this.paymentMethodId = accountData.getPaymentMethodId();
         this.timeZone = accountData.getTimeZone();
@@ -302,4 +305,13 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.parentAccountId = parentAccountId;
     }
 
+    @Override
+    public void setIsPaymentDelegatedToParent(final boolean isPaymentDelegatedToParent) {
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
+    }
+
+    @Override
+    public Boolean isPaymentDelegatedToParent() {
+        return isPaymentDelegatedToParent;
+    }
 }

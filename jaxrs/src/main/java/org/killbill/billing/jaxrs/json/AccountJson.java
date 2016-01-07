@@ -49,6 +49,7 @@ public class AccountJson extends JsonBase {
     private final String currency;
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String parentAccountId;
+    private final Boolean isPaymentDelegatedToParent;
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String paymentMethodId;
     private final String timeZone;
@@ -76,6 +77,7 @@ public class AccountJson extends JsonBase {
         this.billCycleDayLocal = account.getBillCycleDayLocal();
         this.currency = account.getCurrency() != null ? account.getCurrency().toString() : null;
         this.parentAccountId = account.getParentAccountId() != null ? account.getParentAccountId().toString() : null;
+        this.isPaymentDelegatedToParent = account.isPaymentDelegatedToParent();
         this.paymentMethodId = account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null;
         this.timeZone = account.getTimeZone() != null ? account.getTimeZone().toString() : null;
         this.address1 = account.getAddress1();
@@ -100,6 +102,7 @@ public class AccountJson extends JsonBase {
                        @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
                        @JsonProperty("currency") final String currency,
                        @JsonProperty("parentAccountId") final String parentAccountId,
+                       @JsonProperty("isPaymentDelegatedToParent") final Boolean isPaymentDelegatedToParent,
                        @JsonProperty("paymentMethodId") final String paymentMethodId,
                        @JsonProperty("timeZone") final String timeZone,
                        @JsonProperty("address1") final String address1,
@@ -126,6 +129,7 @@ public class AccountJson extends JsonBase {
         this.billCycleDayLocal = billCycleDayLocal;
         this.currency = currency;
         this.parentAccountId = parentAccountId;
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
         this.address1 = address1;
@@ -259,6 +263,11 @@ public class AccountJson extends JsonBase {
                     return UUID.fromString(parentAccountId);
                 }
             }
+
+            @Override
+            public Boolean isPaymentDelegatedToParent() {
+                return isPaymentDelegatedToParent;
+            }
         };
     }
 
@@ -300,6 +309,11 @@ public class AccountJson extends JsonBase {
 
     public String getParentAccountId() {
         return parentAccountId;
+    }
+
+    @JsonProperty("isPaymentDelegatedToParent")
+    public Boolean isPaymentDelegatedToParent() {
+        return isPaymentDelegatedToParent;
     }
 
     public String getPaymentMethodId() {
@@ -369,6 +383,7 @@ public class AccountJson extends JsonBase {
                ", billCycleDayLocal=" + billCycleDayLocal +
                ", currency='" + currency + '\'' +
                ", parentAccountId=" + parentAccountId + '\'' +
+               ", isPaymentDelegatedToParent=" + isPaymentDelegatedToParent + '\'' +
                ", paymentMethodId='" + paymentMethodId + '\'' +
                ", timeZone='" + timeZone + '\'' +
                ", address1='" + address1 + '\'' +
@@ -429,6 +444,9 @@ public class AccountJson extends JsonBase {
         if (parentAccountId != null ? !parentAccountId.equals(that.parentAccountId) : that.parentAccountId != null) {
             return false;
         }
+        if (isPaymentDelegatedToParent != null ? !isPaymentDelegatedToParent.equals(that.isPaymentDelegatedToParent) : that.isPaymentDelegatedToParent != null) {
+            return false;
+        }
         if (email != null ? !email.equals(that.email) : that.email != null) {
             return false;
         }
@@ -481,6 +499,7 @@ public class AccountJson extends JsonBase {
         result = 31 * result + (billCycleDayLocal != null ? billCycleDayLocal.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (parentAccountId != null ? parentAccountId.hashCode() : 0);
+        result = 31 * result + (isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent.hashCode() : 0);
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
         result = 31 * result + (address1 != null ? address1.hashCode() : 0);

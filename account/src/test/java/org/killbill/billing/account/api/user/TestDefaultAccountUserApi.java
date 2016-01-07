@@ -71,7 +71,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
         // Update the address and leave other fields null
-        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, 0, null,
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, false, 0, null,
                                                                                     null, null, null, null, null, null,
                                                                                     null, null, null, null, false, false);
         final String newAddress1 = UUID.randomUUID().toString();
@@ -138,6 +138,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
         final AccountModelDao childAccountModel = createTestAccount();
         childAccountModel.setParentAccountId(parentAccount.getId());
+        childAccountModel.setIsPaymentDelegatedToParent(true);
         final AccountData childAccountData = new DefaultAccount(childAccountModel);
         final Account childAccount = accountUserApi.createAccount(childAccountData, callContext);
 
@@ -147,6 +148,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertNotNull(retrievedChildAccount.getParentAccountId());
         Assert.assertEquals(retrievedChildAccount.getId(), childAccount.getId());
         Assert.assertEquals(retrievedChildAccount.getParentAccountId(), parentAccount.getId());
+        Assert.assertEquals(retrievedChildAccount.isPaymentDelegatedToParent(), childAccount.isPaymentDelegatedToParent());
     }
 
     @Test(groups = "slow", description = "Test Account create Child with a non existing Parent",
