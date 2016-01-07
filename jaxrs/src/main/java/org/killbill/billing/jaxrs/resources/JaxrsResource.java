@@ -239,7 +239,7 @@ public interface JaxrsResource {
 
     public static final String COMBO = "combo";
 
-    public static final String CHILDS = "childs";
-    public static final String CHILDS_PATH = PREFIX + "/" + CHILDS;
+    public static final String CHILDREN = "children";
+    public static final String CHILDREN_PATH = PREFIX + "/" + CHILDREN;
 
 }

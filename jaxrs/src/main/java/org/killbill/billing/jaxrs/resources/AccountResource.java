@@ -1215,19 +1215,19 @@ public class AccountResource extends JaxRsResourceBase {
 
     @TimedResource
     @GET
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + CHILDS)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CHILDREN)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "List child accounts", response = AccountJson.class, responseContainer = "List")
+    @ApiOperation(value = "List children accounts", response = AccountJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid parent account id supplied"),
                            @ApiResponse(code = 404, message = "Parent Account not found")})
-    public Response getChildAccounts(@PathParam("accountId") final String parentAccountId,
-                                     @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
-                                     @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
-                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+    public Response getChildrenAccounts(@PathParam("accountId") final String parentAccountId,
+                                        @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
+                                        @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
+                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
 
         final TenantContext tenantContext = context.createContext(request);
-        final List<Account> accounts = accountUserApi.getChildAccounts(UUID.fromString(parentAccountId), tenantContext);
+        final List<Account> accounts = accountUserApi.getChildrenAccounts(UUID.fromString(parentAccountId), tenantContext);
 
         final List<AccountJson> accountJson = new ArrayList<AccountJson>();
         for (final Account account : accounts) {
@@ -1239,18 +1239,18 @@ public class AccountResource extends JaxRsResourceBase {
 
     @TimedResource
     @GET
-    @Path("/{parentAccountId:" + UUID_PATTERN + "}/" + CHILDS + "/" + INVOICES)
+    @Path("/{parentAccountId:" + UUID_PATTERN + "}/" + CHILDREN + "/" + INVOICES)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve child account invoices", response = InvoiceJson.class)
+    @ApiOperation(value = "Retrieve children account invoices", response = InvoiceJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or date range supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getChildInvoices(@PathParam("parentAccountId") final String parentAccountIdString,
-                                     @QueryParam(QUERY_START_DATE) final String startDateString,
-                                     @QueryParam(QUERY_END_DATE) final String endDateString,
-                                     @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
-                                     @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
-                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
+    public Response getChildrenInvoices(@PathParam("parentAccountId") final String parentAccountIdString,
+                                       @QueryParam(QUERY_START_DATE) final String startDateString,
+                                       @QueryParam(QUERY_END_DATE) final String endDateString,
+                                       @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                                       @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
+                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         // Verify the account exists

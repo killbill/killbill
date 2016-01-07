@@ -88,6 +88,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
 
         if (data.getParentAccountId() != null) {
+            // verify that parent account exists if parentAccountId is not null
             getAccountById(data.getParentAccountId(), internalContext);
         }
 
@@ -151,6 +152,8 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
         }
 
+        // TODO verify that parent is not modified
+
         updateAccount(currentAccount, accountData, context);
     }
 
@@ -197,8 +200,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
     }
 
     @Override
-    public List<Account> getChildAccounts(final UUID parentAccountId, final TenantContext context) throws AccountApiException {
-        getAccountById(parentAccountId, context);
+    public List<Account> getChildrenAccounts(final UUID parentAccountId, final TenantContext context) throws AccountApiException {
         return ImmutableList.<Account>copyOf(Collections2.transform(accountDao.getAccountsByParentId(parentAccountId, internalCallContextFactory.createInternalTenantContext(context)),
                                                                          new Function<AccountModelDao, Account>() {
                                                                              @Override

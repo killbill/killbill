@@ -113,5 +113,8 @@ getIdFromKey() ::= <<
 getAccountsByParentId() ::= <<
     select <allTableFields()>
     from accounts
-    where parent_account_id = :parentAccountId <AND_CHECK_TENANT()>;
+    where parent_account_id = :parentAccountId
+    <AND_CHECK_TENANT()>
+    <defaultOrderBy()>
+    ;
 >>

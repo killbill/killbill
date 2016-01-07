@@ -169,7 +169,7 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public List<Account> getChildAccounts(final UUID uuid, final TenantContext tenantContext) throws AccountApiException {
+    public List<Account> getChildrenAccounts(final UUID uuid, final TenantContext tenantContext) throws AccountApiException {
         // TODO implement
         return null;
     }

@@ -177,7 +177,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
         return ImmutableList.<AccountModelDao>copyOf(Iterables.<AccountModelDao>filter(accountSqlDao.getAll(context), new Predicate<AccountModelDao>() {
             @Override
             public boolean apply(final AccountModelDao input) {
-                return input.getParentAccountId().equals(parentAccountId);
+                return parentAccountId.equals(input.getParentAccountId());
             }
         }));
     }

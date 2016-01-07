@@ -11,7 +11,7 @@ CREATE TABLE accounts (
     currency varchar(3) DEFAULT NULL,
     billing_cycle_day_local int DEFAULT NULL,
     parent_account_id varchar(36) DEFAULT NULL,
-    is_payment_delegated_to_parent boolean default false,
+    is_payment_delegated_to_parent boolean DEFAULT FALSE,
     payment_method_id varchar(36) DEFAULT NULL,
     time_zone varchar(50) NOT NULL,
     locale varchar(5) DEFAULT NULL,
