@@ -492,10 +492,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return getFutureEndDate() != null;
     }
 
-    public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy) {
+    public DateTime getPlanChangeEffectiveDate(final DateTime subscriptionStartDate, final BillingActionPolicy policy) {
+
+        final DateTime candidateResult;
         switch (policy) {
             case IMMEDIATE:
-                return clock.getUTCNow();
+                candidateResult =  clock.getUTCNow();
+                break;
             case END_OF_TERM:
                 //
                 // If we have a chargedThroughDate that is 'up to date' we use it, if not default to now
@@ -503,11 +506,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 // 1. account is not being invoiced, for e.g AUTO_INVOICING_OFF nis set
                 // 2. In the case if FIXED item CTD is set using startDate of the service period
                 //
-                return (chargedThroughDate != null && chargedThroughDate.isAfter(clock.getUTCNow())) ? chargedThroughDate : clock.getUTCNow();
+                candidateResult =  (chargedThroughDate != null && chargedThroughDate.isAfter(clock.getUTCNow())) ? chargedThroughDate : clock.getUTCNow();
+                break;
             default:
                 throw new SubscriptionBaseError(String.format(
                         "Unexpected policy type %s", policy.toString()));
         }
+        return (candidateResult.compareTo(subscriptionStartDate) < 0) ? subscriptionStartDate : candidateResult;
     }
 
     public DateTime getCurrentPhaseStart() {
