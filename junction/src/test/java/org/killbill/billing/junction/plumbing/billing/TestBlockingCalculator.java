@@ -18,6 +18,7 @@ package org.killbill.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -118,7 +119,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         setBlockingStates(blockingStates);
 
-        blockingCalculator.insertBlockingEvents(billingEvents, internalCallContext);
+        blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), internalCallContext);
 
         assertEquals(billingEvents.size(), 7);
 
@@ -750,7 +751,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         setBlockingStates(blockingEvents);
 
-        blockingCalculator.insertBlockingEvents(billingEvents, internalCallContext);
+        blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), internalCallContext);
 
         assertEquals(billingEvents.size(), 5);
         final List<BillingEvent> events = new ArrayList<BillingEvent>(billingEvents);
