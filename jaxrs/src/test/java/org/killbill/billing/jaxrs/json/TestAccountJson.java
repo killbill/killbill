@@ -51,9 +51,10 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         final String phone = UUID.randomUUID().toString();
         final Boolean isMigrated = true;
         final Boolean isNotifiedForInvoice = false;
+        final String parentAccountId = UUID.randomUUID().toString();
 
         final AccountJson accountJson = new AccountJson(accountId, name, length, externalKey,
-                                                        email, billCycleDayLocal, currency, null, false, paymentMethodId,
+                                                        email, billCycleDayLocal, currency, parentAccountId, true, paymentMethodId,
                                                         timeZone, address1, address2, postalCode, company, city, state,
                                                         country, locale, phone, isMigrated, isNotifiedForInvoice, null, null, null);
         Assert.assertEquals(accountJson.getAccountId(), accountId);
@@ -76,6 +77,8 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(accountJson.getPhone(), phone);
         Assert.assertEquals(accountJson.isMigrated(), isMigrated);
         Assert.assertEquals(accountJson.isNotifiedForInvoices(), isNotifiedForInvoice);
+        Assert.assertEquals(accountJson.getParentAccountId(), parentAccountId);
+        Assert.assertEquals(accountJson.isPaymentDelegatedToParent(), Boolean.TRUE);
 
         final String asJson = mapper.writeValueAsString(accountJson);
         final AccountJson fromJson = mapper.readValue(asJson, AccountJson.class);
