@@ -273,7 +273,7 @@ public class TestSubscription extends TestIntegrationBase {
 
         // Move off trial and reach start/cancellation date
         // NextEvent.INVOICE is required because of #467
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.BLOCK, NextEvent.CANCEL);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL);
         clock.addDays(30);
         assertListenerStatus();
 
@@ -314,8 +314,7 @@ public class TestSubscription extends TestIntegrationBase {
         assertListenerStatus();
 
         // Move off trial and reach start/cancellation date
-        // NextEvent.INVOICE is required because of #467
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.BLOCK, NextEvent.CANCEL);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL);
         clock.addDays(30);
         assertListenerStatus();
 
