@@ -111,7 +111,8 @@ public class TestAccount extends TestJaxrsBase {
         // Update Account
         final Account newInput = new Account(input.getAccountId(),
                                              "zozo", 4, input.getExternalKey(), "rr@google.com", 18,
-                                             "USD", null, "UTC", "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
+                                             "USD", null, false, null, "UTC",
+                                             "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
                                              false, false, null, null);
         final Account updatedAccount = killBillClient.updateAccount(newInput, createdBy, reason, comment);
         Assert.assertTrue(updatedAccount.equals(newInput));
