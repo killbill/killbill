@@ -50,6 +50,7 @@ import org.killbill.billing.util.currency.KillBillMoney;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateNumberOfWholeBillingPeriods;
@@ -90,12 +91,12 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         return accountItemTree.getResultingItemList();
     }
 
-    private List<InvoiceItem> processRecurringBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
+    private void processRecurringBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
                                                             final LocalDate targetDate, final Currency currency, final List<InvoiceItem> proposedItems,
                                                             final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate) throws InvoiceApiException {
 
         if (events.size() == 0) {
-            return proposedItems;
+            return;
         }
 
         // Pretty-print the generated invoice items from the junction events
@@ -121,10 +122,11 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
         log.info(logStringBuilder.toString());
 
-        return proposedItems;
+        return;
     }
 
-    private List<InvoiceItem> processFixedBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events, final LocalDate targetDate, final Currency currency, final List<InvoiceItem> proposedItems) {
+    @VisibleForTesting
+    void processFixedBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events, final LocalDate targetDate, final Currency currency, final List<InvoiceItem> proposedItems) {
 
         final AccountDateAndTimeZoneContext dateAndTimeZoneContext = events.getAccountDateAndTimeZoneContext();
 
@@ -144,11 +146,10 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         if (prevItem != null) {
             proposedItems.add(prevItem);
         }
-        return proposedItems;
     }
 
-
-    private boolean isSameDayAndSameSubscription(final InvoiceItem prevComputedFixedItem, final BillingEvent currentBillingEvent, final AccountDateAndTimeZoneContext dateAndTimeZoneContext) {
+    @VisibleForTesting
+    boolean isSameDayAndSameSubscription(final InvoiceItem prevComputedFixedItem, final BillingEvent currentBillingEvent, final AccountDateAndTimeZoneContext dateAndTimeZoneContext) {
         final LocalDate curLocalEffectiveDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(currentBillingEvent.getEffectiveDate());
         if (prevComputedFixedItem != null && /* If we have computed a previous item */
             prevComputedFixedItem.getStartDate().compareTo(curLocalEffectiveDate) == 0 && /* The current billing event happens at the same date */
