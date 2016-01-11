@@ -16,18 +16,16 @@
 
 package org.killbill.billing.invoice.dao;
 
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 
 @EntitySqlDaoStringTemplate
 public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
@@ -40,14 +38,5 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
     UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId,
                                  @BindBean final InternalTenantContext context);
 
-    @SqlQuery
-    List<InvoiceModelDao> getInvoicesByParentAccount(@Bind("parentAccountId") final UUID parentAccountId,
-                                                     @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    List<InvoiceModelDao> getInvoicesByParentAccountDateRange(@Bind("parentAccountId") final UUID parentAccountId,
-                                                              @Bind("startDate") final Date startDate,
-                                                              @Bind("endDate") final Date endDate,
-                                                              @BindBean final InternalTenantContext context);
 }
 

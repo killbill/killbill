@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -363,17 +362,4 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public List<InvoiceModelDao> getInvoicesByParentAccount(final UUID parentAccountId, final LocalDate startDate, final LocalDate endDate, final InternalTenantContext context) {
-        final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
-
-        synchronized (monitor) {
-            for (final InvoiceModelDao invoice : invoices.values()) {
-                // TODO filter by parent account id
-                // if (invoice.account.parentAccountId.equals(parentAccountId)) { ... }
-                result.add(invoice);
-            }
-        }
-        return result;
-    }
 }

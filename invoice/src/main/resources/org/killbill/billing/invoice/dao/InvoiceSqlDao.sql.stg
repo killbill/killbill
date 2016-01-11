@@ -50,25 +50,3 @@ getInvoiceIdByPaymentId() ::= <<
    <AND_CHECK_TENANT("i.")>
    <AND_CHECK_TENANT("ip.")>
 >>
-
-getInvoicesByParentAccount() ::= <<
-  SELECT <allTableFields("i.")>
-  FROM <tableName()> i
-  JOIN accounts ac ON i.account_id = ac.id
-  WHERE ac.parent_account_id = :parentAccountId
-  <AND_CHECK_TENANT("i.")>
-  <AND_CHECK_TENANT("ac.")>
-  ;
->>
-
-getInvoicesByParentAccountDateRange() ::= <<
-  SELECT <allTableFields("i.")>
-  FROM <tableName()> i
-  JOIN accounts ac ON i.account_id = ac.id
-  WHERE ac.parent_account_id = :parentAccountId
-  and invoice_date >= :startDate
-  and invoice_date \< :endDate
-  <AND_CHECK_TENANT("i.")>
-  <AND_CHECK_TENANT("ac.")>
-  ;
->>

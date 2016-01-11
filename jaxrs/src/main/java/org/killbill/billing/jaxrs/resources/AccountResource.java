@@ -49,7 +49,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -1235,39 +1234,6 @@ public class AccountResource extends JaxRsResourceBase {
             accountJson.add(getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext));
         }
         return Response.status(Status.OK).entity(accountJson).build();
-    }
-
-    @TimedResource
-    @GET
-    @Path("/{parentAccountId:" + UUID_PATTERN + "}/" + CHILDREN + "/" + INVOICES)
-    @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve children account invoices", response = InvoiceJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or date range supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
-    public Response getChildrenInvoices(@PathParam("parentAccountId") final String parentAccountIdString,
-                                       @QueryParam(QUERY_START_DATE) final String startDateString,
-                                       @QueryParam(QUERY_END_DATE) final String endDateString,
-                                       @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
-                                       @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
-                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
-        final TenantContext tenantContext = context.createContext(request);
-
-        // Verify the account exists
-        final UUID parentAccountId = UUID.fromString(parentAccountIdString);
-        accountUserApi.getAccountById(parentAccountId, tenantContext);
-
-        final LocalDate startDate = (startDateString != null) ? LOCAL_DATE_FORMATTER.parseLocalDate(startDateString) : null ;
-        final LocalDate endDate = (endDateString != null) ? LOCAL_DATE_FORMATTER.parseLocalDate(endDateString) : null ;
-        final List<Invoice> invoices = invoiceApi.getInvoicesByParentAccount(parentAccountId, startDate, endDate, tenantContext);
-        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(parentAccountId, auditMode.getLevel(), tenantContext);
-
-        final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
-        for (final Invoice invoice : invoices) {
-            result.add(new InvoiceJson(invoice, withItems, accountAuditLogs));
-        }
-
-        return Response.status(Status.OK).entity(result).build();
     }
 
 }
