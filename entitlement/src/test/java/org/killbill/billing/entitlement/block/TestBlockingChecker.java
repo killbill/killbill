@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -71,17 +73,17 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE,"state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingState(bundleState, clock, internalCallContext);
+        blockingStateDao.setBlockingState(bundleState, internalCallContext);
     }
 
     private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState accountState = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingState(accountState, clock, internalCallContext);
+        blockingStateDao.setBlockingState(accountState, internalCallContext);
     }
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingState(subscriptionState, clock, internalCallContext);
+        blockingStateDao.setBlockingState(subscriptionState, internalCallContext);
     }
 
     @Test(groups = "fast")

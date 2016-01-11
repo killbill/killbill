@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,7 +24,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -63,10 +64,9 @@ public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, Block
      * Sets a new state for a specific service.
      *
      * @param state   blocking state to set
-     * @param clock   system clock
      * @param context call context
      */
-    public void setBlockingState(BlockingState state, Clock clock, InternalCallContext context);
+    public void setBlockingState(BlockingState state, InternalCallContext context);
 
     /**
      * Unactive the blocking state
