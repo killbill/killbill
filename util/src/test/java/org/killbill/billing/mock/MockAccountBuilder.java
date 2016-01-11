@@ -34,6 +34,7 @@ public class MockAccountBuilder {
     private String name = "";
     private int firstNameLength;
     private Currency currency = Currency.USD;
+    private UUID parentAccountId;
     private int billingCycleDayLocal;
     private UUID paymentMethodId;
     private DateTimeZone timeZone = DateTimeZone.UTC;
@@ -68,6 +69,7 @@ public class MockAccountBuilder {
         this.companyName(data.getCompanyName());
         this.country(data.getCountry());
         this.currency(data.getCurrency());
+        this.parentAccountId(data.getParentAccountId());
         this.email(data.getEmail());
         this.externalKey(data.getExternalKey());
         this.firstNameLength(data.getFirstNameLength());
@@ -109,6 +111,11 @@ public class MockAccountBuilder {
 
     public MockAccountBuilder currency(final Currency currency) {
         this.currency = currency;
+        return this;
+    }
+
+    public MockAccountBuilder parentAccountId(final UUID parentAccountId) {
+        this.parentAccountId = parentAccountId;
         return this;
     }
 
@@ -314,7 +321,7 @@ public class MockAccountBuilder {
 
             @Override
             public UUID getParentAccountId() {
-                return null;
+                return parentAccountId;
             }
 
             @Override

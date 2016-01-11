@@ -108,6 +108,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         accountBuilder.postalCode(UUID.randomUUID().toString());
         accountBuilder.stateOrProvince(UUID.randomUUID().toString());
         accountBuilder.timeZone(DateTimeZone.UTC);
+        accountBuilder.parentAccountId(UUID.randomUUID());
         final Account account = accountBuilder.build();
 
         final AccountJson accountJson = new AccountJson(account, null, null, null);
@@ -128,5 +129,6 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(accountJson.isNotifiedForInvoices(), account.isNotifiedForInvoices());
         Assert.assertEquals(accountJson.getState(), account.getStateOrProvince());
         Assert.assertEquals(accountJson.getTimeZone(), account.getTimeZone().toString());
+        Assert.assertEquals(accountJson.getParentAccountId(), account.getParentAccountId().toString());
     }
 }
