@@ -61,12 +61,13 @@ public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, Block
     public List<BlockingState> getBlockingAllForAccountRecordId(InternalTenantContext context);
 
     /**
-     * Sets a new state for a specific service.
+     * Sets a new state for a specific service and send an event if needed
      *
      * @param state   blocking state to set
+     * @param bundleId bundle id of the associated bundle if the blocking state type is SUBSCRIPTION
      * @param context call context
      */
-    public void setBlockingState(BlockingState state, InternalCallContext context);
+    public void setBlockingStateAndPostBlockingTransitionEvent(BlockingState state, UUID bundleId, InternalCallContext context);
 
     /**
      * Unactive the blocking state

@@ -84,7 +84,7 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
-    public synchronized void setBlockingState(final BlockingState state, final InternalCallContext context) {
+    public synchronized void setBlockingStateAndPostBlockingTransitionEvent(final BlockingState state, final UUID bundleId, final InternalCallContext context) {
         if (blockingStates.get(state.getBlockedId()) == null) {
             blockingStates.put(state.getBlockedId(), new ArrayList<BlockingState>());
         }

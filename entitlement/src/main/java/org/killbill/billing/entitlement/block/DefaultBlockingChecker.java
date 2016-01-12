@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -115,6 +117,8 @@ public class DefaultBlockingChecker implements BlockingChecker {
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final BlockingStateDao dao;
 
+    private final StatelessBlockingChecker statelessBlockingChecker = new StatelessBlockingChecker();
+
     @Inject
     public DefaultBlockingChecker(final SubscriptionBaseInternalApi subscriptionApi, final BlockingStateDao dao) {
         this.subscriptionApi = subscriptionApi;
@@ -126,7 +130,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
         try {
             subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
             return getBlockedStateSubscription(subscription, upToDate, context);
-        } catch (SubscriptionBaseApiException e) {
+        } catch (final SubscriptionBaseApiException e) {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
@@ -152,7 +156,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
         try {
             bundle = subscriptionApi.getBundleFromId(bundleId, context);
             return getBlockedStateBundle(bundle, upToDate, context);
-        } catch (SubscriptionBaseApiException e) {
+        } catch (final SubscriptionBaseApiException e) {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
@@ -185,15 +189,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
         } else {
             blockableState = ImmutableList.<BlockingState>of();
         }
-        return getBlockedState(blockableState);
-    }
-
-    private DefaultBlockingAggregator getBlockedState(final Iterable<BlockingState> currentBlockableStatePerService) {
-        final DefaultBlockingAggregator result = new DefaultBlockingAggregator();
-        for (final BlockingState cur : currentBlockableStatePerService) {
-            result.or(cur);
-        }
-        return result;
+        return statelessBlockingChecker.getBlockedState(blockableState);
     }
 
     @Override
@@ -209,10 +205,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
 
     @Override
     public BlockingAggregator getBlockedStatus(final List<BlockingState> accountEntitlementStates, final List<BlockingState> bundleEntitlementStates, final List<BlockingState> subscriptionEntitlementStates, final InternalTenantContext internalTenantContext) {
-        final DefaultBlockingAggregator result = getBlockedState(subscriptionEntitlementStates);
-        result.or(getBlockedState(bundleEntitlementStates));
-        result.or(getBlockedState(accountEntitlementStates));
-        return result;
+        return statelessBlockingChecker.getBlockedState(accountEntitlementStates, bundleEntitlementStates, subscriptionEntitlementStates);
     }
 
     @Override

@@ -73,17 +73,17 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE,"state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingState(bundleState, internalCallContext);
+        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(bundleState, null, internalCallContext);
     }
 
     private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState accountState = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingState(accountState, internalCallContext);
+        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(accountState, null, internalCallContext);
     }
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingState(subscriptionState, internalCallContext);
+        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(subscriptionState, subscription.getBundleId(), internalCallContext);
     }
 
     @Test(groups = "fast")

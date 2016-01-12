@@ -55,13 +55,13 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         clock.setDay(new LocalDate(2012, 4, 1));
 
         final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingState(state1, internalCallContext);
+        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(state1, null, internalCallContext);
 
         clock.addDays(1);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingState(state2, internalCallContext);
+        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(state2, null, internalCallContext);
 
         Assert.assertEquals(blockingStateDao.getBlockingStateForService(uuid, BlockingStateType.ACCOUNT, service, internalCallContext).getStateName(), state2.getStateName());
 
@@ -83,14 +83,14 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         final boolean blockBilling = false;
 
         final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service1, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingState(state1, internalCallContext);
+        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(state1, null, internalCallContext);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String service2 = "TEST2";
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service2, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingState(state2, internalCallContext);
+        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(state2, null, internalCallContext);
 
         final List<BlockingState> history2 = blockingStateDao.getBlockingAllForAccountRecordId(internalCallContext);
         Assert.assertEquals(history2.size(), 2);
