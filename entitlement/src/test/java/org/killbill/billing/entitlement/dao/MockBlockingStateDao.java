@@ -35,6 +35,7 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -84,16 +85,18 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
-    public synchronized void setBlockingStateAndPostBlockingTransitionEvent(final BlockingState state, final UUID bundleId, final InternalCallContext context) {
-        if (blockingStates.get(state.getBlockedId()) == null) {
-            blockingStates.put(state.getBlockedId(), new ArrayList<BlockingState>());
-        }
-        blockingStates.get(state.getBlockedId()).add(state);
+    public synchronized void setBlockingStatesAndPostBlockingTransitionEvent(final Map<BlockingState, Optional<UUID>> states, final InternalCallContext context) {
+        for (final BlockingState state : states.keySet()) {
+            if (blockingStates.get(state.getBlockedId()) == null) {
+                blockingStates.put(state.getBlockedId(), new ArrayList<BlockingState>());
+            }
+            blockingStates.get(state.getBlockedId()).add(state);
 
-        if (blockingStatesPerAccountRecordId.get(context.getAccountRecordId()) == null) {
-            blockingStatesPerAccountRecordId.put(context.getAccountRecordId(), new ArrayList<BlockingState>());
+            if (blockingStatesPerAccountRecordId.get(context.getAccountRecordId()) == null) {
+                blockingStatesPerAccountRecordId.put(context.getAccountRecordId(), new ArrayList<BlockingState>());
+            }
+            blockingStatesPerAccountRecordId.get(context.getAccountRecordId()).add(state);
         }
-        blockingStatesPerAccountRecordId.get(context.getAccountRecordId()).add(state);
     }
 
     @Override

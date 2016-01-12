@@ -32,6 +32,9 @@ import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.DefaultBlockingState;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+
 public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
@@ -55,13 +58,13 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         clock.setDay(new LocalDate(2012, 4, 1));
 
         final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(state1, null, internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(state1, Optional.<UUID>absent()), internalCallContext);
 
         clock.addDays(1);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(state2, null, internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(state2, Optional.<UUID>absent()), internalCallContext);
 
         Assert.assertEquals(blockingStateDao.getBlockingStateForService(uuid, BlockingStateType.ACCOUNT, service, internalCallContext).getStateName(), state2.getStateName());
 
@@ -83,14 +86,14 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         final boolean blockBilling = false;
 
         final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service1, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(state1, null, internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(state1, Optional.<UUID>absent()), internalCallContext);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String service2 = "TEST2";
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service2, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(state2, null, internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(state2, Optional.<UUID>absent()), internalCallContext);
 
         final List<BlockingState> history2 = blockingStateDao.getBlockingAllForAccountRecordId(internalCallContext);
         Assert.assertEquals(history2.size(), 2);

@@ -54,6 +54,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -231,8 +232,8 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public void setBlockingStateAndPostBlockingTransitionEvent(final BlockingState state, final UUID bundleId, final InternalCallContext context) {
-        delegate.setBlockingStateAndPostBlockingTransitionEvent(state, bundleId, context);
+    public void setBlockingStatesAndPostBlockingTransitionEvent(final Map<BlockingState, Optional<UUID>> states, final InternalCallContext context) {
+        delegate.setBlockingStatesAndPostBlockingTransitionEvent(states, context);
     }
 
     @Override
@@ -241,7 +242,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     // Add blocking states for add-ons, which would be impacted by a future cancellation or change of their base plan
-    // See DefaultEntitlement#blockAddOnsIfRequired
+    // See DefaultEntitlement#computeAddOnBlockingStates
     private List<BlockingState> addBlockingStatesNotOnDisk(final List<BlockingState> blockingStatesOnDisk,
                                                            final InternalTenantContext context) {
         final Collection<BlockingState> blockingStatesOnDiskCopy = new LinkedList<BlockingState>(blockingStatesOnDisk);

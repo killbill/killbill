@@ -31,10 +31,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.mockito.Mockito;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
@@ -51,6 +47,12 @@ import org.killbill.billing.junction.JunctionTestSuiteNoDB;
 import org.killbill.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.mockito.Mockito;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -115,11 +117,12 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         billingEvents.add(C);
         billingEvents.add(D);
 
-        final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
-        blockingStates.add(new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now));
-        blockingStates.add(new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2)));
+        final BlockingState blockingState1 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now);
+        final BlockingState blockingState2 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2));
 
-        setBlockingStates(blockingStates);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(blockingState1, Optional.<UUID>absent(),
+                                                                                                                        blockingState2, Optional.<UUID>absent()),
+                                                                         internalCallContext);
 
         blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), internalCallContext);
 
@@ -745,13 +748,16 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         billingEvents.add(phase);
         billingEvents.add(upgrade);
 
-        final List<BlockingState> blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, false, false, new LocalDate(2012, 7, 5).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
-        blockingEvents.add(new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
-        blockingEvents.add(new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 24).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
-        blockingEvents.add(new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
+        final BlockingState blockingState1 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, false, false, new LocalDate(2012, 7, 5).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        final BlockingState blockingState2 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        final BlockingState blockingState3 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 24).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        final BlockingState blockingState4 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
 
-        setBlockingStates(blockingEvents);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(blockingState1, Optional.<UUID>absent(),
+                                                                                                                        blockingState2, Optional.<UUID>absent(),
+                                                                                                                        blockingState3, Optional.<UUID>absent(),
+                                                                                                                        blockingState4, Optional.<UUID>absent()),
+                                                                         internalCallContext);
 
         blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), internalCallContext);
 
@@ -767,11 +773,5 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(events.get(3).getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
         assertEquals(events.get(4).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
         assertEquals(events.get(4).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
-    }
-
-    private void setBlockingStates(final List<BlockingState> blockingStates) {
-        for (final BlockingState blockingState : blockingStates) {
-            blockingStateDao.setBlockingState(blockingState, internalCallContext);
-        }
     }
 }

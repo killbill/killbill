@@ -20,11 +20,6 @@ package org.killbill.billing.entitlement.block;
 
 import java.util.UUID;
 
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.EntitlementTestSuiteNoDB;
@@ -36,6 +31,13 @@ import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
@@ -70,20 +72,19 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         ((MockBlockingStateDao) blockingStateDao).clear();
     }
 
-
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE,"state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(bundleState, null, internalCallContext);
+        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, "state", "test-service", bC, bE, bB, clock.getUTCNow());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(bundleState, Optional.<UUID>absent()), internalCallContext);
     }
 
     private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState accountState = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(accountState, null, internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(accountState, Optional.<UUID>absent()), internalCallContext);
     }
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingStateAndPostBlockingTransitionEvent(subscriptionState, subscription.getBundleId(), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(subscriptionState, Optional.<UUID>of(subscription.getBundleId())), internalCallContext);
     }
 
     @Test(groups = "fast")

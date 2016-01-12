@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,7 +19,9 @@
 package org.killbill.billing.entitlement.api;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -296,14 +300,19 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             } else {
                 getSubscriptionBase().cancel(callContext);
             }
-        } catch (SubscriptionBaseApiException e) {
+        } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
 
         final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveCancelDate);
-        entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(newBlockingState, contextWithValidAccountRecordId);
+        final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
+        final Collection<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(effectiveCancelDate, notificationEvents, callContext, contextWithValidAccountRecordId);
 
-        blockAddOnsIfRequired(effectiveCancelDate, callContext, contextWithValidAccountRecordId);
+        // Record the new state first, then insert the notifications to avoid race conditions
+        setBlockingStates(newBlockingState, addOnsBlockingStates, contextWithValidAccountRecordId);
+        for (final NotificationEvent notificationEvent : notificationEvents) {
+            recordFutureNotification(effectiveCancelDate, notificationEvent, contextWithValidAccountRecordId);
+        }
 
         return entitlementApi.getEntitlementForId(getId(), callContext);
     }
@@ -353,7 +362,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         if (getSubscriptionBase().getFutureEndDate() != null) {
             try {
                 getSubscriptionBase().uncancel(callContext);
-            } catch (SubscriptionBaseApiException e) {
+            } catch (final SubscriptionBaseApiException e) {
                 throw new EntitlementApiException(e);
             }
         }
@@ -394,14 +403,19 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 try {
                     // Cancel subscription base first, to correctly compute the add-ons entitlements we need to cancel (see below)
                     getSubscriptionBase().cancelWithPolicy(billingPolicy, callContext);
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
 
                 final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveDate);
-                entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(newBlockingState, contextWithValidAccountRecordId);
+                final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
+                final Collection<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(effectiveDate, notificationEvents, callContext, contextWithValidAccountRecordId);
 
-                blockAddOnsIfRequired(effectiveDate, callContext, contextWithValidAccountRecordId);
+                // Record the new state first, then insert the notifications to avoid race conditions
+                setBlockingStates(newBlockingState, addOnsBlockingStates, contextWithValidAccountRecordId);
+                for (final NotificationEvent notificationEvent : notificationEvents) {
+                    recordFutureNotification(effectiveDate, notificationEvent, contextWithValidAccountRecordId);
+                }
 
                 return entitlementApi.getEntitlementForId(getId(), callContext);
             }
@@ -454,19 +468,25 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 final DateTime effectiveChangeDate;
                 try {
                     effectiveChangeDate = getSubscriptionBase().changePlan(productName, billingPeriod, priceList, overrides, callContext);
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
                 try {
                     checker.checkBlockedChange(getSubscriptionBase(), effectiveChangeDate, context);
-                } catch (BlockingApiException e) {
+                } catch (final BlockingApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
-                blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
+                final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
+                final Iterable<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(effectiveChangeDate, notificationEvents, callContext, context);
 
+                // Record the new state first, then insert the notifications to avoid race conditions
+                setBlockingStates(addOnsBlockingStates, context);
+                for (final NotificationEvent notificationEvent : notificationEvents) {
+                    recordFutureNotification(effectiveChangeDate, notificationEvent, context);
+                }
                 return entitlementApi.getEntitlementForId(getId(), callContext);
             }
         };
@@ -502,18 +522,24 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), getSubscriptionBase().getStartDate(), context);
                 try {
                     getSubscriptionBase().changePlanWithDate(productName, billingPeriod, priceList, overrides, effectiveChangeDate, callContext);
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
 
                 try {
                     checker.checkBlockedChange(getSubscriptionBase(), effectiveChangeDate, context);
-                } catch (BlockingApiException e) {
+                } catch (final BlockingApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
+                final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
+                final Iterable<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(effectiveChangeDate, notificationEvents, callContext, context);
 
-                blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
+                // Record the new state first, then insert the notifications to avoid race conditions
+                setBlockingStates(addOnsBlockingStates, context);
+                for (final NotificationEvent notificationEvent : notificationEvents) {
+                    recordFutureNotification(effectiveChangeDate, notificationEvent, context);
+                }
 
                 return entitlementApi.getEntitlementForId(getId(), callContext);
             }
@@ -551,17 +577,24 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 final DateTime effectiveChangeDate;
                 try {
                     effectiveChangeDate = getSubscriptionBase().changePlanWithPolicy(productName, billingPeriod, priceList, overrides, actionPolicy, callContext);
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
 
                 try {
                     checker.checkBlockedChange(getSubscriptionBase(), effectiveChangeDate, context);
-                } catch (BlockingApiException e) {
+                } catch (final BlockingApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
-                blockAddOnsIfRequired(effectiveChangeDate, callContext, context);
+                final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
+                final Iterable<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(effectiveChangeDate, notificationEvents, callContext, context);
+
+                // Record the new state first, then insert the notifications to avoid race conditions
+                setBlockingStates(addOnsBlockingStates, context);
+                for (final NotificationEvent notificationEvent : notificationEvents) {
+                    recordFutureNotification(effectiveChangeDate, notificationEvent, context);
+                }
 
                 return entitlementApi.getEntitlementForId(getId(), callContext);
             }
@@ -573,11 +606,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         eventsStream = eventsStreamBuilder.refresh(eventsStream, context);
     }
 
-    public void blockAddOnsIfRequired(final DateTime effectiveDate, final TenantContext context, final InternalCallContext internalCallContext) throws EntitlementApiException {
+    public Collection<BlockingState> computeAddOnBlockingStates(final DateTime effectiveDate, final Collection<NotificationEvent> notificationEvents, final TenantContext context, final InternalCallContext internalCallContext) throws EntitlementApiException {
         // Optimization - bail early
         if (!ProductCategory.BASE.equals(getSubscriptionBase().getCategory())) {
             // Only base subscriptions have add-ons
-            return;
+            return ImmutableList.<BlockingState>of();
         }
 
         // Get the latest state from disk (we just got cancelled or changed plan)
@@ -594,14 +627,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             // go through the DAO (e.g. change)
             final boolean isBaseEntitlementCancelled = eventsStream.isEntitlementCancelled();
             final NotificationEvent notificationEvent = new EntitlementNotificationKey(getId(), getBundleId(), isBaseEntitlementCancelled ? EntitlementNotificationKeyAction.CANCEL : EntitlementNotificationKeyAction.CHANGE, effectiveDate);
-            recordFutureNotification(effectiveDate, notificationEvent, internalCallContext);
-            return;
+            notificationEvents.add(notificationEvent);
+            return ImmutableList.<BlockingState>of();
         }
 
-        final Collection<BlockingState> addOnsBlockingStates = eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);
-        for (final BlockingState addOnBlockingState : addOnsBlockingStates) {
-            entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(addOnBlockingState, internalCallContext);
-        }
+        return eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);
     }
 
     private void recordFutureNotification(final DateTime effectiveDate,
@@ -611,18 +641,29 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
                                                                                                            DefaultEntitlementService.NOTIFICATION_QUEUE_NAME);
             subscriptionEventQueue.recordFutureNotification(effectiveDate, notificationEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
-        } catch (NoSuchNotificationQueue e) {
+        } catch (final NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void setBlockingStates(final BlockingState entitlementBlockingState, final Collection<BlockingState> addOnsBlockingStates, final InternalCallContext internalCallContext) {
+        final Collection<BlockingState> states = new LinkedList<BlockingState>();
+        states.add(entitlementBlockingState);
+        states.addAll(addOnsBlockingStates);
+        setBlockingStates(states, internalCallContext);
+    }
+
+    private void setBlockingStates(final Iterable<BlockingState> blockingStates, final InternalCallContext internalCallContext) {
+        entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(blockingStates, getBundleId(), internalCallContext);
     }
 
     //
     // Unfortunately the permission checks for the entitlement api cannot *simply* rely on the KillBillShiroAopModule because some of the operations (CANCEL, CHANGE) are
     // done through objects that are not injected by Guice, and so the check needs to happen explicitly.
     //
-    private void checkForPermissions(final Permission permission, final CallContext callContext) throws EntitlementApiException {
+    private void checkForPermissions(final Permission permission, final TenantContext callContext) throws EntitlementApiException {
         //
         // If authentication had been done (CorsBasicHttpAuthenticationFilter) we verify the correct permissions exist.
         //
