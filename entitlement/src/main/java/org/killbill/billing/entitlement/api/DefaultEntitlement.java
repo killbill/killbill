@@ -368,6 +368,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         }
     }
 
+    // See also EntitlementInternalApi#cancel for the bulk API
     @Override
     public Entitlement cancelEntitlementWithDateOverrideBillingPolicy(final LocalDate localCancelDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 

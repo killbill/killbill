@@ -43,6 +43,7 @@ public class MockEntitlementModule extends KillBillModule implements Entitlement
         installBlockingStateDao();
         installBlockingApi();
         installEntitlementApi();
+        installEntitlementInternalApi();
         installBlockingChecker();
     }
 

@@ -39,6 +39,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.EntitlementInternalApi;
 import org.killbill.billing.entitlement.api.BlockingApiException;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -91,6 +92,7 @@ public class OverdueStateApplicator {
     private final PersistentBus bus;
     private final AccountInternalApi accountApi;
     private final EntitlementApi entitlementApi;
+    private final EntitlementInternalApi entitlementInternalApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
     private final TagInternalApi tagApi;
     private final EmailSender emailSender;
@@ -100,6 +102,7 @@ public class OverdueStateApplicator {
     public OverdueStateApplicator(final BlockingInternalApi accessApi,
                                   final AccountInternalApi accountApi,
                                   final EntitlementApi entitlementApi,
+                                  final EntitlementInternalApi entitlementInternalApi,
                                   final Clock clock,
                                   @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverduePoster checkPoster,
                                   final OverdueEmailGenerator overdueEmailGenerator,
@@ -111,6 +114,7 @@ public class OverdueStateApplicator {
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
+        this.entitlementInternalApi = entitlementInternalApi;
         this.clock = clock;
         this.checkPoster = checkPoster;
         this.overdueEmailGenerator = overdueEmailGenerator;
@@ -314,15 +318,10 @@ public class OverdueStateApplicator {
             final List<Entitlement> toBeCancelled = new LinkedList<Entitlement>();
             computeEntitlementsToCancel(account, toBeCancelled, callContext);
 
-            for (final Entitlement cur : toBeCancelled) {
-                try {
-                    cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, ImmutableList.<PluginProperty>of(), callContext);
-                } catch (final EntitlementApiException e) {
-                    // If subscription has already been cancelled, there is nothing to do so we can ignore
-                    if (e.getCode() != ErrorCode.SUB_CANCEL_BAD_STATE.getCode()) {
-                        throw new OverdueException(e);
-                    }
-                }
+            try {
+                entitlementInternalApi.cancel(toBeCancelled, new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, ImmutableList.<PluginProperty>of(), context);
+            } catch (final EntitlementApiException e) {
+                throw new OverdueException(e);
             }
         } catch (final EntitlementApiException e) {
             throw new OverdueException(e);
