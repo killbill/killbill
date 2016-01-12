@@ -46,6 +46,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.WithAccountLock;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -283,7 +284,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                     if (invoiceIdForExternalCharge == null) {
                         final Currency currency = charge.getCurrency();
                         if (newInvoicesForExternalCharges.get(currency) == null) {
-                            final Invoice newInvoiceForExternalCharge = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
+                            final Invoice newInvoiceForExternalCharge = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency, InvoiceStatus.DRAFT);
                             newInvoicesForExternalCharges.put(currency, newInvoiceForExternalCharge);
                         }
                         invoiceForExternalCharge = newInvoicesForExternalCharges.get(currency);
@@ -347,7 +348,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                 // Create an invoice for that credit if it doesn't exist
                 final Invoice invoiceForCredit;
                 if (invoiceId == null) {
-                    invoiceForCredit = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
+                    invoiceForCredit = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency, InvoiceStatus.DRAFT);
                 } else {
                     invoiceForCredit = getInvoiceAndCheckCurrency(invoiceId, currency, context);
                 }

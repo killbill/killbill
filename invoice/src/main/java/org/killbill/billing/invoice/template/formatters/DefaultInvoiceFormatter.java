@@ -44,6 +44,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
@@ -339,6 +340,11 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     @Override
     public DateTime getUpdatedDate() {
         return invoice.getUpdatedDate();
+    }
+
+    @Override
+    public InvoiceStatus getStatus() {
+        return invoice.getStatus();
     }
 
     // Expose the fields for children classes. This is useful for further customization of the invoices

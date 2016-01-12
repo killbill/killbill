@@ -32,6 +32,7 @@ import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -54,17 +55,21 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     private final boolean isWrittenOff;
 
     private final Currency processedCurrency;
-
+    private final InvoiceStatus status;
 
 
     // Used to create a new invoice
     public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
-        this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
+        this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, InvoiceStatus.COMMITTED);
+    }
+
+    public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final InvoiceStatus status) {
+        this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, status);
     }
 
     public DefaultInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
-                          final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice) {
-        this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice, false);
+                          final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice, final InvoiceStatus status) {
+        this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice, false, status);
     }
 
 
@@ -72,7 +77,8 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
         this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
              invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
-             invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated(), invoiceModelDao.isWrittenOff());
+             invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated(),
+             invoiceModelDao.isWrittenOff(), invoiceModelDao.getStatus());
         addInvoiceItems(Collections2.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final InvoiceItemModelDao input) {
@@ -90,7 +96,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     private DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
                           @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
                           final LocalDate targetDate, final Currency currency, final Currency processedCurrency,
-                           final boolean isMigrationInvoice, final boolean isWrittenOff) {
+                           final boolean isMigrationInvoice, final boolean isWrittenOff, final InvoiceStatus status) {
         super(invoiceId, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -102,13 +108,14 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this.isWrittenOff = isWrittenOff;
         this.invoiceItems = new ArrayList<InvoiceItem>();
         this.payments = new ArrayList<InvoicePayment>();
+        this.status = status;
     }
 
 
     // Semi deep copy where we copy the lists but not the elements in the lists since they are immutables.
     @Override
     public Object clone() {
-        final Invoice clonedInvoice = new DefaultInvoice(getId(),  getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice(), isWrittenOff());
+        final Invoice clonedInvoice = new DefaultInvoice(getId(),  getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice(), isWrittenOff(), getStatus());
         clonedInvoice.getInvoiceItems().addAll(getInvoiceItems());
         clonedInvoice.getPayments().addAll(getPayments());
         return clonedInvoice;
@@ -239,8 +246,13 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     }
 
     @Override
+    public InvoiceStatus getStatus() {
+        return status;
+    }
+
+    @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", Status=" + status + "]";
     }
 
 }

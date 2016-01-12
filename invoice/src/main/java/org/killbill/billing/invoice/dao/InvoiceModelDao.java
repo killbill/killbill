@@ -27,6 +27,7 @@ import org.joda.time.LocalDate;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -40,6 +41,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     private LocalDate targetDate;
     private Currency currency;
     private boolean migrated;
+    private InvoiceStatus status;
 
     // Not in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems = new LinkedList<InvoiceItemModelDao>();
@@ -52,7 +54,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
 
     public InvoiceModelDao(final UUID id, @Nullable final DateTime createdDate, final UUID accountId,
                            @Nullable final Integer invoiceNumber, final LocalDate invoiceDate, final LocalDate targetDate,
-                           final Currency currency, final boolean migrated) {
+                           final Currency currency, final boolean migrated, final InvoiceStatus status) {
         super(id, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -61,19 +63,24 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.currency = currency;
         this.migrated = migrated;
         this.isWrittenOff = false;
+        this.status = status;
     }
 
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final boolean migrated) {
-        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, migrated);
+        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, migrated, InvoiceStatus.COMMITTED);
+    }
+
+    public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final boolean migrated, final InvoiceStatus status) {
+        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, migrated, status);
     }
 
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
-        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, false);
+        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, false, InvoiceStatus.COMMITTED);
     }
 
     public InvoiceModelDao(final Invoice invoice) {
         this(invoice.getId(), invoice.getCreatedDate(), invoice.getAccountId(), invoice.getInvoiceNumber(), invoice.getInvoiceDate(),
-             invoice.getTargetDate(), invoice.getCurrency(), invoice.isMigrationInvoice());
+             invoice.getTargetDate(), invoice.getCurrency(), invoice.isMigrationInvoice(), invoice.getStatus());
     }
 
     public void addInvoiceItems(final List<InvoiceItemModelDao> invoiceItems) {
@@ -168,6 +175,14 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.isWrittenOff = isWrittenOff;
     }
 
+    public InvoiceStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(final InvoiceStatus status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -178,6 +193,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         sb.append(", targetDate=").append(targetDate);
         sb.append(", currency=").append(currency);
         sb.append(", migrated=").append(migrated);
+        sb.append(", status=").append(status);
         sb.append('}');
         return sb.toString();
     }
@@ -214,6 +230,9 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         if (targetDate != null ? !targetDate.equals(that.targetDate) : that.targetDate != null) {
             return false;
         }
+        if (status != null ? !status.equals(that.status) : that.status != null) {
+            return false;
+        }
 
         return true;
     }
@@ -227,6 +246,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         result = 31 * result + (targetDate != null ? targetDate.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (migrated ? 1 : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
         return result;
     }
 
