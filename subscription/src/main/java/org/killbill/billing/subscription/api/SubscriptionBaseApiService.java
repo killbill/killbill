@@ -81,7 +81,7 @@ public interface SubscriptionBaseApiService {
                                          String priceList, List<PlanPhasePriceOverride> overrides, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public int cancelAddOnsIfRequired(final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final CallContext context) throws CatalogApiException;
+    public int cancelAddOnsIfRequiredOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final CallContext context) throws CatalogApiException;
 
     public PlanChangeResult getPlanChangeResult(final DefaultSubscriptionBase subscription, final String productName,
                                                 final BillingPeriod term, final String priceList, final DateTime effectiveDate, TenantContext context) throws SubscriptionBaseApiException;
