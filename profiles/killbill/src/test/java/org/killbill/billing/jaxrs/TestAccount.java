@@ -387,7 +387,29 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertTrue(retrievedAccount.equals(childAccount));
         Assert.assertEquals(retrievedAccount.getParentAccountId(), parentAccount.getAccountId());
         Assert.assertTrue(retrievedAccount.getIsPaymentDelegatedToParent());
+    }
 
+    @Test(groups = "slow", description = "retrieve children accounts by parent account id")
+    public void testGetChildrenAccounts() throws Exception {
+
+        final Account parentAccount = createAccount();
+
+        final Account childInput = getAccount();
+        childInput.setParentAccountId(parentAccount.getAccountId());
+        childInput.setIsPaymentDelegatedToParent(true);
+        final Account childAccount = killBillClient.createAccount(childInput, createdBy, reason, comment);
+
+        final Account childInput2 = getAccount();
+        childInput2.setParentAccountId(parentAccount.getAccountId());
+        childInput2.setIsPaymentDelegatedToParent(true);
+        final Account childAccount2 = killBillClient.createAccount(childInput2, createdBy, reason, comment);
+
+        // Retrieves children accounts by parent account id
+        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(parentAccount.getAccountId(), true, true);
+        Assert.assertEquals(childrenAccounts.size(), 2);
+
+        Assert.assertTrue(childrenAccounts.get(0).equals(childAccount));
+        Assert.assertTrue(childrenAccounts.get(1).equals(childAccount2));
     }
 
 }
