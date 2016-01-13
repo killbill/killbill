@@ -28,8 +28,6 @@ import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
 
 public class DefaultAccount extends EntityBase implements Account {
