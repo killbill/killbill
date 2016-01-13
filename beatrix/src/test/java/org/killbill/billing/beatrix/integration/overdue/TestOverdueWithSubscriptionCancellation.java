@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -108,8 +110,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         assertTrue(cancelledAddon1.getState() == EntitlementState.CANCELLED);
     }
 
-
-    @Test(groups = "slow", enabled = false, description = "https://github.com/killbill/killbill/issues/248")
+    @Test(groups = "slow")
     public void testCheckSubscriptionCancellationWithMultipleBundles() throws Exception {
         // 2012-05-01T00:03:53.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
@@ -152,7 +153,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // DAY 36 (2012-06-06)-- RIGHT AFTER OD1 (two block events, for the cancellation and the OD1 state)
         // One BLOCK event is for the overdue state transition
         // The 2 other BLOCK are for the entitlement blocking states for both baseEntitlement and baseEntitlement3
-        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.INVOICE);
+        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
 
         // Should be in OD1
         checkODState("OD1");
