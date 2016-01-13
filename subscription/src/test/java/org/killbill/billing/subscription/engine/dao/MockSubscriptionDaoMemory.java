@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -341,25 +341,17 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void cancelSubscription(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent cancelEvent,
-                                   final InternalCallContext context, final int seqId) {
-        synchronized (events) {
-            cancelNextPhaseEvent(subscription.getId(), context);
-            insertEvent(cancelEvent, context);
-        }
-    }
-
-    @Override
     public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
         synchronized (events) {
             for (int i = 0; i < subscriptions.size(); i++) {
-                cancelSubscription(subscriptions.get(i), cancelEvents.get(i), context, 0);
+                cancelNextPhaseEvent(subscriptions.get(i).getId(), context);
+                insertEvent(cancelEvents.get(i), context);
             }
         }
     }
 
     @Override
-    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> changeEvents, final InternalCallContext context) {
+    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> changeEvents, final List<DefaultSubscriptionBase> subscriptionsToBeCancelled, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
         synchronized (events) {
             cancelNextChangeEvent(subscription.getId());
             cancelNextPhaseEvent(subscription.getId(), context);
@@ -368,6 +360,8 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
                 recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
             }
         }
+
+        cancelSubscriptions(subscriptionsToBeCancelled, cancelEvents, context);
     }
 
     private void insertEvent(final SubscriptionBaseEvent event, final InternalCallContext context) {
