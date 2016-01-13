@@ -215,6 +215,23 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
+    public void cancelBaseSubscriptions(final Iterable<SubscriptionBase> subscriptions, final BillingActionPolicy policy, final InternalCallContext context) throws SubscriptionBaseApiException {
+        apiService.cancelWithPolicyNoValidation(Iterables.<SubscriptionBase, DefaultSubscriptionBase>transform(subscriptions,
+                                                                                                               new Function<SubscriptionBase, DefaultSubscriptionBase>() {
+                                                                                                                   @Override
+                                                                                                                   public DefaultSubscriptionBase apply(final SubscriptionBase subscriptionBase) {
+                                                                                                                       try {
+                                                                                                                           return getDefaultSubscriptionBase(subscriptionBase, context);
+                                                                                                                       } catch (final CatalogApiException e) {
+                                                                                                                           throw new RuntimeException(e);
+                                                                                                                       }
+                                                                                                                   }
+                                                                                                               }),
+                                                policy,
+                                                context);
+    }
+
+    @Override
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final InternalCallContext context) throws SubscriptionBaseApiException {
 
         final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
@@ -626,5 +643,15 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 return new DefaultEffectiveSubscriptionEvent((SubscriptionBaseTransitionData) input, ((DefaultSubscriptionBase) subscription).getAlignStartDate(), null, context.getAccountRecordId(), context.getTenantRecordId());
             }
         }));
+    }
+
+    // For forward-compatibility
+    private DefaultSubscriptionBase getDefaultSubscriptionBase(final SubscriptionBase subscriptionBase, final InternalTenantContext context) throws CatalogApiException {
+        if (subscriptionBase instanceof DefaultSubscriptionBase) {
+            return (DefaultSubscriptionBase) subscriptionBase;
+        } else {
+            // Safe cast, see above
+            return (DefaultSubscriptionBase) dao.getSubscriptionFromId(subscriptionBase.getId(), context);
+        }
     }
 }

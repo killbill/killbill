@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
@@ -43,6 +44,8 @@ public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBase createBaseSubscriptionWithAddOns(UUID bundleId, Iterable<EntitlementSpecifier> entitlements, DateTime requestedDateWithMs,
                                                              InternalCallContext context) throws SubscriptionBaseApiException;
+
+    public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, InternalCallContext context)
             throws SubscriptionBaseApiException;

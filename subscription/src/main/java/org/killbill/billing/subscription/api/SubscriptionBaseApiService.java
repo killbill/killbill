@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -31,7 +32,6 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -61,6 +61,9 @@ public interface SubscriptionBaseApiService {
             throws SubscriptionBaseApiException;
 
     public boolean cancelWithPolicy(DefaultSubscriptionBase subscription, BillingActionPolicy policy, CallContext context)
+            throws SubscriptionBaseApiException;
+
+    public boolean cancelWithPolicyNoValidation(Iterable<DefaultSubscriptionBase> subscriptions, BillingActionPolicy policy, InternalCallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean uncancel(DefaultSubscriptionBase subscription, CallContext context)
