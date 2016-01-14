@@ -303,7 +303,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                                                                                   context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                 notifyBusFromTransaction(entitySqlDaoWrapperFactory, event);
             } else {
-                log.debug("Skipping event for service {} (previousState={}, currentState={})", serviceName, previousState, currentState);
+                log.debug("Skipping event for service {} and blockableId {} (previousState={}, currentState={})", serviceName, blockableId, previousState, currentState);
             }
 
         }

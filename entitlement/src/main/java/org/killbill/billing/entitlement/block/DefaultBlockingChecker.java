@@ -82,6 +82,16 @@ public class DefaultBlockingChecker implements BlockingChecker {
         }
 
         @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("DefaultBlockingAggregator{");
+            sb.append("blockChange=").append(blockChange);
+            sb.append(", blockEntitlement=").append(blockEntitlement);
+            sb.append(", blockBilling=").append(blockBilling);
+            sb.append('}');
+            return sb.toString();
+        }
+
+        @Override
         public boolean equals(final Object o) {
             if (this == o) {
                 return true;
