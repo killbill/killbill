@@ -465,19 +465,25 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
                 }
 
+                final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
 
                 final DateTime effectiveChangeDate;
                 try {
-                    effectiveChangeDate = getSubscriptionBase().changePlan(productName, billingPeriod, priceList, overrides, callContext);
+                    effectiveChangeDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), productName, billingPeriod, priceList, null, null, context);
                 } catch (final SubscriptionBaseApiException e) {
-                    throw new EntitlementApiException(e);
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
-                final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
                 try {
                     checker.checkBlockedChange(getSubscriptionBase(), effectiveChangeDate, context);
                 } catch (final BlockingApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                }
+
+                try {
+                    getSubscriptionBase().changePlan(productName, billingPeriod, priceList, overrides, callContext);
+                } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
                 }
 
                 final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
@@ -520,17 +526,25 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-                final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), getSubscriptionBase().getStartDate(), context);
+                final DateTime effectiveChangeDateComputed = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), getSubscriptionBase().getStartDate(), context);
+
+                final DateTime effectiveChangeDate;
                 try {
-                    getSubscriptionBase().changePlanWithDate(productName, billingPeriod, priceList, overrides, effectiveChangeDate, callContext);
+                    effectiveChangeDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), productName, billingPeriod, priceList, effectiveChangeDateComputed, null, context);
                 } catch (final SubscriptionBaseApiException e) {
-                    throw new EntitlementApiException(e);
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
                 try {
                     checker.checkBlockedChange(getSubscriptionBase(), effectiveChangeDate, context);
                 } catch (final BlockingApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                }
+
+                try {
+                    getSubscriptionBase().changePlanWithDate(productName, billingPeriod, priceList, overrides, effectiveChangeDate, callContext);
+                } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
                 }
 
                 final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
@@ -577,15 +591,21 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
                 final DateTime effectiveChangeDate;
                 try {
-                    effectiveChangeDate = getSubscriptionBase().changePlanWithPolicy(productName, billingPeriod, priceList, overrides, actionPolicy, callContext);
+                    effectiveChangeDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), productName, billingPeriod, priceList, null, actionPolicy, context);
                 } catch (final SubscriptionBaseApiException e) {
-                    throw new EntitlementApiException(e);
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
                 try {
                     checker.checkBlockedChange(getSubscriptionBase(), effectiveChangeDate, context);
                 } catch (final BlockingApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                }
+
+                try {
+                    getSubscriptionBase().changePlanWithPolicy(productName, billingPeriod, priceList, overrides, actionPolicy, callContext);
+                } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
                 }
 
                 final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,6 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
@@ -337,6 +339,31 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
+    public DateTime dryRunChangePlan(final DefaultSubscriptionBase subscription,
+                                     final String productName,
+                                     final BillingPeriod term,
+                                     final String priceList,
+                                     @Nullable final DateTime requestedDateWithMs,
+                                     @Nullable final BillingActionPolicy requestedPolicy,
+                                     final TenantContext context) throws SubscriptionBaseApiException {
+        final DateTime now = clock.getUTCNow();
+
+        BillingActionPolicy policyMaybeNull = requestedPolicy;
+        if (requestedDateWithMs == null && requestedPolicy == null) {
+            final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, productName, term, priceList, now, context);
+            policyMaybeNull = planChangeResult.getPolicy();
+        }
+
+        if (policyMaybeNull != null) {
+            return subscription.getPlanChangeEffectiveDate(policyMaybeNull);
+        } else if (requestedDateWithMs != null) {
+            return DefaultClock.truncateMs(requestedDateWithMs);
+        } else {
+            return now;
+        }
+    }
+
+    @Override
     public DateTime changePlan(final DefaultSubscriptionBase subscription, final String productName, final BillingPeriod term,
                                final String priceList, final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
         final DateTime now = clock.getUTCNow();
@@ -344,47 +371,48 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         validateEntitlementState(subscription);
 
         final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, productName, term, priceList, now, context);
-        final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(planChangeResult.getPolicy());
+        final DateTime effectiveDate = dryRunChangePlan(subscription, productName, term, priceList, null, planChangeResult.getPolicy(), context);
         validateEffectiveDate(subscription, effectiveDate);
 
         try {
-            return doChangePlan(subscription, productName, term, planChangeResult.getNewPriceList().getName(), overrides, now, effectiveDate, context);
+            doChangePlan(subscription, productName, term, planChangeResult.getNewPriceList().getName(), overrides, effectiveDate, context);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
+
+        return effectiveDate;
     }
 
     @Override
     public DateTime changePlanWithRequestedDate(final DefaultSubscriptionBase subscription, final String productName, final BillingPeriod term,
                                                 final String priceList, final List<PlanPhasePriceOverride> overrides,
                                                 final DateTime requestedDateWithMs, final CallContext context) throws SubscriptionBaseApiException {
-        final DateTime now = clock.getUTCNow();
-        final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
-
+        final DateTime effectiveDate = dryRunChangePlan(subscription, productName, term, priceList, requestedDateWithMs, null, context);
         validateEffectiveDate(subscription, effectiveDate);
         validateEntitlementState(subscription);
 
         try {
-            return doChangePlan(subscription, productName, term, priceList, overrides, now, effectiveDate, context);
+            doChangePlan(subscription, productName, term, priceList, overrides, effectiveDate, context);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
+
+        return effectiveDate;
     }
 
     @Override
     public DateTime changePlanWithPolicy(final DefaultSubscriptionBase subscription, final String productName, final BillingPeriod term,
-                                         final String priceList, final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context)
-            throws SubscriptionBaseApiException {
-        final DateTime now = clock.getUTCNow();
-
+                                         final String priceList, final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
         validateEntitlementState(subscription);
 
-        final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy);
+        final DateTime effectiveDate = dryRunChangePlan(subscription, productName, term, priceList, null, policy, context);
         try {
-            return doChangePlan(subscription, productName, term, priceList, overrides, now, effectiveDate, context);
+            doChangePlan(subscription, productName, term, priceList, overrides, effectiveDate, context);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
+
+        return effectiveDate;
     }
 
     @Override
@@ -414,14 +442,13 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         return planChangeResult;
     }
 
-    private DateTime doChangePlan(final DefaultSubscriptionBase subscription,
-                                  final String newProductName,
-                                  final BillingPeriod newBillingPeriod,
-                                  final String newPriceList,
-                                  final List<PlanPhasePriceOverride> overrides,
-                                  final DateTime now,
-                                  final DateTime effectiveDate,
-                                  final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
+    private void doChangePlan(final DefaultSubscriptionBase subscription,
+                              final String newProductName,
+                              final BillingPeriod newBillingPeriod,
+                              final String newPriceList,
+                              final List<PlanPhasePriceOverride> overrides,
+                              final DateTime effectiveDate,
+                              final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
         final Plan newPlan = catalogService.getFullCatalog(internalCallContext).createOrFindPlan(newProductName, newBillingPeriod, newPriceList, overridesWithContext, effectiveDate, subscription.getStartDate());
@@ -438,8 +465,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final Catalog fullCatalog = catalogService.getFullCatalog(internalCallContext);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), fullCatalog);
-
-        return effectiveDate;
     }
 
     @Override

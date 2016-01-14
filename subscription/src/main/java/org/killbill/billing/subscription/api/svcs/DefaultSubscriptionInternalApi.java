@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,6 +32,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
@@ -419,6 +420,18 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(final SubscriptionBase subscription, final InternalTenantContext context) {
         final List<SubscriptionBaseTransition> transitions = ((DefaultSubscriptionBase) subscription).getBillingTransitions();
         return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
+    }
+
+    @Override
+    public DateTime getDryRunChangePlanEffectiveDate(final SubscriptionBase subscription,
+                                                     final String productName,
+                                                     final BillingPeriod term,
+                                                     final String priceList,
+                                                     final DateTime requestedDateWithMs,
+                                                     final BillingActionPolicy requestedPolicy,
+                                                     final InternalTenantContext context) throws SubscriptionBaseApiException {
+        final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
+        return apiService.dryRunChangePlan((DefaultSubscriptionBase) subscription, productName, term, priceList, requestedDateWithMs, requestedPolicy, tenantContext);
     }
 
     @Override
