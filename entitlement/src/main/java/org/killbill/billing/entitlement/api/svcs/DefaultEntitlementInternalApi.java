@@ -216,11 +216,13 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         @Override
         public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-            // Make sure to compute the entitlement effective date first to avoid timing issues for IMM cancellations
-            // (we don't want an entitlement cancel date one second or so after the subscription cancel date or add-ons cancellations
-            // computations won't work).
             final LocalDate effectiveLocalDate = new LocalDate(updatedPluginContext.getEffectiveDate(), entitlement.getAccountTimeZone());
-            final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(effectiveLocalDate, entitlement.getSubscriptionBase().getStartDate(), internalCallContext);
+            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(effectiveLocalDate, entitlement.getSubscriptionBase().getStartDate(), internalCallContext);
+            // Avoid timing issues for IMM cancellations (we don't want an entitlement cancel date one second or so after the subscription cancel date or
+            // add-ons cancellations computations won't work).
+            if (effectiveDate.compareTo(entitlement.getSubscriptionBase().getEndDate()) > 0) {
+                effectiveDate = entitlement.getSubscriptionBase().getEndDate();
+            }
 
             final BlockingState newBlockingState = new DefaultBlockingState(entitlement.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveDate);
             final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
