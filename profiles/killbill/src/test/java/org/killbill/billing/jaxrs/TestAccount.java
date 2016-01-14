@@ -111,7 +111,7 @@ public class TestAccount extends TestJaxrsBase {
         // Update Account
         final Account newInput = new Account(input.getAccountId(),
                                              "zozo", 4, input.getExternalKey(), "rr@google.com", 18,
-                                             "USD", null, false, null, "UTC",
+                                             "USD", null, null, null, "UTC",
                                              "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
                                              false, false, null, null);
         final Account updatedAccount = killBillClient.updateAccount(newInput, createdBy, reason, comment);
@@ -410,6 +410,24 @@ public class TestAccount extends TestJaxrsBase {
 
         Assert.assertTrue(childrenAccounts.get(0).equals(childAccount));
         Assert.assertTrue(childrenAccounts.get(1).equals(childAccount2));
+    }
+
+    @Test(groups = "slow", description = "retrieve an empty children accounts list by a non parent account id")
+    public void testEmptyGetChildrenAccounts() throws Exception {
+
+        // Retrieves children accounts by parent account id
+        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(UUID.randomUUID(), false, false);
+        Assert.assertEquals(childrenAccounts.size(), 0);
+
+    }
+
+    @Test(groups = "slow", description = "retrieve an empty children accounts list by a null id")
+    public void testGetChildrenAccountsByNullId() throws Exception {
+
+        // Retrieves children accounts by parent account id
+        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(null, true, true);
+        Assert.assertEquals(childrenAccounts.size(), 0);
+
     }
 
 }
