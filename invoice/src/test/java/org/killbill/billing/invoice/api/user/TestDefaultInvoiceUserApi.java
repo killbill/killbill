@@ -32,6 +32,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -364,5 +365,41 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         final Invoice invoiceAfterTagRemoval = invoiceUserApi.getInvoice(invoiceId, callContext);
         assertEquals(invoiceAfterTagRemoval.getBalance().compareTo(BigDecimal.ZERO), 1);
+    }
+
+    @Test(groups = "slow")
+    public void testInvoiceStatusTransition() throws Exception {
+        // Verify the initial invoice balance
+        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
+        Assert.assertEquals(invoiceBalance.compareTo(BigDecimal.ZERO), 1);
+
+        // Verify the initial account balance
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
+        Assert.assertEquals(accountBalance, invoiceBalance);
+
+        // Adjust the invoice for the full amount
+        final BigDecimal creditAmount = BigDecimal.TEN;
+        final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCreditForInvoice(accountId, null, creditAmount,
+                                                                                    clock.getUTCToday(), accountCurrency, callContext);
+
+        final UUID invoiceId = creditInvoiceItem.getInvoiceId();
+        Invoice creditInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
+        Assert.assertEquals(creditInvoice.getStatus(), InvoiceStatus.DRAFT);
+        Assert.assertEquals(creditInvoiceItem.getInvoiceId(), creditInvoice.getId());
+
+        // move invoice from DRAFT to COMMITTED
+        invoiceUserApi.invoiceStatusTransition(this.accountId, creditInvoice.getId(), callContext);
+        creditInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
+        Assert.assertEquals(creditInvoice.getStatus(), InvoiceStatus.COMMITTED);
+
+        // TODO verify post actions (event bus ???)
+
+        // Verify the adjusted invoice balance
+//        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(this.invoiceId, callContext).getBalance();
+//        Assert.assertEquals(adjustedInvoiceBalance.compareTo(BigDecimal.ZERO), 0);
+
+        // Verify the adjusted account balance
+//        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
+//        Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
     }
 }

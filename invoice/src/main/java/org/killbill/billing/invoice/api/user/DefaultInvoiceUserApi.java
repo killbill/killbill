@@ -351,6 +351,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                     invoiceForCredit = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency, InvoiceStatus.DRAFT);
                 } else {
                     invoiceForCredit = getInvoiceAndCheckCurrency(invoiceId, currency, context);
+                    // TODO check with @sbrossie if really want to add this validation
+                    /*
+                    if (InvoiceStatus.COMMITTED.equals(invoiceForCredit.getStatus())) {
+                        throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_STATUS_CREDIT, invoiceId);
+                    }
+                    */
                 }
 
                 // Create the new credit
@@ -483,4 +489,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return invoice;
     }
 
+    @Override
+    public void invoiceStatusTransition(final UUID accountId, final UUID invoiceId, final CallContext context) throws InvoiceApiException {
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+        dao.changeInvoiceStatus(accountId, invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
+    }
 }

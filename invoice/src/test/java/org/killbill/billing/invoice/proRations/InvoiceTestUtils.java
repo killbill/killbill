@@ -38,6 +38,7 @@ import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -96,6 +97,7 @@ public class InvoiceTestUtils {
         Mockito.when(invoice.getTargetDate()).thenReturn(clock.getUTCToday());
         Mockito.when(invoice.getCurrency()).thenReturn(currency);
         Mockito.when(invoice.isMigrationInvoice()).thenReturn(false);
+        Mockito.when(invoice.getStatus()).thenReturn(InvoiceStatus.COMMITTED);
 
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
         final List<InvoiceItemModelDao> invoiceModelItems = new ArrayList<InvoiceItemModelDao>();

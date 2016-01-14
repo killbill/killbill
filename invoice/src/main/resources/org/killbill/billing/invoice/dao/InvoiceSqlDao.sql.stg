@@ -52,3 +52,11 @@ getInvoiceIdByPaymentId() ::= <<
    <AND_CHECK_TENANT("i.")>
    <AND_CHECK_TENANT("ip.")>
 >>
+
+updateStatus() ::= <<
+    UPDATE <tableName()>
+    SET status = :status
+    WHERE id = :id
+     AND account_id = :accountId
+    <AND_CHECK_TENANT()>;
+>>
