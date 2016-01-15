@@ -258,10 +258,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context);
                     }
                     cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
-                    if (InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
-                        // only notify on the bus if the state is COMMITTED
-                        notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
-                    }
+                    notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }
                 return null;
             }
@@ -299,7 +296,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         cbaDao.addCBAComplexityFromTransaction(invoiceModelDao.getId(), entitySqlDaoWrapperFactory, context);
 
                         // Notify the bus since the balance of the invoice changed
-                        // TODO check invoice status before sent it to the bus
                         // TODO should we post an InvoiceCreationInternalEvent event instead? Note! This will trigger a payment (see InvoiceHandler)
                         notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceModelDao.getId(), invoiceModelDao.getAccountId(), context.getUserToken(), context);
                     }

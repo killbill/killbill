@@ -30,6 +30,10 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.PaymentInternalEvent;
+import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceInternalApi;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
@@ -53,6 +57,7 @@ public class PaymentBusEventHandler {
     private static final Logger log = LoggerFactory.getLogger(PaymentBusEventHandler.class);
 
     private final AccountInternalApi accountApi;
+    private final InvoiceInternalApi invoiceApi;
     private final InternalCallContextFactory internalCallContextFactory;
     private final PluginControlPaymentProcessor pluginControlPaymentProcessor;
     private final PaymentConfig paymentConfig;
@@ -61,11 +66,13 @@ public class PaymentBusEventHandler {
     @Inject
     public PaymentBusEventHandler(final PaymentConfig paymentConfig,
                                   final AccountInternalApi accountApi,
+                                  final InvoiceInternalApi invoiceApi,
                                   final PluginControlPaymentProcessor pluginControlPaymentProcessor,
                                   final Janitor janitor,
                                   final InternalCallContextFactory internalCallContextFactory) {
         this.paymentConfig = paymentConfig;
         this.accountApi = accountApi;
+        this.invoiceApi = invoiceApi;
         this.janitor = janitor;
         this.internalCallContextFactory = internalCallContextFactory;
         this.pluginControlPaymentProcessor = pluginControlPaymentProcessor;
@@ -83,9 +90,16 @@ public class PaymentBusEventHandler {
         log.info("Received invoice creation notification for account {} and invoice {}",
                  event.getAccountId(), event.getInvoiceId());
 
+
         final Account account;
         try {
             final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+            final Invoice invoice = invoiceApi.getInvoiceById(event.getInvoiceId(), internalContext);
+            if (!InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
+                log.info("Ignoring payment for non COMMITTED invoice " + event.getInvoiceId());
+                return;
+            }
+
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
 
             final List<PluginProperty> properties = new ArrayList<PluginProperty>();
@@ -100,6 +114,8 @@ public class PaymentBusEventHandler {
             pluginControlPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(),
                                                          properties, paymentControlPluginNames, callContext, internalContext);
         } catch (final AccountApiException e) {
+            log.error("Failed to process invoice payment", e);
+        } catch (InvoiceApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {
             // Log as error unless:
