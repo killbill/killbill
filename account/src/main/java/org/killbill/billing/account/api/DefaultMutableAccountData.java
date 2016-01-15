@@ -306,7 +306,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
-    public void setIsPaymentDelegatedToParent(final Boolean isPaymentDelegatedToParent) {
+    public void setIsPaymentDelegatedToParent(final boolean isPaymentDelegatedToParent) {
         this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
     }
 
