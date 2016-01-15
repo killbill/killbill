@@ -71,17 +71,6 @@ public class InvoiceChecker {
         return invoice;
     }
 
-    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final CallContext context, final ExpectedInvoiceItemCheck... expected) throws InvoiceApiException {
-        checkRepairedInvoice(accountId, invoiceNb, context, ImmutableList.<ExpectedInvoiceItemCheck>copyOf(expected));
-    }
-
-    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, context);
-        Assert.assertTrue(invoices.size() > invoiceNb);
-        final Invoice invoice = invoices.get(invoiceNb - 1);
-        checkInvoice(invoice.getId(), context, expected);
-    }
-
     public void checkInvoice(final UUID invoiceId, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
         final Invoice invoice = invoiceUserApi.getInvoice(invoiceId, context);
         Assert.assertNotNull(invoice);
