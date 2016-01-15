@@ -77,8 +77,11 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
             final BlockingState current = iterator.next();
             if (iterator.hasNext()) {
                 final BlockingState next = iterator.next();
-                if (prev != null && current.getEffectiveDate().equals(next.getEffectiveDate()) && current.getBlockedId().equals(next.getBlockedId())) {
-                    // Same date, same blockable id
+                if (prev != null &&
+                    current.getEffectiveDate().equals(next.getEffectiveDate()) &&
+                    current.getBlockedId().equals(next.getBlockedId()) &&
+                    !current.getService().equals(next.getService())) {
+                    // Same date, same blockable id, different services (for same-service events, trust the total ordering)
 
                     // Make sure block billing transitions are respected first
                     BlockingState prevCandidate = insertTiedBlockingStatesInTheRightOrder(result, current, next, prev.isBlockBilling(), current.isBlockBilling(), next.isBlockBilling());
