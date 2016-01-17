@@ -92,7 +92,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                                              final GatewayNotification result = plugin.processNotification(notification, properties, callContext);
                                                              return PluginDispatcher.createPluginDispatcherReturnType(result == null ? new DefaultNoOpGatewayNotification() : result);
                                                          } catch (final PaymentPluginApiException e) {
-                                                             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                                                             throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
                                                          }
                                                      }
                                                  }, paymentPluginNotificationDispatcher);
@@ -101,7 +101,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
             try {
                 return plugin.processNotification(notification, properties, callContext);
             } catch (final PaymentPluginApiException e) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
             }
         }
     }
@@ -123,7 +123,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                                          } catch (final RuntimeException e) {
                                                              throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
                                                          } catch (final PaymentPluginApiException e) {
-                                                             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                                                             throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
                                                          }
                                                      }
                                                  }, paymentPluginFormDispatcher);
@@ -132,7 +132,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
             try {
                 return plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
             } catch (final PaymentPluginApiException e) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+                throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
             }
         }
     }
