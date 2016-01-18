@@ -32,6 +32,16 @@ matrix:
       jdk: oraclejdk7
     - env: PHASE="-Pmysql,jdk18"
       jdk: oraclejdk8
+    - env: PHASE="-Ppostgresql"
+      jdk: openjdk7
+    - env: PHASE="-Ppostgresql"
+      jdk: oraclejdk7
+    - env: PHASE="-Ppostgresql,jdk17"
+      jdk: openjdk7
+    - env: PHASE="-Ppostgresql,jdk17"
+      jdk: oraclejdk7
+    - env: PHASE="-Ppostgresql,jdk18"
+      jdk: oraclejdk8
     - env: PHASE="-Ptravis"
       jdk: openjdk7
     - env: PHASE="-Ptravis"
