@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -35,6 +37,7 @@ import org.killbill.billing.overdue.config.DefaultOverdueStateSet;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
 import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,11 +51,14 @@ public class OverdueWrapperFactory {
     private final BillingStateCalculator billingStateCalculator;
     private final OverdueStateApplicator overdueStateApplicator;
     private final BlockingInternalApi api;
+    private final GlobalLocker locker;
     private final Clock clock;
     private final OverdueConfigCache overdueConfigCache;
 
     @Inject
-    public OverdueWrapperFactory(final BlockingInternalApi api, final Clock clock,
+    public OverdueWrapperFactory(final BlockingInternalApi api,
+                                 final GlobalLocker locker,
+                                 final Clock clock,
                                  final BillingStateCalculator billingStateCalculator,
                                  final OverdueStateApplicator overdueStateApplicatorBundle,
                                  final OverdueConfigCache overdueConfigCache,
@@ -61,24 +67,20 @@ public class OverdueWrapperFactory {
         this.overdueStateApplicator = overdueStateApplicatorBundle;
         this.accountApi = accountApi;
         this.api = api;
+        this.locker = locker;
         this.clock = clock;
         this.overdueConfigCache = overdueConfigCache;
     }
 
-    @SuppressWarnings("unchecked")
     public OverdueWrapper createOverdueWrapperFor(final ImmutableAccountData blockable, final InternalTenantContext context) throws OverdueException {
-        return (OverdueWrapper) new OverdueWrapper(blockable, api, getOverdueStateSet(context),
-                                                   clock, billingStateCalculator, overdueStateApplicator);
+        return new OverdueWrapper(blockable, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator);
     }
 
-    @SuppressWarnings("unchecked")
     public OverdueWrapper createOverdueWrapperFor(final UUID id, final InternalTenantContext context) throws OverdueException {
-
         try {
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(id, context);
-            return new OverdueWrapper(account, api, getOverdueStateSet(context),
-                                      clock, billingStateCalculator, overdueStateApplicator);
-        } catch (AccountApiException e) {
+            return new OverdueWrapper(account, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator);
+        } catch (final AccountApiException e) {
             throw new OverdueException(e);
         }
     }
@@ -104,7 +106,7 @@ public class OverdueWrapperFactory {
             } else {
                 return ((DefaultOverdueConfig) overdueConfig).getOverdueStatesAccount();
             }
-        } catch (OverdueApiException e) {
+        } catch (final OverdueApiException e) {
             throw new OverdueException(e);
         }
     }

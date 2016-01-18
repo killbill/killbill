@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,6 +25,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.mock.glue.MockInvoiceModule;
 import org.killbill.billing.mock.glue.MockSubscriptionModule;
 import org.killbill.billing.mock.glue.MockTenantModule;
+import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.payment.TestPaymentHelper;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
@@ -32,6 +33,8 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.email.EmailModule;
+import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
@@ -73,6 +76,12 @@ public class TestPaymentModule extends PaymentModule {
         install(new MockTenantModule(configSource));
         install(new CacheModule(configSource));
         install(new CallContextModule(configSource));
+
+        install(new DefaultOverdueModule(configSource));
+        install(new TemplateModule(configSource));
+        install(new EmailModule(configSource));
+        install(new MockEntitlementModuleForPayment(configSource));
+
         installExternalApis();
         bind(TestPaymentHelper.class).asEagerSingleton();
     }

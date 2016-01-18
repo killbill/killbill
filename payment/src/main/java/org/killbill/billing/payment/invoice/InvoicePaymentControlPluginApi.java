@@ -31,6 +31,9 @@ import javax.inject.Named;
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
@@ -45,6 +48,9 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.overdue.OverdueInternalApi;
+import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -89,7 +95,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
 
     private final PaymentConfig paymentConfig;
+    private final AccountInternalApi accountApi;
     private final InvoiceInternalApi invoiceApi;
+    private final OverdueInternalApi overdueApi;
     private final TagUserApi tagApi;
     private final PaymentDao paymentDao;
     private final InvoicePaymentControlDao controlDao;
@@ -100,12 +108,15 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     private final Logger log = LoggerFactory.getLogger(InvoicePaymentControlPluginApi.class);
 
     @Inject
-    public InvoicePaymentControlPluginApi(final PaymentConfig paymentConfig, final InvoiceInternalApi invoiceApi, final TagUserApi tagApi, final PaymentDao paymentDao,
-                                          final InvoicePaymentControlDao invoicePaymentControlDao,
+    public InvoicePaymentControlPluginApi(final PaymentConfig paymentConfig, final AccountInternalApi accountApi,
+                                          final InvoiceInternalApi invoiceApi, final OverdueInternalApi overdueApi, final TagUserApi tagApi,
+                                          final PaymentDao paymentDao, final InvoicePaymentControlDao invoicePaymentControlDao,
                                           @Named(PaymentModule.RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
                                           final InternalCallContextFactory internalCallContextFactory, final Clock clock) {
         this.paymentConfig = paymentConfig;
+        this.accountApi = accountApi;
         this.invoiceApi = invoiceApi;
+        this.overdueApi = overdueApi;
         this.tagApi = tagApi;
         this.paymentDao = paymentDao;
         this.controlDao = invoicePaymentControlDao;
@@ -143,6 +154,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                     transactionType == TransactionType.REFUND ||
                                     transactionType == TransactionType.CHARGEBACK);
 
+        boolean refreshOverdue = false;
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         try {
             final InvoicePayment existingInvoicePayment;
@@ -162,6 +174,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                    paymentControlContext.getCreatedDate(),
                                                    true,
                                                    internalContext);
+                        refreshOverdue = true;
                     }
                     break;
 
@@ -174,6 +187,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                         final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
                         final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
                         invoiceApi.createRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
+                        refreshOverdue = true;
                     }
                     break;
 
@@ -183,6 +197,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                         log.info("onSuccessCall was already completed for payment chargeback: " + paymentControlContext.getPaymentId());
                     } else {
                         invoiceApi.createChargeback(paymentControlContext.getPaymentId(), paymentControlContext.getProcessedAmount(), paymentControlContext.getProcessedCurrency(), internalContext);
+                        refreshOverdue = true;
                     }
                     break;
 
@@ -192,6 +207,11 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         } catch (final InvoiceApiException e) {
             log.error("InvoicePaymentControlPluginApi onSuccessCall failed for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
         }
+
+        if (refreshOverdue) {
+            refreshOverdue(paymentControlContext, internalContext);
+        }
+
         return new DefaultOnSuccessPaymentControlResult();
     }
 
@@ -199,6 +219,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> pluginProperties) throws PaymentControlApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         final TransactionType transactionType = paymentControlContext.getTransactionType();
+
+        boolean refreshOverdue = false;
+        DateTime nextRetryDate = null;
         switch (transactionType) {
             case PURCHASE:
                 final UUID invoiceId = getInvoiceId(pluginProperties);
@@ -214,20 +237,27 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                    paymentControlContext.getCreatedDate(),
                                                    false,
                                                    internalContext);
-                    } catch (InvoiceApiException e) {
+                        refreshOverdue = true;
+                    } catch (final InvoiceApiException e) {
                         log.error("InvoicePaymentControlPluginApi onFailureCall failed ton update invoice for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
                     }
                 }
 
-                final DateTime nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
-                return new DefaultFailureCallResult(nextRetryDate);
+                nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
+                break;
             case REFUND:
             case CHARGEBACK:
-                // We don't retry  REFUND, CHARGEBACK
-                return new DefaultFailureCallResult(null);
+                // We don't retry REFUND, CHARGEBACK
+                break;
             default:
                 throw new IllegalStateException("Unexpected transactionType " + transactionType);
         }
+
+        if (refreshOverdue) {
+            refreshOverdue(paymentControlContext, internalContext);
+        }
+
+        return new DefaultFailureCallResult(nextRetryDate);
     }
 
     public void process_AUTO_PAY_OFF_removal(final UUID accountId, final InternalCallContext internalCallContext) {
@@ -515,5 +545,19 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return tag.getTagDefinitionId();
             }
         }));
+    }
+
+    // See https://github.com/killbill/killbill/issues/472
+    private void refreshOverdue(final PaymentControlContext paymentControlContext, final InternalCallContext internalContext) {
+        try {
+            final Account account = accountApi.getAccountById(paymentControlContext.getAccountId(), internalContext);
+            overdueApi.refreshOverdueStateFor(account, internalContext.toCallContext(paymentControlContext.getTenantId()));
+        } catch (final AccountApiException e) {
+            log.warn("Unable to refresh overdue for accountId={}: {}", paymentControlContext.getAccountId(), e);
+        } catch (final OverdueApiException e) {
+            log.warn("Unable to refresh overdue for accountId={}: {}", paymentControlContext.getAccountId(), e);
+        } catch (final OverdueException e) {
+            log.warn("Unable to refresh overdue for accountId={}: {}", paymentControlContext.getAccountId(), e);
+        }
     }
 }

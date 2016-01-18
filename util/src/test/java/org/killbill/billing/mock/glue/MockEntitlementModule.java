@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,13 +29,19 @@ import org.mockito.Mockito;
 
 public class MockEntitlementModule extends KillBillModule implements EntitlementModule {
 
-    private final BlockingInternalApi blockingApi = Mockito.mock(BlockingInternalApi.class);
     private final EntitlementApi entitlementApi = Mockito.mock(EntitlementApi.class);
     private final EntitlementInternalApi entitlementInternalApi = Mockito.mock(EntitlementInternalApi.class);
     private final SubscriptionApi subscriptionApi = Mockito.mock(SubscriptionApi.class);
 
+    protected final BlockingInternalApi blockingApi;
+
     public MockEntitlementModule(final KillbillConfigSource configSource) {
+        this(configSource, Mockito.mock(BlockingInternalApi.class));
+    }
+
+    public MockEntitlementModule(final KillbillConfigSource configSource, final BlockingInternalApi blockingApi) {
         super(configSource);
+        this.blockingApi = blockingApi;
     }
 
     @Override
@@ -53,7 +59,7 @@ public class MockEntitlementModule extends KillBillModule implements Entitlement
 
     @Override
     public void installBlockingApi() {
-        //bind(BlockingInternalApi.class).toInstance(blockingApi);
+        bind(BlockingInternalApi.class).toInstance(blockingApi);
     }
 
     @Override

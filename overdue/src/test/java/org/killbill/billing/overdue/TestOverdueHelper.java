@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -25,6 +27,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.overdue.api.OverdueState;
+import org.killbill.billing.overdue.glue.TestOverdueModule.ApplicatorBlockingApi;
 import org.mockito.Mockito;
 import org.testng.Assert;
 
@@ -32,7 +35,6 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.entitlement.api.BlockingState;
-import org.killbill.billing.overdue.glue.ApplicatorMockJunctionModule.ApplicatorBlockingApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.account.api.AccountInternalApi;
