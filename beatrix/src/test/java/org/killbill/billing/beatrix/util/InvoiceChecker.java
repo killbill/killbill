@@ -78,11 +78,9 @@ public class InvoiceChecker {
     }
 
     public void checkInvoiceNoAudits(final Invoice invoice, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
-
         final List<InvoiceItem> actual = invoice.getInvoiceItems();
-        Assert.assertEquals(actual.size(), expected.size());
+        Assert.assertEquals(actual.size(), expected.size(), String.format("Expected items: %s, actual items: %s", expected, actual));
         for (final ExpectedInvoiceItemCheck cur : expected) {
-
             boolean found = false;
 
             // First try to find exact match; this is necessary because the for loop below might encounter a similar item -- for instance

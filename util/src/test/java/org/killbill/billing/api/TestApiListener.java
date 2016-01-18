@@ -18,6 +18,7 @@ package org.killbill.billing.api;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -25,27 +26,26 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.events.BroadcastInternalEvent;
-import org.killbill.billing.events.InvoiceNotificationInternalEvent;
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.tweak.HandleCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
+import org.killbill.billing.events.BroadcastInternalEvent;
 import org.killbill.billing.events.CustomFieldEvent;
 import org.killbill.billing.events.EffectiveEntitlementInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
+import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.events.RepairSubscriptionInternalEvent;
 import org.killbill.billing.events.TagDefinitionInternalEvent;
 import org.killbill.billing.events.TagInternalEvent;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
@@ -317,7 +317,19 @@ public class TestApiListener {
                     final DateTime after = new DateTime();
                     waitTimeMs -= after.getMillis() - before.getMillis();
                 } catch (final Exception ignore) {
-                    log.error("isCompleted got interrupted ", ignore);
+                    final StringBuilder errorBuilder = new StringBuilder("isCompleted got interrupted. Exception: ").append(ignore)
+                                                                                                                    .append("\nRemaining bus events:\n");
+                    idbi.withHandle(new HandleCallback<Void>() {
+                        @Override
+                        public Void withHandle(final Handle handle) throws Exception {
+                            final List<Map<String, Object>> busEvents = handle.select("select * from bus_events");
+                            for (final Map<String, Object> busEvent : busEvents) {
+                                errorBuilder.append(busEvent).append("\n");
+                            }
+                            return null;
+                        }
+                    });
+                    log.error(errorBuilder.toString());
                     return false;
                 }
             } while (waitTimeMs > 0 && !completed);
