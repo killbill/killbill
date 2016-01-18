@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -170,14 +172,17 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("InvoiceModelDao");
-        sb.append("{accountId=").append(accountId);
+        final StringBuilder sb = new StringBuilder("InvoiceModelDao{");
+        sb.append("accountId=").append(accountId);
         sb.append(", invoiceNumber=").append(invoiceNumber);
         sb.append(", invoiceDate=").append(invoiceDate);
         sb.append(", targetDate=").append(targetDate);
         sb.append(", currency=").append(currency);
         sb.append(", migrated=").append(migrated);
+        sb.append(", invoiceItems=").append(invoiceItems);
+        sb.append(", invoicePayments=").append(invoicePayments);
+        sb.append(", processedCurrency=").append(processedCurrency);
+        sb.append(", isWrittenOff=").append(isWrittenOff);
         sb.append('}');
         return sb.toString();
     }

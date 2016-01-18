@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -42,6 +42,8 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
@@ -50,6 +52,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class InvoiceDaoHelper {
+
+    private static final Logger log = LoggerFactory.getLogger(InvoiceDaoHelper.class);
 
     private final TagInternalApi tagInternalApi;
 
@@ -164,6 +168,7 @@ public class InvoiceDaoHelper {
 
     public List<InvoiceModelDao> getUnpaidInvoicesByAccountFromTransaction(final UUID accountId, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final LocalDate upToDate, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoices = getAllInvoicesByAccountFromTransaction(entitySqlDaoWrapperFactory, context);
+        log.debug("Found invoices={} for accountId={}", invoices, accountId);
         return getUnpaidInvoicesByAccountFromTransaction(invoices, upToDate);
     }
 
@@ -171,7 +176,9 @@ public class InvoiceDaoHelper {
         final Collection<InvoiceModelDao> unpaidInvoices = Collections2.filter(invoices, new Predicate<InvoiceModelDao>() {
             @Override
             public boolean apply(final InvoiceModelDao in) {
-                return (InvoiceModelDaoHelper.getBalance(in).compareTo(BigDecimal.ZERO) >= 1) && (upToDate == null || !in.getTargetDate().isAfter(upToDate));
+                final BigDecimal balance = InvoiceModelDaoHelper.getBalance(in);
+                log.debug("Computed balance={} for invoice={}", balance, in);
+                return (balance.compareTo(BigDecimal.ZERO) >= 1) && (upToDate == null || !in.getTargetDate().isAfter(upToDate));
             }
         });
         return new ArrayList<InvoiceModelDao>(unpaidInvoices);
@@ -252,6 +259,7 @@ public class InvoiceDaoHelper {
         for (final InvoiceModelDao invoice : invoices) {
             // Make sure to set invoice items to a non-null value
             final List<InvoiceItemModelDao> invoiceItemsForInvoice = Objects.firstNonNull(invoiceItemsPerInvoiceId.get(invoice.getId()), ImmutableList.<InvoiceItemModelDao>of());
+            log.debug("Found items={} for invoice={}", invoiceItemsForInvoice, invoice);
             invoice.addInvoiceItems(invoiceItemsForInvoice);
         }
     }
@@ -271,6 +279,7 @@ public class InvoiceDaoHelper {
         for (final InvoiceModelDao invoice : invoices) {
             // Make sure to set payments to a non-null value
             final List<InvoicePaymentModelDao> invoicePaymentsForInvoice = Objects.firstNonNull(invoicePaymentsPerInvoiceId.get(invoice.getId()), ImmutableList.<InvoicePaymentModelDao>of());
+            log.debug("Found payments={} for invoice={}", invoicePaymentsForInvoice, invoice);
             invoice.addPayments(invoicePaymentsForInvoice);
 
             for (final InvoicePaymentModelDao invoicePayment : invoicePaymentsForInvoice) {

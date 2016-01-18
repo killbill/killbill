@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -153,6 +153,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     if (existingInvoicePayment != null && existingInvoicePayment.isSuccess()) {
                         log.info("onSuccessCall was already completed for payment purchase: " + paymentControlContext.getPaymentId());
                     } else {
+                        log.debug("Notifying invoice of successful payment: id={}, amount={}, currency={}, invoiceId={}", paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), paymentControlContext.getCurrency(), invoiceId);
                         invoiceApi.notifyOfPayment(invoiceId,
                                                    paymentControlContext.getAmount(),
                                                    paymentControlContext.getCurrency(),
@@ -203,6 +204,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 final UUID invoiceId = getInvoiceId(pluginProperties);
                 if (paymentControlContext.getPaymentId() != null) {
                     try {
+                        log.debug("Notifying invoice of failed payment: id={}, amount={}, currency={}, invoiceId={}", paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), paymentControlContext.getCurrency(), invoiceId);
                         invoiceApi.notifyOfPayment(invoiceId,
                                                    paymentControlContext.getAmount(),
                                                    paymentControlContext.getCurrency(),

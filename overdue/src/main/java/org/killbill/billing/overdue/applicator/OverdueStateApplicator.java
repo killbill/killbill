@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -128,13 +128,12 @@ public class OverdueStateApplicator {
                       final ImmutableAccountData account, final OverdueState previousOverdueState,
                       final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException, OverdueApiException {
         try {
-
             if (isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(context)) {
-                log.debug("OverdueStateApplicator:apply returns because account (recordId = " + context.getAccountRecordId() + ") is set with OVERDUE_ENFORCEMENT_OFF ");
+                log.debug("OverdueStateApplicator: apply returns because account (recordId={}) is set with OVERDUE_ENFORCEMENT_OFF", context.getAccountRecordId());
                 return;
             }
 
-            log.debug("OverdueStateApplicator:apply <enter> : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueState.getName() + ", nextState = " + nextOverdueState);
+            log.debug("OverdueStateApplicator: time={}, previousState={}, nextState={}, billingState={}", clock.getUTCNow(), previousOverdueState, nextOverdueState, billingState);
 
             final OverdueState firstOverdueState = overdueStateSet.getFirstState();
             final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
@@ -145,10 +144,9 @@ public class OverdueStateApplicator {
                 final Period reevaluationInterval = getReevaluationInterval(overdueStateSet, nextOverdueState);
                 // If there is no configuration in the config, we assume this is because the overdue conditions are not time based and so there is nothing to retry
                 if (reevaluationInterval == null) {
-                    log.debug("OverdueStateApplicator <notificationQ> : Missing InitialReevaluationInterval from config, NOT inserting notification for account " + account.getId());
-
+                    log.debug("OverdueStateApplicator <notificationQ>: missing InitialReevaluationInterval from config, NOT inserting notification for account {}", account.getId());
                 } else {
-                    log.debug("OverdueStateApplicator <notificationQ> : inserting notification for account " + account.getId() + ", time = " + clock.getUTCNow().plus(reevaluationInterval));
+                    log.debug("OverdueStateApplicator <notificationQ>: inserting notification for account={}, time={}", account.getId(), clock.getUTCNow().plus(reevaluationInterval));
                     createFutureNotification(account, clock.getUTCNow().plus(reevaluationInterval), context);
                 }
             } else if (nextOverdueState.isClearState()) {
@@ -156,6 +154,7 @@ public class OverdueStateApplicator {
             }
 
             if (previousOverdueState.getName().equals(nextOverdueState.getName())) {
+                log.debug("OverdueStateApplicator is no-op: previousState={}, nextState={}", previousOverdueState, nextOverdueState);
                 return;
             }
 
