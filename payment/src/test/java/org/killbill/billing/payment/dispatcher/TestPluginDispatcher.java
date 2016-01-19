@@ -53,7 +53,7 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
             voidPluginDispatcher.dispatchWithTimeout(new Callable<PluginDispatcherReturnType<Void>>() {
                 @Override
                 public PluginDispatcherReturnType<Void> call() throws Exception {
-                    Thread.sleep(1000);
+                    Thread.sleep(paymentConfig.getPaymentPluginTimeout().getMillis() + 100);
                     return null;
                 }
             }, 100, TimeUnit.MILLISECONDS);
