@@ -35,12 +35,12 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -269,6 +269,70 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         final Payment payment = payments.get(0);
         assertTrue(payment.getPurchasedAmount().compareTo(new BigDecimal("199.90")) == 0);
+    }
+
+    @Test(groups = "slow")
+    public void testDraftInvoice() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+
+        log.info("Beginning test with BCD of " + billingDay);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+        int invoiceItemCount = 1;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        //
+        DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        DefaultSubscriptionBase subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 6, 14), new LocalDate(2015, 7, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+
+        // Move through time and verify we get the same invoice
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        // This will verify that the upcoming invoice notification is found and the invoice is generated at the right date, with correct items
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 7, 14), new LocalDate(2015, 8, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+
+        // add create external charge
+        final LocalDate date = clock.getToday(account.getTimeZone());
+        final List<InvoiceItem> invoiceItemList = new ArrayList<InvoiceItem>();
+        ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(null, account.getId(), subscription.getBundleId(), "", date, BigDecimal.TEN, account.getCurrency());
+        invoiceItemList.add(item);
+        final List<InvoiceItem> draftInvoiceItems = invoiceUserApi.insertExternalCharges(account.getId(), date, invoiceItemList, callContext);
+
+        // add expected invoice
+        final List<ExpectedInvoiceItemCheck> expectedDrafInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedDrafInvoices.add(new ExpectedInvoiceItemCheck(InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
+
+        // Move through time and verify we get the same invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+
+        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedDrafInvoices);
+        invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceUserApi.invoiceStatusTransition(account.getId(), draftInvoiceItems.get(0).getInvoiceId(), callContext);
+        assertListenerStatus();
+
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, null, callContext);
+        assertEquals(accountPayments.size(), 3);
+        assertEquals(accountPayments.get(2).getPurchasedAmount(), new BigDecimal("10.000000000"));
+
     }
 
 }
