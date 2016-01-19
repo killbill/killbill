@@ -11,6 +11,8 @@ tableFields(prefix) ::= <<
 , <prefix>first_name_length
 , <prefix>currency
 , <prefix>billing_cycle_day_local
+, <prefix>parent_account_id
+, <prefix>is_payment_delegated_to_parent
 , <prefix>payment_method_id
 , <prefix>time_zone
 , <prefix>locale
@@ -37,6 +39,8 @@ tableValues() ::= <<
 , :firstNameLength
 , :currency
 , :billingCycleDayLocal
+, :parentAccountId
+, :isPaymentDelegatedToParent
 , :paymentMethodId
 , :timeZone
 , :locale
@@ -106,3 +110,11 @@ getIdFromKey() ::= <<
     WHERE external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
+getAccountsByParentId() ::= <<
+    select <allTableFields()>
+    from accounts
+    where parent_account_id = :parentAccountId
+    <AND_CHECK_TENANT()>
+    <defaultOrderBy()>
+    ;
+>>

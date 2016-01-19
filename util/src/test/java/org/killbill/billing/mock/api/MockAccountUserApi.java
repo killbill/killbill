@@ -22,7 +22,6 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.joda.time.DateTimeZone;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
@@ -165,6 +164,11 @@ public class MockAccountUserApi implements AccountUserApi {
     @Override
     public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
             throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<Account> getChildrenAccounts(final UUID uuid, final TenantContext tenantContext) throws AccountApiException {
         throw new UnsupportedOperationException();
     }
 }

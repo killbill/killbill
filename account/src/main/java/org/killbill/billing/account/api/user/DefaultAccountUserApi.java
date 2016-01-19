@@ -32,6 +32,7 @@ import org.killbill.billing.account.api.DefaultAccountEmail;
 import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.dao.AccountEmailModelDao;
 import org.killbill.billing.account.dao.AccountModelDao;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -84,8 +85,15 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
             throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, data.getExternalKey());
         }
 
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
+
+        if (data.getParentAccountId() != null) {
+            // verify that parent account exists if parentAccountId is not null
+            getAccountById(data.getParentAccountId(), internalContext);
+        }
+
         final AccountModelDao account = new AccountModelDao(data);
-        accountDao.create(account, internalCallContextFactory.createInternalCallContext(context));
+        accountDao.create(account, internalContext);
 
         return new DefaultAccount(account);
     }
@@ -187,5 +195,16 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
     @Override
     public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
         accountDao.removeEmail(new AccountEmailModelDao(email, false), internalCallContextFactory.createInternalCallContext(accountId, context));
+    }
+
+    @Override
+    public List<Account> getChildrenAccounts(final UUID parentAccountId, final TenantContext context) throws AccountApiException {
+        return ImmutableList.<Account>copyOf(Collections2.transform(accountDao.getAccountsByParentId(parentAccountId, internalCallContextFactory.createInternalTenantContext(context)),
+                                                                         new Function<AccountModelDao, Account>() {
+                                                                             @Override
+                                                                             public Account apply(final AccountModelDao input) {
+                                                                                 return new DefaultAccount(input);
+                                                                             }
+                                                                         }));
     }
 }

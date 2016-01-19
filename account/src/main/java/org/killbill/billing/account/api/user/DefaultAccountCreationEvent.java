@@ -110,6 +110,8 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
         private final String email;
         private final Integer billCycleDayLocal;
         private final String currency;
+        private final UUID parentAccountId;
+        private final Boolean isPaymentDelegatedToParent;
         private final UUID paymentMethodId;
         private final String timeZone;
         private final String locale;
@@ -131,6 +133,8 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
                  d.getEmail(),
                  d.getBillingCycleDayLocal(),
                  d.getCurrency() != null ? d.getCurrency().name() : null,
+                 d.getParentAccountId(),
+                 d.getIsPaymentDelegatedToParent(),
                  d.getPaymentMethodId(),
                  d.getTimeZone() != null ? d.getTimeZone().getID() : null,
                  d.getLocale(),
@@ -153,6 +157,8 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
                                   @JsonProperty("email") final String email,
                                   @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
                                   @JsonProperty("currency") final String currency,
+                                  @JsonProperty("parentAccountId") final UUID parentAccountId,
+                                  @JsonProperty("isPaymentDelegatedToParent") final Boolean isPaymentDelegatedToParent,
                                   @JsonProperty("paymentMethodId") final UUID paymentMethodId,
                                   @JsonProperty("timeZone") final String timeZone,
                                   @JsonProperty("locale") final String locale,
@@ -172,6 +178,8 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             this.email = email;
             this.billCycleDayLocal = billCycleDayLocal;
             this.currency = currency;
+            this.parentAccountId = parentAccountId;
+            this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
             this.paymentMethodId = paymentMethodId;
             this.timeZone = timeZone;
             this.locale = locale;
@@ -219,6 +227,17 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             } else {
                 return Currency.valueOf(currency);
             }
+        }
+
+        @Override
+        public UUID getParentAccountId() {
+            return parentAccountId;
+        }
+
+        @Override
+        @JsonIgnore
+        public Boolean isPaymentDelegatedToParent() {
+            return isPaymentDelegatedToParent;
         }
 
         @JsonIgnore
@@ -298,7 +317,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             return isNotifiedForInvoices;
         }
 
-        // These two getters are for Jackson serialization only
+        // These getters are for Jackson serialization only
 
         public Boolean getIsMigrated() {
             return isMigrated;
@@ -306,6 +325,10 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
 
         public Boolean getIsNotifiedForInvoices() {
             return isNotifiedForInvoices;
+        }
+
+        public Boolean getIsPaymentDelegatedToParent() {
+            return isPaymentDelegatedToParent;
         }
 
         @Override
@@ -344,6 +367,12 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
                 return false;
             }
             if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
+                return false;
+            }
+            if (parentAccountId != null ? !parentAccountId.equals(that.parentAccountId) : that.parentAccountId != null) {
+                return false;
+            }
+            if (isPaymentDelegatedToParent != null ? !isPaymentDelegatedToParent.equals(that.isPaymentDelegatedToParent) : that.isPaymentDelegatedToParent != null) {
                 return false;
             }
             if (email != null ? !email.equals(that.email) : that.email != null) {
@@ -388,6 +417,8 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             result = 31 * result + (email != null ? email.hashCode() : 0);
             result = 31 * result + (billCycleDayLocal != null ? billCycleDayLocal.hashCode() : 0);
             result = 31 * result + (currency != null ? currency.hashCode() : 0);
+            result = 31 * result + (parentAccountId != null ? parentAccountId.hashCode() : 0);
+            result = 31 * result + (isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent.hashCode() : 0);
             result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
             result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
             result = 31 * result + (locale != null ? locale.hashCode() : 0);

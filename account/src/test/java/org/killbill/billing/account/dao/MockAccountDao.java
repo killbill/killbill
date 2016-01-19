@@ -50,6 +50,7 @@ import com.google.inject.Inject;
 
 public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
 
+    private final MockEntityDaoBase<AccountModelDao, Account, AccountApiException> accountSqlDao = new MockEntityDaoBase<AccountModelDao, Account, AccountApiException>();
     private final MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException> accountEmailSqlDao = new MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException>();
     private final PersistentBus eventBus;
 
@@ -171,4 +172,13 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
         return account != null ? account.getBillingCycleDayLocal() : 0;
     }
 
+    @Override
+    public List<AccountModelDao> getAccountsByParentId(final UUID parentAccountId, final InternalTenantContext context) {
+        return ImmutableList.<AccountModelDao>copyOf(Iterables.<AccountModelDao>filter(accountSqlDao.getAll(context), new Predicate<AccountModelDao>() {
+            @Override
+            public boolean apply(final AccountModelDao input) {
+                return parentAccountId.equals(input.getParentAccountId());
+            }
+        }));
+    }
 }

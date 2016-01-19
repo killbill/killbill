@@ -1207,4 +1207,33 @@ public class AccountResource extends JaxRsResourceBase {
     protected ObjectType getObjectType() {
         return ObjectType.ACCOUNT;
     }
+
+    // -------------------------------------
+    //      Parent and child accounts
+    // -------------------------------------
+
+    @TimedResource
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CHILDREN)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "List children accounts", response = AccountJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid parent account id supplied"),
+                           @ApiResponse(code = 404, message = "Parent Account not found")})
+    public Response getChildrenAccounts(@PathParam("accountId") final String parentAccountId,
+                                        @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
+                                        @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
+                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+
+        final TenantContext tenantContext = context.createContext(request);
+        final List<Account> accounts = accountUserApi.getChildrenAccounts(UUID.fromString(parentAccountId), tenantContext);
+
+        final List<AccountJson> accountJson = new ArrayList<AccountJson>();
+        for (final Account account : accounts) {
+            final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
+            accountJson.add(getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext));
+        }
+        return Response.status(Status.OK).entity(accountJson).build();
+    }
+
 }

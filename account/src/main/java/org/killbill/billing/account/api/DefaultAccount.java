@@ -37,6 +37,8 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String name;
     private final Integer firstNameLength;
     private final Currency currency;
+    private final UUID parentAccountId;
+    private final Boolean isPaymentDelegatedToParent;
     private final Integer billCycleDayLocal;
     private final UUID paymentMethodId;
     private final DateTimeZone timeZone;
@@ -65,6 +67,8 @@ public class DefaultAccount extends EntityBase implements Account {
              data.getName(),
              data.getFirstNameLength(),
              data.getCurrency(),
+             data.getParentAccountId(),
+             data.isPaymentDelegatedToParent(),
              data.getBillCycleDayLocal(),
              data.getPaymentMethodId(),
              data.getTimeZone(),
@@ -83,8 +87,9 @@ public class DefaultAccount extends EntityBase implements Account {
 
     // This call is used for testing and update from an existing account
     public DefaultAccount(final UUID id, final String externalKey, final String email,
-                          final String name, final Integer firstNameLength,
-                          final Currency currency, final Integer billCycleDayLocal, final UUID paymentMethodId,
+                          final String name, final Integer firstNameLength, final Currency currency,
+                          final UUID parentAccountId, final Boolean isPaymentDelegatedToParent,
+                          final Integer billCycleDayLocal, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
@@ -98,6 +103,8 @@ public class DefaultAccount extends EntityBase implements Account {
              name,
              firstNameLength,
              currency,
+             parentAccountId,
+             isPaymentDelegatedToParent,
              billCycleDayLocal,
              paymentMethodId,
              timeZone,
@@ -116,8 +123,9 @@ public class DefaultAccount extends EntityBase implements Account {
 
     public DefaultAccount(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                           final String externalKey, final String email,
-                          final String name, final Integer firstNameLength,
-                          final Currency currency, final Integer billCycleDayLocal, final UUID paymentMethodId,
+                          final String name, final Integer firstNameLength, final Currency currency,
+                          final UUID parentAccountId, final Boolean isPaymentDelegatedToParent,
+                          final Integer billCycleDayLocal, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
@@ -129,6 +137,8 @@ public class DefaultAccount extends EntityBase implements Account {
         this.name = name;
         this.firstNameLength = firstNameLength;
         this.currency = currency;
+        this.parentAccountId = parentAccountId;
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : false;
         this.billCycleDayLocal = billCycleDayLocal == null ? DEFAULT_BILLING_CYCLE_DAY_LOCAL : billCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
@@ -154,6 +164,8 @@ public class DefaultAccount extends EntityBase implements Account {
              accountModelDao.getName(),
              accountModelDao.getFirstNameLength(),
              accountModelDao.getCurrency(),
+             accountModelDao.getParentAccountId(),
+             accountModelDao.getIsPaymentDelegatedToParent(),
              accountModelDao.getBillingCycleDayLocal(),
              accountModelDao.getPaymentMethodId(),
              accountModelDao.getTimeZone(),
@@ -193,6 +205,16 @@ public class DefaultAccount extends EntityBase implements Account {
     @Override
     public Currency getCurrency() {
         return currency;
+    }
+
+    @Override
+    public UUID getParentAccountId() {
+        return parentAccountId;
+    }
+
+    @Override
+    public Boolean isPaymentDelegatedToParent() {
+        return isPaymentDelegatedToParent;
     }
 
     @Override
@@ -327,6 +349,8 @@ public class DefaultAccount extends EntityBase implements Account {
         accountData.setCountry(country != null ? country : currentAccount.getCountry());
         accountData.setPostalCode(postalCode != null ? postalCode : currentAccount.getPostalCode());
         accountData.setPhone(phone != null ? phone : currentAccount.getPhone());
+        accountData.setParentAccountId(parentAccountId != null ? parentAccountId : currentAccount.getParentAccountId());
+        accountData.setIsPaymentDelegatedToParent(isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : currentAccount.isPaymentDelegatedToParent());
         final Boolean isMigrated = this.isMigrated != null ? this.isMigrated : currentAccount.isMigrated();
         if (isMigrated != null) {
             accountData.setIsMigrated(isMigrated);
@@ -351,6 +375,8 @@ public class DefaultAccount extends EntityBase implements Account {
                ", firstNameLength=" + firstNameLength +
                ", phone=" + phone +
                ", currency=" + currency +
+               ", parentAccountId=" + parentAccountId +
+               ", isPaymentDelegatedToParent=" + isPaymentDelegatedToParent +
                ", billCycleDayLocal=" + billCycleDayLocal +
                ", paymentMethodId=" + paymentMethodId +
                ", timezone=" + timeZone +
@@ -398,6 +424,12 @@ public class DefaultAccount extends EntityBase implements Account {
             return false;
         }
         if (currency != that.currency) {
+            return false;
+        }
+        if (parentAccountId != null ? !parentAccountId.equals(that.parentAccountId) : that.parentAccountId != null) {
+            return false;
+        }
+        if (isPaymentDelegatedToParent != null ? !isPaymentDelegatedToParent.equals(that.isPaymentDelegatedToParent) : that.isPaymentDelegatedToParent != null) {
             return false;
         }
         if (email != null ? !email.equals(that.email) : that.email != null) {
@@ -448,6 +480,8 @@ public class DefaultAccount extends EntityBase implements Account {
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (parentAccountId != null ? parentAccountId.hashCode() : 0);
+        result = 31 * result + (isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent.hashCode() : 0);
         result = 31 * result + billCycleDayLocal;
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);

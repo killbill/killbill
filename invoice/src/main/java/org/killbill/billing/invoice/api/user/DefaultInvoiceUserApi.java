@@ -481,4 +481,5 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
         return invoice;
     }
+
 }
