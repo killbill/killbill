@@ -157,23 +157,23 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
 
-        // 2012-07-09 => Retry P1
-        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        // 2012-07-08 => Retry P1
+        addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
 
         // 2012-07-10 => Retry P0
         //
         // This is the first stage that will block the billing (and entitlement).
         //
-        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.TAG, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(2, NextEvent.BLOCK, NextEvent.TAG, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
-        // 2012-07-17 => Retry P1
-        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        // 2012-07-16 => Retry P1
+        addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         // 2012-07-18 => Retry P0
-        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         // 2012-07-20
@@ -244,33 +244,33 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
 
-        // 2012-07-09 => Retry P1
-        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        // 2012-07-08 => Retry P1
+        addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
 
         // 2012-07-10 => Retry P0
         //
         // This is the first stage that will block the billing (and entitlement).
         //
-        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.TAG, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(2, NextEvent.BLOCK, NextEvent.TAG, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
-        // 2012-07-17 => Retry P1
-        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        // 2012-07-16 => Retry P1
+        addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         // 2012-07-18 => Retry P0
-        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         // 2012-07-20
         addDaysAndCheckForCompletion(2, NextEvent.BLOCK);
         checkODState("OD3");
 
-        // 2012-07-25 => Retry P0
-        addDaysAndCheckForCompletion(5, NextEvent.PAYMENT_ERROR);
+        // 2012-07-24 => Retry P1
+        addDaysAndCheckForCompletion(4, NextEvent.PAYMENT_ERROR);
         // 2012-07-26 => Retry P0
-        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
 
         // 2012-07-31 => No NEW INVOICE because OD2 -> still blocked
         addDaysAndCheckForCompletion(5);
@@ -338,40 +338,40 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
 
-        // 2012-07-09 => Retry P1
-        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        // 2012-07-08 => Retry P1
+        addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
 
         // 2012-07-10 => Retry P0
         //
         // This is the first stage that will block the billing (and entitlement).
         //
-        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.TAG, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(2, NextEvent.BLOCK, NextEvent.TAG, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
-        // 2012-07-17 => Retry P1
-        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        // 2012-07-16 => Retry P1
+        addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         // 2012-07-18 => Retry P0
-        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         // 2012-07-20
         addDaysAndCheckForCompletion(2, NextEvent.BLOCK);
         checkODState("OD3");
 
-        // 2012-07-25 => Retry P0
-        addDaysAndCheckForCompletion(5, NextEvent.PAYMENT_ERROR);
+        // 2012-07-24 => Retry P1
+        addDaysAndCheckForCompletion(4, NextEvent.PAYMENT_ERROR);
         // 2012-07-26 => Retry P0
-        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
 
         // 2012-07-31 => No NEW INVOICE because OD2 -> still blocked
         addDaysAndCheckForCompletion(5);
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
 
-        // 2012-08-01 => Nothing should have happened
-        addDaysAndCheckForCompletion(1);
+        // 2012-08-01 => Retry P1
+        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
 
         allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(true);
 
@@ -438,20 +438,20 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
 
-        // 2012-07-09 => Retry P1
-        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        // 2012-07-08 => Retry P1
+        addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
 
         // 2012-07-10 => Retry P0
-        addDaysAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.TAG, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(2, NextEvent.BLOCK, NextEvent.TAG, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
-        // 2012-07-17 => Retry P1
-        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        // 2012-07-16 => Retry P1
+        addDaysAndCheckForCompletion(6, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         // 2012-07-18 => Retry P0
-        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
 
         // 2012-07-20
