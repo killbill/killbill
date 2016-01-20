@@ -439,6 +439,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             try {
                 retryInDays = retryDays.get(retryCount);
                 result = nextRetryDate.plusDays(retryInDays);
+                log.debug("Next retryDate={}, retryInDays={}, retryCount={}, now={}", result, retryInDays, retryCount, clock.getUTCNow());
             } catch (final NumberFormatException ex) {
                 log.error("Could not get retry day for retry count {}", retryCount);
             }
@@ -459,6 +460,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 nbSec = nbSec * paymentConfig.getPluginFailureRetryMultiplier();
             }
             result = clock.getUTCNow().plusSeconds(nbSec);
+            log.debug("Next retryDate={}, retryAttempt={}, now={}", result, retryAttempt, clock.getUTCNow());
         }
         return result;
     }
