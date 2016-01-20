@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,6 +20,7 @@ package org.killbill.billing.overdue.config;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -134,5 +137,17 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
     @Override
     public ControlTagType getControlTagType() {
         return controlTag;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultOverdueCondition{");
+        sb.append("numberOfUnpaidInvoicesEqualsOrExceeds=").append(numberOfUnpaidInvoicesEqualsOrExceeds);
+        sb.append(", totalUnpaidInvoiceBalanceEqualsOrExceeds=").append(totalUnpaidInvoiceBalanceEqualsOrExceeds);
+        sb.append(", timeSinceEarliestUnpaidInvoiceEqualsOrExceeds=").append(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds);
+        sb.append(", responseForLastFailedPayment=").append(Arrays.toString(responseForLastFailedPayment));
+        sb.append(", controlTag=").append(controlTag);
+        sb.append('}');
+        return sb.toString();
     }
 }
