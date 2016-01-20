@@ -79,6 +79,12 @@ public class TestApiListener {
     }
 
     public void assertListenerStatus() {
+        // Bail early
+        if (isListenerFailed) {
+            log.error(listenerFailedMsg);
+            Assert.fail(listenerFailedMsg);
+        }
+
         try {
             assertTrue(isCompleted(DELAY));
         } catch (final Exception e) {
