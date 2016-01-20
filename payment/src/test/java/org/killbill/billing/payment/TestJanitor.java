@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
@@ -400,7 +401,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
     // The test will check that when a PENDING entry stays PENDING, we go through all our retries and evebtually give up (no infinite loop of retries)
     @Test(groups = "slow")
-    public void testPendingEntriesThatDontMove() throws PaymentApiException, EventBusException, NoSuchNotificationQueue, PaymentPluginApiException, InterruptedException {
+    public void testPendingEntriesThatDontMove() throws Exception {
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final String paymentExternalKey = "haha";
@@ -446,7 +447,12 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
             Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
         }
 
-        assertEquals(getPendingNotificationCnt(internalCallContext), 0);
+        await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return getPendingNotificationCnt(internalCallContext) == 0;
+            }
+        });
     }
 
 
