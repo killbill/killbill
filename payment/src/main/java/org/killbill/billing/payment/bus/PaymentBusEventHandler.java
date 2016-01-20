@@ -115,7 +115,7 @@ public class PaymentBusEventHandler {
                                                          properties, paymentControlPluginNames, callContext, internalContext);
         } catch (final AccountApiException e) {
             log.error("Failed to process invoice payment", e);
-        } catch (InvoiceApiException e) {
+        } catch (final InvoiceApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {
             // Log as error unless:

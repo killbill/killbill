@@ -244,7 +244,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        busHandler.pushExpectedEvents();
         invoiceUserApi.insertCredit(account.getId(), new BigDecimal("300"), new LocalDate(clock.getUTCNow(), account.getTimeZone()), account.getCurrency(), callContext);
         assertListenerStatus();
 
@@ -310,23 +310,25 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final List<InvoiceItem> invoiceItemList = new ArrayList<InvoiceItem>();
         ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(null, account.getId(), subscription.getBundleId(), "", date, BigDecimal.TEN, account.getCurrency());
         invoiceItemList.add(item);
+        busHandler.pushExpectedEvents();
         final List<InvoiceItem> draftInvoiceItems = invoiceUserApi.insertExternalCharges(account.getId(), date, invoiceItemList, callContext);
+        assertListenerStatus();
 
         // add expected invoice
-        final List<ExpectedInvoiceItemCheck> expectedDrafInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
-        expectedDrafInvoices.add(new ExpectedInvoiceItemCheck(InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
+        final List<ExpectedInvoiceItemCheck> expectedDraftInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedDraftInvoices.add(new ExpectedInvoiceItemCheck(InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
 
-        // Move through time and verify we get the same invoice
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        // Move through time and verify invoices
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
 
-        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedDrafInvoices);
+        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedDraftInvoices);
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceUserApi.invoiceStatusTransition(account.getId(), draftInvoiceItems.get(0).getInvoiceId(), callContext);
+        invoiceUserApi.commitInvoice(draftInvoiceItems.get(0).getInvoiceId(), callContext);
         assertListenerStatus();
 
         final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, null, callContext);

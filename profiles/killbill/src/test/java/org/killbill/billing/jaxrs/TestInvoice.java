@@ -30,7 +30,6 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.AuditLog;
 import org.killbill.billing.client.model.Credit;
@@ -573,57 +572,11 @@ public class TestInvoice extends TestJaxrsBase {
         Invoice invoice = killBillClient.getInvoice(creditJson.getInvoiceId());
         Assert.assertEquals(invoice.getStatus(), InvoiceStatus.DRAFT.toString());
 
-        killBillClient.invoiceStatusTransition(account.getAccountId(), invoice.getInvoiceId(), createdBy, reason, comment);
+        killBillClient.commitInvoice(invoice.getInvoiceId(), createdBy, reason, comment);
 
         invoice = killBillClient.getInvoice(creditJson.getInvoiceId());
         Assert.assertEquals(invoice.getStatus(), InvoiceStatus.COMMITTED.toString());
 
     }
-
-    @Test(groups = "slow", description = "Forcing method to fail.", expectedExceptions = KillBillClientException.class,
-            expectedExceptionsMessageRegExp = ".* type=ACCOUNT doesn't exist!")
-    public void testMoveInvoiceStatusWithInvalidIds() throws Exception {
-
-        killBillClient.invoiceStatusTransition(UUID.randomUUID(), UUID.randomUUID(), createdBy, reason, comment);
-
-    }
-
-    /*
-    @Test(groups = "slow", description = "Forcing method to fail.", expectedExceptions = KillBillClientException.class,
-            expectedExceptionsMessageRegExp = ".* type=ACCOUNT doesn't exist!")
-    public void testErrorTransition() throws Exception {
-
-        final Account account = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
-        final Invoice invoice = killBillClient.getInvoicesForAccount(account.getAccountId()).get(0);
-        Assert.assertEquals(invoice.getStatus(), InvoiceStatus.COMMITTED.toString());
-
-        killBillClient.invoiceStatusTransition(account.getAccountId(), invoice.getInvoiceId(), createdBy, reason, comment);
-
-    }
-    */
-
-    /*
-    @Test(groups = "slow", description = "Forcing method to fail.", expectedExceptions = KillBillClientException.class,
-            expectedExceptionsMessageRegExp = "No invoice could be found .*")
-    public void testMoveInvoiceStatusWithInvalidAccount() throws Exception {
-
-        final Account account = createAccountWithDefaultPaymentMethod();
-        final Account otherAccount = createAccountWithDefaultPaymentMethod();
-
-        final DateTime effectiveDate = clock.getUTCNow();
-        final BigDecimal creditAmount = BigDecimal.TEN;
-        final Credit credit = new Credit();
-        credit.setAccountId(account.getAccountId());
-        credit.setInvoiceId(null);
-        credit.setCreditAmount(creditAmount);
-        final Credit creditJson = killBillClient.createCredit(credit, createdBy, reason, comment);
-
-        Invoice invoice = killBillClient.getInvoice(creditJson.getInvoiceId());
-        Assert.assertEquals(invoice.getStatus(), InvoiceStatus.DRAFT.toString());
-
-        killBillClient.invoiceStatusTransition(otherAccount.getAccountId(), invoice.getInvoiceId(), createdBy, reason, comment);
-
-    }
-    */
 
 }

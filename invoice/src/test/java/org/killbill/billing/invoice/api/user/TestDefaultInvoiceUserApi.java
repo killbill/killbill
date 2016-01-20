@@ -388,7 +388,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), creditInvoice.getId());
 
         // move invoice from DRAFT to COMMITTED
-        invoiceUserApi.invoiceStatusTransition(this.accountId, creditInvoice.getId(), callContext);
+        invoiceUserApi.commitInvoice(creditInvoice.getId(), callContext);
         creditInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
         Assert.assertEquals(creditInvoice.getStatus(), InvoiceStatus.COMMITTED);
 

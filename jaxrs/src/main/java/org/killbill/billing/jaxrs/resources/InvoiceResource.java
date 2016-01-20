@@ -43,6 +43,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -941,28 +942,22 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @TimedResource
-    @POST
-    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + ACCOUNTS + "/{accountId:" + UUID_PATTERN + "}/" + INVOICE_STATUS_TRANSITION)
+    @PUT
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + COMMIT_INVOICE)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Perform the invoice status transition from DRAFT to COMMITTED")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or invoice id supplied"),
-                           @ApiResponse(code = 404, message = "Invoice not found")})
-    public Response invoiceStatusTransition(@PathParam("accountId") final String accountIdString,
-                                            @PathParam("invoiceId") final String invoiceIdString,
-                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                            @HeaderParam(HDR_REASON) final String reason,
-                                            @HeaderParam(HDR_COMMENT) final String comment,
-                                            @javax.ws.rs.core.Context final HttpServletRequest request,
-                                            @javax.ws.rs.core.Context final UriInfo uriInfo) throws InvoiceApiException {
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice not found")})
+    public Response commitInvoice(@PathParam("invoiceId") final String invoiceIdString,
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws InvoiceApiException {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-
-        final UUID accountId = UUID.fromString(accountIdString);
         final UUID invoiceId = UUID.fromString(invoiceIdString);
-
-        invoiceApi.invoiceStatusTransition(accountId, invoiceId, callContext);
-
+        invoiceApi.commitInvoice(invoiceId, callContext);
         return Response.status(Response.Status.OK).build();
     }
 

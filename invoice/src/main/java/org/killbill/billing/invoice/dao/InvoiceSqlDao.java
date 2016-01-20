@@ -45,7 +45,6 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     public void updateStatus(@Bind("id") String invoiceId,
-                             @Bind("accountId") String accountId,
                              @Bind("status") String status,
                              @BindBean final InternalCallContext context);
 }

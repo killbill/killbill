@@ -236,7 +236,7 @@ public interface JaxrsResource {
     public static final String INVOICE_MP_TEMPLATE = "manualPayTemplate";
     public static final String INVOICE_TRANSLATION = "translation";
     public static final String INVOICE_CATALOG_TRANSLATION = "catalogTranslation";
-    public static final String INVOICE_STATUS_TRANSITION = "statusTransition";
+    public static final String COMMIT_INVOICE = "commitInvoice";
 
     public static final String COMBO = "combo";
 

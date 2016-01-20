@@ -40,7 +40,7 @@ CREATE TABLE invoices (
     invoice_date date NOT NULL,
     target_date date NOT NULL,
     currency varchar(3) NOT NULL,
-    status varchar(15) NOT NULL,
+    status varchar(15) NOT NULL DEFAULT 'COMMITTED',
     migrated bool NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,

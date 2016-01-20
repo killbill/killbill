@@ -57,6 +57,5 @@ updateStatus() ::= <<
     UPDATE <tableName()>
     SET status = :status
     WHERE id = :id
-     AND account_id = :accountId
     <AND_CHECK_TENANT()>;
 >>

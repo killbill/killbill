@@ -364,7 +364,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public void changeInvoiceStatus(final UUID accountId, final UUID invoiceId, final InvoiceStatus newState, final InternalCallContext context) throws InvoiceApiException {
+    public void changeInvoiceStatus(final UUID invoiceId, final InvoiceStatus newState, final InternalCallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 }

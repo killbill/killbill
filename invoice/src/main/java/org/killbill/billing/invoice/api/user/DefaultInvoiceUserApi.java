@@ -495,16 +495,18 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void invoiceStatusTransition(final UUID accountId, final UUID invoiceId, final CallContext context) throws InvoiceApiException {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
-        dao.changeInvoiceStatus(accountId, invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
+    public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
         final Invoice invoice = this.getInvoice(invoiceId, context);
 
+        final Long accountRecordId = internalCallContextFactory.getRecordIdFromObject(invoice.getAccountId(), ObjectType.ACCOUNT, context);
         // notify invoice creation event
         final DefaultInvoiceCreationEvent defaultInvoiceCreationEvent = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                                         invoice.getBalance(), invoice.getCurrency(),
-                                                                                                        internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), context.getUserToken());
-        postEvent(defaultInvoiceCreationEvent, accountId, internalCallContext);
+                                                                                                        accountRecordId, internalCallContext.getTenantRecordId(),
+                                                                                                        context.getUserToken());
+        postEvent(defaultInvoiceCreationEvent, invoice.getAccountId(), internalCallContext);
     }
 
     private void postEvent(final BusInternalEvent event, final UUID accountId, final InternalCallContext context) {

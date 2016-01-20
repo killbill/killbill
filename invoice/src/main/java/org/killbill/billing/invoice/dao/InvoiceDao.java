@@ -141,13 +141,12 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context);
 
     /**
-     * Update invoice state
+     * Update invoice status
      *
-     * @param accountId the account id
      * @param invoiceId the invoice id
      * @param newState the new invoice state
      * @param context the tenant context
      * @throws InvoiceApiException
      */
-    void changeInvoiceStatus(UUID accountId, UUID invoiceId, InvoiceStatus newState, InternalCallContext context) throws InvoiceApiException;
+    void changeInvoiceStatus(UUID invoiceId, InvoiceStatus newState, InternalCallContext context) throws InvoiceApiException;
 }
