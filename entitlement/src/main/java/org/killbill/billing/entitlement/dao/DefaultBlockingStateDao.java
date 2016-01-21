@@ -185,10 +185,10 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final DateTime upToDate = clock.getUTCNow();
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
 
                 for (final BlockingState state : states.keySet()) {
+                    final DateTime upToDate = state.getEffectiveDate();
                     final UUID bundleId = states.get(state).orNull();
                     final BlockingAggregator previousState = getBlockedStatus(sqlDao, entitySqlDaoWrapperFactory.getHandle(), state.getBlockedId(), state.getType(), bundleId, upToDate, context);
 
