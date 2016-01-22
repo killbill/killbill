@@ -392,14 +392,5 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         creditInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
         Assert.assertEquals(creditInvoice.getStatus(), InvoiceStatus.COMMITTED);
 
-        // TODO verify post actions (event bus ???)
-
-        // Verify the adjusted invoice balance
-//        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(this.invoiceId, callContext).getBalance();
-//        Assert.assertEquals(adjustedInvoiceBalance.compareTo(BigDecimal.ZERO), 0);
-
-        // Verify the adjusted account balance
-//        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
-//        Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
     }
 }

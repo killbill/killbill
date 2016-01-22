@@ -56,10 +56,8 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         clock.setDay(new LocalDate(2012, 4, 1));
 
-        busHandler.pushExpectedEvents();
         final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, "Initial external charge", clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
         final InvoiceItem item1 = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), callContext).get(0);
-        assertListenerStatus();
 
         final Invoice invoice = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         final Payment payment1 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("4.00"), account.getCurrency(),  NextEvent.PAYMENT);

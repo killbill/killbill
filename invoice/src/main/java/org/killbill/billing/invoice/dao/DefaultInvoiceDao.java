@@ -35,6 +35,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.Invoice;
@@ -43,6 +44,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
+import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -878,8 +880,26 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 transactional.updateStatus(invoiceId.toString(), newStatus.toString(), context);
 
+                // notify invoice creation event
+                final BigDecimal balance = InvoiceModelDaoHelper.getBalance(invoice);
+                final DefaultInvoiceCreationEvent defaultInvoiceCreationEvent = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
+                                                                                                                balance, invoice.getCurrency(),
+                                                                                                                context.getAccountRecordId(), context.getTenantRecordId(),
+                                                                                                                context.getUserToken());
+                postEvent(defaultInvoiceCreationEvent, invoice.getAccountId());
+
                 return null;
             }
         });
     }
+
+    /* Use this method to post any event that implements BusInternalEvent */
+    private void postEvent(final BusInternalEvent event, final UUID accountId) {
+        try {
+            eventBus.post(event);
+        } catch (final EventBusException e) {
+            log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
+        }
+    }
+
 }

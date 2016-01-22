@@ -20,12 +20,10 @@ package org.killbill.billing.invoice.api.user;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -41,9 +39,6 @@ import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.events.BusInternalEvent;
-import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
-import org.killbill.billing.events.InvoiceInternalEvent;
 import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
@@ -496,25 +491,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
         dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
-        final Invoice invoice = this.getInvoice(invoiceId, context);
-
-        final Long accountRecordId = internalCallContextFactory.getRecordIdFromObject(invoice.getAccountId(), ObjectType.ACCOUNT, context);
-        // notify invoice creation event
-        final DefaultInvoiceCreationEvent defaultInvoiceCreationEvent = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                                                        invoice.getBalance(), invoice.getCurrency(),
-                                                                                                        accountRecordId, internalCallContext.getTenantRecordId(),
-                                                                                                        context.getUserToken());
-        postEvent(defaultInvoiceCreationEvent, invoice.getAccountId(), internalCallContext);
-    }
-
-    private void postEvent(final BusInternalEvent event, final UUID accountId, final InternalCallContext context) {
-        try {
-            eventBus.post(event);
-        } catch (final EventBusException e) {
-            log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
-        }
     }
 
 }
