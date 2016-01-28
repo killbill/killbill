@@ -27,11 +27,12 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.beatrix.integration.BeatrixIntegrationModule;
 import org.killbill.billing.beatrix.integration.TestIntegrationBase;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.overdue.OverdueService;
-import org.killbill.billing.overdue.api.DefaultOverdueInternalApi;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
+import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
 import org.killbill.xmlloader.XMLLoader;
@@ -81,11 +82,15 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
             await().atMost(10, SECONDS).until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    return expected.equals(blockingApi.getBlockingStateForService(account.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName());
+                    final BlockingState blockingStateForService = blockingApi.getBlockingStateForService(account.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext);
+                    final String stateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
+                    return expected.equals(stateName);
                 }
             });
         } catch (final Exception e) {
-            Assert.assertEquals(blockingApi.getBlockingStateForService(account.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext).getStateName(), expected, "Got exception: " + e.toString());
+            final BlockingState blockingStateForService = blockingApi.getBlockingStateForService(account.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext);
+            final String stateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
+            Assert.assertEquals(stateName, expected, "Got exception: " + e.toString());
         }
     }
 }

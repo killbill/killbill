@@ -21,6 +21,7 @@ package org.killbill.billing.overdue.wrapper;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.overdue.OverdueService;
@@ -98,8 +99,8 @@ public class OverdueWrapper {
 
     private OverdueState refreshWithLock(final InternalCallContext context) throws OverdueException, OverdueApiException {
         final BillingState billingState = billingState(context);
-        final String previousOverdueStateName = MoreObjects.firstNonNull(api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context).getStateName(), OverdueWrapper.CLEAR_STATE_NAME);
-
+        final BlockingState blockingStateForService = api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context);
+        final String previousOverdueStateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
         final OverdueState currentOverdueState = overdueStateSet.findState(previousOverdueStateName);
         final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
 
@@ -125,7 +126,8 @@ public class OverdueWrapper {
     }
 
     private void clearWithLock(final InternalCallContext context) throws OverdueException, OverdueApiException {
-        final String previousOverdueStateName = MoreObjects.firstNonNull(api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context).getStateName(), OverdueWrapper.CLEAR_STATE_NAME);
+        final BlockingState blockingStateForService = api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context);
+        final String previousOverdueStateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
         final OverdueState previousOverdueState = overdueStateSet.findState(previousOverdueStateName);
         overdueStateApplicator.clear(overdueable, previousOverdueState, overdueStateSet.getClearState(), context);
     }
