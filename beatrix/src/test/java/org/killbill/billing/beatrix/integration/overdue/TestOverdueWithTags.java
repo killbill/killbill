@@ -21,18 +21,16 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.invoice.api.Invoice;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.junction.DefaultBlockingState;
+import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.util.tag.ControlTagType;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -65,7 +63,6 @@ public class TestOverdueWithTags extends TestOverdueBase {
         return configXml;
     }
 
-
     @Test(groups = "slow")
     public void testOverdueStateAndWRITTEN_OFFTag() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
@@ -96,14 +93,13 @@ public class TestOverdueWithTags extends TestOverdueBase {
         addDaysAndCheckForCompletion(6);
 
         // Should still be in clear state
-        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);
         tagUserApi.removeTag(nonNullInvoice.getId(), ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), callContext);
         assertListenerStatus();
         checkODState("OD1");
     }
-
 
     @Test(groups = "slow")
     public void testNonOverdueAccountWithOverdueEnforcementOffTag() throws Exception {
@@ -133,7 +129,7 @@ public class TestOverdueWithTags extends TestOverdueBase {
         addDaysAndCheckForCompletion(6);
 
         // Should still be in clear state
-        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
         // Now remove OVERDUE_ENFORCEMENT_OFF tag
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);
@@ -175,7 +171,7 @@ public class TestOverdueWithTags extends TestOverdueBase {
         assertListenerStatus();
 
         // Should now be in clear state
-        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
         // Now remove OVERDUE_ENFORCEMENT_OFF tag
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);

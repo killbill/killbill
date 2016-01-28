@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
+import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -49,7 +50,7 @@ public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
 
         final OverdueStateSet overdueStateSet = config.getOverdueStatesAccount();
-        final OverdueState clearState = config.getOverdueStatesAccount().findState(DefaultBlockingState.CLEAR_STATE_NAME);
+        final OverdueState clearState = config.getOverdueStatesAccount().findState(OverdueWrapper.CLEAR_STATE_NAME);
         OverdueState state;
 
         state = config.getOverdueStatesAccount().findState("OD1");

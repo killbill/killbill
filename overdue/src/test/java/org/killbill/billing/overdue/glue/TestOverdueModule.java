@@ -21,6 +21,7 @@ package org.killbill.billing.overdue.glue;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -37,6 +38,7 @@ import org.killbill.billing.overdue.applicator.OverdueBusListenerTester;
 import org.killbill.billing.overdue.caching.MockOverdueConfigCache;
 import org.killbill.billing.overdue.caching.OverdueCacheInvalidationCallback;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
+import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.email.EmailModule;
@@ -46,6 +48,7 @@ import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
+import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 
 import com.google.inject.name.Names;
@@ -90,12 +93,13 @@ public class TestOverdueModule extends DefaultOverdueModule {
             return blockingState;
         }
 
+
         @Override
         public BlockingState getBlockingStateForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
             if (blockingState != null && blockingState.getBlockedId().equals(blockableId)) {
                 return blockingState;
             } else {
-                return DefaultBlockingState.getOverdueClearState(blockingStateType, serviceName, new ClockMock());
+                return new DefaultBlockingState(null, blockingStateType, OverdueWrapper.CLEAR_STATE_NAME, serviceName, false, false, false, null);
             }
         }
 

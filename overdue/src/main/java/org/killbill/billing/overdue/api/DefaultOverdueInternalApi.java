@@ -50,6 +50,7 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 
 public class DefaultOverdueInternalApi implements OverdueInternalApi {
@@ -83,7 +84,7 @@ public class DefaultOverdueInternalApi implements OverdueInternalApi {
     public OverdueState getOverdueStateFor(final ImmutableAccountData overdueable, final TenantContext context) throws OverdueException {
         try {
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
-            final String stateName = accessApi.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContextFactory.createInternalTenantContext(context)).getStateName();
+            final String stateName = MoreObjects.firstNonNull(accessApi.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContextFactory.createInternalTenantContext(context)).getStateName(), OverdueWrapper.CLEAR_STATE_NAME);
             final OverdueConfig overdueConfig = overdueConfigCache.getOverdueConfig(internalTenantContext);
             final OverdueStateSet states = ((DefaultOverdueConfig) overdueConfig).getOverdueStatesAccount();
             return states.findState(stateName);

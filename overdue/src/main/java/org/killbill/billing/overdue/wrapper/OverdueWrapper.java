@@ -39,7 +39,12 @@ import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.MoreObjects;
+
 public class OverdueWrapper {
+
+
+    public static final String CLEAR_STATE_NAME = "__KILLBILL__CLEAR__OVERDUE_STATE__";
 
     private static final Logger log = LoggerFactory.getLogger(OverdueWrapper.class);
 
@@ -93,7 +98,7 @@ public class OverdueWrapper {
 
     private OverdueState refreshWithLock(final InternalCallContext context) throws OverdueException, OverdueApiException {
         final BillingState billingState = billingState(context);
-        final String previousOverdueStateName = api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context).getStateName();
+        final String previousOverdueStateName = MoreObjects.firstNonNull(api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context).getStateName(), OverdueWrapper.CLEAR_STATE_NAME);
 
         final OverdueState currentOverdueState = overdueStateSet.findState(previousOverdueStateName);
         final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
@@ -120,7 +125,7 @@ public class OverdueWrapper {
     }
 
     private void clearWithLock(final InternalCallContext context) throws OverdueException, OverdueApiException {
-        final String previousOverdueStateName = api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context).getStateName();
+        final String previousOverdueStateName = MoreObjects.firstNonNull(api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context).getStateName(), OverdueWrapper.CLEAR_STATE_NAME);
         final OverdueState previousOverdueState = overdueStateSet.findState(previousOverdueStateName);
         overdueStateApplicator.clear(overdueable, previousOverdueState, overdueStateSet.getClearState(), context);
     }

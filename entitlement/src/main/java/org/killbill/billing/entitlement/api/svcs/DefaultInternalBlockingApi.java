@@ -47,12 +47,7 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
 
     @Override
     public BlockingState getBlockingStateForService(final UUID overdueableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
-        final BlockingState blockingStateForService = dao.getBlockingStateForService(overdueableId, blockingStateType, serviceName, context);
-        if (blockingStateForService == null && serviceName.equals(OverdueService.OVERDUE_SERVICE_NAME)) {
-            return DefaultBlockingState.getOverdueClearState(blockingStateType, serviceName, clock);
-        } else {
-            return blockingStateForService;
-        }
+        return dao.getBlockingStateForService(overdueableId, blockingStateType, serviceName, context);
     }
 
     @Override

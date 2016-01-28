@@ -43,7 +43,7 @@ public class MockEntitlementModuleForPayment extends MockEntitlementModule {
     public void installBlockingApi() {
         super.installBlockingApi();
 
-        final BlockingState blockingState = new DefaultBlockingState(null, BlockingStateType.ACCOUNT, DefaultBlockingState.CLEAR_STATE_NAME, "test", false, false, false, new DateTime(DateTimeZone.UTC));
+        final BlockingState blockingState = new DefaultBlockingState(null, BlockingStateType.ACCOUNT, "CLEAR_STATE_NAME", "test", false, false, false, new DateTime(DateTimeZone.UTC));
         Mockito.when(blockingApi.getBlockingAllForAccount(Mockito.<InternalTenantContext>any())).thenReturn(ImmutableList.<BlockingState>of(blockingState));
         Mockito.when(blockingApi.getBlockingStateForService(Mockito.<UUID>any(), Mockito.<BlockingStateType>any(), Mockito.anyString(), Mockito.<InternalTenantContext>any())).thenReturn(blockingState);
     }
