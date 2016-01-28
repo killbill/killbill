@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -47,11 +47,14 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.customfield.ShouldntHappenException;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
+import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -74,8 +77,11 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
             final BlockingState current = iterator.next();
             if (iterator.hasNext()) {
                 final BlockingState next = iterator.next();
-                if (prev != null && current.getEffectiveDate().equals(next.getEffectiveDate()) && current.getBlockedId().equals(next.getBlockedId())) {
-                    // Same date, same blockable id
+                if (prev != null &&
+                    current.getEffectiveDate().equals(next.getEffectiveDate()) &&
+                    current.getBlockedId().equals(next.getBlockedId()) &&
+                    !current.getService().equals(next.getService())) {
+                    // Same date, same blockable id, different services (for same-service events, trust the total ordering)
 
                     // Make sure block billing transitions are respected first
                     BlockingState prevCandidate = insertTiedBlockingStatesInTheRightOrder(result, current, next, prev.isBlockBilling(), current.isBlockBilling(), next.isBlockBilling());
@@ -164,12 +170,12 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
     @Inject
     public ProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
-                                 final IDBI dbi, final Clock clock,
+                                 final IDBI dbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
                                  final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.subscriptionInternalApi = subscriptionBaseInternalApi;
         this.clock = clock;
-        this.delegate = new DefaultBlockingStateDao(dbi, clock, cacheControllerDispatcher, nonEntityDao);
+        this.delegate = new DefaultBlockingStateDao(dbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao);
     }
 
     @Override
@@ -229,8 +235,8 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public void setBlockingState(final BlockingState state, final Clock clock, final InternalCallContext context) {
-        delegate.setBlockingState(state, clock, context);
+    public void setBlockingStatesAndPostBlockingTransitionEvent(final Map<BlockingState, Optional<UUID>> states, final InternalCallContext context) {
+        delegate.setBlockingStatesAndPostBlockingTransitionEvent(states, context);
     }
 
     @Override
@@ -239,7 +245,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     // Add blocking states for add-ons, which would be impacted by a future cancellation or change of their base plan
-    // See DefaultEntitlement#blockAddOnsIfRequired
+    // See DefaultEntitlement#computeAddOnBlockingStates
     private List<BlockingState> addBlockingStatesNotOnDisk(final List<BlockingState> blockingStatesOnDisk,
                                                            final InternalTenantContext context) {
         final Collection<BlockingState> blockingStatesOnDiskCopy = new LinkedList<BlockingState>(blockingStatesOnDisk);

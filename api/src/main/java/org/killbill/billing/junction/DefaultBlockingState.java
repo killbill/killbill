@@ -151,7 +151,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         if (comparison == 0) {
             // Keep a stable ordering for ties
             final int comparison2 = createdDate.compareTo(arg0.getCreatedDate());
-            if (comparison2 == 0 && getClass() != arg0.getClass()) {
+            if (comparison2 == 0 && arg0 instanceof DefaultBlockingState) {
                 final DefaultBlockingState other = (DefaultBlockingState) arg0;
                 // New element is last
                 if (totalOrdering == null) {

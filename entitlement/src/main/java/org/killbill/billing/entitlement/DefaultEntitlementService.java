@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,10 +18,14 @@
 
 package org.killbill.billing.entitlement;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.DefaultBlockingTransitionInternalEvent;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -30,12 +34,14 @@ import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.entitlement.engine.core.BlockingTransitionNotificationKey;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKey;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
+import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus;
@@ -62,6 +68,7 @@ public class DefaultEntitlementService implements EntitlementService {
     private final BlockingStateDao blockingStateDao;
     private final PersistentBus eventBus;
     private final NotificationQueueService notificationQueueService;
+    private final EntitlementUtils entitlementUtils;
     private final InternalCallContextFactory internalCallContextFactory;
 
     private NotificationQueue entitlementEventQueue;
@@ -71,11 +78,13 @@ public class DefaultEntitlementService implements EntitlementService {
                                      final BlockingStateDao blockingStateDao,
                                      final PersistentBus eventBus,
                                      final NotificationQueueService notificationQueueService,
+                                     final EntitlementUtils entitlementUtils,
                                      final InternalCallContextFactory internalCallContextFactory) {
         this.entitlementInternalApi = entitlementInternalApi;
         this.blockingStateDao = blockingStateDao;
         this.eventBus = eventBus;
         this.notificationQueueService = notificationQueueService;
+        this.entitlementUtils = entitlementUtils;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -131,7 +140,7 @@ public class DefaultEntitlementService implements EntitlementService {
         try {
             if (EntitlementNotificationKeyAction.CHANGE.equals(entitlementNotificationKeyAction) ||
                 EntitlementNotificationKeyAction.CANCEL.equals(entitlementNotificationKeyAction)) {
-                ((DefaultEntitlement) entitlement).blockAddOnsIfRequired(key.getEffectiveDate(), callContext, internalCallContext);
+                blockAddOnsIfRequired(key, (DefaultEntitlement) entitlement, callContext, internalCallContext);
             } else if (EntitlementNotificationKeyAction.PAUSE.equals(entitlementNotificationKeyAction)) {
                 entitlementInternalApi.pause(key.getBundleId(), key.getEffectiveDate().toLocalDate(), ImmutableList.<PluginProperty>of(), internalCallContext);
             } else if (EntitlementNotificationKeyAction.RESUME.equals(entitlementNotificationKeyAction)) {
@@ -139,6 +148,30 @@ public class DefaultEntitlementService implements EntitlementService {
             }
         } catch (final EntitlementApiException e) {
             log.error("Error processing event for entitlement {}" + entitlement.getId(), e);
+        }
+    }
+
+    private void blockAddOnsIfRequired(final EntitlementNotificationKey key, final DefaultEntitlement entitlement, final TenantContext callContext, final InternalCallContext internalCallContext) throws EntitlementApiException {
+        final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
+        final Collection<BlockingState> blockingStates = entitlement.computeAddOnBlockingStates(key.getEffectiveDate(), notificationEvents, callContext, internalCallContext);
+        // Record the new state first, then insert the notifications to avoid race conditions
+        entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(blockingStates, entitlement.getBundleId(), internalCallContext);
+        for (final NotificationEvent notificationEvent : notificationEvents) {
+            recordFutureNotification(key.getEffectiveDate(), notificationEvent, internalCallContext);
+        }
+    }
+
+    private void recordFutureNotification(final DateTime effectiveDate,
+                                          final NotificationEvent notificationEvent,
+                                          final InternalCallContext context) {
+        try {
+            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                                                           DefaultEntitlementService.NOTIFICATION_QUEUE_NAME);
+            subscriptionEventQueue.recordFutureNotification(effectiveDate, notificationEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+        } catch (final NoSuchNotificationQueue e) {
+            throw new RuntimeException(e);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

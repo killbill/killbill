@@ -89,7 +89,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public String getDescription() {
-        return Strings.nullToEmpty(item.getDescription());
+        return Strings.nullToEmpty(translator.getTranslation(item.getDescription()));
     }
 
     @Override

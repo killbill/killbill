@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,16 +19,18 @@
 package org.killbill.billing.entitlement.dao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.util.entity.dao.EntityDao;
+
+import com.google.common.base.Optional;
 
 public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, BlockingState, EntitlementApiException> {
 
@@ -60,13 +64,12 @@ public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, Block
     public List<BlockingState> getBlockingAllForAccountRecordId(InternalTenantContext context);
 
     /**
-     * Sets a new state for a specific service.
+     * Set new blocking states
      *
-     * @param state   blocking state to set
-     * @param clock   system clock
+     * @param states  blocking states to set (mapped to the associated bundle id if the blocking state type is SUBSCRIPTION)
      * @param context call context
      */
-    public void setBlockingState(BlockingState state, Clock clock, InternalCallContext context);
+    public void setBlockingStatesAndPostBlockingTransitionEvent(Map<BlockingState, Optional<UUID>> states, InternalCallContext context);
 
     /**
      * Unactive the blocking state

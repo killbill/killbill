@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -42,9 +42,11 @@ import org.killbill.billing.subscription.api.migration.AccountMigrationData;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import org.killbill.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
+import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.SubscriptionNotificationKey;
@@ -57,6 +59,9 @@ import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
+import org.killbill.bus.api.BusEvent;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -78,18 +83,21 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     private final MockNonEntityDao mockNonEntityDao;
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
+    private final PersistentBus eventBus;
     private final CatalogService catalogService;
 
     @Inject
     public MockSubscriptionDaoMemory(final MockNonEntityDao mockNonEntityDao,
                                      final Clock clock,
                                      final NotificationQueueService notificationQueueService,
+                                     final PersistentBus eventBus,
                                      final CatalogService catalogService) {
         super();
         this.mockNonEntityDao = mockNonEntityDao;
         this.clock = clock;
         this.catalogService = catalogService;
         this.notificationQueueService = notificationQueueService;
+        this.eventBus = eventBus;
         this.bundles = new ArrayList<SubscriptionBaseBundle>();
         this.subscriptions = new ArrayList<SubscriptionBase>();
         this.events = new TreeSet<SubscriptionBaseEvent>();
@@ -305,9 +313,10 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent nextPhase, final InternalCallContext context) {
+    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionBaseEvent nextPhase, final InternalCallContext context) {
         cancelNextPhaseEvent(subscription.getId(), context);
         insertEvent(nextPhase, context);
+        notifyBusOfEffectiveImmediateChange(subscription, readyPhaseEvent, 0, context);
     }
 
     private SubscriptionBase buildSubscription(final DefaultSubscriptionBase in, final InternalTenantContext context) {
@@ -341,25 +350,23 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void cancelSubscription(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent cancelEvent,
-                                   final InternalCallContext context, final int seqId) {
-        synchronized (events) {
-            cancelNextPhaseEvent(subscription.getId(), context);
-            insertEvent(cancelEvent, context);
-        }
+    public void cancelSubscriptionsOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
+        cancelSubscriptions(subscriptions, cancelEvents, context);
+        notifyBusOfEffectiveImmediateChange(subscription, event, subscriptions.size(), context);
     }
 
     @Override
     public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
         synchronized (events) {
             for (int i = 0; i < subscriptions.size(); i++) {
-                cancelSubscription(subscriptions.get(i), cancelEvents.get(i), context, 0);
+                cancelNextPhaseEvent(subscriptions.get(i).getId(), context);
+                insertEvent(cancelEvents.get(i), context);
             }
         }
     }
 
     @Override
-    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> changeEvents, final InternalCallContext context) {
+    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> changeEvents, final List<DefaultSubscriptionBase> subscriptionsToBeCancelled, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
         synchronized (events) {
             cancelNextChangeEvent(subscription.getId());
             cancelNextPhaseEvent(subscription.getId(), context);
@@ -368,6 +375,8 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
                 recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
             }
         }
+
+        cancelSubscriptions(subscriptionsToBeCancelled, cancelEvents, context);
     }
 
     private void insertEvent(final SubscriptionBaseEvent event, final InternalCallContext context) {
@@ -496,6 +505,21 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
             throw new RuntimeException(e);
         } catch (final IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void notifyBusOfEffectiveImmediateChange(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent immediateEvent, final int seqId, final InternalCallContext context) {
+        try {
+            final SubscriptionBaseTransitionData transition = subscription.getTransitionFromEvent(immediateEvent, seqId);
+            final BusEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition,
+                                                                            subscription.getAlignStartDate(),
+                                                                            context.getUserToken(),
+                                                                            context.getAccountRecordId(),
+                                                                            context.getTenantRecordId());
+
+            eventBus.post(busEvent);
+        } catch (final EventBusException e) {
+            log.warn("Failed to post effective event for subscription " + subscription.getId(), e);
         }
     }
 

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -170,5 +172,21 @@ public class DefaultOverdueState extends ValidatingConfig<DefaultOverdueConfig> 
     @Override
     public EmailNotification getEmailNotification() {
         return enterStateEmailNotification;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultOverdueState{");
+        sb.append("condition=").append(condition);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", externalMessage='").append(externalMessage).append('\'');
+        sb.append(", blockChanges=").append(blockChanges);
+        sb.append(", disableEntitlement=").append(disableEntitlement);
+        sb.append(", subscriptionCancellationPolicy=").append(subscriptionCancellationPolicy);
+        sb.append(", isClearState=").append(isClearState);
+        sb.append(", autoReevaluationInterval=").append(autoReevaluationInterval);
+        sb.append(", enterStateEmailNotification=").append(enterStateEmailNotification);
+        sb.append('}');
+        return sb.toString();
     }
 }

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -35,7 +37,6 @@ import org.killbill.clock.Clock;
 import org.killbill.xmlloader.UriAccessor;
 import org.killbill.xmlloader.XMLLoader;
 
-import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 public class VersionedCatalogLoader implements CatalogLoader {
@@ -80,7 +81,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
         }
     }
 
-    public VersionedCatalog load(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
+    public VersionedCatalog load(final Iterable<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
         final VersionedCatalog result = new VersionedCatalog(clock);
         final URI uri;
         try {
@@ -91,7 +92,9 @@ public class VersionedCatalogLoader implements CatalogLoader {
                 result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory));
             }
             return result;
-        } catch (Exception e) {
+        } catch (final CatalogApiException e) {
+            throw e;
+        } catch (final Exception e) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog ", e);
         }
     }

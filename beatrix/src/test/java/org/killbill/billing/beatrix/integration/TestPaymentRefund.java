@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -73,7 +73,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testRefundWithNoAdjustments() throws Exception {
         // Although we don't adjust the invoice, the invoicing system sends an event because invoice balance changes and overdue system-- in particular-- needs to know about it.
-        refundPaymentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), false, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
     }
 
@@ -82,7 +82,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
         iias.put(invoice.getInvoiceItems().get(0).getId(), null);
-        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment, iias, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment, iias, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), true, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
         invoice = invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext,
                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
@@ -93,7 +93,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testRefundWithInvoiceAdjustment() throws Exception {
-        refundPaymentWithAdjustmentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentWithAdjustmentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), true, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
         invoice = invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext,
                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
@@ -123,7 +123,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
         invoiceChecker.checkChargedThroughDate(bpEntitlement.getId(), clock.getUTCToday(), callContext);
 
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoice = invoiceChecker.checkInvoice(account.getId(), ++invoiceItemCount, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
                                                                                                                              new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.82")));
         payment = paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 3, 2), new BigDecimal("233.82"), TransactionStatus.SUCCESS, invoice.getId(), Currency.USD));

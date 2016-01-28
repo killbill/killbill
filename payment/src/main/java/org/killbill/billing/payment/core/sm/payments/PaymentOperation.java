@@ -206,7 +206,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                 return paymentStateContext.getOverridePluginOperationResult();
             }
         } catch (final PaymentPluginApiException e) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
         }
     }
 

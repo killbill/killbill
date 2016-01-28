@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,8 +18,10 @@
 
 package org.killbill.billing.overdue;
 
+import java.util.UUID;
+
 import org.killbill.billing.account.api.ImmutableAccountData;
-import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueException;
@@ -26,12 +30,13 @@ import org.killbill.billing.util.callcontext.TenantContext;
 
 public interface OverdueInternalApi {
 
-    public OverdueState refreshOverdueStateFor(ImmutableAccountData overdueable, CallContext context) throws OverdueException, OverdueApiException;
+    public void scheduleOverdueRefresh(UUID accountId, InternalCallContext context);
+
+    public void scheduleOverdueClear(UUID accountId, InternalCallContext context);
 
     public void setOverrideBillingStateForAccount(ImmutableAccountData overdueable, BillingState state, CallContext context) throws OverdueException;
 
     public OverdueState getOverdueStateFor(ImmutableAccountData overdueable, TenantContext context) throws OverdueException;
 
     public BillingState getBillingStateFor(ImmutableAccountData overdueable, TenantContext context) throws OverdueException;
-
 }

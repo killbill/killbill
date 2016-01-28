@@ -40,6 +40,10 @@ public class TestEmbeddedDBFactory extends KillbillTestSuite {
         Assert.assertEquals(h2EmbeddedDb.getDBEngine(), DBEngine.H2);
         checkEmbeddedDb(h2EmbeddedDb);
 
+        final EmbeddedDB postgresEmbeddedDb = EmbeddedDBFactory.get(createDaoConfig("jdbc:postgresql://127.0.0.1:5432/killbill", "root", "root"));
+        Assert.assertEquals(postgresEmbeddedDb.getDBEngine(), DBEngine.POSTGRESQL);
+        checkEmbeddedDb(postgresEmbeddedDb);
+
         final EmbeddedDB genericEmbeddedDb = EmbeddedDBFactory.get(createDaoConfig("jdbc:derby://localhost:1527/killbill;collation=TERRITORY_BASED:PRIMARY", "root", "root"));
         Assert.assertEquals(genericEmbeddedDb.getDBEngine(), DBEngine.GENERIC);
         checkEmbeddedDb(genericEmbeddedDb);
