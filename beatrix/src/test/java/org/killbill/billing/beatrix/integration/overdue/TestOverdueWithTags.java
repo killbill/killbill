@@ -64,7 +64,7 @@ public class TestOverdueWithTags extends TestOverdueBase {
     }
 
     @Test(groups = "slow")
-    public void testOverdueStateAndWRITTEN_OFFTag() throws Exception {
+    public void testOverdueStateWith_WRITTEN_OFF() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
         // Set next invoice to fail and create subscription
@@ -84,7 +84,7 @@ public class TestOverdueWithTags extends TestOverdueBase {
         final Invoice nonNullInvoice = invoices.get(1);
         assertTrue(nonNullInvoice.getBalance().compareTo(BigDecimal.ZERO) > 0);
 
-        // Set the WRITTEN_OFF tag (we set the clear state, hence the blocking event)
+        // Set the WRITTEN_OFF tag
         busHandler.pushExpectedEvents(NextEvent.TAG);
         tagUserApi.addTag(nonNullInvoice.getId(), ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), callContext);
         assertListenerStatus();
@@ -92,9 +92,10 @@ public class TestOverdueWithTags extends TestOverdueBase {
         // Move after what should be OD1 (if invoice had not been written off)
         addDaysAndCheckForCompletion(6);
 
-        // Should still be in clear state
+        // Should still be in clear state because of WRITTEN_OFF tag
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
+        // Remove the WRITTEN_OFF tag and verify overdue state is now OD1
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);
         tagUserApi.removeTag(nonNullInvoice.getId(), ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), callContext);
         assertListenerStatus();
@@ -102,7 +103,7 @@ public class TestOverdueWithTags extends TestOverdueBase {
     }
 
     @Test(groups = "slow")
-    public void testNonOverdueAccountWithOverdueEnforcementOffTag() throws Exception {
+    public void testNonOverdueAccountWith_OVERDUE_ENFORCEMENT_OFF() throws Exception {
 
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
