@@ -43,7 +43,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     private final BlockingStateType type;
     private final Long totalOrdering;
 
-    public static BlockingState getClearState(final BlockingStateType type, final String serviceName, final Clock clock) {
+    public static BlockingState getOverdueClearState(final BlockingStateType type, final String serviceName, final Clock clock) {
         if (clearState == null) {
             clearState = new DefaultBlockingState(null, type, CLEAR_STATE_NAME, serviceName, false, false, false, clock.getUTCNow());
         }

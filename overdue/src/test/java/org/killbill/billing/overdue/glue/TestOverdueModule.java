@@ -95,7 +95,7 @@ public class TestOverdueModule extends DefaultOverdueModule {
             if (blockingState != null && blockingState.getBlockedId().equals(blockableId)) {
                 return blockingState;
             } else {
-                return DefaultBlockingState.getClearState(blockingStateType, serviceName, new ClockMock());
+                return DefaultBlockingState.getOverdueClearState(blockingStateType, serviceName, new ClockMock());
             }
         }
 
