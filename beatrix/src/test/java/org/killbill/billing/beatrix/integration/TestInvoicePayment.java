@@ -96,7 +96,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
 */
 
-        refundPaymentAndCheckForCompletion(account, payment1, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentAndCheckForCompletion(account, payment1, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(new BigDecimal("4.00")) == 0);

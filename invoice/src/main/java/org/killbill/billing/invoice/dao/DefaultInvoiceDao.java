@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -46,6 +47,7 @@ import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.InvoiceConfig;
@@ -98,6 +100,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private final CBADao cbaDao;
     private final InvoiceConfig invoiceConfig;
     private final Clock clock;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final NonEntityDao nonEntityDao;
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi,
@@ -118,6 +122,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         this.invoiceDaoHelper = invoiceDaoHelper;
         this.cbaDao = cbaDao;
         this.clock = clock;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
+        this.nonEntityDao = nonEntityDao;
     }
 
     @Override
@@ -507,9 +513,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
 
-                // Notify the bus since the balance of the invoice changed
-                notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoice.getId(), invoice.getAccountId(), context.getUserToken(), context);
-
+                if (isInvoiceAdjusted) {
+                    notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoice.getId(), invoice.getAccountId(), context.getUserToken(), context);
+                }
                 notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, refund, invoice.getAccountId(), context.getUserToken(), context);
 
                 return refund;
@@ -562,8 +568,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargeBack.getId().toString(), context);
 
                 cbaDao.addCBAComplexityFromTransaction(payment.getInvoiceId(), entitySqlDaoWrapperFactory, context);
-
-                notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, payment.getInvoiceId(), accountId, context.getUserToken(), context);
 
                 notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, chargeBack, accountId, context.getUserToken(), context);
 
@@ -691,10 +695,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     }
                 }
 
-                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-                final InvoiceModelDao invoice = invoiceSqlDao.getById(invoicePayment.getInvoiceId().toString(), context);
-                // Should never be null, but be safe...
-                final UUID accountId = invoice == null ? null : invoice.getAccountId();
+                final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID), entitySqlDaoWrapperFactory.getHandle());
                 notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, invoicePayment, accountId, context.getUserToken(), context);
 
                 return null;

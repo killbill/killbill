@@ -73,7 +73,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testRefundWithNoAdjustments() throws Exception {
         // Although we don't adjust the invoice, the invoicing system sends an event because invoice balance changes and overdue system-- in particular-- needs to know about it.
-        refundPaymentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), false, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
     }
 

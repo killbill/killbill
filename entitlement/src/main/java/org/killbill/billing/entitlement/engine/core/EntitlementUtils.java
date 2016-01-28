@@ -75,6 +75,7 @@ public class EntitlementUtils {
 
     public void setBlockingStateAndPostBlockingTransitionEvent(final BlockingState state, final InternalCallContext context) {
         UUID bundleId = null;
+        // We only need the bundle id in case of subscriptions (at the account level, we don't need it and at the bundle level, we already have it)
         if (state.getType() == BlockingStateType.SUBSCRIPTION) {
             try {
                 bundleId = subscriptionBaseInternalApi.getSubscriptionFromId(state.getBlockedId(), context).getBundleId();
