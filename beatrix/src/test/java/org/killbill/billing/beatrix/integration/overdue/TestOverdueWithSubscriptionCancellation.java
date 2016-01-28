@@ -86,7 +86,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         cancelEntitlementAndCheckForCompletion(addOn1, clock.getUTCNow(), NextEvent.BLOCK, NextEvent.CANCEL);
 
         // DAY 30 have to get out of trial before first payment
-        addDaysAndCheckForCompletion(29, NextEvent.PHASE,  NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(29, NextEvent.PHASE,  NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
 
@@ -139,7 +139,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         assertTrue(cancelledBaseSubscription2.getState() == EntitlementState.CANCELLED);
 
         // DAY 30 have to get out of trial before first payment (2012-05-31)
-        addDaysAndCheckForCompletion(29, NextEvent.PHASE,  NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(29, NextEvent.PHASE,  NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         invoiceChecker.checkInvoice(account.getId(),
                                     4,
                                     callContext,

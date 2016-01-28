@@ -37,6 +37,8 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
+import org.killbill.billing.invoice.api.DefaultInvoicePaymentErrorEvent;
+import org.killbill.billing.invoice.api.DefaultInvoicePaymentInfoEvent;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -54,6 +56,7 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
@@ -507,6 +510,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Notify the bus since the balance of the invoice changed
                 notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoice.getId(), invoice.getAccountId(), context.getUserToken(), context);
 
+                notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, refund, invoice.getAccountId(), context.getUserToken(), context);
+
                 return refund;
             }
         });
@@ -559,6 +564,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 cbaDao.addCBAComplexityFromTransaction(payment.getInvoiceId(), entitySqlDaoWrapperFactory, context);
 
                 notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, payment.getInvoiceId(), accountId, context.getUserToken(), context);
+
+                notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, chargeBack, accountId, context.getUserToken(), context);
 
                 return chargeBack;
             }
@@ -667,18 +674,29 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
-                final List<InvoicePaymentModelDao> invoicePayments = transactional.getInvoicePayments(invoicePayment.getPaymentId().toString(), context);
-                final InvoicePaymentModelDao existingAttempt = Iterables.tryFind(invoicePayments, new Predicate<InvoicePaymentModelDao>() {
-                    @Override
-                    public boolean apply(final InvoicePaymentModelDao input) {
-                        return input.getType() == InvoicePaymentType.ATTEMPT;
+
+                // If the payment id is null, the payment wasn't attempted (e.g. no payment method). We don't record an attempt but send an event nonetheless (e.g. for Overdue)
+                if (invoicePayment.getPaymentId() != null) {
+                    final List<InvoicePaymentModelDao> invoicePayments = transactional.getInvoicePayments(invoicePayment.getPaymentId().toString(), context);
+                    final InvoicePaymentModelDao existingAttempt = Iterables.tryFind(invoicePayments, new Predicate<InvoicePaymentModelDao>() {
+                        @Override
+                        public boolean apply(final InvoicePaymentModelDao input) {
+                            return input.getType() == InvoicePaymentType.ATTEMPT;
+                        }
+                    }).orNull();
+                    if (existingAttempt == null) {
+                        transactional.create(invoicePayment, context);
+                    } else if (!existingAttempt.getSuccess() && invoicePayment.getSuccess()) {
+                        transactional.updateAttempt(existingAttempt.getRecordId(), invoicePayment.getPaymentDate().toDate(), invoicePayment.getAmount(), invoicePayment.getCurrency(), invoicePayment.getProcessedCurrency(), context);
                     }
-                }).orNull();
-                if (existingAttempt == null) {
-                    transactional.create(invoicePayment, context);
-                } else if (!existingAttempt.getSuccess() && invoicePayment.getSuccess()) {
-                    transactional.updateAttempt(existingAttempt.getRecordId(), invoicePayment.getPaymentDate().toDate(), invoicePayment.getAmount(), invoicePayment.getCurrency(), invoicePayment.getProcessedCurrency(), context);
                 }
+
+                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                final InvoiceModelDao invoice = invoiceSqlDao.getById(invoicePayment.getInvoiceId().toString(), context);
+                // Should never be null, but be safe...
+                final UUID accountId = invoice == null ? null : invoice.getAccountId();
+                notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, invoicePayment, accountId, context.getUserToken(), context);
+
                 return null;
             }
         });
@@ -830,6 +848,45 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                          entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
             log.warn("Failed to post adjustment event for invoice " + invoiceId, e);
+        }
+    }
+
+    private void notifyBusOfInvoicePayment(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InvoicePaymentModelDao invoicePaymentModelDao,
+                                           final UUID accountId, final UUID userToken, final InternalCallContext context) {
+        final BusEvent busEvent;
+        if (invoicePaymentModelDao.getSuccess() == Boolean.TRUE) {
+            busEvent = new DefaultInvoicePaymentInfoEvent(accountId,
+                                                          invoicePaymentModelDao.getPaymentId(),
+                                                          invoicePaymentModelDao.getType(),
+                                                          invoicePaymentModelDao.getInvoiceId(),
+                                                          invoicePaymentModelDao.getPaymentDate(),
+                                                          invoicePaymentModelDao.getAmount(),
+                                                          invoicePaymentModelDao.getCurrency(),
+                                                          invoicePaymentModelDao.getLinkedInvoicePaymentId(),
+                                                          invoicePaymentModelDao.getPaymentCookieId(),
+                                                          invoicePaymentModelDao.getProcessedCurrency(),
+                                                          context.getAccountRecordId(),
+                                                          context.getTenantRecordId(),
+                                                          userToken);
+        } else {
+            busEvent = new DefaultInvoicePaymentErrorEvent(accountId,
+                                                           invoicePaymentModelDao.getPaymentId(),
+                                                           invoicePaymentModelDao.getType(),
+                                                           invoicePaymentModelDao.getInvoiceId(),
+                                                           invoicePaymentModelDao.getPaymentDate(),
+                                                           invoicePaymentModelDao.getAmount(),
+                                                           invoicePaymentModelDao.getCurrency(),
+                                                           invoicePaymentModelDao.getLinkedInvoicePaymentId(),
+                                                           invoicePaymentModelDao.getPaymentCookieId(),
+                                                           invoicePaymentModelDao.getProcessedCurrency(),
+                                                           context.getAccountRecordId(),
+                                                           context.getTenantRecordId(),
+                                                           userToken);
+        }
+        try {
+            eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
+        } catch (final EventBusException e) {
+            log.warn("Failed to post invoice payment event for invoice " + invoicePaymentModelDao.getInvoiceId(), e);
         }
     }
 

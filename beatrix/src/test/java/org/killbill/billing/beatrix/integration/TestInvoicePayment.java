@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -62,7 +62,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertListenerStatus();
 
         final Invoice invoice = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
-        final Payment payment1 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("4.00"), account.getCurrency(),  NextEvent.PAYMENT);
+        final Payment payment1 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("4.00"), account.getCurrency(),  NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         Invoice invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(new BigDecimal("6.00")) == 0);
@@ -72,7 +72,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance.compareTo(new BigDecimal("6.00")) == 0);
 
-        final Payment payment2 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("6.00"), account.getCurrency(),  NextEvent.PAYMENT);
+        final Payment payment2 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("6.00"), account.getCurrency(),  NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(BigDecimal.ZERO) == 0);
@@ -96,7 +96,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
 */
 
-        refundPaymentAndCheckForCompletion(account, payment1, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentAndCheckForCompletion(account, payment1, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
 
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(new BigDecimal("4.00")) == 0);
@@ -121,7 +121,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         clock.addDays(30);
         assertListenerStatus();
 
@@ -143,7 +143,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments.size(), 1);
 
         // Trigger the payment retry
-        busHandler.pushExpectedEvents(NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(8);
         assertListenerStatus();
 
