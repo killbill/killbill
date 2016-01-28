@@ -923,10 +923,6 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow", enabled = false)
-    public void testOverdueStateAndWRITTEN_OFFTag() throws Exception {
-        // TODO add/remove tag to invoice
-    }
 
     private void allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(final boolean extraPayment) {
         // Reset plugin so payments should now succeed

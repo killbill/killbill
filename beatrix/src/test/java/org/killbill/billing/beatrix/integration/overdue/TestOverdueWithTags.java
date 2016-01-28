@@ -17,9 +17,12 @@
 package org.killbill.billing.beatrix.integration.overdue;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.invoice.api.Invoice;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.ObjectType;
@@ -31,8 +34,11 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.util.tag.ControlTagType;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
 @Test(groups = "slow")
-public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
+public class TestOverdueWithTags extends TestOverdueBase {
 
     @Override
     public String getOverdueConfig() {
@@ -58,6 +64,46 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
                                  "</overdueConfig>";
         return configXml;
     }
+
+
+    @Test(groups = "slow")
+    public void testOverdueStateAndWRITTEN_OFFTag() throws Exception {
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        // Set next invoice to fail and create subscription
+        paymentPlugin.makeAllInvoicesFailWithError(true);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
+
+        // DAY 30 have to get out of trial before first payment
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        assertEquals(invoices.size(), 2);
+
+        final Invoice nonNullInvoice = invoices.get(1);
+        assertTrue(nonNullInvoice.getBalance().compareTo(BigDecimal.ZERO) > 0);
+
+        // Set the WRITTEN_OFF tag (we set the clear state, hence the blocking event)
+        busHandler.pushExpectedEvents(NextEvent.TAG);
+        tagUserApi.addTag(nonNullInvoice.getId(), ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), callContext);
+        assertListenerStatus();
+
+        // Move after what should be OD1 (if invoice had not been written off)
+        addDaysAndCheckForCompletion(6);
+
+        // Should still be in clear state
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+
+        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);
+        tagUserApi.removeTag(nonNullInvoice.getId(), ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), callContext);
+        assertListenerStatus();
+        checkODState("OD1");
+    }
+
 
     @Test(groups = "slow")
     public void testNonOverdueAccountWithOverdueEnforcementOffTag() throws Exception {
