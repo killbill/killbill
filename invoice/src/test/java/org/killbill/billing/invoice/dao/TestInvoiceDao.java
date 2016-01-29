@@ -32,7 +32,6 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.MockInternationalPrice;
@@ -54,6 +53,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
@@ -1083,6 +1083,54 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(invoices.size(), 2);
     }
 
+    @Test(groups = "slow")
+    public void testGetUnpaidInvoicesByAccountIdWithDraftInvoice() throws EntityPersistenceException {
+        final UUID accountId = account.getId();
+        final UUID bundleId = UUID.randomUUID();
+        final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
+        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
+        invoiceUtil.createInvoice(invoice1, true, context);
+
+        final LocalDate startDate = new LocalDate(2011, 3, 1);
+        final LocalDate endDate = startDate.plusMonths(1);
+
+        final BigDecimal rate1 = new BigDecimal("17.0");
+        final BigDecimal rate2 = new BigDecimal("42.0");
+
+        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate, endDate,
+                                                                    rate1, rate1, Currency.USD);
+        invoiceUtil.createInvoiceItem(item1, context);
+
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate, endDate,
+                                                                    rate2, rate2, Currency.USD);
+        invoiceUtil.createInvoiceItem(item2, context);
+
+        LocalDate upToDate;
+        Collection<InvoiceModelDao> invoices;
+
+        upToDate = new LocalDate(2011, 1, 1);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        assertEquals(invoices.size(), 0);
+
+        upToDate = new LocalDate(2012, 1, 1);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        assertEquals(invoices.size(), 1);
+
+        List<InvoiceModelDao> allInvoicesByAccount = invoiceDao.getInvoicesByAccount(new LocalDate(2011, 1, 1), context);
+        assertEquals(allInvoicesByAccount.size(), 1);
+
+        // insert DRAFT invoice
+        createCredit(accountId, new LocalDate(2011, 12, 31), BigDecimal.TEN);
+
+        allInvoicesByAccount = invoiceDao.getInvoicesByAccount(new LocalDate(2011, 1, 1), context);
+        assertEquals(allInvoicesByAccount.size(), 2);
+        assertEquals(allInvoicesByAccount.get(0).getStatus(), InvoiceStatus.COMMITTED);
+        assertEquals(allInvoicesByAccount.get(1).getStatus(), InvoiceStatus.DRAFT);
+
+        upToDate = new LocalDate(2012, 1, 1);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        assertEquals(invoices.size(), 1);
+    }
 
     /*
      *
@@ -1659,7 +1707,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     private void createCredit(final UUID accountId, @Nullable final UUID invoiceId, final LocalDate effectiveDate, final BigDecimal creditAmount) {
         final InvoiceModelDao invoiceModelDao;
         if (invoiceId == null) {
-            invoiceModelDao = new InvoiceModelDao(accountId, effectiveDate, effectiveDate, Currency.USD);
+            invoiceModelDao = new InvoiceModelDao(accountId, effectiveDate, effectiveDate, Currency.USD, false, InvoiceStatus.DRAFT);
 
         } else {
             invoiceModelDao = invoiceDao.getById(invoiceId, context);

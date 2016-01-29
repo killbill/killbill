@@ -121,6 +121,8 @@ public interface JaxrsResource {
 
     public static final String QUERY_PARALLEL = "parallel";
 
+    public static final String QUERY_AUTO_COMMIT = "autoCommit";
+
     public static final String QUERY_NOTIFICATION_CALLBACK = "cb";
 
     public static final String PAGINATION = "pagination";

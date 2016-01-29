@@ -370,13 +370,11 @@ public class InvoiceDispatcher {
                 setChargedThroughDates(billingEvents.getAccountDateAndTimeZoneContext(), invoice.getInvoiceItems(FixedPriceInvoiceItem.class), invoice.getInvoiceItems(RecurringInvoiceItem.class), context);
 
                 if (InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
-                    // TODO we should send bus events when we commit the ionvoice on disk in commitInvoice
+                    // TODO we should send bus events when we commit the invoice on disk in commitInvoice
                     postEvents(account, invoice, adjustedUniqueOtherInvoiceId, isRealInvoiceWithNonEmptyItems, context);
-
+                    notifyAccountIfEnabled(account, invoice, isRealInvoiceWithNonEmptyItems, context);
                 }
 
-                // TODO should we include this notification inside of previous if clause?
-                notifyAccountIfEnabled(account, invoice, isRealInvoiceWithNonEmptyItems, context);
             }
             return invoice;
         } catch (final AccountApiException e) {
