@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -88,7 +90,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
             assertEquals(cur.getBalance(), cur.getChargedAmount());
         }
 
-        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT);
+        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         addDelayBceauseOfLackOfCorrectSynchro();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -130,7 +132,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         }
 
         paymentPlugin.makeNextPaymentFailWithError();
-        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT_ERROR);
+        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         addDelayBceauseOfLackOfCorrectSynchro();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -146,7 +148,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         int nbDaysBeforeRetry = paymentConfig.getPaymentFailureRetryDays().get(0);
 
         // MOVE TIME FOR RETRY TO HAPPEN
-        busHandler.pushExpectedEvents(NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(nbDaysBeforeRetry + 1);
         assertListenerStatus();
 
@@ -190,7 +192,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         // NOW SET PLUGIN TO THROW FAILURES
         paymentPlugin.makeNextPaymentFailWithError();
-        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT_ERROR);
+        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         addDelayBceauseOfLackOfCorrectSynchro();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -224,7 +226,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         // REMOVE AUTO_PAY_OFF -> WILL SCHEDULE A PAYMENT_RETRY
         paymentPlugin.clear();
-        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT);
+        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         addDelayBceauseOfLackOfCorrectSynchro();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);

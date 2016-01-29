@@ -35,6 +35,8 @@ import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
+import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
+import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
@@ -114,6 +116,8 @@ public class TestApiListener {
         INVOICE,
         INVOICE_NOTIFICATION,
         INVOICE_ADJUSTMENT,
+        INVOICE_PAYMENT,
+        INVOICE_PAYMENT_ERROR,
         PAYMENT,
         PAYMENT_ERROR,
         PAYMENT_PLUGIN_ERROR,
@@ -245,6 +249,20 @@ public class TestApiListener {
     public void handleInvoiceAdjustmentEvents(final InvoiceAdjustmentInternalEvent event) {
         log.info(String.format("Got Invoice adjustment event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE_ADJUSTMENT);
+        notifyIfStackEmpty();
+    }
+
+    @Subscribe
+    public void handleInvoicePaymentEvents(final InvoicePaymentInfoInternalEvent event) {
+        log.info(String.format("Got InvoicePaymentInfo event %s", event.toString()));
+        assertEqualsNicely(NextEvent.INVOICE_PAYMENT);
+        notifyIfStackEmpty();
+    }
+
+    @Subscribe
+    public void handleInvoicePaymentErrorEvents(final InvoicePaymentErrorInternalEvent event) {
+        log.info(String.format("Got InvoicePaymentError event %s", event.toString()));
+        assertEqualsNicely(NextEvent.INVOICE_PAYMENT_ERROR);
         notifyIfStackEmpty();
     }
 

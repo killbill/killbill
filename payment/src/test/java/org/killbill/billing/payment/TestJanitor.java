@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -48,7 +48,6 @@ import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
@@ -136,10 +135,14 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         eventBus.register(testListener);
         mockPaymentProviderPlugin.clear();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
+
+        testListener.assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        testListener.assertListenerStatus();
+
         janitor.stop();
         eventBus.unregister(handler);
         eventBus.unregister(testListener);
@@ -154,7 +157,9 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate now = clock.getUTCToday();
 
+        testListener.pushExpectedEvent(NextEvent.INVOICE);
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
+        testListener.assertListenerStatus();
 
         final String paymentExternalKey = invoice.getId().toString();
         final String transactionExternalKey = "wouf wouf";
@@ -170,8 +175,10 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                             new BigDecimal("1.0"),
                                                             Currency.USD));
 
+        testListener.pushExpectedEvent(NextEvent.PAYMENT);
         final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                                             createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+        testListener.assertListenerStatus();
         assertEquals(payment.getTransactions().size(), 1);
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
@@ -205,7 +212,9 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate now = clock.getUTCToday();
 
+        testListener.pushExpectedEvent(NextEvent.INVOICE);
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
+        testListener.assertListenerStatus();
 
         final String paymentExternalKey = invoice.getId().toString();
         final String transactionExternalKey = "craboom";
@@ -222,8 +231,10 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                                      Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
 
+        testListener.pushExpectedEvent(NextEvent.PAYMENT);
         final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                                             createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+        testListener.assertListenerStatus();
 
         final List<PluginProperty> refundProperties = new ArrayList<PluginProperty>();
         final HashMap<UUID, BigDecimal> uuidBigDecimalHashMap = new HashMap<UUID, BigDecimal>();
@@ -231,8 +242,10 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
         refundProperties.add(refundIdsProp);
 
+        testListener.pushExpectedEvent(NextEvent.PAYMENT);
         final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, transactionExternalKey2,
                                                                            refundProperties, INVOICE_PAYMENT, callContext);
+        testListener.assertListenerStatus();
 
         assertEquals(payment2.getTransactions().size(), 2);
         PaymentTransaction refundTransaction = payment2.getTransactions().get(1);
@@ -281,8 +294,10 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.assertListenerStatus();
 
         // Move clock for notification to be processed
+        testListener.pushExpectedEvent(NextEvent.PAYMENT);
         clock.addDeltaFromReality(5 * 60 * 1000);
         assertNotificationsCompleted(internalCallContext, 5);
+        testListener.assertListenerStatus();
 
         final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
@@ -315,8 +330,10 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(paymentTransactionHistoryBeforeJanitor.size(), 3);
 
         // Move clock for notification to be processed
+        testListener.pushExpectedEvent(NextEvent.PAYMENT_ERROR);
         clock.addDeltaFromReality(5 * 60 * 1000);
         assertNotificationsCompleted(internalCallContext, 5);
+        testListener.assertListenerStatus();
 
         // Proves the Janitor ran (and updated the transaction)
         final List<PaymentTransactionModelDao> paymentTransactionHistoryAfterJanitor = getPaymentTransactionHistory(transactionExternalKey);
@@ -392,9 +409,11 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.assertListenerStatus();
 
         // Move clock for notification to be processed
+        testListener.pushExpectedEvent(NextEvent.PAYMENT);
         clock.addDeltaFromReality(5 * 60 * 1000);
 
         assertNotificationsCompleted(internalCallContext, 5);
+        testListener.assertListenerStatus();
         final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
         Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
