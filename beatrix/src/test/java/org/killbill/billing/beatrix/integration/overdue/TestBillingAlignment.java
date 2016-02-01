@@ -63,7 +63,7 @@ public class TestBillingAlignment extends TestIntegrationBase {
         invoiceChecker.checkChargedThroughDate(bpEntitlement.getId(), new LocalDate(2012, 5, 25), callContext);
 
         // Change plan to annual that has been configured to have a 'Subscription' billing alignment
-        final DefaultEntitlement changedBpEntitlement = changeEntitlementAndCheckForCompletion(bpEntitlement, "Shotgun", BillingPeriod.ANNUAL, null, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        final DefaultEntitlement changedBpEntitlement = changeEntitlementAndCheckForCompletion(bpEntitlement, "Shotgun", BillingPeriod.ANNUAL, null, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         invoiceChecker.checkInvoice(account.getId(),
                                     3,
