@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -84,7 +84,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
         // Move through time and verify we get the same invoice
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -98,7 +98,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
 
         // Move through time and verify we get the same invoice
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -149,7 +149,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, dryRun, callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // 2014-2-1
         clock.addDays(30);
         assertListenerStatus();
@@ -178,7 +178,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, dryRun, callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // 2015-1-14
         clock.addDays(30);
         assertListenerStatus();
@@ -199,7 +199,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, dryRun, callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // 2015-2-1
         clock.addDays(18);
         assertListenerStatus();
@@ -256,7 +256,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(31);
         assertListenerStatus();
 

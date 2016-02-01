@@ -25,10 +25,8 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
-import org.killbill.billing.events.PaymentErrorInternalEvent;
-import org.killbill.billing.events.PaymentInfoInternalEvent;
-import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.billing.invoice.api.InvoiceInternalApi;
+import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
+import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
 import org.killbill.billing.overdue.OverdueInternalApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -95,15 +93,15 @@ public class OverdueListener {
 
     @AllowConcurrentEvents
     @Subscribe
-    public void handlePaymentInfoEvent(final PaymentInfoInternalEvent event) {
-        log.debug("Received PaymentInfo event {}", event);
+    public void handlePaymentInfoEvent(final InvoicePaymentInfoInternalEvent event) {
+        log.debug("Received InvoicePaymentInfo event {}", event);
         insertBusEventIntoNotificationQueue(event.getAccountId(), event);
     }
 
     @AllowConcurrentEvents
     @Subscribe
-    public void handlePaymentErrorEvent(final PaymentErrorInternalEvent event) {
-        log.debug("Received PaymentError event {}", event);
+    public void handlePaymentErrorEvent(final InvoicePaymentErrorInternalEvent event) {
+        log.debug("Received InvoicePaymentError event {}", event);
         insertBusEventIntoNotificationQueue(event.getAccountId(), event);
     }
 
