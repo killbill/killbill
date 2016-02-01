@@ -353,6 +353,10 @@ public class PaymentResource extends ComboPaymentResource {
                                                                  initialPayment.getExternalKey(), transactionExternalKey,
                                                                  pluginProperties, paymentOptions, callContext);
                 break;
+            case CAPTURE:
+                paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), amount, currency, transactionExternalKey,
+                                                           pluginProperties, paymentOptions, callContext);
+                break;
             case PURCHASE:
                 paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
                                                             initialPayment.getExternalKey(), transactionExternalKey,
