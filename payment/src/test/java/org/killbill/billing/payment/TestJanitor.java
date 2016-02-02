@@ -421,7 +421,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
-    // The test will check that when a PENDING entry stays PENDING, we go through all our retries and evebtually give up (no infinite loop of retries)
+    // The test will check that when a PENDING entry stays PENDING, we go through all our retries and eventually give up (no infinite loop of retries)
     @Test(groups = "slow")
     public void testPendingEntriesThatDontMove() throws Exception {
 
@@ -453,18 +453,19 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.assertListenerStatus();
 
         // 15s,1m,3m,1h,1d,1d,1d,1d,1d
-        for (TimeSpan cur : paymentConfig.getIncompleteTransactionsRetries()) {
+        for (final TimeSpan cur : paymentConfig.getIncompleteTransactionsRetries()) {
             // Verify there is a notification to retry updating the value
             assertEquals(getPendingNotificationCnt(internalCallContext), 1);
 
             clock.addDeltaFromReality(cur.getMillis() + 1);
 
-            // We add a sleep here to make sure the notification gets processed. Note that calling assertNotificationsCompleted would not work
-            // because there is a point in time where the notification  queue is empty (showing notification was processed), but the processing of the notification
+            assertNotificationsCompleted(internalCallContext, 5);
+            // We add a sleep here to make sure the notification gets processed. Note that calling assertNotificationsCompleted alone would not work
+            // because there is a point in time where the notification queue is empty (showing notification was processed), but the processing of the notification
             // will itself enter a new notification, and so the synchronization is difficult without writing *too much code*.
             Thread.sleep(1000);
+            assertNotificationsCompleted(internalCallContext, 5);
 
-            //assertNotificationsCompleted(internalCallContext, 5);
             final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
             Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
         }
@@ -518,8 +519,12 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
             await().atMost(timeoutSec, SECONDS).until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    final List<NotificationEventWithMetadata<NotificationEvent>> notifications = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
-                    return notifications.isEmpty();
+                    for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId())) {
+                        if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                            return false;
+                        }
+                    }
+                    return true;
                 }
             });
         } catch (final Exception e) {
