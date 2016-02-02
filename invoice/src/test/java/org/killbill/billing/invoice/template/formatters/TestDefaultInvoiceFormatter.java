@@ -33,6 +33,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -81,7 +82,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                                                                                                          fixedItem.getStartDate(), fixedItem.getAmount().negate(),
                                                                                                          fixedItem.getCurrency());
         final Invoice invoice = new DefaultInvoice(fixedItem.getInvoiceId(), fixedItem.getAccountId(), null,
-                                                   new LocalDate(), new LocalDate(), Currency.USD, false);
+                                                   new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
         invoice.addInvoiceItem(fixedItem);
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem);
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem2);
@@ -128,7 +129,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         final RefundAdjInvoiceItem refundAdjInvoiceItem = new RefundAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
                                                                                    fixedItem.getStartDate(), BigDecimal.ONE.negate(), fixedItem.getCurrency());
         final DefaultInvoice invoice = new DefaultInvoice(fixedItem.getInvoiceId(), fixedItem.getAccountId(), null,
-                                                          new LocalDate(), new LocalDate(), Currency.USD, false);
+                                                          new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
         invoice.addInvoiceItem(fixedItem);
         invoice.addInvoiceItem(repairAdjInvoiceItem);
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem);
@@ -392,7 +393,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testProcessedCurrencyDoesNotExist() throws Exception {
-        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.USD, false);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
 
         checkOutput(invoice,
                     "{{#invoice.processedCurrency}}" +
@@ -412,7 +413,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                                                                              UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("1499.95"), Currency.BRL);
 
-        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.BRL,  false);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.BRL,  false, InvoiceStatus.COMMITTED);
         invoice.addInvoiceItem(fixedItemBRL);
 
         final String template = "<html>\n" +

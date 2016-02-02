@@ -60,6 +60,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceNotificationInternalEvent;
@@ -368,10 +369,12 @@ public class InvoiceDispatcher {
 
                 setChargedThroughDates(billingEvents.getAccountDateAndTimeZoneContext(), invoice.getInvoiceItems(FixedPriceInvoiceItem.class), invoice.getInvoiceItems(RecurringInvoiceItem.class), context);
 
-                // TODO we should send bus events when we commit the ionvoice on disk in commitInvoice
-                postEvents(account, invoice, adjustedUniqueOtherInvoiceId, isRealInvoiceWithNonEmptyItems, context);
+                if (InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
+                    // TODO we should send bus events when we commit the invoice on disk in commitInvoice
+                    postEvents(account, invoice, adjustedUniqueOtherInvoiceId, isRealInvoiceWithNonEmptyItems, context);
+                    notifyAccountIfEnabled(account, invoice, isRealInvoiceWithNonEmptyItems, context);
+                }
 
-                notifyAccountIfEnabled(account, invoice, isRealInvoiceWithNonEmptyItems, context);
             }
             return invoice;
         } catch (final AccountApiException e) {

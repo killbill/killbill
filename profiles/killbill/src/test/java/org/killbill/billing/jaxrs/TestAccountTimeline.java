@@ -42,10 +42,6 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
-import static org.testng.Assert.assertEquals;
-
 public class TestAccountTimeline extends TestJaxrsBase {
 
     private static final String PAYMENT_REQUEST_PROCESSOR = "PaymentRequestProcessor";
@@ -83,9 +79,8 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final BigDecimal creditAmount = BigDecimal.ONE;
         final Credit credit = new Credit();
         credit.setAccountId(accountJson.getAccountId());
-        credit.setInvoiceId(invoice.getInvoiceId());
         credit.setCreditAmount(creditAmount);
-        killBillClient.createCredit(credit, createdBy, reason, comment);
+        killBillClient.createCredit(credit, true, createdBy, reason, comment);
 
         // Add refund
         final Payment postedPayment = killBillClient.getPaymentsForAccount(accountJson.getAccountId()).get(0);
@@ -191,19 +186,23 @@ public class TestAccountTimeline extends TestJaxrsBase {
             final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
 
             // Verify invoices
-            Assert.assertEquals(timeline.getInvoices().size(), 2);
+            Assert.assertEquals(timeline.getInvoices().size(), 3);
 
             // Verify audits
             final List<AuditLog> firstInvoiceAuditLogs = timeline.getInvoices().get(0).getAuditLogs();
             final List<AuditLog> secondInvoiceAuditLogs = timeline.getInvoices().get(1).getAuditLogs();
+            final List<AuditLog> thirdInvoiceAuditLogs = timeline.getInvoices().get(2).getAuditLogs();
             if (AuditLevel.NONE.equals(auditLevel)) {
                 Assert.assertEquals(firstInvoiceAuditLogs.size(), 0);
                 Assert.assertEquals(secondInvoiceAuditLogs.size(), 0);
+                Assert.assertEquals(thirdInvoiceAuditLogs.size(), 0);
             } else {
                 Assert.assertEquals(firstInvoiceAuditLogs.size(), 1);
                 verifyAuditLog(firstInvoiceAuditLogs.get(0), ChangeType.INSERT, null, null, TRANSITION, startTime, endTime);
                 Assert.assertEquals(secondInvoiceAuditLogs.size(), 1);
                 verifyAuditLog(secondInvoiceAuditLogs.get(0), ChangeType.INSERT, null, null, TRANSITION, startTime, endTime);
+                Assert.assertEquals(thirdInvoiceAuditLogs.size(), 1);
+                verifyAuditLog(thirdInvoiceAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
             }
         }
     }

@@ -46,6 +46,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.WithAccountLock;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -261,7 +262,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<InvoiceItem> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> charges, final CallContext context) throws InvoiceApiException {
+    public List<InvoiceItem> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> charges, final boolean autoCommit, final CallContext context) throws InvoiceApiException {
         for (final InvoiceItem charge : charges) {
             if (charge.getAmount() == null || charge.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new InvoiceApiException(ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID, charge.getAmount());
@@ -283,7 +284,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                     if (invoiceIdForExternalCharge == null) {
                         final Currency currency = charge.getCurrency();
                         if (newInvoicesForExternalCharges.get(currency) == null) {
-                            final Invoice newInvoiceForExternalCharge = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
+                            final InvoiceStatus status = autoCommit ? InvoiceStatus.COMMITTED : InvoiceStatus.DRAFT;
+                            final Invoice newInvoiceForExternalCharge = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency, status);
                             newInvoicesForExternalCharges.put(currency, newInvoiceForExternalCharge);
                         }
                         invoiceForExternalCharge = newInvoicesForExternalCharges.get(currency);
@@ -327,13 +329,18 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final LocalDate effectiveDate,
-                                    final Currency currency, final CallContext context) throws InvoiceApiException {
-        return insertCreditForInvoice(accountId, null, amount, effectiveDate, currency, context);
+                                    final Currency currency, final boolean autoCommit, final CallContext context) throws InvoiceApiException {
+        return insertCreditForInvoice(accountId, null, amount, effectiveDate, currency, autoCommit, context);
     }
 
     @Override
     public InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
                                               final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
+        return insertCreditForInvoice(accountId, invoiceId, amount, effectiveDate, currency, false, context);
+    }
+
+    private InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final LocalDate effectiveDate,
+                                               final Currency currency, final boolean autoCommit, final CallContext context) throws InvoiceApiException {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.CREDIT_AMOUNT_INVALID, amount);
         }
@@ -347,9 +354,13 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                 // Create an invoice for that credit if it doesn't exist
                 final Invoice invoiceForCredit;
                 if (invoiceId == null) {
-                    invoiceForCredit = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
+                    final InvoiceStatus status = autoCommit ? InvoiceStatus.COMMITTED : InvoiceStatus.DRAFT;
+                    invoiceForCredit = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency, status);
                 } else {
                     invoiceForCredit = getInvoiceAndCheckCurrency(invoiceId, currency, context);
+                    if (InvoiceStatus.COMMITTED.equals(invoiceForCredit.getStatus())) {
+                        throw new InvoiceApiException(ErrorCode.INVOICE_ALREADY_COMMITTED, invoiceId);
+                    }
                 }
 
                 // Create the new credit
@@ -480,6 +491,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, currency, invoice.getCurrency());
         }
         return invoice;
+    }
+
+    @Override
+    public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
+        dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
     }
 
 }

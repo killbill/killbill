@@ -121,6 +121,8 @@ public interface JaxrsResource {
 
     public static final String QUERY_PARALLEL = "parallel";
 
+    public static final String QUERY_AUTO_COMMIT = "autoCommit";
+
     public static final String QUERY_NOTIFICATION_CALLBACK = "cb";
 
     public static final String PAGINATION = "pagination";
@@ -236,6 +238,7 @@ public interface JaxrsResource {
     public static final String INVOICE_MP_TEMPLATE = "manualPayTemplate";
     public static final String INVOICE_TRANSLATION = "translation";
     public static final String INVOICE_CATALOG_TRANSLATION = "catalogTranslation";
+    public static final String COMMIT_INVOICE = "commitInvoice";
 
     public static final String COMBO = "combo";
 

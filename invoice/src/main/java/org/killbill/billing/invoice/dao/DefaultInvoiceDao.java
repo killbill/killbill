@@ -41,7 +41,9 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
+import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -275,11 +277,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final List<InvoiceItemModelDao> createdInvoiceItems = new LinkedList<InvoiceItemModelDao>();
                 for (final InvoiceModelDao invoiceModelDao : invoices) {
                     boolean madeChanges = false;
+                    boolean newInvoice = false;
 
                     // Create the invoice if needed
                     if (invoiceSqlDao.getById(invoiceModelDao.getId().toString(), context) == null) {
                         invoiceSqlDao.create(invoiceModelDao, context);
                         madeChanges = true;
+                        newInvoice = true;
                     }
 
                     // Create the invoice items if needed
@@ -293,10 +297,16 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                     if (madeChanges) {
                         cbaDao.addCBAComplexityFromTransaction(invoiceModelDao.getId(), entitySqlDaoWrapperFactory, context);
+                    }
 
-                        // Notify the bus since the balance of the invoice changed
-                        // TODO should we post an InvoiceCreationInternalEvent event instead? Note! This will trigger a payment (see InvoiceHandler)
-                        notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceModelDao.getId(), invoiceModelDao.getAccountId(), context.getUserToken(), context);
+                    if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
+                        if (newInvoice) {
+                            notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
+                        } else if (madeChanges) {
+                            // Notify the bus since the balance of the invoice changed (only if the invoice is COMMITTED)
+                            // TODO should we post an InvoiceCreationInternalEvent event instead? Note! This will trigger a payment (see InvoiceHandler)
+                            notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceModelDao.getId(), invoiceModelDao.getAccountId(), context.getUserToken(), context);
+                        }
                     }
                 }
 
@@ -851,6 +861,50 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         final InvoiceItemModelDao invoiceItemToBeAdjusted = invoiceItemSqlDao.getById(invoiceItemModelDao.getLinkedItemId().toString(), context);
         if (!INVOICE_ITEM_TYPES_ADJUSTABLE.contains(invoiceItemToBeAdjusted.getType())) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_ITEM_INVALID, invoiceItemToBeAdjusted.getId());
+        }
+    }
+
+    @Override
+    public void changeInvoiceStatus(final UUID invoiceId, final InvoiceStatus newStatus,
+                                    final InternalCallContext context) throws InvoiceApiException {
+        transactionalSqlDao.execute(InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
+                // Retrieve the invoice and make sure it belongs to the right account
+                final InvoiceModelDao invoice = transactional.getById(invoiceId.toString(), context);
+
+                if (invoice == null ) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
+                }
+
+                if (invoice.getStatus().equals(newStatus)) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_STATUS, newStatus, invoiceId, invoice.getStatus());
+                }
+
+                transactional.updateStatus(invoiceId.toString(), newStatus.toString(), context);
+
+                if (InvoiceStatus.COMMITTED.equals(newStatus)) {
+                    // notify invoice creation event
+                    notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoice, context);
+                }
+
+                return null;
+            }
+        });
+    }
+
+    private void notifyBusOfInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InvoiceModelDao invoice, final InternalCallContext context) {
+        try {
+            final BigDecimal balance = InvoiceModelDaoHelper.getBalance(invoice);
+            final DefaultInvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
+                                                                                                            balance, invoice.getCurrency(),
+                                                                                                            context.getAccountRecordId(), context.getTenantRecordId(),
+                                                                                                            context.getUserToken());
+            eventBus.postFromTransaction(event, entitySqlDaoWrapperFactory.getHandle().getConnection());
+        } catch (final EventBusException e) {
+            log.error(String.format("Failed to post invoice creation event %s for account %s", invoice.getAccountId()), e);
         }
     }
 
