@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 The Billing Project, LLC
+ * Copyright 2015-2016 Groupon, Inc
+ * Copyright 2015-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,6 +30,14 @@ import java.util.UUID;
 public abstract class UUIDs {
 
     public static UUID randomUUID() { return rndUUIDv4(); }
+
+    public static void setRandom(final Random random) {
+        threadRandom.set(random);
+    }
+
+    public static Random getRandom() {
+        return threadRandom.get();
+    }
 
     private static UUID rndUUIDv4() {
         // ~ return UUID.randomUUID() :

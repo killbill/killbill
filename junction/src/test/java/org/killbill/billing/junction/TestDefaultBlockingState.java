@@ -45,7 +45,7 @@ public class TestDefaultBlockingState extends JunctionTestSuiteNoDB {
         final BlockingState bs2 = new DefaultBlockingState(UUID.randomUUID(),
                                                            UUID.randomUUID(),
                                                            BlockingStateType.ACCOUNT,
-                                                           DefaultBlockingState.CLEAR_STATE_NAME,
+                                                           "OD2",
                                                            "test",
                                                            false,
                                                            false,

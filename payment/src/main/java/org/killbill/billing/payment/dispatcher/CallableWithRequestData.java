@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,23 +17,27 @@
 
 package org.killbill.billing.payment.dispatcher;
 
+import java.util.Random;
 import java.util.concurrent.Callable;
 
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
 
 public class CallableWithRequestData<T> implements Callable<T> {
 
     private final RequestData requestData;
+    private final Random random;
     private final SecurityManager securityManager;
     private final Subject subject;
     private final Callable<T> delegate;
 
-    public CallableWithRequestData(final RequestData requestData, final SecurityManager securityManager, final Subject subject, final Callable<T> delegate) {
+    public CallableWithRequestData(final RequestData requestData, final Random random, final SecurityManager securityManager, final Subject subject, final Callable<T> delegate) {
         this.requestData = requestData;
+        this.random = random;
         this.securityManager = securityManager;
         this.subject = subject;
         this.delegate = delegate;
@@ -43,11 +47,13 @@ public class CallableWithRequestData<T> implements Callable<T> {
     public T call() throws Exception {
         try {
             Request.setPerThreadRequestData(requestData);
+            UUIDs.setRandom(random);
             ThreadContext.bind(securityManager);
             ThreadContext.bind(subject);
             return delegate.call();
         } finally {
             Request.resetPerThreadRequestData();
+            UUIDs.setRandom(null);
             ThreadContext.unbindSecurityManager();
             ThreadContext.unbindSubject();
         }

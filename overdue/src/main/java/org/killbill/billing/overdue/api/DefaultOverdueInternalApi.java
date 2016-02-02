@@ -26,6 +26,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.overdue.OverdueInternalApi;
@@ -50,6 +51,7 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 
 public class DefaultOverdueInternalApi implements OverdueInternalApi {
@@ -83,7 +85,8 @@ public class DefaultOverdueInternalApi implements OverdueInternalApi {
     public OverdueState getOverdueStateFor(final ImmutableAccountData overdueable, final TenantContext context) throws OverdueException {
         try {
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
-            final String stateName = accessApi.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContextFactory.createInternalTenantContext(context)).getStateName();
+            final BlockingState blockingStateForService = accessApi.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContextFactory.createInternalTenantContext(context));
+            final String stateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
             final OverdueConfig overdueConfig = overdueConfigCache.getOverdueConfig(internalTenantContext);
             final OverdueStateSet states = ((DefaultOverdueConfig) overdueConfig).getOverdueStatesAccount();
             return states.findState(stateName);

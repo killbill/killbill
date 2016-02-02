@@ -78,7 +78,7 @@ public class TestProxyBlockingStateDao extends EntitlementTestSuiteNoDB {
         final BlockingState bs4 = new DefaultBlockingState(UUID.randomUUID(),
                                                            blockedId,
                                                            blockingStateType,
-                                                           DefaultBlockingState.CLEAR_STATE_NAME,
+                                                           "OD4",
                                                            service,
                                                            false,
                                                            false,

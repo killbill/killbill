@@ -31,6 +31,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.junction.DefaultBlockingState;
+import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.testng.annotations.Test;
 
@@ -92,7 +93,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
 
 
         // Should still be in clear state
-        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
 
         // DAY 36 -- RIGHT AFTER OD1 (two block events, for the cancellation and the OD1 state)
@@ -148,7 +149,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
-        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
         // DAY 36 (2012-06-06)-- RIGHT AFTER OD1 (two block events, for the cancellation and the OD1 state)
         // One BLOCK event is for the overdue state transition
