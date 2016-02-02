@@ -116,6 +116,7 @@ public abstract class BaseRetryService implements RetryService {
                 final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
                 final NotificationEvent key = new PaymentRetryNotificationKey(attemptId, paymentControlPluginNames);
                 if (retryQueue != null) {
+                    log.debug("Scheduling retry timeOfRetry={}, key={}", timeOfRetry, key);
                     if (transactionalDao == null) {
                         retryQueue.recordFutureNotification(timeOfRetry, key, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
                     } else {

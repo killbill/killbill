@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -185,15 +187,18 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("InvoiceModelDao");
-        sb.append("{accountId=").append(accountId);
+        final StringBuilder sb = new StringBuilder("InvoiceModelDao{");
+        sb.append("accountId=").append(accountId);
         sb.append(", invoiceNumber=").append(invoiceNumber);
         sb.append(", invoiceDate=").append(invoiceDate);
         sb.append(", targetDate=").append(targetDate);
         sb.append(", currency=").append(currency);
         sb.append(", migrated=").append(migrated);
         sb.append(", status=").append(status);
+        sb.append(", invoiceItems=").append(invoiceItems);
+        sb.append(", invoicePayments=").append(invoicePayments);
+        sb.append(", processedCurrency=").append(processedCurrency);
+        sb.append(", isWrittenOff=").append(isWrittenOff);
         sb.append('}');
         return sb.toString();
     }
@@ -215,26 +220,35 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         if (migrated != that.migrated) {
             return false;
         }
+        if (isWrittenOff != that.isWrittenOff) {
+            return false;
+        }
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
-            return false;
-        }
-        if (currency != that.currency) {
-            return false;
-        }
-        if (invoiceDate != null ? !invoiceDate.equals(that.invoiceDate) : that.invoiceDate != null) {
             return false;
         }
         if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
             return false;
         }
-        if (targetDate != null ? !targetDate.equals(that.targetDate) : that.targetDate != null) {
+        if (invoiceDate != null ? invoiceDate.compareTo(that.invoiceDate) != 0 : that.invoiceDate != null) {
             return false;
         }
-        if (status != null ? !status.equals(that.status) : that.status != null) {
+        if (targetDate != null ? targetDate.compareTo(that.targetDate) != 0 : that.targetDate != null) {
             return false;
         }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (status != that.status) {
+            return false;
+        }
+        if (invoiceItems != null ? !invoiceItems.equals(that.invoiceItems) : that.invoiceItems != null) {
+            return false;
+        }
+        if (invoicePayments != null ? !invoicePayments.equals(that.invoicePayments) : that.invoicePayments != null) {
+            return false;
+        }
+        return processedCurrency == that.processedCurrency;
 
-        return true;
     }
 
     @Override
@@ -247,6 +261,10 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (migrated ? 1 : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (invoiceItems != null ? invoiceItems.hashCode() : 0);
+        result = 31 * result + (invoicePayments != null ? invoicePayments.hashCode() : 0);
+        result = 31 * result + (processedCurrency != null ? processedCurrency.hashCode() : 0);
+        result = 31 * result + (isWrittenOff ? 1 : 0);
         return result;
     }
 

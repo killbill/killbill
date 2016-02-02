@@ -71,17 +71,6 @@ public class InvoiceChecker {
         return invoice;
     }
 
-    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final CallContext context, final ExpectedInvoiceItemCheck... expected) throws InvoiceApiException {
-        checkRepairedInvoice(accountId, invoiceNb, context, ImmutableList.<ExpectedInvoiceItemCheck>copyOf(expected));
-    }
-
-    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, context);
-        Assert.assertTrue(invoices.size() > invoiceNb);
-        final Invoice invoice = invoices.get(invoiceNb - 1);
-        checkInvoice(invoice.getId(), context, expected);
-    }
-
     public void checkInvoice(final UUID invoiceId, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
         final Invoice invoice = invoiceUserApi.getInvoice(invoiceId, context);
         Assert.assertNotNull(invoice);
@@ -89,11 +78,9 @@ public class InvoiceChecker {
     }
 
     public void checkInvoiceNoAudits(final Invoice invoice, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
-
         final List<InvoiceItem> actual = invoice.getInvoiceItems();
-        Assert.assertEquals(actual.size(), expected.size());
+        Assert.assertEquals(actual.size(), expected.size(), String.format("Expected items: %s, actual items: %s", expected, actual));
         for (final ExpectedInvoiceItemCheck cur : expected) {
-
             boolean found = false;
 
             // First try to find exact match; this is necessary because the for loop below might encounter a similar item -- for instance

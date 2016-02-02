@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,15 @@
 
 package org.killbill.billing.overdue.glue;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.junction.BlockingInternalApi;
+import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockEntitlementModule;
 import org.killbill.billing.mock.glue.MockInvoiceModule;
@@ -25,7 +34,6 @@ import org.killbill.billing.mock.glue.MockTagModule;
 import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.overdue.TestOverdueHelper;
 import org.killbill.billing.overdue.applicator.OverdueBusListenerTester;
-import org.killbill.billing.overdue.caching.EhCacheOverdueConfigCache;
 import org.killbill.billing.overdue.caching.MockOverdueConfigCache;
 import org.killbill.billing.overdue.caching.OverdueCacheInvalidationCallback;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
@@ -37,6 +45,8 @@ import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
+import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
+import org.killbill.clock.ClockMock;
 
 import com.google.inject.name.Names;
 
@@ -56,15 +66,12 @@ public class TestOverdueModule extends DefaultOverdueModule {
         install(new CustomFieldModule(configSource));
         install(new EmailModule(configSource));
         install(new MockAccountModule(configSource));
-        install(new MockEntitlementModule(configSource));
+        install(new MockEntitlementModule(configSource, new ApplicatorBlockingApi()));
         install(new MockInvoiceModule(configSource));
         install(new MockTagModule(configSource));
         install(new TemplateModule(configSource));
         install(new MockTenantModule(configSource));
-
-
-        // We can't use the dumb mocks in MockJunctionModule here
-        install(new ApplicatorMockJunctionModule(configSource));
+        install(new MemoryGlobalLockerModule(configSource));
 
         bind(OverdueBusListenerTester.class).asEagerSingleton();
         bind(TestOverdueHelper.class).asEagerSingleton();
@@ -75,4 +82,31 @@ public class TestOverdueModule extends DefaultOverdueModule {
         bind(CacheInvalidationCallback.class).annotatedWith(Names.named(OVERDUE_INVALIDATION_CALLBACK)).to(OverdueCacheInvalidationCallback.class).asEagerSingleton();
     }
 
+    public static class ApplicatorBlockingApi implements BlockingInternalApi {
+
+        private BlockingState blockingState;
+
+        public BlockingState getBlockingState() {
+            return blockingState;
+        }
+
+        @Override
+        public BlockingState getBlockingStateForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
+            if (blockingState != null && blockingState.getBlockedId().equals(blockableId)) {
+                return blockingState;
+            } else {
+                return DefaultBlockingState.getClearState(blockingStateType, serviceName, new ClockMock());
+            }
+        }
+
+        @Override
+        public List<BlockingState> getBlockingAllForAccount(final InternalTenantContext context) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setBlockingState(final BlockingState state, final InternalCallContext context) {
+            blockingState = state;
+        }
+    }
 }

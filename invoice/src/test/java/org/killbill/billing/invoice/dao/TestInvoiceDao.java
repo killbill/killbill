@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -1515,16 +1515,16 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                                                          fixedItem1.getStartDate(), fixedItem1.getAmount(),
                                                                                                          fixedItem1.getCurrency());
 
+        invoiceUtil.createInvoice(invoice1, true, context);
+        invoiceUtil.createInvoiceItem(fixedItem1, context);
+        invoiceUtil.createInvoiceItem(repairAdjInvoiceItem, context);
+        invoiceUtil.createInvoiceItem(creditBalanceAdjInvoiceItem1, context);
+
         final UUID paymentId = UUID.randomUUID();
         final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), clock.getUTCNow().plusDays(12), new BigDecimal("10.0"),
                                                                                       Currency.USD, Currency.USD, true);
 
         invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment), context);
-
-        invoiceUtil.createInvoice(invoice1, true, context);
-        invoiceUtil.createInvoiceItem(fixedItem1, context);
-        invoiceUtil.createInvoiceItem(repairAdjInvoiceItem, context);
-        invoiceUtil.createInvoiceItem(creditBalanceAdjInvoiceItem1, context);
 
         // Create invoice 2
         // Scenario: single item

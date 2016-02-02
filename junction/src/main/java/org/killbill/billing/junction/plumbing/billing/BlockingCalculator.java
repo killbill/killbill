@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -92,7 +93,7 @@ public class BlockingCalculator {
      *
      * @param billingEvents the original list of billing events to update (without overdue events)
      */
-    public void insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final InternalTenantContext context) {
+    public void insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final InternalTenantContext context) {
         if (billingEvents.size() <= 0) {
             return;
         }
@@ -116,10 +117,16 @@ public class BlockingCalculator {
         final Map<UUID, List<BlockingState>> perSubscriptionBlockingEvents = getPerTypeBlockingEvents(BlockingStateType.SUBSCRIPTION, blockingEvents);
 
         for (final UUID bundleId : bundleMap.keySet()) {
+
+            final List<BlockingState> bundleBlockingEvents = perBundleBlockingEvents.get(bundleId)  != null ? perBundleBlockingEvents.get(bundleId) : ImmutableList.<BlockingState>of();
+
             for (final SubscriptionBase subscription : bundleMap.get(bundleId)) {
+                // Avoid inserting additional events for subscriptions that don't even have a START event
+                if (skippedSubscriptions.contains(subscription.getId())) {
+                    continue;
+                }
 
                 final List<BlockingState> subscriptionBlockingEvents = perSubscriptionBlockingEvents.get(subscription.getId()) != null ? perSubscriptionBlockingEvents.get(subscription.getId()) : ImmutableList.<BlockingState>of();
-                final List<BlockingState> bundleBlockingEvents = perBundleBlockingEvents.get(bundleId)  != null ? perBundleBlockingEvents.get(bundleId) : ImmutableList.<BlockingState>of();
                 final List<BlockingState> aggregateSubscriptionBlockingEvents = getAggregateBlockingEventsPerSubscription(subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents);
                 final List<DisabledDuration> accountBlockingDurations = createBlockingDurations(aggregateSubscriptionBlockingEvents);
 

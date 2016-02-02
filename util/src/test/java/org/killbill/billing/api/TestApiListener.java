@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,34 +20,35 @@ package org.killbill.billing.api;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import org.joda.time.DateTime;
-import org.killbill.billing.events.BroadcastInternalEvent;
-import org.killbill.billing.events.InvoiceNotificationInternalEvent;
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.tweak.HandleCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
+import org.killbill.billing.events.BroadcastInternalEvent;
 import org.killbill.billing.events.CustomFieldEvent;
 import org.killbill.billing.events.EffectiveEntitlementInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
+import org.killbill.billing.events.InvoiceNotificationInternalEvent;
+import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
+import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.events.RepairSubscriptionInternalEvent;
 import org.killbill.billing.events.TagDefinitionInternalEvent;
 import org.killbill.billing.events.TagInternalEvent;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
@@ -78,6 +81,12 @@ public class TestApiListener {
     }
 
     public void assertListenerStatus() {
+        // Bail early
+        if (isListenerFailed) {
+            log.error(listenerFailedMsg);
+            Assert.fail(listenerFailedMsg);
+        }
+
         try {
             assertTrue(isCompleted(DELAY));
         } catch (final Exception e) {
@@ -107,6 +116,8 @@ public class TestApiListener {
         INVOICE,
         INVOICE_NOTIFICATION,
         INVOICE_ADJUSTMENT,
+        INVOICE_PAYMENT,
+        INVOICE_PAYMENT_ERROR,
         PAYMENT,
         PAYMENT_ERROR,
         PAYMENT_PLUGIN_ERROR,
@@ -242,6 +253,20 @@ public class TestApiListener {
     }
 
     @Subscribe
+    public void handleInvoicePaymentEvents(final InvoicePaymentInfoInternalEvent event) {
+        log.info(String.format("Got InvoicePaymentInfo event %s", event.toString()));
+        assertEqualsNicely(NextEvent.INVOICE_PAYMENT);
+        notifyIfStackEmpty();
+    }
+
+    @Subscribe
+    public void handleInvoicePaymentErrorEvents(final InvoicePaymentErrorInternalEvent event) {
+        log.info(String.format("Got InvoicePaymentError event %s", event.toString()));
+        assertEqualsNicely(NextEvent.INVOICE_PAYMENT_ERROR);
+        notifyIfStackEmpty();
+    }
+
+    @Subscribe
     public void handlePaymentEvents(final PaymentInfoInternalEvent event) {
         log.info(String.format("Got PaymentInfo event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT);
@@ -288,39 +313,52 @@ public class TestApiListener {
 
     public boolean isCompleted(final long timeout) {
         synchronized (this) {
-            if (completed) {
-                return completed;
-            }
             long waitTimeMs = timeout;
             do {
                 try {
-                    final DateTime before = new DateTime();
-                    wait(500);
+                    final long before = System.currentTimeMillis();
+                    wait(100);
                     if (completed) {
                         // TODO PIERRE Kludge alert!
                         // When we arrive here, we got notified by the current thread (Bus listener) that we received
                         // all expected events. But other handlers might still be processing them.
                         // Since there is only one bus thread, and that the test thread waits for all events to be processed,
                         // we're guaranteed that all are processed when the bus events table is empty.
+                        // We also need to wait for in-processing notifications (see https://github.com/killbill/killbill/issues/475).
+                        // This is really similar to TestResource#waitForNotificationToComplete.
                         await().atMost(timeout, TimeUnit.MILLISECONDS).until(new Callable<Boolean>() {
                             @Override
                             public Boolean call() throws Exception {
-                                final long inProcessingBusEvents = idbi.withHandle(new HandleCallback<Long>() {
+                                final long inProcessing = idbi.withHandle(new HandleCallback<Long>() {
                                     @Override
                                     public Long withHandle(final Handle handle) throws Exception {
-                                        return (Long) handle.select("select count(distinct record_id) count from bus_events").get(0).get("count");
+                                        return (Long) handle.select("select count(distinct record_id) count from bus_events").get(0).get("count") +
+                                               // We assume all ready notifications have been picked up
+                                               (Long) handle.select("select count(distinct record_id) count from notifications where processing_state = 'IN_PROCESSING'").get(0).get("count");
                                     }
                                 });
-                                log.debug("Events still in processing: " + inProcessingBusEvents);
-                                return inProcessingBusEvents == 0;
+                                log.debug("Events still in processing: {}", inProcessing);
+                                return inProcessing == 0;
                             }
                         });
                         return completed;
                     }
-                    final DateTime after = new DateTime();
-                    waitTimeMs -= after.getMillis() - before.getMillis();
+                    final long after = System.currentTimeMillis();
+                    waitTimeMs -= (after - before);
                 } catch (final Exception ignore) {
-                    log.error("isCompleted got interrupted ", ignore);
+                    final StringBuilder errorBuilder = new StringBuilder("isCompleted got interrupted. Exception: ").append(ignore)
+                                                                                                                    .append("\nRemaining bus events:\n");
+                    idbi.withHandle(new HandleCallback<Void>() {
+                        @Override
+                        public Void withHandle(final Handle handle) throws Exception {
+                            final List<Map<String, Object>> busEvents = handle.select("select * from bus_events");
+                            for (final Map<String, Object> busEvent : busEvents) {
+                                errorBuilder.append(busEvent).append("\n");
+                            }
+                            return null;
+                        }
+                    });
+                    log.error(errorBuilder.toString());
                     return false;
                 }
             } while (waitTimeMs > 0 && !completed);

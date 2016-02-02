@@ -64,6 +64,7 @@ import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
@@ -98,7 +99,6 @@ import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -659,8 +659,13 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Void apply(@Nullable final Void input) {
                 try {
-                    invoiceUserApi.insertCreditForInvoice(account.getId(), invoice.getId(), invoice.getBalance(), invoice.getInvoiceDate(),
-                                                          account.getCurrency(), callContext);
+                    for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+                        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(),
+                                                                   invoice.getId(),
+                                                                   invoiceItem.getId(),
+                                                                   invoice.getInvoiceDate(),
+                                                                   callContext);
+                    }
                 } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }

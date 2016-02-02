@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,7 +19,9 @@
 package org.killbill.billing.entitlement.api;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -59,8 +63,6 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -70,15 +72,12 @@ import com.google.common.collect.Lists;
 
 public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements EntitlementApi {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementApi.class);
-
     public static final String ENT_STATE_BLOCKED = "ENT_BLOCKED";
     public static final String ENT_STATE_CLEAR = "ENT_CLEAR";
     public static final String ENT_STATE_CANCELLED = "ENT_CANCELLED";
 
     private final SubscriptionBaseInternalApi subscriptionBaseInternalApi;
     private final SubscriptionBaseTransferApi subscriptionBaseTransferApi;
-    private final AccountInternalApi accountApi;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
     private final BlockingChecker checker;
@@ -104,7 +103,6 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         this.internalCallContextFactory = internalCallContextFactory;
         this.subscriptionBaseInternalApi = subscriptionInternalApi;
         this.subscriptionBaseTransferApi = subscriptionTransferApi;
-        this.accountApi = accountApi;
         this.clock = clock;
         this.checker = checker;
         this.blockingStateDao = blockingStateDao;
@@ -119,7 +117,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     @Override
     public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final List<PlanPhasePriceOverride> overrides, final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
-        EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(planPhaseSpecifier, overrides);
+        final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(planPhaseSpecifier, overrides);
         final List<EntitlementSpecifier> entitlementSpecifierList = new ArrayList<EntitlementSpecifier>();
         entitlementSpecifierList.add(entitlementSpecifier);
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CREATE_SUBSCRIPTION,
@@ -152,7 +150,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     return new DefaultEntitlement(subscription.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
                                                   blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
                                                   entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
             }
@@ -216,8 +214,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                   blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
                                                   entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
 
-
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
 
@@ -229,7 +226,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     @Override
     public Entitlement addEntitlement(final UUID bundleId, final PlanPhaseSpecifier planPhaseSpecifier, final List<PlanPhasePriceOverride> overrides, final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
-        EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(planPhaseSpecifier, overrides);
+        final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(planPhaseSpecifier, overrides);
         final List<EntitlementSpecifier> entitlementSpecifierList = new ArrayList<EntitlementSpecifier>();
         entitlementSpecifierList.add(entitlementSpecifier);
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CREATE_SUBSCRIPTION,
@@ -267,7 +264,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     return new DefaultEntitlement(subscription.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
                                                   blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
                                                   entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
             }
@@ -285,7 +282,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(bundle.getAccountId(), context);
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, baseSubscription.getStartDate(), contextWithValidAccountRecordId);
             return subscriptionBaseInternalApi.getDryRunChangePlanStatus(baseSubscription.getId(), targetProductName, requestedDate, contextWithValidAccountRecordId);
-        } catch (SubscriptionBaseApiException e) {
+        } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
     }
@@ -302,7 +299,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         final UUID accountId;
         try {
             accountId = subscriptionBaseInternalApi.getBundleFromId(bundleId, internalContext).getAccountId();
-        } catch (SubscriptionBaseApiException e) {
+        } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
 
@@ -360,14 +357,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
     }
 
-
     @Override
-    public void setBlockingState(final UUID bundleId, final String stateName, final String serviceName, final LocalDate effectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, final Iterable<PluginProperty> properties, final CallContext context)
+    public void setBlockingState(final UUID bundleId, final String stateName, final String serviceName, final LocalDate effectiveDate, final boolean blockBilling, final boolean blockEntitlement, final boolean blockChange, final Iterable<PluginProperty> properties, final CallContext context)
             throws EntitlementApiException {
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
         super.setBlockingState(bundleId, stateName, serviceName, effectiveDate, blockBilling, blockEntitlement, blockChange, properties, contextWithValidAccountRecordId);
     }
-
 
     @Override
     public Iterable<BlockingState> getBlockingStatesForServiceAndType(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final TenantContext tenantContext) {
@@ -426,15 +421,17 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
                     // Block all associated subscriptions - TODO Do we want to block the bundle as well (this will add an extra STOP_ENTITLEMENT event in the bundle timeline stream)?
                     // Note that there is no un-transfer at the moment, so we effectively add a blocking state on disk for all subscriptions
+                    final Map<BlockingState, UUID> blockingStates = new HashMap<BlockingState, UUID>();
                     for (final SubscriptionBase subscriptionBase : subscriptionBaseInternalApi.getSubscriptionsForBundle(baseBundle.getId(), null, contextWithValidAccountRecordId)) {
                         final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate);
-                        entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingState, contextWithValidAccountRecordId);
+                        blockingStates.put(blockingState, subscriptionBase.getBundleId());
                     }
+                    entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingStates, contextWithValidAccountRecordId);
 
                     return newBundle.getId();
-                } catch (SubscriptionBaseTransferApiException e) {
+                } catch (final SubscriptionBaseTransferApiException e) {
                     throw new EntitlementApiException(e);
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
             }

@@ -78,6 +78,8 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 public class DefaultEntitlementApiBase {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementApiBase.class);
@@ -277,9 +279,9 @@ public class DefaultEntitlementApiBase {
             final SubscriptionBase baseSubscription = inputBaseSubscription == null ? subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext) : inputBaseSubscription;
             final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(localEffectiveDate, baseSubscription.getStartDate(), internalCallContext);
             final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, stateName, serviceName, blockChange, blockEntitlement, blockBilling, effectiveDate);
-            entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(state, internalCallContext);
+            entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(state), bundleId, internalCallContext);
             return state.getId();
-        } catch (SubscriptionBaseApiException e) {
+        } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
     }

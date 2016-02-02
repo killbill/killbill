@@ -147,8 +147,10 @@ public class TenantFilter implements Filter {
         return shouldContinue;
     }
 
+
+
     private boolean isPermissionRequest(final String path, final String httpMethod) {
-        return path != null && path.startsWith(JaxrsResource.SECURITY_PATH) && "GET".equals(httpMethod);
+        return path != null && path.startsWith(JaxrsResource.SECURITY_PATH);
     }
 
     private boolean isTenantCreationRequest(final String path, final String httpMethod) {
@@ -162,6 +164,7 @@ public class TenantFilter implements Filter {
     private boolean isOptionsRequest(final String httpMethod) {
         return "OPTIONS".equals(httpMethod);
     }
+
 
     private boolean isNotKbNorPluginResourceRequest(final String path, final String httpMethod) {
         return !isPluginRequest(path) && !isKbApiRequest(path) && "GET".equals(httpMethod);
