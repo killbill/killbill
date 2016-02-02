@@ -45,6 +45,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -250,6 +251,12 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         try {
             final UUID invoiceId = getInvoiceId(pluginProperties);
             final Invoice invoice = rebalanceAndGetInvoice(invoiceId, internalContext);
+
+            if (!InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
+                // abort payment if the invoice status is not COMMITTED
+                return new DefaultPriorPaymentControlResult(true);
+            }
+
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
 
             final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;

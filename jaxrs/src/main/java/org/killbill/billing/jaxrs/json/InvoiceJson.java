@@ -50,10 +50,12 @@ public class InvoiceJson extends JsonBase {
     private final List<InvoiceItemJson> items;
     private final String bundleKeys;
     private final List<CreditJson> credits;
+    private final String status;
 
     @JsonCreator
     public InvoiceJson(@JsonProperty("amount") final BigDecimal amount,
                        @JsonProperty("currency") final String currency,
+                       @JsonProperty("status") final String status,
                        @JsonProperty("creditAdj") final BigDecimal creditAdj,
                        @JsonProperty("refundAdj") final BigDecimal refundAdj,
                        @JsonProperty("invoiceId") final String invoiceId,
@@ -69,6 +71,7 @@ public class InvoiceJson extends JsonBase {
         super(auditLogs);
         this.amount = amount;
         this.currency = currency;
+        this.status = status;
         this.creditAdj = creditAdj;
         this.refundAdj = refundAdj;
         this.invoiceId = invoiceId;
@@ -87,7 +90,7 @@ public class InvoiceJson extends JsonBase {
     }
 
     public InvoiceJson(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
-        this(input.getChargedAmount(), input.getCurrency().toString(), input.getCreditedAmount(), input.getRefundedAmount(),
+        this(input.getChargedAmount(), input.getCurrency().toString(), input.getStatus().toString(), input.getCreditedAmount(), input.getRefundedAmount(),
              input.getId().toString(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
              input.getBalance(), input.getAccountId().toString(), bundleKeys, credits, null, toAuditLogJson(auditLogs));
     }
@@ -102,6 +105,7 @@ public class InvoiceJson extends JsonBase {
         }
         this.amount = input.getChargedAmount();
         this.currency = input.getCurrency().toString();
+        this.status = input.getStatus().toString();
         this.creditAdj = input.getCreditedAmount();
         this.refundAdj = input.getRefundedAmount();
         this.invoiceId = input.getId().toString();
@@ -166,11 +170,16 @@ public class InvoiceJson extends JsonBase {
         return credits;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
     @Override
     public String toString() {
         return "InvoiceJson{" +
                "amount=" + amount +
                ", currency='" + currency + '\'' +
+               ", status='" + status + '\'' +
                ", invoiceId='" + invoiceId + '\'' +
                ", invoiceDate=" + invoiceDate +
                ", targetDate=" + targetDate +
@@ -235,6 +244,9 @@ public class InvoiceJson extends JsonBase {
         if (targetDate != null ? targetDate.compareTo(that.targetDate) != 0 : that.targetDate != null) {
             return false;
         }
+        if (status != null ? !status.equals(that.status) : that.status != null) {
+            return false;
+        }
 
         return true;
     }
@@ -243,6 +255,7 @@ public class InvoiceJson extends JsonBase {
     public int hashCode() {
         int result = amount != null ? amount.hashCode() : 0;
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (invoiceDate != null ? invoiceDate.hashCode() : 0);
         result = 31 * result + (targetDate != null ? targetDate.hashCode() : 0);

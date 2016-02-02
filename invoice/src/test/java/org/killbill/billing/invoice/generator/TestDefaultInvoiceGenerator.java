@@ -53,6 +53,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
@@ -960,7 +961,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         final LocalDate targetDate = new LocalDate(2013, 10, 30);
 
-        final Invoice existingInvoice = new DefaultInvoice(UUID.randomUUID(), accountId, null, clock.getUTCToday(), targetDate, currency, false);
+        final Invoice existingInvoice = new DefaultInvoice(UUID.randomUUID(), accountId, null, clock.getUTCToday(), targetDate, currency, false, InvoiceStatus.COMMITTED);
 
         // Set the existing recurring invoice item 2013/06/15 - 2013/07/15
         final LocalDate startDate = new LocalDate(2013, 06, 15);

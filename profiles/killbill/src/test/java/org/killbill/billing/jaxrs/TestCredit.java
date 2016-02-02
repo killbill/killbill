@@ -26,6 +26,7 @@ import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Credit;
 import org.killbill.billing.client.model.Invoice;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -45,6 +46,29 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can add a credit to an existing invoice")
     public void testAddCreditToInvoice() throws Exception {
+        //final Invoice invoice = killBillClient.getInvoicesForAccount(accountJson.getAccountId()).get(1);
+
+        final DateTime effectiveDate = clock.getUTCNow();
+        final BigDecimal creditAmount = BigDecimal.ONE;
+        final Credit credit = new Credit();
+        credit.setAccountId(accountJson.getAccountId());
+        credit.setCreditAmount(creditAmount);
+        Credit objFromJson = killBillClient.createCredit(credit, false, createdBy, reason, comment);
+
+        final UUID invoiceId = objFromJson.getInvoiceId();
+        credit.setInvoiceId(invoiceId);
+        objFromJson = killBillClient.createCredit(credit, false, createdBy, reason, comment);
+
+        // We can't just compare the object via .equals() due e.g. to the invoice id
+        assertEquals(objFromJson.getAccountId(), accountJson.getAccountId());
+        assertEquals(objFromJson.getInvoiceId(), invoiceId);
+        assertEquals(objFromJson.getCreditAmount().compareTo(creditAmount), 0);
+        assertEquals(objFromJson.getEffectiveDate().compareTo(effectiveDate.toLocalDate()), 0);
+    }
+
+    @Test(groups = "slow", description = "Can add a credit to an existing account",
+            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = ".*it is already in COMMITTED status")
+    public void testAddCreditToCommittedInvoice() throws Exception {
         final Invoice invoice = killBillClient.getInvoicesForAccount(accountJson.getAccountId()).get(1);
 
         final DateTime effectiveDate = clock.getUTCNow();
@@ -53,13 +77,7 @@ public class TestCredit extends TestJaxrsBase {
         credit.setAccountId(accountJson.getAccountId());
         credit.setInvoiceId(invoice.getInvoiceId());
         credit.setCreditAmount(creditAmount);
-        final Credit objFromJson = killBillClient.createCredit(credit, createdBy, reason, comment);
-
-        // We can't just compare the object via .equals() due e.g. to the invoice id
-        assertEquals(objFromJson.getAccountId(), accountJson.getAccountId());
-        assertEquals(objFromJson.getInvoiceId(), invoice.getInvoiceId());
-        assertEquals(objFromJson.getCreditAmount().compareTo(creditAmount), 0);
-        assertEquals(objFromJson.getEffectiveDate().compareTo(effectiveDate.toLocalDate()), 0);
+        final Credit objFromJson = killBillClient.createCredit(credit, true, createdBy, reason, comment);
     }
 
     @Test(groups = "slow", description = "Cannot add a credit if the account doesn't exist")
@@ -69,7 +87,7 @@ public class TestCredit extends TestJaxrsBase {
         credit.setCreditAmount(BigDecimal.TEN);
 
         // Try to create the credit
-        assertNull(killBillClient.createCredit(credit, createdBy, reason, comment));
+        assertNull(killBillClient.createCredit(credit, true, createdBy, reason, comment));
     }
 
     @Test(groups = "slow", description = "Cannot credit a badly formatted credit")
@@ -80,7 +98,7 @@ public class TestCredit extends TestJaxrsBase {
 
         // Try to create the credit
         try {
-            killBillClient.createCredit(credit, createdBy, reason, comment);
+            killBillClient.createCredit(credit, true, createdBy, reason, comment);
             fail();
         } catch (final KillBillClientException e) {
         }

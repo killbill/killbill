@@ -43,6 +43,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -460,6 +461,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                           @QueryParam(QUERY_PAY_INVOICE) @DefaultValue("false") final Boolean payInvoice,
                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                          @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
@@ -482,7 +484,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                                                             }
                                                                                                         }
                                                                                                        );
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, externalCharges, callContext);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, externalCharges, autoCommit, callContext);
 
         if (payInvoice) {
             final Collection<UUID> paidInvoices = new HashSet<UUID>();
@@ -938,6 +940,26 @@ public class InvoiceResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(UUID.fromString(id), tagList,
                                 context.createContext(createdBy, reason, comment, request));
+    }
+
+    @TimedResource
+    @PUT
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + COMMIT_INVOICE)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Perform the invoice status transition from DRAFT to COMMITTED")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice not found")})
+    public Response commitInvoice(@PathParam("invoiceId") final String invoiceIdString,
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws InvoiceApiException {
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID invoiceId = UUID.fromString(invoiceIdString);
+        invoiceApi.commitInvoice(invoiceId, callContext);
+        return Response.status(Response.Status.OK).build();
     }
 
     @Override

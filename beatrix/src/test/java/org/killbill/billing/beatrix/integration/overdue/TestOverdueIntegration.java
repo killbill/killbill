@@ -685,9 +685,9 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // Create an external charge on a new invoice
         addDaysAndCheckForCompletion(5);
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), bundle.getId(), "For overdue", new LocalDate(2012, 5, 6), BigDecimal.TEN, Currency.USD);
-        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), callContext).get(0);
+        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), true, callContext).get(0);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 6), null, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
 
