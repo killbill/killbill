@@ -885,8 +885,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 transactional.updateStatus(invoiceId.toString(), newStatus.toString(), context);
 
-                // notify invoice creation event
-                notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoice, context);
+                if (InvoiceStatus.COMMITTED.equals(newStatus)) {
+                    // notify invoice creation event
+                    notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoice, context);
+                }
 
                 return null;
             }
