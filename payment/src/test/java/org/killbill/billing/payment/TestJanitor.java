@@ -80,6 +80,8 @@ import static org.testng.Assert.fail;
 
 public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
+    private static final int TIMEOUT = 10;
+
     final PaymentOptions INVOICE_PAYMENT = new PaymentOptions() {
         @Override
         public boolean isExternalPayment() {
@@ -205,7 +207,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testCreateSuccessRefundPaymentControlWithItemAdjustments() throws PaymentApiException, InvoiceApiException, EventBusException {
+    public void testCreateSuccessRefundPaymentControlWithItemAdjustments() throws Exception {
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final UUID subscriptionId = UUID.randomUUID();
@@ -263,13 +265,14 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(attempt2.getStateName(), "INIT");
 
         clock.addDays(1);
-        try {
-            Thread.sleep(1500);
-        } catch (InterruptedException e) {
-        }
 
-        final PaymentAttemptModelDao attempt3 = paymentDao.getPaymentAttempt(refundAttempt.getId(), internalCallContext);
-        assertEquals(attempt3.getStateName(), "SUCCESS");
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                final PaymentAttemptModelDao attempt3 = paymentDao.getPaymentAttempt(refundAttempt.getId(), internalCallContext);
+                return "SUCCESS".equals(attempt3.getStateName());
+            }
+        });
     }
 
     @Test(groups = "slow")
@@ -466,7 +469,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
             Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
         }
 
-        await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 return getPendingNotificationCnt(internalCallContext) == 0;
