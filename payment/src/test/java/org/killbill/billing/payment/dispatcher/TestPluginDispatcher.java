@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -25,6 +27,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
 import org.testng.Assert;
@@ -134,6 +137,7 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
         };
 
         final CallableWithRequestData<PluginDispatcherReturnType<String>> callable = new CallableWithRequestData<PluginDispatcherReturnType<String>>(new RequestData(requestId),
+                                                                                                                                                     UUIDs.getRandom(),
                                                                                                                                                      null,
                                                                                                                                                      null,
                                                                                                                                                      delegate);
