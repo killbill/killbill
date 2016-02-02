@@ -179,7 +179,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         // Make sure the thread has started
         Awaitility.await().untilTrue(threadRunning);
 
-        return threadRunning;
+        return threadHasRun;
     }
 
     private PaymentOperation getPluginOperation() throws PaymentApiException {
