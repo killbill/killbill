@@ -168,11 +168,6 @@ public class DefaultEntitlementApiBase {
             public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
                 try {
 
-                    final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalCallContext);
-                    if (currentState != null && currentState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_BLOCKED)) {
-                        throw new EntitlementApiException(ErrorCode.ENT_ALREADY_BLOCKED, bundleId);
-                    }
-
                     final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, internalCallContext);
                     final ImmutableAccountData account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), internalCallContext);
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
@@ -232,13 +227,6 @@ public class DefaultEntitlementApiBase {
 
                     if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone())) {
                         recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, false, internalCallContext);
-                        return null;
-                    }
-
-                    final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalCallContext);
-                    if (currentState == null || currentState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CLEAR)) {
-                        // Nothing to do.
-                        log.warn("Current state is {}, nothing to resume", currentState);
                         return null;
                     }
 
