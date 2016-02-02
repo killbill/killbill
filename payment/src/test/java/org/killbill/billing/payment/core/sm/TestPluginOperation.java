@@ -57,7 +57,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
     private static final String PLUGIN_NAME_PLACEHOLDER = "pluginName";
 
-    private static final int TIMEOUT = 3;
+    private static final int TIMEOUT = 5;
 
     private final GlobalLocker locker = new MemoryGlobalLocker();
     private final Account account = Mockito.mock(Account.class);
@@ -123,7 +123,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         Assert.assertEquals(callback.getRunCount(), 0);
 
         // Trying to run the operation again will throw LockFailedException
-        Awaitility.await().atMost(TIMEOUT + 1, TimeUnit.SECONDS).untilTrue(runPluginOperationInBackground(pluginOperation, callback, true));
+        Awaitility.await().atMost(2 * TIMEOUT, TimeUnit.SECONDS).untilTrue(runPluginOperationInBackground(pluginOperation, callback, true));
 
         Assert.assertEquals(callback.getRunCount(), 0);
 
