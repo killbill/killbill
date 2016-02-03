@@ -28,7 +28,6 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -47,7 +46,6 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testPartialPayments() throws Exception {
-
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
@@ -62,7 +60,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertListenerStatus();
 
         final Invoice invoice = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
-        final Payment payment1 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("4.00"), account.getCurrency(),  NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final Payment payment1 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("4.00"), account.getCurrency(), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         Invoice invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(new BigDecimal("6.00")) == 0);
@@ -72,7 +70,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance.compareTo(new BigDecimal("6.00")) == 0);
 
-        final Payment payment2 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("6.00"), account.getCurrency(),  NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final Payment payment2 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("6.00"), account.getCurrency(), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(BigDecimal.ZERO) == 0);
@@ -103,14 +101,10 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance.compareTo(new BigDecimal("4.00")) == 0);
-
     }
-
-    //
 
     @Test(groups = "slow")
     public void testWithPaymentFailure() throws Exception {
-
         clock.setDay(new LocalDate(2012, 4, 1));
 
         final AccountData accountData = getAccountData(1);
@@ -129,14 +123,14 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoices.size(), 2);
 
         final Invoice invoice1 = invoices.get(0).getInvoiceItems().get(0).getInvoiceItemType() == InvoiceItemType.RECURRING ?
-                           invoices.get(0) : invoices.get(1);
+                                 invoices.get(0) : invoices.get(1);
         assertTrue(invoice1.getBalance().compareTo(new BigDecimal("249.95")) == 0);
         assertTrue(invoice1.getPaidAmount().compareTo(BigDecimal.ZERO) == 0);
         assertTrue(invoice1.getChargedAmount().compareTo(new BigDecimal("249.95")) == 0);
         assertEquals(invoice1.getPayments().size(), 1);
         assertFalse(invoice1.getPayments().get(0).isSuccess());
 
-        BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
 
         final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
@@ -147,16 +141,14 @@ public class TestInvoicePayment extends TestIntegrationBase {
         clock.addDays(8);
         assertListenerStatus();
 
-        Invoice invoice2 = invoiceUserApi.getInvoice(invoice1.getId(), callContext);
+        final Invoice invoice2 = invoiceUserApi.getInvoice(invoice1.getId(), callContext);
         assertTrue(invoice2.getBalance().compareTo(BigDecimal.ZERO) == 0);
         assertTrue(invoice2.getPaidAmount().compareTo(new BigDecimal("249.95")) == 0);
         assertTrue(invoice2.getChargedAmount().compareTo(new BigDecimal("249.95")) == 0);
         assertEquals(invoice2.getPayments().size(), 1);
         assertTrue(invoice2.getPayments().get(0).isSuccess());
 
-        BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance2.compareTo(BigDecimal.ZERO) == 0);
     }
-
-
 }
