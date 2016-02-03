@@ -154,9 +154,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     if (existingInvoicePayment != null && existingInvoicePayment.isSuccess()) {
                         log.info("onSuccessCall was already completed for payment purchase: " + paymentControlContext.getPaymentId());
                     } else {
-                        log.debug("Notifying invoice of successful payment: id={}, amount={}, currency={}, invoiceId={}", paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), paymentControlContext.getCurrency(), invoiceId);
+                        log.debug("Notifying invoice of successful payment: id={}, amount={}, currency={}, invoiceId={}", paymentControlContext.getPaymentId(), paymentControlContext.getProcessedAmount(), paymentControlContext.getCurrency(), invoiceId);
                         invoiceApi.notifyOfPayment(invoiceId,
-                                                   paymentControlContext.getAmount(),
+                                                   paymentControlContext.getProcessedAmount(),
                                                    paymentControlContext.getCurrency(),
                                                    paymentControlContext.getProcessedCurrency(),
                                                    paymentControlContext.getPaymentId(),

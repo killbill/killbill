@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -98,7 +98,8 @@ import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.TestCallContext;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -413,12 +414,11 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-
                     final List<PluginProperty> properties = new ArrayList<PluginProperty>();
                     final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
                     properties.add(prop1);
                     return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amount, currency, UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
+                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, refreshedCallContext());
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -437,7 +437,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     properties.add(prop1);
 
                     return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
+                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, refreshedCallContext());
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -457,7 +457,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     properties.add(prop1);
 
                     return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, EXTERNAL_PAYMENT_OPTIONS, callContext);
+                                                                       UUID.randomUUID().toString(), properties, EXTERNAL_PAYMENT_OPTIONS, refreshedCallContext());
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -472,7 +472,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Payment apply(@Nullable final Void input) {
                 try {
                     return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
-                                                                     PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
+                                                                     PLUGIN_PROPERTIES, PAYMENT_OPTIONS, refreshedCallContext());
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -491,7 +491,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 properties.add(prop1);
                 try {
                     return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
-                                                                     properties, PAYMENT_OPTIONS, callContext);
+                                                                     properties, PAYMENT_OPTIONS, refreshedCallContext());
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -513,7 +513,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
                 try {
                     return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
-                                                                     properties, PAYMENT_OPTIONS, callContext);
+                                                                     properties, PAYMENT_OPTIONS, refreshedCallContext());
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -528,7 +528,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Void apply(@Nullable final Void input) {
                 try {
                     paymentApi.createChargebackWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
-                                                                  PAYMENT_OPTIONS, callContext);
+                                                                  PAYMENT_OPTIONS, refreshedCallContext());
                 } catch (PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -698,6 +698,11 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         busHandler.pushExpectedEvents(additionalEvents);
         tagUserApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
         assertListenerStatus();
+    }
+
+    // Update the context dates (matters for payments ordering for instance)
+    protected CallContext refreshedCallContext() {
+        return new TestCallContext(callContext, clock.getUTCNow());
     }
 
     private <T> T doCallAndCheckForCompletion(final Function<Void, T> f, final NextEvent... events) {
