@@ -205,6 +205,10 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
             final CallContext callContext = buildCallContext(internalCallContext);
 
             final State state = paymentControlStateMachineHelper.getState(attempt.getStateName());
+
+            log.debug("Retrying attemptId={}, paymentExternalKey={}, transactionExternalKey={}. paymentControlPluginNames={}, now={}",
+                      attemptId, attempt.getPaymentExternalKey(), attempt.getTransactionExternalKey(), paymentControlPluginNames, clock.getUTCNow());
+
             pluginControlledPaymentAutomatonRunner.run(state,
                                                        false,
                                                        attempt.getTransactionType(),

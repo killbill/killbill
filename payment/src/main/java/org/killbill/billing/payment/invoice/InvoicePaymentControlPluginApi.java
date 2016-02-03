@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -101,8 +101,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     private final Logger log = LoggerFactory.getLogger(InvoicePaymentControlPluginApi.class);
 
     @Inject
-    public InvoicePaymentControlPluginApi(final PaymentConfig paymentConfig, final InvoiceInternalApi invoiceApi, final TagUserApi tagApi, final PaymentDao paymentDao,
-                                          final InvoicePaymentControlDao invoicePaymentControlDao,
+    public InvoicePaymentControlPluginApi(final PaymentConfig paymentConfig,
+                                          final InvoiceInternalApi invoiceApi, final TagUserApi tagApi,
+                                          final PaymentDao paymentDao, final InvoicePaymentControlDao invoicePaymentControlDao,
                                           @Named(PaymentModule.RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
                                           final InternalCallContextFactory internalCallContextFactory, final Clock clock) {
         this.paymentConfig = paymentConfig;
@@ -154,6 +155,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     if (existingInvoicePayment != null && existingInvoicePayment.isSuccess()) {
                         log.info("onSuccessCall was already completed for payment purchase: " + paymentControlContext.getPaymentId());
                     } else {
+                        log.debug("Notifying invoice of successful payment: id={}, amount={}, currency={}, invoiceId={}", paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), paymentControlContext.getCurrency(), invoiceId);
                         invoiceApi.notifyOfPayment(invoiceId,
                                                    paymentControlContext.getAmount(),
                                                    paymentControlContext.getCurrency(),
@@ -192,6 +194,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         } catch (final InvoiceApiException e) {
             log.error("InvoicePaymentControlPluginApi onSuccessCall failed for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
         }
+
         return new DefaultOnSuccessPaymentControlResult();
     }
 
@@ -199,34 +202,37 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> pluginProperties) throws PaymentControlApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         final TransactionType transactionType = paymentControlContext.getTransactionType();
+
+        DateTime nextRetryDate = null;
         switch (transactionType) {
             case PURCHASE:
                 final UUID invoiceId = getInvoiceId(pluginProperties);
-                if (paymentControlContext.getPaymentId() != null) {
-                    try {
-                        invoiceApi.notifyOfPayment(invoiceId,
-                                                   paymentControlContext.getAmount(),
-                                                   paymentControlContext.getCurrency(),
-                                                   // processed currency may be null so we use currency; processed currency will be updated if/when payment succeeds
-                                                   paymentControlContext.getCurrency(),
-                                                   paymentControlContext.getPaymentId(),
-                                                   paymentControlContext.getCreatedDate(),
-                                                   false,
-                                                   internalContext);
-                    } catch (InvoiceApiException e) {
-                        log.error("InvoicePaymentControlPluginApi onFailureCall failed ton update invoice for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
-                    }
+                try {
+                    log.debug("Notifying invoice of failed payment: id={}, amount={}, currency={}, invoiceId={}", paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), paymentControlContext.getCurrency(), invoiceId);
+                    invoiceApi.notifyOfPayment(invoiceId,
+                                               paymentControlContext.getAmount(),
+                                               paymentControlContext.getCurrency(),
+                                               // processed currency may be null so we use currency; processed currency will be updated if/when payment succeeds
+                                               paymentControlContext.getCurrency(),
+                                               paymentControlContext.getPaymentId(),
+                                               paymentControlContext.getCreatedDate(),
+                                               false,
+                                               internalContext);
+                } catch (final InvoiceApiException e) {
+                    log.error("InvoicePaymentControlPluginApi onFailureCall failed ton update invoice for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
                 }
 
-                final DateTime nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
-                return new DefaultFailureCallResult(nextRetryDate);
+                nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
+                break;
             case REFUND:
             case CHARGEBACK:
-                // We don't retry  REFUND, CHARGEBACK
-                return new DefaultFailureCallResult(null);
+                // We don't retry REFUND, CHARGEBACK
+                break;
             default:
                 throw new IllegalStateException("Unexpected transactionType " + transactionType);
         }
+
+        return new DefaultFailureCallResult(nextRetryDate);
     }
 
     public void process_AUTO_PAY_OFF_removal(final UUID accountId, final InternalCallContext internalCallContext) {
@@ -414,6 +420,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             try {
                 retryInDays = retryDays.get(retryCount);
                 result = nextRetryDate.plusDays(retryInDays);
+                log.debug("Next retryDate={}, retryInDays={}, retryCount={}, now={}", result, retryInDays, retryCount, clock.getUTCNow());
             } catch (final NumberFormatException ex) {
                 log.error("Could not get retry day for retry count {}", retryCount);
             }
@@ -434,6 +441,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 nbSec = nbSec * paymentConfig.getPluginFailureRetryMultiplier();
             }
             result = clock.getUTCNow().plusSeconds(nbSec);
+            log.debug("Next retryDate={}, retryAttempt={}, now={}", result, retryAttempt, clock.getUTCNow());
         }
         return result;
     }

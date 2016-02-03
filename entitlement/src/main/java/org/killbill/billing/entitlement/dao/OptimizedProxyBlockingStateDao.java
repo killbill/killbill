@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -34,7 +36,9 @@ import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
+import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.collect.ImmutableList;
@@ -42,9 +46,9 @@ import com.google.common.collect.ImmutableList;
 public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
 
     public OptimizedProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
-                                          final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
-                                          final NonEntityDao nonEntityDao) {
-        super(eventsStreamBuilder, subscriptionBaseInternalApi, dbi, clock, cacheControllerDispatcher, nonEntityDao);
+                                          final IDBI dbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
+                                          final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+        super(eventsStreamBuilder, subscriptionBaseInternalApi, dbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao);
     }
 
     /**

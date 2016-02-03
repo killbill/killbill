@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,13 +20,11 @@ package org.killbill.billing.entitlement.api;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.testng.annotations.Test;
-
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -32,10 +32,14 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -273,5 +277,54 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         // Entitlement started in trial on 2013-08-07, which is when we want the billing cancellation date to occur
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getBaseEntitlementId(), callContext);
         assertEquals(subscription.getBillingEndDate(), new LocalDate(2013, 8, 7));
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/452")
+    public void testBlockedEntitlementChange() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addDays(1);
+        assertListenerStatus();
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        entitlementApi.setBlockingState(entitlement.getBundleId(), "MY_BLOCK", "test", clock.getUTCToday(), false, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        try {
+            entitlement.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, ImmutableList.<PluginProperty>of(), callContext);
+            fail();
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
+            final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+            assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
+        }
+
+        try {
+            entitlement.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+            fail();
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
+            final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+            assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
+        }
+
+        try {
+            entitlement.changePlanOverrideBillingPolicy("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+            fail();
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
+            final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+            assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
+        }
     }
 }

@@ -876,7 +876,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         final String pluginName = mockPaymentProviderPlugin.PLUGIN_NAME;
 
-        mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds(1100);
+        mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds((int) (paymentConfig.getPaymentPluginTimeout().getMillis() + 100));
 
         SpyLogger spyLogger = withSpyLogger(OperationCallbackBase.class, new Callable<Void>() {
 

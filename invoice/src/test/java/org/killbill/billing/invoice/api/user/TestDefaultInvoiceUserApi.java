@@ -71,9 +71,11 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
-        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), externalChargeAmount, accountCurrency);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, "description", clock.getUTCToday(), externalChargeAmount, accountCurrency);
         final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), true, callContext).get(0);
         verifyExternalChargeOnNewInvoice(accountBalance, null, externalChargeAmount, externalChargeInvoiceItem);
+
+        assertEquals(externalChargeInvoiceItem.getDescription(), "description");
     }
 
     @Test(groups = "slow")
@@ -125,7 +127,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         verifyExternalChargeOnExistingInvoice(invoiceBalance, null, externalChargeAmount, externalChargeInvoiceItem);
     }
 
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow")
     public void testOriginalAmountCharged() throws Exception {
 
         final Invoice initialInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);

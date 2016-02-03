@@ -128,6 +128,7 @@ public class TestInvoiceHelper {
     public static final BigDecimal THIRTY_THREE = new BigDecimal("33.0").setScale(KillBillMoney.MAX_SCALE);
 
     public static final BigDecimal FORTY = new BigDecimal("40.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal FORTY_SEVEN = new BigDecimal("47.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal SIXTY_SIX = new BigDecimal("66.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal SEVENTY_FIVE = new BigDecimal("75.0").setScale(KillBillMoney.MAX_SCALE);
 
@@ -224,8 +225,10 @@ public class TestInvoiceHelper {
 
     public SubscriptionBase createSubscription() throws SubscriptionBaseApiException {
         final UUID uuid = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(uuid);
+        Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
         Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         return subscription;
     }
@@ -329,7 +332,6 @@ public class TestInvoiceHelper {
 
         final Account mockAccount = Mockito.mock(Account.class);
         Mockito.when(mockAccount.getTimeZone()).thenReturn(DateTimeZone.UTC);
-        final Account accountOrMockAcount = account != null ? account : mockAccount;
         return new BillingEvent() {
             @Override
             public int getBillCycleDayLocal() {

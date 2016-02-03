@@ -76,7 +76,7 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
 
         final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
         final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
-        state = config.getOverdueStatesAccount().findState(DefaultBlockingState.CLEAR_STATE_NAME);
+        state = config.getOverdueStatesAccount().findState(OverdueWrapper.CLEAR_STATE_NAME);
         account = testOverdueHelper.createImmutableAccountData(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account, internalCallContext);
         final OverdueState result = wrapper.refresh(internalCallContext);

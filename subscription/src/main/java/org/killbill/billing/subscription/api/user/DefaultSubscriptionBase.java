@@ -492,7 +492,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return getFutureEndDate() != null;
     }
 
-    public DateTime getPlanChangeEffectiveDate(final DateTime subscriptionStartDate, final BillingActionPolicy policy) {
+    public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy) {
 
         final DateTime candidateResult;
         switch (policy) {
@@ -512,7 +512,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 throw new SubscriptionBaseError(String.format(
                         "Unexpected policy type %s", policy.toString()));
         }
-        return (candidateResult.compareTo(subscriptionStartDate) < 0) ? subscriptionStartDate : candidateResult;
+        return (candidateResult.compareTo(getStartDate()) < 0) ? getStartDate() : candidateResult;
     }
 
     public DateTime getCurrentPhaseStart() {

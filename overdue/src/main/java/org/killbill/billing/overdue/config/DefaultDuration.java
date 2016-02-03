@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -36,17 +38,11 @@ public class DefaultDuration extends ValidatingConfig<DefaultOverdueConfig> impl
     @XmlElement(required = false)
     private Integer number = -1;
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IDuration#getUnit()
-      */
     @Override
     public TimeUnit getUnit() {
         return unit;
     }
 
-    /* (non-Javadoc)
-	 * @see org.killbill.billing.catalog.IDuration#getLength()
-	 */
     @Override
     public int getNumber() {
         return number;
@@ -108,5 +104,12 @@ public class DefaultDuration extends ValidatingConfig<DefaultOverdueConfig> impl
         return this;
     }
 
-
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultDuration{");
+        sb.append("unit=").append(unit);
+        sb.append(", number=").append(number);
+        sb.append('}');
+        return sb.toString();
+    }
 }

@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -84,7 +85,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
 
@@ -99,7 +100,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 1), 50L, callContext);
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 16), 300L, callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
@@ -116,7 +117,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 7, 1), 50L, callContext);
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 7, 16), 300L, callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
@@ -152,7 +153,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -166,7 +167,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 29), 100L, callContext);
 
         clock.addDays(27);
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         aoSubscription.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(2012, 5, 28), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -214,7 +215,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE);
         assertListenerStatus();
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,

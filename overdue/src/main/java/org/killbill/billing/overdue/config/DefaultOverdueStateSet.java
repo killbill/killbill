@@ -21,27 +21,26 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
+import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
-import org.killbill.billing.junction.DefaultBlockingState;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOverdueConfig> implements OverdueStateSet {
 
     private static final Period ZERO_PERIOD = new Period();
-    private final DefaultOverdueState clearState = new DefaultOverdueState().setName(DefaultBlockingState.CLEAR_STATE_NAME).setClearState(true);
+    private final DefaultOverdueState clearState = new DefaultOverdueState().setName(OverdueWrapper.CLEAR_STATE_NAME).setClearState(true);
 
     public abstract DefaultOverdueState[] getStates();
 
     @Override
     public OverdueState findState(final String stateName) throws OverdueApiException {
-        if (stateName.equals(DefaultBlockingState.CLEAR_STATE_NAME)) {
+        if (stateName.equals(OverdueWrapper.CLEAR_STATE_NAME)) {
             return clearState;
         }
         for (final DefaultOverdueState state : getStates()) {
@@ -51,7 +50,6 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOve
         }
         throw new OverdueApiException(ErrorCode.CAT_NO_SUCH_OVEDUE_STATE, stateName);
     }
-
 
     /* (non-Javadoc)
      * @see org.killbill.billing.catalog.overdue.OverdueBillingState#findClearState()
@@ -96,6 +94,6 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOve
 
     @Override
     public OverdueState getFirstState() {
-        return getStates()[0];
+        return getStates()[size() - 1];
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -313,12 +313,35 @@ public class SubscriptionJson extends JsonBase {
     public SubscriptionJson(final Subscription subscription, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscription(subscription.getId())));
         this.startDate = subscription.getEffectiveStartDate();
-        // last* fields can be null if the subscription starts in the future
-        this.productName = subscription.getLastActiveProduct() == null ? null : subscription.getLastActiveProduct().getName();
-        this.productCategory = subscription.getLastActiveProductCategory() == null ? null : subscription.getLastActiveProductCategory().name();
-        this.billingPeriod = subscription.getLastActivePlan() == null ? null : subscription.getLastActivePlan().getRecurringBillingPeriod().toString();
-        this.phaseType = subscription.getLastActivePhase() == null ? null : subscription.getLastActivePhase().getPhaseType().toString();
-        this.priceList = subscription.getLastActivePriceList() == null ? null : subscription.getLastActivePriceList().getName();
+
+        // last* fields can be null if the subscription starts in the future - rely on the first available event instead
+        final SubscriptionEvent firstEvent = subscription.getSubscriptionEvents().isEmpty() ? null : subscription.getSubscriptionEvents().get(0);
+        if (subscription.getLastActiveProduct() == null) {
+            this.productName = firstEvent == null ? null : firstEvent.getNextProduct().getName();
+        } else {
+            this.productName = subscription.getLastActiveProduct().getName();
+        }
+        if (subscription.getLastActiveProductCategory() == null) {
+            this.productCategory = firstEvent == null ? null : firstEvent.getNextProduct().getCategory().name();
+        } else {
+            this.productCategory = subscription.getLastActiveProductCategory().name();
+        }
+        if (subscription.getLastActivePlan() == null) {
+            this.billingPeriod = firstEvent == null ? null : firstEvent.getNextPlan().getRecurringBillingPeriod().name();
+        } else {
+            this.billingPeriod = subscription.getLastActivePlan().getRecurringBillingPeriod().toString();
+        }
+        if (subscription.getLastActivePhase() == null) {
+            this.phaseType = firstEvent == null ? null : firstEvent.getNextPhase().getPhaseType().name();
+        } else {
+            this.phaseType = subscription.getLastActivePhase().getPhaseType().toString();
+        }
+        if (subscription.getLastActivePriceList() == null) {
+            this.priceList = firstEvent == null ? null : firstEvent.getNextPriceList().getName();
+        } else {
+            this.priceList = subscription.getLastActivePriceList().getName();
+        }
+
         this.state = subscription.getState().name();
         this.sourceType = subscription.getSourceType().name();
         this.cancelledDate = subscription.getEffectiveEndDate();

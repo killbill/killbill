@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -198,7 +198,6 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(objFromJson.getBillingPeriod(), BillingPeriod.MONTHLY);
     }
 
-
     @Test(groups = "slow", description = "Can override a price when creating a subscription")
     public void testOverridePrice() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
@@ -208,7 +207,6 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
-
 
         final Subscription input = new Subscription();
         input.setAccountId(accountJson.getAccountId());
@@ -221,7 +219,7 @@ public class TestEntitlement extends TestJaxrsBase {
         overrides.add(new PhasePriceOverride(null, PhaseType.TRIAL.toString(), BigDecimal.TEN, null));
         input.setPriceOverrides(overrides);
 
-        final Subscription subscription =  killBillClient.createSubscription(input,  DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+        final Subscription subscription = killBillClient.createSubscription(input, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
 
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 1);
@@ -234,7 +232,6 @@ public class TestEntitlement extends TestJaxrsBase {
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
-
 
         final Subscription base = new Subscription();
         base.setAccountId(accountJson.getAccountId());
@@ -273,4 +270,28 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(invoices.size(), 1);
     }
 
+    @Test(groups = "slow", description = "Can create an entitlement in the future")
+    public void testCreateEntitlementInTheFuture() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Shotgun");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final Subscription entitlementJson = killBillClient.createSubscription(input, initialDate.plusMonths(1), -1, createdBy, reason, comment);
+
+        Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
+        Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
+        Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
+        Assert.assertEquals(entitlementJson.getPriceList(), input.getPriceList());
+
+        // Retrieves with GET
+        final Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        Assert.assertTrue(objFromJson.equals(entitlementJson));
+    }
 }

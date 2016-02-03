@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.overdue.OverdueService;
 import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -46,12 +47,7 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
 
     @Override
     public BlockingState getBlockingStateForService(final UUID overdueableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
-        final BlockingState blockingStateForService = dao.getBlockingStateForService(overdueableId, blockingStateType, serviceName, context);
-        if (blockingStateForService == null) {
-            return DefaultBlockingState.getClearState(blockingStateType, serviceName, clock);
-        } else {
-            return blockingStateForService;
-        }
+        return dao.getBlockingStateForService(overdueableId, blockingStateType, serviceName, context);
     }
 
     @Override

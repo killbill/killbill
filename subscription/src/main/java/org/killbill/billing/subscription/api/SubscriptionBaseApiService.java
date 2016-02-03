@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -31,7 +32,6 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -63,8 +63,15 @@ public interface SubscriptionBaseApiService {
     public boolean cancelWithPolicy(DefaultSubscriptionBase subscription, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
+    public boolean cancelWithPolicyNoValidation(Iterable<DefaultSubscriptionBase> subscriptions, BillingActionPolicy policy, InternalCallContext context)
+            throws SubscriptionBaseApiException;
+
     public boolean uncancel(DefaultSubscriptionBase subscription, CallContext context)
             throws SubscriptionBaseApiException;
+
+    // Return the effective date of the change
+    public DateTime dryRunChangePlan(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
+                                     String priceList, DateTime requestedDate, BillingActionPolicy policy, TenantContext context) throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
     public DateTime changePlan(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
@@ -81,7 +88,7 @@ public interface SubscriptionBaseApiService {
                                          String priceList, List<PlanPhasePriceOverride> overrides, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public int cancelAddOnsIfRequired(final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final CallContext context) throws CatalogApiException;
+    public int cancelAddOnsIfRequiredOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final CallContext context) throws CatalogApiException;
 
     public PlanChangeResult getPlanChangeResult(final DefaultSubscriptionBase subscription, final String productName,
                                                 final BillingPeriod term, final String priceList, final DateTime effectiveDate, TenantContext context) throws SubscriptionBaseApiException;

@@ -1,8 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -45,8 +46,6 @@ import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -56,12 +55,12 @@ import com.jayway.awaitility.Awaitility;
 
 public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
-    private final static String PLUGIN_NAME_PLACEHOLDER = "pluginName";
+    private static final String PLUGIN_NAME_PLACEHOLDER = "pluginName";
+
+    private static final int TIMEOUT = 5;
 
     private final GlobalLocker locker = new MemoryGlobalLocker();
     private final Account account = Mockito.mock(Account.class);
-
-    private static final Logger logger = LoggerFactory.getLogger(TestPluginOperation.class);
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
@@ -70,10 +69,9 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testWithAccountLock() throws Exception {
-        testLocking(true);
+    public void testAccountLock() throws Exception {
+        testLocking();
     }
-
 
     @Test(groups = "fast")
     public void testOperationThrowsPaymentApiException() throws Exception {
@@ -103,30 +101,31 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         }
     }
 
-    private void testLocking(final boolean withAccountLock) throws Exception {
+    private void testLocking() throws Exception {
         final Semaphore available = new Semaphore(1, true);
         final CallbackTest callback = new CallbackTest(available);
-        final PaymentOperation pluginOperation = getPluginOperation(withAccountLock);
+        final PaymentOperation pluginOperation = getPluginOperation(true);
 
         // Take the only permit
         available.acquire();
 
         // Start the plugin operation in the background (will block)
         runPluginOperationInBackground(pluginOperation, callback, false);
+        Awaitility.await()
+                  .until(new Callable<Boolean>() {
+                      @Override
+                      public Boolean call() throws Exception {
+                          return callback.getStartCount() == 1;
+                      }
+                  });
 
         // The operation should be blocked here because we have the semaphore
-        Assert.assertEquals(available.getQueueLength(), 1);
         Assert.assertEquals(callback.getRunCount(), 0);
 
-        if (withAccountLock) {
-            // If the account is locked, trying to run the operation again will throw LockFailedException
-            runPluginOperationInBackground(pluginOperation, callback, true);
-        } else {
-            // If the account is not locked, it will just block
-            runPluginOperationInBackground(pluginOperation, callback, false);
-            Assert.assertEquals(available.getQueueLength(), 2);
-            Assert.assertEquals(callback.getRunCount(), 0);
-        }
+        // Trying to run the operation again will throw LockFailedException
+        Awaitility.await().atMost(2 * TIMEOUT, TimeUnit.SECONDS).untilTrue(runPluginOperationInBackground(pluginOperation, callback, true));
+
+        Assert.assertEquals(callback.getRunCount(), 0);
 
         // Release the semaphore
         available.release();
@@ -136,37 +135,41 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                   .until(new Callable<Boolean>() {
                       @Override
                       public Boolean call() throws Exception {
-                          return callback.getRunCount() == (withAccountLock ? 1 : 2);
+                          return callback.getRunCount() == 1;
                       }
                   });
 
         // Verify the final state
-        Assert.assertEquals(available.getQueueLength(), 0);
-        Assert.assertEquals(callback.getRunCount(), withAccountLock ? 1 : 2);
+        Assert.assertEquals(available.availablePermits(), 1);
     }
 
-    private void runPluginOperationInBackground(final PaymentOperation pluginOperation, final CallbackTest callback, final boolean shouldFailBecauseOfLockFailure) throws Exception {
-        final AtomicBoolean threadStarted = new AtomicBoolean(false);
+    private AtomicBoolean runPluginOperationInBackground(final PaymentOperation pluginOperation, final CallbackTest callback, final boolean shouldFailBecauseOfLockFailure) throws Exception {
+        final AtomicBoolean threadRunning = new AtomicBoolean(false);
+        final AtomicBoolean threadHasRun = new AtomicBoolean(false);
         final Thread t1 = new Thread(new Runnable() {
             @Override
             public void run() {
-                threadStarted.set(true);
+                threadRunning.set(true);
 
-                if (shouldFailBecauseOfLockFailure) {
-                    try {
-                        pluginOperation.dispatchWithAccountLockAndTimeout(PLUGIN_NAME_PLACEHOLDER, callback);
-                        Assert.fail();
-                    } catch (final OperationException e) {
-                        Assert.assertTrue(e.getCause() instanceof PaymentApiException);
-                        // No better error code for lock failures...
-                        Assert.assertEquals(((PaymentApiException) e.getCause()).getCode(), ErrorCode.PAYMENT_INTERNAL_ERROR.getCode());
+                try {
+                    if (shouldFailBecauseOfLockFailure) {
+                        try {
+                            pluginOperation.dispatchWithAccountLockAndTimeout(PLUGIN_NAME_PLACEHOLDER, callback);
+                            Assert.fail();
+                        } catch (final OperationException e) {
+                            Assert.assertTrue(e.getCause() instanceof PaymentApiException);
+                            // No better error code for lock failures...
+                            Assert.assertEquals(((PaymentApiException) e.getCause()).getCode(), ErrorCode.PAYMENT_INTERNAL_ERROR.getCode());
+                        }
+                    } else {
+                        try {
+                            pluginOperation.dispatchWithAccountLockAndTimeout(PLUGIN_NAME_PLACEHOLDER, callback);
+                        } catch (final OperationException e) {
+                            Assert.fail(e.getMessage());
+                        }
                     }
-                } else {
-                    try {
-                        pluginOperation.dispatchWithAccountLockAndTimeout(PLUGIN_NAME_PLACEHOLDER, callback);
-                    } catch (final OperationException e) {
-                        Assert.fail(e.getMessage());
-                    }
+                } finally {
+                    threadHasRun.set(true);
                 }
             }
         });
@@ -174,7 +177,9 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         t1.start();
 
         // Make sure the thread has started
-        Awaitility.await().untilTrue(threadStarted);
+        Awaitility.await().untilTrue(threadRunning);
+
+        return threadHasRun;
     }
 
     private PaymentOperation getPluginOperation() throws PaymentApiException {
@@ -182,7 +187,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     }
 
     private PaymentOperation getPluginOperation(final boolean shouldLockAccount) throws PaymentApiException {
-        return getPluginOperation(shouldLockAccount, Integer.MAX_VALUE);
+        return getPluginOperation(shouldLockAccount, TIMEOUT);
     }
 
     private PaymentOperation getPluginOperation(final boolean shouldLockAccount, final int timeoutSeconds) throws PaymentApiException {
@@ -209,6 +214,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
     private static final class CallbackTest implements DispatcherCallback<PluginDispatcherReturnType<OperationResult>, PaymentApiException> {
 
+        private final AtomicInteger startCount = new AtomicInteger(0);
         private final AtomicInteger runCount = new AtomicInteger(0);
 
         private final Semaphore available;
@@ -242,9 +248,11 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
         @Override
         public PluginDispatcherReturnType<OperationResult> doOperation() throws PaymentApiException {
+            startCount.incrementAndGet();
+
             try {
                 if (available != null) {
-                    available.acquire();
+                    available.acquireUninterruptibly();
                 }
 
                 if (sleepTimeMillis != null) {
@@ -271,6 +279,10 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
         public int getRunCount() {
             return runCount.get();
+        }
+
+        public int getStartCount() {
+            return startCount.get();
         }
     }
 

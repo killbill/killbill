@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,6 +39,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.EntitlementInternalApi;
 import org.killbill.billing.entitlement.api.BlockingApiException;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -91,6 +92,7 @@ public class OverdueStateApplicator {
     private final PersistentBus bus;
     private final AccountInternalApi accountApi;
     private final EntitlementApi entitlementApi;
+    private final EntitlementInternalApi entitlementInternalApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
     private final TagInternalApi tagApi;
     private final EmailSender emailSender;
@@ -100,6 +102,7 @@ public class OverdueStateApplicator {
     public OverdueStateApplicator(final BlockingInternalApi accessApi,
                                   final AccountInternalApi accountApi,
                                   final EntitlementApi entitlementApi,
+                                  final EntitlementInternalApi entitlementInternalApi,
                                   final Clock clock,
                                   @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverduePoster checkPoster,
                                   final OverdueEmailGenerator overdueEmailGenerator,
@@ -111,6 +114,7 @@ public class OverdueStateApplicator {
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
+        this.entitlementInternalApi = entitlementInternalApi;
         this.clock = clock;
         this.checkPoster = checkPoster;
         this.overdueEmailGenerator = overdueEmailGenerator;
@@ -124,13 +128,12 @@ public class OverdueStateApplicator {
                       final ImmutableAccountData account, final OverdueState previousOverdueState,
                       final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException, OverdueApiException {
         try {
-
             if (isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(context)) {
-                log.debug("OverdueStateApplicator:apply returns because account (recordId = " + context.getAccountRecordId() + ") is set with OVERDUE_ENFORCEMENT_OFF ");
+                log.debug("OverdueStateApplicator: apply returns because account (recordId={}) is set with OVERDUE_ENFORCEMENT_OFF", context.getAccountRecordId());
                 return;
             }
 
-            log.debug("OverdueStateApplicator:apply <enter> : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueState.getName() + ", nextState = " + nextOverdueState);
+            log.debug("OverdueStateApplicator: time={}, previousState={}, nextState={}, billingState={}", clock.getUTCNow(), previousOverdueState, nextOverdueState, billingState);
 
             final OverdueState firstOverdueState = overdueStateSet.getFirstState();
             final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
@@ -141,10 +144,9 @@ public class OverdueStateApplicator {
                 final Period reevaluationInterval = getReevaluationInterval(overdueStateSet, nextOverdueState);
                 // If there is no configuration in the config, we assume this is because the overdue conditions are not time based and so there is nothing to retry
                 if (reevaluationInterval == null) {
-                    log.debug("OverdueStateApplicator <notificationQ> : Missing InitialReevaluationInterval from config, NOT inserting notification for account " + account.getId());
-
+                    log.debug("OverdueStateApplicator <notificationQ>: missing InitialReevaluationInterval from config, NOT inserting notification for account {}", account.getId());
                 } else {
-                    log.debug("OverdueStateApplicator <notificationQ> : inserting notification for account " + account.getId() + ", time = " + clock.getUTCNow().plus(reevaluationInterval));
+                    log.debug("OverdueStateApplicator <notificationQ>: inserting notification for account={}, time={}", account.getId(), clock.getUTCNow().plus(reevaluationInterval));
                     createFutureNotification(account, clock.getUTCNow().plus(reevaluationInterval), context);
                 }
             } else if (nextOverdueState.isClearState()) {
@@ -152,6 +154,7 @@ public class OverdueStateApplicator {
             }
 
             if (previousOverdueState.getName().equals(nextOverdueState.getName())) {
+                log.debug("OverdueStateApplicator is no-op: previousState={}, nextState={}", previousOverdueState, nextOverdueState);
                 return;
             }
 
@@ -314,15 +317,10 @@ public class OverdueStateApplicator {
             final List<Entitlement> toBeCancelled = new LinkedList<Entitlement>();
             computeEntitlementsToCancel(account, toBeCancelled, callContext);
 
-            for (final Entitlement cur : toBeCancelled) {
-                try {
-                    cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, ImmutableList.<PluginProperty>of(), callContext);
-                } catch (final EntitlementApiException e) {
-                    // If subscription has already been cancelled, there is nothing to do so we can ignore
-                    if (e.getCode() != ErrorCode.SUB_CANCEL_BAD_STATE.getCode()) {
-                        throw new OverdueException(e);
-                    }
-                }
+            try {
+                entitlementInternalApi.cancel(toBeCancelled, new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, ImmutableList.<PluginProperty>of(), context);
+            } catch (final EntitlementApiException e) {
+                throw new OverdueException(e);
             }
         } catch (final EntitlementApiException e) {
             throw new OverdueException(e);

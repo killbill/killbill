@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,10 +18,11 @@
 
 package org.killbill.billing.events;
 
-
 import org.killbill.bus.api.BusEvent;
 
 public interface BusInternalEvent extends BusEvent {
+
+    public BusInternalEventType getBusEventType();
 
     public enum BusInternalEventType {
         ACCOUNT_CHANGE,
@@ -38,6 +41,8 @@ public interface BusInternalEvent extends BusEvent {
         INVOICE_CREATION,
         INVOICE_NOTIFICATION,
         INVOICE_EMPTY,
+        INVOICE_PAYMENT_ERROR,
+        INVOICE_PAYMENT_INFO,
         OVERDUE_CHANGE,
         PAYMENT_ERROR,
         PAYMENT_PLUGIN_ERROR,
@@ -50,7 +55,4 @@ public interface BusInternalEvent extends BusEvent {
         TENANT_CONFIG_CHANGE,
         TENANT_CONFIG_DELETION;
     }
-
-    public BusInternalEventType getBusEventType();
-
 }

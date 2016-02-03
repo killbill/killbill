@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -30,7 +32,6 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.MockCatalog;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
@@ -38,6 +39,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
+import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.dao.MockBlockingStateDao;
@@ -60,7 +62,9 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -181,8 +185,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final Account account = createAccount(32);
 
-        blockingStateDao.setBlockingState(new DefaultBlockingState(bunId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1)), clock, internalCallContext);
-        blockingStateDao.setBlockingState(new DefaultBlockingState(bunId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2)), clock, internalCallContext);
+        final BlockingState blockingState1 = new DefaultBlockingState(bunId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1));
+        final BlockingState blockingState2 = new DefaultBlockingState(bunId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2));
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(blockingState1, Optional.<UUID>absent(), blockingState2, Optional.<UUID>absent()), internalCallContext);
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
 

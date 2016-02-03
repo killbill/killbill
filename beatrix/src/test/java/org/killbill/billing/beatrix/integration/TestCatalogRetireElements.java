@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -74,7 +74,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         // Move out a month.
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
@@ -90,7 +90,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         }
 
         // Move out a month and verify 'Pistol' plan continue working as expected.
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
@@ -128,12 +128,12 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         // Move out a month.
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
         // Move out a month.
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
@@ -149,7 +149,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         }
 
         // Move out a month and verify 'Pistol' plan continue working as expected.
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
@@ -188,12 +188,12 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
         // Move out a month.
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
         // Move out a month.
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
@@ -208,12 +208,12 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         }
 
         // Move out a month and verify 'Pistol' plan continue working as expected.
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
         // Move out a month.
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 

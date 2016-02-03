@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,13 +29,13 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -83,16 +85,18 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
-    public synchronized void setBlockingState(final BlockingState state, final Clock clock, final InternalCallContext context) {
-        if (blockingStates.get(state.getBlockedId()) == null) {
-            blockingStates.put(state.getBlockedId(), new ArrayList<BlockingState>());
-        }
-        blockingStates.get(state.getBlockedId()).add(state);
+    public synchronized void setBlockingStatesAndPostBlockingTransitionEvent(final Map<BlockingState, Optional<UUID>> states, final InternalCallContext context) {
+        for (final BlockingState state : states.keySet()) {
+            if (blockingStates.get(state.getBlockedId()) == null) {
+                blockingStates.put(state.getBlockedId(), new ArrayList<BlockingState>());
+            }
+            blockingStates.get(state.getBlockedId()).add(state);
 
-        if (blockingStatesPerAccountRecordId.get(context.getAccountRecordId()) == null) {
-            blockingStatesPerAccountRecordId.put(context.getAccountRecordId(), new ArrayList<BlockingState>());
+            if (blockingStatesPerAccountRecordId.get(context.getAccountRecordId()) == null) {
+                blockingStatesPerAccountRecordId.put(context.getAccountRecordId(), new ArrayList<BlockingState>());
+            }
+            blockingStatesPerAccountRecordId.get(context.getAccountRecordId()).add(state);
         }
-        blockingStatesPerAccountRecordId.get(context.getAccountRecordId()).add(state);
     }
 
     @Override

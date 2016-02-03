@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -86,7 +86,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // Check we get the first invoice at the phase event
         //
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // Move the clock to 2012-05-02
         clock.addDays(31);
         assertListenerStatus();
@@ -201,7 +201,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // Check we get the first invoice at the phase event
         //
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // Move the clock to 2012-05-02
         clock.addDays(28);
         assertListenerStatus();
@@ -396,7 +396,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
 
@@ -501,7 +501,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
 
@@ -538,7 +538,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
         iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("197.26"));
-        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         checkNoMoreInvoiceToGenerate(account);
     }
 
@@ -572,7 +572,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
 
@@ -609,7 +609,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
         iias.put(invoice1.getInvoiceItems().get(0).getId(), new BigDecimal("100.00"));
-        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         checkNoMoreInvoiceToGenerate(account);
     }
 }

@@ -78,6 +78,8 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 public class DefaultEntitlementApiBase {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementApiBase.class);
@@ -166,11 +168,6 @@ public class DefaultEntitlementApiBase {
             public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
                 try {
 
-                    final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalCallContext);
-                    if (currentState != null && currentState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_BLOCKED)) {
-                        throw new EntitlementApiException(ErrorCode.ENT_ALREADY_BLOCKED, bundleId);
-                    }
-
                     final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, internalCallContext);
                     final ImmutableAccountData account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), internalCallContext);
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
@@ -233,13 +230,6 @@ public class DefaultEntitlementApiBase {
                         return null;
                     }
 
-                    final BlockingState currentState = blockingStateDao.getBlockingStateForService(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalCallContext);
-                    if (currentState == null || currentState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CLEAR)) {
-                        // Nothing to do.
-                        log.warn("Current state is {}, nothing to resume", currentState);
-                        return null;
-                    }
-
                     final UUID blockingId = blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, false, false, false, baseSubscription, internalCallContext);
 
                     // Should we send one event per entitlement in the bundle?
@@ -277,9 +267,9 @@ public class DefaultEntitlementApiBase {
             final SubscriptionBase baseSubscription = inputBaseSubscription == null ? subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext) : inputBaseSubscription;
             final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(localEffectiveDate, baseSubscription.getStartDate(), internalCallContext);
             final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, stateName, serviceName, blockChange, blockEntitlement, blockBilling, effectiveDate);
-            entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(state, internalCallContext);
+            entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(state), bundleId, internalCallContext);
             return state.getId();
-        } catch (SubscriptionBaseApiException e) {
+        } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
     }

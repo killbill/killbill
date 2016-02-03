@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,6 +19,7 @@
 package org.killbill.billing.overdue.config.api;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
@@ -84,5 +87,20 @@ public class BillingState {
 
     public DateTimeZone getAccountTimeZone() {
         return accountTimeZone;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("BillingState{");
+        sb.append("objectId=").append(objectId);
+        sb.append(", numberOfUnpaidInvoices=").append(numberOfUnpaidInvoices);
+        sb.append(", balanceOfUnpaidInvoices=").append(balanceOfUnpaidInvoices);
+        sb.append(", dateOfEarliestUnpaidInvoice=").append(dateOfEarliestUnpaidInvoice);
+        sb.append(", accountTimeZone=").append(accountTimeZone);
+        sb.append(", idOfEarliestUnpaidInvoice=").append(idOfEarliestUnpaidInvoice);
+        sb.append(", responseForLastFailedPayment=").append(responseForLastFailedPayment);
+        sb.append(", tags=").append(Arrays.toString(tags));
+        sb.append('}');
+        return sb.toString();
     }
 }

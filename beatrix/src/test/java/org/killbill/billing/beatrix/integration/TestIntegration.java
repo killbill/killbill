@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -99,7 +101,7 @@ public class TestIntegration extends TestIntegrationBase {
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
-        addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
         paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), TransactionStatus.SUCCESS, invoice.getId(), Currency.USD));
@@ -181,12 +183,12 @@ public class TestIntegration extends TestIntegrationBase {
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("561.24")));
 
-        // Verify first next targetDate 
+        // Verify first next targetDate
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
 
-        setDateAndCheckForCompletion(nextDate, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        setDateAndCheckForCompletion(nextDate, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, expectedInvoices);
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 3, 31), callContext);
         expectedInvoices.clear();
@@ -211,23 +213,23 @@ public class TestIntegration extends TestIntegrationBase {
 
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
-        addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, expectedInvoices);
         invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate, callContext);
         expectedInvoices.clear();
 
         //
-        // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT
+        // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT
         //
-        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 30), new LocalDate(2012, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 5, 31), callContext);
 
-        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
-        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
@@ -280,7 +282,7 @@ public class TestIntegration extends TestIntegrationBase {
         setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 23, 59, 59, 0, testTimeZone));
         setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 23, 59, 59, 0, testTimeZone));
         setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 23, 59, 59, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
                                                                                                                    new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 4, 2), callContext);
@@ -309,22 +311,22 @@ public class TestIntegration extends TestIntegrationBase {
         //
         final LocalDate firstRecurringPistolDate = subscription.getChargedThroughDate().toLocalDate();
         final LocalDate secondRecurringPistolDate = firstRecurringPistolDate.plusMonths(1);
-        addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 2), new LocalDate(2012, 5, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate, callContext);
 
         //
-        // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT
+        // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT
         //
-        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 6, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 6, 2), callContext);
 
-        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 2), new LocalDate(2012, 7, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 2), callContext);
 
-        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 2), new LocalDate(2012, 8, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 2), callContext);
 
@@ -377,13 +379,13 @@ public class TestIntegration extends TestIntegrationBase {
         setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 23, 59, 59, 0, testTimeZone));
         setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 23, 59, 59, 0, testTimeZone));
         setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 23, 59, 59, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // PRO_RATION
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
                                                                                                                    new LocalDate(2012, 3, 3), InvoiceItemType.RECURRING, new BigDecimal("20.69")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 3, 3), callContext);
 
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 3, 23, 59, 59, 0, testTimeZone), NextEvent.INVOICE, NextEvent.PAYMENT);
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 3, 23, 59, 59, 0, testTimeZone), NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 3),
                                                                                                                    new LocalDate(2012, 4, 3), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 4, 3), callContext);
@@ -399,22 +401,22 @@ public class TestIntegration extends TestIntegrationBase {
         //
         final LocalDate firstRecurringPistolDate = subscription.getChargedThroughDate().toLocalDate();
         final LocalDate secondRecurringPistolDate = firstRecurringPistolDate.plusMonths(1);
-        addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 3), new LocalDate(2012, 5, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate, callContext);
 
         //
-        // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT
+        // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT
         //
-        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 6, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 6, 3), callContext);
 
-        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 3), new LocalDate(2012, 7, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 3), callContext);
 
-        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 3), new LocalDate(2012, 8, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 3), callContext);
 
@@ -496,23 +498,18 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDays(3);
 
         final DefaultEntitlement aoEntitlement1 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
-                                                                                        NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+                                                                                        NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         final DefaultEntitlement aoEntitlement2 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
-                                                                                        NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+                                                                                        NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT
-        busHandler.pushExpectedEvent(NextEvent.PHASE);
-        busHandler.pushExpectedEvent(NextEvent.PHASE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(28));
         clock.addDays(28);// 26 / 5
         assertListenerStatus();
 
-        busHandler.pushExpectedEvent(NextEvent.PHASE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(3));
         clock.addDays(3);// 29 / 5
         assertListenerStatus();
@@ -521,8 +518,7 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDays(10);// 8 / 6
         assertListenerStatus();
 
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(18));
         clock.addDays(18);// 26 / 6
         assertListenerStatus();
@@ -606,9 +602,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvent(NextEvent.PHASE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertListenerStatus();
 
@@ -667,9 +661,7 @@ public class TestIntegration extends TestIntegrationBase {
         assertNotNull(invoices);
         assertTrue(invoices.size() == 1);
 
-        busHandler.pushExpectedEvent(NextEvent.PHASE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertListenerStatus();
         invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
@@ -678,15 +670,12 @@ public class TestIntegration extends TestIntegrationBase {
 
         for (int i = 0; i < 5; i++) {
             log.info("============== loop number " + i + "=======================");
-            busHandler.pushExpectedEvent(NextEvent.INVOICE);
-            busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
             assertListenerStatus();
         }
 
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        busHandler.pushExpectedEvent(NextEvent.PHASE);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertListenerStatus();
 
@@ -696,8 +685,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         for (int i = 0; i <= 5; i++) {
             log.info("============== second loop number " + i + "=======================");
-            busHandler.pushExpectedEvent(NextEvent.INVOICE);
-            busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
             assertListenerStatus();
         }
