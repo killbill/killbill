@@ -523,11 +523,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     }
 
     protected Payment createChargeBackAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+        return createChargeBackAndCheckForCompletion(account, payment, payment.getPurchasedAmount(), payment.getCurrency(), events);
+    }
+
+    protected Payment createChargeBackAndCheckForCompletion(final Account account, final Payment payment, final BigDecimal amount, final Currency currency, final NextEvent... events) {
         return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-                    return paymentApi.createChargebackWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+                    return paymentApi.createChargebackWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
                                                                          PAYMENT_OPTIONS, refreshedCallContext());
                 } catch (final PaymentApiException e) {
                     fail(e.toString());

@@ -33,6 +33,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
@@ -190,7 +191,22 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     if (existingInvoicePayment != null) {
                         log.info("onSuccessCall was already completed for payment chargeback: " + paymentControlContext.getPaymentId());
                     } else {
-                        invoiceApi.createChargeback(paymentControlContext.getPaymentId(), paymentControlContext.getProcessedAmount(), paymentControlContext.getProcessedCurrency(), internalContext);
+                        final InvoicePayment linkedInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
+
+                        final BigDecimal amount;
+                        final Currency currency;
+                        if (linkedInvoicePayment.getCurrency().equals(paymentControlContext.getProcessedCurrency()) && paymentControlContext.getProcessedAmount() != null) {
+                            amount = paymentControlContext.getProcessedAmount();
+                            currency = paymentControlContext.getProcessedCurrency();
+                        } else if (linkedInvoicePayment.getCurrency().equals(paymentControlContext.getCurrency()) && paymentControlContext.getAmount() != null) {
+                            amount = paymentControlContext.getAmount();
+                            currency = paymentControlContext.getCurrency();
+                        } else {
+                            amount = linkedInvoicePayment.getAmount();
+                            currency = linkedInvoicePayment.getCurrency();
+                        }
+
+                        invoiceApi.createChargeback(paymentControlContext.getPaymentId(), amount, currency, internalContext);
                     }
                     break;
 

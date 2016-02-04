@@ -30,6 +30,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -89,7 +90,10 @@ public class PaymentAutomatonDAOHelper {
             if (existingTransactions.isEmpty()) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, paymentStateContext.getPaymentId());
             }
-            if (paymentStateContext.getCurrency() != null && existingTransactions.get(0).getCurrency() != paymentStateContext.getCurrency()) {
+            if (paymentStateContext.getCurrency() != null &&
+                existingTransactions.get(0).getCurrency() != paymentStateContext.getCurrency() &&
+                !TransactionType.CHARGEBACK.equals(paymentStateContext.getTransactionType())) {
+                // Note that we allow chargebacks in a different currency
                 throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, "currency", " should be " + existingTransactions.get(0).getCurrency() + " to match other existing transactions");
             }
 
