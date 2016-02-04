@@ -154,9 +154,16 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     if (existingInvoicePayment != null && existingInvoicePayment.isSuccess()) {
                         log.info("onSuccessCall was already completed for payment purchase: " + paymentControlContext.getPaymentId());
                     } else {
-                        log.debug("Notifying invoice of successful payment: id={}, amount={}, currency={}, invoiceId={}", paymentControlContext.getPaymentId(), paymentControlContext.getProcessedAmount(), paymentControlContext.getCurrency(), invoiceId);
+                        final BigDecimal invoicePaymentAmount;
+                        if (paymentControlContext.getCurrency() == paymentControlContext.getProcessedCurrency()) {
+                            invoicePaymentAmount = paymentControlContext.getProcessedAmount();
+                        } else {
+                            log.warn("Currency {} of invoice payment {} doesn't match invoice currency {}, assuming it is a full payment" , paymentControlContext.getProcessedCurrency(), paymentControlContext.getPaymentId(), paymentControlContext.getCurrency());
+                            invoicePaymentAmount = paymentControlContext.getAmount();
+                        }
+                        log.debug("Notifying invoice of successful payment: id={}, amount={}, currency={}, invoiceId={}", paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
                         invoiceApi.notifyOfPayment(invoiceId,
-                                                   paymentControlContext.getProcessedAmount(),
+                                                   invoicePaymentAmount,
                                                    paymentControlContext.getCurrency(),
                                                    paymentControlContext.getProcessedCurrency(),
                                                    paymentControlContext.getPaymentId(),
