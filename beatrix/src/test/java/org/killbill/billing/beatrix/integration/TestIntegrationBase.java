@@ -372,6 +372,23 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                                        .build();
     }
 
+    protected AccountData getChildAccountData(final int billingDay, final UUID parentAccountId, final boolean isPaymentDelegatedToParent) {
+        return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+                                       .firstNameLength(6)
+                                       .email(UUID.randomUUID().toString().substring(1, 8))
+                                       .phone(UUID.randomUUID().toString().substring(1, 8))
+                                       .migrated(false)
+                                       .isNotifiedForInvoices(false)
+                                       .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                                       .billingCycleDayLocal(billingDay)
+                                       .currency(Currency.USD)
+                                       .paymentMethodId(UUID.randomUUID())
+                                       .timeZone(DateTimeZone.UTC)
+                                       .parentAccountId(parentAccountId)
+                                       .isPaymentDelegatedToParent(isPaymentDelegatedToParent)
+                                       .build();
+    }
+
     protected void addMonthsAndCheckForCompletion(final int nbMonth, final NextEvent... events) {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
             @Override

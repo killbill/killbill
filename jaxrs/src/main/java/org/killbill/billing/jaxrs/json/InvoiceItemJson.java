@@ -43,6 +43,8 @@ public class InvoiceItemJson extends JsonBase {
     private final String linkedInvoiceItemId;
     @ApiModelProperty(dataType = "java.util.UUID", required = true)
     private final String accountId;
+    @ApiModelProperty(dataType = "java.util.UUID", required = false)
+    private final String childAccountId;
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String bundleId;
     @ApiModelProperty(dataType = "java.util.UUID")
@@ -62,6 +64,7 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("invoiceId") final String invoiceId,
                            @JsonProperty("linkedInvoiceItemId") final String linkedInvoiceItemId,
                            @JsonProperty("accountId") final String accountId,
+                           @JsonProperty("childAccountId") final String childAccountId,
                            @JsonProperty("bundleId") final String bundleId,
                            @JsonProperty("subscriptionId") final String subscriptionId,
                            @JsonProperty("planName") final String planName,
@@ -79,6 +82,7 @@ public class InvoiceItemJson extends JsonBase {
         this.invoiceId = invoiceId;
         this.linkedInvoiceItemId = linkedInvoiceItemId;
         this.accountId = accountId;
+        this.childAccountId = childAccountId;
         this.bundleId = bundleId;
         this.subscriptionId = subscriptionId;
         this.planName = planName;
@@ -94,7 +98,7 @@ public class InvoiceItemJson extends JsonBase {
 
     public InvoiceItemJson(final InvoiceItem item, @Nullable final List<AuditLog> auditLogs) {
         this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getLinkedItemId()),
-             toString(item.getAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
+             toString(item.getAccountId()), toString(item.getChildAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
              item.getPlanName(), item.getPhaseName(), item.getUsageName(), item.getInvoiceItemType().toString(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
              item.getAmount(), item.getCurrency(), toAuditLogJson(auditLogs));
@@ -115,6 +119,11 @@ public class InvoiceItemJson extends JsonBase {
             @Override
             public UUID getAccountId() {
                 return accountId != null ? UUID.fromString(accountId) : null;
+            }
+
+            @Override
+            public UUID getChildAccountId() {
+                return childAccountId != null ? UUID.fromString(childAccountId) : null;
             }
 
             @Override
@@ -219,6 +228,10 @@ public class InvoiceItemJson extends JsonBase {
         return accountId;
     }
 
+    public String getChildAccountId() {
+        return childAccountId;
+    }
+
     public String getBundleId() {
         return bundleId;
     }
@@ -271,6 +284,7 @@ public class InvoiceItemJson extends JsonBase {
         sb.append(", invoiceId='").append(invoiceId).append('\'');
         sb.append(", linkedInvoiceItemId='").append(linkedInvoiceItemId).append('\'');
         sb.append(", accountId='").append(accountId).append('\'');
+        sb.append(", childAccountId='").append(childAccountId).append('\'');
         sb.append(", bundleId='").append(bundleId).append('\'');
         sb.append(", subscriptionId='").append(subscriptionId).append('\'');
         sb.append(", planName='").append(planName).append('\'');
@@ -297,6 +311,9 @@ public class InvoiceItemJson extends JsonBase {
         final InvoiceItemJson that = (InvoiceItemJson) o;
 
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (childAccountId != null ? !childAccountId.equals(that.childAccountId) : that.childAccountId != null) {
             return false;
         }
         if (!((amount == null && that.amount == null) ||
@@ -351,6 +368,7 @@ public class InvoiceItemJson extends JsonBase {
         result = 31 * result + (invoiceItemId != null ? invoiceItemId.hashCode() : 0);
         result = 31 * result + (linkedInvoiceItemId != null ? linkedInvoiceItemId.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (childAccountId != null ? childAccountId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (planName != null ? planName.hashCode() : 0);

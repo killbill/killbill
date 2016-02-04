@@ -9,6 +9,7 @@ tableFields(prefix) ::= <<
 , <prefix>currency
 , <prefix>status
 , <prefix>migrated
+, <prefix>parent_invoice
 , <prefix>created_by
 , <prefix>created_date
 >>
@@ -20,6 +21,7 @@ tableValues() ::= <<
 , :currency
 , :status
 , :migrated
+, :parentInvoice
 , :createdBy
 , :createdDate
 >>
@@ -58,4 +60,12 @@ updateStatus() ::= <<
     SET status = :status
     WHERE id = :id
     <AND_CHECK_TENANT()>;
+>>
+
+getParentDraftInvoice() ::= <<
+  SELECT <allTableFields()>
+    FROM <tableName()>
+   WHERE account_id = :accountId
+     AND status = 'DRAFT'
+   <AND_CHECK_TENANT()>
 >>

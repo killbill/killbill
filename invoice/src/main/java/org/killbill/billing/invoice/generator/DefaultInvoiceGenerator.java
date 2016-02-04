@@ -40,6 +40,7 @@ import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.clock.Clock;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -105,7 +106,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         LocalDate maxDate = targetDate;
 
         for (final Invoice invoice : existingInvoices) {
-            if (invoice.getTargetDate().isAfter(maxDate)) {
+            if ((invoice.getTargetDate() != null) && invoice.getTargetDate().isAfter(maxDate)) {
                 maxDate = invoice.getTargetDate();
             }
         }

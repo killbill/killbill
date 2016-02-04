@@ -113,6 +113,8 @@ public class AccountItemTree {
             case FIXED:
             case ITEM_ADJ:
                 break;
+            case PARENT_SUMMARY:
+                break;
 
             default:
                 Preconditions.checkState(false, "Unknown invoice item type " + existingItem.getInvoiceItemType());

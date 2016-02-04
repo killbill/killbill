@@ -28,16 +28,21 @@ public class DefaultImmutableAccountData implements ImmutableAccountData {
     private final String externalKey;
     private final Currency currency;
     private final DateTimeZone dateTimeZone;
+    private final UUID parentAccountId;
+    private final boolean isPaymentDelegatedToParent;
 
-    public DefaultImmutableAccountData(final UUID id, final String externalKey, final Currency currency, final DateTimeZone dateTimeZone) {
+    public DefaultImmutableAccountData(final UUID id, final String externalKey, final Currency currency, final DateTimeZone dateTimeZone,
+                                       final UUID parentAccountId, final boolean isPaymentDelegatedToParent) {
         this.id = id;
         this.externalKey = externalKey;
         this.currency = currency;
         this.dateTimeZone = dateTimeZone;
+        this.parentAccountId = parentAccountId;
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
     }
 
     public DefaultImmutableAccountData(final Account account) {
-        this(account.getId(), account.getExternalKey(), account.getCurrency(), account.getTimeZone());
+        this(account.getId(), account.getExternalKey(), account.getCurrency(), account.getTimeZone(), account.getParentAccountId(), account.isPaymentDelegatedToParent());
     }
 
     @Override
@@ -59,4 +64,15 @@ public class DefaultImmutableAccountData implements ImmutableAccountData {
     public DateTimeZone getTimeZone() {
         return dateTimeZone;
     }
+
+    @Override
+    public UUID getParentAccountId() {
+        return parentAccountId;
+    }
+
+    @Override
+    public Boolean isPaymentDelegatedToParent() {
+        return isPaymentDelegatedToParent;
+    }
+
 }

@@ -249,6 +249,24 @@ public class TestInvoiceHelper {
         return accountUserApi.createAccount(accountData, callContext);
     }
 
+    public Account createChildAccount(final UUID parentAccountId, final CallContext callContext) throws AccountApiException {
+        final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+                                                                .firstNameLength(6)
+                                                                .email(UUID.randomUUID().toString().substring(1, 8))
+                                                                .phone(UUID.randomUUID().toString().substring(1, 8))
+                                                                .migrated(false)
+                                                                .isNotifiedForInvoices(true)
+                                                                .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                                                                .billingCycleDayLocal(31)
+                                                                .currency(accountCurrency)
+                                                                .paymentMethodId(UUID.randomUUID())
+                                                                .timeZone(DateTimeZone.UTC)
+                                                                .parentAccountId(parentAccountId)
+                                                                .isPaymentDelegatedToParent(false)
+                                                                .build();
+        return accountUserApi.createAccount(accountData, callContext);
+    }
+
     public void createInvoiceItem(final InvoiceItem invoiceItem, final InternalCallContext internalCallContext) throws EntityPersistenceException {
         invoiceItemSqlDao.create(new InvoiceItemModelDao(invoiceItem), internalCallContext);
     }

@@ -41,6 +41,7 @@ public class InvoiceItemFactory {
         final DateTime createdDate = invoiceItemModelDao.getCreatedDate();
         final UUID invoiceId = invoiceItemModelDao.getInvoiceId();
         final UUID accountId = invoiceItemModelDao.getAccountId();
+        final UUID childAccountId = invoiceItemModelDao.getChildAccountId();
         final UUID bundleId = invoiceItemModelDao.getBundleId();
         final UUID subscriptionId = invoiceItemModelDao.getSubscriptionId();
         final String planName = invoiceItemModelDao.getPlanName();
@@ -86,6 +87,9 @@ public class InvoiceItemFactory {
                 break;
             case TAX:
                 item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, description, amount, currency, linkedItemId);
+                break;
+            case PARENT_SUMMARY:
+                item = new ParentInvoiceItem(id, createdDate, invoiceId, accountId, childAccountId, amount, currency);
                 break;
             default:
                 throw new RuntimeException("Unexpected type of event item " + type);

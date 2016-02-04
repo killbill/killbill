@@ -44,15 +44,16 @@ public class MockInvoice extends EntityBase implements Invoice {
     private final Currency currency;
     private final boolean migrationInvoice;
     private final InvoiceStatus status;
+    private final boolean parentInvoice;
 
     // used to create a new invoice
     public MockInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
-        this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, InvoiceStatus.COMMITTED);
+        this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, InvoiceStatus.COMMITTED, false);
     }
 
     // used to hydrate invoice from persistence layer
     public MockInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
-                       final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice, InvoiceStatus status) {
+                       @Nullable final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice, final InvoiceStatus status, final boolean parentInvoice) {
         super(invoiceId);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -61,6 +62,7 @@ public class MockInvoice extends EntityBase implements Invoice {
         this.currency = currency;
         this.migrationInvoice = isMigrationInvoice;
         this.status = status;
+        this.parentInvoice = parentInvoice;
     }
 
     @Override
@@ -203,7 +205,7 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", status=" + status + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", status=" + status + ", parentInvoice=" + parentInvoice + "]";
     }
 
     @Override
@@ -214,6 +216,11 @@ public class MockInvoice extends EntityBase implements Invoice {
     @Override
     public BigDecimal getOriginalChargedAmount() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isParentInvoice() {
+        return parentInvoice;
     }
 }
 

@@ -54,7 +54,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final InvoiceJson invoiceJsonSimple = new InvoiceJson(amount, Currency.USD.toString(), InvoiceStatus.COMMITTED.toString(),
                                                               creditAdj, refundAdj, invoiceId, invoiceDate,
                                                               targetDate, invoiceNumber, balance, accountId, bundleKeys,
-                                                              credits, null, auditLogs);
+                                                              credits, null, false, auditLogs);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);
         Assert.assertEquals(invoiceJsonSimple.getCreditAdj(), creditAdj);
         Assert.assertEquals(invoiceJsonSimple.getRefundAdj(), refundAdj);
@@ -68,6 +68,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceJsonSimple.getCredits(), credits);
         Assert.assertEquals(invoiceJsonSimple.getAuditLogs(), auditLogs);
         Assert.assertEquals(invoiceJsonSimple.getStatus(), InvoiceStatus.COMMITTED.toString());
+        Assert.assertFalse(invoiceJsonSimple.getIsParentInvoice());
 
         final String asJson = mapper.writeValueAsString(invoiceJsonSimple);
         final InvoiceJson fromJson = mapper.readValue(asJson, InvoiceJson.class);

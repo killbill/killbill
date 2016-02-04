@@ -40,6 +40,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         final String invoiceId = UUID.randomUUID().toString();
         final String linkedInvoiceItemId = UUID.randomUUID().toString();
         final String accountId = UUID.randomUUID().toString();
+        final String childAccountId = UUID.randomUUID().toString();
         final String bundleId = UUID.randomUUID().toString();
         final String subscriptionId = UUID.randomUUID().toString();
         final String planName = UUID.randomUUID().toString();
@@ -52,13 +53,14 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         final BigDecimal amount = BigDecimal.TEN;
         final Currency currency = Currency.MXN;
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final InvoiceItemJson invoiceItemJson = new InvoiceItemJson(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId,
+        final InvoiceItemJson invoiceItemJson = new InvoiceItemJson(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, childAccountId,
                                                                                       bundleId, subscriptionId, planName, phaseName, usageName, type, description,
                                                                                       startDate, endDate, amount, currency, auditLogs);
         Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItemId);
         Assert.assertEquals(invoiceItemJson.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceItemJson.getLinkedInvoiceItemId(), linkedInvoiceItemId);
         Assert.assertEquals(invoiceItemJson.getAccountId(), accountId);
+        Assert.assertEquals(invoiceItemJson.getChildAccountId(), childAccountId);
         Assert.assertEquals(invoiceItemJson.getBundleId(), bundleId);
         Assert.assertEquals(invoiceItemJson.getSubscriptionId(), subscriptionId);
         Assert.assertEquals(invoiceItemJson.getPlanName(), planName);

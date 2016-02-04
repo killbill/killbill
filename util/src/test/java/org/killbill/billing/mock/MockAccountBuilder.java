@@ -20,7 +20,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.MutableAccountData;
@@ -35,6 +34,7 @@ public class MockAccountBuilder {
     private int firstNameLength;
     private Currency currency = Currency.USD;
     private UUID parentAccountId;
+    private boolean isPaymentDelegatedToParent = false;
     private int billingCycleDayLocal;
     private UUID paymentMethodId;
     private DateTimeZone timeZone = DateTimeZone.UTC;
@@ -70,6 +70,7 @@ public class MockAccountBuilder {
         this.country(data.getCountry());
         this.currency(data.getCurrency());
         this.parentAccountId(data.getParentAccountId());
+        this.isPaymentDelegatedToParent(data.isPaymentDelegatedToParent());
         this.email(data.getEmail());
         this.externalKey(data.getExternalKey());
         this.firstNameLength(data.getFirstNameLength());
@@ -116,6 +117,11 @@ public class MockAccountBuilder {
 
     public MockAccountBuilder parentAccountId(final UUID parentAccountId) {
         this.parentAccountId = parentAccountId;
+        return this;
+    }
+
+    public MockAccountBuilder isPaymentDelegatedToParent(final boolean isPaymentDelegatedToParent) {
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
         return this;
     }
 
@@ -326,7 +332,7 @@ public class MockAccountBuilder {
 
             @Override
             public Boolean isPaymentDelegatedToParent() {
-                return false;
+                return isPaymentDelegatedToParent;
             }
 
             @Override

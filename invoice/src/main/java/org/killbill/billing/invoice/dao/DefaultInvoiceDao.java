@@ -85,7 +85,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                         .onResultOf(new Function<InvoiceModelDao, Comparable>() {
                                                                                             @Override
                                                                                             public Comparable apply(final InvoiceModelDao invoice) {
-                                                                                                return invoice.getTargetDate();
+                                                                                                return invoice.getTargetDate() == null ? invoice.getCreatedDate() : invoice.getTargetDate();
                                                                                             }
                                                                                         });
 
@@ -268,7 +268,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context);
                     }
                     cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
-                    notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
+                    if (InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
+                        notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
+                    }
                 }
                 return null;
             }
@@ -946,6 +948,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 if (InvoiceStatus.COMMITTED.equals(newStatus)) {
                     // notify invoice creation event
                     notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoice, context);
+                    // notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }
 
                 return null;
@@ -966,4 +969,26 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         }
     }
 
+    @Override
+    public void createParentChildInvoiceRelation(final InvoiceParentChildModelDao invoiceRelation, final InternalCallContext context) throws InvoiceApiException {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceParentChildrenSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceParentChildrenSqlDao.class);
+                transactional.create(invoiceRelation, context);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public InvoiceModelDao getParentDraftInvoice(final UUID parentAccountId, final InternalCallContext context) throws InvoiceApiException {
+        return transactionalSqlDao.execute(InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<InvoiceModelDao>() {
+            @Override
+            public InvoiceModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                return invoiceSqlDao.getParentDraftInvoice(parentAccountId.toString(), context);
+            }
+        });
+    }
 }

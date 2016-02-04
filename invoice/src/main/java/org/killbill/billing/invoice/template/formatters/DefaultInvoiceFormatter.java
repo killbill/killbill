@@ -347,6 +347,11 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         return invoice.getStatus();
     }
 
+    @Override
+    public boolean isParentInvoice() {
+        return invoice.isParentInvoice();
+    }
+
     // Expose the fields for children classes. This is useful for further customization of the invoices
 
     @SuppressWarnings("UnusedDeclaration")

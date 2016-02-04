@@ -6,6 +6,7 @@ tableFields(prefix) ::= <<
   <prefix>type
 , <prefix>invoice_id
 , <prefix>account_id
+, <prefix>child_account_id
 , <prefix>bundle_id
 , <prefix>subscription_id
 , <prefix>description
@@ -26,6 +27,7 @@ tableValues() ::= <<
   :type
 , :invoiceId
 , :accountId
+, :childAccountId
 , :bundleId
 , :subscriptionId
 , :description

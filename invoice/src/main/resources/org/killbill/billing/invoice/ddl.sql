@@ -7,13 +7,14 @@ CREATE TABLE invoice_items (
     type varchar(24) NOT NULL,
     invoice_id varchar(36) NOT NULL,
     account_id varchar(36) NOT NULL,
+    child_account_id varchar(36),
     bundle_id varchar(36),
     subscription_id varchar(36),
     description varchar(255),
     plan_name varchar(50),
     phase_name varchar(50),
     usage_name varchar(50),
-    start_date date NOT NULL,
+    start_date date,
     end_date date,
     amount numeric(15,9) NOT NULL,
     rate numeric(15,9) NULL,
@@ -38,10 +39,11 @@ CREATE TABLE invoices (
     id varchar(36) NOT NULL,
     account_id varchar(36) NOT NULL,
     invoice_date date NOT NULL,
-    target_date date NOT NULL,
+    target_date date,
     currency varchar(3) NOT NULL,
     status varchar(15) NOT NULL DEFAULT 'COMMITTED',
     migrated bool NOT NULL,
+    parent_invoice bool NOT NULL DEFAULT FALSE,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     account_record_id bigint /*! unsigned */ not null,
@@ -77,3 +79,20 @@ CREATE UNIQUE INDEX idx_invoice_payments ON invoice_payments(payment_id, type);
 CREATE INDEX invoice_payments_invoice_id ON invoice_payments(invoice_id);
 CREATE INDEX invoice_payments_reversals ON invoice_payments(linked_invoice_payment_id);
 CREATE INDEX invoice_payments_tenant_account_record_id ON invoice_payments(tenant_record_id, account_record_id);
+
+DROP TABLE IF EXISTS invoice_parent_children;
+CREATE TABLE invoice_parent_children (
+    record_id serial unique,
+    id varchar(36) NOT NULL,
+    parent_invoice_id varchar(36) NOT NULL,
+    child_invoice_id varchar(36) NOT NULL,
+    child_account_id varchar(36) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
+    PRIMARY KEY(record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE UNIQUE INDEX invoice_parent_children_id ON invoice_parent_children(id);
+CREATE INDEX invoice_parent_children_invoice_id ON invoice_parent_children(parent_invoice_id);
+CREATE INDEX invoice_parent_children_tenant_account_record_id ON invoice_parent_children(tenant_record_id, account_record_id);

@@ -367,4 +367,14 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     public void changeInvoiceStatus(final UUID invoiceId, final InvoiceStatus newState, final InternalCallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public void createParentChildInvoiceRelation(final InvoiceParentChildModelDao invoiceRelation, final InternalCallContext context) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InvoiceModelDao getParentDraftInvoice(final UUID parentAccountId, final InternalCallContext context) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
 }

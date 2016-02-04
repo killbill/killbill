@@ -51,6 +51,7 @@ public class InvoiceJson extends JsonBase {
     private final String bundleKeys;
     private final List<CreditJson> credits;
     private final String status;
+    private final Boolean isParentInvoice;
 
     @JsonCreator
     public InvoiceJson(@JsonProperty("amount") final BigDecimal amount,
@@ -67,6 +68,7 @@ public class InvoiceJson extends JsonBase {
                        @JsonProperty("externalBundleKeys") final String bundleKeys,
                        @JsonProperty("credits") final List<CreditJson> credits,
                        @JsonProperty("items") final List<InvoiceItemJson> items,
+                       @JsonProperty("isParentInvoice") final Boolean isParentInvoice,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.amount = amount;
@@ -83,6 +85,7 @@ public class InvoiceJson extends JsonBase {
         this.bundleKeys = bundleKeys;
         this.credits = credits;
         this.items = items;
+        this.isParentInvoice = isParentInvoice;
     }
 
     public InvoiceJson(final Invoice input) {
@@ -92,7 +95,7 @@ public class InvoiceJson extends JsonBase {
     public InvoiceJson(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
         this(input.getChargedAmount(), input.getCurrency().toString(), input.getStatus().toString(), input.getCreditedAmount(), input.getRefundedAmount(),
              input.getId().toString(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
-             input.getBalance(), input.getAccountId().toString(), bundleKeys, credits, null, toAuditLogJson(auditLogs));
+             input.getBalance(), input.getAccountId().toString(), bundleKeys, credits, null, input.isParentInvoice(), toAuditLogJson(auditLogs));
     }
 
     public InvoiceJson(final Invoice input, final boolean withItems, @Nullable final AccountAuditLogs accountAuditLogs) {
@@ -116,6 +119,7 @@ public class InvoiceJson extends JsonBase {
         this.accountId = input.getAccountId().toString();
         this.bundleKeys = null;
         this.credits = null;
+        this.isParentInvoice = input.isParentInvoice();
     }
 
     public BigDecimal getAmount() {
@@ -174,6 +178,10 @@ public class InvoiceJson extends JsonBase {
         return status;
     }
 
+    public Boolean getIsParentInvoice() {
+        return isParentInvoice;
+    }
+
     @Override
     public String toString() {
         return "InvoiceJson{" +
@@ -191,6 +199,7 @@ public class InvoiceJson extends JsonBase {
                ", items=" + items +
                ", bundleKeys='" + bundleKeys + '\'' +
                ", credits=" + credits +
+               ", isParentInvoice=" + isParentInvoice +
                '}';
     }
 
@@ -247,6 +256,9 @@ public class InvoiceJson extends JsonBase {
         if (status != null ? !status.equals(that.status) : that.status != null) {
             return false;
         }
+        if (isParentInvoice != null ? !isParentInvoice.equals(that.isParentInvoice) : that.isParentInvoice != null) {
+            return false;
+        }
 
         return true;
     }
@@ -267,6 +279,7 @@ public class InvoiceJson extends JsonBase {
         result = 31 * result + (items != null ? items.hashCode() : 0);
         result = 31 * result + (bundleKeys != null ? bundleKeys.hashCode() : 0);
         result = 31 * result + (credits != null ? credits.hashCode() : 0);
+        result = 31 * result + (isParentInvoice != null ? isParentInvoice.hashCode() : 0);
         return result;
     }
 }

@@ -33,6 +33,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     /* Common to all items */
     protected final UUID invoiceId;
     protected final UUID accountId;
+    protected final UUID childAccountId;
     protected final LocalDate startDate;
     protected final LocalDate endDate;
     protected final BigDecimal amount;
@@ -77,30 +78,37 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                            @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, startDate, endDate, amount, null, currency, null);
+        this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, planName, phaseName, usageName, startDate, endDate, amount, null, currency, null);
     }
 
     // With rate but no reversing item
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                            @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, startDate, endDate, amount, rate, currency, null);
+        this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, planName, phaseName, usageName, startDate, endDate, amount, rate, currency, null);
     }
 
     // With  reversing item, no rate
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                            @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final UUID reversedItemId) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, startDate, endDate, amount, null, currency, reversedItemId);
+        this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, planName, phaseName, usageName, startDate, endDate, amount, null, currency, reversedItemId);
     }
 
-    private InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
+    // For parent invoices
+    public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID childAccountId,
+                             final BigDecimal amount, final Currency currency) {
+        this(id, createdDate, invoiceId, accountId, childAccountId, null, null, null, null, null, null, null, null, amount, null, currency, null);
+    }
+
+    private InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID childAccountId, @Nullable final UUID bundleId,
                             @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
-                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency,
+                            @Nullable final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency,
                             final UUID reversedItemId) {
         super(id, createdDate, createdDate);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
+        this.childAccountId = childAccountId;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
         this.description = description;
@@ -181,6 +189,11 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     }
 
     @Override
+    public UUID getChildAccountId() {
+        return childAccountId;
+    }
+
+    @Override
     public boolean equals(final Object o) {
 
         if (!matches(o)) {
@@ -214,6 +227,9 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         final InvoiceItemBase that = (InvoiceItemBase) o;
 
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (childAccountId != null ? !childAccountId.equals(that.childAccountId) : that.childAccountId != null) {
             return false;
         }
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
@@ -251,6 +267,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         int result = super.hashCode();
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (childAccountId != null ? childAccountId.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
