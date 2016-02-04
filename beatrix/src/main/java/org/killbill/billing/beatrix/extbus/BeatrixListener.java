@@ -42,6 +42,8 @@ import org.killbill.billing.events.EntitlementInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
+import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
+import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
 import org.killbill.billing.events.OverdueChangeInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
@@ -194,6 +196,20 @@ public class BeatrixListener {
                 objectType = ObjectType.INVOICE;
                 objectId = realEventInvAdj.getInvoiceId();
                 eventBusType = ExtBusEventType.INVOICE_ADJUSTMENT;
+                break;
+
+            case INVOICE_PAYMENT_INFO:
+                final InvoicePaymentInfoInternalEvent realEventInvPay = (InvoicePaymentInfoInternalEvent) event;
+                objectType = ObjectType.INVOICE;
+                objectId = realEventInvPay.getInvoiceId();
+                eventBusType = ExtBusEventType.INVOICE_PAYMENT_SUCCESS;
+                break;
+
+            case INVOICE_PAYMENT_ERROR:
+                final InvoicePaymentErrorInternalEvent realEventInvPayErr = (InvoicePaymentErrorInternalEvent) event;
+                objectType = ObjectType.INVOICE;
+                objectId = realEventInvPayErr.getInvoiceId();
+                eventBusType = ExtBusEventType.INVOICE_PAYMENT_FAILED;
                 break;
 
             case PAYMENT_INFO:
