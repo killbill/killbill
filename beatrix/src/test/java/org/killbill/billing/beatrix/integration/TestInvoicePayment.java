@@ -74,11 +74,10 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         // Invoice is partially paid
         final Payment payment1 = paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 5, 31), new BigDecimal("249.95"), TransactionStatus.SUCCESS, invoice2.getId(), Currency.USD));
-        // TODO See https://github.com/killbill/killbill/issues/482
-        //Assert.assertEquals(payment1.getPurchasedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(payment1.getTransactions().get(0).getProcessedAmount().compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("239.95")), 0);
-        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
 
         // 2012-06-30
         addDaysAndCheckForCompletion(30, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -92,7 +91,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
         Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("239.95")), 0);
         Assert.assertEquals(invoice3.getBalance().compareTo(BigDecimal.ZERO), 0);
-        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
 
         // Fully pay the second invoice
         final Payment payment3 = createPaymentAndCheckForCompletion(account, invoice2, invoice2.getBalance(), account.getCurrency(), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
