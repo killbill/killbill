@@ -522,18 +522,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected void createChargeBackAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
-        doCallAndCheckForCompletion(new Function<Void, Void>() {
+    protected Payment createChargeBackAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
-            public Void apply(@Nullable final Void input) {
+            public Payment apply(@Nullable final Void input) {
                 try {
-                    paymentApi.createChargebackWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
-                                                                  PAYMENT_OPTIONS, refreshedCallContext());
-                } catch (PaymentApiException e) {
+                    return paymentApi.createChargebackWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+                                                                         PAYMENT_OPTIONS, refreshedCallContext());
+                } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
                 }
-                return null;
             }
         }, events);
     }
