@@ -345,38 +345,57 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Get the latest state from disk
         refresh(callContext);
 
-        if (eventsStream.isSubscriptionCancelled()) {
-            throw new EntitlementApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, getId());
-        }
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UNCANCEL_SUBSCRIPTION,
+                                                                               getAccountId(),
+                                                                               null,
+                                                                               getBundleId(),
+                                                                               getExternalKey(),
+                                                                               null,
+                                                                               null,
+                                                                               properties,
+                                                                               callContext);
 
-        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-        final Collection<BlockingState> pendingEntitlementCancellationEvents = eventsStream.getPendingEntitlementCancellationEvents();
-        if (eventsStream.isEntitlementCancelled()) {
-            final BlockingState cancellationEvent = eventsStream.getEntitlementCancellationEvent();
-            blockingStateDao.unactiveBlockingState(cancellationEvent.getId(), contextWithValidAccountRecordId);
-        } else if (pendingEntitlementCancellationEvents.size() > 0) {
-            // Reactivate entitlements
-            // See also https://github.com/killbill/killbill/issues/111
-            //
-            // Today we only support cancellation at SUBSCRIPTION level (Not ACCOUNT or BUNDLE), so we should really have only
-            // one future event in the list
-            //
-            for (final BlockingState futureCancellation : pendingEntitlementCancellationEvents) {
-                blockingStateDao.unactiveBlockingState(futureCancellation.getId(), contextWithValidAccountRecordId);
-            }
-        } else {
-            // Entitlement is NOT cancelled (or future cancelled), there is nothing to do
-            throw new EntitlementApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, getId());
-        }
+        final WithEntitlementPlugin<Void> uncancelEntitlementWithPlugin = new WithEntitlementPlugin<Void>() {
 
-        // If billing was previously cancelled, reactivate
-        if (getSubscriptionBase().getFutureEndDate() != null) {
-            try {
-                getSubscriptionBase().uncancel(callContext);
-            } catch (final SubscriptionBaseApiException e) {
-                throw new EntitlementApiException(e);
+            @Override
+            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+                if (eventsStream.isSubscriptionCancelled()) {
+                    throw new EntitlementApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, getId());
+                }
+
+                final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+                final Collection<BlockingState> pendingEntitlementCancellationEvents = eventsStream.getPendingEntitlementCancellationEvents();
+                if (eventsStream.isEntitlementCancelled()) {
+                    final BlockingState cancellationEvent = eventsStream.getEntitlementCancellationEvent();
+                    blockingStateDao.unactiveBlockingState(cancellationEvent.getId(), contextWithValidAccountRecordId);
+                } else if (pendingEntitlementCancellationEvents.size() > 0) {
+                    // Reactivate entitlements
+                    // See also https://github.com/killbill/killbill/issues/111
+                    //
+                    // Today we only support cancellation at SUBSCRIPTION level (Not ACCOUNT or BUNDLE), so we should really have only
+                    // one future event in the list
+                    //
+                    for (final BlockingState futureCancellation : pendingEntitlementCancellationEvents) {
+                        blockingStateDao.unactiveBlockingState(futureCancellation.getId(), contextWithValidAccountRecordId);
+                    }
+                } else {
+                    // Entitlement is NOT cancelled (or future cancelled), there is nothing to do
+                    throw new EntitlementApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, getId());
+                }
+
+                // If billing was previously cancelled, reactivate
+                if (getSubscriptionBase().getFutureEndDate() != null) {
+                    try {
+                        getSubscriptionBase().uncancel(callContext);
+                    } catch (final SubscriptionBaseApiException e) {
+                        throw new EntitlementApiException(e);
+                    }
+                }
+                return null;
             }
-        }
+        };
+
+        pluginExecution.executeWithPlugin(uncancelEntitlementWithPlugin, pluginContext);
     }
 
     @Override
