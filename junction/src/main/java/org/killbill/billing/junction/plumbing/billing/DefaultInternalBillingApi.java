@@ -35,6 +35,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -181,7 +182,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         for (final SubscriptionBase subscription : subscriptions) {
 
             // The subscription did not even start, so there is nothing to do yet, we can skip and avoid some NPE down the line when calculating the BCD
-            if (subscription.getState() == null) {
+            if (subscription.getState() == EntitlementState.PENDING) {
                 continue;
             }
 

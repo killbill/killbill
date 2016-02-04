@@ -407,8 +407,13 @@ public class DefaultEventsStream implements EventsStream {
         if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(new LocalDate(utcNow, account.getTimeZone())) <= 0) {
             entitlementState = EntitlementState.CANCELLED;
         } else {
-            // Gather states across all services and check if one of them is set to 'blockEntitlement'
-            entitlementState = (blockingAggregator != null && blockingAggregator.isBlockEntitlement() ? EntitlementState.BLOCKED : EntitlementState.ACTIVE);
+            final LocalDate startDate = new LocalDate(getSubscriptionBase().getStartDate(), account.getTimeZone());
+            if (startDate.compareTo(new LocalDate(utcNow, account.getTimeZone())) > 0) {
+                entitlementState = EntitlementState.PENDING;
+            } else {
+                // Gather states across all services and check if one of them is set to 'blockEntitlement'
+                entitlementState = (blockingAggregator != null && blockingAggregator.isBlockEntitlement() ? EntitlementState.BLOCKED : EntitlementState.ACTIVE);
+            }
         }
     }
 

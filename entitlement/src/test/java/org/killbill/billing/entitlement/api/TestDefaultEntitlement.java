@@ -327,4 +327,30 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
         }
     }
+
+    @Test(groups = "slow")
+    public void testEntitlementStartedInFuture() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+
+        final LocalDate startDate = initialDate.plusDays(10);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, startDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        assertEquals(entitlement.getState(), EntitlementState.PENDING);
+
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        clock.addDays(10);
+        assertListenerStatus();
+
+        final Entitlement entitlement1 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement1.getState(), EntitlementState.ACTIVE);
+
+    }
 }
