@@ -103,8 +103,22 @@ public class PaymentAutomatonDAOHelper {
 
     public void processPaymentInfoPlugin(final TransactionStatus transactionStatus, @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,
                                          final String currentPaymentStateName) {
-        final BigDecimal processedAmount = paymentInfoPlugin == null ? null : paymentInfoPlugin.getAmount();
-        final Currency processedCurrency = paymentInfoPlugin == null ? null : paymentInfoPlugin.getCurrency();
+        final BigDecimal processedAmount;
+        if (TransactionStatus.SUCCESS.equals(transactionStatus) || TransactionStatus.PENDING.equals(transactionStatus)) {
+            if (paymentInfoPlugin == null || paymentInfoPlugin.getAmount() == null) {
+                processedAmount = paymentStateContext.getAmount();
+            } else {
+                processedAmount = paymentInfoPlugin.getAmount();
+            }
+        } else {
+            processedAmount = BigDecimal.ZERO;
+        }
+        final Currency processedCurrency;
+        if (paymentInfoPlugin == null || paymentInfoPlugin.getCurrency() == null) {
+            processedCurrency = paymentStateContext.getCurrency();
+        } else {
+            processedCurrency = paymentInfoPlugin.getCurrency();
+        }
         final String gatewayErrorCode = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayErrorCode();
         final String gatewayErrorMsg = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayError();
 

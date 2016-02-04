@@ -216,7 +216,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 try {
                     log.debug("Notifying invoice of failed payment: id={}, amount={}, currency={}, invoiceId={}", paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), paymentControlContext.getCurrency(), invoiceId);
                     invoiceApi.notifyOfPayment(invoiceId,
-                                               paymentControlContext.getAmount(),
+                                               BigDecimal.ZERO,
                                                paymentControlContext.getCurrency(),
                                                // processed currency may be null so we use currency; processed currency will be updated if/when payment succeeds
                                                paymentControlContext.getCurrency(),

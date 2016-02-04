@@ -223,6 +223,8 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertTrue(invoice1.getPaidAmount().compareTo(BigDecimal.ZERO) == 0);
         assertTrue(invoice1.getChargedAmount().compareTo(new BigDecimal("249.95")) == 0);
         assertEquals(invoice1.getPayments().size(), 1);
+        assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
         assertFalse(invoice1.getPayments().get(0).isSuccess());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -230,6 +232,11 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(payments.size(), 1);
+        assertEquals(payments.get(0).getTransactions().size(), 1);
+        assertEquals(payments.get(0).getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments.get(0).getTransactions().get(0).getCurrency(), Currency.USD);
+        assertEquals(payments.get(0).getTransactions().get(0).getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payments.get(0).getTransactions().get(0).getProcessedCurrency(), Currency.USD);
 
         // Trigger the payment retry
         busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -245,5 +252,13 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance2.compareTo(BigDecimal.ZERO) == 0);
+
+        final List<Payment> payments2 = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(payments2.size(), 1);
+        assertEquals(payments2.get(0).getTransactions().size(), 2);
+        assertEquals(payments2.get(0).getTransactions().get(1).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments2.get(0).getTransactions().get(1).getCurrency(), Currency.USD);
+        assertEquals(payments2.get(0).getTransactions().get(1).getProcessedAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments2.get(0).getTransactions().get(1).getProcessedCurrency(), Currency.USD);
     }
 }
