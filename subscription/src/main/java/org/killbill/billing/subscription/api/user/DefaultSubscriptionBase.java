@@ -139,8 +139,22 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public EntitlementState getState() {
-        return (getPreviousTransition() == null) ? null
-                                                 : getPreviousTransition().getNextState();
+
+        final SubscriptionBaseTransition previousTransition = getPreviousTransition();
+        if (previousTransition != null) {
+            return previousTransition.getNextState();
+        }
+
+        final SubscriptionBaseTransition pendingTransition = getPendingTransition();
+        if (pendingTransition != null &&
+            (pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.CREATE) ||
+             pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.TRANSFER) ||
+             pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.MIGRATE_BILLING) ||
+             pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.RE_CREATE))) {
+            return EntitlementState.PENDING;
+        }
+
+        throw new IllegalStateException("Should return a valid EntitlementState");
     }
 
     @Override

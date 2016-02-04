@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.DefaultSubscriptionTestInitializer;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
@@ -264,5 +265,31 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(subscription);
 
         assertListenerStatus();
+    }
+
+
+    @Test(groups = "slow")
+    public void testCreateSubscriptionInTheFuture() throws SubscriptionBaseApiException {
+        final DateTime init = clock.getUTCNow();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+
+        final DateTime futureCreationDate = init.plusDays(10);
+
+        DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
+                                                                                                                          testUtil.getProductSpecifier(productName, planSetName, term, null), null, futureCreationDate, internalCallContext);
+        assertListenerStatus();
+        assertNotNull(subscription);
+        assertEquals(subscription.getState(), EntitlementState.PENDING);
+
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        clock.addDays(10);
+        assertListenerStatus();
+
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(subscription.getState(), EntitlementState.ACTIVE);
     }
 }

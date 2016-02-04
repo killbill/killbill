@@ -211,7 +211,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     @Override
     public boolean cancel(final DefaultSubscriptionBase subscription, final CallContext context) throws SubscriptionBaseApiException {
         final EntitlementState currentState = subscription.getState();
-        if (currentState != null && currentState != EntitlementState.ACTIVE) {
+        if (currentState == EntitlementState.CANCELLED) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
         }
         final DateTime now = clock.getUTCNow();
@@ -237,7 +237,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     @Override
     public boolean cancelWithRequestedDate(final DefaultSubscriptionBase subscription, final DateTime requestedDateWithMs, final CallContext context) throws SubscriptionBaseApiException {
         final EntitlementState currentState = subscription.getState();
-        if (currentState != null && currentState != EntitlementState.ACTIVE) {
+        if (currentState == EntitlementState.CANCELLED) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
         }
         final DateTime now = clock.getUTCNow();
@@ -250,7 +250,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     @Override
     public boolean cancelWithPolicy(final DefaultSubscriptionBase subscription, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
         final EntitlementState currentState = subscription.getState();
-        if (currentState != null && currentState != EntitlementState.ACTIVE) {
+        if (currentState == EntitlementState.CANCELLED) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
         }
 

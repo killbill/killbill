@@ -619,7 +619,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         switch (plan.getProduct().getCategory()) {
             case BASE:
                 if (baseSubscription != null &&
-                    baseSubscription.getState() == EntitlementState.ACTIVE) {
+                    (baseSubscription.getState() == EntitlementState.ACTIVE || baseSubscription.getState() == EntitlementState.PENDING)) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
                 }
                 return effectiveDate;
