@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -32,6 +34,14 @@ public class TestCallContext implements CallContext {
 
     public TestCallContext(final String userName) {
         this(userName, new DefaultClock().getUTCNow(), new DefaultClock().getUTCNow());
+    }
+
+    public TestCallContext(final CallContext context, final DateTime utcNow) {
+        this.userName = context.getUserName();
+        this.createdDate = utcNow;
+        this.updatedDate = utcNow;
+        this.userToken = context.getUserToken();
+        this.tenantId = context.getTenantId();
     }
 
     public TestCallContext(final String userName, final DateTime createdDate, final DateTime updatedDate) {
