@@ -156,7 +156,7 @@ public class TestPayment extends TestJaxrsBase {
         refundTransaction.setTransactionExternalKey(refundTransactionExternalKey);
         refundTransaction.setAmount(purchaseAmount);
         refundTransaction.setCurrency(authPayment.getCurrency());
-        final Payment refundPayment = killBillClient.refundPayment(refundTransaction, pluginProperties, createdBy, reason, comment);
+        final Payment refundPayment = killBillClient.refundPayment(refundTransaction, null, pluginProperties, createdBy, reason, comment);
         verifyPaymentWithPendingRefund(account, paymentMethodId, paymentExternalKey, purchaseTransactionExternalKey, purchaseAmount, refundTransactionExternalKey, refundPayment);
 
         // We cannot complete using just the payment id as JAX-RS doesn't know which transaction to complete
@@ -221,7 +221,7 @@ public class TestPayment extends TestJaxrsBase {
 
         // Void payment using externalKey
         final String voidTransactionExternalKey = UUID.randomUUID().toString();
-        final Payment voidPayment = killBillClient.voidPayment(null, paymentExternalKey, voidTransactionExternalKey, ImmutableMap.<String, String>of(), createdBy, reason, comment);
+        final Payment voidPayment = killBillClient.voidPayment(null, paymentExternalKey, voidTransactionExternalKey, null, ImmutableMap.<String, String>of(), createdBy, reason, comment);
         verifyPaymentTransaction(accountJson, voidPayment.getPaymentId(), paymentExternalKey, voidPayment.getTransactions().get(1),
                                  voidTransactionExternalKey, null, "VOID", "SUCCESS");
     }
