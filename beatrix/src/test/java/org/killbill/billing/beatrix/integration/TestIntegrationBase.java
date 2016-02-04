@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -467,11 +468,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     }
 
     protected Payment refundPaymentAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+        return refundPaymentAndCheckForCompletion(account, payment, payment.getPurchasedAmount(), payment.getCurrency(), events);
+    }
+
+    protected Payment refundPaymentAndCheckForCompletion(final Account account, final Payment payment, final BigDecimal amount, final Currency currency, final NextEvent... events) {
         return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
                                                                      PLUGIN_PROPERTIES, PAYMENT_OPTIONS, refreshedCallContext());
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
@@ -501,18 +506,21 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     }
 
     protected Payment refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final Payment payment, final Map<UUID, BigDecimal> iias, final NextEvent... events) {
+        return refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment, payment.getPurchasedAmount(), payment.getCurrency(), iias, events);
+    }
+
+    protected Payment refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final Payment payment, final BigDecimal amount, final Currency currency, final Map<UUID, BigDecimal> iias, final NextEvent... events) {
         return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
             public Payment apply(@Nullable final Void input) {
-
-                final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+                final Collection<PluginProperty> properties = new ArrayList<PluginProperty>();
                 final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
                 properties.add(prop1);
                 final PluginProperty prop2 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, iias, false);
                 properties.add(prop2);
 
                 try {
-                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
                                                                      properties, PAYMENT_OPTIONS, refreshedCallContext());
                 } catch (final PaymentApiException e) {
                     fail(e.toString());

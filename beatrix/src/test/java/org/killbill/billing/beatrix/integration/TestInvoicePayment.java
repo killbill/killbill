@@ -18,7 +18,10 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -104,6 +107,82 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertEquals(invoice2.getBalance().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(invoice3.getBalance().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testPartialRefunds() throws Exception {
+        // 2012-05-01T00:03:42.000Z
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        final AccountData accountData = getAccountData(0);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
+
+        // 2012-05-31 => DAY 30 have to get out of trial {I0, P0}
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
+
+        // Invoice is fully paid
+        Payment payment1 = paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 5, 31), new BigDecimal("249.95"), TransactionStatus.SUCCESS, invoice2.getId(), Currency.USD));
+        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment1.getTransactions().get(0).getProcessedAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(invoice2.getBalance().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+
+        // Trigger first partial refund ($1), no adjustment
+        payment1 = refundPaymentAndCheckForCompletion(account, payment1, BigDecimal.TEN, Currency.USD, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getRefundedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().size(), 2);
+        Assert.assertEquals(payment1.getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(0).getProcessedAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(1).getAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().get(1).getProcessedAmount().compareTo(BigDecimal.TEN), 0);
+        invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
+        Assert.assertEquals(invoice2.getBalance().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+
+        // Trigger second partial refund ($1), with item adjustment
+        final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
+        iias.put(invoice2.getInvoiceItems().get(0).getId(), BigDecimal.ONE);
+        payment1 = refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, BigDecimal.ONE, Currency.USD, iias, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getRefundedAmount().compareTo(new BigDecimal("11")), 0);
+        Assert.assertEquals(payment1.getTransactions().size(), 3);
+        Assert.assertEquals(payment1.getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(0).getProcessedAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(1).getAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().get(1).getProcessedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().get(2).getAmount().compareTo(BigDecimal.ONE), 0);
+        Assert.assertEquals(payment1.getTransactions().get(2).getProcessedAmount().compareTo(BigDecimal.ONE), 0);
+        invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
+        Assert.assertEquals(invoice2.getBalance().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+
+        // Trigger third partial refund ($10), with item adjustment
+        iias.put(invoice2.getInvoiceItems().get(0).getId(), BigDecimal.TEN);
+        payment1 = refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, BigDecimal.TEN, Currency.USD, iias, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
+        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getRefundedAmount().compareTo(new BigDecimal("21")), 0);
+        Assert.assertEquals(payment1.getTransactions().size(), 4);
+        Assert.assertEquals(payment1.getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(0).getProcessedAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(1).getAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().get(1).getProcessedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().get(2).getAmount().compareTo(BigDecimal.ONE), 0);
+        Assert.assertEquals(payment1.getTransactions().get(2).getProcessedAmount().compareTo(BigDecimal.ONE), 0);
+        Assert.assertEquals(payment1.getTransactions().get(3).getAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().get(3).getProcessedAmount().compareTo(BigDecimal.TEN), 0);
+        invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
+        Assert.assertEquals(invoice2.getBalance().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
     }
 
     @Test(groups = "slow")

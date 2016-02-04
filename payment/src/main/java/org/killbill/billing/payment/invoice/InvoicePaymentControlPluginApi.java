@@ -153,6 +153,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     final UUID invoiceId = getInvoiceId(pluginProperties);
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null && existingInvoicePayment.isSuccess()) {
+                        // Only one successful purchase per payment (the invoice could be linked to multiple successful payments though)
                         log.info("onSuccessCall was already completed for payment purchase: " + paymentControlContext.getPaymentId());
                     } else {
                         final BigDecimal invoicePaymentAmount;
@@ -175,20 +176,16 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     break;
 
                 case REFUND:
-                    existingInvoicePayment = invoiceApi.getInvoicePaymentForRefund(paymentControlContext.getPaymentId(), internalContext);
-                    if (existingInvoicePayment != null) {
-                        log.info("onSuccessCall was already completed for payment refund: " + paymentControlContext.getPaymentId());
-                    } else {
-                        final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
-                        final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
-                        final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
-                        invoiceApi.createRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
-                    }
+                    final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
+                    final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
+                    final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
+                    invoiceApi.createRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
                     break;
 
                 case CHARGEBACK:
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForChargeback(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
+                        // We don't support partial chargebacks (yet?)
                         log.info("onSuccessCall was already completed for payment chargeback: " + paymentControlContext.getPaymentId());
                     } else {
                         final InvoicePayment linkedInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
