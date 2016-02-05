@@ -58,6 +58,8 @@ import static org.testng.Assert.fail;
 
 public class TestRetryService extends PaymentTestSuiteNoDB {
 
+    private static final int TIMEOUT = 10;
+
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
 
     @Override
@@ -174,7 +176,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         moveClockForFailureType(FailureType.PAYMENT_FAILURE, 0);
 
         try {
-            await().atMost(5, SECONDS).until(new Callable<Boolean>() {
+            await().atMost(TIMEOUT, SECONDS).until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
                     final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
@@ -260,7 +262,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
             final int curFailureCondition = curFailure;
 
             try {
-                await().atMost(5, SECONDS).until(new Callable<Boolean>() {
+                await().atMost(TIMEOUT, SECONDS).until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
                         final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
@@ -345,7 +347,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
             final int curFailureCondition = curFailure;
 
             try {
-                await().atMost(5, SECONDS).until(new Callable<Boolean>() {
+                await().atMost(TIMEOUT, SECONDS).until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
                         final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);

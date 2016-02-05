@@ -29,9 +29,6 @@ import org.killbill.clock.Clock;
 
 public class DefaultBlockingState extends EntityBase implements BlockingState {
 
-    public static final String CLEAR_STATE_NAME = "__KILLBILL__CLEAR__OVERDUE_STATE__";
-
-    private static BlockingState clearState = null;
 
     private final UUID blockedId;
     private final String stateName;
@@ -42,13 +39,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     private final DateTime effectiveDate;
     private final BlockingStateType type;
     private final Long totalOrdering;
-
-    public static BlockingState getClearState(final BlockingStateType type, final String serviceName, final Clock clock) {
-        if (clearState == null) {
-            clearState = new DefaultBlockingState(null, type, CLEAR_STATE_NAME, serviceName, false, false, false, clock.getUTCNow());
-        }
-        return clearState;
-    }
 
     // Used by the DAO
     public DefaultBlockingState(final UUID id,

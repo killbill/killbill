@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -222,6 +223,27 @@ public class PaymentTransactionModelDao extends EntityModelDaoBase implements En
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("PaymentTransactionModelDao{");
+        sb.append("attemptId=").append(attemptId);
+        sb.append(", paymentId=").append(paymentId);
+        sb.append(", transactionExternalKey='").append(transactionExternalKey).append('\'');
+        sb.append(", transactionType=").append(transactionType);
+        sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", transactionStatus=").append(transactionStatus);
+        sb.append(", amount=").append(amount);
+        sb.append(", currency=").append(currency);
+        sb.append(", processedAmount=").append(processedAmount);
+        sb.append(", processedCurrency=").append(processedCurrency);
+        sb.append(", gatewayErrorCode='").append(gatewayErrorCode).append('\'');
+        sb.append(", gatewayErrorMsg='").append(gatewayErrorMsg).append('\'');
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", updatedDate=").append(updatedDate);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override

@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -100,6 +101,21 @@ public class PaymentModelDao extends EntityModelDaoBase implements EntityModelDa
 
     public void setLastSuccessStateName(final String lastSuccessStateName) {
         this.lastSuccessStateName = lastSuccessStateName;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("PaymentModelDao{");
+        sb.append("accountId=").append(accountId);
+        sb.append(", paymentNumber=").append(paymentNumber);
+        sb.append(", paymentMethodId=").append(paymentMethodId);
+        sb.append(", externalKey='").append(externalKey).append('\'');
+        sb.append(", stateName='").append(stateName).append('\'');
+        sb.append(", lastSuccessStateName='").append(lastSuccessStateName).append('\'');
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", updatedDate=").append(updatedDate);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override

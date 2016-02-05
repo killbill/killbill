@@ -17,14 +17,11 @@
 
 package org.killbill.billing.payment.core.sm.payments;
 
-import java.math.BigDecimal;
-
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
-import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
@@ -50,28 +47,6 @@ public class ChargebackOperation extends PaymentOperation {
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting CHARGEBACK for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
-
-        final PaymentPluginStatus status;
-        if (!paymentStateContext.getOnLeavingStateExistingTransactions().isEmpty()) {
-            final Iterable<PaymentTransactionModelDao> purchaseTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.PURCHASE);
-            final Iterable<PaymentTransactionModelDao> captureTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.CAPTURE);
-            final Iterable<PaymentTransactionModelDao> refundTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.REFUND);
-            final Iterable<PaymentTransactionModelDao> chargebackTransactions = getOnLeavingStateExistingTransactionsForType(TransactionType.CHARGEBACK);
-
-            final BigDecimal purchasedAmount = getSumAmount(purchaseTransactions);
-            final BigDecimal capturedAmount = getSumAmount(captureTransactions);
-            final BigDecimal refundedAmount = getSumAmount(refundTransactions);
-            final BigDecimal chargebackAmount = getSumAmount(chargebackTransactions);
-            final BigDecimal chargebackAvailableAmount = purchasedAmount.add(capturedAmount).subtract(refundedAmount.add(chargebackAmount));
-
-            if (paymentStateContext.getAmount().compareTo(chargebackAvailableAmount) > 0) {
-                status = PaymentPluginStatus.ERROR;
-            } else {
-                status = PaymentPluginStatus.PROCESSED;
-            }
-        } else {
-            status = PaymentPluginStatus.PROCESSED;
-        }
         return new DefaultNoOpPaymentInfoPlugin(paymentStateContext.getPaymentId(),
                                                 paymentStateContext.getTransactionId(),
                                                 TransactionType.CHARGEBACK,
@@ -79,7 +54,7 @@ public class ChargebackOperation extends PaymentOperation {
                                                 paymentStateContext.getCurrency(),
                                                 null,
                                                 null,
-                                                status,
+                                                PaymentPluginStatus.PROCESSED,
                                                 null,
                                                 null);
     }

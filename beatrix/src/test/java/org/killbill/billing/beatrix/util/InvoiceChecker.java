@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -159,17 +161,11 @@ public class InvoiceChecker {
             if (expectedLocalCTD == null) {
                 assertNull(subscription.getChargedThroughDate());
             } else {
-                assertTrue(expectedLocalCTD.compareTo(subscription.getChargedThroughDate().toLocalDate()) == 0);
-                /*
-                final DateTime expectedCTD = expectedLocalCTD.toDateTime(new LocalTime(subscription.getStartDate().getMillis(), DateTimeZone.UTC), DateTimeZone.UTC);
-                final String msg = String.format("Checking CTD for entitlement %s : expectedLocalCTD = %s => expectedCTD = %s, got %s",
-                                                 entitlementId, expectedLocalCTD, expectedCTD, subscription.getChargedThroughDate());
-                log.info(msg);
-                assertNotNull(subscription.getChargedThroughDate());
-                assertTrue(subscription.getChargedThroughDate().compareTo(expectedCTD) == 0, msg);
-                */
+                final String msg = String.format("Checking CTD for entitlement %s : expectedLocalCTD = %s, got %s",
+                                                 entitlementId, expectedLocalCTD, subscription.getChargedThroughDate().toLocalDate());
+                assertTrue(expectedLocalCTD.compareTo(subscription.getChargedThroughDate().toLocalDate()) == 0, msg);
             }
-        } catch (EntitlementApiException e) {
+        } catch (final EntitlementApiException e) {
             fail("Failed to retrieve entitlement for " + entitlementId);
         }
     }
@@ -182,7 +178,7 @@ public class InvoiceChecker {
         private final InvoiceItemType type;
         private final BigDecimal amount;
 
-        public ExpectedInvoiceItemCheck(final InvoiceItemType type, final BigDecimal amount, boolean checkDates) {
+        public ExpectedInvoiceItemCheck(final InvoiceItemType type, final BigDecimal amount, final boolean checkDates) {
             this.checkDates = checkDates;
             this.type = type;
             this.startDate = null;
@@ -195,7 +191,7 @@ public class InvoiceChecker {
         }
 
         public ExpectedInvoiceItemCheck(final LocalDate startDate, final LocalDate endDate,
-                                        final InvoiceItemType type, final BigDecimal amount, boolean checkDates) {
+                                        final InvoiceItemType type, final BigDecimal amount, final boolean checkDates) {
             this.checkDates = checkDates;
             this.startDate = startDate;
             this.endDate = endDate;
@@ -227,6 +223,17 @@ public class InvoiceChecker {
         public BigDecimal getAmount() {
             return amount;
         }
-    }
 
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("ExpectedInvoiceItemCheck{");
+            sb.append("checkDates=").append(checkDates);
+            sb.append(", startDate=").append(startDate);
+            sb.append(", endDate=").append(endDate);
+            sb.append(", type=").append(type);
+            sb.append(", amount=").append(amount);
+            sb.append('}');
+            return sb.toString();
+        }
+    }
 }

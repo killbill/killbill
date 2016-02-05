@@ -256,7 +256,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
 
         return new ExternalChargeInvoiceItem(externalChargeItem.getId(), externalChargeItem.getInvoiceId(), externalChargeItem.getAccountId(),
-                                             externalChargeItem.getPlanName(), externalChargeItem.getStartDate(),
+                                             externalChargeItem.getDescription(), externalChargeItem.getStartDate(),
                                              externalChargeItem.getAmount(), externalChargeItem.getCurrency());
     }
 

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.shiro.util.ThreadContext;
 import org.killbill.billing.payment.core.PaymentExecutors;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.ProfilingData;
 import org.killbill.commons.request.Request;
@@ -57,7 +58,11 @@ public class PluginDispatcher<ReturnType> {
         final ExecutorService pluginExecutor = paymentExecutors.getPluginExecutorService();
 
         // Wrap existing callable to keep the original requestId
-        final Callable<PluginDispatcherReturnType<ReturnType>> callableWithRequestData = new CallableWithRequestData(Request.getPerThreadRequestData(), ThreadContext.getSecurityManager(), ThreadContext.getSubject(), task);
+        final Callable<PluginDispatcherReturnType<ReturnType>> callableWithRequestData = new CallableWithRequestData(Request.getPerThreadRequestData(),
+                                                                                                                     UUIDs.getRandom(),
+                                                                                                                     ThreadContext.getSecurityManager(),
+                                                                                                                     ThreadContext.getSubject(),
+                                                                                                                     task);
 
         final Future<PluginDispatcherReturnType<ReturnType>> future = pluginExecutor.submit(callableWithRequestData);
         final PluginDispatcherReturnType<ReturnType> pluginDispatcherResult = future.get(timeout, unit);

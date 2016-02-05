@@ -311,14 +311,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement telescopicEntitlement2 = entitlementApi.getEntitlementForId(telescopicEntitlement.getId(), callContext);
         assertEquals(telescopicEntitlement2.getState(), EntitlementState.BLOCKED);
 
-        // Check we can't block in a blocked state
-        try {
-            entitlementApi.pause(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
-            Assert.fail("Should not have succeeded to block in a blocked state");
-        } catch (EntitlementApiException e) {
-            assertEquals(e.getCode(), ErrorCode.ENT_ALREADY_BLOCKED.getCode());
-        }
-
         final List<Entitlement> bundleEntitlements2 = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement2.getBundleId(), callContext);
         assertEquals(bundleEntitlements2.size(), 2);
         for (final Entitlement cur : bundleEntitlements2) {
@@ -339,8 +331,11 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        // Verify call is idempotent
+        // Verify call is idempotent : The current semantics is to post the RESUME because we went through the operation, but not the BLOCK because the DAO logic
+        // filtered the event as the subscription was already resumed.
+        testListener.pushExpectedEvents(NextEvent.RESUME);
         entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
 
         // Verify blocking state
         final Entitlement baseEntitlement3 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,6 +24,8 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentTransaction;
@@ -46,15 +48,17 @@ public class PaymentChecker {
     private static final Logger log = LoggerFactory.getLogger(PaymentChecker.class);
 
     private final PaymentApi paymentApi;
+    private final InvoicePaymentApi invoicePaymentApi;
     private final AuditChecker auditChecker;
 
     @Inject
-    public PaymentChecker(final PaymentApi paymentApi, final AuditChecker auditChecker) {
+    public PaymentChecker(final PaymentApi paymentApi, final InvoicePaymentApi invoicePaymentApi, final AuditChecker auditChecker) {
         this.paymentApi = paymentApi;
+        this.invoicePaymentApi = invoicePaymentApi;
         this.auditChecker = auditChecker;
     }
 
-    public Payment checkPayment(final UUID accountId, final int paymentOrderingNumber, final CallContext context, ExpectedPaymentCheck expected) throws PaymentApiException {
+    public Payment checkPayment(final UUID accountId, final int paymentOrderingNumber, final CallContext context, final ExpectedPaymentCheck expected) throws PaymentApiException {
         final List<Payment> payments = paymentApi.getAccountPayments(accountId, false, ImmutableList.<PluginProperty>of(), context);
         Assert.assertEquals(payments.size(), paymentOrderingNumber);
         final Payment payment = payments.get(paymentOrderingNumber - 1);
@@ -78,10 +82,19 @@ public class PaymentChecker {
 
     private void checkPayment(final UUID accountId, final Payment payment, final CallContext context, final ExpectedPaymentCheck expected) {
         Assert.assertEquals(payment.getAccountId(), accountId);
-        final PaymentTransaction transaction = getPurchaseTransaction(payment);
-        Assert.assertTrue(transaction.getAmount().compareTo(expected.getAmount()) == 0);
-        Assert.assertEquals(transaction.getTransactionStatus(), expected.getStatus());
         Assert.assertEquals(payment.getCurrency(), expected.getCurrency());
+
+        if (expected.getInvoiceId() != null) {
+            for (final InvoicePayment invoicePayment : invoicePaymentApi.getInvoicePayments(payment.getId(), context)) {
+                Assert.assertEquals(invoicePayment.getInvoiceId(), expected.getInvoiceId());
+            }
+        }
+
+        final PaymentTransaction transaction = getPurchaseTransaction(payment);
+        Assert.assertTrue(transaction.getAmount().compareTo(expected.getAmount()) == 0, "Actual amount " + transaction.getAmount() + ", expected amount " + expected.getAmount());
+        Assert.assertEquals(transaction.getTransactionStatus(), expected.getStatus());
+        Assert.assertEquals(transaction.getEffectiveDate().toLocalDate().compareTo(expected.getPaymentDate()), 0);
+
         auditChecker.checkPaymentCreated(payment, context);
     }
 

@@ -20,7 +20,6 @@ package org.killbill.billing.invoice.api.svcs;
 
 import java.math.BigDecimal;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -108,11 +107,6 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public InvoicePayment getInvoicePaymentForAttempt(final UUID paymentId, final InternalTenantContext context) throws InvoiceApiException {
         return getInvoicePayment(paymentId, InvoicePaymentType.ATTEMPT, context);
-    }
-
-    @Override
-    public InvoicePayment getInvoicePaymentForRefund(final UUID paymentId, final InternalTenantContext context) throws InvoiceApiException {
-        return getInvoicePayment(paymentId, InvoicePaymentType.REFUND, context);
     }
 
     @Override

@@ -178,7 +178,7 @@ public class InvoiceDaoHelper {
             public boolean apply(final InvoiceModelDao in) {
                 final BigDecimal balance = InvoiceModelDaoHelper.getBalance(in);
                 log.debug("Computed balance={} for invoice={}", balance, in);
-                return (balance.compareTo(BigDecimal.ZERO) >= 1) && (upToDate == null || !in.getTargetDate().isAfter(upToDate));
+                return (!in.isWrittenOff() && balance.compareTo(BigDecimal.ZERO) >= 1) && (upToDate == null || !in.getTargetDate().isAfter(upToDate));
             }
         });
         return new ArrayList<InvoiceModelDao>(unpaidInvoices);

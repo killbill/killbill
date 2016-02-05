@@ -128,6 +128,7 @@ public class TestInvoiceHelper {
     public static final BigDecimal THIRTY_THREE = new BigDecimal("33.0").setScale(KillBillMoney.MAX_SCALE);
 
     public static final BigDecimal FORTY = new BigDecimal("40.0").setScale(KillBillMoney.MAX_SCALE);
+    public static final BigDecimal FORTY_SEVEN = new BigDecimal("47.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal SIXTY_SIX = new BigDecimal("66.0").setScale(KillBillMoney.MAX_SCALE);
     public static final BigDecimal SEVENTY_FIVE = new BigDecimal("75.0").setScale(KillBillMoney.MAX_SCALE);
 

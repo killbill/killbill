@@ -28,9 +28,12 @@ import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
 import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
 import org.killbill.billing.overdue.OverdueInternalApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.bus.api.BusEvent;
 import org.slf4j.Logger;
@@ -46,28 +49,45 @@ public class OverdueListener {
 
     private final OverdueInternalApi overdueInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
+
+    private final NonEntityDao nonEntityDao;
 
     @Inject
     public OverdueListener(final OverdueInternalApi overdueInternalApi,
+                           final NonEntityDao nonEntityDao,
+                           final CacheControllerDispatcher cacheControllerDispatcher,
                            final InternalCallContextFactory internalCallContextFactory) {
         this.overdueInternalApi = overdueInternalApi;
+        this.nonEntityDao = nonEntityDao;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    @AllowConcurrentEvents
-    @Subscribe
-    public void handle_OVERDUE_ENFORCEMENT_OFF_Insert(final ControlTagCreationInternalEvent event) {
-        if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
-            final InternalCallContext callContext = createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2());
-            overdueInternalApi.scheduleOverdueClear(event.getObjectId(), callContext);
-        }
-    }
+
+
 
     @AllowConcurrentEvents
     @Subscribe
-    public void handle_OVERDUE_ENFORCEMENT_OFF_Removal(final ControlTagDeletionInternalEvent event) {
+    public void handleTagInsert(final ControlTagCreationInternalEvent event) {
+        if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
+            final InternalCallContext callContext = createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2());
+            overdueInternalApi.scheduleOverdueClear(event.getObjectId(), callContext);
+        } else if (event.getTagDefinition().getName().equals(ControlTagType.WRITTEN_OFF.toString()) && event.getObjectType() == ObjectType.INVOICE) {
+            final UUID accountId = nonEntityDao.retrieveIdFromObject(event.getSearchKey1(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+            insertBusEventIntoNotificationQueue(accountId, event);
+        }
+    }
+
+
+    @AllowConcurrentEvents
+    @Subscribe
+    public void handleTagRemoval(final ControlTagDeletionInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
             insertBusEventIntoNotificationQueue(event.getObjectId(), event);
+        } else if (event.getTagDefinition().getName().equals(ControlTagType.WRITTEN_OFF.toString()) && event.getObjectType() == ObjectType.INVOICE) {
+            final UUID accountId = nonEntityDao.retrieveIdFromObject(event.getSearchKey1(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+            insertBusEventIntoNotificationQueue(accountId, event);
         }
     }
 
