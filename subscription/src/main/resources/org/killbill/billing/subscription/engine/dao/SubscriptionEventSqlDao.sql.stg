@@ -16,7 +16,6 @@ order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
 tableFields(prefix) ::= <<
   <prefix> event_type
 , <prefix> user_type
-, <prefix> requested_date
 , <prefix> effective_date
 , <prefix> subscription_id
 , <prefix> plan_name
@@ -33,7 +32,6 @@ tableFields(prefix) ::= <<
 tableValues() ::= <<
   :eventType
 , :userType
-, :requestedDate
 , :effectiveDate
 , :subscriptionId
 , :planName
