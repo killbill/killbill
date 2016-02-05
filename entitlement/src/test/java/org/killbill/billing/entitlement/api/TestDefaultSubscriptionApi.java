@@ -276,18 +276,14 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(0).getEffectiveDate().compareTo(effectiveDate), 0);
-        assertEquals(events.get(0).getRequestedDate().compareTo(effectiveDate), 0);
 
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
         assertEquals(events.get(1).getEffectiveDate().compareTo(effectiveDate), 0);
-        assertEquals(events.get(1).getRequestedDate().compareTo(effectiveDate), 0);
 
         assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
         assertEquals(events.get(2).getEffectiveDate().compareTo(effectiveDate.plusMonths(1)), 0);
-        assertEquals(events.get(2).getRequestedDate().compareTo(effectiveDate.plusMonths(1)), 0);
 
         assertListenerStatus();
-
     }
 
 

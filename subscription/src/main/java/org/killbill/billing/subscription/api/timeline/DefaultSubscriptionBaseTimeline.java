@@ -130,11 +130,6 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                 }
 
                 @Override
-                public DateTime getRequestedDate() {
-                    return cur.getEffectiveDate();
-                }
-
-                @Override
                 public PlanPhaseSpecifier getPlanPhaseSpecifier() {
                     return spec;
                 }

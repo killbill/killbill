@@ -47,7 +47,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
     private long totalOrdering;
     private EventType eventType;
     private ApiEventType userType;
-    private DateTime requestedDate; // deprecated (similar to effectiveDate)
     private DateTime effectiveDate;
     private UUID subscriptionId;
     private String planName;
@@ -61,14 +60,13 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
     }
 
     public SubscriptionEventModelDao(final UUID id, final long totalOrdering, final EventType eventType, final ApiEventType userType,
-                                     final DateTime requestedDate, final DateTime effectiveDate, final UUID subscriptionId,
+                                     final DateTime effectiveDate, final UUID subscriptionId,
                                      final String planName, final String phaseName, final String priceListName, final long currentVersion,
                                      final boolean active, final DateTime createDate, final DateTime updateDate) {
         super(id, createDate, updateDate);
         this.totalOrdering = totalOrdering;
         this.eventType = eventType;
         this.userType = userType;
-        this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
         this.subscriptionId = subscriptionId;
         this.planName = planName;
@@ -83,7 +81,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         this.totalOrdering = src.getTotalOrdering();
         this.eventType = src.getType();
         this.userType = eventType == EventType.API_USER ? ((ApiEvent) src).getApiEventType() : null;
-        this.requestedDate = src.getEffectiveDate();
         this.effectiveDate = src.getEffectiveDate();
         this.subscriptionId = src.getSubscriptionId();
         this.planName = eventType == EventType.API_USER ? ((ApiEvent) src).getEventPlan() : null;
@@ -103,10 +100,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
 
     public ApiEventType getUserType() {
         return userType;
-    }
-
-    public DateTime getRequestedDate() {
-        return requestedDate;
     }
 
     public DateTime getEffectiveDate() {
@@ -152,10 +145,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
 
     public void setUserType(final ApiEventType userType) {
         this.userType = userType;
-    }
-
-    public void setRequestedDate(final DateTime requestedDate) {
-        this.requestedDate = requestedDate;
     }
 
     public void setEffectiveDate(final DateTime effectiveDate) {
@@ -229,7 +218,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         sb.append("{totalOrdering=").append(totalOrdering);
         sb.append(", eventType=").append(eventType);
         sb.append(", userType=").append(userType);
-        sb.append(", requestedDate=").append(requestedDate);
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append(", subscriptionId=").append(subscriptionId);
         sb.append(", planName='").append(planName).append('\'');
@@ -279,9 +267,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         if (priceListName != null ? !priceListName.equals(that.priceListName) : that.priceListName != null) {
             return false;
         }
-        if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
-            return false;
-        }
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
         }
@@ -298,7 +283,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         result = 31 * result + (int) (totalOrdering ^ (totalOrdering >>> 32));
         result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
         result = 31 * result + (userType != null ? userType.hashCode() : 0);
-        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (planName != null ? planName.hashCode() : 0);

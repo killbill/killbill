@@ -199,11 +199,6 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             }
 
             @Override
-            public DateTime getRequestedDate() {
-                return getEffectiveDate();
-            }
-
-            @Override
             public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                 return subscriptionTransitionType;
             }
@@ -239,11 +234,6 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             }
 
             @Override
-            public DateTime getRequestedDate() {
-                return getEffectiveDate();
-            }
-
-            @Override
             public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                 return SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT;
             }
@@ -274,11 +264,6 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
                 return migrateEntitlementEvent.getPlanPhaseSpecifier();
-            }
-
-            @Override
-            public DateTime getRequestedDate() {
-                return migrateEntitlementEvent.getRequestedDate();
             }
 
             @Override

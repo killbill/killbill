@@ -123,11 +123,6 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     }
 
     @Override
-    public LocalDate getRequestedDate() {
-        return requestedDate != null ? new LocalDate(requestedDate, accountTimeZone) : null;
-    }
-
-    @Override
     public SubscriptionEventType getSubscriptionEventType() {
         return eventType;
     }

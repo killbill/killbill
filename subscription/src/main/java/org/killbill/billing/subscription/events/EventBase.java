@@ -89,7 +89,7 @@ public abstract class EventBase implements SubscriptionBaseEvent {
     // Really used for unit tests only as the sql implementation relies on date first and then event insertion
     //
     // Order first by:
-    // - effectiveDate, followed by processedDate, requestedDate
+    // - effectiveDate, followed by processedDate
     // - if all dates are equal-- unlikely, we first return PHASE EVENTS
     // - If both events are User events, return the first CREATE, CHANGE,... as specified by ApiEventType
     // - If all that is not enough return consistent by random ordering based on UUID
