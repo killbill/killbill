@@ -229,6 +229,54 @@ public class TestInvoicePayment extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
+    public void testAUTO_PAY_OFFThenPartialPayment() throws Exception {
+        // 2012-05-01T00:03:42.000Z
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        final AccountData accountData = getAccountData(0);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
+
+        // Put the account in AUTO_PAY_OFF to make sure payment system does not try to pay the initial invoice
+        add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        // 2012-05-31 => DAY 30 have to get out of trial {I0, P0}
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE);
+
+        Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
+
+        // Invoice is not paid
+        Assert.assertEquals(paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext).size(), 0);
+        Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+
+        // Trigger partial payment
+        final Payment payment1 = createPaymentAndCheckForCompletion(account, invoice2, BigDecimal.TEN, account.getCurrency(), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 5, 31), BigDecimal.TEN, TransactionStatus.SUCCESS, invoice2.getId(), Currency.USD));
+        Assert.assertEquals(payment1.getTransactions().size(), 1);
+        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().get(0).getProcessedAmount().compareTo(BigDecimal.TEN), 0);
+        invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
+        Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("239.95")), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+
+        // Remove AUTO_PAY_OFF and verify the invoice is fully paid
+        remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final Payment payment2 = paymentChecker.checkPayment(account.getId(), 2, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 5, 31), new BigDecimal("239.95"), TransactionStatus.SUCCESS, invoice2.getId(), Currency.USD));
+        Assert.assertEquals(payment2.getTransactions().size(), 1);
+        Assert.assertEquals(payment2.getPurchasedAmount().compareTo(new BigDecimal("239.95")), 0);
+        Assert.assertEquals(payment2.getTransactions().get(0).getProcessedAmount().compareTo(new BigDecimal("239.95")), 0);
+        invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
+        Assert.assertEquals(invoice2.getBalance().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+    }
+
+    @Test(groups = "slow")
     public void testPaymentDifferentCurrencyByPaymentPlugin() throws Exception {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
