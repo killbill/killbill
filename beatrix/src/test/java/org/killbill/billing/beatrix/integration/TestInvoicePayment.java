@@ -38,6 +38,7 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -328,7 +329,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testPartialPayments() throws Exception {
+    public void testPartialRefundsOnPartialPayments() throws Exception {
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
@@ -342,8 +343,9 @@ public class TestInvoicePayment extends TestIntegrationBase {
         final InvoiceItem item1 = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), callContext).get(0);
         assertListenerStatus();
 
+        // Trigger first partial payment ($4) on first invoice
         final Invoice invoice = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
-        final Payment payment1 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("4.00"), account.getCurrency(), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        Payment payment1 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("4.00"), account.getCurrency(), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         Invoice invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(new BigDecimal("6.00")) == 0);
@@ -353,7 +355,8 @@ public class TestInvoicePayment extends TestIntegrationBase {
         BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance.compareTo(new BigDecimal("6.00")) == 0);
 
-        final Payment payment2 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("6.00"), account.getCurrency(), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        // Trigger second partial payment ($6) on first invoice
+        Payment payment2 = createPaymentAndCheckForCompletion(account, invoice, new BigDecimal("6.00"), account.getCurrency(), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(BigDecimal.ZERO) == 0);
@@ -363,27 +366,56 @@ public class TestInvoicePayment extends TestIntegrationBase {
         accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance.compareTo(BigDecimal.ZERO) == 0);
 
-/*
-        This does not work since item is paid across multiple payments and so the mount is bigger than the payment.
-
-        // Now, issue refund with item adjustment on first invoice/item
-        paymentApi.createRefundWithItemsAdjustments(account, payment1.getId(), Sets.<UUID>newHashSet(item1.getId()), callContext);
-
+        // Refund first payment with item adjustment
+        final Map<UUID, BigDecimal> iias = new HashMap<UUID, BigDecimal>();
+        iias.put(item1.getId(), new BigDecimal("4.00"));
+        payment1 = refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, new BigDecimal("4.00"), Currency.USD, iias, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
         assertTrue(invoice1.getBalance().compareTo(BigDecimal.ZERO) == 0);
-
         accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance.compareTo(BigDecimal.ZERO) == 0);
 
-*/
-
-        refundPaymentAndCheckForCompletion(account, payment1, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-
+        // Refund second payment with item adjustment
+        iias.put(item1.getId(), new BigDecimal("6.00"));
+        payment2 = refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment2, new BigDecimal("6.00"), Currency.USD, iias, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         invoice1 = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);
-        assertTrue(invoice1.getBalance().compareTo(new BigDecimal("4.00")) == 0);
-
+        assertTrue(invoice1.getBalance().compareTo(BigDecimal.ZERO) == 0);
         accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
-        assertTrue(accountBalance.compareTo(new BigDecimal("4.00")) == 0);
+        assertTrue(accountBalance.compareTo(BigDecimal.ZERO) == 0);
+
+        Assert.assertEquals(invoice1.getPayments().size(), 4);
+
+        // Verify links for payment 1
+        Assert.assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(new BigDecimal("4.00")), 0);
+        Assert.assertNull(invoice1.getPayments().get(0).getLinkedInvoicePaymentId());
+        Assert.assertNull(invoice1.getPayments().get(0).getPaymentCookieId());
+        Assert.assertEquals(invoice1.getPayments().get(0).getPaymentId(), payment1.getId());
+        Assert.assertEquals(invoice1.getPayments().get(0).getType(), InvoicePaymentType.ATTEMPT);
+        Assert.assertTrue(invoice1.getPayments().get(0).isSuccess());
+
+        // Verify links for payment 2
+        Assert.assertEquals(invoice1.getPayments().get(1).getAmount().compareTo(new BigDecimal("6.00")), 0);
+        Assert.assertNull(invoice1.getPayments().get(1).getLinkedInvoicePaymentId());
+        Assert.assertNull(invoice1.getPayments().get(1).getPaymentCookieId());
+        Assert.assertEquals(invoice1.getPayments().get(1).getPaymentId(), payment2.getId());
+        Assert.assertEquals(invoice1.getPayments().get(1).getType(), InvoicePaymentType.ATTEMPT);
+        Assert.assertTrue(invoice1.getPayments().get(1).isSuccess());
+
+        // Verify links for refund 1
+        Assert.assertEquals(invoice1.getPayments().get(2).getAmount().compareTo(new BigDecimal("-4.00")), 0);
+        Assert.assertEquals(invoice1.getPayments().get(2).getLinkedInvoicePaymentId(), invoice1.getPayments().get(0).getId());
+        Assert.assertEquals(invoice1.getPayments().get(2).getPaymentCookieId(), payment1.getTransactions().get(1).getExternalKey());
+        Assert.assertEquals(invoice1.getPayments().get(2).getPaymentId(), payment1.getId());
+        Assert.assertEquals(invoice1.getPayments().get(2).getType(), InvoicePaymentType.REFUND);
+        Assert.assertTrue(invoice1.getPayments().get(2).isSuccess());
+
+        // Verify links for refund 2
+        Assert.assertEquals(invoice1.getPayments().get(3).getAmount().compareTo(new BigDecimal("-6.00")), 0);
+        Assert.assertEquals(invoice1.getPayments().get(3).getLinkedInvoicePaymentId(), invoice1.getPayments().get(1).getId());
+        Assert.assertEquals(invoice1.getPayments().get(3).getPaymentCookieId(), payment2.getTransactions().get(1).getExternalKey());
+        Assert.assertEquals(invoice1.getPayments().get(3).getPaymentId(), payment2.getId());
+        Assert.assertEquals(invoice1.getPayments().get(3).getType(), InvoicePaymentType.REFUND);
+        Assert.assertTrue(invoice1.getPayments().get(3).isSuccess());
     }
 
     @Test(groups = "slow")
