@@ -55,7 +55,6 @@ public class TestBundleTransfer extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testBundleTransferWithBPAnnualOnly() throws Exception {
-
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(3));
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
@@ -88,23 +87,21 @@ public class TestBundleTransfer extends TestIntegrationBase {
         transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", clock.getUTCNow(), false, false, callContext);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);
         assertEquals(invoices.size(), 1);
 
         final List<InvoiceItem> invoiceItems = invoices.get(0).getInvoiceItems();
         assertEquals(invoiceItems.size(), 1);
-        InvoiceItem theItem = invoiceItems.get(0);
+        final InvoiceItem theItem = invoiceItems.get(0);
         assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012, 5, 11)) == 0);
         assertTrue(theItem.getEndDate().compareTo(new LocalDate(2013, 5, 11)) == 0);
         assertTrue(theItem.getAmount().compareTo(new BigDecimal("2399.9500")) == 0);
 
         checkNoMoreInvoiceToGenerate(account);
-
     }
 
     @Test(groups = "slow")
     public void testBundleTransferWithBPMonthlyOnly() throws Exception {
-
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
@@ -249,7 +246,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), TransactionStatus.SUCCESS, secondInvoice.getId(), Currency.USD));
 
         // Move past the phase for simplicity
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
         final Invoice thirdInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -270,7 +267,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final DateTime now = clock.getUTCNow();
         final LocalDate transferDay = now.toLocalDate();
 
-        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.TRANSFER, NextEvent.TRANSFER, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.TRANSFER, NextEvent.TRANSFER, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final UUID newBundleId = entitlementApi.transferEntitlements(account.getId(), newAccount.getId(), bundleExternalKey, transferDay, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -313,6 +310,5 @@ public class TestBundleTransfer extends TestIntegrationBase {
         }
 
         checkNoMoreInvoiceToGenerate(account);
-
     }
 }
