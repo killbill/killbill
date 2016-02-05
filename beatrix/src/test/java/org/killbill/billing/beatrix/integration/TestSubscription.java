@@ -298,7 +298,7 @@ public class TestSubscription extends TestIntegrationBase {
 
         // No CREATE event as this is set in the future
         final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, ImmutableList.<PluginProperty>of(), callContext);
-        assertEquals(createdEntitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(createdEntitlement.getState(), EntitlementState.PENDING);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
