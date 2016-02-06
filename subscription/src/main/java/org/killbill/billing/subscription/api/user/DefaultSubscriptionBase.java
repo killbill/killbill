@@ -569,7 +569,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         EntitlementState nextState = null;
         String nextPlanName = null;
         String nextPhaseName = null;
-        String nextPriceListName = null;
 
         UUID prevEventId = null;
         DateTime prevCreatedDate = null;
@@ -620,12 +619,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             nextState = EntitlementState.ACTIVE;
                             nextPlanName = userEV.getEventPlan();
                             nextPhaseName = userEV.getEventPlanPhase();
-                            nextPriceListName = userEV.getPriceList();
                             break;
                         case CHANGE:
                             nextPlanName = userEV.getEventPlan();
                             nextPhaseName = userEV.getEventPlanPhase();
-                            nextPriceListName = userEV.getPriceList();
                             break;
                         case CANCEL:
                             nextState = EntitlementState.CANCELLED;
@@ -650,10 +647,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
             nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
             nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getEffectiveDate(), getAlignStartDate()) : null;
-
-            // See issue https://github.com/killbill/killbill/issues/464
-            final DateTime catalogEffectiveDateForPriceList = transitions.isEmpty() ? cur.getEffectiveDate() : transitions.get(0).getEffectiveTransitionTime();
-            nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, catalogEffectiveDateForPriceList) : null;
+            nextPriceList = (nextPlan != null) ? nextPlan.getPriceList() : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, cur.getType(), apiEventType,

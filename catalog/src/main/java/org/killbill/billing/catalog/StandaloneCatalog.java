@@ -281,8 +281,8 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         for (final DefaultPlan p : plans) {
             p.initialize(catalog, sourceURI);
         }
-
     }
+
 
     //////////////////////////////////////////////////////////////////////////////
     //

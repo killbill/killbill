@@ -17,10 +17,8 @@
 
 package org.killbill.billing.catalog.plugin;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalTenantContext;

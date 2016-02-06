@@ -156,7 +156,6 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
         assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
         assertNotNull(subscription.getEndDate());
-        assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
         assertEquals(subscription.getCurrentPhase(), null);
         assertEquals(subscription.getState(), EntitlementState.CANCELLED);
         assertNull(subscription.getCurrentPlan());

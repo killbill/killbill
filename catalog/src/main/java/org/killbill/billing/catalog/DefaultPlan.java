@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.xmlloader.ValidatingConfig;
@@ -73,6 +74,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlElement(required = false)
     private Integer plansAllowedInBundle = 1;
 
+    private PriceList priceList;
 
     public DefaultPlan() {
         initialPhases = new DefaultPlanPhase[0];
@@ -88,7 +90,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             initialPhases[i] = newPhase;
         }
         this.finalPhase = new DefaultPlanPhase(this, in.getFinalPhase(), overrides[overrides.length - 1]);
-
+        this.priceList = in.getPriceList();
     }
     /* (non-Javadoc)
       * @see org.killbill.billing.catalog.IPlan#getEffectiveDateForExistingSubscriptons()
@@ -111,6 +113,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public Product getProduct() {
         return product;
+    }
+
+    @Override
+    public PriceList getPriceList() {
+        return priceList;
     }
 
     /* (non-Javadoc)
@@ -189,7 +196,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                 p.initialize(catalog, sourceURI);
             }
         }
+        this.priceList = findPriceListForPlan(catalog);
     }
+
+
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
@@ -223,6 +233,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     public DefaultPlan setProduct(final DefaultProduct product) {
         this.product = product;
+        return this;
+    }
+
+    public DefaultPlan setPriceList(final DefaultPriceList priceList) {
+        this.priceList = priceList;
         return this;
     }
 
@@ -306,5 +321,16 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                 + effectiveDateForExistingSubscriptons + ", product=" + product + ", initialPhases="
                 + Arrays.toString(initialPhases) + ", finalPhase=" + finalPhase + ", plansAllowedInBundle="
                 + plansAllowedInBundle + "]";
+    }
+
+    private DefaultPriceList findPriceListForPlan(final StandaloneCatalog catalog) {
+        for (PriceList cur : catalog.getPriceLists().getAllPriceLists()) {
+            for (Plan p : cur.getPlans()) {
+                if (p.getName().equals(name)) {
+                    return (DefaultPriceList) cur;
+                }
+            }
+        }
+        throw new IllegalStateException("Cannot extract pricelist for plan " + name);
     }
 }

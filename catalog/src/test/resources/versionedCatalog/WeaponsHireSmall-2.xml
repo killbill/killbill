@@ -278,6 +278,8 @@
                 <plan>pistol-monthly</plan>
                 <plan>shotgun-monthly</plan>
                 <plan>shotgun-annual</plan>
+                <plan>laser-scope-monthly</plan>
+                <plan>extra-ammo-monthly</plan>
             </plans>
         </defaultPriceList>
     </priceLists>

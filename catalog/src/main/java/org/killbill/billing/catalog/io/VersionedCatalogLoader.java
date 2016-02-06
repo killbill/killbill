@@ -77,7 +77,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
             }
             return result;
         } catch (Exception e) {
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog ", e);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog: ", e.getMessage());
         }
     }
 
