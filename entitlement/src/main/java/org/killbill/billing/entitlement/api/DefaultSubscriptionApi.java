@@ -29,13 +29,22 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.AccountEntitlements;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
+import org.killbill.billing.entitlement.EntitlementService;
+import org.killbill.billing.entitlement.api.EntitlementPluginExecution.WithEntitlementPlugin;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
+import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
+import org.killbill.billing.entitlement.plugin.api.OperationType;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -46,6 +55,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.ShouldntHappenException;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
+import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,17 +90,29 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         }
     };
 
+    private final AccountInternalApi accountApi;
     private final EntitlementInternalApi entitlementInternalApi;
     private final SubscriptionBaseInternalApi subscriptionBaseInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
     private final EntitlementUtils entitlementUtils;
+    private final Clock clock;
+    private final EntitlementPluginExecution pluginExecution;
+
 
     @Inject
-    public DefaultSubscriptionApi(final EntitlementInternalApi entitlementInternalApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
-                                  final InternalCallContextFactory internalCallContextFactory, final EntitlementUtils entitlementUtils) {
+    public DefaultSubscriptionApi(final AccountInternalApi accountApi,
+                                  final EntitlementInternalApi entitlementInternalApi,
+                                  final SubscriptionBaseInternalApi subscriptionInternalApi,
+                                  final InternalCallContextFactory internalCallContextFactory,
+                                  final Clock clock,
+                                  final EntitlementPluginExecution pluginExecution,
+                                  final EntitlementUtils entitlementUtils) {
+        this.accountApi = accountApi;
         this.entitlementInternalApi = entitlementInternalApi;
         this.subscriptionBaseInternalApi = subscriptionInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.clock = clock;
+        this.pluginExecution = pluginExecution;
         this.entitlementUtils = entitlementUtils;
     }
 
@@ -139,12 +161,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         } else {
             return bundleOptional.get();
         }
-    }
-
-    @Override
-    public void updateExternalKey(final UUID uuid, final String newExternalKey, final CallContext callContext) {
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(callContext);
-        subscriptionBaseInternalApi.updateExternalKey(uuid, newExternalKey, internalContext);
     }
 
     @Override
@@ -238,6 +254,125 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                   }
                                               }
                                              );
+    }
+
+    @Override
+    public void updateExternalKey(final UUID bundleId, final String newExternalKey, final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(callContext);
+
+        final SubscriptionBaseBundle bundle;
+        final ImmutableAccountData account;
+        try {
+            bundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, internalCallContext);
+            account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), internalCallContext);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        } catch (AccountApiException e) {
+            throw new EntitlementApiException(e);
+        }
+
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UPDATE_BUNDLE_EXTERNAL_KEY,
+                                                                               bundle.getAccountId(),
+                                                                               null,
+                                                                               bundleId,
+                                                                               newExternalKey,
+                                                                               new ArrayList<EntitlementSpecifier>(),
+                                                                               new LocalDate(clock.getUTCNow(), account.getTimeZone()),
+                                                                               ImmutableList.<PluginProperty>of(),
+                                                                               callContext);
+
+        final WithEntitlementPlugin<Void> updateExternalKeyWithPlugin = new WithEntitlementPlugin<Void>() {
+
+            final InternalCallContext internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+
+            @Override
+            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+                subscriptionBaseInternalApi.updateExternalKey(bundleId, newExternalKey, internalCallContextWithValidAccountId);
+                return null;
+            }
+        };
+        pluginExecution.executeWithPlugin(updateExternalKeyWithPlugin, pluginContext);
+    }
+
+    @Override
+    public void addBlockingState(final BlockingState blockingState, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        // This is in no way an exhaustive arg validation, but to to ensure plugin would not hijack private entitlement state or service name
+        if (blockingState.getService() == null || blockingState.getService().equals(EntitlementService.ENTITLEMENT_SERVICE_NAME)) {
+            throw new EntitlementApiException(ErrorCode.SUB_BLOCKING_STATE_INVALID_ARG, "Need to specify a valid serviceName");
+        }
+
+        if (blockingState.getStateName() == null ||
+            blockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED) ||
+            blockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_BLOCKED) ||
+            blockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CLEAR)) {
+            throw new EntitlementApiException(ErrorCode.SUB_BLOCKING_STATE_INVALID_ARG, "Need to specify a valid stateName");
+        }
+
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(callContext);
+
+        final ImmutableAccountData account;
+        final UUID accountId;
+        final UUID bundleId;
+        final String externalKey;
+        try {
+            switch (blockingState.getType()) {
+                case ACCOUNT:
+                    account = accountApi.getImmutableAccountDataById(blockingState.getBlockedId(), internalCallContext);
+                    externalKey = account.getExternalKey();
+                    accountId = account.getId();
+                    bundleId = null;
+                    break;
+
+                case SUBSCRIPTION_BUNDLE:
+                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(blockingState.getBlockedId(), internalCallContext);
+                    externalKey = bundle.getExternalKey();
+                    bundleId = bundle.getId();
+                    accountId = bundle.getAccountId();
+                    account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
+                    break;
+
+                case SUBSCRIPTION:
+                    final Entitlement entitlement = entitlementInternalApi.getEntitlementForId(blockingState.getBlockedId(), internalCallContext);
+                    bundleId = entitlement.getBundleId();
+                    accountId = entitlement.getAccountId();
+                    account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
+                    externalKey = null;
+                    break;
+
+                default:
+                    throw new IllegalStateException("Invalid blockingStateType " + blockingState.getType());
+            }
+        } catch (final AccountApiException e) {
+            throw new EntitlementApiException(e);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
+
+
+
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.ADD_BLOCKING_STATE,
+                                                                               accountId,
+                                                                               null,
+                                                                               bundleId,
+                                                                               externalKey,
+                                                                               new ArrayList<EntitlementSpecifier>(),
+                                                                               new LocalDate(blockingState.getEffectiveDate(), account.getTimeZone()),
+                                                                               properties,
+                                                                               callContext);
+
+
+        final WithEntitlementPlugin<Void> addBlockingStateWithPlugin = new WithEntitlementPlugin<Void>() {
+
+            final InternalCallContext internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+
+            @Override
+            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+                entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingState, internalCallContextWithValidAccountId);
+                return null;
+            }
+        };
+        pluginExecution.executeWithPlugin(addBlockingStateWithPlugin, pluginContext);
     }
 
     private List<SubscriptionBundle> getSubscriptionBundlesForAccount(final UUID accountId, final TenantContext tenantContext) throws SubscriptionApiException {

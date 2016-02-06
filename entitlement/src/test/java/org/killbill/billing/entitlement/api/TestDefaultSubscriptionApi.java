@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -315,6 +316,44 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertEquals(subscription.getEffectiveEndDate().compareTo(futureDate), 0);
 
         assertListenerStatus();
+    }
+
+
+
+    @Test(groups = "slow")
+    public void testAddBlockingState() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState state1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "accountBlock", "svc1", false, true, false, clock.getUTCNow());
+        subscriptionApi.addBlockingState(state1, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        Entitlement updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
+
+        clock.addDays(1);
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState state2 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionBlock", "svc2", false, false, false, clock.getUTCNow());
+        subscriptionApi.addBlockingState(state2, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Still blocked because this is a different service
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
+
     }
 
 
