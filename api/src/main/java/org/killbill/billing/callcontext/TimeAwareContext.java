@@ -32,12 +32,18 @@ public class TimeAwareContext {
 
     // Create a DateTime object forcing the time zone to be UTC
     public DateTime toUTCDateTime(final DateTime dateTime) {
-        return dateTime.toDateTime(DateTimeZone.UTC);
+        return toDateTime(dateTime, DateTimeZone.UTC);
+    }
+
+    // Create a DateTime object using the specified timezone (usually, the one on the account)
+    // TODO Should we cache the accountTimeZone in the context?
+    public DateTime toDateTime(final DateTime dateTime, final DateTimeZone accountTimeZone) {
+        return dateTime.toDateTime(accountTimeZone);
     }
 
     // Create a LocalDate object using the specified timezone (usually, the one on the account)
     // TODO Should we cache the accountTimeZone in the context?
-    public LocalDate toLocalDate(final DateTime effectiveDate, final DateTimeZone accountTimeZone) {
-        return new LocalDate(effectiveDate, accountTimeZone);
+    public LocalDate toLocalDate(final DateTime dateTime, final DateTimeZone accountTimeZone) {
+        return new LocalDate(dateTime, accountTimeZone);
     }
 }
