@@ -20,11 +20,17 @@ package org.killbill.billing.callcontext;
 import java.util.Date;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 public class TimeAwareContext {
 
     // From JDK to Joda (see http://www.joda.org/joda-time/userguide.html#JDK_Interoperability)
     public DateTime toDateTime(final Date date) {
         return new DateTime(date);
+    }
+
+    // Create a DateTime object forcing the time zone to be UTC
+    public DateTime toUTCDateTime(final DateTime dateTime) {
+        return new DateTime(dateTime, DateTimeZone.UTC);
     }
 }

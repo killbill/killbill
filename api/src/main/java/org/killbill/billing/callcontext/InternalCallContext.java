@@ -53,8 +53,8 @@ public class InternalCallContext extends InternalTenantContext {
         this.contextUserType = userType;
         this.reasonCode = reasonCode;
         this.comments = comment;
-        this.createdDate = new DateTime(createdDate, DateTimeZone.UTC);
-        this.updatedDate = updatedDate;
+        this.createdDate = toUTCDateTime(createdDate);
+        this.updatedDate = toUTCDateTime(updatedDate);
     }
 
     public InternalCallContext(final Long tenantRecordId, @Nullable final Long accountRecordId, final CallContext callContext) {
