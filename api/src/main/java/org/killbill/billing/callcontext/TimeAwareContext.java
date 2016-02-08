@@ -26,8 +26,8 @@ import org.joda.time.LocalDate;
 public class TimeAwareContext {
 
     // From JDK to Joda (see http://www.joda.org/joda-time/userguide.html#JDK_Interoperability)
-    public DateTime toDateTime(final Date date) {
-        return new DateTime(date);
+    public DateTime toUTCDateTime(final Date date) {
+        return toUTCDateTime(new DateTime(date));
     }
 
     // Create a DateTime object forcing the time zone to be UTC

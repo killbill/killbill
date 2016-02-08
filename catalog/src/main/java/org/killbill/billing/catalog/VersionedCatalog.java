@@ -174,12 +174,12 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
                 }
             }
 
-            final DateTime catalogEffectiveDate = internalTenantContext.toDateTime(c.getEffectiveDate());
+            final DateTime catalogEffectiveDate = internalTenantContext.toUTCDateTime(c.getEffectiveDate());
             if (!subscriptionStartDate.isBefore(catalogEffectiveDate)) { // Its a new subscription this plan always applies
                 return plan;
             } else { //Its an existing subscription
                 if (plan.getEffectiveDateForExistingSubscriptons() != null) { //if it is null any change to this does not apply to existing subscriptions
-                    final DateTime existingSubscriptionDate = internalTenantContext.toDateTime(plan.getEffectiveDateForExistingSubscriptons());
+                    final DateTime existingSubscriptionDate = internalTenantContext.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptons());
                     if (requestedDate.isAfter(existingSubscriptionDate)) { // this plan is now applicable to existing subs
                         return plan;
                     }
