@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -41,10 +42,8 @@ import org.killbill.billing.entitlement.block.BlockingChecker.BlockingAggregator
 import org.killbill.billing.entitlement.block.DefaultBlockingChecker.DefaultBlockingAggregator;
 import org.killbill.billing.junction.DefaultBlockingState;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 // Given an event stream (across one or multiple entitlements), insert the blocking events at the right place
 public class BlockingStateOrdering extends EntitlementOrderingBase {
@@ -53,11 +52,11 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
 
     private BlockingStateOrdering() {}
 
-    public static void insertSorted(final Iterable<Entitlement> entitlements, final DateTimeZone accountTimeZone, final LinkedList<SubscriptionEvent> result) {
-        INSTANCE.computeEvents(entitlements, accountTimeZone, result);
+    public static void insertSorted(final Iterable<Entitlement> entitlements, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> result) {
+        INSTANCE.computeEvents(entitlements, accountTimeZone, internalTenantContext, result);
     }
 
-    private void computeEvents(final Iterable<Entitlement> entitlements, final DateTimeZone accountTimeZone, final LinkedList<SubscriptionEvent> result) {
+    private void computeEvents(final Iterable<Entitlement> entitlements, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> result) {
         final Collection<UUID> allEntitlementUUIDs = new HashSet<UUID>();
         final Collection<BlockingState> blockingStates = new LinkedList<BlockingState>();
         for (final Entitlement entitlement : entitlements) {
@@ -69,13 +68,13 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
         // Trust the incoming ordering here: blocking states were sorted using ProxyBlockingStateDao#sortedCopy
         for (final BlockingState bs : blockingStates) {
             final List<SubscriptionEvent> newEvents = new ArrayList<SubscriptionEvent>();
-            final int index = insertFromBlockingEvent(accountTimeZone, allEntitlementUUIDs, result, bs, bs.getEffectiveDate(), newEvents);
+            final int index = insertFromBlockingEvent(accountTimeZone, internalTenantContext, allEntitlementUUIDs, result, bs, bs.getEffectiveDate(), newEvents);
             insertAfterIndex(result, newEvents, index);
         }
     }
 
     // Returns the index and the newEvents generated from the incoming blocking state event. Those new events will all be created for the same effectiveDate and should be ordered.
-    private int insertFromBlockingEvent(final DateTimeZone accountTimeZone, final Collection<UUID> allEntitlementUUIDs, final List<SubscriptionEvent> result, final BlockingState bs, final DateTime bsEffectiveDate, final List<SubscriptionEvent> newEvents) {
+    private int insertFromBlockingEvent(final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext, final Collection<UUID> allEntitlementUUIDs, final List<SubscriptionEvent> result, final BlockingState bs, final DateTime bsEffectiveDate, final Collection<SubscriptionEvent> newEvents) {
         // Keep the current state per entitlement
         final Map<UUID, TargetState> targetStates = new HashMap<UUID, TargetState>();
         for (final UUID cur : allEntitlementUUIDs) {
@@ -134,7 +133,7 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
 
             final List<SubscriptionEventType> eventTypes = curTargetState.addStateAndReturnEventTypes(bs);
             for (final SubscriptionEventType t : eventTypes) {
-                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], targetEntitlementId, bs, t, accountTimeZone));
+                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], targetEntitlementId, bs, t, accountTimeZone, internalTenantContext));
             }
         }
         return index;
@@ -176,7 +175,8 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
     }
 
     private SubscriptionEvent toSubscriptionEvent(@Nullable final SubscriptionEvent prev, @Nullable final SubscriptionEvent next,
-                                                  final UUID entitlementId, final BlockingState in, final SubscriptionEventType eventType, final DateTimeZone accountTimeZone) {
+                                                  final UUID entitlementId, final BlockingState in, final SubscriptionEventType eventType,
+                                                  final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
         final Product prevProduct;
         final Plan prevPlan;
         final PlanPhase prevPlanPhase;
@@ -257,7 +257,8 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                                             nextPriceList,
                                             nextBillingPeriod,
                                             in.getCreatedDate(),
-                                            accountTimeZone);
+                                            accountTimeZone,
+                                            internalTenantContext);
     }
 
     private void insertAfterIndex(final LinkedList<SubscriptionEvent> original, final Collection<SubscriptionEvent> newEvents, final int index) {

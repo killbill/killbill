@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -399,12 +401,12 @@ public class DefaultEventsStream implements EventsStream {
                                                                           return DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
                                                                       }
                                                                   }).orNull();
-        entitlementEffectiveEndDate = entitlementCancelEvent != null ?  new LocalDate(entitlementCancelEvent.getEffectiveDate(), account.getTimeZone()) : null;
+        entitlementEffectiveEndDate = entitlementCancelEvent != null ? internalTenantContext.toLocalDate(entitlementCancelEvent.getEffectiveDate(), account.getTimeZone()) : null;
     }
 
     private void computeStateForEntitlement() {
         // Current state for the ENTITLEMENT_SERVICE_NAME is set to cancelled
-        if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(new LocalDate(utcNow, account.getTimeZone())) <= 0) {
+        if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(internalTenantContext.toLocalDate(utcNow, account.getTimeZone())) <= 0) {
             entitlementState = EntitlementState.CANCELLED;
         } else {
             // Gather states across all services and check if one of them is set to 'blockEntitlement'

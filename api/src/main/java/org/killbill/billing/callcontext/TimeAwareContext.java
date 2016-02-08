@@ -21,6 +21,7 @@ import java.util.Date;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
 public class TimeAwareContext {
 
@@ -31,6 +32,12 @@ public class TimeAwareContext {
 
     // Create a DateTime object forcing the time zone to be UTC
     public DateTime toUTCDateTime(final DateTime dateTime) {
-        return new DateTime(dateTime, DateTimeZone.UTC);
+        return dateTime.toDateTime(DateTimeZone.UTC);
+    }
+
+    // Create a LocalDate object using the specified timezone (usually, the one on the account)
+    // TODO Should we cache the accountTimeZone in the context?
+    public LocalDate toLocalDate(final DateTime effectiveDate, final DateTimeZone accountTimeZone) {
+        return new LocalDate(effectiveDate, accountTimeZone);
     }
 }
