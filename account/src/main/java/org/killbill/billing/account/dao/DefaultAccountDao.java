@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -57,6 +59,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     private final PersistentBus eventBus;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final Clock clock;
 
     @Inject
     public DefaultAccountDao(final IDBI dbi, final PersistentBus eventBus, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
@@ -64,6 +67,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), AccountSqlDao.class);
         this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.clock = clock;
     }
 
     @Override
@@ -157,8 +161,8 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                                                              specifiedAccount,
                                                                                              context.getAccountRecordId(),
                                                                                              context.getTenantRecordId(),
-                                                                                             context.getUserToken()
-                );
+                                                                                             context.getUserToken(),
+                                                                                             clock.getUTCNow());
                 try {
                     eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
                 } catch (final EventBusException e) {
@@ -195,8 +199,8 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, currentAccount, account,
                                                                                              context.getAccountRecordId(),
                                                                                              context.getTenantRecordId(),
-                                                                                             context.getUserToken()
-                );
+                                                                                             context.getUserToken(),
+                                                                                             clock.getUTCNow());
 
                 try {
                     eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
