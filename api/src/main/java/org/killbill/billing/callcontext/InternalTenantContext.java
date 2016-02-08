@@ -25,7 +25,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 /**
  * Internal use only
  */
-public class InternalTenantContext {
+public class InternalTenantContext extends TimeAwareContext {
 
     protected final Long tenantRecordId;
     protected final Long accountRecordId;
