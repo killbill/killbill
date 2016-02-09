@@ -20,9 +20,7 @@ package org.killbill.billing.util.timezone;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.Days;
 import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 
@@ -33,50 +31,24 @@ import org.killbill.billing.util.AccountDateAndTimeZoneContext;
  */
 public final class DefaultAccountDateAndTimeZoneContext implements AccountDateAndTimeZoneContext {
 
-    private final LocalTime referenceTime;
+    private final DateTime referenceTime;
     private final DateTimeZone accountTimeZone;
     private final InternalTenantContext internalTenantContext;
 
-    private final int offsetFromUtc;
-
-    /// referenceTime is compute from first billing event and so offsetFromUtc will remain constant with regard to daylight saving time
-    public DefaultAccountDateAndTimeZoneContext(final DateTime effectiveDateTime, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
-        this.referenceTime = effectiveDateTime != null ? effectiveDateTime.toLocalTime() : null;
+    public DefaultAccountDateAndTimeZoneContext(final DateTime referenceTime, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+        this.referenceTime = referenceTime;
         this.accountTimeZone = accountTimeZone;
         this.internalTenantContext = internalTenantContext;
-
-        this.offsetFromUtc = computeOffsetFromUtc(effectiveDateTime, accountTimeZone, internalTenantContext);
-    }
-
-    static int computeOffsetFromUtc(final DateTime effectiveDateTime, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
-        final LocalDate localDateInAccountTimeZone = internalTenantContext.toLocalDate(effectiveDateTime, accountTimeZone);
-        final LocalDate localDateInUTC = new LocalDate(effectiveDateTime, DateTimeZone.UTC);
-        return Days.daysBetween(localDateInUTC, localDateInAccountTimeZone).getDays();
     }
 
     @Override
     public LocalDate computeLocalDateFromFixedAccountOffset(final DateTime targetDateTime) {
-        final DateTime dateWithOriginalAccountTimeZoneOffset = targetDateTime.plusDays(offsetFromUtc);
-        return dateWithOriginalAccountTimeZoneOffset.toLocalDate();
+        return internalTenantContext.toLocalDate(targetDateTime, referenceTime, accountTimeZone);
     }
 
     @Override
     public DateTime computeUTCDateTimeFromLocalDate(final LocalDate invoiceItemEndDate) {
-        //
-        // Since we create the targetDate for next invoice using the date from the notificationQ, we need to make sure
-        // that this datetime once transformed into a LocalDate points to the correct day.
-        //
-        // All we need to do is figure if the transformation from DateTime (point in time) to LocalDate (date in account time zone)
-        // changed the day; if so, when we recompute a UTC date from LocalDate (date in account time zone), we can simply chose a reference
-        // time and apply the offset backward to end up on the right day
-        //
-        // We use clock.getUTCNow() to get the offset with account timezone but that may not be correct
-        // when we transition from standard time and daylight saving time. We could end up with a result
-        // that is slightly in advance and therefore results in a null invoice.
-        // We will fix that by re-inserting ourselves in the notificationQ if we detect that there is no invoice
-        // and yet the subscription is recurring and not cancelled.
-        //
-        return invoiceItemEndDate.toDateTime(referenceTime, DateTimeZone.UTC).plusDays(-offsetFromUtc);
+        return internalTenantContext.toUTCDateTime(invoiceItemEndDate, referenceTime, accountTimeZone);
     }
 
     @Override

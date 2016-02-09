@@ -27,6 +27,9 @@ import org.joda.time.LocalTime;
 // TODO Cache the accountTimeZone, reference time and clock in the context
 public class TimeAwareContext {
 
+    /// Generic functions
+    /// TODO Move to ClockUtil
+
     // From JDK to Joda (see http://www.joda.org/joda-time/userguide.html#JDK_Interoperability)
     public DateTime toUTCDateTime(final Date date) {
         return toUTCDateTime(new DateTime(date));
@@ -37,31 +40,43 @@ public class TimeAwareContext {
         return toDateTime(dateTime, DateTimeZone.UTC);
     }
 
-    // Create a DateTime object using the specified reference time and timezone (usually, the one on the account)
-    public DateTime toUTCDateTime(final LocalDate localDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
-        return toUTCDateTime(toDateTime(localDate, referenceDateTime, accountTimeZone));
-    }
-
-    // Create a DateTime object using the specified reference time and timezone (usually, the one on the account)
-    public DateTime toDateTime(final LocalDate localDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
-        final LocalTime referenceLocalTime = toDateTime(referenceDateTime, accountTimeZone).toLocalTime();
-
-        return new DateTime(localDate.getYear(),
-                            localDate.getMonthOfYear(),
-                            localDate.getDayOfMonth(),
-                            referenceLocalTime.getHourOfDay(),
-                            referenceLocalTime.getMinuteOfHour(),
-                            referenceLocalTime.getSecondOfMinute(),
-                            accountTimeZone);
-    }
-
     // Create a DateTime object using the specified timezone (usually, the one on the account)
     public DateTime toDateTime(final DateTime dateTime, final DateTimeZone accountTimeZone) {
         return dateTime.toDateTime(accountTimeZone);
     }
 
-    // Create a LocalDate object using the specified timezone (usually, the one on the account)
-    public LocalDate toLocalDate(final DateTime dateTime, final DateTimeZone accountTimeZone) {
-        return new LocalDate(dateTime, accountTimeZone);
+    /// DateTime <-> LocalDate transformations
+
+    // Create a DateTime object using the specified reference time and timezone (usually, the one on the account)
+    public DateTime toUTCDateTime(final LocalDate localDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
+        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime, accountTimeZone);
+
+        final LocalTime referenceLocalTime = toDateTime(referenceDateTime, normalizedAccountTimezone).toLocalTime();
+
+        final DateTime targetDateTime = new DateTime(localDate.getYear(),
+                                                     localDate.getMonthOfYear(),
+                                                     localDate.getDayOfMonth(),
+                                                     referenceLocalTime.getHourOfDay(),
+                                                     referenceLocalTime.getMinuteOfHour(),
+                                                     referenceLocalTime.getSecondOfMinute(),
+                                                     normalizedAccountTimezone);
+
+        return toUTCDateTime(targetDateTime);
+    }
+
+    // Create a LocalDate object using the specified timezone (usually, the one on the account), respecting the offset at the time of the referenceDateTime
+    public LocalDate toLocalDate(final DateTime dateTime, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
+        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime, accountTimeZone);
+        return new LocalDate(dateTime, normalizedAccountTimezone);
+    }
+
+    private DateTimeZone getNormalizedAccountTimezone(final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
+        // Check if DST was in effect at the reference date time
+        final boolean shouldUseDST = !accountTimeZone.isStandardOffset(referenceDateTime.getMillis());
+        if (shouldUseDST) {
+            return DateTimeZone.forOffsetMillis(accountTimeZone.getOffset(referenceDateTime.getMillis()));
+        } else {
+            return DateTimeZone.forOffsetMillis(accountTimeZone.getStandardOffset(referenceDateTime.getMillis()));
+        }
     }
 }

@@ -151,6 +151,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         // Check that our input date is greater than now
         assertTrue(inputDateEquals.compareTo(clock.getUTCNow()) > 0);
         // And yet since the LocalDate match the function returns true
-        assertTrue(dateHelper.isBeforeOrEqualsToday(inputDateEquals, timeZoneUtcMinus8, internalCallContext));
+        final DateTime referenceDateTimeThatDoesNotMatter = new DateTime();
+        assertTrue(dateHelper.isBeforeOrEqualsToday(inputDateEquals, referenceDateTimeThatDoesNotMatter, timeZoneUtcMinus8, internalCallContext));
     }
 }

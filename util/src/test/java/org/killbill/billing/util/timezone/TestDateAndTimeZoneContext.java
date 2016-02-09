@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,9 +24,8 @@ import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.killbill.billing.util.AccountDateAndTimeZoneContext;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.util.UtilTestSuiteNoDB;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -38,99 +39,12 @@ import static org.testng.Assert.assertTrue;
 public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
     private final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTimeParser();
-
-    final String effectiveDateTime1 = "2012-01-20T07:30:42.000Z";
-    final String effectiveDateTime2 = "2012-01-20T08:00:00.000Z";
-    final String effectiveDateTime3 = "2012-01-20T08:45:33.000Z";
-
-    final String effectiveDateTimeA = "2012-01-20T16:30:42.000Z";
-    final String effectiveDateTimeB = "2012-01-20T16:00:00.000Z";
-    final String effectiveDateTimeC = "2012-01-20T15:30:42.000Z";
-
-
-    //
-    // Take an negative timezone offset and a reference time that is less than the offset (07:30:42 < 8)
-    // => to expect a negative offset of one day
-    //
-    @Test(groups = "fast")
-    public void testComputeOffset1() {
-
-        final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
-        final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTime1);
-
-        int offset = DefaultAccountDateAndTimeZoneContext.computeOffsetFromUtc(effectiveDateTime, timeZone, internalCallContext);
-        assertEquals(offset, -1);
-    }
-
-    //
-    // Take an negative timezone offset and a reference time that is equal than the offset (08:00:00 = 8)
-    // => to expect an offset of 0
-    //
-    @Test(groups = "fast")
-    public void testComputeOffset2() {
-
-        final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
-        final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTime2);
-
-        int offset = DefaultAccountDateAndTimeZoneContext.computeOffsetFromUtc(effectiveDateTime, timeZone, internalCallContext);
-        assertEquals(offset, 0);
-    }
-
-    //
-    // Take an negative timezone offset and a reference time that is greater than the offset (08:45:33 > 8)
-    // => to expect an offset of 0
-    //
-    @Test(groups = "fast")
-    public void testComputeOffset3() {
-
-        final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
-        final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTime3);
-
-        int offset = DefaultAccountDateAndTimeZoneContext.computeOffsetFromUtc(effectiveDateTime, timeZone, internalCallContext);
-        assertEquals(offset, 0);
-    }
-
-    //
-    // Take an positive timezone offset and a reference time that closer to the end of the day than the timezone (16:30:42 + 8 > 24)
-    // => to expect a positive offset of one day
-    //
-    @Test(groups = "fast")
-    public void testComputeOffsetA() {
-
-        final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
-        final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTimeA);
-
-        int offset = DefaultAccountDateAndTimeZoneContext.computeOffsetFromUtc(effectiveDateTime, timeZone, internalCallContext);
-        assertEquals(offset, 1);
-    }
-
-    //
-    // Take an positive timezone offset and a reference time that brings us exactly at the end of the day (16:00:00 + 8 = 24)
-    // => to expect an offset of 1
-    //
-    @Test(groups = "fast")
-    public void testComputeOffsetB() {
-
-        final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
-        final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTimeB);
-
-        int offset = DefaultAccountDateAndTimeZoneContext.computeOffsetFromUtc(effectiveDateTime, timeZone, internalCallContext);
-        assertEquals(offset, 1);
-    }
-
-    //
-    // Take an positive timezone offset and a reference time that further away to the end of the day  (15:30:42 + 8 < 24)
-    // =>  to expect an offset of 0
-    //
-    @Test(groups = "fast")
-    public void testComputeOffsetC() {
-
-        final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
-        final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTimeC);
-
-        int offset = DefaultAccountDateAndTimeZoneContext.computeOffsetFromUtc(effectiveDateTime, timeZone, internalCallContext);
-        assertEquals(offset, 0);
-    }
+    private final String effectiveDateTime1 = "2012-01-20T07:30:42.000Z";
+    private final String effectiveDateTime2 = "2012-01-20T08:00:00.000Z";
+    private final String effectiveDateTime3 = "2012-01-20T08:45:33.000Z";
+    private final String effectiveDateTimeA = "2012-01-20T16:30:42.000Z";
+    private final String effectiveDateTimeB = "2012-01-20T16:00:00.000Z";
+    private final String effectiveDateTimeC = "2012-01-20T15:30:42.000Z";
 
     @Test(groups = "fast")
     public void testComputeUTCDateTimeFromLocalDate1() {
@@ -138,13 +52,12 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTime1);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
-        final DefaultAccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 19);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
         assertTrue(endDateTimeInUTC.compareTo(effectiveDateTime.plusYears(1)) == 0);
     }
-
 
     @Test(groups = "fast")
     public void testComputeUTCDateTimeFromLocalDate2() {
@@ -152,13 +65,12 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTime2);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
-        final DefaultAccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 20);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
         assertTrue(endDateTimeInUTC.compareTo(effectiveDateTime.plusYears(1)) == 0);
     }
-
 
     @Test(groups = "fast")
     public void testComputeUTCDateTimeFromLocalDate3() {
@@ -166,7 +78,7 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTime3);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
-        final DefaultAccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 20);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
@@ -179,7 +91,7 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTimeA);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
-        final DefaultAccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 21);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
@@ -192,7 +104,7 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTimeB);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
-        final DefaultAccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 21);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
@@ -205,36 +117,34 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTimeC);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
-        final DefaultAccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 20);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
         assertTrue(endDateTimeInUTC.compareTo(effectiveDateTime.plusYears(1)) == 0);
     }
 
-
     @Test(groups = "fast")
-    public void testComputeTargetDateWithDayLigthSaving() {
+    public void testComputeTargetDateWithDayLightSaving() {
+        final DateTime dateTime1 = new DateTime("2015-01-01T08:01:01.000Z");
+        final DateTime dateTime2 = new DateTime("2015-09-01T08:01:01.000Z");
+        final DateTime dateTime3 = new DateTime("2015-12-01T08:01:01.000Z");
 
+        // Alaska Standard Time
         final DateTimeZone tz = DateTimeZone.forID("America/Juneau");
-        final DateTime originalDateTime = new DateTime("2015-09-01T08:01:01.000Z");
 
-        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(originalDateTime, tz, internalCallContext);
+        // Time zone is AKDT (UTC-8h) between March and November
+        final DateTime referenceDateTimeWithDST = new DateTime("2015-09-01T08:01:01.000Z");
+        final AccountDateAndTimeZoneContext tzContextWithDST = new DefaultAccountDateAndTimeZoneContext(referenceDateTimeWithDST, tz, internalCallContext);
+        assertEquals(tzContextWithDST.computeLocalDateFromFixedAccountOffset(dateTime1), new LocalDate("2015-01-01"));
+        assertEquals(tzContextWithDST.computeLocalDateFromFixedAccountOffset(dateTime2), new LocalDate("2015-09-01"));
+        assertEquals(tzContextWithDST.computeLocalDateFromFixedAccountOffset(dateTime3), new LocalDate("2015-12-01"));
 
-
-        final LocalDate l1 = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(originalDateTime);
-        assertEquals(l1, new LocalDate("2015-09-01"));
-
-        final LocalDate l1ComputedFromAccountTz = new LocalDate(originalDateTime, tz);
-        assertEquals(l1ComputedFromAccountTz, new LocalDate("2015-09-01"));
-
-        final DateTime newDateTime = new DateTime("2015-12-01T08:01:01.000Z");
-
-        final LocalDate l2 = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(newDateTime);
-        assertEquals(l2, new LocalDate("2015-12-01"));
-
-        final LocalDate l2ComputedFromAccountTz = new LocalDate(newDateTime, tz);
-        assertEquals(l2ComputedFromAccountTz, new LocalDate("2015-11-30"));
-
+        // Time zone is AKST (UTC-9h) otherwise
+        final DateTime referenceDateTimeWithoutDST = new DateTime("2015-02-01T08:01:01.000Z");
+        final AccountDateAndTimeZoneContext tzContextWithoutDST = new DefaultAccountDateAndTimeZoneContext(referenceDateTimeWithoutDST, tz, internalCallContext);
+        assertEquals(tzContextWithoutDST.computeLocalDateFromFixedAccountOffset(dateTime1), new LocalDate("2014-12-31"));
+        assertEquals(tzContextWithoutDST.computeLocalDateFromFixedAccountOffset(dateTime2), new LocalDate("2015-08-31"));
+        assertEquals(tzContextWithoutDST.computeLocalDateFromFixedAccountOffset(dateTime3), new LocalDate("2015-11-30"));
     }
 }

@@ -156,9 +156,9 @@ public class DefaultEntitlementService implements EntitlementService {
                 EntitlementNotificationKeyAction.CANCEL.equals(entitlementNotificationKeyAction)) {
                 blockAddOnsIfRequired(key, (DefaultEntitlement) entitlement, callContext, internalCallContext);
             } else if (EntitlementNotificationKeyAction.PAUSE.equals(entitlementNotificationKeyAction)) {
-                entitlementInternalApi.pause(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate(), immutableAccountData.getTimeZone()), ImmutableList.<PluginProperty>of(), internalCallContext);
+                entitlementInternalApi.pause(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate(), ((DefaultEntitlement) entitlement).getSubscriptionBase().getStartDate(), immutableAccountData.getTimeZone()), ImmutableList.<PluginProperty>of(), internalCallContext);
             } else if (EntitlementNotificationKeyAction.RESUME.equals(entitlementNotificationKeyAction)) {
-                entitlementInternalApi.resume(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate(), immutableAccountData.getTimeZone()), ImmutableList.<PluginProperty>of(), internalCallContext);
+                entitlementInternalApi.resume(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate(), ((DefaultEntitlement) entitlement).getSubscriptionBase().getStartDate(), immutableAccountData.getTimeZone()), ImmutableList.<PluginProperty>of(), internalCallContext);
             }
         } catch (final EntitlementApiException e) {
             log.error("Error processing event for entitlement {}" + entitlement.getId(), e);

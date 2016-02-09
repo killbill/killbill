@@ -65,9 +65,9 @@ public class EntitlementDateHelper {
      * @return true if the inputDate, once converted into a LocalDate using account timezone is less or equals than today
      */
     // TODO Move to ClockUtils
-    public boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+    public boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTime referenceDatetime, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
         final LocalDate localDateNowInAccountTimezone = clock.getToday(accountTimeZone);
-        final LocalDate targetDateInAccountTimezone = internalTenantContext.toLocalDate(inputDate, accountTimeZone);
+        final LocalDate targetDateInAccountTimezone = internalTenantContext.toLocalDate(inputDate, referenceDatetime, accountTimeZone);
         return targetDateInAccountTimezone.compareTo(localDateNowInAccountTimezone) <= 0;
     }
 }

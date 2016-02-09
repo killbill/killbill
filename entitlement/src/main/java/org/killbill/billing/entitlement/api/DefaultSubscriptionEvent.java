@@ -52,6 +52,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     private final PriceList nextPriceList;
     private final BillingPeriod nextBillingPeriod;
     private final DateTime createdDate;
+    private final DateTime referenceTime;
     private final DateTimeZone accountTimeZone;
     private final InternalTenantContext internalTenantContext;
 
@@ -74,6 +75,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
                                     final PriceList nextPriceList,
                                     final BillingPeriod nextBillingPeriod,
                                     final DateTime createDate,
+                                    final DateTime referenceTime,
                                     final DateTimeZone accountTimeZone,
                                     final InternalTenantContext internalTenantContext) {
         this.id = id;
@@ -96,6 +98,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         this.nextPriceList = nextPriceList;
         this.nextBillingPeriod = nextBillingPeriod;
         this.createdDate = createDate;
+        this.referenceTime = referenceTime;
         this.accountTimeZone = accountTimeZone;
         this.internalTenantContext = internalTenantContext;
     }
@@ -124,12 +127,12 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
 
     @Override
     public LocalDate getEffectiveDate() {
-        return effectiveDate != null ? internalTenantContext.toLocalDate(effectiveDate, accountTimeZone) : null;
+        return effectiveDate != null ? internalTenantContext.toLocalDate(effectiveDate, referenceTime, accountTimeZone) : null;
     }
 
     @Override
     public LocalDate getRequestedDate() {
-        return requestedDate != null ? internalTenantContext.toLocalDate(requestedDate, accountTimeZone) : null;
+        return requestedDate != null ? internalTenantContext.toLocalDate(requestedDate, referenceTime, accountTimeZone) : null;
     }
 
     @Override

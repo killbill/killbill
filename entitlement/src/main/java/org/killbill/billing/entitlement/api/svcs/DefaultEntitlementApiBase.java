@@ -172,7 +172,7 @@ public class DefaultEntitlementApiBase {
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
                     final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), baseSubscription.getStartDate(), internalCallContext);
 
-                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone(), internalCallContext)) {
+                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, baseSubscription.getStartDate(), account.getTimeZone(), internalCallContext)) {
                         recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, true, internalCallContext);
                         return null;
                     }
@@ -224,7 +224,7 @@ public class DefaultEntitlementApiBase {
 
                     final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), baseSubscription.getStartDate(), internalCallContext);
 
-                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone(), internalCallContext)) {
+                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, baseSubscription.getStartDate(), account.getTimeZone(), internalCallContext)) {
                         recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, false, internalCallContext);
                         return null;
                     }
