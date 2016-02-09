@@ -30,6 +30,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
@@ -76,6 +77,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     private final SecurityApi securityApi;
     protected final EventsStreamBuilder eventsStreamBuilder;
     protected final EntitlementDateHelper dateHelper;
+    protected final InternalTenantContext internalTenantContext;
     protected final InternalCallContextFactory internalCallContextFactory;
     protected final Clock clock;
     protected final BlockingChecker checker;
@@ -98,14 +100,14 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                               final InternalCallContextFactory internalCallContextFactory, final TenantContext tenantContext) throws EntitlementApiException {
         this(eventsStreamBuilder.buildForEntitlement(entitlementId, tenantContext), eventsStreamBuilder,
              entitlementApi, pluginExecution, blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
-             entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory);
+             entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory.createInternalTenantContext(tenantContext), internalCallContextFactory);
     }
 
     public DefaultEntitlement(final EventsStream eventsStream, final EventsStreamBuilder eventsStreamBuilder,
                               final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution, final BlockingStateDao blockingStateDao,
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
                               final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils,
-                              final EntitlementDateHelper dateHelper, final Clock clock, final SecurityApi securityApi, final InternalCallContextFactory internalCallContextFactory) {
+                              final EntitlementDateHelper dateHelper, final Clock clock, final SecurityApi securityApi, final InternalTenantContext internalTenantContext, final InternalCallContextFactory internalCallContextFactory) {
         super(eventsStream.getEntitlementId(), eventsStream.getSubscriptionBase().getCreatedDate(), eventsStream.getSubscriptionBase().getUpdatedDate());
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.eventsStream = eventsStream;
@@ -113,6 +115,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         this.entitlementApi = entitlementApi;
         this.pluginExecution = pluginExecution;
         this.subscriptionInternalApi = subscriptionInternalApi;
+        this.internalTenantContext = internalTenantContext;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
         this.securityApi = securityApi;
@@ -135,6 +138,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
              in.getDateHelper(),
              in.getClock(),
              in.getSecurityApi(),
+             in.getInternalTenantContext(),
              in.getInternalCallContextFactory());
     }
 
@@ -162,6 +166,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     public EntitlementDateHelper getDateHelper() {
         return dateHelper;
+    }
+
+    public InternalTenantContext getInternalTenantContext() {
+        return internalTenantContext;
     }
 
     public InternalCallContextFactory getInternalCallContextFactory() {
@@ -236,7 +244,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public LocalDate getEffectiveStartDate() {
-        return new LocalDate(getSubscriptionBase().getStartDate(), eventsStream.getAccountTimeZone());
+        return internalTenantContext.toLocalDate(getSubscriptionBase().getStartDate(), eventsStream.getAccountTimeZone());
     }
 
     @Override
@@ -438,8 +446,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 // (we don't want an entitlement cancel date one second or so after the subscription cancel date or add-ons cancellations
                 // computations won't work).
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-                final LocalDate effectiveLocalDate = new LocalDate(updatedPluginContext.getEffectiveDate(), eventsStream.getAccountTimeZone());
-                final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(effectiveLocalDate, getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
+                final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
 
                 try {
                     // Cancel subscription base first, to correctly compute the add-ons entitlements we need to cancel (see below)
@@ -468,10 +475,14 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final LocalDate cancellationDate;
         switch (entitlementPolicy) {
             case IMMEDIATE:
-                cancellationDate = new LocalDate(clock.getUTCNow(), eventsStream.getAccountTimeZone());
+                cancellationDate = clock.getToday(eventsStream.getAccountTimeZone());
                 break;
             case END_OF_TERM:
-                cancellationDate = getSubscriptionBase().getChargedThroughDate() != null ? new LocalDate(getSubscriptionBase().getChargedThroughDate(), eventsStream.getAccountTimeZone()) : new LocalDate(clock.getUTCNow(), eventsStream.getAccountTimeZone());
+                if (getSubscriptionBase().getChargedThroughDate() != null) {
+                    cancellationDate = internalTenantContext.toLocalDate(getSubscriptionBase().getChargedThroughDate(), eventsStream.getAccountTimeZone());
+                } else {
+                    cancellationDate = clock.getToday(eventsStream.getAccountTimeZone());
+                }
                 break;
             default:
                 throw new RuntimeException("Unsupported policy " + entitlementPolicy);

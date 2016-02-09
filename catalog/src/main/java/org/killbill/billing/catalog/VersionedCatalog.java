@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -65,21 +65,23 @@ import org.killbill.xmlloader.ValidationErrors;
 public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPriceOverride> implements Catalog, StaticCatalog {
 
     private final Clock clock;
+    private final InternalTenantContext internalTenantContext;
+    @XmlElement(name = "catalogVersion", required = true)
+    private final List<StandaloneCatalogWithPriceOverride> versions;
     private String catalogName;
     private BillingMode recurringBillingMode;
-
-    @XmlElement(name = "catalogVersion", required = true)
-    private List<StandaloneCatalogWithPriceOverride> versions;
 
     // Required for JAXB deserialization
     public VersionedCatalog() {
         this.clock = null;
-        versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
+        this.versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
+        this.internalTenantContext = new InternalTenantContext(null, null);
     }
 
     public VersionedCatalog(final Clock clock) {
         this.clock = clock;
-        versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
+        this.versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
+        this.internalTenantContext = new InternalTenantContext(null, null);
     }
 
     public VersionedCatalog(final Clock clock, final String catalogName, final BillingMode recurringBillingMode, final List<StandaloneCatalogWithPriceOverride> versions, final InternalTenantContext tenantContext) {
@@ -91,8 +93,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
             final StandaloneCatalogWithPriceOverride catalogWithTenantInfo = new StandaloneCatalogWithPriceOverride(cur, tenantContext);
             this.versions.add(catalogWithTenantInfo);
         }
+        this.internalTenantContext = tenantContext;
     }
-
 
     //
     // Private methods
@@ -154,16 +156,16 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
                           final DateTime subscriptionStartDate)
             throws CatalogApiException {
         final List<StandaloneCatalogWithPriceOverride> catalogs = versionsBeforeDate(requestedDate.toDate());
-        if (catalogs.size() == 0) {
+        if (catalogs.isEmpty()) {
             throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
         }
 
         for (int i = catalogs.size() - 1; i >= 0; i--) { // Working backwards to find the latest applicable plan
             final StandaloneCatalogWithPriceOverride c = catalogs.get(i);
-            Plan plan;
+            final Plan plan;
             try {
                 plan = wrapper.findPlan(c);
-            } catch (CatalogApiException e) {
+            } catch (final CatalogApiException e) {
                 if (e.getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode()) {
                     throw e;
                 } else {
@@ -172,12 +174,12 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
                 }
             }
 
-            DateTime catalogEffectiveDate = new DateTime(c.getEffectiveDate());
+            final DateTime catalogEffectiveDate = internalTenantContext.toUTCDateTime(c.getEffectiveDate());
             if (!subscriptionStartDate.isBefore(catalogEffectiveDate)) { // Its a new subscription this plan always applies
                 return plan;
             } else { //Its an existing subscription
                 if (plan.getEffectiveDateForExistingSubscriptons() != null) { //if it is null any change to this does not apply to existing subscriptions
-                    final DateTime existingSubscriptionDate = new DateTime(plan.getEffectiveDateForExistingSubscriptons());
+                    final DateTime existingSubscriptionDate = internalTenantContext.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptons());
                     if (requestedDate.isAfter(existingSubscriptionDate)) { // this plan is now applicable to existing subs
                         return plan;
                     }
@@ -271,10 +273,10 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
 
     @Override
     public Plan createOrFindPlan(final String productName,
-                         final BillingPeriod term,
-                         final String priceListName,
-                         final PlanPhasePriceOverridesWithCallContext overrides,
-                         final DateTime requestedDate)
+                                 final BillingPeriod term,
+                                 final String priceListName,
+                                 final PlanPhasePriceOverridesWithCallContext overrides,
+                                 final DateTime requestedDate)
             throws CatalogApiException {
         return versionForDate(requestedDate).createOrFindCurrentPlan(productName, term, priceListName, overrides);
     }
@@ -289,11 +291,11 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
 
     @Override
     public Plan createOrFindPlan(final String productName,
-                         final BillingPeriod term,
-                         final String priceListName,
-                         final PlanPhasePriceOverridesWithCallContext overrides,
-                         final DateTime requestedDate,
-                         final DateTime subscriptionStartDate)
+                                 final BillingPeriod term,
+                                 final String priceListName,
+                                 final PlanPhasePriceOverridesWithCallContext overrides,
+                                 final DateTime requestedDate,
+                                 final DateTime subscriptionStartDate)
             throws CatalogApiException {
         return findPlan(new PlanRequestWrapper(productName, term, priceListName, overrides), requestedDate, subscriptionStartDate);
     }
@@ -434,7 +436,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
 
     @Override
     public Plan createOrFindCurrentPlan(final String productName, final BillingPeriod term,
-                                final String priceList, PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
+                                        final String priceList, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).createOrFindCurrentPlan(productName, term, priceList, overrides);
     }
 
@@ -512,7 +514,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     }
 
     @Override
-    public boolean compliesWithLimits(String phaseName, String unit, double value) throws CatalogApiException {
+    public boolean compliesWithLimits(final String phaseName, final String unit, final double value) throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).compliesWithLimits(phaseName, unit, value);
     }
 }

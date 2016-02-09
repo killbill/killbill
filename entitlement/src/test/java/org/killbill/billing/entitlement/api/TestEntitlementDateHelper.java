@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -149,6 +151,6 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         // Check that our input date is greater than now
         assertTrue(inputDateEquals.compareTo(clock.getUTCNow()) > 0);
         // And yet since the LocalDate match the function returns true
-        assertTrue(dateHelper.isBeforeOrEqualsToday(inputDateEquals, timeZoneUtcMinus8));
+        assertTrue(dateHelper.isBeforeOrEqualsToday(inputDateEquals, timeZoneUtcMinus8, internalCallContext));
     }
 }

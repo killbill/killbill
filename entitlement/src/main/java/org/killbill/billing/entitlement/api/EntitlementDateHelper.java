@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -39,8 +41,8 @@ public class EntitlementDateHelper {
     public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
         try {
             final ImmutableAccountData account = accountApi.getImmutableAccountDataByRecordId(callContext.getAccountRecordId(), callContext);
-            return ClockUtil.computeDateTimeWithUTCReferenceTime(requestedDate, referenceDateTime.toDateTime(DateTimeZone.UTC).toLocalTime(), account.getTimeZone(), clock);
-        } catch (AccountApiException e) {
+            return ClockUtil.computeDateTimeWithUTCReferenceTime(requestedDate, callContext.toUTCDateTime(referenceDateTime).toLocalTime(), account.getTimeZone(), clock);
+        } catch (final AccountApiException e) {
             throw new EntitlementApiException(e);
         }
     }
@@ -50,13 +52,13 @@ public class EntitlementDateHelper {
      *
      * @param inputDate       the fully qualified DateTime
      * @param accountTimeZone the account timezone
+     * @param internalTenantContext the context
      * @return true if the inputDate, once converted into a LocalDate using account timezone is less or equals than today
      */
     // TODO Move to ClockUtils
-    public boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTimeZone accountTimeZone) {
-        final LocalDate localDateNowInAccountTimezone = new LocalDate(clock.getUTCNow(), accountTimeZone);
-        final LocalDate targetDateInAccountTimezone = new LocalDate(inputDate, accountTimeZone);
+    public boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+        final LocalDate localDateNowInAccountTimezone = clock.getToday(accountTimeZone);
+        final LocalDate targetDateInAccountTimezone = internalTenantContext.toLocalDate(inputDate, accountTimeZone);
         return targetDateInAccountTimezone.compareTo(localDateNowInAccountTimezone) <= 0;
     }
-
 }

@@ -211,11 +211,23 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         // Recompute new lastSuccessPaymentState. This is important to be able to allow new operations on the state machine (for e.g an AUTH_SUCCESS would now allow a CAPTURE operation)
         final String lastSuccessPaymentState = paymentStateMachineHelper.isSuccessState(newPaymentState) ? newPaymentState : null;
 
-        // Update the processedAmount, processedCurrency if we got a paymentTransactionInfoPlugin from the plugin and if this is a non error state
-        final BigDecimal processedAmount = (paymentTransactionInfoPlugin != null && isPendingOrFinalTransactionStatus(transactionStatus)) ?
-                                           paymentTransactionInfoPlugin.getAmount() : paymentTransaction.getProcessedAmount();
-        final Currency processedCurrency = (paymentTransactionInfoPlugin != null && isPendingOrFinalTransactionStatus(transactionStatus)) ?
-                                           paymentTransactionInfoPlugin.getCurrency() : paymentTransaction.getProcessedCurrency();
+        // Update processedAmount and processedCurrency
+        final BigDecimal processedAmount;
+        if (TransactionStatus.SUCCESS.equals(transactionStatus) || TransactionStatus.PENDING.equals(transactionStatus)) {
+            if (paymentTransactionInfoPlugin == null || paymentTransactionInfoPlugin.getAmount() == null) {
+                processedAmount = paymentTransaction.getProcessedAmount();
+            } else {
+                processedAmount = paymentTransactionInfoPlugin.getAmount();
+            }
+        } else {
+            processedAmount = BigDecimal.ZERO;
+        }
+        final Currency processedCurrency;
+        if (paymentTransactionInfoPlugin == null || paymentTransactionInfoPlugin.getCurrency() == null) {
+            processedCurrency = paymentTransaction.getProcessedCurrency();
+        } else {
+            processedCurrency = paymentTransactionInfoPlugin.getCurrency();
+        }
 
         // Update the gatewayErrorCode, gatewayError if we got a paymentTransactionInfoPlugin
         final String gatewayErrorCode = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin.getGatewayErrorCode() : paymentTransaction.getGatewayErrorCode();
@@ -237,12 +249,6 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     private TransactionStatus computeNewTransactionStatusFromPaymentTransactionInfoPlugin(final PaymentTransactionInfoPlugin input, final TransactionStatus currentTransactionStatus) {
         final TransactionStatus newTransactionStatus = PaymentTransactionInfoPluginConverter.toTransactionStatus(input);
         return (newTransactionStatus != TransactionStatus.UNKNOWN) ? newTransactionStatus : currentTransactionStatus;
-    }
-
-    private boolean isPendingOrFinalTransactionStatus(final TransactionStatus transactionStatus) {
-        return (transactionStatus == TransactionStatus.PENDING ||
-                transactionStatus == TransactionStatus.SUCCESS ||
-                transactionStatus == TransactionStatus.PAYMENT_FAILURE);
     }
 
     private PaymentPluginApi getPaymentPluginApi(final PaymentModelDao item, final String pluginName) {

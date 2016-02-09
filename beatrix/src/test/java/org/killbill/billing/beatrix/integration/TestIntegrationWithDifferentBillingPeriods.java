@@ -153,7 +153,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         // Move to 1020-08-01
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(20);
         clock.addMonths(2);
         assertListenerStatus();
@@ -199,7 +199,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         // 2012-5-12
         clock.addDays(10);
 
-        busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
         entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -218,7 +218,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         // 2012-6-4
         clock.addDays(23);
 
-        busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -230,7 +230,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 4), new LocalDate(2012, 6, 4), InvoiceItemType.CBA_ADJ, new BigDecimal("-2327.62")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addYears(1);
         assertListenerStatus();
 
@@ -307,7 +307,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 12), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2327.62")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addYears(1);
         assertListenerStatus();
 

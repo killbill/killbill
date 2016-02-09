@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,6 +21,8 @@ package org.killbill.billing.catalog;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -85,31 +89,24 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         this.effectiveDateForExistingSubscriptons = in.getEffectiveDateForExistingSubscriptons();
         this.product = (DefaultProduct) in.getProduct();
         this.initialPhases = new DefaultPlanPhase[in.getInitialPhases().length];
-        for (int i = 0; i< overrides.length - 1; i++) {
+        for (int i = 0; i < overrides.length - 1; i++) {
             final DefaultPlanPhase newPhase = new DefaultPlanPhase(this, in.getInitialPhases()[i], overrides[i]);
             initialPhases[i] = newPhase;
         }
         this.finalPhase = new DefaultPlanPhase(this, in.getFinalPhase(), overrides[overrides.length - 1]);
         this.priceList = in.getPriceList();
     }
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPlan#getEffectiveDateForExistingSubscriptons()
-      */
+
     @Override
     public Date getEffectiveDateForExistingSubscriptons() {
         return effectiveDateForExistingSubscriptons;
-    }    /* (non-Javadoc)
-	 * @see org.killbill.billing.catalog.IPlan#getPhases()
-	 */
+    }
 
     @Override
     public DefaultPlanPhase[] getInitialPhases() {
         return initialPhases;
     }
 
-    /* (non-Javadoc)
-	 * @see org.killbill.billing.catalog.IPlan#getProduct()
-	 */
     @Override
     public Product getProduct() {
         return product;
@@ -120,9 +117,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return priceList;
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPlan#getName()
-      */
     @Override
     public String getName() {
         return name;
@@ -163,9 +157,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return finalPhase.getRecurring() != null ? finalPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPlan#getPlansAllowedInBundle()
-      */
     @Override
     public int getPlansAllowedInBundle() {
         return plansAllowedInBundle;
@@ -176,10 +167,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
       */
     @Override
     public Iterator<PlanPhase> getInitialPhaseIterator() {
-        final ArrayList<PlanPhase> list = new ArrayList<PlanPhase>();
-        for (final DefaultPlanPhase p : initialPhases) {
-            list.add(p);
-        }
+        final Collection<PlanPhase> list = new ArrayList<PlanPhase>();
+        Collections.addAll(list, initialPhases);
         return list.iterator();
     }
 
@@ -199,12 +188,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         this.priceList = findPriceListForPlan(catalog);
     }
 
-
-
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         if (effectiveDateForExistingSubscriptons != null &&
-                catalog.getEffectiveDate().getTime() > effectiveDateForExistingSubscriptons.getTime()) {
+            catalog.getEffectiveDate().getTime() > effectiveDateForExistingSubscriptons.getTime()) {
             errors.add(new ValidationError(String.format("Price effective date %s is before catalog effective date '%s'",
                                                          effectiveDateForExistingSubscriptons,
                                                          catalog.getEffectiveDate().getTime()),
@@ -253,8 +240,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     @Override
     public DateTime dateOfFirstRecurringNonZeroCharge(final DateTime subscriptionStartDate, final PhaseType initialPhaseType) {
-        DateTime result = subscriptionStartDate.toDateTime();
-        boolean skipPhase = initialPhaseType == null ? false : true;
+        DateTime result = subscriptionStartDate;
+        boolean skipPhase = initialPhaseType != null;
         for (final PlanPhase phase : getAllPhases()) {
             if (skipPhase) {
                 if (phase.getPhaseType() != initialPhaseType) {
@@ -318,9 +305,9 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public String toString() {
         return "DefaultPlan [name=" + name + ", effectiveDateForExistingSubscriptons="
-                + effectiveDateForExistingSubscriptons + ", product=" + product + ", initialPhases="
-                + Arrays.toString(initialPhases) + ", finalPhase=" + finalPhase + ", plansAllowedInBundle="
-                + plansAllowedInBundle + "]";
+               + effectiveDateForExistingSubscriptons + ", product=" + product + ", initialPhases="
+               + Arrays.toString(initialPhases) + ", finalPhase=" + finalPhase + ", plansAllowedInBundle="
+               + plansAllowedInBundle + "]";
     }
 
     private DefaultPriceList findPriceListForPlan(final StandaloneCatalog catalog) {

@@ -542,7 +542,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }
                 // We expect the code to correctly pass the account currency -- the payment code, more generic accept chargeBack in different currencies,
                 // but this is only for direct payment (no invoice)
-                Preconditions.checkArgument(invoicePayment.getCurrency() == currency);
+                Preconditions.checkArgument(invoicePayment.getCurrency() == currency, String.format("Invoice payment currency %s doesn't match chargeback currency %s", invoicePayment.getCurrency(), currency));
 
                 final UUID invoicePaymentId = invoicePayment.getId();
                 final BigDecimal maxChargedBackAmount = invoiceDaoHelper.getRemainingAmountPaidFromTransaction(invoicePaymentId, entitySqlDaoWrapperFactory, context);

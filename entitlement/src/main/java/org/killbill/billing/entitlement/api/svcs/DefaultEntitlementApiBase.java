@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -124,7 +124,6 @@ public class DefaultEntitlementApiBase {
     }
 
     public AccountEntitlements getAllEntitlementsForAccountId(final UUID accountId, final InternalTenantContext tenantContext) throws EntitlementApiException {
-
         final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(tenantContext);
 
         final Map<UUID, Collection<Entitlement>> entitlementsPerBundle = new HashMap<UUID, Collection<Entitlement>>();
@@ -136,7 +135,7 @@ public class DefaultEntitlementApiBase {
             for (final EventsStream eventsStream : accountEventsStreams.getEventsStreams().get(bundleId)) {
                 final Entitlement entitlement = new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
                                                                        blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
-                                                                       entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory);
+                                                                       entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);
                 entitlementsPerBundle.get(bundleId).add(entitlement);
             }
         }
@@ -148,7 +147,7 @@ public class DefaultEntitlementApiBase {
         final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(entitlementId, tenantContext);
         return new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
                                       blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
-                                      entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory);
+                                      entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);
     }
 
     public void pause(final UUID bundleId, final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
@@ -173,7 +172,7 @@ public class DefaultEntitlementApiBase {
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
                     final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), baseSubscription.getStartDate(), internalCallContext);
 
-                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone())) {
+                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone(), internalCallContext)) {
                         recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, true, internalCallContext);
                         return null;
                     }
@@ -225,7 +224,7 @@ public class DefaultEntitlementApiBase {
 
                     final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), baseSubscription.getStartDate(), internalCallContext);
 
-                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone())) {
+                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone(), internalCallContext)) {
                         recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, false, internalCallContext);
                         return null;
                     }

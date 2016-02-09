@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,7 +19,6 @@
 package org.killbill.billing.account.api;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.events.ChangedField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -39,12 +40,6 @@ public class DefaultChangedField implements ChangedField {
         this.fieldName = fieldName;
         this.oldValue = oldValue;
         this.newValue = newValue;
-    }
-
-    public DefaultChangedField(final String fieldName,
-                               final String oldValue,
-                               final String newValue) {
-        this(fieldName, oldValue, newValue, new DateTime());
     }
 
     @Override
@@ -124,5 +119,4 @@ public class DefaultChangedField implements ChangedField {
         }
         return true;
     }
-
 }

@@ -60,7 +60,6 @@ public class TestConsumableInArrear extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testWithNoUsageInPeriodAndOldUsage() throws Exception {
-
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
@@ -80,12 +79,12 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         // ADD ADD_ON ON THE SAME DAY
         //
-        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE);
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.NULL_INVOICE);
 
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
 
@@ -93,9 +92,10 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
-        // We don't expect any invoice, but we want to give the system the time to verify there is nothing to do so we can fail
+        // We don't expect any invoice
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         clock.addMonths(1);
-        Thread.sleep(1000);
+        assertListenerStatus();
 
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 1), 50L, callContext);
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 16), 300L, callContext);
@@ -128,7 +128,6 @@ public class TestConsumableInArrear extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testWithCancellation() throws Exception {
-
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
@@ -148,12 +147,12 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         // ADD ADD_ON ON THE SAME DAY
         //
-        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE);
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.NULL_INVOICE);
 
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -174,14 +173,13 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 28), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
+        busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
         clock.addDays(4);
-        Thread.sleep(1000);
-
+        assertListenerStatus();
     }
 
     @Test(groups = "slow")
     public void testWithDayLightSaving() throws Exception {
-
         clock.setTime(new DateTime("2015-09-01T08:01:01.000Z"));
 
         final DateTimeZone tz = DateTimeZone.forID("America/Juneau");
@@ -212,20 +210,22 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         // ADD ADD_ON ON THE SAME DAY
         //
-        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE);
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.NULL_INVOICE);
         assertListenerStatus();
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 10, 1), new LocalDate(2016, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
 
         // 2015-11-1
+        busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
 
         // 2015-12-1
+        busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
 

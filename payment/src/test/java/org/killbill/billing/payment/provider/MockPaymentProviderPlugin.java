@@ -29,6 +29,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -71,6 +73,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     private final AtomicBoolean makeAllInvoicesFailWithError = new AtomicBoolean(false);
     private final AtomicInteger makePluginWaitSomeMilliseconds = new AtomicInteger(0);
     private final AtomicReference<BigDecimal> overrideNextProcessedAmount = new AtomicReference<BigDecimal>();
+    private final AtomicReference<Currency> overrideNextProcessedCurrency = new AtomicReference<Currency>();
 
     private final Map<String, InternalPaymentInfo> payments = new ConcurrentHashMap<String, InternalPaymentInfo>();
     private final Map<String, List<PaymentTransactionInfoPlugin>> paymentTransactions = new ConcurrentHashMap<String, List<PaymentTransactionInfoPlugin>>();
@@ -222,6 +225,10 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         overrideNextProcessedAmount.set(amount);
     }
 
+    public void overrideNextProcessedCurrency(final Currency currency) {
+        overrideNextProcessedCurrency.set(currency);
+    }
+
     public void updatePaymentTransactions(final UUID paymentId, final List<PaymentTransactionInfoPlugin> newTransactions) {
         if (paymentTransactions.containsKey(paymentId.toString())) {
             paymentTransactions.put (paymentId.toString(), newTransactions);
@@ -351,7 +358,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         return getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.REFUND, refundAmount, currency, properties);
     }
 
-    private PaymentTransactionInfoPlugin getPaymentTransactionInfoPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType type, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> pluginProperties) throws PaymentPluginApiException {
+    private PaymentTransactionInfoPlugin getPaymentTransactionInfoPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType type, final BigDecimal amount, @Nullable final Currency currency, final Iterable<PluginProperty> pluginProperties) throws PaymentPluginApiException {
         if (makePluginWaitSomeMilliseconds.get() > 0) {
             try {
                 Thread.sleep(makePluginWaitSomeMilliseconds.get());
@@ -388,8 +395,12 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         }
 
         final BigDecimal processedAmount = MoreObjects.firstNonNull(overrideNextProcessedAmount.getAndSet(null), amount);
+        Currency processedCurrency = overrideNextProcessedCurrency.getAndSet(null);
+        if (processedCurrency == null) {
+            processedCurrency = currency;
+        }
 
-        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, processedAmount, currency, clock.getUTCNow(), clock.getUTCNow(), status, errorCode, error);
+        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, processedAmount, processedCurrency, clock.getUTCNow(), clock.getUTCNow(), status, errorCode, error);
         List<PaymentTransactionInfoPlugin> existingTransactions = paymentTransactions.get(kbPaymentId.toString());
         if (existingTransactions == null) {
             existingTransactions = new ArrayList<PaymentTransactionInfoPlugin>();

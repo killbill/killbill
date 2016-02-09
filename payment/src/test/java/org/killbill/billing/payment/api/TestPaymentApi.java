@@ -182,7 +182,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
         assertEquals(payment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
         assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.AED);
-        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.AED);
 
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
@@ -405,7 +405,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
         assertEquals(payment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
         assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.USD);
-        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0); // This is weird...
+        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.USD);
 
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);

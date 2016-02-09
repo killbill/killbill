@@ -135,7 +135,6 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
                 try {
-
                     if (entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(externalKey, contextWithValidAccountRecordId) != null) {
                         throw new EntitlementApiException(new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, externalKey));
                     }
@@ -337,7 +336,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                               public Entitlement apply(final EventsStream eventsStream) {
                                                                   return new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
                                                                                                 blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
-                                                                                                entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory);
+                                                                                                entitlementUtils, dateHelper, clock, securityApi, context, internalCallContextFactory);
                                                               }
                                                           });
     }

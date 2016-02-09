@@ -72,21 +72,26 @@ public class DefaultPayment extends EntityBase implements Payment {
 
     private static BigDecimal getAmountForType(final Iterable<PaymentTransaction> transactions, final TransactionType transactiontype) {
         BigDecimal result = BigDecimal.ZERO;
-        final Iterable<PaymentTransaction> filtered = Iterables.filter(transactions, new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                return input.getTransactionType() == transactiontype && TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
+        BigDecimal processedResult = BigDecimal.ZERO;
+        boolean shouldUseProcessedAmount = true;
+
+        for (final PaymentTransaction transaction : transactions) {
+            if (transaction.getTransactionType() != transactiontype || !TransactionStatus.SUCCESS.equals(transaction.getTransactionStatus())) {
+                continue;
             }
-        });
-        if (TransactionType.AUTHORIZE.equals(transactiontype) && filtered.iterator().hasNext()) {
-            // HACK - For multi-step AUTH, don't sum the individual transactions
-            result = filtered.iterator().next().getAmount();
-        } else {
-            for (final PaymentTransaction dpt : filtered) {
-                result = result.add(dpt.getAmount());
+
+            result = result.add(transaction.getAmount());
+
+            shouldUseProcessedAmount = shouldUseProcessedAmount && transaction.getCurrency().equals(transaction.getProcessedCurrency()) && transaction.getProcessedAmount() != null;
+            processedResult = shouldUseProcessedAmount ? processedResult.add(transaction.getProcessedAmount()) : BigDecimal.ZERO;
+
+            // For multi-step AUTH, don't sum the individual transactions
+            if (TransactionType.AUTHORIZE.equals(transactiontype)) {
+                break;
             }
         }
-        return result;
+
+        return shouldUseProcessedAmount ? processedResult : result;
     }
 
     @Override

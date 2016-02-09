@@ -212,7 +212,7 @@ public class TestSubscription extends TestIntegrationBase {
         specifierList.add(addOnEntitlementSpecifier1);
         specifierList.add(addOnEntitlementSpecifier2);
 
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.CREATE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         checkNoMoreInvoiceToGenerate(account);
@@ -252,7 +252,6 @@ public class TestSubscription extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testCancelFutureSubscriptionWithPolicy() throws Exception {
-
         final LocalDate initialDate = new LocalDate(2015, 9, 1);
         clock.setDay(initialDate);
 
@@ -274,8 +273,7 @@ public class TestSubscription extends TestIntegrationBase {
         assertListenerStatus();
 
         // Move off trial and reach start/cancellation date
-        // NextEvent.INVOICE is required because of #467
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
         clock.addDays(30);
         assertListenerStatus();
 
@@ -286,7 +284,6 @@ public class TestSubscription extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testCancelFutureSubscriptionWithRequestedDate() throws Exception {
-
         final LocalDate initialDate = new LocalDate(2015, 9, 1);
         clock.setDay(initialDate);
 
@@ -317,13 +314,12 @@ public class TestSubscription extends TestIntegrationBase {
         assertListenerStatus();
 
         // Move off trial and reach start/cancellation date
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
         clock.addDays(30);
         assertListenerStatus();
 
         // Just to make sure we really don't invoice for anything move to next month
         clock.addMonths(1);
         assertListenerStatus();
-
     }
 }

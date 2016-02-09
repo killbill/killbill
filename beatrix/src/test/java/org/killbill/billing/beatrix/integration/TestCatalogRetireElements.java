@@ -50,7 +50,6 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testRetirePlan() throws Exception {
-
         // Catalog v1 starts in 2011-01-01
         // Catalog v2 starts in 2015-12-01
         final LocalDate today = new LocalDate(2015, 11, 5);
@@ -85,7 +84,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         try {
             entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
-        } catch (EntitlementApiException e) {
+        } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find a plan matching: (product: 'Pistol', billing period: 'MONTHLY'"));
         }
 
@@ -96,15 +95,13 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 3);
-        for (Invoice invoice : invoices) {
+        for (final Invoice invoice : invoices) {
             assertEquals(invoice.getInvoiceItems().get(0).getPlanName(), "pistol-monthly");
         }
-
     }
 
     @Test(groups = "slow")
     public void testRetireProduct() throws Exception {
-
         // Catalog v1 starts in 2011-01-01
         // Catalog v3 starts in 2016-01-01
         final LocalDate today = new LocalDate(2015, 11, 5);
@@ -144,7 +141,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         try {
             entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
-        } catch (EntitlementApiException e) {
+        } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find any product named 'Pistol'"));
         }
 
@@ -155,15 +152,13 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 4);
-        for (Invoice invoice : invoices) {
+        for (final Invoice invoice : invoices) {
             assertEquals(invoice.getInvoiceItems().get(0).getPlanName(), "pistol-monthly");
         }
-
     }
 
     @Test(groups = "slow")
     public void testRetirePriceList() throws Exception {
-
         // Catalog v1 starts in 2011-01-01
         // Catalog v2 starts in 2015-12-01
         // Catalog v3 starts in 2016-01-01
@@ -203,7 +198,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         try {
             entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
-        } catch (EntitlementApiException e) {
+        } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find any product named 'Pistol'"));
         }
 
@@ -213,7 +208,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         assertListenerStatus();
 
         // Move out a month.
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
@@ -225,7 +220,5 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         assertTrue(invoices.get(2).getInvoiceItems().get(0).getPhaseName().equals("discount-pistol-monthly-discount"));
         assertTrue(invoices.get(3).getInvoiceItems().get(0).getPhaseName().equals("discount-pistol-monthly-discount"));
         assertTrue(invoices.get(4).getInvoiceItems().get(0).getPhaseName().equals("discount-pistol-monthly-evergreen"));
-
     }
-
 }
