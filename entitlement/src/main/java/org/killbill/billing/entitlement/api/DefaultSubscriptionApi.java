@@ -26,12 +26,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTimeZone;
+import org.joda.time.Interval;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.OrderingType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
@@ -41,6 +45,7 @@ import org.killbill.billing.entitlement.AccountEntitlements;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.api.EntitlementPluginExecution.WithEntitlementPlugin;
+import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
@@ -64,6 +69,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
@@ -97,6 +103,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     private final EntitlementUtils entitlementUtils;
     private final Clock clock;
     private final EntitlementPluginExecution pluginExecution;
+    private final BlockingStateDao blockingStateDao;
 
 
     @Inject
@@ -106,6 +113,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                   final InternalCallContextFactory internalCallContextFactory,
                                   final Clock clock,
                                   final EntitlementPluginExecution pluginExecution,
+                                  final BlockingStateDao blockingStateDao,
                                   final EntitlementUtils entitlementUtils) {
         this.accountApi = accountApi;
         this.entitlementInternalApi = entitlementInternalApi;
@@ -113,6 +121,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
         this.pluginExecution = pluginExecution;
+        this.blockingStateDao = blockingStateDao;
         this.entitlementUtils = entitlementUtils;
     }
 
@@ -373,6 +382,52 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             }
         };
         pluginExecution.executeWithPlugin(addBlockingStateWithPlugin, pluginContext);
+    }
+
+    @Override
+    public Iterable<BlockingState> getBlockingStates(final UUID accountId, @Nullable final List<BlockingStateType> typeFilter, @Nullable final List<String> svcsFilter, final OrderingType orderingType, final int timeFilter, final TenantContext tenantContext) throws EntitlementApiException {
+
+        try {
+
+            final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
+            final List<BlockingState> allBlockingStates = blockingStateDao.getBlockingAllForAccountRecordId(internalTenantContextWithValidAccountRecordId);
+
+            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, internalTenantContextWithValidAccountRecordId);
+
+            final Iterable<BlockingState> filteredByTypes = typeFilter != null  && !typeFilter.isEmpty() ?
+                                                            Iterables.filter(allBlockingStates, new Predicate<BlockingState>() {
+                                                                @Override
+                                                                public boolean apply(final BlockingState input) {
+                                                                    return typeFilter.contains(input.getType());
+                                                                }
+                                                            }) : allBlockingStates;
+
+            final Iterable<BlockingState> filteredByTypesAndSvcs = svcsFilter != null && !svcsFilter.isEmpty() ?
+                                                                   Iterables.filter(filteredByTypes, new Predicate<BlockingState>() {
+                                                                       @Override
+                                                                       public boolean apply(final BlockingState input) {
+                                                                           return svcsFilter.contains(input.getService());
+                                                                       }
+                                                                   }) : filteredByTypes;
+
+            final LocalDate localDateNowInAccountTimezone = new LocalDate(clock.getUTCNow(), account.getTimeZone());
+            final List<BlockingState> result = new ArrayList<BlockingState>();
+            for (final BlockingState cur : filteredByTypesAndSvcs) {
+
+                final LocalDate eventDate = new LocalDate(cur.getEffectiveDate(), account.getTimeZone());
+                final int comp = eventDate.compareTo(localDateNowInAccountTimezone);
+                if ((comp <= 1 && ((timeFilter & SubscriptionApi.PAST_EVENTS) == SubscriptionApi.PAST_EVENTS)) ||
+                    (comp == 0 && ((timeFilter & SubscriptionApi.PRESENT_EVENTS) == SubscriptionApi.PRESENT_EVENTS)) ||
+                    (comp >= 1 && ((timeFilter & SubscriptionApi.FUTURE_EVENTS) == SubscriptionApi.FUTURE_EVENTS))) {
+                    result.add(cur);
+                }
+            }
+
+            return orderingType == OrderingType.ASCENDING ? result : Lists.reverse(result);
+
+        } catch (AccountApiException e) {
+            throw new EntitlementApiException(e);
+        }
     }
 
     private List<SubscriptionBundle> getSubscriptionBundlesForAccount(final UUID accountId, final TenantContext tenantContext) throws SubscriptionApiException {

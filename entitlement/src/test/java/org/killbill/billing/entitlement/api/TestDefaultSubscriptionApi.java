@@ -16,10 +16,13 @@
 
 package org.killbill.billing.entitlement.api;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.OrderingType;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -354,6 +357,61 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
+        // Now we remove the blocking state for the same service but at the SUBSCRIPTION level
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState state3 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionUnBlock", "svc1", false, false, false, clock.getUTCNow());
+        subscriptionApi.addBlockingState(state3, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
+
+
+        final DateTime futureEffectiveDate = clock.getUTCNow().plusDays(1);
+        final BlockingState state4 = new DefaultBlockingState(createdEntitlement.getBundleId(), BlockingStateType.SUBSCRIPTION_BUNDLE, "blockBilling", "svc1", true, false, false, futureEffectiveDate);
+        subscriptionApi.addBlockingState(state4, ImmutableList.<PluginProperty>of(), callContext);
+
+
+        final Iterable<BlockingState> blockingStates1 = subscriptionApi.getBlockingStates(account.getId(), ImmutableList.of(BlockingStateType.ACCOUNT, BlockingStateType.SUBSCRIPTION), ImmutableList.of("svc1", "svc2"), OrderingType.ASCENDING, SubscriptionApi.PAST_OR_PRESENT_EVENTS, callContext);
+        verifyBlockingStates(blockingStates1, ImmutableList.<BlockingState>of(state1, state2, state3));
+
+        final Iterable<BlockingState> blockingStates3 = subscriptionApi.getBlockingStates(account.getId(), ImmutableList.of(BlockingStateType.SUBSCRIPTION), ImmutableList.of("svc1", "svc2"), OrderingType.DESCENDING, SubscriptionApi.PAST_OR_PRESENT_EVENTS, callContext);
+        verifyBlockingStates(blockingStates3, ImmutableList.<BlockingState>of(state3, state2));
+
+        final Iterable<BlockingState> blockingStates4 = subscriptionApi.getBlockingStates(account.getId(), ImmutableList.of(BlockingStateType.SUBSCRIPTION), ImmutableList.of("svc2"), OrderingType.DESCENDING, SubscriptionApi.PAST_OR_PRESENT_EVENTS, callContext);
+        verifyBlockingStates(blockingStates4, ImmutableList.<BlockingState>of(state2));
+
+        final Iterable<BlockingState> blockingStates2 = subscriptionApi.getBlockingStates(account.getId(), null, null, OrderingType.DESCENDING, SubscriptionApi.ALL_EVENTS, callContext);
+        verifyBlockingStates(blockingStates2, ImmutableList.<BlockingState>of(state4, state3, state2, state1));
+
+        final Iterable<BlockingState> blockingStates6 = subscriptionApi.getBlockingStates(account.getId(), ImmutableList.of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, OrderingType.ASCENDING, SubscriptionApi.FUTURE_EVENTS, callContext);
+        verifyBlockingStates(blockingStates6, ImmutableList.<BlockingState>of(state4));
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        final Iterable<BlockingState> blockingStates5 = subscriptionApi.getBlockingStates(account.getId(), null, null, OrderingType.ASCENDING, SubscriptionApi.PAST_OR_PRESENT_EVENTS, callContext);
+        verifyBlockingStates(blockingStates5, ImmutableList.<BlockingState>of(state1, state2, state3, state4));
+
+    }
+
+    private void verifyBlockingStates(final Iterable<BlockingState> result, final List<BlockingState> expected) {
+        int i = 0;
+        final Iterator<BlockingState> iterator = result.iterator();
+        while (iterator.hasNext()) {
+            final BlockingState cur = iterator.next();
+            final BlockingState expectedItem = expected.get(i);
+            assertEquals(cur.isBlockBilling(), expectedItem.isBlockBilling());
+            assertEquals(cur.isBlockEntitlement(), expectedItem.isBlockEntitlement());
+            assertEquals(cur.isBlockChange(), expectedItem.isBlockChange());
+            assertEquals(cur.getService(), expectedItem.getService());
+            assertEquals(cur.getStateName(), expectedItem.getStateName());
+            assertEquals(cur.getBlockedId(), expectedItem.getBlockedId());
+            assertEquals(cur.getEffectiveDate().compareTo(expectedItem.getEffectiveDate()), 0);
+            i++;
+        }
+        assertEquals(i, expected.size());
     }
 
 
