@@ -20,13 +20,13 @@ package org.killbill.billing.entitlement.api;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.clock.Clock;
-import org.killbill.clock.ClockUtil;
 
 public class EntitlementDateHelper {
 
@@ -39,19 +39,28 @@ public class EntitlementDateHelper {
     }
 
     public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
+        final ImmutableAccountData account;
+
         try {
-            final ImmutableAccountData account = accountApi.getImmutableAccountDataByRecordId(callContext.getAccountRecordId(), callContext);
-            return ClockUtil.computeDateTimeWithUTCReferenceTime(requestedDate, callContext.toUTCDateTime(referenceDateTime).toLocalTime(), account.getTimeZone(), clock);
+            account = accountApi.getImmutableAccountDataByRecordId(callContext.getAccountRecordId(), callContext);
         } catch (final AccountApiException e) {
             throw new EntitlementApiException(e);
         }
+
+        // If the input date overlaps with the present, we return NOW.
+        final Interval interval = requestedDate.toInterval(account.getTimeZone());
+        if (interval.contains(clock.getUTCNow())) {
+            return clock.getUTCNow();
+        }
+
+        return callContext.toUTCDateTime(requestedDate, referenceDateTime, account.getTimeZone());
     }
 
     /**
      * Check if the date portion of a date/time is before or equals at now (as returned by the clock).
      *
-     * @param inputDate       the fully qualified DateTime
-     * @param accountTimeZone the account timezone
+     * @param inputDate             the fully qualified DateTime
+     * @param accountTimeZone       the account timezone
      * @param internalTenantContext the context
      * @return true if the inputDate, once converted into a LocalDate using account timezone is less or equals than today
      */

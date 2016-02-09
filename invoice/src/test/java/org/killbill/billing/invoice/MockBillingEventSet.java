@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
@@ -38,12 +39,15 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
 
     private static final long serialVersionUID = 1L;
 
+    private final InternalTenantContext internalTenantContext;
+
     private boolean isAccountInvoiceOff;
     private List<UUID> subscriptionIdsWithAutoInvoiceOff;
     private AccountDateAndTimeZoneContext accountDateAndTimeZoneContext;
 
-    public MockBillingEventSet() {
+    public MockBillingEventSet(final InternalTenantContext internalTenantContext) {
         super();
+        this.internalTenantContext = internalTenantContext;
         this.isAccountInvoiceOff = false;
         this.subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
     }
@@ -51,7 +55,7 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     @Override
     public boolean add(final BillingEvent e) {
         if (accountDateAndTimeZoneContext == null) {
-            this.accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), DateTimeZone.UTC);
+            this.accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), DateTimeZone.UTC, internalTenantContext);
         }
         return super.add(e);
     }
@@ -59,7 +63,7 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     @Override
     public boolean addAll(final Collection<? extends BillingEvent> all) {
         if (accountDateAndTimeZoneContext == null) {
-            this.accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), DateTimeZone.UTC);
+            this.accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), DateTimeZone.UTC, internalTenantContext);
         }
         return super.addAll(all);
     }

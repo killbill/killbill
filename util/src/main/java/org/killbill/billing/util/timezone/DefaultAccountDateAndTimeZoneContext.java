@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,28 +23,33 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 
 /**
- * Used by entitlement and invoice to calculate:
+ * Used by junction and invoice to calculate:
  * - a LocalDate from DateTime and the timeZone set on the account
  * - A DateTime from a LocalDate and the referenceTime attached to the account.
  */
 public final class DefaultAccountDateAndTimeZoneContext implements AccountDateAndTimeZoneContext {
 
     private final LocalTime referenceTime;
-    private final int offsetFromUtc;
     private final DateTimeZone accountTimeZone;
+    private final InternalTenantContext internalTenantContext;
 
-    /// effectiveDateTime is compute from first billing event and so offsetFromUtc will remain constant with regard to daylight saving time
-    public DefaultAccountDateAndTimeZoneContext(final DateTime effectiveDateTime, final DateTimeZone accountTimeZone) {
+    private final int offsetFromUtc;
+
+    /// referenceTime is compute from first billing event and so offsetFromUtc will remain constant with regard to daylight saving time
+    public DefaultAccountDateAndTimeZoneContext(final DateTime effectiveDateTime, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
         this.referenceTime = effectiveDateTime != null ? effectiveDateTime.toLocalTime() : null;
         this.accountTimeZone = accountTimeZone;
-        this.offsetFromUtc = computeOffsetFromUtc(effectiveDateTime, accountTimeZone);
+        this.internalTenantContext = internalTenantContext;
+
+        this.offsetFromUtc = computeOffsetFromUtc(effectiveDateTime, accountTimeZone, internalTenantContext);
     }
 
-    static int computeOffsetFromUtc(final DateTime effectiveDateTime, final DateTimeZone accountTimeZone) {
-        final LocalDate localDateInAccountTimeZone = new LocalDate(effectiveDateTime, accountTimeZone);
+    static int computeOffsetFromUtc(final DateTime effectiveDateTime, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+        final LocalDate localDateInAccountTimeZone = internalTenantContext.toLocalDate(effectiveDateTime, accountTimeZone);
         final LocalDate localDateInUTC = new LocalDate(effectiveDateTime, DateTimeZone.UTC);
         return Days.daysBetween(localDateInUTC, localDateInAccountTimeZone).getDays();
     }
@@ -50,7 +57,7 @@ public final class DefaultAccountDateAndTimeZoneContext implements AccountDateAn
     @Override
     public LocalDate computeLocalDateFromFixedAccountOffset(final DateTime targetDateTime) {
         final DateTime dateWithOriginalAccountTimeZoneOffset = targetDateTime.plusDays(offsetFromUtc);
-        return  dateWithOriginalAccountTimeZoneOffset.toLocalDate();
+        return dateWithOriginalAccountTimeZoneOffset.toLocalDate();
     }
 
     @Override

@@ -22,7 +22,9 @@ import java.util.Date;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 
+// TODO Cache the accountTimeZone, reference time and clock in the context
 public class TimeAwareContext {
 
     // From JDK to Joda (see http://www.joda.org/joda-time/userguide.html#JDK_Interoperability)
@@ -35,14 +37,30 @@ public class TimeAwareContext {
         return toDateTime(dateTime, DateTimeZone.UTC);
     }
 
+    // Create a DateTime object using the specified reference time and timezone (usually, the one on the account)
+    public DateTime toUTCDateTime(final LocalDate localDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
+        return toUTCDateTime(toDateTime(localDate, referenceDateTime, accountTimeZone));
+    }
+
+    // Create a DateTime object using the specified reference time and timezone (usually, the one on the account)
+    public DateTime toDateTime(final LocalDate localDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
+        final LocalTime referenceLocalTime = toDateTime(referenceDateTime, accountTimeZone).toLocalTime();
+
+        return new DateTime(localDate.getYear(),
+                            localDate.getMonthOfYear(),
+                            localDate.getDayOfMonth(),
+                            referenceLocalTime.getHourOfDay(),
+                            referenceLocalTime.getMinuteOfHour(),
+                            referenceLocalTime.getSecondOfMinute(),
+                            accountTimeZone);
+    }
+
     // Create a DateTime object using the specified timezone (usually, the one on the account)
-    // TODO Should we cache the accountTimeZone in the context?
     public DateTime toDateTime(final DateTime dateTime, final DateTimeZone accountTimeZone) {
         return dateTime.toDateTime(accountTimeZone);
     }
 
     // Create a LocalDate object using the specified timezone (usually, the one on the account)
-    // TODO Should we cache the accountTimeZone in the context?
     public LocalDate toLocalDate(final DateTime dateTime, final DateTimeZone accountTimeZone) {
         return new LocalDate(dateTime, accountTimeZone);
     }

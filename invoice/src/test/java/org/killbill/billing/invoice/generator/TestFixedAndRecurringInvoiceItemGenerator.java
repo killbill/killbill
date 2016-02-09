@@ -69,7 +69,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         try {
             account = invoiceUtil.createAccount(callContext);
             subscription = invoiceUtil.createSubscription();
-            dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(new DateTime("2016-01-08T03:01:01.000Z"), DateTimeZone.UTC);
+            dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(new DateTime("2016-01-08T03:01:01.000Z"), DateTimeZone.UTC, internalCallContext);
         } catch (final Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -170,7 +170,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final LocalDate targetDate = new LocalDate("2016-01-08");
 
         final UUID invoiceId = UUID.randomUUID();
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         final BigDecimal fixedPriceAmount = BigDecimal.TEN;
         final MockInternationalPrice fixedPrice = new MockInternationalPrice(new DefaultPrice(fixedPriceAmount, Currency.USD));
@@ -203,7 +203,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final LocalDate targetDate = new LocalDate("2016-01-08");
 
         final UUID invoiceId = UUID.randomUUID();
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         final BigDecimal fixedPriceAmount = BigDecimal.TEN;
         final MockInternationalPrice fixedPrice = new MockInternationalPrice(new DefaultPrice(fixedPriceAmount, Currency.USD));
@@ -239,7 +239,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final LocalDate targetDate = new LocalDate("2016-01-08");
 
         final UUID invoiceId = UUID.randomUUID();
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         final BigDecimal fixedPriceAmount1 = BigDecimal.TEN;
         final MockInternationalPrice fixedPrice1 = new MockInternationalPrice(new DefaultPrice(fixedPriceAmount1, Currency.USD));

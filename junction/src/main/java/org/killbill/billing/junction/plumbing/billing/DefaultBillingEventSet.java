@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -26,9 +28,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
@@ -48,20 +49,22 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     private final List<UUID> subscriptionIdsWithAutoInvoiceOff;
     private final BillingMode recurringBillingMode;
     private final DateTimeZone accountTimeZone;
+    private final InternalTenantContext internalTenantContext;
 
     private DefaultAccountDateAndTimeZoneContext dateTimeZoneContext;
 
-    public DefaultBillingEventSet(final boolean accountAutoInvoiceOff, final BillingMode recurringBillingMode, final DateTimeZone timeZone) {
+    public DefaultBillingEventSet(final boolean accountAutoInvoiceOff, final BillingMode recurringBillingMode, final DateTimeZone timeZone, final InternalTenantContext internalTenantContext) {
         this.accountAutoInvoiceOff = accountAutoInvoiceOff;
         this.recurringBillingMode = recurringBillingMode;
         this.accountTimeZone = timeZone;
+        this.internalTenantContext = internalTenantContext;
         this.subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
     }
 
     @Override
     public boolean add(final BillingEvent e) {
         if (dateTimeZoneContext == null) {
-            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), accountTimeZone);
+            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), accountTimeZone, internalTenantContext);
         }
         return super.add(e);
     }
@@ -69,14 +72,11 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     @Override
     public boolean addAll(final Collection<? extends BillingEvent> all) {
         if (dateTimeZoneContext == null) {
-            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), accountTimeZone);
+            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), accountTimeZone, internalTenantContext);
         }
         return super.addAll(all);
     }
 
-    /* (non-Javadoc)
-        * @see org.killbill.billing.junction.plumbing.billing.BillingEventSet#isAccountAutoInvoiceOff()
-        */
     @Override
     public boolean isAccountAutoInvoiceOff() {
         return accountAutoInvoiceOff;
@@ -87,9 +87,6 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
         return recurringBillingMode;
     }
 
-    /* (non-Javadoc)
-    * @see org.killbill.billing.junction.plumbing.billing.BillingEventSet#getSubscriptionIdsWithAutoInvoiceOff()
-    */
     @Override
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
@@ -120,7 +117,6 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
         }
         return result;
     }
-
 
     @Override
     public String toString() {

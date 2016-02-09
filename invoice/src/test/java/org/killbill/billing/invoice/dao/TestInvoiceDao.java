@@ -1109,7 +1109,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                        recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingMode.IN_ADVANCE,
                                                                        "testEvent1", 1L, SubscriptionBaseTransitionType.CREATE);
 
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         events.add(event1);
 
         final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, invoiceList, targetDate, Currency.USD, context);
@@ -1161,7 +1161,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BillingEvent event = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate, plan, phase,
                                                                       fixedPrice.getPrice(currency), null, currency, BillingPeriod.MONTHLY, 15, BillingMode.IN_ADVANCE,
                                                                       "testEvent", 1L, SubscriptionBaseTransitionType.CREATE);
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         events.add(event);
 
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 1, 15);
@@ -1203,7 +1203,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate1, plan, phase1, fixedPrice.getPrice(currency),
                                                                        null, currency, BillingPeriod.MONTHLY, 1, BillingMode.IN_ADVANCE,
                                                                        "testEvent1", 1L, SubscriptionBaseTransitionType.CREATE);
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         events.add(event1);
 
         final UUID accountId = account.getId();
@@ -1246,7 +1246,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testInvoiceForEmptyEventSet() throws InvoiceApiException {
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, null, new LocalDate(), Currency.USD, context);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNull(invoice);
@@ -1273,7 +1273,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                        fixedPrice.getPrice(currency), null, currency,
                                                                        BillingPeriod.MONTHLY, 1, BillingMode.IN_ADVANCE,
                                                                        "testEvent1", 1L, SubscriptionBaseTransitionType.CREATE);
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         events.add(event1);
 
         final DateTime effectiveDate2 = effectiveDate1.plusDays(30);
@@ -1340,7 +1340,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoices.add(new DefaultInvoice(savedInvoice));
 
         // NOW COMPUTE A DIFFERENT ITEM TO TRIGGER REPAIR
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final SubscriptionBase subscription = getZombieSubscription(subscriptionId);
 
         final Plan plan = Mockito.mock(Plan.class);
@@ -1381,7 +1381,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final PlanPhase phase2 = Mockito.mock(PlanPhase.class);
         Mockito.when(phase2.getName()).thenReturn("plan-phase2");
 
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final List<Invoice> invoices = new ArrayList<Invoice>();
 
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, targetDate1, plan, phase1, null,

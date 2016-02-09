@@ -22,17 +22,14 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.ImmutableAccountData;
-import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
-import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
-import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.MigrationPlan;
-import org.killbill.clock.Clock;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceMigrationApi;
 import org.killbill.billing.invoice.dao.DefaultInvoiceDao;
@@ -40,7 +37,10 @@ import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -68,10 +68,12 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
 
     @Override
     public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final BigDecimal balance, final Currency currency, final CallContext context) {
-        ImmutableAccountData account;
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+
+        final ImmutableAccountData account;
         try {
-            account = accountUserApi.getImmutableAccountDataById(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
-        } catch (AccountApiException e) {
+            account = accountUserApi.getImmutableAccountDataById(accountId, internalCallContext);
+        } catch (final AccountApiException e) {
             log.warn("Unable to find account for id {}", accountId);
             return null;
         }
@@ -82,9 +84,9 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
                                                                                  targetDate, null, balance, null, currency, null);
 
         final DateTime wrongEffectiveDateButDoesNotMatter = null;
-        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(wrongEffectiveDateButDoesNotMatter, account.getTimeZone());
+        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(wrongEffectiveDateButDoesNotMatter, account.getTimeZone(), internalCallContext);
         dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),
-                          true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContextFactory.createInternalCallContext(accountId, context));
+                          true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
 
         return migrationInvoice.getId();
     }
