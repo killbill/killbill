@@ -34,16 +34,12 @@ import com.google.common.base.Objects;
 
 public class ItemAdjInvoiceItem extends AdjInvoiceItem {
 
-    public ItemAdjInvoiceItem(final InvoiceItem invoiceItem, final LocalDate effectiveDate,
+    public ItemAdjInvoiceItem(final InvoiceItem linkedInvoiceItem, final LocalDate effectiveDate,
                               final BigDecimal amount, final Currency currency) {
-        this(UUIDs.randomUUID(), invoiceItem.getInvoiceId(), invoiceItem.getAccountId(), effectiveDate,
-             amount, currency, invoiceItem.getId());
+        this(UUIDs.randomUUID(), null, linkedInvoiceItem.getInvoiceId(), linkedInvoiceItem.getAccountId(), effectiveDate,
+             linkedInvoiceItem.getDescription(), amount, currency, linkedInvoiceItem.getId());
     }
 
-    public ItemAdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final LocalDate startDate,
-                              final BigDecimal amount, final Currency currency, final UUID linkedItemId) {
-        this(id, null, invoiceId, accountId, startDate, null, amount, currency, linkedItemId);
-    }
 
     public ItemAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate startDate,
                               @Nullable final String description, final BigDecimal amount, final Currency currency, final UUID linkedItemId) {

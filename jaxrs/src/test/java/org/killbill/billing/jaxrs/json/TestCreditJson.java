@@ -40,7 +40,7 @@ public class TestCreditJson extends JaxrsTestSuiteNoDB {
         final String accountId = UUID.randomUUID().toString();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final CreditJson creditJson = new CreditJson(creditAmount, invoiceId, invoiceNumber, effectiveDate,
-                                                     accountId, auditLogs);
+                                                     accountId, null, auditLogs);
         Assert.assertEquals(creditJson.getEffectiveDate(), effectiveDate);
         Assert.assertEquals(creditJson.getCreditAmount(), creditAmount);
         Assert.assertEquals(creditJson.getInvoiceId(), invoiceId);

@@ -689,7 +689,7 @@ public class AccountResource extends JaxRsResourceBase {
         // then we apply some credit on the account.
         //
         if (externalPayment && remainingRequestPayment.compareTo(BigDecimal.ZERO) > 0) {
-            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), callContext);
+            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), "pay all invoices", callContext);
         }
         return Response.status(Status.OK).build();
     }

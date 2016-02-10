@@ -53,6 +53,7 @@ public class TestCredit extends TestJaxrsBase {
         credit.setAccountId(accountJson.getAccountId());
         credit.setInvoiceId(invoice.getInvoiceId());
         credit.setCreditAmount(creditAmount);
+        credit.setDescription("description");
         final Credit objFromJson = killBillClient.createCredit(credit, createdBy, reason, comment);
 
         // We can't just compare the object via .equals() due e.g. to the invoice id
@@ -60,6 +61,7 @@ public class TestCredit extends TestJaxrsBase {
         assertEquals(objFromJson.getInvoiceId(), invoice.getInvoiceId());
         assertEquals(objFromJson.getCreditAmount().compareTo(creditAmount), 0);
         assertEquals(objFromJson.getEffectiveDate().compareTo(effectiveDate.toLocalDate()), 0);
+        assertEquals(objFromJson.getDescription().compareTo("description"), 0);
     }
 
     @Test(groups = "slow", description = "Cannot add a credit if the account doesn't exist")

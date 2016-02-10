@@ -433,6 +433,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     UUID.fromString(invoiceId),
                                                                     UUID.fromString(json.getInvoiceItemId()),
                                                                     requestedDate,
+                                                                    json.getDescription(),
                                                                     callContext);
         } else {
             adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(accountId,
@@ -441,6 +442,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     requestedDate,
                                                                     json.getAmount(),
                                                                     json.getCurrency(),
+                                                                    json.getDescription(),
                                                                     callContext);
         }
 

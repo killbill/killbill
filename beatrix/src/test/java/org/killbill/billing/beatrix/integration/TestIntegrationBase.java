@@ -673,7 +673,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Void apply(@Nullable final Void input) {
                 try {
                     invoiceUserApi.insertCreditForInvoice(account.getId(), invoice.getId(), invoice.getBalance(), invoice.getInvoiceDate(),
-                                                          account.getCurrency(), callContext);
+                                                          account.getCurrency(), null, callContext);
                 } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }
@@ -688,7 +688,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Void apply(@Nullable final Void input) {
                 try {
                     invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), invoice.getInvoiceItems().get(itemNb - 1).getId(),
-                                                               invoice.getInvoiceDate(), callContext);
+                                                               invoice.getInvoiceDate(), null, callContext);
                 } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }

@@ -149,7 +149,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
             if (!mergedInvoiceAdjustment.getCurrency().equals(item.getCurrency())) {
                 invoiceItems.add(item);
             } else {
-                mergedInvoiceAdjustment = new CreditAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), invoice.getInvoiceDate(),
+                mergedInvoiceAdjustment = new CreditAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), invoice.getInvoiceDate(), mergedInvoiceAdjustment.getDescription(),
                                                                    mergedInvoiceAdjustment.getAmount().add(item.getAmount()), mergedInvoiceAdjustment.getCurrency());
             }
         }

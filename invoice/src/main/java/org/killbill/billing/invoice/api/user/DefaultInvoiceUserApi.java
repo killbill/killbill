@@ -322,18 +322,18 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
 
         return new CreditAdjInvoiceItem(creditItem.getId(), creditItem.getCreatedDate(), creditItem.getInvoiceId(), creditItem.getAccountId(),
-                                        creditItem.getStartDate(), creditItem.getAmount().negate(), creditItem.getCurrency());
+                                        creditItem.getStartDate(), creditItem.getDescription(), creditItem.getAmount().negate(), creditItem.getCurrency());
     }
 
     @Override
     public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final LocalDate effectiveDate,
-                                    final Currency currency, final CallContext context) throws InvoiceApiException {
-        return insertCreditForInvoice(accountId, null, amount, effectiveDate, currency, context);
+                                    final Currency currency, final String description, final CallContext context) throws InvoiceApiException {
+        return insertCreditForInvoice(accountId, null, amount, effectiveDate, currency, description, context);
     }
 
     @Override
     public InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
-                                              final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
+                                              final LocalDate effectiveDate, final Currency currency, final String description, final CallContext context) throws InvoiceApiException {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.CREDIT_AMOUNT_INVALID, amount);
         }
@@ -358,6 +358,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                       invoiceForCredit.getId(),
                                                       accountId,
                                                       effectiveDate,
+                                                      description,
                                                       // Note! The amount is negated here!
                                                       amount.negate(),
                                                       currency);
@@ -381,14 +382,14 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
-                                                   final LocalDate effectiveDate, final CallContext context) throws InvoiceApiException {
-        return insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, null, null, context);
+                                                   final LocalDate effectiveDate, final String description, final CallContext context) throws InvoiceApiException {
+        return insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, null, null, description, context);
     }
 
     @Override
     public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
                                                    final LocalDate effectiveDate, @Nullable final BigDecimal amount,
-                                                   @Nullable final Currency currency, final CallContext context) throws InvoiceApiException {
+                                                   @Nullable final Currency currency, final String description, final CallContext context) throws InvoiceApiException {
         if (amount != null && amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_SHOULD_BE_POSITIVE, amount);
         }
@@ -402,6 +403,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                                          amount,
                                                                                          currency,
                                                                                          effectiveDate,
+                                                                                         description,
                                                                                          internalCallContextFactory.createInternalCallContext(accountId, context));
                 invoice.addInvoiceItem(adjustmentItem);
 

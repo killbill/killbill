@@ -32,8 +32,8 @@ public class TestItemAdjInvoiceItem extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testType() throws Exception {
-        final InvoiceItem invoiceItem = new ItemAdjInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                                                               new LocalDate(2010, 1, 1), new BigDecimal("7.00"), Currency.USD,
+        final InvoiceItem invoiceItem = new ItemAdjInvoiceItem(UUID.randomUUID(), null, UUID.randomUUID(), UUID.randomUUID(),
+                                                               new LocalDate(2010, 1, 1), null, new BigDecimal("7.00"),  Currency.USD,
                                                                UUID.randomUUID());
         Assert.assertEquals(invoiceItem.getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
     }

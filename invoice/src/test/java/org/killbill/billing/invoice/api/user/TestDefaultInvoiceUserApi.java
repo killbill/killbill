@@ -201,12 +201,13 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Adjust the invoice for the full amount
         final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, invoiceBalance,
-                                                                                    clock.getUTCToday(), accountCurrency, callContext);
+                                                                                    clock.getUTCToday(), accountCurrency, "some description", callContext);
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(creditInvoiceItem.getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
         Assert.assertEquals(creditInvoiceItem.getAccountId(), accountId);
         Assert.assertEquals(creditInvoiceItem.getAmount().compareTo(invoiceBalance.negate()), 0);
         Assert.assertEquals(creditInvoiceItem.getCurrency(), accountCurrency);
+        Assert.assertEquals(creditInvoiceItem.getDescription(), "some description");
         Assert.assertNull(creditInvoiceItem.getLinkedItemId());
 
         // Verify the adjusted invoice balance
@@ -231,7 +232,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         // Adjust the invoice for a fraction of the balance
         final BigDecimal creditAmount = invoiceBalance.divide(BigDecimal.TEN);
         final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, creditAmount,
-                                                                                    clock.getUTCToday(), accountCurrency, callContext);
+                                                                                    clock.getUTCToday(), accountCurrency,
+                                                                                    null, callContext);
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(creditInvoiceItem.getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
         Assert.assertEquals(creditInvoiceItem.getAccountId(), accountId);
@@ -251,7 +253,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testCantAdjustInvoiceWithNegativeAmount() throws Exception {
         try {
-            invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, BigDecimal.TEN.negate(), clock.getUTCToday(), accountCurrency, callContext);
+            invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, BigDecimal.TEN.negate(), clock.getUTCToday(), accountCurrency,
+                                                  null, callContext);
             Assert.fail("Should not have been able to adjust an invoice with a negative amount");
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.CREDIT_AMOUNT_INVALID.getCode());
@@ -274,7 +277,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Adjust the invoice for the full amount
         final InvoiceItem adjInvoiceItem = invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(),
-                                                                                      clock.getUTCToday(), callContext);
+                                                                                      clock.getUTCToday(), null, callContext);
         Assert.assertEquals(adjInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(adjInvoiceItem.getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
         Assert.assertEquals(adjInvoiceItem.getAccountId(), accountId);
@@ -309,7 +312,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal adjAmount = invoiceItem.getAmount().divide(BigDecimal.TEN);
         final InvoiceItem adjInvoiceItem = invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(),
                                                                                       clock.getUTCToday(), adjAmount, accountCurrency,
-                                                                                      callContext);
+                                                                                      null, callContext);
         Assert.assertEquals(adjInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(adjInvoiceItem.getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
         Assert.assertEquals(adjInvoiceItem.getAccountId(), accountId);
@@ -332,7 +335,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         try {
             invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(), clock.getUTCToday(),
-                                                       BigDecimal.TEN.negate(), accountCurrency, callContext);
+                                                       BigDecimal.TEN.negate(), accountCurrency, null, callContext);
             Assert.fail("Should not have been able to adjust an item with a negative amount");
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_SHOULD_BE_POSITIVE.getCode());
