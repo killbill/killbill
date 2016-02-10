@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.slf4j.Logger;
@@ -60,8 +63,8 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
 
     @Inject
     public DefaultTagDefinitionDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final PersistentBus bus, final Clock clock,
-                                   final CacheControllerDispatcher controllerDispatcher, final NonEntityDao nonEntityDao) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao), TagDefinitionSqlDao.class);
+                                   final CacheControllerDispatcher controllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), TagDefinitionSqlDao.class);
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
     }

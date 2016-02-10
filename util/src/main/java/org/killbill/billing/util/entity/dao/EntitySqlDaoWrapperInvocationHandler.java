@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -43,6 +43,7 @@ import org.killbill.billing.util.cache.CachableKey;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.EntityAudit;
 import org.killbill.billing.util.dao.EntityHistoryModelDao;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -89,6 +90,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private final CacheControllerDispatcher cacheControllerDispatcher;
     private final Clock clock;
     private final NonEntityDao nonEntityDao;
+    private final InternalCallContextFactory internalCallContextFactory;
     private final Profiling prof;
 
     public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass,
@@ -97,13 +99,15 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                                                 final Clock clock,
                                                 // Special DAO that don't require caching can invoke EntitySqlDaoWrapperInvocationHandler with no caching (e.g NoCachingTenantDao)
                                                 @Nullable final CacheControllerDispatcher cacheControllerDispatcher,
-                                                @Nullable final NonEntityDao nonEntityDao) {
+                                                @Nullable final NonEntityDao nonEntityDao,
+                                                final InternalCallContextFactory internalCallContextFactory) {
         this.sqlDaoClass = sqlDaoClass;
         this.sqlDao = sqlDao;
         this.handle = handle;
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.nonEntityDao = nonEntityDao;
+        this.internalCallContextFactory = internalCallContextFactory;
         this.prof = new Profiling<Object, Throwable>();
     }
 
@@ -465,7 +469,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         final InternalCallContext context;
         // Populate the account record id when creating the account record
         if (TableName.ACCOUNT.equals(tableName) && ChangeType.INSERT.equals(changeType)) {
-            context = new InternalCallContext(contextMaybeWithoutAccountRecordId, entityRecordId);
+            context = internalCallContextFactory.createInternalCallContext(contextMaybeWithoutAccountRecordId, entityRecordId);
         } else {
             context = contextMaybeWithoutAccountRecordId;
         }

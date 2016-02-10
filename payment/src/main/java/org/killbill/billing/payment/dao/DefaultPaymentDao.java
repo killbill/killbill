@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -43,6 +43,7 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
@@ -67,7 +68,7 @@ import com.google.common.collect.Iterables;
 
 public class DefaultPaymentDao implements PaymentDao {
 
-    private final static Logger log = LoggerFactory.getLogger(DefaultPaymentDao.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultPaymentDao.class);
 
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final DefaultPaginationSqlDaoHelper paginationHelper;
@@ -75,8 +76,9 @@ public class DefaultPaymentDao implements PaymentDao {
     private final Clock clock;
 
     @Inject
-    public DefaultPaymentDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final PersistentBus eventBus) {
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
+    public DefaultPaymentDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+                             final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus eventBus) {
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
         this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
         this.eventBus = eventBus;
         this.clock = clock;

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -33,6 +35,7 @@ import org.killbill.billing.util.audit.DefaultAccountAuditLogs;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogsForObjectType;
 import org.killbill.billing.util.audit.DefaultAuditLog;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.NonEntitySqlDao;
 import org.killbill.billing.util.dao.RecordIdIdMappings;
@@ -55,9 +58,9 @@ public class DefaultAuditDao implements AuditDao {
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     @Inject
-    public DefaultAuditDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+    public DefaultAuditDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.nonEntitySqlDao = dbi.onDemand(NonEntitySqlDao.class);
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     @Override

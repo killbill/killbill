@@ -44,7 +44,7 @@ public class InternalCallContextFactory {
     private final CacheControllerDispatcher cacheControllerDispatcher;
 
     @Inject
-    public InternalCallContextFactory(final Clock clock, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
+    public InternalCallContextFactory(final Clock clock, final NonEntityDao nonEntityDao, @Nullable final CacheControllerDispatcher cacheControllerDispatcher) {
         this.clock = clock;
         this.nonEntityDao = nonEntityDao;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
@@ -203,6 +203,10 @@ public class InternalCallContextFactory {
         return new InternalCallContext(tenantRecordId, null, context);
     }
 
+    public InternalCallContext createInternalCallContext(final InternalCallContext context, final Long accountRecordId) {
+        return new InternalCallContext(context, accountRecordId);
+    }
+
     // Used when we need to re-hydrate the callcontext with the account_record_id (when creating the account)
     public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
         return new InternalCallContext(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getCreatedBy(),
@@ -239,7 +243,7 @@ public class InternalCallContextFactory {
     public UUID getAccountId(final UUID objectId, final ObjectType objectType, final TenantContext context) {
         final Long accountRecordId = getAccountRecordIdSafe(objectId, objectType, context);
         if (accountRecordId != null) {
-            return nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+            return nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
         } else {
             return null;
         }
@@ -249,7 +253,7 @@ public class InternalCallContextFactory {
     public Long getRecordIdFromObject(final UUID objectId, final ObjectType objectType, final TenantContext context) {
         try {
             if (objectBelongsToTheRightTenant(objectId, objectType, context)) {
-                return nonEntityDao.retrieveRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
+                return nonEntityDao.retrieveRecordIdFromObject(objectId, objectType, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
             } else {
                 return null;
             }
@@ -290,7 +294,7 @@ public class InternalCallContextFactory {
     }
 
     private UUID getTenantIdSafe(final InternalTenantContext context) {
-        return nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+        return nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
     }
 
     //
@@ -318,11 +322,11 @@ public class InternalCallContextFactory {
     //
 
     private Long getAccountRecordIdUnsafe(final UUID objectId, final ObjectType objectType) {
-        return nonEntityDao.retrieveAccountRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
+        return nonEntityDao.retrieveAccountRecordIdFromObject(objectId, objectType, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
     }
 
     private Long getTenantRecordIdUnsafe(final UUID objectId, final ObjectType objectType) {
-        return nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID));
+        return nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID));
     }
 
     public static final class ObjectDoesNotExist extends IllegalStateException {
