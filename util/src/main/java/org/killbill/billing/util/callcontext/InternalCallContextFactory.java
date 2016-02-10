@@ -325,7 +325,7 @@ public class InternalCallContextFactory {
         return nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID));
     }
 
-    private static final class ObjectDoesNotExist extends IllegalStateException {
+    public static final class ObjectDoesNotExist extends IllegalStateException {
 
         public ObjectDoesNotExist(final String s) {
             super(s);
