@@ -65,7 +65,6 @@ import org.killbill.xmlloader.ValidationErrors;
 public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPriceOverride> implements Catalog, StaticCatalog {
 
     private final Clock clock;
-    private final InternalTenantContext internalTenantContext;
     @XmlElement(name = "catalogVersion", required = true)
     private final List<StandaloneCatalogWithPriceOverride> versions;
     private String catalogName;
@@ -75,13 +74,11 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     public VersionedCatalog() {
         this.clock = null;
         this.versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
-        this.internalTenantContext = new InternalTenantContext(null);
     }
 
     public VersionedCatalog(final Clock clock) {
         this.clock = clock;
         this.versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
-        this.internalTenantContext = new InternalTenantContext(null);
     }
 
     public VersionedCatalog(final Clock clock, final String catalogName, final BillingMode recurringBillingMode, final List<StandaloneCatalogWithPriceOverride> versions, final InternalTenantContext tenantContext) {
@@ -93,7 +90,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
             final StandaloneCatalogWithPriceOverride catalogWithTenantInfo = new StandaloneCatalogWithPriceOverride(cur, tenantContext);
             this.versions.add(catalogWithTenantInfo);
         }
-        this.internalTenantContext = tenantContext;
     }
 
     //
@@ -174,12 +170,12 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
                 }
             }
 
-            final DateTime catalogEffectiveDate = internalTenantContext.toUTCDateTime(c.getEffectiveDate());
+            final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(c.getEffectiveDate());
             if (!subscriptionStartDate.isBefore(catalogEffectiveDate)) { // Its a new subscription this plan always applies
                 return plan;
             } else { //Its an existing subscription
                 if (plan.getEffectiveDateForExistingSubscriptons() != null) { //if it is null any change to this does not apply to existing subscriptions
-                    final DateTime existingSubscriptionDate = internalTenantContext.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptons());
+                    final DateTime existingSubscriptionDate = CatalogDateHelper.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptons());
                     if (requestedDate.isAfter(existingSubscriptionDate)) { // this plan is now applicable to existing subs
                         return plan;
                     }

@@ -140,7 +140,7 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
         }
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(overrides.getCallContext());
-        return priceOverride.getOrCreateOverriddenPlan(defaultPlan, internalCallContext.toUTCDateTime(getEffectiveDate()), overrides.getOverrides(), internalCallContext);
+        return priceOverride.getOrCreateOverriddenPlan(defaultPlan, CatalogDateHelper.toUTCDateTime(getEffectiveDate()), overrides.getOverrides(), internalCallContext);
     }
 
     @Override

@@ -36,11 +36,6 @@ public class TimeAwareContext {
     /// Generic functions
     /// TODO Move to ClockUtil
 
-    // From JDK to Joda (see http://www.joda.org/joda-time/userguide.html#JDK_Interoperability)
-    public DateTime toUTCDateTime(final Date date) {
-        return toUTCDateTime(new DateTime(date));
-    }
-
     // Create a DateTime object forcing the time zone to be UTC
     protected DateTime toUTCDateTime(final DateTime dateTime) {
         return toDateTime(dateTime, DateTimeZone.UTC);
