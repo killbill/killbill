@@ -43,7 +43,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         account = Mockito.mock(Account.class);
         Mockito.when(accountInternalApi.getAccountByRecordId(Mockito.anyLong(), Mockito.<InternalTenantContext>any())).thenReturn(account);
         Mockito.when(accountInternalApi.getImmutableAccountDataByRecordId(Mockito.anyLong(), Mockito.<InternalTenantContext>any())).thenReturn(account);
-        dateHelper = new EntitlementDateHelper(accountInternalApi, clock);
+        dateHelper = new EntitlementDateHelper(clock);
         clock.resetDeltaFromReality();
     }
 
@@ -114,26 +114,6 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         // ahead because of the 8 hours difference.
         //
         Assert.assertEquals(targetDate, new DateTime(2013, 8, 6, 20, 28, 10, 0, DateTimeZone.UTC));
-    }
-
-    @Test(groups = "fast")
-    public void testWhereLocalDateInAccountTimeZoneContainsNow() throws EntitlementApiException {
-
-        final DateTime initialNow = new DateTime(2013, 8, 22, 22, 07, 01, 0, DateTimeZone.UTC);
-        clock.setTime(initialNow);
-
-        final LocalDate inputDate = new LocalDate(2013, 8, 22);
-
-        final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(-8);
-        Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
-        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
-
-        final DateTime referenceDateTimeThatDoesNotMatter = new DateTime();
-        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, referenceDateTimeThatDoesNotMatter, internalCallContext);
-
-        final DateTime now = clock.getUTCNow();
-        Assert.assertTrue(initialNow.compareTo(targetDate) <= 0);
-        Assert.assertTrue(targetDate.compareTo(now) <= 0);
     }
 
     @Test(groups = "fast")

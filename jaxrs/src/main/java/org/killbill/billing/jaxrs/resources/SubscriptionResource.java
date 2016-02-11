@@ -185,7 +185,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                                        ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
 
-                final LocalDate inputLocalDate = toLocalDate(account, requestedDate, callContext);
+                final LocalDate inputLocalDate = requestedDate == null ? null : toLocalDate(account, requestedDate, callContext);
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
                                                                  ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());

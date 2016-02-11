@@ -73,7 +73,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      final UUID bundleId,
                                      final String externalKey,
                                      final List<EntitlementSpecifier> entitlementSpecifiers,
-                                     final LocalDate effectiveDate,
+                                     @Nullable final LocalDate effectiveDate,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final CallContext callContext) {
         this(operationType, accountId, destinationAccountId, bundleId, externalKey, entitlementSpecifiers, effectiveDate, pluginProperties,
@@ -88,7 +88,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      final UUID bundleId,
                                      final String externalKey,
                                      final List<EntitlementSpecifier> entitlementSpecifiers,
-                                     final LocalDate effectiveDate,
+                                     @Nullable final LocalDate effectiveDate,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final UUID userToken,
                                      final String userName,

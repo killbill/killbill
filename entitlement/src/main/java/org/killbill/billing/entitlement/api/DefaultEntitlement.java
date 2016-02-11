@@ -25,6 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -289,7 +291,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement cancelEntitlementWithDate(final LocalDate localCancelDate, final boolean overrideBillingEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement cancelEntitlementWithDate(@Nullable final LocalDate localCancelDate, final boolean overrideBillingEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
 
@@ -399,7 +401,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     // See also EntitlementInternalApi#cancel for the bulk API
     @Override
-    public Entitlement cancelEntitlementWithDateOverrideBillingPolicy(final LocalDate localCancelDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement cancelEntitlementWithDateOverrideBillingPolicy(@Nullable final LocalDate localCancelDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
 
@@ -533,7 +535,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement changePlanWithDate(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final LocalDate localDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlanWithDate(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, @Nullable final LocalDate localDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
 

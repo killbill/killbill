@@ -18,42 +18,25 @@
 
 package org.killbill.billing.entitlement.api;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.clock.Clock;
 
 public class EntitlementDateHelper {
 
-    private final AccountInternalApi accountApi;
     private final Clock clock;
 
-    public EntitlementDateHelper(final AccountInternalApi accountApi, final Clock clock) {
-        this.accountApi = accountApi;
+    public EntitlementDateHelper(final Clock clock) {
         this.clock = clock;
     }
 
-    public DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
-        final ImmutableAccountData account;
-
-        try {
-            account = accountApi.getImmutableAccountDataByRecordId(callContext.getAccountRecordId(), callContext);
-        } catch (final AccountApiException e) {
-            throw new EntitlementApiException(e);
-        }
-
-        // If the input date overlaps with the present, we return NOW.
-        final Interval interval = requestedDate.toInterval(account.getTimeZone());
-        if (interval.contains(clock.getUTCNow())) {
-            return clock.getUTCNow();
-        }
-
-        return callContext.toUTCDateTime(requestedDate, referenceDateTime);
+    public DateTime fromLocalDateAndReferenceTime(@Nullable final LocalDate requestedDate, final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
+        return requestedDate == null ? clock.getUTCNow() : callContext.toUTCDateTime(requestedDate, referenceDateTime);
     }
 
     /**

@@ -30,7 +30,6 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.testng.annotations.Test;
@@ -84,7 +83,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
 
         // Cancel addOn1 one day after
         clock.addDays(1);
-        cancelEntitlementAndCheckForCompletion(addOn1, clock.getUTCNow(), NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
+        cancelEntitlementAndCheckForCompletion(addOn1, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
 
         // DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(29, NextEvent.PHASE,  NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
@@ -135,7 +134,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
 
         // Cancel bundle 2 one day after (2012-05-02)
         clock.addDays(1);
-        cancelEntitlementAndCheckForCompletion(baseEntitlement2, clock.getUTCNow(), NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
+        cancelEntitlementAndCheckForCompletion(baseEntitlement2, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
         final SubscriptionBase cancelledBaseSubscription2 = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement2.getId(), callContext)).getSubscriptionBase();
         assertTrue(cancelledBaseSubscription2.getState() == EntitlementState.CANCELLED);
 
