@@ -302,7 +302,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final HttpServletRequest request,
                                         @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final LocalDate inputDate = toLocalDate(UUID.fromString(accountId), targetDate, callContext);
+        final LocalDate inputDate = toLocalDate(targetDate, callContext);
 
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, null,
@@ -339,10 +339,10 @@ public class InvoiceResource extends JaxRsResourceBase {
             } else if (DryRunType.SUBSCRIPTION_ACTION.name().equals(dryRunSubscriptionSpec.getDryRunType()) && dryRunSubscriptionSpec.getEffectiveDate() != null) {
                 inputDate = dryRunSubscriptionSpec.getEffectiveDate();
             } else {
-                inputDate = toLocalDate(UUID.fromString(accountId), targetDate, callContext);
+                inputDate = toLocalDate(targetDate, callContext);
             }
         } else {
-            inputDate = toLocalDate(UUID.fromString(accountId), targetDate, callContext);
+            inputDate = toLocalDate(targetDate, callContext);
         }
 
         // Passing a null or empty body means we are trying to generate an invoice with a (future) targetDate
@@ -426,7 +426,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID accountId = UUID.fromString(json.getAccountId());
-        final LocalDate requestedDate = toLocalDate(accountId, requestedDateTimeString, callContext);
+        final LocalDate requestedDate = toLocalDateDefaultToday(accountId, requestedDateTimeString, callContext);
         final InvoiceItem adjustmentItem;
         if (json.getAmount() == null) {
             adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(accountId,
@@ -474,7 +474,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final Iterable<InvoiceItemJson> sanitizedExternalChargesJson = cloneRefundItemsWithValidCurrency(account.getCurrency(), externalChargesJson);
 
         // Get the effective date of the external charge, in the account timezone
-        final LocalDate requestedDate = toLocalDate(account, requestedDateTimeString, callContext);
+        final LocalDate requestedDate = toLocalDateDefaultToday(account, requestedDateTimeString, callContext);
 
         final Iterable<InvoiceItem> externalCharges = Iterables.<InvoiceItemJson, InvoiceItem>transform(sanitizedExternalChargesJson,
                                                                                                         new Function<InvoiceItemJson, InvoiceItem>() {
