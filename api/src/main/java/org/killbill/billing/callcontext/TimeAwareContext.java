@@ -42,7 +42,7 @@ public class TimeAwareContext {
     }
 
     // Create a DateTime object forcing the time zone to be UTC
-    public DateTime toUTCDateTime(final DateTime dateTime) {
+    protected DateTime toUTCDateTime(final DateTime dateTime) {
         return toDateTime(dateTime, DateTimeZone.UTC);
     }
 
