@@ -47,6 +47,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
@@ -181,9 +182,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
             public Entitlement doOperation(final CallContext ctx) throws InterruptedException, TimeoutException, EntitlementApiException, SubscriptionApiException, AccountApiException {
 
                 final Account account = getAccountFromSubscriptionJson(entitlement, callContext);
+                final PhaseType phaseType = entitlement.getPhaseType() != null ? PhaseType.valueOf(entitlement.getPhaseType()) : null;
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(entitlement.getProductName(),
                                                                        ProductCategory.valueOf(entitlement.getProductCategory()),
-                                                                       BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
+                                                                       BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), phaseType);
 
                 final LocalDate inputLocalDate = requestedDate == null ? null : toLocalDate(account, requestedDate, callContext);
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
