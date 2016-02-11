@@ -58,7 +58,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
-        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final Account account = createAccount(getAccountData(7));
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK);
         final Entitlement entitlement1 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, initialDate, ImmutableList.<PluginProperty>of(), callContext);
@@ -101,7 +101,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
-        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final Account account = createAccount(getAccountData(7));
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
@@ -169,7 +169,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         clock.addDays(3);
 
-        final Account account2 = accountApi.createAccount(getAccountData(7), callContext);
+        final Account account2 = createAccount(getAccountData(7));
 
         testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.CANCEL, NextEvent.BLOCK);
         entitlementApi.transferEntitlements(account.getId(), account2.getId(), externalKey, new LocalDate(clock.getUTCNow(), account.getTimeZone()), ImmutableList.<PluginProperty>of(), callContext);
@@ -207,7 +207,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
-        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final Account account = createAccount(getAccountData(7));
 
         // Create entitlement
         testListener.pushExpectedEvent(NextEvent.CREATE);
@@ -263,7 +263,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
-        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final Account account = createAccount(getAccountData(7));
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
@@ -297,7 +297,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
-        final Account account = accountApi.createAccount(getAccountData(7), callContext);
+        final Account account = createAccount(getAccountData(7));
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 

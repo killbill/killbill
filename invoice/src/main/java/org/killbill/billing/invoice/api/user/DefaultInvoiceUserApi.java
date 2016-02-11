@@ -127,7 +127,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public Invoice getInvoiceByPayment(final UUID paymentId, final TenantContext context) throws InvoiceApiException {
-        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context);
         final UUID invoiceId = dao.getInvoiceIdByPaymentId(paymentId, tenantContext);
         if (invoiceId == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, paymentId);

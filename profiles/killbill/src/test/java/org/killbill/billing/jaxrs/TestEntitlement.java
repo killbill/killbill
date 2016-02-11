@@ -145,26 +145,11 @@ public class TestEntitlement extends TestJaxrsBase {
         subscription.setBillingPeriod(BillingPeriod.ANNUAL);
         subscription.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        try {
-            killBillClient.updateSubscription(subscription, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
-            Assert.fail();
-        } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
-        }
+        assertNull(killBillClient.updateSubscription(subscription, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment));
 
-        try {
-            killBillClient.cancelSubscription(subscriptionId, createdBy, reason, comment);
-            Assert.fail();
-        } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
-        }
+        killBillClient.cancelSubscription(subscriptionId, createdBy, reason, comment);
 
-        try {
-            killBillClient.getSubscription(subscriptionId);
-            Assert.fail();
-        } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
-        }
+        assertNull(killBillClient.getSubscription(subscriptionId));
     }
 
     @Test(groups = "slow", description = "Can override billing policy on change")

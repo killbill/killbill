@@ -21,7 +21,6 @@ package org.killbill.billing.entitlement.api;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.callcontext.InternalTenantContext;
 
 public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTimeline {
@@ -31,8 +30,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
     private final String externalKey;
     private final List<SubscriptionEvent> events;
 
-    public DefaultSubscriptionBundleTimeline(final DateTimeZone accountTimeZone,
-                                             final UUID accountId,
+    public DefaultSubscriptionBundleTimeline(final UUID accountId,
                                              final UUID bundleId,
                                              final String externalKey,
                                              final Iterable<Entitlement> entitlements,
@@ -40,7 +38,7 @@ public class DefaultSubscriptionBundleTimeline implements SubscriptionBundleTime
         this.accountId = accountId;
         this.bundleId = bundleId;
         this.externalKey = externalKey;
-        this.events = SubscriptionEventOrdering.sortedCopy(entitlements, accountTimeZone, internalTenantContext);
+        this.events = SubscriptionEventOrdering.sortedCopy(entitlements, internalTenantContext);
     }
 
     @Override

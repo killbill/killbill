@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.DateTimeZone;
+import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -48,20 +48,20 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
 
     private SubscriptionEventOrdering() {}
 
-    public static List<SubscriptionEvent> sortedCopy(final Entitlement entitlement, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
-        return sortedCopy(ImmutableList.<Entitlement>of(entitlement), accountTimeZone, internalTenantContext);
+    public static List<SubscriptionEvent> sortedCopy(final Entitlement entitlement, final InternalTenantContext internalTenantContext) {
+        return sortedCopy(ImmutableList.<Entitlement>of(entitlement), internalTenantContext);
     }
 
-    public static List<SubscriptionEvent> sortedCopy(final Iterable<Entitlement> entitlements, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
-        return INSTANCE.computeEvents(entitlements, accountTimeZone, internalTenantContext);
+    public static List<SubscriptionEvent> sortedCopy(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext) {
+        return INSTANCE.computeEvents(entitlements, internalTenantContext);
     }
 
-    private List<SubscriptionEvent> computeEvents(final Iterable<Entitlement> entitlements, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+    private List<SubscriptionEvent> computeEvents(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext) {
         // Compute base events across all entitlements (already ordered per entitlement)
-        final LinkedList<SubscriptionEvent> result = computeSubscriptionBaseEvents(entitlements, accountTimeZone, internalTenantContext);
+        final LinkedList<SubscriptionEvent> result = computeSubscriptionBaseEvents(entitlements, internalTenantContext);
 
         // Add blocking states at the right place
-        BlockingStateOrdering.insertSorted(entitlements, accountTimeZone, internalTenantContext, result);
+        BlockingStateOrdering.insertSorted(entitlements, internalTenantContext, result);
 
         // Final cleanups
         reOrderSubscriptionEventsOnSameDateByType(result);
@@ -71,7 +71,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
     }
 
     // Compute the initial stream of events based on the subscription base events
-    private LinkedList<SubscriptionEvent> computeSubscriptionBaseEvents(final Iterable<Entitlement> entitlements, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+    private LinkedList<SubscriptionEvent> computeSubscriptionBaseEvents(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext) {
         final LinkedList<SubscriptionEvent> result = new LinkedList<SubscriptionEvent>();
         for (final Entitlement cur : entitlements) {
             Preconditions.checkState(cur instanceof DefaultEntitlement, "Entitlement %s is not a DefaultEntitlement", cur);
@@ -80,7 +80,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
             for (final SubscriptionBaseTransition tr : baseTransitions) {
                 final List<SubscriptionEventType> eventTypes = toEventTypes(tr.getTransitionType());
                 for (final SubscriptionEventType eventType : eventTypes) {
-                    final SubscriptionEvent event = toSubscriptionEvent(tr, eventType, accountTimeZone, internalTenantContext);
+                    final SubscriptionEvent event = toSubscriptionEvent(tr, eventType, base.getStartDate(), internalTenantContext);
                     insertSubscriptionEvent(event, result);
                 }
             }
@@ -151,7 +151,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
         result.add(index, event);
     }
 
-    private SubscriptionEvent toSubscriptionEvent(final SubscriptionBaseTransition in, final SubscriptionEventType eventType, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+    private SubscriptionEvent toSubscriptionEvent(final SubscriptionBaseTransition in, final SubscriptionEventType eventType, final DateTime referenceTime, final InternalTenantContext internalTenantContext) {
         return new DefaultSubscriptionEvent(in.getId(),
                                             in.getSubscriptionId(),
                                             in.getEffectiveTransitionTime(),
@@ -171,7 +171,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
                                             in.getNextPriceList(),
                                             (in.getNextPlan() != null ? in.getNextPlan().getRecurringBillingPeriod() : null),
                                             in.getCreatedDate(),
-                                            accountTimeZone,
+                                            referenceTime,
                                             internalTenantContext);
     }
 

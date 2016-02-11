@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,7 +19,6 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -25,8 +26,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -93,7 +92,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(context);
 
         final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
-        final DefaultBillingEventSet result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode(), account.getTimeZone());
+        final DefaultBillingEventSet result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode(), context);
 
 
 
@@ -103,7 +102,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
             final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
             if (found_AUTO_INVOICING_OFF) {
-                return new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode(), account.getTimeZone()); // billing is off, we are done
+                return new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode(), context); // billing is off, we are done
             }
 
             addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);

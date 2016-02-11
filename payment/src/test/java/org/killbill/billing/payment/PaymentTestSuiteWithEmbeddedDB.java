@@ -34,6 +34,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.profiling.Profiling;
 import org.testng.annotations.AfterMethod;
@@ -73,6 +74,8 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected TestPaymentHelper testHelper;
     @Inject
     protected PaymentExecutors paymentExecutors;
+    @Inject
+    protected NonEntityDao nonEntityDao;
 
     @Override
     protected KillbillConfigSource getConfigSource() {

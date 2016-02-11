@@ -50,10 +50,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
-        account = accountApi.createAccount(getAccountData(7), callContext);
-
-        // Override the context with the right account record id
-        internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+        account = createAccount(getAccountData(7));
     }
 
     @Test(groups = "slow", description = "Verify we don't insert extra add-on events")

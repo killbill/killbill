@@ -40,10 +40,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
-        final Account account = accountApi.createAccount(getAccountData(7), callContext);
-
-        // Override the context with the right account record id
-        internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+        final Account account = createAccount(getAccountData(7));
     }
 
     @Test(groups = "slow", description = "Check BlockingStateDao with a single service")

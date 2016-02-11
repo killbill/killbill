@@ -120,7 +120,7 @@ public class DefaultEntitlementApiBase {
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.entitlementUtils = entitlementUtils;
         this.securityApi = securityApi;
-        this.dateHelper = new EntitlementDateHelper(accountApi, clock);
+        this.dateHelper = new EntitlementDateHelper(clock);
     }
 
     public AccountEntitlements getAllEntitlementsForAccountId(final UUID accountId, final InternalTenantContext tenantContext) throws EntitlementApiException {
@@ -150,7 +150,7 @@ public class DefaultEntitlementApiBase {
                                       entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);
     }
 
-    public void pause(final UUID bundleId, final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
+    public void pause(final UUID bundleId, @Nullable final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
 
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.PAUSE_BUNDLE,
                                                                                null,
@@ -172,7 +172,7 @@ public class DefaultEntitlementApiBase {
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
                     final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), baseSubscription.getStartDate(), internalCallContext);
 
-                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone(), internalCallContext)) {
+                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, baseSubscription.getStartDate(), account.getTimeZone(), internalCallContext)) {
                         recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, true, internalCallContext);
                         return null;
                     }
@@ -203,7 +203,7 @@ public class DefaultEntitlementApiBase {
         pluginExecution.executeWithPlugin(pauseWithPlugin, pluginContext);
     }
 
-    public void resume(final UUID bundleId, final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
+    public void resume(final UUID bundleId, @Nullable final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
 
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.RESUME_BUNDLE,
                                                                                null,
@@ -224,7 +224,7 @@ public class DefaultEntitlementApiBase {
 
                     final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), baseSubscription.getStartDate(), internalCallContext);
 
-                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone(), internalCallContext)) {
+                    if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, baseSubscription.getStartDate(), account.getTimeZone(), internalCallContext)) {
                         recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, false, internalCallContext);
                         return null;
                     }
@@ -260,7 +260,7 @@ public class DefaultEntitlementApiBase {
         blockUnblockBundle(bundleId, stateName, serviceName, localEffectiveDate, blockBilling, blockEntitlement, blockChange, null, internalCallContext);
     }
 
-    private UUID blockUnblockBundle(final UUID bundleId, final String stateName, final String serviceName, final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, @Nullable final SubscriptionBase inputBaseSubscription, final InternalCallContext internalCallContext)
+    private UUID blockUnblockBundle(final UUID bundleId, final String stateName, final String serviceName, @Nullable final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, @Nullable final SubscriptionBase inputBaseSubscription, final InternalCallContext internalCallContext)
             throws EntitlementApiException {
         try {
             final SubscriptionBase baseSubscription = inputBaseSubscription == null ? subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext) : inputBaseSubscription;

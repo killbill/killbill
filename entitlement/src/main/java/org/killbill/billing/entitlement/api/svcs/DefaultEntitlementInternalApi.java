@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
@@ -91,7 +92,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
     }
 
     @Override
-    public void cancel(final Iterable<Entitlement> entitlements, final LocalDate effectiveDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
+    public void cancel(final Iterable<Entitlement> entitlements, @Nullable final LocalDate effectiveDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
         final CallContext callContext = internalCallContextFactory.createCallContext(internalCallContext);
 
         final ImmutableMap.Builder<BlockingState, Optional<UUID>> blockingStates = new ImmutableMap.Builder<BlockingState, Optional<UUID>>();

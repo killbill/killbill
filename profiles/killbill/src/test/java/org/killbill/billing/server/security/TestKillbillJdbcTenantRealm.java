@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,7 +30,9 @@ import org.killbill.billing.jaxrs.TestJaxrsBase;
 import org.killbill.billing.tenant.api.DefaultTenant;
 import org.killbill.billing.tenant.dao.DefaultTenantDao;
 import org.killbill.billing.tenant.dao.TenantModelDao;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.DefaultNonEntityDao;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -49,7 +51,7 @@ public class TestKillbillJdbcTenantRealm extends TestJaxrsBase {
         super.beforeMethod();
 
         // Create the tenant
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(dbi, clock, cacheControllerDispatcher, new DefaultNonEntityDao(dbi), securityConfig);
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(dbi, clock, cacheControllerDispatcher, new DefaultNonEntityDao(dbi), Mockito.mock(InternalCallContextFactory.class), securityConfig);
         tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                    UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(new TenantModelDao(tenant), internalCallContext);

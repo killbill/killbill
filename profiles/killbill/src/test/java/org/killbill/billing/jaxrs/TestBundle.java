@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -74,12 +74,7 @@ public class TestBundle extends TestJaxrsBase {
     public void testBundleNonExistent() throws Exception {
         final Account accountJson = createAccount();
 
-        try {
-            killBillClient.getBundle(UUID.randomUUID());
-            Assert.fail();
-        } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
-        }
+        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID()));
         Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892").isEmpty());
         Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId()).isEmpty());
     }

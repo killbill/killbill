@@ -401,12 +401,12 @@ public class DefaultEventsStream implements EventsStream {
                                                                           return DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
                                                                       }
                                                                   }).orNull();
-        entitlementEffectiveEndDate = entitlementCancelEvent != null ? internalTenantContext.toLocalDate(entitlementCancelEvent.getEffectiveDate(), account.getTimeZone()) : null;
+        entitlementEffectiveEndDate = entitlementCancelEvent != null ? internalTenantContext.toLocalDate(entitlementCancelEvent.getEffectiveDate(),getSubscriptionBase().getStartDate()) : null;
     }
 
     private void computeStateForEntitlement() {
         // Current state for the ENTITLEMENT_SERVICE_NAME is set to cancelled
-        if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(internalTenantContext.toLocalDate(utcNow, account.getTimeZone())) <= 0) {
+        if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(internalTenantContext.toLocalDate(utcNow, getSubscriptionBase().getStartDate())) <= 0) {
             entitlementState = EntitlementState.CANCELLED;
         } else {
             final LocalDate startDate = new LocalDate(getSubscriptionBase().getStartDate(), account.getTimeZone());

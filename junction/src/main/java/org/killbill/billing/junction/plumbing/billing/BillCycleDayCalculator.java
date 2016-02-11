@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -123,7 +125,7 @@ public class BillCycleDayCalculator {
         // TODO - this should be extracted somewhere, along with this code above
         final PhaseType initialPhaseType;
         final List<EffectiveSubscriptionInternalEvent> transitions = subscriptionApi.getAllTransitions(subscription, context);
-        if (transitions.size() == 0) {
+        if (transitions.isEmpty()) {
             initialPhaseType = null;
         } else {
             final DateTime requestedDate = subscription.getStartDate();
@@ -141,10 +143,9 @@ public class BillCycleDayCalculator {
         }
 
         final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate(), initialPhaseType);
-        final int bcdUTC = context.toUTCDateTime(date).getDayOfMonth();
         final int bcdLocal = context.toDateTime(date, account.getTimeZone()).getDayOfMonth();
-        log.info("Calculated BCD: subscription id {}, subscription start {}, timezone {}, bcd UTC {}, bcd local {}",
-                 subscription.getId(), date.toDateTimeISO(), account.getTimeZone(), bcdUTC, bcdLocal);
+        log.info("Calculated BCD: subscription id {}, subscription start {}, timezone {}, bcd {}",
+                 subscription.getId(), date.toDateTimeISO(), account.getTimeZone(), bcdLocal);
 
         return bcdLocal;
     }

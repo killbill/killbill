@@ -34,8 +34,10 @@ import org.killbill.billing.tenant.dao.NoCachingTenantBroadcastDao;
 import org.killbill.billing.tenant.dao.NoCachingTenantDao;
 import org.killbill.billing.tenant.dao.TenantBroadcastDao;
 import org.killbill.billing.tenant.dao.TenantDao;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.TenantConfig;
 import org.killbill.billing.util.glue.KillBillModule;
+import org.killbill.billing.util.glue.NoCachingInternalCallContextFactoryProvider;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.name.Names;
@@ -59,6 +61,7 @@ public class DefaultTenantModule extends KillBillModule implements TenantModule 
         bind(TenantDao.class).annotatedWith(Names.named(NO_CACHING_TENANT)).to(NoCachingTenantDao.class).asEagerSingleton();
         bind(TenantBroadcastDao.class).to(DefaultTenantBroadcastDao.class).asEagerSingleton();
         bind(TenantBroadcastDao.class).annotatedWith(Names.named(NO_CACHING_TENANT)).to(NoCachingTenantBroadcastDao.class).asEagerSingleton();
+        bind(InternalCallContextFactory.class).annotatedWith(Names.named(NO_CACHING_TENANT)).toProvider(NoCachingInternalCallContextFactoryProvider.class).asEagerSingleton();
     }
 
     public void installTenantUserApi() {

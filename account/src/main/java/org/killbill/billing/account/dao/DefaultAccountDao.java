@@ -64,7 +64,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
     @Inject
     public DefaultAccountDao(final IDBI dbi, final PersistentBus eventBus, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                              final InternalCallContextFactory internalCallContextFactory, final NonEntityDao nonEntityDao) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), AccountSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), AccountSqlDao.class);
         this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
