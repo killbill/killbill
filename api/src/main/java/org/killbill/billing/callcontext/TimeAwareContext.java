@@ -52,7 +52,7 @@ public class TimeAwareContext {
     public DateTime toUTCDateTime(final LocalDate localDate, final DateTime referenceDateTime) {
         validateContext();
 
-        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime, getReferenceDateTimeZone());
+        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime);
 
         final LocalTime referenceLocalTime = toDateTime(referenceDateTime, normalizedAccountTimezone).toLocalTime();
 
@@ -71,11 +71,11 @@ public class TimeAwareContext {
     public LocalDate toLocalDate(final DateTime dateTime, final DateTime referenceDateTime) {
         validateContext();
 
-        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime, getReferenceDateTimeZone());
+        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime);
         return new LocalDate(dateTime, normalizedAccountTimezone);
     }
 
-    private DateTimeZone getNormalizedAccountTimezone(final DateTime referenceDateTime, final DateTimeZone accountTimeZoneUnused) {
+    private DateTimeZone getNormalizedAccountTimezone(final DateTime referenceDateTime) {
         // Check if DST was in effect at the reference date time
         final boolean shouldUseDST = !getReferenceDateTimeZone().isStandardOffset(referenceDateTime.getMillis());
         if (shouldUseDST) {
@@ -92,7 +92,7 @@ public class TimeAwareContext {
     }
 
     // For convenience, to be overridden in tests
-    public DateTimeZone getReferenceDateTimeZone() {
+    protected DateTimeZone getReferenceDateTimeZone() {
         return referenceDateTimeZone;
     }
 }
