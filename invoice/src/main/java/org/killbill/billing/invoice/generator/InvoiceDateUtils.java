@@ -147,24 +147,6 @@ public class InvoiceDateUtils {
         return calculateProrationBetweenDates(previousBillThroughDate, endDate, previousBillThroughDate, nextBillThroughDate);
     }
 
- /*
-    public static LocalDate calculateBillingCycleDateOnOrAfter(final LocalDate date, final DateTimeZone accountTimeZone,
-                                                               final int billingCycleDayLocal) {
-        final DateTime tmp = date.toDateTimeAtStartOfDay(accountTimeZone);
-        final DateTime proposedDateTime = calculateBillingCycleDateOnOrAfter(tmp, billingCycleDayLocal);
-
-        return new LocalDate(proposedDateTime, accountTimeZone);
-    }
-
-    public static LocalDate calculateBillingCycleDateAfter(final LocalDate date, final DateTimeZone accountTimeZone,
-                                                           final int billingCycleDayLocal) {
-        final DateTime tmp = date.toDateTimeAtStartOfDay(accountTimeZone);
-        final DateTime proposedDateTime = calculateBillingCycleDateAfter(tmp, billingCycleDayLocal);
-
-        return new LocalDate(proposedDateTime, accountTimeZone);
-    }
-    */
-
     public static LocalDate calculateBillingCycleDateOnOrAfter(final LocalDate date, final int billingCycleDayLocal) {
         final int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
 
