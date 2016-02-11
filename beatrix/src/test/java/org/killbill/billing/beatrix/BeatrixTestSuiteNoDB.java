@@ -16,7 +16,18 @@
 
 package org.killbill.billing.beatrix;
 
-import org.killbill.billing.GuicyKillbillTestSuite;
+import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
+import org.killbill.billing.beatrix.integration.BeatrixIntegrationModuleNoDB;
+import org.testng.annotations.BeforeClass;
 
-public abstract class BeatrixTestSuite extends GuicyKillbillTestSuite {
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
+public abstract class BeatrixTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
+
+    @BeforeClass(groups = "fast")
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new BeatrixIntegrationModuleNoDB(configSource));
+        injector.injectMembers(this);
+    }
 }

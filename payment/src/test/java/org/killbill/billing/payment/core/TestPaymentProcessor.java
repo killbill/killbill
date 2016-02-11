@@ -1,8 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,7 +27,6 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
@@ -63,7 +62,6 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
-        internalCallContext = new InternalCallContext(internalCallContext, 1L);
 
         paymentBusListener = new PaymentBusListener();
         eventBus.register(paymentBusListener);

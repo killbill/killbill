@@ -99,8 +99,11 @@ import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TestCallContext;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -247,6 +250,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     @Inject
     protected IDBI idbi;
 
+    @Inject
+    protected NonEntityDao nonEntityDao;
 
     @Inject
     protected TestApiListener busHandler;
@@ -259,6 +264,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     @Inject
     protected KillbillNodesApi nodesApi;
+
+    @Inject
+    protected CacheControllerDispatcher controllerDispatcher;
 
     protected void assertListenerStatus() {
         busHandler.assertListenerStatus();
@@ -278,6 +286,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         //Thread.currentThread().setContextClassLoader(null);
 
         log.debug("RESET TEST FRAMEWORK");
+
+        controllerDispatcher.clearAll();
+
         overdueConfigCache.loadDefaultOverdueConfig((OverdueConfig) null);
 
         clock.resetDeltaFromReality();
@@ -350,6 +361,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     private Account createAccountWithPaymentMethod(final AccountData accountData, final String paymentPluginName) throws Exception {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
+
+        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID));
+        internalCallContext.setAccountRecordId(accountRecordId);
+        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
 
         final PaymentMethodPlugin info = createPaymentMethodPlugin();
 

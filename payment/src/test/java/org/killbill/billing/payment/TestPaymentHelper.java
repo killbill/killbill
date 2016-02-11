@@ -21,11 +21,13 @@ package org.killbill.billing.payment;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
@@ -38,7 +40,10 @@ import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
@@ -55,8 +60,10 @@ public class TestPaymentHelper {
     protected PaymentApi paymentApi;
     private final PersistentBus eventBus;
     private final Clock clock;
+    private final NonEntityDao nonEntityDao;
     private final MockNonEntityDao mockNonEntityDao;
-    private final InternalCallContext internalCallContext;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final MutableInternalCallContext internalCallContext;
     private final CallContext context;
 
     @Inject
@@ -66,8 +73,10 @@ public class TestPaymentHelper {
                              final PaymentApi paymentApi,
                              final PersistentBus eventBus,
                              final Clock clock,
+                             final NonEntityDao nonEntityDao,
                              final MockNonEntityDao mockNonEntityDao,
-                             final InternalCallContext internalCallContext,
+                             final CacheControllerDispatcher cacheControllerDispatcher,
+                             final MutableInternalCallContext internalCallContext,
                              final CallContext context) {
         this.accountApi = accountApi;
         this.eventBus = eventBus;
@@ -75,7 +84,9 @@ public class TestPaymentHelper {
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
+        this.nonEntityDao = nonEntityDao;
         this.mockNonEntityDao = mockNonEntityDao;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.internalCallContext = internalCallContext;
         this.context = context;
     }
@@ -140,7 +151,12 @@ public class TestPaymentHelper {
             mockNonEntityDao.addAccountRecordIdMapping(account.getId(), internalCallContext);
         } else {
             account = accountApi.createAccount(accountData, context);
+
+            final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
+            internalCallContext.setAccountRecordId(accountRecordId);
         }
+
+        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
 
         if (addPaymentMethod) {
             final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -23,20 +25,18 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDaoHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbeddedDB {
 
@@ -71,8 +71,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         Assert.assertNotNull(migrationInvoiceId);
         //Double check it was created and values are correct
 
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, callContext);
-        final InvoiceModelDao invoice = invoiceDao.getById(migrationInvoiceId, internalTenantContext);
+        final InvoiceModelDao invoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
         Assert.assertNotNull(invoice);
 
         Assert.assertEquals(invoice.getAccountId(), accountId);
@@ -101,26 +100,15 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         Assert.assertEquals(unpaid.size(), 2);
     }
 
-
     // ACCOUNT balance should reflect total of migration and non-migration invoices
     @Test(groups = "slow")
     public void testBalance() throws InvoiceApiException {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, callContext);
-        final InvoiceModelDao migrationInvoice = invoiceDao.getById(migrationInvoiceId, internalTenantContext);
-        final InvoiceModelDao regularInvoice = invoiceDao.getById(regularInvoiceId, internalTenantContext);
+        final InvoiceModelDao migrationInvoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
+        final InvoiceModelDao regularInvoice = invoiceDao.getById(regularInvoiceId, internalCallContext);
         final BigDecimal balanceOfAllInvoices = InvoiceModelDaoHelper.getBalance(migrationInvoice).add(InvoiceModelDaoHelper.getBalance(regularInvoice));
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         log.info("ACCOUNT balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);
         Assert.assertEquals(accountBalance.compareTo(balanceOfAllInvoices), 0);
-    }
-
-    private boolean checkContains(final List<Invoice> invoices, final UUID invoiceId) {
-        for (final Invoice invoice : invoices) {
-            if (invoice.getId().equals(invoiceId)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

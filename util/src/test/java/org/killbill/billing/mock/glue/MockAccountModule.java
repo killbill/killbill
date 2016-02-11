@@ -18,12 +18,19 @@
 
 package org.killbill.billing.mock.glue;
 
+import org.joda.time.DateTimeZone;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.glue.AccountModule;
+import org.killbill.billing.mock.api.MockAccountUserApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.mockito.Mockito;
+import org.testng.Assert;
 
 public class MockAccountModule extends KillBillModule implements AccountModule {
 
@@ -39,11 +46,23 @@ public class MockAccountModule extends KillBillModule implements AccountModule {
 
     @Override
     public void installAccountUserApi() {
-        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
+        bind(AccountUserApi.class).toInstance(new MockAccountUserApi());
     }
 
     @Override
     public void installInternalApi() {
-        bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
+        final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
+        Mockito.when(immutableAccountData.getTimeZone()).thenReturn(DateTimeZone.UTC);
+
+        final AccountInternalApi accountInternalApi = Mockito.mock(AccountInternalApi.class);
+        final ImmutableAccountInternalApi immutableAccountInternalApi = Mockito.mock(ImmutableAccountInternalApi.class);
+        try {
+            Mockito.when(accountInternalApi.getImmutableAccountDataByRecordId(Mockito.anyLong(), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
+            Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.anyLong(), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
+        } catch (final AccountApiException e) {
+            Assert.fail(e.getMessage());
+        }
+        bind(AccountInternalApi.class).toInstance(accountInternalApi);
+        bind(ImmutableAccountInternalApi.class).toInstance(immutableAccountInternalApi);
     }
 }

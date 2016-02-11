@@ -24,7 +24,12 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.cache.Cachable.CacheType;
@@ -32,19 +37,24 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 // Internal contexts almost always expect accountRecordId and tenantRecordId to be populated
 public class InternalCallContextFactory {
 
     public static final long INTERNAL_TENANT_RECORD_ID = 0L;
 
+    private final ImmutableAccountInternalApi accountInternalApi;
     private final Clock clock;
     private final NonEntityDao nonEntityDao;
     private final CacheControllerDispatcher cacheControllerDispatcher;
 
     @Inject
-    public InternalCallContextFactory(final Clock clock, final NonEntityDao nonEntityDao, @Nullable final CacheControllerDispatcher cacheControllerDispatcher) {
+    public InternalCallContextFactory(@Nullable final ImmutableAccountInternalApi accountInternalApi,
+                                      final Clock clock,
+                                      final NonEntityDao nonEntityDao,
+                                      @Nullable final CacheControllerDispatcher cacheControllerDispatcher) {
+        this.accountInternalApi = accountInternalApi;
         this.clock = clock;
         this.nonEntityDao = nonEntityDao;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
@@ -120,8 +130,11 @@ public class InternalCallContextFactory {
      * @return internal tenant callcontext
      */
     public InternalTenantContext createInternalTenantContext(final Long tenantRecordId, @Nullable final Long accountRecordId) {
-        //Preconditions.checkNotNull(tenantRecordId, "tenantRecordId cannot be null");
-        return new InternalTenantContext(tenantRecordId, accountRecordId);
+        if (accountRecordId == null) {
+            return new InternalTenantContext(tenantRecordId);
+        } else {
+            return new InternalTenantContext(tenantRecordId, accountRecordId, getAccountTimeZone(tenantRecordId, accountRecordId));
+        }
     }
 
     //
@@ -175,17 +188,16 @@ public class InternalCallContextFactory {
      * This is used by notification queue and persistent bus - accountRecordId is expected to be non null
      *
      * @param tenantRecordId  tenant record id - if null, the default tenant record id value will be used
-     * @param accountRecordId account record id (cannot be null)
+     * @param accountRecordId account record id (can be null in specific use-cases, e.g. config change events in BeatrixListener)
      * @param userName        user name
      * @param callOrigin      call origin
      * @param userType        user type
      * @param userToken       user token, if any
      * @return internal call callcontext
      */
-    public InternalCallContext createInternalCallContext(@Nullable final Long tenantRecordId, final Long accountRecordId, final String userName,
+    public InternalCallContext createInternalCallContext(@Nullable final Long tenantRecordId, @Nullable final Long accountRecordId, final String userName,
                                                          final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
-        return new InternalCallContext(tenantRecordId, accountRecordId, userToken, userName, callOrigin, userType, null, null,
-                                       clock.getUTCNow(), clock.getUTCNow());
+        return createInternalCallContext(tenantRecordId, accountRecordId, userName, callOrigin, userType, userToken, null, null, clock.getUTCNow(), clock.getUTCNow());
     }
 
     /**
@@ -200,18 +212,13 @@ public class InternalCallContextFactory {
     public InternalCallContext createInternalCallContext(final CallContext context) {
         // If tenant id is null, this will default to the default tenant record id (multi-tenancy disabled)
         final Long tenantRecordId = getTenantRecordIdSafe(context);
-        return new InternalCallContext(tenantRecordId, null, context);
-    }
-
-    public InternalCallContext createInternalCallContext(final InternalCallContext context, final Long accountRecordId) {
-        return new InternalCallContext(context, accountRecordId);
+        return new InternalCallContext(tenantRecordId, context);
     }
 
     // Used when we need to re-hydrate the callcontext with the account_record_id (when creating the account)
     public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
-        return new InternalCallContext(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getCreatedBy(),
-                                       context.getCallOrigin(), context.getContextUserType(), context.getReasonCode(), context.getComments(),
-                                       context.getCreatedDate(), context.getUpdatedDate());
+        final DateTimeZone accountTimeZone = getAccountTimeZone(context.getTenantRecordId(), accountRecordId);
+        return new InternalCallContext(context, accountRecordId, accountTimeZone);
     }
 
     private InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final String userName,
@@ -224,15 +231,31 @@ public class InternalCallContextFactory {
                                          reasonCode, comment, createdDate, updatedDate);
     }
 
-    private InternalCallContext createInternalCallContext(@Nullable final Long tenantRecordId, final Long accountRecordId, final String userName,
+    private InternalCallContext createInternalCallContext(@Nullable final Long tenantRecordId, @Nullable  final Long accountRecordId, final String userName,
                                                           final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken,
                                                           @Nullable final String reasonCode, @Nullable final String comment, final DateTime createdDate,
                                                           final DateTime updatedDate) {
-        //Preconditions.checkNotNull(accountRecordId, "accountRecordId cannot be null");
-        final Long nonNulTenantRecordId = Objects.firstNonNull(tenantRecordId, INTERNAL_TENANT_RECORD_ID);
+        final Long nonNulTenantRecordId = MoreObjects.firstNonNull(tenantRecordId, INTERNAL_TENANT_RECORD_ID);
+        final DateTimeZone accountTimeZone = getAccountTimeZone(tenantRecordId, accountRecordId);
 
-        return new InternalCallContext(nonNulTenantRecordId, accountRecordId, userToken, userName, callOrigin, userType, reasonCode, comment,
+        return new InternalCallContext(nonNulTenantRecordId, accountRecordId, accountTimeZone, userToken, userName, callOrigin, userType, reasonCode, comment,
                                        createdDate, updatedDate);
+    }
+
+    private DateTimeZone getAccountTimeZone(final Long tenantRecordId, @Nullable final Long accountRecordId) {
+        if (accountRecordId == null || accountInternalApi == null) {
+            return null;
+        }
+
+        final InternalTenantContext tmp = new InternalTenantContext(tenantRecordId, accountRecordId, null);
+
+        try {
+            final ImmutableAccountData immutableAccountData = accountInternalApi.getImmutableAccountDataByRecordId(accountRecordId, tmp);
+            // Will be null while creating the account
+            return immutableAccountData == null ? null : immutableAccountData.getTimeZone();
+        } catch (final AccountApiException e) {
+            return null;
+        }
     }
 
     //

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -64,10 +65,9 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         super.beforeMethod();
         final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
         final SubscriptionDao dao = Mockito.mock(SubscriptionDao.class);
-         final CatalogService catalogService = new MockCatalogService(new MockCatalog(), cacheControllerDispatcher);
+        final CatalogService catalogService = new MockCatalogService(new MockCatalog(), cacheControllerDispatcher);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
-        final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, new CacheControllerDispatcher());
         transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogService, apiService, internalCallContextFactory);
     }
 

@@ -24,8 +24,14 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
-// TODO Cache the accountTimeZone, reference time and clock in the context
+// TODO Cache the reference time and clock in the context
 public class TimeAwareContext {
+
+    private final DateTimeZone referenceDateTimeZone;
+
+    public TimeAwareContext(final DateTimeZone referenceDateTimeZone) {
+        this.referenceDateTimeZone = referenceDateTimeZone;
+    }
 
     /// Generic functions
     /// TODO Move to ClockUtil
@@ -48,8 +54,10 @@ public class TimeAwareContext {
     /// DateTime <-> LocalDate transformations
 
     // Create a DateTime object using the specified reference time and timezone (usually, the one on the account)
-    public DateTime toUTCDateTime(final LocalDate localDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
-        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime, accountTimeZone);
+    public DateTime toUTCDateTime(final LocalDate localDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZoneUnused) {
+        validateContext();
+
+        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime, getReferenceDateTimeZone());
 
         final LocalTime referenceLocalTime = toDateTime(referenceDateTime, normalizedAccountTimezone).toLocalTime();
 
@@ -65,18 +73,31 @@ public class TimeAwareContext {
     }
 
     // Create a LocalDate object using the specified timezone (usually, the one on the account), respecting the offset at the time of the referenceDateTime
-    public LocalDate toLocalDate(final DateTime dateTime, final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
-        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime, accountTimeZone);
+    public LocalDate toLocalDate(final DateTime dateTime, final DateTime referenceDateTime, final DateTimeZone accountTimeZoneUnused) {
+        validateContext();
+
+        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime, getReferenceDateTimeZone());
         return new LocalDate(dateTime, normalizedAccountTimezone);
     }
 
-    private DateTimeZone getNormalizedAccountTimezone(final DateTime referenceDateTime, final DateTimeZone accountTimeZone) {
+    private DateTimeZone getNormalizedAccountTimezone(final DateTime referenceDateTime, final DateTimeZone accountTimeZoneUnused) {
         // Check if DST was in effect at the reference date time
-        final boolean shouldUseDST = !accountTimeZone.isStandardOffset(referenceDateTime.getMillis());
+        final boolean shouldUseDST = !getReferenceDateTimeZone().isStandardOffset(referenceDateTime.getMillis());
         if (shouldUseDST) {
-            return DateTimeZone.forOffsetMillis(accountTimeZone.getOffset(referenceDateTime.getMillis()));
+            return DateTimeZone.forOffsetMillis(getReferenceDateTimeZone().getOffset(referenceDateTime.getMillis()));
         } else {
-            return DateTimeZone.forOffsetMillis(accountTimeZone.getStandardOffset(referenceDateTime.getMillis()));
+            return DateTimeZone.forOffsetMillis(getReferenceDateTimeZone().getStandardOffset(referenceDateTime.getMillis()));
         }
+    }
+
+    private void validateContext() {
+        if (getReferenceDateTimeZone() == null) {
+            throw new IllegalArgumentException(String.format("Context mis-configured: getReferenceDateTimeZone()=%s", getReferenceDateTimeZone()));
+        }
+    }
+
+    // For convenience, to be overridden in tests
+    public DateTimeZone getReferenceDateTimeZone() {
+        return referenceDateTimeZone;
     }
 }

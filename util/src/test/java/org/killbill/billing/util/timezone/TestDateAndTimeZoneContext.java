@@ -48,10 +48,10 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testComputeUTCDateTimeFromLocalDate1() {
-
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTime1);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
+        internalCallContext.setReferenceDateTimeZone(timeZone);
         final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 19);
@@ -61,10 +61,10 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testComputeUTCDateTimeFromLocalDate2() {
-
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTime2);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
+        internalCallContext.setReferenceDateTimeZone(timeZone);
         final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 20);
@@ -74,10 +74,10 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testComputeUTCDateTimeFromLocalDate3() {
-
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTime3);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
+        internalCallContext.setReferenceDateTimeZone(timeZone);
         final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 20);
@@ -87,10 +87,10 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testComputeUTCDateTimeFromLocalDateA() {
-
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTimeA);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
+        internalCallContext.setReferenceDateTimeZone(timeZone);
         final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 21);
@@ -100,10 +100,10 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testComputeUTCDateTimeFromLocalDateB() {
-
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTimeB);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
+        internalCallContext.setReferenceDateTimeZone(timeZone);
         final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 21);
@@ -113,10 +113,10 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testComputeUTCDateTimeFromLocalDateC() {
-
         final DateTime effectiveDateTime = DATE_TIME_FORMATTER.parseDateTime(effectiveDateTimeC);
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
+        internalCallContext.setReferenceDateTimeZone(timeZone);
         final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 20);
@@ -132,6 +132,7 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
         // Alaska Standard Time
         final DateTimeZone tz = DateTimeZone.forID("America/Juneau");
+        internalCallContext.setReferenceDateTimeZone(tz);
 
         // Time zone is AKDT (UTC-8h) between March and November
         final DateTime referenceDateTimeWithDST = new DateTime("2015-09-01T08:01:01.000Z");

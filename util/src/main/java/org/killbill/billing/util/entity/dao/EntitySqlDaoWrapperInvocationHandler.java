@@ -469,7 +469,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         final InternalCallContext context;
         // Populate the account record id when creating the account record
         if (TableName.ACCOUNT.equals(tableName) && ChangeType.INSERT.equals(changeType)) {
-            context = internalCallContextFactory.createInternalCallContext(contextMaybeWithoutAccountRecordId, entityRecordId);
+            context = internalCallContextFactory.createInternalCallContext(entityRecordId, contextMaybeWithoutAccountRecordId);
         } else {
             context = contextMaybeWithoutAccountRecordId;
         }

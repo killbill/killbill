@@ -75,13 +75,13 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     public VersionedCatalog() {
         this.clock = null;
         this.versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
-        this.internalTenantContext = new InternalTenantContext(null, null);
+        this.internalTenantContext = new InternalTenantContext(null);
     }
 
     public VersionedCatalog(final Clock clock) {
         this.clock = clock;
         this.versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
-        this.internalTenantContext = new InternalTenantContext(null, null);
+        this.internalTenantContext = new InternalTenantContext(null);
     }
 
     public VersionedCatalog(final Clock clock, final String catalogName, final BillingMode recurringBillingMode, final List<StandaloneCatalogWithPriceOverride> versions, final InternalTenantContext tenantContext) {

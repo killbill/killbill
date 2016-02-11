@@ -37,6 +37,6 @@ public class NoCachingInternalCallContextFactoryProvider implements Provider<Int
 
     @Override
     public InternalCallContextFactory get() {
-        return new InternalCallContextFactory(clock, nonEntityDao, null);
+        return new InternalCallContextFactory(null, clock, nonEntityDao, null);
     }
 }

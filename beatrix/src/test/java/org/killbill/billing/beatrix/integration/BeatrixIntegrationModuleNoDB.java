@@ -1,5 +1,4 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
  * Copyright 2014-2016 Groupon, Inc
  * Copyright 2014-2016 The Billing Project, LLC
  *
@@ -16,33 +15,24 @@
  * under the License.
  */
 
-package org.killbill.billing.util.glue;
+package org.killbill.billing.beatrix.integration;
 
+import org.killbill.billing.GuicyKillbillTestNoDBModule;
 import org.killbill.billing.mock.glue.MockAccountModule;
-import org.killbill.billing.mock.glue.MockTenantModule;
+import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
-import org.mockito.Mockito;
+import org.killbill.billing.util.glue.KillBillModule;
 
-public class TestUtilModule extends KillBillModule {
+public class BeatrixIntegrationModuleNoDB extends KillBillModule {
 
-    public TestUtilModule(final KillbillConfigSource configSource) {
+    public BeatrixIntegrationModuleNoDB(final KillbillConfigSource configSource) {
         super(configSource);
-    }
-
-    // TODO this is bad!
-    public void installHacks() {
-        // DefaultAuditUserApi is using SubscriptionBaseTimeline API
-        bind(SubscriptionBaseTimelineApi.class).toInstance(Mockito.mock(SubscriptionBaseTimelineApi.class));
-        // InternalCallContextFactory is using AccountInternalApi
-        install(new MockAccountModule(configSource));
     }
 
     @Override
     protected void configure() {
-        //install(new CallContextModule());
-        install(new CacheModule(configSource));
-        install(new MockTenantModule(configSource));
-        installHacks();
+        install(new GuicyKillbillTestNoDBModule(configSource));
+        install(new MockNonEntityDaoModule(configSource));
+        install(new MockAccountModule(configSource));
     }
 }
