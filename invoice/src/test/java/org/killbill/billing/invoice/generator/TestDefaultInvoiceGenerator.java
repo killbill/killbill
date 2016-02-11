@@ -157,14 +157,14 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testWithEmptyEventSet() throws InvoiceApiException {
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, null, clock.getUTCToday(), Currency.USD, internalCallContext);
         assertNull(invoiceWithMetadata.getInvoice());
     }
 
     @Test(groups = "fast")
     public void testWithSingleMonthlyEvent() throws InvoiceApiException, CatalogApiException {
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         final SubscriptionBase sub = createSubscription();
         final LocalDate startDate = invoiceUtil.buildDate(2011, 9, 1);
@@ -208,7 +208,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final int bcdLocal = 16;
         final LocalDate startDate = invoiceUtil.buildDate(2012, 7, bcdLocal);
 
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final BillingEvent event = createBillingEvent(sub.getId(), sub.getBundleId(), startDate, plan, phase, bcdLocal);
         events.add(event);
 
@@ -233,7 +233,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final int bcdLocal = 16;
         final LocalDate startDate = invoiceUtil.buildDate(2012, 7, 16);
 
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         events.add(createBillingEvent(sub.getId(), sub.getBundleId(), startDate, plan, phaseEvergreen, bcdLocal));
 
         // Set a target date of today (start date)
@@ -248,7 +248,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testWithSingleMonthlyEventWithLeadingProRation() throws InvoiceApiException, CatalogApiException {
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         final SubscriptionBase sub = createSubscription();
         final LocalDate startDate = invoiceUtil.buildDate(2011, 9, 1);
@@ -273,7 +273,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testTwoMonthlySubscriptionsWithAlignedBillingDates() throws InvoiceApiException, CatalogApiException {
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         final Plan plan1 = new MockPlan();
         final BigDecimal rate1 = FIVE;
@@ -301,7 +301,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testOnePlan_TwoMonthlyPhases_ChangeImmediate() throws InvoiceApiException, CatalogApiException {
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         final Plan plan1 = new MockPlan();
         final BigDecimal rate1 = FIVE;
@@ -338,7 +338,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testOnePlan_ThreeMonthlyPhases_ChangeEOT() throws InvoiceApiException, CatalogApiException {
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         final Plan plan1 = new MockPlan();
         final BigDecimal rate1 = FIVE;
@@ -368,7 +368,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testSingleEventWithExistingInvoice() throws InvoiceApiException, CatalogApiException {
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         final SubscriptionBase sub = createSubscription();
         final LocalDate startDate = invoiceUtil.buildDate(2011, 9, 1);
@@ -446,7 +446,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         BigDecimal expectedAmount;
         final List<Invoice> invoices = new ArrayList<Invoice>();
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         // on 1/5/2011, create SubscriptionBase 1 (trial)
         events.add(createBillingEvent(subscriptionId1, bundleId, plan1StartDate, plan1, plan1Phase1, 5));
@@ -556,7 +556,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     public void testZeroDollarEvents() throws InvoiceApiException, CatalogApiException {
         final Plan plan = new MockPlan();
         final PlanPhase planPhase = createMockMonthlyPlanPhase(ZERO);
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 1, 1);
         events.add(createBillingEvent(UUID.randomUUID(), UUID.randomUUID(), targetDate, plan, planPhase, 1));
 
@@ -569,7 +569,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     public void testEndDateIsCorrect() throws InvoiceApiException, CatalogApiException {
         final Plan plan = new MockPlan();
         final PlanPhase planPhase = createMockMonthlyPlanPhase(ONE);
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final LocalDate startDate = clock.getUTCToday().minusDays(1);
         final LocalDate targetDate = startDate.plusDays(1);
 
@@ -597,7 +597,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         final DateTime changeDate = new DateTime("2012-04-1");
 
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
 
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, new DateTime("2012-01-1"),
                                                                        plan, phase1,
@@ -636,7 +636,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final BigDecimal fixedCost = TEN;
         final PlanPhase phase1 = createMockMonthlyPlanPhase(monthlyRate, fixedCost, PhaseType.TRIAL);
 
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
 
@@ -674,7 +674,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final PlanPhase phase1 = createMockMonthlyPlanPhase(null, fixedCost1, PhaseType.TRIAL);
         final PlanPhase phase2 = createMockMonthlyPlanPhase(null, fixedCost2, PhaseType.EVERGREEN);
 
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final UUID subscriptionId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -706,7 +706,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testInvoiceGenerationFailureScenario() throws InvoiceApiException, CatalogApiException {
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final int BILL_CYCLE_DAY = 15;
@@ -766,7 +766,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast", expectedExceptions = {InvoiceApiException.class})
     public void testTargetDateRestrictionFailure() throws InvoiceApiException, CatalogApiException {
         final LocalDate targetDate = clock.getUTCToday().plusMonths(60);
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final Plan plan1 = new MockPlan();
         final PlanPhase phase1 = createMockMonthlyPlanPhase(null, ZERO, PhaseType.TRIAL);
         events.add(createBillingEvent(UUID.randomUUID(), UUID.randomUUID(), clock.getUTCToday(), plan1, phase1, 1));
@@ -840,7 +840,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final MockInternationalPrice price20 = new MockInternationalPrice(new DefaultPrice(TWENTY, Currency.USD));
         final PlanPhase basePlanEvergreen = new MockPlanPhase(price10, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
 
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         events.add(createBillingEvent(baseSubscription.getId(), baseSubscription.getBundleId(), april25, basePlan, basePlanEvergreen, 25));
 
         // generate invoice
@@ -876,7 +876,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // perform a repair (change base plan; remove one add-on)
         // event stream should include just two plans
-        final MockBillingEventSet newEvents = new MockBillingEventSet();
+        final MockBillingEventSet newEvents = new MockBillingEventSet(internalCallContext);
         final Plan basePlan2 = new MockPlan("base plan 2");
         final MockInternationalPrice price13 = new MockInternationalPrice(new DefaultPrice(THIRTEEN, Currency.USD));
         final PlanPhase basePlan2Phase = new MockPlanPhase(price13, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
@@ -905,7 +905,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final MockInternationalPrice price10 = new MockInternationalPrice(new DefaultPrice(TEN, Currency.USD));
         final PlanPhase originalPlanEvergreen = new MockPlanPhase(price10, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
 
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         events.add(createBillingEvent(originalSubscription.getId(), originalSubscription.getBundleId(), april25, originalPlan, originalPlanEvergreen, 25));
 
         final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, null, april25, Currency.USD, internalCallContext);
@@ -983,7 +983,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         //
         // Note : this is the interesting part of the test; it does not provide the blocking billing events, which force invoice
         // to un repair what was previously repaired.
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final BillingEvent event = invoiceUtil.createMockBillingEvent(null, subscription, new DateTime("2013-06-15", DateTimeZone.UTC),
                                                                       plan, phase,
                                                                       null, recurringPrice.getPrice(currency), currency,
@@ -1064,7 +1064,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAutoInvoiceOffAccount() throws Exception {
-        final MockBillingEventSet events = new MockBillingEventSet();
+        final MockBillingEventSet events = new MockBillingEventSet(internalCallContext);
         events.setAccountInvoiceOff(true);
 
         final SubscriptionBase sub = createSubscription();
@@ -1087,7 +1087,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     public void testAutoInvoiceOffWithCredits() throws CatalogApiException, InvoiceApiException {
         final Currency currency = Currency.USD;
         final List<Invoice> invoices = new ArrayList<Invoice>();
-        final MockBillingEventSet eventSet = new MockBillingEventSet();
+        final MockBillingEventSet eventSet = new MockBillingEventSet(internalCallContext);
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
 

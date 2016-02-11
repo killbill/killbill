@@ -72,7 +72,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public Account getAccountById(final UUID id, final TenantContext context) throws AccountApiException {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(id, context);
         return getAccountById(id, internalTenantContext);
     }
 

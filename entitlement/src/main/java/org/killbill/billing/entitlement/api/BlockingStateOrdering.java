@@ -30,7 +30,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
@@ -52,29 +51,31 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
 
     private BlockingStateOrdering() {}
 
-    public static void insertSorted(final Iterable<Entitlement> entitlements, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> result) {
-        INSTANCE.computeEvents(entitlements, accountTimeZone, internalTenantContext, result);
+    public static void insertSorted(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> result) {
+        INSTANCE.computeEvents(entitlements, internalTenantContext, result);
     }
 
-    private void computeEvents(final Iterable<Entitlement> entitlements, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> result) {
+    private void computeEvents(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> result) {
         final Collection<UUID> allEntitlementUUIDs = new HashSet<UUID>();
         final Collection<BlockingState> blockingStates = new LinkedList<BlockingState>();
+        final Map<UUID, DateTime> referenceTimes = new HashMap<UUID, DateTime>();
         for (final Entitlement entitlement : entitlements) {
             allEntitlementUUIDs.add(entitlement.getId());
             Preconditions.checkState(entitlement instanceof DefaultEntitlement, "Entitlement %s is not a DefaultEntitlement", entitlement);
             blockingStates.addAll(((DefaultEntitlement) entitlement).getEventsStream().getBlockingStates());
+            referenceTimes.put(entitlement.getId(), ((DefaultEntitlement) entitlement).getSubscriptionBase().getStartDate());
         }
 
         // Trust the incoming ordering here: blocking states were sorted using ProxyBlockingStateDao#sortedCopy
         for (final BlockingState bs : blockingStates) {
             final List<SubscriptionEvent> newEvents = new ArrayList<SubscriptionEvent>();
-            final int index = insertFromBlockingEvent(accountTimeZone, internalTenantContext, allEntitlementUUIDs, result, bs, bs.getEffectiveDate(), newEvents);
+            final int index = insertFromBlockingEvent(referenceTimes, internalTenantContext, allEntitlementUUIDs, result, bs, bs.getEffectiveDate(), newEvents);
             insertAfterIndex(result, newEvents, index);
         }
     }
 
     // Returns the index and the newEvents generated from the incoming blocking state event. Those new events will all be created for the same effectiveDate and should be ordered.
-    private int insertFromBlockingEvent(final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext, final Collection<UUID> allEntitlementUUIDs, final List<SubscriptionEvent> result, final BlockingState bs, final DateTime bsEffectiveDate, final Collection<SubscriptionEvent> newEvents) {
+    private int insertFromBlockingEvent(final Map<UUID, DateTime> referenceTimes, final InternalTenantContext internalTenantContext, final Collection<UUID> allEntitlementUUIDs, final List<SubscriptionEvent> result, final BlockingState bs, final DateTime bsEffectiveDate, final Collection<SubscriptionEvent> newEvents) {
         // Keep the current state per entitlement
         final Map<UUID, TargetState> targetStates = new HashMap<UUID, TargetState>();
         for (final UUID cur : allEntitlementUUIDs) {
@@ -133,7 +134,7 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
 
             final List<SubscriptionEventType> eventTypes = curTargetState.addStateAndReturnEventTypes(bs);
             for (final SubscriptionEventType t : eventTypes) {
-                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], targetEntitlementId, bs, t, accountTimeZone, internalTenantContext));
+                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], targetEntitlementId, bs, t, referenceTimes.get(targetEntitlementId), internalTenantContext));
             }
         }
         return index;
@@ -176,7 +177,7 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
 
     private SubscriptionEvent toSubscriptionEvent(@Nullable final SubscriptionEvent prev, @Nullable final SubscriptionEvent next,
                                                   final UUID entitlementId, final BlockingState in, final SubscriptionEventType eventType,
-                                                  final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+                                                  final DateTime referenceTime, final InternalTenantContext internalTenantContext) {
         final Product prevProduct;
         final Plan prevPlan;
         final PlanPhase prevPlanPhase;
@@ -257,7 +258,7 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                                             nextPriceList,
                                             nextBillingPeriod,
                                             in.getCreatedDate(),
-                                            accountTimeZone,
+                                            referenceTime,
                                             internalTenantContext);
     }
 

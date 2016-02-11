@@ -61,12 +61,14 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // Note: this will cleanup all tables
         super.beforeMethod();
 
-        final AccountData accountData = subscriptionTestInitializer.initAccountData();
-        final Account account = accountUserApi.createAccount(accountData, callContext);
-        newAccountId = account.getId();
         final AccountData accountData2 = subscriptionTestInitializer.initAccountData();
-        final Account account2 = accountUserApi.createAccount(accountData2, callContext);
+        final Account account2 = createAccount(accountData2);
         finalNewAccountId = account2.getId();
+
+        // internal context will be configured for newAccountId
+        final AccountData accountData = subscriptionTestInitializer.initAccountData();
+        final Account account = createAccount(accountData);
+        newAccountId = account.getId();
     }
 
     @Test(groups = "slow")

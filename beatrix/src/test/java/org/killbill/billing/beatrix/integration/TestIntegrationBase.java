@@ -99,8 +99,11 @@ import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TestCallContext;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -247,6 +250,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     @Inject
     protected IDBI idbi;
 
+    @Inject
+    protected NonEntityDao nonEntityDao;
 
     @Inject
     protected TestApiListener busHandler;
@@ -259,6 +264,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     @Inject
     protected KillbillNodesApi nodesApi;
+
+    @Inject
+    protected CacheControllerDispatcher controllerDispatcher;
 
     protected void assertListenerStatus() {
         busHandler.assertListenerStatus();
@@ -278,6 +286,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         //Thread.currentThread().setContextClassLoader(null);
 
         log.debug("RESET TEST FRAMEWORK");
+
+        controllerDispatcher.clearAll();
+
         overdueConfigCache.loadDefaultOverdueConfig((OverdueConfig) null);
 
         clock.resetDeltaFromReality();
@@ -350,6 +361,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     private Account createAccountWithPaymentMethod(final AccountData accountData, final String paymentPluginName) throws Exception {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
+
+        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID));
+        internalCallContext.setAccountRecordId(accountRecordId);
+        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
 
         final PaymentMethodPlugin info = createPaymentMethodPlugin();
 
@@ -567,8 +582,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
-                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
+                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, null, ImmutableList.<PluginProperty>of(), callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
@@ -602,8 +616,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
-                    final Entitlement entitlement = entitlementApi.addEntitlement(bundleId, spec, null, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
+                    final Entitlement entitlement = entitlementApi.addEntitlement(bundleId, spec, null, null, ImmutableList.<PluginProperty>of(), callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
@@ -629,7 +642,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     if (billingPolicy == null) {
                         refreshedEntitlement = refreshedEntitlement.changePlan(productName, billingPeriod, priceList, null, ImmutableList.<PluginProperty>of(), callContext);
                     } else {
-                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, priceList, null, clock.getUTCNow().toLocalDate(), billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, priceList, null, null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
                     }
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
@@ -649,7 +662,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     }
 
     protected DefaultEntitlement cancelEntitlementAndCheckForCompletion(final Entitlement entitlement,
-                                                                        final DateTime requestedDate,
+                                                                        final NextEvent... events) {
+        return cancelEntitlementAndCheckForCompletion(entitlement, null, events);
+    }
+
+    protected DefaultEntitlement cancelEntitlementAndCheckForCompletion(final Entitlement entitlement,
+                                                                        final LocalDate requestedDate,
                                                                         final NextEvent... events) {
         return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
             @Override
@@ -657,7 +675,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-                    refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate.toLocalDate(), false, ImmutableList.<PluginProperty>of(), callContext);
+                    refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate, false, ImmutableList.<PluginProperty>of(), callContext);
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
                     fail(e.getMessage());

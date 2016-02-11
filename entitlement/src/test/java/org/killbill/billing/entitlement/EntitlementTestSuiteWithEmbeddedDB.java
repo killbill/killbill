@@ -32,6 +32,9 @@ import org.apache.shiro.util.ThreadContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
@@ -57,7 +60,9 @@ import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.AuditUserApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.tag.dao.TagDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.ClockMock;
@@ -118,6 +123,8 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected InternalCallContextFactory internalCallContextFactory;
     @Inject
     protected SecurityApi securityApi;
+    @Inject
+    protected NonEntityDao nonEntityDao;
 
     protected Catalog catalog;
 
@@ -277,6 +284,16 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
                                        .paymentMethodId(UUID.randomUUID())
                                        .timeZone(DateTimeZone.UTC)
                                        .build();
+    }
+
+    protected Account createAccount(final AccountData accountData) throws AccountApiException {
+        final Account account = accountApi.createAccount(accountData, callContext);
+
+        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID));
+        internalCallContext.setAccountRecordId(accountRecordId);
+        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
+
+        return account;
     }
 
     protected void assertListenerStatus() {

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,10 +20,7 @@ package org.killbill.billing.tenant.dao;
 import java.util.List;
 import java.util.UUID;
 
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.tenant.TenantTestSuiteWithEmbeddedDb;
-import org.killbill.billing.util.callcontext.CallOrigin;
-import org.killbill.billing.util.callcontext.UserType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -33,12 +30,14 @@ public class TestNoCachingTenantBroadcastDao extends TenantTestSuiteWithEmbedded
     public void testBasic() throws Exception {
         final TenantBroadcastModelDao model = new TenantBroadcastModelDao(0L, "foo", UUID.randomUUID());
 
-        final InternalCallContext context79 = createContext(79L);
-        tenantBroadcastDao.create(model, context79);
+        internalCallContext.setTenantRecordId(79L);
+        tenantBroadcastDao.create(model, internalCallContext);
 
-        final TenantBroadcastModelDao result1 = tenantBroadcastDao.getById(model.getId(), context79);
+        final TenantBroadcastModelDao result1 = tenantBroadcastDao.getById(model.getId(), internalCallContext);
         Assert.assertEquals(result1.getTenantRecordId(), new Long(79L));
         Assert.assertEquals(result1.getType(), "foo");
+
+        internalCallContext.reset();
 
         final TenantBroadcastModelDao resultNull = tenantBroadcastDao.getById(model.getId(), internalCallContext);
         Assert.assertNull(resultNull);
@@ -50,15 +49,15 @@ public class TestNoCachingTenantBroadcastDao extends TenantTestSuiteWithEmbedded
 
     @Test(groups = "slow")
     public void testLatestEntries() throws Exception {
+        internalCallContext.setTenantRecordId(81L);
 
-        final InternalCallContext context79 = createContext(81L);
         TenantBroadcastModelDao latestInsert = null;
         for (int i = 0; i < 100; i++) {
             final TenantBroadcastModelDao model = new TenantBroadcastModelDao(0L, "foo-" + i, UUID.randomUUID());
-            tenantBroadcastDao.create(model, context79);
+            tenantBroadcastDao.create(model, internalCallContext);
             latestInsert = model;
         }
-        final TenantBroadcastModelDao latestInsertRefreshed = tenantBroadcastDao.getById(latestInsert.getId(), context79);
+        final TenantBroadcastModelDao latestInsertRefreshed = tenantBroadcastDao.getById(latestInsert.getId(), internalCallContext);
         final TenantBroadcastModelDao lastEntry = noCachingTenantBroadcastDao.getLatestEntry();
 
         Assert.assertEquals(lastEntry.getRecordId(), latestInsertRefreshed.getRecordId());
@@ -69,17 +68,8 @@ public class TestNoCachingTenantBroadcastDao extends TenantTestSuiteWithEmbedded
         Assert.assertEquals(result.size(), expectedEntries);
 
         long i = 0;
-        for (TenantBroadcastModelDao cur : result) {
+        for (final TenantBroadcastModelDao cur : result) {
             Assert.assertEquals(cur.getRecordId().longValue(), (fromRecordId + i++ + 1L));
         }
-
-    }
-
-    private InternalCallContext createContext(final Long tenantRecordId) {
-        return new InternalCallContext(tenantRecordId, 0L, UUID.randomUUID(),
-                                       UUID.randomUUID().toString(), CallOrigin.TEST,
-                                       UserType.TEST, "Testing TestNoCachingTenantBroadcastDao", "This is a test for TestNoCachingTenantBroadcastDao",
-                                       clock.getUTCNow(), clock.getUTCNow());
-
     }
 }

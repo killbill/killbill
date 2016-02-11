@@ -52,7 +52,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     private final PriceList nextPriceList;
     private final BillingPeriod nextBillingPeriod;
     private final DateTime createdDate;
-    private final DateTimeZone accountTimeZone;
+    private final DateTime referenceTime;
     private final InternalTenantContext internalTenantContext;
 
     public DefaultSubscriptionEvent(final UUID id,
@@ -74,7 +74,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
                                     final PriceList nextPriceList,
                                     final BillingPeriod nextBillingPeriod,
                                     final DateTime createDate,
-                                    final DateTimeZone accountTimeZone,
+                                    final DateTime referenceTime,
                                     final InternalTenantContext internalTenantContext) {
         this.id = id;
         this.entitlementId = entitlementId;
@@ -96,12 +96,8 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         this.nextPriceList = nextPriceList;
         this.nextBillingPeriod = nextBillingPeriod;
         this.createdDate = createDate;
-        this.accountTimeZone = accountTimeZone;
+        this.referenceTime = referenceTime;
         this.internalTenantContext = internalTenantContext;
-    }
-
-    public DateTimeZone getAccountTimeZone() {
-        return accountTimeZone;
     }
 
     public DateTime getEffectiveDateTime() {
@@ -124,9 +120,10 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
 
     @Override
     public LocalDate getEffectiveDate() {
-        return effectiveDate != null ? internalTenantContext.toLocalDate(effectiveDate, accountTimeZone) : null;
+        return effectiveDate != null ? internalTenantContext.toLocalDate(effectiveDate, referenceTime) : null;
     }
 
+    @Override
     public SubscriptionEventType getSubscriptionEventType() {
         return eventType;
     }

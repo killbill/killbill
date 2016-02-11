@@ -21,14 +21,13 @@ package org.killbill.billing.entitlement.api;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.entitlement.EntitlementTestSuiteNoDB;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.entitlement.EntitlementTestSuiteNoDB;
 
 import static org.testng.Assert.assertTrue;
 
@@ -41,12 +40,11 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
     public void beforeMethod() throws Exception {
         super.beforeClass();
 
-
         account = Mockito.mock(Account.class);
         Mockito.when(accountInternalApi.getAccountByRecordId(Mockito.anyLong(), Mockito.<InternalTenantContext>any())).thenReturn(account);
         Mockito.when(accountInternalApi.getImmutableAccountDataByRecordId(Mockito.anyLong(), Mockito.<InternalTenantContext>any())).thenReturn(account);
-        dateHelper = new EntitlementDateHelper(accountInternalApi, clock);
-        clock.resetDeltaFromReality();;
+        dateHelper = new EntitlementDateHelper(clock);
+        clock.resetDeltaFromReality();
     }
 
     @Test(groups = "fast")
@@ -63,7 +61,6 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         Assert.assertEquals(targetDate, expectedDate);
     }
 
-
     @Test(groups = "fast")
     public void testWithAccountInUtcMinus8() throws EntitlementApiException {
 
@@ -73,11 +70,11 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
 
         final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(-8);
         Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
+        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
 
         // We also use a reference time of 1, 28, 10, 0 -> DateTime in accountTimeZone will be (2013, 8, 7, 1, 28, 10)
         final DateTime refererenceDateTime = new DateTime(2013, 1, 1, 1, 28, 10, 0, DateTimeZone.UTC);
         final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, refererenceDateTime, internalCallContext);
-
 
         // Things to verify:
         // 1. Verify the resulting DateTime brings us back into the correct LocalDate (in the account timezone)
@@ -92,8 +89,6 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         Assert.assertEquals(targetDate, new DateTime(2013, 8, 8, 1, 28, 10, 0, DateTimeZone.UTC));
     }
 
-
-
     @Test(groups = "fast")
     public void testWithAccountInUtcPlus5() throws EntitlementApiException {
 
@@ -102,6 +97,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
 
         final DateTimeZone timeZoneUtcPlus5 = DateTimeZone.forOffsetHours(+5);
         Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcPlus5);
+        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
 
         // We also use a reference time of 20, 28, 10, 0 -> DateTime in accountTimeZone will be (2013, 8, 7, 20, 28, 10)
         final DateTime refererenceDateTime = new DateTime(2013, 1, 1, 20, 28, 10, 0, DateTimeZone.UTC);
@@ -121,36 +117,18 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testWhereLocalDateInAccountTimeZoneContainsNow() throws EntitlementApiException {
-
-        final DateTime initialNow = new DateTime(2013, 8, 22,22, 07, 01, 0, DateTimeZone.UTC);
-        clock.setTime(initialNow);
-
-        final LocalDate inputDate = new LocalDate(2013, 8, 22);
-
-        final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(-8);
-        Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
-
-        final DateTime referenceDateTimeThatDoesNotMatter = new DateTime();
-        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, referenceDateTimeThatDoesNotMatter, internalCallContext);
-
-        final DateTime now = clock.getUTCNow();
-        Assert.assertTrue(initialNow.compareTo(targetDate) <= 0);
-        Assert.assertTrue(targetDate.compareTo(now) <= 0);
-    }
-
-
-    @Test(groups = "fast")
     public void testIsBeforeOrEqualsToday() {
 
         clock.setTime(new DateTime(2013, 8, 7, 3, 28, 10, 0, DateTimeZone.UTC));
         final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(-8);
-
+        Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
+        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
 
         final DateTime inputDateEquals = new DateTime(2013, 8, 6, 23, 28, 10, 0, timeZoneUtcMinus8);
         // Check that our input date is greater than now
         assertTrue(inputDateEquals.compareTo(clock.getUTCNow()) > 0);
         // And yet since the LocalDate match the function returns true
-        assertTrue(dateHelper.isBeforeOrEqualsToday(inputDateEquals, timeZoneUtcMinus8, internalCallContext));
+        final DateTime referenceDateTimeThatDoesNotMatter = new DateTime();
+        assertTrue(dateHelper.isBeforeOrEqualsToday(inputDateEquals, referenceDateTimeThatDoesNotMatter, timeZoneUtcMinus8, internalCallContext));
     }
 }

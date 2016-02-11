@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
@@ -286,16 +289,14 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         clock.addDays(1);
         final DateTime newTime = clock.getUTCNow();
-        final InternalCallContext internalCallContextWithNewTime = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),
-                                                                                           UUID.randomUUID().toString(), CallOrigin.TEST,
-                                                                                           UserType.TEST, "Testing", "This is a test",
-                                                                                           newTime, newTime);
+        internalCallContext.setCreatedDate(newTime);
+        internalCallContext.setUpdatedDate(newTime);
 
         final PaymentTransactionModelDao transaction4 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey4,
                                                                                        paymentModelDao.getId(), TransactionType.AUTHORIZE, newTime,
                                                                                        TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
                                                                                        "pending", "");
-        paymentDao.updatePaymentWithNewTransaction(paymentModelDao.getId(), transaction4, internalCallContextWithNewTime);
+        paymentDao.updatePaymentWithNewTransaction(paymentModelDao.getId(), transaction4, internalCallContext);
 
         final List<PaymentTransactionModelDao> result = getPendingTransactions(paymentModelDao.getId());
         Assert.assertEquals(result.size(), 3);
@@ -363,17 +364,10 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                        "unknown", "");
 
-        final InternalCallContext context1 = new InternalCallContext(1L,
-                                                                     1L,
-                                                                     internalCallContext.getUserToken(),
-                                                                     internalCallContext.getCreatedBy(),
-                                                                     internalCallContext.getCallOrigin(),
-                                                                     internalCallContext.getContextUserType(),
-                                                                     internalCallContext.getReasonCode(),
-                                                                     internalCallContext.getComments(),
-                                                                     createdDate1,
-                                                                     createdDate1);
-        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao1, transaction1, context1);
+        internalCallContext.setAccountRecordId(1L);
+        internalCallContext.setCreatedDate(createdDate1);
+        internalCallContext.setUpdatedDate(createdDate1);
+        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao1, transaction1, internalCallContext);
 
         // Right after createdAfterDate, so it should  be returned
         final DateTime createdDate2 = createdAfterDate.plusHours(1);
@@ -384,17 +378,10 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                        "unknown", "");
 
-        final InternalCallContext context2 = new InternalCallContext(2L,
-                                                                     2L,
-                                                                     internalCallContext.getUserToken(),
-                                                                     internalCallContext.getCreatedBy(),
-                                                                     internalCallContext.getCallOrigin(),
-                                                                     internalCallContext.getContextUserType(),
-                                                                     internalCallContext.getReasonCode(),
-                                                                     internalCallContext.getComments(),
-                                                                     createdDate2,
-                                                                     createdDate2);
-        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao2, transaction2, context2);
+        internalCallContext.setAccountRecordId(2L);
+        internalCallContext.setCreatedDate(createdDate2);
+        internalCallContext.setUpdatedDate(createdDate2);
+        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao2, transaction2, internalCallContext);
 
         // Right before createdBeforeDate, so it should be returned
         final DateTime createdDate3 = createdBeforeDate.minusDays(1);
@@ -405,18 +392,10 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                        "unknown", "");
 
-        final InternalCallContext context3 = new InternalCallContext(3L,
-                                                                     3L,
-                                                                     internalCallContext.getUserToken(),
-                                                                     internalCallContext.getCreatedBy(),
-                                                                     internalCallContext.getCallOrigin(),
-                                                                     internalCallContext.getContextUserType(),
-                                                                     internalCallContext.getReasonCode(),
-                                                                     internalCallContext.getComments(),
-                                                                     createdDate3,
-                                                                     createdDate3);
-
-        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao3, transaction3, context3);
+        internalCallContext.setAccountRecordId(3L);
+        internalCallContext.setCreatedDate(createdDate3);
+        internalCallContext.setUpdatedDate(createdDate3);
+        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao3, transaction3, internalCallContext);
 
         // Right before createdBeforeDate but with a SUCCESS state so it should NOT be returned
         final DateTime createdDate4 = createdBeforeDate.minusDays(1);
@@ -427,18 +406,10 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                        "unknown", "");
 
-        final InternalCallContext context4 = new InternalCallContext(4L,
-                                                                     4L,
-                                                                     internalCallContext.getUserToken(),
-                                                                     internalCallContext.getCreatedBy(),
-                                                                     internalCallContext.getCallOrigin(),
-                                                                     internalCallContext.getContextUserType(),
-                                                                     internalCallContext.getReasonCode(),
-                                                                     internalCallContext.getComments(),
-                                                                     createdDate4,
-                                                                     createdDate4);
-
-        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao4, transaction4, context4);
+        internalCallContext.setAccountRecordId(4L);
+        internalCallContext.setCreatedDate(createdDate4);
+        internalCallContext.setUpdatedDate(createdDate4);
+        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao4, transaction4, internalCallContext);
 
         // Right after createdBeforeDate, so it should NOT be returned
         final DateTime createdDate5 = createdBeforeDate.plusDays(1);
@@ -449,18 +420,10 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                        "unknown", "");
 
-        final InternalCallContext context5 = new InternalCallContext(5L,
-                                                                     5L,
-                                                                     internalCallContext.getUserToken(),
-                                                                     internalCallContext.getCreatedBy(),
-                                                                     internalCallContext.getCallOrigin(),
-                                                                     internalCallContext.getContextUserType(),
-                                                                     internalCallContext.getReasonCode(),
-                                                                     internalCallContext.getComments(),
-                                                                     createdDate5,
-                                                                     createdDate5);
-
-        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao5, transaction5, context5);
+        internalCallContext.setAccountRecordId(5L);
+        internalCallContext.setCreatedDate(createdDate5);
+        internalCallContext.setUpdatedDate(createdDate5);
+        paymentDao.insertPaymentWithFirstTransaction(paymentModelDao5, transaction5, internalCallContext);
 
         final String[] errorStates = {"AUTH_ERRORED", "CAPTURE_ERRORED", "REFUND_ERRORED", "CREDIT_ERRORED"};
         final List<PaymentModelDao> result = paymentDao.getPaymentsByStatesAcrossTenants(errorStates, createdBeforeDate, createdAfterDate, 10);
@@ -480,17 +443,10 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                            TransactionStatus.UNKNOWN, BigDecimal.TEN, Currency.AED,
                                                                                            "unknown", "");
 
-            final InternalCallContext context1 = new InternalCallContext(1L,
-                                                                         1L,
-                                                                         internalCallContext.getUserToken(),
-                                                                         internalCallContext.getCreatedBy(),
-                                                                         internalCallContext.getCallOrigin(),
-                                                                         internalCallContext.getContextUserType(),
-                                                                         internalCallContext.getReasonCode(),
-                                                                         internalCallContext.getComments(),
-                                                                         createdDate1,
-                                                                         createdDate1);
-            paymentDao.insertPaymentWithFirstTransaction(paymentModelDao1, transaction1, context1);
+            internalCallContext.setAccountRecordId(1L);
+            internalCallContext.setCreatedDate(createdDate1);
+            internalCallContext.setUpdatedDate(createdDate1);
+            paymentDao.insertPaymentWithFirstTransaction(paymentModelDao1, transaction1, internalCallContext);
         }
 
         final Pagination<PaymentTransactionModelDao> result = paymentDao.getByTransactionStatusAcrossTenants(ImmutableList.of(TransactionStatus.UNKNOWN), clock.getUTCNow(), createdDate1, 0L, new Long(NB_ENTRIES));
@@ -529,29 +485,15 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                            UUID.randomUUID(), transactionExternalKey2, TransactionType.AUTHORIZE, stateName, BigDecimal.ONE, Currency.USD,
                                                                            ImmutableList.<String>of(pluginName), null);
 
-        final InternalCallContext context1 = new InternalCallContext(1L,
-                                                                     1L,
-                                                                     internalCallContext.getUserToken(),
-                                                                     internalCallContext.getCreatedBy(),
-                                                                     internalCallContext.getCallOrigin(),
-                                                                     internalCallContext.getContextUserType(),
-                                                                     internalCallContext.getReasonCode(),
-                                                                     internalCallContext.getComments(),
-                                                                     createdAfterDate,
-                                                                     createdAfterDate);
-        paymentDao.insertPaymentAttemptWithProperties(attempt1, context1);
+        internalCallContext.setAccountRecordId(1L);
+        internalCallContext.setCreatedDate(createdAfterDate);
+        internalCallContext.setUpdatedDate(createdAfterDate);
+        paymentDao.insertPaymentAttemptWithProperties(attempt1, internalCallContext);
 
-        final InternalCallContext context2 = new InternalCallContext(2L,
-                                                                     2L,
-                                                                     internalCallContext.getUserToken(),
-                                                                     internalCallContext.getCreatedBy(),
-                                                                     internalCallContext.getCallOrigin(),
-                                                                     internalCallContext.getContextUserType(),
-                                                                     internalCallContext.getReasonCode(),
-                                                                     internalCallContext.getComments(),
-                                                                     createdAfterDate,
-                                                                     createdAfterDate);
-        paymentDao.insertPaymentAttemptWithProperties(attempt2, context2);
+        internalCallContext.setAccountRecordId(2L);
+        internalCallContext.setCreatedDate(createdAfterDate);
+        internalCallContext.setUpdatedDate(createdAfterDate);
+        paymentDao.insertPaymentAttemptWithProperties(attempt2, internalCallContext);
 
         final Pagination<PaymentAttemptModelDao> result = paymentDao.getPaymentAttemptsByStateAcrossTenants(stateName, createdBeforeDate, 0L, 2L);
         Assert.assertEquals(result.getTotalNbRecords().longValue(), 2L);

@@ -24,9 +24,6 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.DefaultBlockingTransitionInternalEvent;
@@ -68,7 +65,6 @@ public class DefaultEntitlementService implements EntitlementService {
     private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementService.class);
 
     private final EntitlementInternalApi entitlementInternalApi;
-    private final AccountInternalApi accountInternalApi;
     private final BlockingStateDao blockingStateDao;
     private final PersistentBus eventBus;
     private final NotificationQueueService notificationQueueService;
@@ -79,14 +75,12 @@ public class DefaultEntitlementService implements EntitlementService {
 
     @Inject
     public DefaultEntitlementService(final EntitlementInternalApi entitlementInternalApi,
-                                     final AccountInternalApi accountInternalApi,
                                      final BlockingStateDao blockingStateDao,
                                      final PersistentBus eventBus,
                                      final NotificationQueueService notificationQueueService,
                                      final EntitlementUtils entitlementUtils,
                                      final InternalCallContextFactory internalCallContextFactory) {
         this.entitlementInternalApi = entitlementInternalApi;
-        this.accountInternalApi = accountInternalApi;
         this.blockingStateDao = blockingStateDao;
         this.eventBus = eventBus;
         this.notificationQueueService = notificationQueueService;
@@ -142,23 +136,15 @@ public class DefaultEntitlementService implements EntitlementService {
             return;
         }
 
-        final ImmutableAccountData immutableAccountData;
-        try {
-            immutableAccountData = accountInternalApi.getImmutableAccountDataById(entitlement.getAccountId(), internalCallContext);
-        } catch (final AccountApiException e) {
-            log.error("Error processing event for entitlement {}" + entitlement.getId(), e);
-            return;
-        }
-
         final EntitlementNotificationKeyAction entitlementNotificationKeyAction = key.getEntitlementNotificationKeyAction();
         try {
             if (EntitlementNotificationKeyAction.CHANGE.equals(entitlementNotificationKeyAction) ||
                 EntitlementNotificationKeyAction.CANCEL.equals(entitlementNotificationKeyAction)) {
                 blockAddOnsIfRequired(key, (DefaultEntitlement) entitlement, callContext, internalCallContext);
             } else if (EntitlementNotificationKeyAction.PAUSE.equals(entitlementNotificationKeyAction)) {
-                entitlementInternalApi.pause(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate(), immutableAccountData.getTimeZone()), ImmutableList.<PluginProperty>of(), internalCallContext);
+                entitlementInternalApi.pause(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate(), ((DefaultEntitlement) entitlement).getSubscriptionBase().getStartDate()), ImmutableList.<PluginProperty>of(), internalCallContext);
             } else if (EntitlementNotificationKeyAction.RESUME.equals(entitlementNotificationKeyAction)) {
-                entitlementInternalApi.resume(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate(), immutableAccountData.getTimeZone()), ImmutableList.<PluginProperty>of(), internalCallContext);
+                entitlementInternalApi.resume(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate(), ((DefaultEntitlement) entitlement).getSubscriptionBase().getStartDate()), ImmutableList.<PluginProperty>of(), internalCallContext);
             }
         } catch (final EntitlementApiException e) {
             log.error("Error processing event for entitlement {}" + entitlement.getId(), e);

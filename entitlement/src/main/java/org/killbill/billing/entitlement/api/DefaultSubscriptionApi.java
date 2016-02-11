@@ -152,10 +152,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public SubscriptionBundle getSubscriptionBundle(final UUID bundleId, final TenantContext tenantContext) throws SubscriptionApiException {
-
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
-
-
         final UUID accountId = internalCallContextFactory.getAccountId(bundleId, ObjectType.BUNDLE, tenantContext);
 
         final Optional<SubscriptionBundle> bundleOptional = Iterables.<SubscriptionBundle>tryFind(getSubscriptionBundlesForAccount(accountId, tenantContext),
@@ -452,8 +448,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             final List<Subscription> subscriptionsForBundle = subscriptionsPerBundle.get(bundleId);
             final String externalKey = subscriptionsForBundle.get(0).getExternalKey();
 
-            final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone,
-                                                                                              accountId,
+            final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId,
                                                                                               bundleId,
                                                                                               externalKey,
                                                                                               accountEntitlements.getEntitlements().get(bundleId),

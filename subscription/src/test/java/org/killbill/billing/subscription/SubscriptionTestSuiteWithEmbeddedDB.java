@@ -21,7 +21,9 @@ package org.killbill.billing.subscription;
 import javax.inject.Inject;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
@@ -38,7 +40,9 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.TestSubscriptionHelper;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.glue.TestDefaultSubscriptionModuleWithEmbeddedDB;
+import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.config.SubscriptionConfig;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.ClockMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,6 +92,9 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @Inject
     protected SubscriptionTestInitializer subscriptionTestInitializer;
 
+    @Inject
+    protected NonEntityDao nonEntityDao;
+
     protected Catalog catalog;
     protected AccountData accountData;
     protected SubscriptionBaseBundle bundle;
@@ -111,7 +118,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService, internalCallContext);
         this.accountData = subscriptionTestInitializer.initAccountData();
-        final Account account = accountUserApi.createAccount(accountData, callContext);
+        final Account account = createAccount(accountData);
         this.bundle = subscriptionTestInitializer.initBundle(account.getId(), subscriptionInternalApi, internalCallContext);
 
         // Make sure we start with a clean state
@@ -124,6 +131,16 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
         assertListenerStatus();
 
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
+    }
+
+    protected Account createAccount(final AccountData accountData) throws AccountApiException {
+        final Account account = accountUserApi.createAccount(accountData, callContext);
+
+        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID));
+        internalCallContext.setAccountRecordId(accountRecordId);
+        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
+
+        return account;
     }
 
     protected void assertListenerStatus() {

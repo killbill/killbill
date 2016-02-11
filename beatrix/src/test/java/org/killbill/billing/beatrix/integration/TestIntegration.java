@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
@@ -33,7 +32,6 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
-import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -48,7 +46,6 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -121,7 +118,7 @@ public class TestIntegration extends TestIntegrationBase {
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
 
-        cancelEntitlementAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
+        cancelEntitlementAndCheckForCompletion(bpSubscription, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
 
         invoiceChecker.checkInvoice(account.getId(), 3,
                                     callContext,
@@ -233,7 +230,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
-        baseEntitlement = cancelEntitlementAndCheckForCompletion(baseEntitlement, clock.getUTCNow(), NextEvent.BLOCK);
+        baseEntitlement = cancelEntitlementAndCheckForCompletion(baseEntitlement, NextEvent.BLOCK);
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
@@ -324,7 +321,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
-        cancelEntitlementAndCheckForCompletion(baseEntitlement, clock.getUTCNow(), NextEvent.BLOCK);
+        cancelEntitlementAndCheckForCompletion(baseEntitlement, NextEvent.BLOCK);
 
         // MOVE AFTER CANCEL DATE
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
@@ -411,7 +408,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
-        baseEntitlement = cancelEntitlementAndCheckForCompletion(baseEntitlement, clock.getUTCNow(), NextEvent.BLOCK);
+        baseEntitlement = cancelEntitlementAndCheckForCompletion(baseEntitlement, NextEvent.BLOCK);
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
