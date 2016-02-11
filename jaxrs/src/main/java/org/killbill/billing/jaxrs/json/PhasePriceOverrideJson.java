@@ -114,11 +114,11 @@ public class PhasePriceOverrideJson {
         return result;
     }
 
-    public static List<PlanPhasePriceOverride> toPlanPhasePriceOverrides(final List<PhasePriceOverrideJson> input, final PlanSpecifier spec, final Currency currency) {
-        if (input == null || input.isEmpty()) {
+    public static List<PlanPhasePriceOverride> toPlanPhasePriceOverrides(final List<PhasePriceOverrideJson> priceOverrides, final PlanSpecifier spec, final Currency currency) {
+        if (priceOverrides == null || priceOverrides.isEmpty()) {
             return ImmutableList.<PlanPhasePriceOverride>of();
         }
-        return ImmutableList.copyOf(Iterables.transform(input, new Function<PhasePriceOverrideJson, PlanPhasePriceOverride>() {
+        return ImmutableList.copyOf(Iterables.transform(priceOverrides, new Function<PhasePriceOverrideJson, PlanPhasePriceOverride>() {
             @Nullable
             @Override
             public PlanPhasePriceOverride apply(@Nullable final PhasePriceOverrideJson input) {
