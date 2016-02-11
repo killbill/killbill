@@ -73,7 +73,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     }
 
     protected ContiguousIntervalConsumableInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
-        final AccountDateAndTimeZoneContext accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC, internalCallContext);
+        final AccountDateAndTimeZoneContext accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), internalCallContext);
         final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, accountId, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()), accountDateAndTimeZoneContext);
         for (BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);

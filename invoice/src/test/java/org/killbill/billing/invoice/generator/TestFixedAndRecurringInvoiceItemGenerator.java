@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.DefaultPrice;
@@ -69,7 +68,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         try {
             account = invoiceUtil.createAccount(callContext);
             subscription = invoiceUtil.createSubscription();
-            dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(new DateTime("2016-01-08T03:01:01.000Z"), DateTimeZone.UTC, internalCallContext);
+            dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(new DateTime("2016-01-08T03:01:01.000Z"), internalCallContext);
         } catch (final Exception e) {
             Assert.fail(e.getMessage());
         }

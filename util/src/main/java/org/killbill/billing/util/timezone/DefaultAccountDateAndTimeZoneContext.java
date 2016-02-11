@@ -32,27 +32,20 @@ import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 public final class DefaultAccountDateAndTimeZoneContext implements AccountDateAndTimeZoneContext {
 
     private final DateTime referenceTime;
-    private final DateTimeZone accountTimeZone;
     private final InternalTenantContext internalTenantContext;
 
-    public DefaultAccountDateAndTimeZoneContext(final DateTime referenceTime, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+    public DefaultAccountDateAndTimeZoneContext(final DateTime referenceTime, final InternalTenantContext internalTenantContext) {
         this.referenceTime = referenceTime;
-        this.accountTimeZone = accountTimeZone;
         this.internalTenantContext = internalTenantContext;
     }
 
     @Override
     public LocalDate computeLocalDateFromFixedAccountOffset(final DateTime targetDateTime) {
-        return internalTenantContext.toLocalDate(targetDateTime, referenceTime, accountTimeZone);
+        return internalTenantContext.toLocalDate(targetDateTime, referenceTime);
     }
 
     @Override
     public DateTime computeUTCDateTimeFromLocalDate(final LocalDate invoiceItemEndDate) {
-        return internalTenantContext.toUTCDateTime(invoiceItemEndDate, referenceTime, accountTimeZone);
-    }
-
-    @Override
-    public DateTimeZone getAccountTimeZone() {
-        return accountTimeZone;
+        return internalTenantContext.toUTCDateTime(invoiceItemEndDate, referenceTime);
     }
 }

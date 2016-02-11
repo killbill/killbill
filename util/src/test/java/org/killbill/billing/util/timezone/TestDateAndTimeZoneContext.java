@@ -52,7 +52,7 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
         internalCallContext.setReferenceDateTimeZone(timeZone);
-        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 19);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
@@ -65,7 +65,7 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
         internalCallContext.setReferenceDateTimeZone(timeZone);
-        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 20);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
@@ -78,7 +78,7 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(-8);
         internalCallContext.setReferenceDateTimeZone(timeZone);
-        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 20);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
@@ -91,7 +91,7 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
         internalCallContext.setReferenceDateTimeZone(timeZone);
-        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 21);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
@@ -104,7 +104,7 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
         internalCallContext.setReferenceDateTimeZone(timeZone);
-        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 21);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
@@ -117,7 +117,7 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
         final DateTimeZone timeZone = DateTimeZone.forOffsetHours(8);
         internalCallContext.setReferenceDateTimeZone(timeZone);
-        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, timeZone, internalCallContext);
+        final AccountDateAndTimeZoneContext dateContext = new DefaultAccountDateAndTimeZoneContext(effectiveDateTime, internalCallContext);
 
         final LocalDate endDate = new LocalDate(2013, 01, 20);
         final DateTime endDateTimeInUTC = dateContext.computeUTCDateTimeFromLocalDate(endDate);
@@ -136,14 +136,14 @@ public class TestDateAndTimeZoneContext extends UtilTestSuiteNoDB {
 
         // Time zone is AKDT (UTC-8h) between March and November
         final DateTime referenceDateTimeWithDST = new DateTime("2015-09-01T08:01:01.000Z");
-        final AccountDateAndTimeZoneContext tzContextWithDST = new DefaultAccountDateAndTimeZoneContext(referenceDateTimeWithDST, tz, internalCallContext);
+        final AccountDateAndTimeZoneContext tzContextWithDST = new DefaultAccountDateAndTimeZoneContext(referenceDateTimeWithDST, internalCallContext);
         assertEquals(tzContextWithDST.computeLocalDateFromFixedAccountOffset(dateTime1), new LocalDate("2015-01-01"));
         assertEquals(tzContextWithDST.computeLocalDateFromFixedAccountOffset(dateTime2), new LocalDate("2015-09-01"));
         assertEquals(tzContextWithDST.computeLocalDateFromFixedAccountOffset(dateTime3), new LocalDate("2015-12-01"));
 
         // Time zone is AKST (UTC-9h) otherwise
         final DateTime referenceDateTimeWithoutDST = new DateTime("2015-02-01T08:01:01.000Z");
-        final AccountDateAndTimeZoneContext tzContextWithoutDST = new DefaultAccountDateAndTimeZoneContext(referenceDateTimeWithoutDST, tz, internalCallContext);
+        final AccountDateAndTimeZoneContext tzContextWithoutDST = new DefaultAccountDateAndTimeZoneContext(referenceDateTimeWithoutDST, internalCallContext);
         assertEquals(tzContextWithoutDST.computeLocalDateFromFixedAccountOffset(dateTime1), new LocalDate("2014-12-31"));
         assertEquals(tzContextWithoutDST.computeLocalDateFromFixedAccountOffset(dateTime2), new LocalDate("2015-08-31"));
         assertEquals(tzContextWithoutDST.computeLocalDateFromFixedAccountOffset(dateTime3), new LocalDate("2015-11-30"));

@@ -24,9 +24,6 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
@@ -55,7 +52,7 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     @Override
     public boolean add(final BillingEvent e) {
         if (accountDateAndTimeZoneContext == null) {
-            this.accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), DateTimeZone.UTC, internalTenantContext);
+            this.accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), internalTenantContext);
         }
         return super.add(e);
     }
@@ -63,7 +60,7 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     @Override
     public boolean addAll(final Collection<? extends BillingEvent> all) {
         if (accountDateAndTimeZoneContext == null) {
-            this.accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), DateTimeZone.UTC, internalTenantContext);
+            this.accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), internalTenantContext);
         }
         return super.addAll(all);
     }

@@ -62,8 +62,8 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
     public class TestSubscriptionBundleTimeline extends DefaultSubscriptionBundleTimeline {
 
-        public TestSubscriptionBundleTimeline(final DateTimeZone accountTimeZone, final UUID accountId, final UUID bundleId, final String externalKey, final Iterable<Entitlement> entitlements) {
-            super(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        public TestSubscriptionBundleTimeline(final UUID accountId, final UUID bundleId, final String externalKey, final Iterable<Entitlement> entitlements) {
+            super(accountId, bundleId, externalKey, entitlements, internalCallContext);
         }
 
         public SubscriptionEvent createEvent(final UUID subscriptionId, final SubscriptionEventType type, final DateTime effectiveDate) {
@@ -87,7 +87,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
                                                 null,
                                                 null,
                                                 effectiveDate,
-                                                DateTimeZone.UTC,
                                                 internalCallContext);
 
         }
@@ -95,7 +94,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
     @Test(groups = "fast")
     public void testReOrderSubscriptionEventsOnInvalidOrder1() {
-        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, null, new ArrayList<Entitlement>());
+        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, new ArrayList<Entitlement>());
 
         final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>();
         final UUID subscriptionId = UUID.randomUUID();
@@ -115,7 +114,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
     @Test(groups = "fast")
     public void testReOrderSubscriptionEventsOnInvalidOrder2() {
-        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, null, new ArrayList<Entitlement>());
+        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, new ArrayList<Entitlement>());
 
         final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>();
         final UUID subscriptionId = UUID.randomUUID();
@@ -135,7 +134,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
     @Test(groups = "fast")
     public void testReOrderSubscriptionEventsOnInvalidOrder3() {
-        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, null, new ArrayList<Entitlement>());
+        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, new ArrayList<Entitlement>());
 
         final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>();
         final UUID subscriptionId = UUID.randomUUID();
@@ -155,7 +154,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
     @Test(groups = "fast")
     public void testReOrderSubscriptionEventsOnInvalidOrderAndDifferentSubscriptionsSameDates1() {
-        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, null, new ArrayList<Entitlement>());
+        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, new ArrayList<Entitlement>());
 
         final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>();
         final UUID subscriptionId = UUID.fromString("60b64e0c-cefd-48c3-8de9-c731a9558165");
@@ -182,7 +181,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
     @Test(groups = "fast")
     public void testReOrderSubscriptionEventsOnInvalidOrderAndDifferentSubscriptionsSameDates2() {
-        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, null, new ArrayList<Entitlement>());
+        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, new ArrayList<Entitlement>());
 
         final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>();
         final UUID subscriptionId = UUID.fromString("35b3b340-31b2-46ea-b062-e9fc9fab3bc9");
@@ -209,7 +208,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
     @Test(groups = "fast")
     public void testReOrderSubscriptionEventsOnInvalidOrderAndDifferentSubscriptionsDates() {
-        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, null, new ArrayList<Entitlement>());
+        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, new ArrayList<Entitlement>());
 
         final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>();
         final UUID subscriptionId = UUID.randomUUID();
@@ -247,7 +246,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
     @Test(groups = "fast")
     public void testReOrderSubscriptionEventsOnCorrectOrder() {
-        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, null, new ArrayList<Entitlement>());
+        final TestSubscriptionBundleTimeline timeline = new TestSubscriptionBundleTimeline(null, null, null, new ArrayList<Entitlement>());
 
         final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>();
         final UUID subscriptionId = UUID.randomUUID();
@@ -297,7 +296,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final Entitlement entitlement = createEntitlement(entitlementId, allTransitions);
         entitlements.add(entitlement);
 
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
 
         assertEquals(timeline.getAccountId(), accountId);
         assertEquals(timeline.getBundleId(), bundleId);
@@ -368,7 +367,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final Entitlement entitlement = createEntitlement(entitlementId, allTransitions, blockingStates);
         entitlements.add(entitlement);
 
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
 
         assertEquals(timeline.getAccountId(), accountId);
         assertEquals(timeline.getBundleId(), bundleId);
@@ -463,7 +462,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final Entitlement entitlement = createEntitlement(entitlementId, allTransitions, blockingStates);
         entitlements.add(entitlement);
 
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
 
         assertEquals(timeline.getAccountId(), accountId);
         assertEquals(timeline.getBundleId(), bundleId);
@@ -602,7 +601,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final Entitlement entitlement = createEntitlement(entitlementId, allTransitions, blockingStates);
         entitlements.add(entitlement);
 
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
 
         assertEquals(timeline.getAccountId(), accountId);
         assertEquals(timeline.getBundleId(), bundleId);
@@ -726,7 +725,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final Entitlement entitlement = createEntitlement(entitlementId, allTransitions, blockingStates);
         entitlements.add(entitlement);
 
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
 
         assertEquals(timeline.getAccountId(), accountId);
         assertEquals(timeline.getBundleId(), bundleId);
@@ -810,7 +809,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final Entitlement entitlement = createEntitlement(entitlementId, allTransitions, blockingStates);
         entitlements.add(entitlement);
 
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
 
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 6);
@@ -908,7 +907,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final Entitlement entitlement2 = createEntitlement(entitlementId2, allTransitions2, blockingStates);
         entitlements.add(entitlement2);
 
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
 
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 9);
@@ -1010,7 +1009,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         // Verify the timeline without the blocking state events
         final ImmutableList<Entitlement> entitlementsWithoutBlockingStates = ImmutableList.<Entitlement>of(createEntitlement(entitlementId, allTransitions, blockingStates));
-        final List<SubscriptionEvent> eventsWithoutBlockingStates = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlementsWithoutBlockingStates, internalCallContext).getSubscriptionEvents();
+        final List<SubscriptionEvent> eventsWithoutBlockingStates = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlementsWithoutBlockingStates, internalCallContext).getSubscriptionEvents();
         assertEquals(eventsWithoutBlockingStates.size(), 4);
         assertEquals(eventsWithoutBlockingStates.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(eventsWithoutBlockingStates.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -1026,7 +1025,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         // Verify the timeline with the overdue event blocking the entitlement
         final ImmutableList<Entitlement> entitlementsWithOverdueEvent = ImmutableList.<Entitlement>of(createEntitlement(entitlementId, allTransitions, blockingStates));
-        final List<SubscriptionEvent> eventsWithOverdueEvent = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlementsWithOverdueEvent, internalCallContext).getSubscriptionEvents();
+        final List<SubscriptionEvent> eventsWithOverdueEvent = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlementsWithOverdueEvent, internalCallContext).getSubscriptionEvents();
         assertEquals(eventsWithOverdueEvent.size(), 5);
         assertEquals(eventsWithOverdueEvent.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(eventsWithOverdueEvent.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -1045,7 +1044,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         entitlements.add(entitlement);
 
         // Verify the timeline with both the overdue event and the entitlement cancel event
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
 
         assertEquals(timeline.getAccountId(), accountId);
         assertEquals(timeline.getBundleId(), bundleId);
@@ -1145,7 +1144,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final Entitlement entitlement = createEntitlement(entitlementId, allTransitions, blockingStates);
         entitlements.add(entitlement);
 
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
 
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 4);
@@ -1238,7 +1237,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final Entitlement entitlement = createEntitlement(entitlementId, allTransitions, blockingStates);
         entitlements.add(entitlement);
 
-        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone, accountId, bundleId, externalKey, entitlements, internalCallContext);
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
 
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 11);

@@ -53,7 +53,7 @@ public class EntitlementDateHelper {
             return clock.getUTCNow();
         }
 
-        return callContext.toUTCDateTime(requestedDate, referenceDateTime, account.getTimeZone());
+        return callContext.toUTCDateTime(requestedDate, referenceDateTime);
     }
 
     /**
@@ -67,7 +67,7 @@ public class EntitlementDateHelper {
     // TODO Move to ClockUtils
     public boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTime referenceDatetime, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
         final LocalDate localDateNowInAccountTimezone = clock.getToday(accountTimeZone);
-        final LocalDate targetDateInAccountTimezone = internalTenantContext.toLocalDate(inputDate, referenceDatetime, accountTimeZone);
+        final LocalDate targetDateInAccountTimezone = internalTenantContext.toLocalDate(inputDate, referenceDatetime);
         return targetDateInAccountTimezone.compareTo(localDateNowInAccountTimezone) <= 0;
     }
 }

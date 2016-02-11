@@ -54,7 +54,7 @@ public class TimeAwareContext {
     /// DateTime <-> LocalDate transformations
 
     // Create a DateTime object using the specified reference time and timezone (usually, the one on the account)
-    public DateTime toUTCDateTime(final LocalDate localDate, final DateTime referenceDateTime, final DateTimeZone accountTimeZoneUnused) {
+    public DateTime toUTCDateTime(final LocalDate localDate, final DateTime referenceDateTime) {
         validateContext();
 
         final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime, getReferenceDateTimeZone());
@@ -73,7 +73,7 @@ public class TimeAwareContext {
     }
 
     // Create a LocalDate object using the specified timezone (usually, the one on the account), respecting the offset at the time of the referenceDateTime
-    public LocalDate toLocalDate(final DateTime dateTime, final DateTime referenceDateTime, final DateTimeZone accountTimeZoneUnused) {
+    public LocalDate toLocalDate(final DateTime dateTime, final DateTime referenceDateTime) {
         validateContext();
 
         final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime, getReferenceDateTimeZone());

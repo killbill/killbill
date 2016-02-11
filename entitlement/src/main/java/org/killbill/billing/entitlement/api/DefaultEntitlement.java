@@ -244,7 +244,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public LocalDate getEffectiveStartDate() {
-        return internalTenantContext.toLocalDate(getSubscriptionBase().getStartDate(), getSubscriptionBase().getStartDate(), eventsStream.getAccountTimeZone());
+        return internalTenantContext.toLocalDate(getSubscriptionBase().getStartDate(), getSubscriptionBase().getStartDate());
     }
 
     @Override
@@ -460,7 +460,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 break;
             case END_OF_TERM:
                 if (getSubscriptionBase().getChargedThroughDate() != null) {
-                    cancellationDate = internalTenantContext.toLocalDate(getSubscriptionBase().getChargedThroughDate(), getSubscriptionBase().getStartDate(), eventsStream.getAccountTimeZone());
+                    cancellationDate = internalTenantContext.toLocalDate(getSubscriptionBase().getChargedThroughDate(), getSubscriptionBase().getStartDate());
                 } else {
                     cancellationDate = clock.getToday(eventsStream.getAccountTimeZone());
                 }

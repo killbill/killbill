@@ -401,12 +401,12 @@ public class DefaultEventsStream implements EventsStream {
                                                                           return DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
                                                                       }
                                                                   }).orNull();
-        entitlementEffectiveEndDate = entitlementCancelEvent != null ? internalTenantContext.toLocalDate(entitlementCancelEvent.getEffectiveDate(),getSubscriptionBase().getStartDate(),  account.getTimeZone()) : null;
+        entitlementEffectiveEndDate = entitlementCancelEvent != null ? internalTenantContext.toLocalDate(entitlementCancelEvent.getEffectiveDate(),getSubscriptionBase().getStartDate()) : null;
     }
 
     private void computeStateForEntitlement() {
         // Current state for the ENTITLEMENT_SERVICE_NAME is set to cancelled
-        if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(internalTenantContext.toLocalDate(utcNow, getSubscriptionBase().getStartDate(), account.getTimeZone())) <= 0) {
+        if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(internalTenantContext.toLocalDate(utcNow, getSubscriptionBase().getStartDate())) <= 0) {
             entitlementState = EntitlementState.CANCELLED;
         } else {
             // Gather states across all services and check if one of them is set to 'blockEntitlement'

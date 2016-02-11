@@ -48,15 +48,13 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     private final boolean accountAutoInvoiceOff;
     private final List<UUID> subscriptionIdsWithAutoInvoiceOff;
     private final BillingMode recurringBillingMode;
-    private final DateTimeZone accountTimeZone;
     private final InternalTenantContext internalTenantContext;
 
     private DefaultAccountDateAndTimeZoneContext dateTimeZoneContext;
 
-    public DefaultBillingEventSet(final boolean accountAutoInvoiceOff, final BillingMode recurringBillingMode, final DateTimeZone timeZone, final InternalTenantContext internalTenantContext) {
+    public DefaultBillingEventSet(final boolean accountAutoInvoiceOff, final BillingMode recurringBillingMode, final InternalTenantContext internalTenantContext) {
         this.accountAutoInvoiceOff = accountAutoInvoiceOff;
         this.recurringBillingMode = recurringBillingMode;
-        this.accountTimeZone = timeZone;
         this.internalTenantContext = internalTenantContext;
         this.subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
     }
@@ -64,7 +62,7 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     @Override
     public boolean add(final BillingEvent e) {
         if (dateTimeZoneContext == null) {
-            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), accountTimeZone, internalTenantContext);
+            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), internalTenantContext);
         }
         return super.add(e);
     }
@@ -72,7 +70,7 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     @Override
     public boolean addAll(final Collection<? extends BillingEvent> all) {
         if (dateTimeZoneContext == null) {
-            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), accountTimeZone, internalTenantContext);
+            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), internalTenantContext);
         }
         return super.addAll(all);
     }

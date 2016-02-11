@@ -303,7 +303,7 @@ public class TestInvoiceHelper {
                                                                                                                                          }));
 
         // The test does not use the invoice callback notifier hence the empty map
-        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC, internalCallContext);
+        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), internalCallContext);
         invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
     }
 

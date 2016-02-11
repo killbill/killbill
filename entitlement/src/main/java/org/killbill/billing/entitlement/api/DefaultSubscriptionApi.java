@@ -258,8 +258,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             final List<Subscription> subscriptionsForBundle = subscriptionsPerBundle.get(bundleId);
             final String externalKey = subscriptionsForBundle.get(0).getExternalKey();
 
-            final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone,
-                                                                                              accountId,
+            final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId,
                                                                                               bundleId,
                                                                                               externalKey,
                                                                                               accountEntitlements.getEntitlements().get(bundleId),

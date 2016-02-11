@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,9 +24,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.MigrationPlan;
@@ -50,17 +49,14 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceMigrationApi.class);
 
-    private final AccountInternalApi accountUserApi;
     private final DefaultInvoiceDao dao;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultInvoiceMigrationApi(final AccountInternalApi accountUserApi,
-                                      final DefaultInvoiceDao dao,
+    public DefaultInvoiceMigrationApi(final DefaultInvoiceDao dao,
                                       final Clock clock,
                                       final InternalCallContextFactory internalCallContextFactory) {
-        this.accountUserApi = accountUserApi;
         this.dao = dao;
         this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -70,21 +66,13 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
     public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final BigDecimal balance, final Currency currency, final CallContext context) {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
-        final ImmutableAccountData account;
-        try {
-            account = accountUserApi.getImmutableAccountDataById(accountId, internalCallContext);
-        } catch (final AccountApiException e) {
-            log.warn("Unable to find account for id {}", accountId);
-            return null;
-        }
-
         final InvoiceModelDao migrationInvoice = new InvoiceModelDao(accountId, clock.getUTCToday(), targetDate, currency, true);
         final InvoiceItemModelDao migrationInvoiceItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.FIXED, migrationInvoice.getId(), accountId, null, null,
                                                                                  null, MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME, null,
                                                                                  targetDate, null, balance, null, currency, null);
 
         final DateTime wrongEffectiveDateButDoesNotMatter = null;
-        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(wrongEffectiveDateButDoesNotMatter, account.getTimeZone(), internalCallContext);
+        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(wrongEffectiveDateButDoesNotMatter, internalCallContext);
         dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),
                           true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
 

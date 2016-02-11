@@ -53,7 +53,6 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     private final BillingPeriod nextBillingPeriod;
     private final DateTime createdDate;
     private final DateTime referenceTime;
-    private final DateTimeZone accountTimeZone;
     private final InternalTenantContext internalTenantContext;
 
     public DefaultSubscriptionEvent(final UUID id,
@@ -76,7 +75,6 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
                                     final BillingPeriod nextBillingPeriod,
                                     final DateTime createDate,
                                     final DateTime referenceTime,
-                                    final DateTimeZone accountTimeZone,
                                     final InternalTenantContext internalTenantContext) {
         this.id = id;
         this.entitlementId = entitlementId;
@@ -99,12 +97,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         this.nextBillingPeriod = nextBillingPeriod;
         this.createdDate = createDate;
         this.referenceTime = referenceTime;
-        this.accountTimeZone = accountTimeZone;
         this.internalTenantContext = internalTenantContext;
-    }
-
-    public DateTimeZone getAccountTimeZone() {
-        return accountTimeZone;
     }
 
     public DateTime getEffectiveDateTime() {
@@ -127,12 +120,12 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
 
     @Override
     public LocalDate getEffectiveDate() {
-        return effectiveDate != null ? internalTenantContext.toLocalDate(effectiveDate, referenceTime, accountTimeZone) : null;
+        return effectiveDate != null ? internalTenantContext.toLocalDate(effectiveDate, referenceTime) : null;
     }
 
     @Override
     public LocalDate getRequestedDate() {
-        return requestedDate != null ? internalTenantContext.toLocalDate(requestedDate, referenceTime, accountTimeZone) : null;
+        return requestedDate != null ? internalTenantContext.toLocalDate(requestedDate, referenceTime) : null;
     }
 
     @Override
