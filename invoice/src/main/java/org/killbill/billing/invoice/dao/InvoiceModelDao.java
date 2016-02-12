@@ -83,7 +83,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     }
 
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final Currency currency, final InvoiceStatus status, final boolean isParentInvoice) {
-        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, null, currency, false, status, isParentInvoice);
+        this(UUIDs.randomUUID(), invoiceDate.toDateTimeAtCurrentTime(), accountId, null, invoiceDate, null, currency, false, status, isParentInvoice);
     }
 
     public InvoiceModelDao(final Invoice invoice) {

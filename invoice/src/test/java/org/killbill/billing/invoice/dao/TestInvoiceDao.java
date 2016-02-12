@@ -1723,4 +1723,23 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceModelDao.addInvoiceItem(new InvoiceItemModelDao(invoiceItem));
         invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), context);
     }
+
+    @Test(groups = "slow")
+    public void testCreateParentChildInvoiceRelation() throws InvoiceApiException {
+
+        final UUID parentInvoiceId = UUID.randomUUID();
+        final UUID childInvoiceId = UUID.randomUUID();
+        final UUID childAccountId = UUID.randomUUID();
+        InvoiceParentChildModelDao invoiceRelation = new InvoiceParentChildModelDao(parentInvoiceId, childInvoiceId, childAccountId);
+        invoiceDao.createParentChildInvoiceRelation(invoiceRelation, context);
+
+        final List<InvoiceParentChildModelDao> relations = invoiceDao.getChildInvoicesByParentInvoiceId(parentInvoiceId, context);
+        assertEquals(relations.size(), 1);
+        final InvoiceParentChildModelDao parentChildRelation = relations.get(0);
+        assertEquals(parentChildRelation.getChildAccountId(), childAccountId);
+        assertEquals(parentChildRelation.getChildInvoiceId(), childInvoiceId);
+        assertEquals(parentChildRelation.getParentInvoiceId(), parentInvoiceId);
+
+    }
+
 }

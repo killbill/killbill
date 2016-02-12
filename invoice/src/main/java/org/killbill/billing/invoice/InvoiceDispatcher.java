@@ -94,6 +94,7 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
+import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
@@ -716,17 +717,23 @@ public class InvoiceDispatcher {
         final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(account.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));
         final InternalCallContext parentContext = new InternalCallContext(context, parentAccountRecordId);
 
+        final DateTime today = clock.getNow(account.getTimeZone());
         if (parentInvoice != null) {
-            InvoiceItem invoiceItem = new ParentInvoiceItem(UUID.randomUUID(), DateTime.now(), parentInvoice.getId(), account.getParentAccountId(), account.getId(), invoiceAmount, account.getCurrency());
+            InvoiceItem invoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoice.getId(), account.getParentAccountId(), account.getId(), invoiceAmount, account.getCurrency());
             parentInvoice.addInvoiceItem(new InvoiceItemModelDao(invoiceItem));
             List<InvoiceModelDao> invoices = new ArrayList<InvoiceModelDao>();
             invoices.add(parentInvoice);
             invoiceDao.createInvoices(invoices, parentContext);
         } else {
-            parentInvoice = new InvoiceModelDao(account.getParentAccountId(), LocalDate.now(), account.getCurrency(), InvoiceStatus.DRAFT, true);
-            InvoiceItem invoiceItem = new ParentInvoiceItem(UUID.randomUUID(), DateTime.now(), parentInvoice.getId(), account.getParentAccountId(), account.getId(), invoiceAmount, account.getCurrency());
+            parentInvoice = new InvoiceModelDao(account.getParentAccountId(), today.toLocalDate(), account.getCurrency(), InvoiceStatus.DRAFT, true);
+            InvoiceItem invoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoice.getId(), account.getParentAccountId(), account.getId(), invoiceAmount, account.getCurrency());
             parentInvoice.addInvoiceItem(new InvoiceItemModelDao(invoiceItem));
-            invoiceDao.createInvoice(parentInvoice, parentInvoice.getInvoiceItems(), true, null, parentContext);
+
+            // build account date time zone
+            final AccountDateAndTimeZoneContext accountDateTimeZone = new DefaultAccountDateAndTimeZoneContext(today, account.getTimeZone());
+            final FutureAccountNotifications futureAccountNotifications = new FutureAccountNotifications(accountDateTimeZone, null);
+
+            invoiceDao.createInvoice(parentInvoice, parentInvoice.getInvoiceItems(), true, futureAccountNotifications, parentContext);
         }
 
         // save parent child invoice relation

@@ -29,6 +29,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -48,6 +49,8 @@ import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
+import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentPoster;
+import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -60,6 +63,7 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -104,6 +108,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private final Clock clock;
     private final CacheControllerDispatcher cacheControllerDispatcher;
     private final NonEntityDao nonEntityDao;
+    private final ParentInvoiceCommitmentPoster parentInvoiceCommitmentPoster;
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi,
@@ -115,6 +120,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              final InvoiceConfig invoiceConfig,
                              final InvoiceDaoHelper invoiceDaoHelper,
                              final CBADao cbaDao,
+                             final ParentInvoiceCommitmentPoster parentInvoiceCommitmentPoster,
                              final InternalCallContextFactory internalCallContextFactory) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), InvoiceSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
@@ -126,6 +132,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.nonEntityDao = nonEntityDao;
+        this.parentInvoiceCommitmentPoster = parentInvoiceCommitmentPoster;
     }
 
     @Override
@@ -270,6 +277,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
                     if (InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
                         notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
+                    }
+                    if (invoice.isParentInvoice()) {
+                        notifyOfParentInvoiceCreation(entitySqlDaoWrapperFactory, invoice, callbackDateTimePerSubscriptions, context);
                     }
                 }
                 return null;
@@ -948,7 +958,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 if (InvoiceStatus.COMMITTED.equals(newStatus)) {
                     // notify invoice creation event
                     notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoice, context);
-                    // notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }
 
                 return null;
@@ -969,6 +978,18 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         }
     }
 
+    private void notifyOfParentInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InvoiceModelDao parentInvoice,
+                                               final FutureAccountNotifications callbackDateTime, final InternalCallContext context) {
+        DateTime futureNotificationDate = parentInvoice.getCreatedDate();
+        AccountDateAndTimeZoneContext accountDateAndTimeZone;
+        if ((callbackDateTime != null) && (callbackDateTime.getAccountDateAndTimeZoneContext() != null)) {
+            accountDateAndTimeZone = callbackDateTime.getAccountDateAndTimeZoneContext();
+        } else {
+            accountDateAndTimeZone = new DefaultAccountDateAndTimeZoneContext(futureNotificationDate, DateTimeZone.UTC);
+        }
+        parentInvoiceCommitmentPoster.insertParentInvoiceFromTransactionInternal(entitySqlDaoWrapperFactory, parentInvoice.getId(), futureNotificationDate, accountDateAndTimeZone, context);
+    }
+
     @Override
     public void createParentChildInvoiceRelation(final InvoiceParentChildModelDao invoiceRelation, final InternalCallContext context) throws InvoiceApiException {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
@@ -977,6 +998,17 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final InvoiceParentChildrenSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceParentChildrenSqlDao.class);
                 transactional.create(invoiceRelation, context);
                 return null;
+            }
+        });
+    }
+
+    @Override
+    public List<InvoiceParentChildModelDao> getChildInvoicesByParentInvoiceId(final UUID parentInvoiceId, final InternalCallContext context) throws InvoiceApiException {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceParentChildModelDao>>() {
+            @Override
+            public List<InvoiceParentChildModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceParentChildrenSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceParentChildrenSqlDao.class);
+                return transactional.getChildInvoicesByParentInvoiceId(parentInvoiceId.toString(), context);
             }
         });
     }

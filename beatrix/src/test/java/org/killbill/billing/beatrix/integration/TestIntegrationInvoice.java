@@ -366,26 +366,23 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getNumberOfItems(), 2);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
-        //assertEquals(parentInvoice.getBalance(), BigDecimal.ZERO);
+        assertEquals(parentInvoice.getBalance().toString(), "0.00");
 
-        // No payment is expected because balance is 0
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected because balance is 0
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.commitInvoice(parentInvoice.getId(), callContext);
+        clock.addDays(1);
         assertListenerStatus();
 
         parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
 
-        // Move through time and verify new parent Invoice
+        // Move through time and verify new parent Invoice. No payments are expected.
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE,
-                                      NextEvent.INVOICE, NextEvent.INVOICE,
-                                      NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT,
-                                      NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT); // TODO fix when refactor invoice.getBalance
+                                      NextEvent.INVOICE, NextEvent.INVOICE);
         clock.addDays(31);
         assertListenerStatus();
 
         // Second Parent invoice over Recurring period
-
         parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), callContext);
         assertEquals(parentInvoices.size(), 2);
 
@@ -393,10 +390,11 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getNumberOfItems(), 2);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().toString(), "279.90");
 
-        // now payment is expected
-        busHandler.pushExpectedEvents(NextEvent.INVOICE); // TODO NextEvent.PAYMENT
-        invoiceUserApi.commitInvoice(parentInvoice.getId(), callContext);
+        // Moving a day the NotificationQ calls the commitInvoice. Now payment is expected
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(1);
         assertListenerStatus();
 
         parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);

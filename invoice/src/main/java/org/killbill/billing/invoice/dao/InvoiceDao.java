@@ -160,6 +160,16 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     void createParentChildInvoiceRelation(final InvoiceParentChildModelDao invoiceRelation, final InternalCallContext context) throws InvoiceApiException;
 
     /**
+     * Get parent/child invoice relationship by parent invoice id
+     *
+     * @param parentInvoiceId the parent invoice id
+     * @param context the tenant context
+     * @throws InvoiceApiException
+     */
+    List<InvoiceParentChildModelDao> getChildInvoicesByParentInvoiceId(UUID parentInvoiceId, final InternalCallContext context) throws InvoiceApiException;
+
+
+    /**
      * Retrieve parent invoice by the parent account id
      *
      * @param parentAccountId the parent account id

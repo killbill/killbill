@@ -31,6 +31,9 @@ import javax.inject.Named;
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
@@ -97,6 +100,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     private final RetryServiceScheduler retryServiceScheduler;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Clock clock;
+    private final AccountInternalApi accountApi;
 
     private final Logger log = LoggerFactory.getLogger(InvoicePaymentControlPluginApi.class);
 
@@ -105,7 +109,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                           final InvoiceInternalApi invoiceApi, final TagUserApi tagApi,
                                           final PaymentDao paymentDao, final InvoicePaymentControlDao invoicePaymentControlDao,
                                           @Named(PaymentModule.RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
-                                          final InternalCallContextFactory internalCallContextFactory, final Clock clock) {
+                                          final InternalCallContextFactory internalCallContextFactory, final Clock clock,
+                                          final AccountInternalApi accountApi) {
         this.paymentConfig = paymentConfig;
         this.invoiceApi = invoiceApi;
         this.tagApi = tagApi;
@@ -114,6 +119,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         this.retryServiceScheduler = retryServiceScheduler;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
+        this.accountApi = accountApi;
     }
 
     @Override
@@ -263,6 +269,12 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return new DefaultPriorPaymentControlResult(true);
             }
 
+            // get immutable account and check if it is child and payment is delegated to parent => abort
+            final ImmutableAccountData accountData = accountApi.getImmutableAccountDataById(invoice.getAccountId(), internalContext);
+            if ((accountData != null) && (accountData.getParentAccountId() != null) && accountData.isPaymentDelegatedToParent()) {
+                return new DefaultPriorPaymentControlResult(true);
+            }
+
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
 
             final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
@@ -282,6 +294,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         } catch (final InvoiceApiException e) {
             throw new PaymentControlApiException(e);
         } catch (final IllegalArgumentException e) {
+            throw new PaymentControlApiException(e);
+        } catch (AccountApiException e) {
             throw new PaymentControlApiException(e);
         }
     }

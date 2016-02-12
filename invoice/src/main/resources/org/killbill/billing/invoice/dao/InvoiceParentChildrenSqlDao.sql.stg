@@ -28,6 +28,9 @@ allTableValues() ::= <<
 , <tableValues()>
 >>
 
-
-
-
+getChildInvoicesByParentInvoiceId() ::= <<
+   SELECT <allTableFields()>
+     FROM <tableName()>
+    WHERE parent_invoice_id = :parentInvoiceId
+    <AND_CHECK_TENANT()>
+ >>

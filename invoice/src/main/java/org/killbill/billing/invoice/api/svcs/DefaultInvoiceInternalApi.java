@@ -40,6 +40,7 @@ import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.WithAccountLock;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -181,5 +182,10 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
                 return input.getType() == type;
             }
         }).orNull();
+    }
+
+    @Override
+    public void commitInvoice(final UUID invoiceId, final InternalCallContext context) throws InvoiceApiException {
+        dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, context);
     }
 }

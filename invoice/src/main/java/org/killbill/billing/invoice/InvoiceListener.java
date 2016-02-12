@@ -19,7 +19,6 @@ package org.killbill.billing.invoice;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
@@ -169,6 +168,15 @@ public class InvoiceListener {
 
     private boolean isChildrenAccountAndPaymentDelegated(final ImmutableAccountData account) {
         return account.getParentAccountId() != null && account.isPaymentDelegatedToParent();
+    }
+
+    public void handleParentInvoiceCommitmentEvent(final UUID invoiceId, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        try {
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Commit Invoice", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
+            invoiceApi.commitInvoice(invoiceId, context);
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
     }
 
 }

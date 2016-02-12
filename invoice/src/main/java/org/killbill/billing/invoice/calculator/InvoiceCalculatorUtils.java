@@ -56,6 +56,11 @@ public abstract class InvoiceCalculatorUtils {
         return InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType());
     }
 
+    // Item from Parent Invoice
+    public static boolean isParentSummaryItem(final InvoiceItem invoiceItem) {
+        return InvoiceItemType.PARENT_SUMMARY.equals(invoiceItem.getInvoiceItemType());
+    }
+
     // Regular line item (charges)
     public static boolean isCharge(final InvoiceItem invoiceItem) {
         return InvoiceItemType.TAX.equals(invoiceItem.getInvoiceItemType()) ||
@@ -124,7 +129,8 @@ public abstract class InvoiceCalculatorUtils {
 
             if (isCharge(invoiceItem) ||
                 isInvoiceAdjustmentItem(invoiceItem, otherInvoiceItems) ||
-                isInvoiceItemAdjustmentItem(invoiceItem)) {
+                isInvoiceItemAdjustmentItem(invoiceItem) ||
+                isParentSummaryItem(invoiceItem)) {
                 amountCharged = amountCharged.add(invoiceItem.getAmount());
             }
         }
