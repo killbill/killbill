@@ -314,7 +314,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(ErrorCode.SUB_BLOCKING_STATE_INVALID_ARG, "Need to specify a valid stateName");
         }
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(callContext);
+        final InternalCallContext internalCallContextWithValidAccountId;
 
         final ImmutableAccountData account;
         final UUID accountId;
@@ -323,25 +323,28 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         try {
             switch (blockingState.getType()) {
                 case ACCOUNT:
-                    account = accountApi.getImmutableAccountDataById(blockingState.getBlockedId(), internalCallContext);
+                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(blockingState.getBlockedId(), ObjectType.ACCOUNT, callContext);
+                    account = accountApi.getImmutableAccountDataById(blockingState.getBlockedId(), internalCallContextWithValidAccountId);
                     externalKey = account.getExternalKey();
                     accountId = account.getId();
                     bundleId = null;
                     break;
 
                 case SUBSCRIPTION_BUNDLE:
-                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(blockingState.getBlockedId(), internalCallContext);
+                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(blockingState.getBlockedId(), ObjectType.BUNDLE, callContext);
+                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(blockingState.getBlockedId(), internalCallContextWithValidAccountId);
                     externalKey = bundle.getExternalKey();
                     bundleId = bundle.getId();
                     accountId = bundle.getAccountId();
-                    account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
+                    account = accountApi.getImmutableAccountDataById(accountId, internalCallContextWithValidAccountId);
                     break;
 
                 case SUBSCRIPTION:
-                    final Entitlement entitlement = entitlementInternalApi.getEntitlementForId(blockingState.getBlockedId(), internalCallContext);
+                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(blockingState.getBlockedId(), ObjectType.SUBSCRIPTION, callContext);
+                    final Entitlement entitlement = entitlementInternalApi.getEntitlementForId(blockingState.getBlockedId(), internalCallContextWithValidAccountId);
                     bundleId = entitlement.getBundleId();
                     accountId = entitlement.getAccountId();
-                    account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
+                    account = accountApi.getImmutableAccountDataById(accountId, internalCallContextWithValidAccountId);
                     externalKey = null;
                     break;
 
@@ -368,8 +371,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
 
         final WithEntitlementPlugin<Void> addBlockingStateWithPlugin = new WithEntitlementPlugin<Void>() {
-
-            final InternalCallContext internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
 
             @Override
             public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
