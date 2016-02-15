@@ -55,13 +55,11 @@ public class TestBundleTransfer extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testBundleTransferWithBPAnnualOnly() throws Exception {
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(3));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-
         final DateTime initialDate = new DateTime(2012, 4, 1, 0, 15, 42, 0, testTimeZone);
-
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(3));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -102,13 +100,11 @@ public class TestBundleTransfer extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testBundleTransferWithBPMonthlyOnly() throws Exception {
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-
         final DateTime initialDate = new DateTime(2012, 4, 1, 0, 15, 42, 0, testTimeZone);
-
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
@@ -158,14 +154,12 @@ public class TestBundleTransfer extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testBundleTransferWithBPMonthlyOnlyWIthCancellationImm() throws Exception {
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        final DateTime initialDate = new DateTime(2012, 4, 1, 0, 15, 42, 0, testTimeZone);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(9));
 
-        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-
-        final DateTime initialDate = new DateTime(2012, 4, 1, 0, 15, 42, 0, testTimeZone);
-
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;

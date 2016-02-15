@@ -90,17 +90,15 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
         testEntitlementPluginApi.setPlanPhasePriceOverride(null);
     }
 
-
-        @Test(groups = "slow")
+    @Test(groups = "slow")
     public void testCreateSubscriptionWithEntitlementPlugin() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
 
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
-
-        // We take april as it has 30 days (easier to play with BCD)
-        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-        clock.setDay(new LocalDate(2012, 4, 1));
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, BigDecimal.TEN));
@@ -180,5 +178,4 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
             this.planPhasePriceOverride = planPhasePriceOverride;
         }
     }
-
 }

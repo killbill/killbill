@@ -29,12 +29,13 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.ObjectType;
+import org.killbill.billing.GuicyKillbillTestSuite;
+import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
@@ -78,7 +79,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -153,6 +153,7 @@ public class TestInvoiceHelper {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
+    private final ImmutableAccountInternalApi immutableAccountApi;
     private final InvoicePluginDispatcher invoicePluginDispatcher;
     private final AccountUserApi accountUserApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
@@ -172,12 +173,13 @@ public class TestInvoiceHelper {
 
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
-                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final InvoicePluginDispatcher invoicePluginDispatcher, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
+                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final ImmutableAccountInternalApi immutableAccountApi, final InvoicePluginDispatcher invoicePluginDispatcher, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher, final MutableInternalCallContext internalCallContext, final InvoiceConfig invoiceConfig,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;
+        this.immutableAccountApi = immutableAccountApi;
         this.invoicePluginDispatcher = invoicePluginDispatcher;
         this.accountUserApi = accountUserApi;
         this.subscriptionApi = subscriptionApi;
@@ -243,23 +245,28 @@ public class TestInvoiceHelper {
     }
 
     public Account createAccount(final CallContext callContext) throws AccountApiException {
-        final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
-                                                                .firstNameLength(6)
-                                                                .email(UUID.randomUUID().toString().substring(1, 8))
-                                                                .phone(UUID.randomUUID().toString().substring(1, 8))
-                                                                .migrated(false)
-                                                                .isNotifiedForInvoices(true)
-                                                                .externalKey(UUID.randomUUID().toString().substring(1, 8))
-                                                                .billingCycleDayLocal(31)
-                                                                .currency(accountCurrency)
-                                                                .paymentMethodId(UUID.randomUUID())
-                                                                .timeZone(DateTimeZone.UTC)
-                                                                .build();
-        final Account account = accountUserApi.createAccount(accountData, callContext);
+        final Account accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+                                                            .firstNameLength(6)
+                                                            .email(UUID.randomUUID().toString().substring(1, 8))
+                                                            .phone(UUID.randomUUID().toString().substring(1, 8))
+                                                            .migrated(false)
+                                                            .isNotifiedForInvoices(true)
+                                                            .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                                                            .billingCycleDayLocal(31)
+                                                            .currency(accountCurrency)
+                                                            .paymentMethodId(UUID.randomUUID())
+                                                            .timeZone(DateTimeZone.UTC)
+                                                            .createdDate(clock.getUTCNow())
+                                                            .build();
 
-        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
-        internalCallContext.setAccountRecordId(accountRecordId);
-        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
+        final Account account;
+        if (isFastTest()) {
+            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountUserApi, accountApi, immutableAccountApi, nonEntityDao, internalCallContextFactory, callContext, internalCallContext);
+        } else {
+            account = accountUserApi.createAccount(accountData, callContext);
+        }
+
+        GuicyKillbillTestSuite.refreshCallContext(account.getId(), internalCallContextFactory, callContext, internalCallContext);
 
         return account;
     }
@@ -477,5 +484,10 @@ public class TestInvoiceHelper {
         public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
             return null;
         }
+    }
+
+    // Unfortunately, this helper is shared across fast and slow tests
+    private boolean isFastTest() {
+        return Mockito.mockingDetails(accountApi).isMock();
     }
 }

@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.util.callcontext.TenantContext;
 
@@ -35,14 +36,15 @@ public class InternalTenantContext extends TimeAwareContext {
 
     public InternalTenantContext(final Long tenantRecordId,
                                  @Nullable final Long accountRecordId,
-                                 @Nullable final DateTimeZone referenceDateTimeZone) {
-        super(referenceDateTimeZone);
+                                 @Nullable final DateTimeZone fixedOffsetTimeZone,
+                                 @Nullable final DateTime referenceDateTime) {
+        super(fixedOffsetTimeZone, referenceDateTime);
         this.tenantRecordId = tenantRecordId;
         this.accountRecordId = accountRecordId;
     }
 
     public InternalTenantContext(final Long defaultTenantRecordId) {
-        this(defaultTenantRecordId, null, null);
+        this(defaultTenantRecordId, null, null, null);
     }
 
     public TenantContext toTenantContext(final UUID tenantId) {

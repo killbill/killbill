@@ -69,6 +69,8 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
     public void testCheckSubscriptionCancellation() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
@@ -114,6 +116,8 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
     public void testCheckSubscriptionCancellationWithMultipleBundles() throws Exception {
         // 2012-05-01T00:03:53.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        setupAccount();
 
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);

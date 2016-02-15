@@ -17,20 +17,21 @@
 
 package org.killbill.billing.callcontext;
 
-import java.util.Date;
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
-// TODO Cache the reference time and clock in the context
 public class TimeAwareContext {
 
-    private final DateTimeZone referenceDateTimeZone;
+    private final DateTimeZone fixedOffsetTimeZone;
+    private final LocalTime referenceTime;
 
-    public TimeAwareContext(final DateTimeZone referenceDateTimeZone) {
-        this.referenceDateTimeZone = referenceDateTimeZone;
+    public TimeAwareContext(@Nullable final DateTimeZone fixedOffsetTimeZone, @Nullable final DateTime referenceDateTime) {
+        this.fixedOffsetTimeZone = fixedOffsetTimeZone;
+        this.referenceTime = computeReferenceTime(referenceDateTime);
     }
 
     /// Generic functions
@@ -52,17 +53,13 @@ public class TimeAwareContext {
     public DateTime toUTCDateTime(final LocalDate localDate, final DateTime referenceDateTime) {
         validateContext();
 
-        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime);
-
-        final LocalTime referenceLocalTime = toDateTime(referenceDateTime, normalizedAccountTimezone).toLocalTime();
-
         final DateTime targetDateTime = new DateTime(localDate.getYear(),
                                                      localDate.getMonthOfYear(),
                                                      localDate.getDayOfMonth(),
-                                                     referenceLocalTime.getHourOfDay(),
-                                                     referenceLocalTime.getMinuteOfHour(),
-                                                     referenceLocalTime.getSecondOfMinute(),
-                                                     normalizedAccountTimezone);
+                                                     getReferenceTime().getHourOfDay(),
+                                                     getReferenceTime().getMinuteOfHour(),
+                                                     getReferenceTime().getSecondOfMinute(),
+                                                     getFixedOffsetTimeZone());
 
         return toUTCDateTime(targetDateTime);
     }
@@ -71,28 +68,26 @@ public class TimeAwareContext {
     public LocalDate toLocalDate(final DateTime dateTime, final DateTime referenceDateTime) {
         validateContext();
 
-        final DateTimeZone normalizedAccountTimezone = getNormalizedAccountTimezone(referenceDateTime);
-        return new LocalDate(dateTime, normalizedAccountTimezone);
-    }
-
-    private DateTimeZone getNormalizedAccountTimezone(final DateTime referenceDateTime) {
-        // Check if DST was in effect at the reference date time
-        final boolean shouldUseDST = !getReferenceDateTimeZone().isStandardOffset(referenceDateTime.getMillis());
-        if (shouldUseDST) {
-            return DateTimeZone.forOffsetMillis(getReferenceDateTimeZone().getOffset(referenceDateTime.getMillis()));
-        } else {
-            return DateTimeZone.forOffsetMillis(getReferenceDateTimeZone().getStandardOffset(referenceDateTime.getMillis()));
-        }
+        return new LocalDate(dateTime, getFixedOffsetTimeZone());
     }
 
     private void validateContext() {
-        if (getReferenceDateTimeZone() == null) {
-            throw new IllegalArgumentException(String.format("Context mis-configured: getReferenceDateTimeZone()=%s", getReferenceDateTimeZone()));
+        if (getFixedOffsetTimeZone() == null || getReferenceTime() == null) {
+            throw new IllegalArgumentException(String.format("Context mis-configured: fixedOffsetTimeZone=%s, referenceTime=%s", getFixedOffsetTimeZone(), getReferenceTime()));
         }
     }
 
+    protected LocalTime computeReferenceTime(@Nullable final DateTime referenceTime) {
+        return referenceTime == null ? null : toDateTime(referenceTime, getFixedOffsetTimeZone()).toLocalTime();
+    }
+
     // For convenience, to be overridden in tests
-    protected DateTimeZone getReferenceDateTimeZone() {
-        return referenceDateTimeZone;
+
+    public DateTimeZone getFixedOffsetTimeZone() {
+        return fixedOffsetTimeZone;
+    }
+
+    public LocalTime getReferenceTime() {
+        return referenceTime;
     }
 }
