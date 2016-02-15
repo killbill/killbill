@@ -171,7 +171,6 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
                                             in.getNextPriceList(),
                                             (in.getNextPlan() != null ? in.getNextPlan().getRecurringBillingPeriod() : null),
                                             in.getCreatedDate(),
-                                            referenceTime,
                                             internalTenantContext);
     }
 

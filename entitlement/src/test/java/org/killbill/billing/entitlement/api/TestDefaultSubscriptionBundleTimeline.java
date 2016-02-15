@@ -86,7 +86,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
                                                 null,
                                                 null,
                                                 null,
-                                                effectiveDate,
                                                 internalCallContext);
 
         }

@@ -54,7 +54,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         final DateTime referenceDateTime = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
         createAccount(DateTimeZone.UTC, referenceDateTime);
 
-        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(initialDate, referenceDateTime, internalCallContext);
+        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(initialDate, internalCallContext);
         final DateTime expectedDate = new DateTime(2013, 8, 7, 15, 43, 25, 0, DateTimeZone.UTC);
         Assert.assertEquals(targetDate, expectedDate);
     }
@@ -71,7 +71,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
 
         createAccount(timeZoneUtcMinus8, referenceDateTime);
 
-        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, referenceDateTime, internalCallContext);
+        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, internalCallContext);
 
         // Things to verify:
         // 1. Verify the resulting DateTime brings us back into the correct LocalDate (in the account timezone)
@@ -97,7 +97,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
 
         createAccount(timeZoneUtcPlus5, referenceDateTime);
 
-        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, referenceDateTime, internalCallContext);
+        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, internalCallContext);
 
         // Things to verify:
         // 1. Verify the resulting DateTime brings us back into the correct LocalDate (in the account timezone)
@@ -124,8 +124,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         // Check that our input date is greater than now
         assertTrue(inputDateEquals.compareTo(clock.getUTCNow()) > 0);
         // And yet since the LocalDate match the function returns true
-        final DateTime referenceDateTimeThatDoesNotMatter = new DateTime();
-        assertTrue(dateHelper.isBeforeOrEqualsToday(inputDateEquals, referenceDateTimeThatDoesNotMatter, timeZoneUtcMinus8, internalCallContext));
+        assertTrue(dateHelper.isBeforeOrEqualsToday(inputDateEquals, timeZoneUtcMinus8, internalCallContext));
     }
 
     private void createAccount(final DateTimeZone dateTimeZone, final DateTime referenceDateTime) throws AccountApiException {

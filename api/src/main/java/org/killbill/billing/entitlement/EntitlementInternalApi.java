@@ -30,7 +30,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 
 public interface EntitlementInternalApi {
 
-    AccountEntitlements getAllEntitlementsForAccountId(UUID accountId, InternalTenantContext context) throws EntitlementApiException;
+    AccountEntitlements getAllEntitlementsForAccount(InternalTenantContext context) throws EntitlementApiException;
 
     Entitlement getEntitlementForId(final UUID uuid, final InternalTenantContext tenantContext) throws EntitlementApiException;
 

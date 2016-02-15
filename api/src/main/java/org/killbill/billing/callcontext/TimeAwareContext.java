@@ -50,7 +50,7 @@ public class TimeAwareContext {
     /// DateTime <-> LocalDate transformations
 
     // Create a DateTime object using the specified reference time and timezone (usually, the one on the account)
-    public DateTime toUTCDateTime(final LocalDate localDate, final DateTime referenceDateTime) {
+    public DateTime toUTCDateTime(final LocalDate localDate) {
         validateContext();
 
         final DateTime targetDateTime = new DateTime(localDate.getYear(),
@@ -65,7 +65,7 @@ public class TimeAwareContext {
     }
 
     // Create a LocalDate object using the specified timezone (usually, the one on the account), respecting the offset at the time of the referenceDateTime
-    public LocalDate toLocalDate(final DateTime dateTime, final DateTime referenceDateTime) {
+    public LocalDate toLocalDate(final DateTime dateTime) {
         validateContext();
 
         return new LocalDate(dateTime, getFixedOffsetTimeZone());
