@@ -246,7 +246,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public LocalDate getEffectiveStartDate() {
-        return internalTenantContext.toLocalDate(getSubscriptionBase().getStartDate(), getSubscriptionBase().getStartDate());
+        return internalTenantContext.toLocalDate(getSubscriptionBase().getStartDate());
     }
 
     @Override
@@ -318,7 +318,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
 
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-                final DateTime effectiveCancelDate = dateHelper.fromLocalDateAndReferenceTime(localCancelDate, getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
+                final DateTime effectiveCancelDate = dateHelper.fromLocalDateAndReferenceTime(localCancelDate, contextWithValidAccountRecordId);
                 try {
                     if (overrideBillingEffectiveDate) {
                         getSubscriptionBase().cancelWithDate(effectiveCancelDate, callContext);
@@ -448,7 +448,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 // (we don't want an entitlement cancel date one second or so after the subscription cancel date or add-ons cancellations
                 // computations won't work).
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-                final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
+                final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), contextWithValidAccountRecordId);
 
                 try {
                     // Cancel subscription base first, to correctly compute the add-ons entitlements we need to cancel (see below)
@@ -481,7 +481,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 break;
             case END_OF_TERM:
                 if (getSubscriptionBase().getChargedThroughDate() != null) {
-                    cancellationDate = internalTenantContext.toLocalDate(getSubscriptionBase().getChargedThroughDate(), getSubscriptionBase().getStartDate());
+                    cancellationDate = internalTenantContext.toLocalDate(getSubscriptionBase().getChargedThroughDate());
                 } else {
                     cancellationDate = clock.getToday(eventsStream.getAccountTimeZone());
                 }
@@ -579,7 +579,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-                final DateTime effectiveChangeDateComputed = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), getSubscriptionBase().getStartDate(), context);
+                final DateTime effectiveChangeDateComputed = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), context);
 
                 final DateTime effectiveChangeDate;
                 try {

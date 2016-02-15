@@ -44,8 +44,6 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
-import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -58,7 +56,6 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
 
     private Account account;
     private SubscriptionBase subscription;
-    private AccountDateAndTimeZoneContext dateAndTimeZoneContext;
 
     @Override
     @BeforeMethod(groups = "fast")
@@ -68,7 +65,6 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         try {
             account = invoiceUtil.createAccount(callContext);
             subscription = invoiceUtil.createSubscription();
-            dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(new DateTime("2016-01-08T03:01:01.000Z"), internalCallContext);
         } catch (final Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -91,7 +87,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                       BillingMode.IN_ADVANCE, "Billing Event Desc", 1L,
                                                                       SubscriptionBaseTransitionType.CREATE);
 
-        assertFalse(fixedAndRecurringInvoiceItemGenerator.isSameDayAndSameSubscription(prevInvoiceItem, event, dateAndTimeZoneContext));
+        assertFalse(fixedAndRecurringInvoiceItemGenerator.isSameDayAndSameSubscription(prevInvoiceItem, event, internalCallContext));
     }
 
     @Test(groups = "fast")
@@ -114,7 +110,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                       BillingMode.IN_ADVANCE, "Billing Event Desc", 1L,
                                                                       SubscriptionBaseTransitionType.CREATE);
 
-        assertFalse(fixedAndRecurringInvoiceItemGenerator.isSameDayAndSameSubscription(prevInvoiceItem, event, dateAndTimeZoneContext));
+        assertFalse(fixedAndRecurringInvoiceItemGenerator.isSameDayAndSameSubscription(prevInvoiceItem, event, internalCallContext));
     }
 
     @Test(groups = "fast")
@@ -137,7 +133,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                       BillingMode.IN_ADVANCE, "Billing Event Desc", 1L,
                                                                       SubscriptionBaseTransitionType.CREATE);
 
-        assertFalse(fixedAndRecurringInvoiceItemGenerator.isSameDayAndSameSubscription(prevInvoiceItem, event, dateAndTimeZoneContext));
+        assertFalse(fixedAndRecurringInvoiceItemGenerator.isSameDayAndSameSubscription(prevInvoiceItem, event, internalCallContext));
     }
 
     @Test(groups = "fast")
@@ -160,7 +156,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                       BillingMode.IN_ADVANCE, "Billing Event Desc", 1L,
                                                                       SubscriptionBaseTransitionType.CREATE);
 
-        assertTrue(fixedAndRecurringInvoiceItemGenerator.isSameDayAndSameSubscription(prevInvoiceItem, event, dateAndTimeZoneContext));
+        assertTrue(fixedAndRecurringInvoiceItemGenerator.isSameDayAndSameSubscription(prevInvoiceItem, event, internalCallContext));
     }
 
     @Test(groups = "fast")
@@ -169,7 +165,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final LocalDate targetDate = new LocalDate("2016-01-08");
 
         final UUID invoiceId = UUID.randomUUID();
-        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
+        final BillingEventSet events = new MockBillingEventSet();
 
         final BigDecimal fixedPriceAmount = BigDecimal.TEN;
         final MockInternationalPrice fixedPrice = new MockInternationalPrice(new DefaultPrice(fixedPriceAmount, Currency.USD));
@@ -192,7 +188,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         events.add(event2);
 
         final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
-        fixedAndRecurringInvoiceItemGenerator.processFixedBillingEvents(invoiceId, account.getId(), events, targetDate, Currency.USD, proposedItems);
+        fixedAndRecurringInvoiceItemGenerator.processFixedBillingEvents(invoiceId, account.getId(), events, targetDate, Currency.USD, proposedItems, internalCallContext);
         assertTrue(proposedItems.isEmpty());
     }
 
@@ -202,7 +198,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final LocalDate targetDate = new LocalDate("2016-01-08");
 
         final UUID invoiceId = UUID.randomUUID();
-        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
+        final BillingEventSet events = new MockBillingEventSet();
 
         final BigDecimal fixedPriceAmount = BigDecimal.TEN;
         final MockInternationalPrice fixedPrice = new MockInternationalPrice(new DefaultPrice(fixedPriceAmount, Currency.USD));
@@ -225,7 +221,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         events.add(event2);
 
         final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
-        fixedAndRecurringInvoiceItemGenerator.processFixedBillingEvents(invoiceId, account.getId(), events, targetDate, Currency.USD, proposedItems);
+        fixedAndRecurringInvoiceItemGenerator.processFixedBillingEvents(invoiceId, account.getId(), events, targetDate, Currency.USD, proposedItems, internalCallContext);
         assertEquals(proposedItems.size(), 1);
         assertEquals(proposedItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
         assertEquals(proposedItems.get(0).getAmount(), fixedPriceAmount);
@@ -238,7 +234,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final LocalDate targetDate = new LocalDate("2016-01-08");
 
         final UUID invoiceId = UUID.randomUUID();
-        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
+        final BillingEventSet events = new MockBillingEventSet();
 
         final BigDecimal fixedPriceAmount1 = BigDecimal.TEN;
         final MockInternationalPrice fixedPrice1 = new MockInternationalPrice(new DefaultPrice(fixedPriceAmount1, Currency.USD));
@@ -280,7 +276,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         events.add(event3);
 
         final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
-        fixedAndRecurringInvoiceItemGenerator.processFixedBillingEvents(invoiceId, account.getId(), events, targetDate, Currency.USD, proposedItems);
+        fixedAndRecurringInvoiceItemGenerator.processFixedBillingEvents(invoiceId, account.getId(), events, targetDate, Currency.USD, proposedItems, internalCallContext);
         assertEquals(proposedItems.size(), 1);
         assertEquals(proposedItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
         assertEquals(proposedItems.get(0).getAmount(), fixedPriceAmount3);

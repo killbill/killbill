@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,7 @@ import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.account.AccountDateTimeUtils;
 
 import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
 
@@ -341,6 +342,16 @@ public class DefaultAccount extends EntityBase implements Account {
 
     public ImmutableAccountData toImmutableAccountData() {
         return new DefaultImmutableAccountData(this);
+    }
+
+    @Override
+    public DateTimeZone getFixedOffsetTimeZone() {
+        return AccountDateTimeUtils.getFixedOffsetTimeZone(this);
+    }
+
+    @Override
+    public DateTime getReferenceTime() {
+        return AccountDateTimeUtils.getReferenceDateTime(this);
     }
 
     @Override

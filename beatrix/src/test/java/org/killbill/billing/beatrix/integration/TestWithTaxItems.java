@@ -106,14 +106,13 @@ public class TestWithTaxItems extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testBasicTaxItems() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
 
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
-
-        // We take april as it has 30 days (easier to play with BCD)
-        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-        clock.setDay(new LocalDate(2012, 4, 1));
 
         //
         // Create original subscription (Trial PHASE) -> $0 invoice.

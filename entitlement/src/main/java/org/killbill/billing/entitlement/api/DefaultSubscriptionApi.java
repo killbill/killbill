@@ -29,10 +29,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import org.joda.time.DateTimeZone;
-import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.OrderingType;
@@ -133,7 +130,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         try {
             final UUID accountId = internalCallContextFactory.getAccountId(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
             final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
-            accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccountId(accountId, internalTenantContextWithValidAccountRecordId);
+            accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccount(internalTenantContextWithValidAccountRecordId);
         } catch (final EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         }
@@ -432,15 +429,13 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         // Retrieve entitlements
         final AccountEntitlements accountEntitlements;
         try {
-            accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccountId(accountId, internalTenantContextWithValidAccountRecordId);
+            accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccount(internalTenantContextWithValidAccountRecordId);
         } catch (final EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         }
 
         // Build subscriptions
         final Map<UUID, List<Subscription>> subscriptionsPerBundle = buildSubscriptionsFromEntitlements(accountEntitlements);
-
-        final DateTimeZone accountTimeZone = accountEntitlements.getAccount().getTimeZone();
 
         // Build subscription bundles
         final List<SubscriptionBundle> bundles = new LinkedList<SubscriptionBundle>();

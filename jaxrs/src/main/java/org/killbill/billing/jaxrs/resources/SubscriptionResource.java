@@ -92,7 +92,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.wordnik.swagger.annotations.Api;
@@ -187,7 +186,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                                        ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), phaseType);
 
-                final LocalDate inputLocalDate = requestedDate == null ? null : toLocalDate(account, requestedDate, callContext);
+                final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
                                                                  ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
@@ -314,7 +313,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     entitlementSpecifierList.add(specifier);
                 }
 
-                final LocalDate inputLocalDate = toLocalDate(account, requestedDate, callContext);
+                final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
                 return entitlementApi.createBaseEntitlementWithAddOns(account.getId(), baseEntitlement.getExternalKey(), entitlementSpecifierList,
                                                                       inputLocalDate, pluginProperties, callContext);
             }
@@ -392,7 +391,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final UUID uuid = UUID.fromString(subscriptionId);
 
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, callContext);
-                final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
+                final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
                 final Entitlement newEntitlement;
 
                 final Account account = accountUserApi.getAccountById(current.getAccountId(), callContext);
@@ -467,7 +466,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final UUID uuid = UUID.fromString(subscriptionId);
 
                 final Entitlement current = entitlementApi.getEntitlementForId(uuid, ctx);
-                final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), requestedDate, callContext);
+                final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
                 final Entitlement newEntitlement;
                 if (billingPolicyString == null && entitlementPolicyString == null) {
                     newEntitlement = current.cancelEntitlementWithDate(inputLocalDate, useRequestedDateForBilling, pluginProperties, ctx);

@@ -19,13 +19,17 @@
 package org.killbill.billing;
 
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.ClockMock;
 import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
@@ -42,6 +46,9 @@ public class GuicyKillbillTestSuite {
     protected static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
 
     private boolean hasFailed = false;
+
+    @Inject
+    protected InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     protected MutableInternalCallContext internalCallContext;
@@ -93,6 +100,20 @@ public class GuicyKillbillTestSuite {
 
     public static ClockMock getClock() {
         return theStaticClock;
+    }
+
+    public static void refreshCallContext(final UUID accountId,
+                                          final InternalCallContextFactory internalCallContextFactory,
+                                          final TenantContext callContext,
+                                          final MutableInternalCallContext internalCallContext) {
+        final InternalTenantContext tmp = internalCallContextFactory.createInternalTenantContext(accountId, callContext);
+        internalCallContext.setAccountRecordId(tmp.getAccountRecordId());
+        internalCallContext.setFixedOffsetTimeZone(tmp.getFixedOffsetTimeZone());
+        internalCallContext.setReferenceTime(tmp.getReferenceTime());
+    }
+
+    protected void refreshCallContext(final UUID accountId) {
+        refreshCallContext(accountId, internalCallContextFactory, callContext, internalCallContext);
     }
 
     @BeforeMethod(alwaysRun = true)

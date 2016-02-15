@@ -1,5 +1,4 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
  * Copyright 2014-2016 Groupon, Inc
  * Copyright 2014-2016 The Billing Project, LLC
  *
@@ -16,27 +15,29 @@
  * under the License.
  */
 
-package org.killbill.billing.usage.glue;
+package org.killbill.billing.server.log;
 
-import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
-import org.killbill.billing.account.glue.DefaultAccountModule;
+import org.killbill.billing.GuicyKillbillTestNoDBModule;
+import org.killbill.billing.mock.glue.MockAccountModule;
+import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.glue.CacheModule;
-import org.killbill.billing.util.glue.NonEntityDaoModule;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.glue.KillBillModule;
 
-public class TestUsageModuleWithEmbeddedDB extends TestUsageModule {
+import com.google.inject.util.Providers;
 
-    public TestUsageModuleWithEmbeddedDB(final KillbillConfigSource configSource) {
+public class TestServerModuleNoDB extends KillBillModule {
+
+    public TestServerModuleNoDB(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
     @Override
     public void configure() {
-        super.configure();
+        install(new GuicyKillbillTestNoDBModule(configSource));
 
-        install(new GuicyKillbillTestWithEmbeddedDBModule(configSource));
-        install(new CacheModule(configSource));
-        install(new NonEntityDaoModule(configSource));
-        install(new DefaultAccountModule(configSource));
+        install(new MockNonEntityDaoModule(configSource));
+        install(new MockAccountModule(configSource));
+        bind(CacheControllerDispatcher.class).toProvider(Providers.<CacheControllerDispatcher>of(null));
     }
 }

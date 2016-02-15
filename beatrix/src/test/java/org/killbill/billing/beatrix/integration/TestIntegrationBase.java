@@ -362,9 +362,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
 
-        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID));
-        internalCallContext.setAccountRecordId(accountRecordId);
-        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
+        refreshCallContext(account.getId());
 
         final PaymentMethodPlugin info = createPaymentMethodPlugin();
 
@@ -586,7 +584,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
-                    fail();
+                    fail(e.toString());
                     return null;
                 }
             }

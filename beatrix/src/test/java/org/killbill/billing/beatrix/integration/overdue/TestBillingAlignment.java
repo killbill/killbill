@@ -39,12 +39,12 @@ public class TestBillingAlignment extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testTransitionAccountBAToSubscriptionBA() throws Exception {
-        // Set the BCD to the 25th
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
-
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
+
+        // Set the BCD to the 25th
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE

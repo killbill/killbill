@@ -64,10 +64,10 @@ public class TestSubscription extends TestIntegrationBase {
     public void testForcePolicy() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         final LocalDate today = new LocalDate(2012, 4, 1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -142,10 +142,10 @@ public class TestSubscription extends TestIntegrationBase {
     public void testChangeOfPlan() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         final LocalDate today = new LocalDate(2012, 4, 1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -245,10 +245,7 @@ public class TestSubscription extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(initialDate, null, InvoiceItemType.FIXED, new BigDecimal("0"))); // Shotgun
 
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
-
     }
-
-
 
     @Test(groups = "slow")
     public void testCancelFutureSubscriptionWithPolicy() throws Exception {

@@ -138,7 +138,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
@@ -146,7 +146,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Add blocking at bundle level.
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameBlock, service, clock.getUTCToday(), blockBilling, blockEntitlement, blockChange, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameBlock, service, null, blockBilling, blockEntitlement, blockChange, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
 
@@ -167,7 +167,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Remove blocking at bundle level.
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameUnBlock, service, clock.getUTCToday(), false, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameUnBlock, service, null, false, false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);

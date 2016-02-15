@@ -136,9 +136,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     protected Account createAccount(final AccountData accountData) throws AccountApiException {
         final Account account = accountUserApi.createAccount(accountData, callContext);
 
-        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID));
-        internalCallContext.setAccountRecordId(accountRecordId);
-        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
+        refreshCallContext(account.getId());
 
         return account;
     }

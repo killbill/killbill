@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,15 +22,13 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 public interface NextBillingDatePoster {
 
     void insertNextBillingNotificationFromTransaction(EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, UUID accountId,
-                                                      UUID subscriptionId, DateTime futureNotificationTime, final AccountDateAndTimeZoneContext accountDateAndTimeZoneContext, InternalCallContext internalCallContext);
+                                                      UUID subscriptionId, DateTime futureNotificationTime, InternalCallContext internalCallContext);
 
     void insertNextBillingDryRunNotificationFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
-                                                            final UUID subscriptionId, final DateTime futureNotificationTime, final DateTime targetDate, final AccountDateAndTimeZoneContext accountDateAndTimeZoneContext, final InternalCallContext internalCallContext);
-
+                                                            final UUID subscriptionId, final DateTime futureNotificationTime, final DateTime targetDate, final InternalCallContext internalCallContext);
 }

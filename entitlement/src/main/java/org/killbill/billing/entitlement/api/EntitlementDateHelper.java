@@ -23,7 +23,6 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.clock.Clock;
 
@@ -35,8 +34,8 @@ public class EntitlementDateHelper {
         this.clock = clock;
     }
 
-    public DateTime fromLocalDateAndReferenceTime(@Nullable final LocalDate requestedDate, final DateTime referenceDateTime, final InternalTenantContext callContext) throws EntitlementApiException {
-        return requestedDate == null ? clock.getUTCNow() : callContext.toUTCDateTime(requestedDate, referenceDateTime);
+    public DateTime fromLocalDateAndReferenceTime(@Nullable final LocalDate requestedDate, final InternalTenantContext callContext) throws EntitlementApiException {
+        return requestedDate == null ? clock.getUTCNow() : callContext.toUTCDateTime(requestedDate);
     }
 
     /**
@@ -48,9 +47,9 @@ public class EntitlementDateHelper {
      * @return true if the inputDate, once converted into a LocalDate using account timezone is less or equals than today
      */
     // TODO Move to ClockUtils
-    public boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTime referenceDatetime, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+    public boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
         final LocalDate localDateNowInAccountTimezone = clock.getToday(accountTimeZone);
-        final LocalDate targetDateInAccountTimezone = internalTenantContext.toLocalDate(inputDate, referenceDatetime);
+        final LocalDate targetDateInAccountTimezone = internalTenantContext.toLocalDate(inputDate);
         return targetDateInAccountTimezone.compareTo(localDateNowInAccountTimezone) <= 0;
     }
 }
