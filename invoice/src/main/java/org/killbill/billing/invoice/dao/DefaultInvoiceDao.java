@@ -89,7 +89,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                         .onResultOf(new Function<InvoiceModelDao, Comparable>() {
                                                                                             @Override
                                                                                             public Comparable apply(final InvoiceModelDao invoice) {
-                                                                                                return invoice.getTargetDate() == null ? invoice.getCreatedDate() : invoice.getTargetDate();
+                                                                                                return invoice.getTargetDate() == null ? invoice.getCreatedDate().toLocalDate() : invoice.getTargetDate();
                                                                                             }
                                                                                         });
 
