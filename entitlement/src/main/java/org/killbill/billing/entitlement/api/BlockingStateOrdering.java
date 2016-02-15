@@ -258,7 +258,6 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                                             nextPriceList,
                                             nextBillingPeriod,
                                             in.getCreatedDate(),
-                                            referenceTime,
                                             internalTenantContext);
     }
 

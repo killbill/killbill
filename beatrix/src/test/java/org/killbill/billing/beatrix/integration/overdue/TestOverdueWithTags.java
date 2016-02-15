@@ -69,6 +69,8 @@ public class TestOverdueWithTags extends TestOverdueBase {
     public void testOverdueStateWith_WRITTEN_OFF() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
@@ -106,8 +108,9 @@ public class TestOverdueWithTags extends TestOverdueBase {
 
     @Test(groups = "slow")
     public void testNonOverdueAccountWith_OVERDUE_ENFORCEMENT_OFF() throws Exception {
-
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        setupAccount();
 
         // Set the OVERDUE_ENFORCEMENT_OFF tag (we set the clear state, hence the blocking event)
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.BLOCK);
@@ -143,8 +146,9 @@ public class TestOverdueWithTags extends TestOverdueBase {
 
     @Test(groups = "slow")
     public void testOverdueAccountWithOverdueEnforcementOffTag() throws Exception {
-
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        setupAccount();
 
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);

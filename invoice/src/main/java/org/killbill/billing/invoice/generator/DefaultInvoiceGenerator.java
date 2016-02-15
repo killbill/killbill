@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -74,7 +74,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         validateTargetDate(targetDate);
         final LocalDate adjustedTargetDate = adjustTargetDate(existingInvoices, targetDate);
 
-        final LocalDate invoiceDate = events.getAccountDateAndTimeZoneContext().computeLocalDateFromFixedAccountOffset(clock.getUTCNow());
+        final LocalDate invoiceDate = context.toLocalDate(clock.getUTCNow());
         final Invoice invoice = new DefaultInvoice(account.getId(), invoiceDate, adjustedTargetDate, targetCurrency);
         final UUID invoiceId = invoice.getId();
         final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<UUID, SubscriptionFutureNotificationDates>();

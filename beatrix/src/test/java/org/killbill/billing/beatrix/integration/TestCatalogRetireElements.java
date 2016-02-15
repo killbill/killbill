@@ -80,9 +80,8 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Catalog v2 should start now.
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find a plan matching: (product: 'Pistol', billing period: 'MONTHLY'"));
@@ -137,9 +136,8 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Catalog v3 should start now.
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find any product named 'Pistol'"));
@@ -173,10 +171,9 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final String productName = "Pistol";
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, "SpecialDiscount", null);
-        LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey", null, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey", null, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         assertNotNull(bpEntitlement);
@@ -194,9 +191,8 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         // PriceList "SpecialDiscount" at this point.
 
-        effectiveDate = new LocalDate(clock.getUTCNow());
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find any product named 'Pistol'"));

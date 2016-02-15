@@ -92,7 +92,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(context);
 
         final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
-        final DefaultBillingEventSet result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode(), context);
+        final DefaultBillingEventSet result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode());
 
 
 
@@ -102,7 +102,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
             final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
             if (found_AUTO_INVOICING_OFF) {
-                return new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode(), context); // billing is off, we are done
+                return new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode()); // billing is off, we are done
             }
 
             addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);

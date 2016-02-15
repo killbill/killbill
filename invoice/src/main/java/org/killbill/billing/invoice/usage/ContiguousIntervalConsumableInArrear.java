@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
@@ -41,7 +43,6 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +75,7 @@ public class ContiguousIntervalConsumableInArrear {
     private final UUID invoiceId;
     private final AtomicBoolean isBuilt;
     private final LocalDate rawUsageStartDate;
-    private final AccountDateAndTimeZoneContext dateAndTimeZoneContext;
+    private final InternalTenantContext internalTenantContext;
 
     public ContiguousIntervalConsumableInArrear(final Usage usage,
                                                 final UUID accountId,
@@ -82,7 +83,7 @@ public class ContiguousIntervalConsumableInArrear {
                                                 final List<RawUsage> rawSubscriptionUsage,
                                                 final LocalDate targetDate,
                                                 final LocalDate rawUsageStartDate,
-                                                final AccountDateAndTimeZoneContext dateAndTimeZoneContext) {
+                                                final InternalTenantContext internalTenantContext) {
         this.usage = usage;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -90,7 +91,7 @@ public class ContiguousIntervalConsumableInArrear {
         this.rawSubscriptionUsage = rawSubscriptionUsage;
         this.targetDate = targetDate;
         this.rawUsageStartDate = rawUsageStartDate;
-        this.dateAndTimeZoneContext = dateAndTimeZoneContext;
+        this.internalTenantContext = internalTenantContext;
         this.billingEvents = Lists.newLinkedList();
         this.transitionTimes = Lists.newLinkedList();
         this.isBuilt = new AtomicBoolean(false);
@@ -112,11 +113,11 @@ public class ContiguousIntervalConsumableInArrear {
         Preconditions.checkState((!closedInterval && billingEvents.size() >= 1) ||
                                  (closedInterval && billingEvents.size() >= 2));
 
-        final LocalDate startDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(billingEvents.get(0).getEffectiveDate());
+        final LocalDate startDate = internalTenantContext.toLocalDate(billingEvents.get(0).getEffectiveDate());
         if (targetDate.isBefore(startDate)) {
             return this;
         }
-        final LocalDate endDate = closedInterval ? dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(billingEvents.get(billingEvents.size() - 1).getEffectiveDate()) : targetDate;
+        final LocalDate endDate = closedInterval ? internalTenantContext.toLocalDate(billingEvents.get(billingEvents.size() - 1).getEffectiveDate()) : targetDate;
 
         final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, getBCD(), usage.getBillingPeriod(), usage.getBillingMode());
 
@@ -230,15 +231,15 @@ public class ContiguousIntervalConsumableInArrear {
         while (eventIt.hasNext()) {
             final BillingEvent thisEvent = nextEvent;
             nextEvent = eventIt.next();
-            final LocalDate startDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(thisEvent.getEffectiveDate());
-            final LocalDate endDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(nextEvent.getEffectiveDate());
+            final LocalDate startDate = internalTenantContext.toLocalDate(thisEvent.getEffectiveDate());
+            final LocalDate endDate = internalTenantContext.toLocalDate(nextEvent.getEffectiveDate());
 
             final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, thisEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR);
             final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
             result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;
         }
 
-        final LocalDate startDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(nextEvent.getEffectiveDate());
+        final LocalDate startDate = internalTenantContext.toLocalDate(nextEvent.getEffectiveDate());
         final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, null, targetDate, nextEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR);
         final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
         result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;

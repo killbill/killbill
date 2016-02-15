@@ -61,10 +61,10 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     public void testSimplePartialRepairWithItemAdjustment() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         final LocalDate today = new LocalDate(2012, 4, 1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(today);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
@@ -120,8 +120,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10")),
-                // TODO PIERRE The cba start_date/end_date are created using the callcontext
-                new ExpectedInvoiceItemCheck(callContext.getCreatedDate().toLocalDate(), callContext.getCreatedDate().toLocalDate(), InvoiceItemType.CBA_ADJ, new BigDecimal("10")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.CBA_ADJ, new BigDecimal("10")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         //
@@ -138,8 +137,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10")),
-                // TODO PIERRE The cba start_date/end_date are created using the callcontext
-                new ExpectedInvoiceItemCheck(callContext.getCreatedDate().toLocalDate(), callContext.getCreatedDate().toLocalDate(), InvoiceItemType.CBA_ADJ, new BigDecimal("10")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 5, 2), InvoiceItemType.CBA_ADJ, new BigDecimal("10")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -157,10 +155,10 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     public void testMultiplePartialRepairs() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         final LocalDate today = new LocalDate(2012, 4, 1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(today);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
@@ -373,13 +371,12 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testPartialRepairWithCompleteRefund() throws Exception {
-
         // We take april as it has 30 days (easier to play with BCD)
         final LocalDate today = new LocalDate(2012, 4, 1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -480,12 +477,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testRepairWithFullItemAdjustment() throws Exception {
-
         final LocalDate today = new LocalDate(2013, 7, 19);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -551,12 +547,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     //
     @Test(groups = "slow")
     public void testRepairWithPartialItemAdjustment() throws Exception {
-
         final LocalDate today = new LocalDate(2013, 7, 19);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;

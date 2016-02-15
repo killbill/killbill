@@ -19,7 +19,6 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,14 +27,10 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
-import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -48,31 +43,11 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     private final boolean accountAutoInvoiceOff;
     private final List<UUID> subscriptionIdsWithAutoInvoiceOff;
     private final BillingMode recurringBillingMode;
-    private final InternalTenantContext internalTenantContext;
 
-    private DefaultAccountDateAndTimeZoneContext dateTimeZoneContext;
-
-    public DefaultBillingEventSet(final boolean accountAutoInvoiceOff, final BillingMode recurringBillingMode, final InternalTenantContext internalTenantContext) {
+    public DefaultBillingEventSet(final boolean accountAutoInvoiceOff, final BillingMode recurringBillingMode) {
         this.accountAutoInvoiceOff = accountAutoInvoiceOff;
         this.recurringBillingMode = recurringBillingMode;
-        this.internalTenantContext = internalTenantContext;
         this.subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
-    }
-
-    @Override
-    public boolean add(final BillingEvent e) {
-        if (dateTimeZoneContext == null) {
-            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), internalTenantContext);
-        }
-        return super.add(e);
-    }
-
-    @Override
-    public boolean addAll(final Collection<? extends BillingEvent> all) {
-        if (dateTimeZoneContext == null) {
-            this.dateTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), internalTenantContext);
-        }
-        return super.addAll(all);
     }
 
     @Override
@@ -88,14 +63,6 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     @Override
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
-    }
-
-    @Override
-    public AccountDateAndTimeZoneContext getAccountDateAndTimeZoneContext() {
-        if (dateTimeZoneContext == null) {
-            throw new IllegalArgumentException("AccountDateAndTimeZoneContext is not initialized because there is no billing event");
-        }
-        return dateTimeZoneContext;
     }
 
     @Override

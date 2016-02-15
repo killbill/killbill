@@ -38,9 +38,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -55,15 +53,14 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
     //
     @Test(groups = "slow")
     public void testDryRunWithNoTargetDate() throws Exception {
-
         final int billingDay = 14;
         final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
 
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
-        // set clock to the initial start date
-        clock.setTime(initialCreationDate);
         int invoiceItemCount = 1;
 
         //
@@ -111,7 +108,6 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
     }
 
-
     //
     // More sophisticated test with two non aligned subscriptions that verifies the behavior of using invoice dryRun api with no date
     // - The first subscription is an annual (SUBSCRIPTION aligned) whose billingDate is the first (we start on Jan 2nd to take into account the 30 days trial)
@@ -121,13 +117,12 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
     //
     @Test(groups = "slow")
     public void testDryRunWithNoTargetDateAndMultipleNonAlignedSubscriptions() throws Exception {
-
-        // billing date for the monthly
-        final int billingDay = 14;
-
         // Set in such a way that annual billing date will be the 1st
         final DateTime initialCreationDate = new DateTime(2014, 1, 2, 0, 0, 0, 0, testTimeZone);
         clock.setTime(initialCreationDate);
+
+        // billing date for the monthly
+        final int billingDay = 14;
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
@@ -211,21 +206,18 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
     }
 
-
     @Test(groups = "slow")
     public void testApplyCreditOnExistingBalance() throws Exception {
-
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
 
         final int billingDay = 14;
-        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
 
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-
-        // set clock to the initial start date
-        clock.setTime(initialCreationDate);
 
         createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
 
@@ -271,5 +263,4 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final Payment payment = payments.get(0);
         assertTrue(payment.getPurchasedAmount().compareTo(new BigDecimal("199.90")) == 0);
     }
-
 }

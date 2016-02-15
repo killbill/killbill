@@ -16,13 +16,13 @@
 
 package org.killbill.billing.mock.api;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.joda.time.DateTimeZone;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
@@ -34,10 +34,11 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
+import org.testng.Assert;
 
 public class MockAccountUserApi implements AccountUserApi {
 
-    private final CopyOnWriteArrayList<Account> accounts = new CopyOnWriteArrayList<Account>();
+    private final ConcurrentLinkedQueue<Account> accounts = new ConcurrentLinkedQueue<Account>();
 
     public Account createAccountFromParams(final UUID id,
                                            final String externalKey,
@@ -153,7 +154,19 @@ public class MockAccountUserApi implements AccountUserApi {
 
     @Override
     public void updateAccount(final Account account, final CallContext context) {
-        throw new UnsupportedOperationException();
+        final Iterator<Account> iterator = accounts.iterator();
+        while (iterator.hasNext()) {
+            final Account account1 = iterator.next();
+            if (account.getId().equals(account1.getId())) {
+                iterator.remove();
+                break;
+            }
+        }
+        try {
+            createAccount(account, context);
+        } catch (final AccountApiException e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Override

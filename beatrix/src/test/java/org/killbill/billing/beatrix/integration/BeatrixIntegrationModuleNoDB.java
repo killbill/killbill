@@ -21,7 +21,10 @@ import org.killbill.billing.GuicyKillbillTestNoDBModule;
 import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.glue.KillBillModule;
+
+import com.google.inject.util.Providers;
 
 public class BeatrixIntegrationModuleNoDB extends KillBillModule {
 
@@ -32,7 +35,9 @@ public class BeatrixIntegrationModuleNoDB extends KillBillModule {
     @Override
     protected void configure() {
         install(new GuicyKillbillTestNoDBModule(configSource));
+
         install(new MockNonEntityDaoModule(configSource));
         install(new MockAccountModule(configSource));
+        bind(CacheControllerDispatcher.class).toProvider(Providers.<CacheControllerDispatcher>of(null));
     }
 }

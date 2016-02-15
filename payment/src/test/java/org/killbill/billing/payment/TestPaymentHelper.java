@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,29 +20,31 @@ package org.killbill.billing.payment;
 
 import java.util.UUID;
 
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.ObjectType;
+import org.killbill.billing.GuicyKillbillTestSuite;
+import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -56,38 +58,38 @@ public class TestPaymentHelper {
 
     protected final AccountUserApi accountApi;
     protected final AccountInternalApi accountInternalApi;
+    protected final ImmutableAccountInternalApi immutableAccountInternalApi;
     protected final InvoiceInternalApi invoiceApi;
-    protected PaymentApi paymentApi;
     private final PersistentBus eventBus;
     private final Clock clock;
     private final NonEntityDao nonEntityDao;
-    private final MockNonEntityDao mockNonEntityDao;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
     private final MutableInternalCallContext internalCallContext;
+    private final InternalCallContextFactory internalCallContextFactory;
     private final CallContext context;
+    protected PaymentApi paymentApi;
 
     @Inject
     public TestPaymentHelper(final AccountUserApi accountApi,
                              final AccountInternalApi accountInternalApi,
+                             final ImmutableAccountInternalApi immutableAccountInternalApi,
                              final InvoiceInternalApi invoiceApi,
                              final PaymentApi paymentApi,
                              final PersistentBus eventBus,
                              final Clock clock,
                              final NonEntityDao nonEntityDao,
-                             final MockNonEntityDao mockNonEntityDao,
-                             final CacheControllerDispatcher cacheControllerDispatcher,
                              final MutableInternalCallContext internalCallContext,
+                             final InternalCallContextFactory internalCallContextFactory,
                              final CallContext context) {
         this.accountApi = accountApi;
         this.eventBus = eventBus;
         this.accountInternalApi = accountInternalApi;
+        this.immutableAccountInternalApi = immutableAccountInternalApi;
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
         this.nonEntityDao = nonEntityDao;
-        this.mockNonEntityDao = mockNonEntityDao;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.internalCallContext = internalCallContext;
+        this.internalCallContextFactory = internalCallContextFactory;
         this.context = context;
     }
 
@@ -141,22 +143,17 @@ public class TestPaymentHelper {
         Mockito.when(accountData.getBillCycleDayLocal()).thenReturn(1);
         Mockito.when(accountData.isMigrated()).thenReturn(false);
         Mockito.when(accountData.isNotifiedForInvoices()).thenReturn(false);
+        Mockito.when(accountData.getTimeZone()).thenReturn(DateTimeZone.UTC);
+        Mockito.when(accountData.getCreatedDate()).thenReturn(clock.getUTCNow());
 
         Account account;
         if (isFastTest()) {
-            account = accountData;
-            Mockito.when(accountInternalApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
-            Mockito.when(accountInternalApi.getAccountByKey(Mockito.anyString(), Mockito.<InternalTenantContext>any())).thenReturn(account);
-            mockNonEntityDao.addTenantRecordIdMapping(account.getId(), internalCallContext);
-            mockNonEntityDao.addAccountRecordIdMapping(account.getId(), internalCallContext);
+            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountApi, accountInternalApi, immutableAccountInternalApi, nonEntityDao, internalCallContextFactory, context, internalCallContext);
         } else {
             account = accountApi.createAccount(accountData, context);
-
-            final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
-            internalCallContext.setAccountRecordId(accountRecordId);
         }
 
-        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
+        GuicyKillbillTestSuite.refreshCallContext(account.getId(), internalCallContextFactory, context, internalCallContext);
 
         if (addPaymentMethod) {
             final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
@@ -167,10 +164,15 @@ public class TestPaymentHelper {
     }
 
     public Account addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(), MockPaymentProviderPlugin.PLUGIN_NAME, true, paymentMethodInfo, ImmutableList.<PluginProperty>of(), context);
+        return addTestPaymentMethod(account, paymentMethodInfo, ImmutableList.<PluginProperty>of());
+    }
+
+    public Account addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo, final Iterable<PluginProperty> pluginProperties) throws Exception {
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(), MockPaymentProviderPlugin.PLUGIN_NAME, true, paymentMethodInfo, pluginProperties, context);
         if (isFastTest()) {
-            Mockito.when(account.getPaymentMethodId()).thenReturn(paymentMethodId);
-            return account;
+            final Account account1 = new MockAccountBuilder(account).paymentMethodId(paymentMethodId).build();
+            accountApi.updateAccount(account, context);
+            return account1;
         } else {
             // To reflect the payment method id change
             return accountApi.getAccountById(account.getId(), context);

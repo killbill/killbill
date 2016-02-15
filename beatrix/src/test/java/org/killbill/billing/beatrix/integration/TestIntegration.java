@@ -63,13 +63,13 @@ public class TestIntegration extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testCancelBPWithAOTheSameDay() throws Exception {
-        final AccountData accountData = getAccountData(1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
-        accountChecker.checkAccount(account.getId(), accountData, callContext);
-
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
 
@@ -131,11 +131,11 @@ public class TestIntegration extends TestIntegrationBase {
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         final int billingDay = 31;
         final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
-        // set clock to the initial start date
-        clock.setTime(initialCreationDate);
         int invoiceItemCount = 1;
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
@@ -243,11 +243,11 @@ public class TestIntegration extends TestIntegrationBase {
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
         final int billingDay = 2;
         final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
-        // set clock to the initial start date
-        clock.setTime(initialCreationDate);
         int invoiceItemCount = 1;
 
         //
@@ -334,11 +334,11 @@ public class TestIntegration extends TestIntegrationBase {
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
         final int billingDay = 3;
         final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
-        // set clock to the initial start date
-        clock.setTime(initialCreationDate);
         int invoiceItemCount = 1;
 
         //
@@ -545,13 +545,12 @@ public class TestIntegration extends TestIntegrationBase {
     public void testWithPauseResume() throws Exception {
         final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         final int billingDay = 2;
+        // set clock to the initial start date
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
         final UUID accountId = account.getId();
         assertNotNull(account);
-
-        // set clock to the initial start date
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;

@@ -63,13 +63,16 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
         overdueConfigCache.loadDefaultOverdueConfig(config);
 
+        productName = "Shotgun";
+        term = BillingPeriod.MONTHLY;
+        paymentPlugin.clear();
+    }
+
+    protected void setupAccount() throws Exception {
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
         paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, paymentMethodPlugin, PLUGIN_PROPERTIES, callContext);
-        productName = "Shotgun";
-        term = BillingPeriod.MONTHLY;
-        paymentPlugin.clear();
     }
 
     protected void checkODState(final String expected) {

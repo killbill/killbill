@@ -216,9 +216,7 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     protected Account createAccount(final AccountData accountData) throws AccountApiException {
         final Account account = accountApi.createAccount(accountData, callContext);
 
-        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID));
-        internalCallContext.setAccountRecordId(accountRecordId);
-        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
+        refreshCallContext(account.getId());
 
         return account;
     }
