@@ -512,7 +512,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     case START_BILLING:
 
                         final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundleId, context);
-                        final DateTime startEffectiveDate = dryRunArguments.getEffectiveDate() != null ? dryRunArguments.getEffectiveDate() : utcNow;
+                        final DateTime startEffectiveDate = dryRunArguments.getEffectiveDate() != null ? context.toUTCDateTime(dryRunArguments.getEffectiveDate()) : utcNow;
                         final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, context);
                         final UUID subscriptionId = UUIDs.randomUUID();
                         dryRunEvents = apiService.getEventsOnCreation(bundleId, subscriptionId, startEffectiveDate, bundleStartDate, 1L, plan, inputSpec.getPhaseType(), realPriceList,
@@ -530,7 +530,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                     case CHANGE:
                         final DefaultSubscriptionBase subscriptionForChange = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), context);
-                        DateTime changeEffectiveDate = dryRunArguments.getEffectiveDate();
+                        DateTime changeEffectiveDate = dryRunArguments.getEffectiveDate() != null ? context.toUTCDateTime(dryRunArguments.getEffectiveDate()) : null;
                         if (changeEffectiveDate == null) {
                             BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
                             if (policy == null) {
@@ -547,7 +547,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                     case STOP_BILLING:
                         final DefaultSubscriptionBase subscriptionForCancellation = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), context);
-                        DateTime cancelEffectiveDate = dryRunArguments.getEffectiveDate();
+                        DateTime cancelEffectiveDate = dryRunArguments.getEffectiveDate() != null ? context.toUTCDateTime(dryRunArguments.getEffectiveDate()) : null;
                         if (dryRunArguments.getEffectiveDate() == null) {
                             BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
                             if (policy == null) {

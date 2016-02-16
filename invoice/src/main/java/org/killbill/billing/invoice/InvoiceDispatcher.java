@@ -669,7 +669,7 @@ public class InvoiceDispatcher {
         }
 
         @Override
-        public DateTime getEffectiveDate() {
+        public LocalDate getEffectiveDate() {
             return null;
         }
 

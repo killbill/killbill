@@ -462,7 +462,7 @@ public class TestInvoiceHelper {
         }
 
         @Override
-        public DateTime getEffectiveDate() {
+        public LocalDate getEffectiveDate() {
             return null;
         }
 

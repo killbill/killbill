@@ -746,7 +746,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         private final SubscriptionEventType action;
         private final UUID subscriptionId;
         private final UUID bundleId;
-        private final DateTime effectiveDate;
+        private final LocalDate effectiveDate;
         private final BillingActionPolicy billingPolicy;
 
         public TestDryRunArguments(final DryRunType dryRunType) {
@@ -768,7 +768,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                                    final SubscriptionEventType action,
                                    final UUID subscriptionId,
                                    final UUID bundleId,
-                                   final DateTime effectiveDate,
+                                   final LocalDate effectiveDate,
                                    final BillingActionPolicy billingPolicy) {
             this.dryRunType = dryRunType;
             this.spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceList, phaseType);
@@ -800,7 +800,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public DateTime getEffectiveDate() {
+        public LocalDate getEffectiveDate() {
             return effectiveDate;
         }
 
