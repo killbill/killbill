@@ -21,9 +21,9 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.IllegalInstantException;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.killbill.clock.ClockUtil;
 
 public class TimeAwareContext {
 
@@ -35,47 +35,16 @@ public class TimeAwareContext {
         this.referenceTime = computeReferenceTime(referenceDateTime);
     }
 
-    /// Generic functions
-    /// TODO Move to ClockUtil
-
-    // Create a DateTime object forcing the time zone to be UTC
-    protected DateTime toUTCDateTime(final DateTime dateTime) {
-        return toDateTime(dateTime, DateTimeZone.UTC);
-    }
-
-    // Create a DateTime object using the specified timezone (usually, the one on the account)
-    public DateTime toDateTime(final DateTime dateTime, final DateTimeZone accountTimeZone) {
-        return dateTime.toDateTime(accountTimeZone);
-    }
-
-    /// DateTime <-> LocalDate transformations
-
-    // Create a DateTime object using the specified reference time and timezone (usually, the one on the account)
     public DateTime toUTCDateTime(final LocalDate localDate) {
         validateContext();
 
-         DateTime targetDateTime;
-        try {
-            targetDateTime = new DateTime(localDate.getYear(),
-                                          localDate.getMonthOfYear(),
-                                          localDate.getDayOfMonth(),
-                                          getReferenceTime().getHourOfDay(),
-                                          getReferenceTime().getMinuteOfHour(),
-                                          getReferenceTime().getSecondOfMinute(),
-                                          getFixedOffsetTimeZone());
-        } catch (final IllegalInstantException e) {
-            // DST gap (shouldn't happen when using fixed offset timezones)
-            targetDateTime = localDate.toDateTimeAtStartOfDay(getFixedOffsetTimeZone());
-        }
-
-        return toUTCDateTime(targetDateTime);
+        return ClockUtil.toUTCDateTime(localDate, getReferenceTime(), getFixedOffsetTimeZone());
     }
 
-    // Create a LocalDate object using the specified timezone (usually, the one on the account), respecting the offset at the time of the referenceDateTime
     public LocalDate toLocalDate(final DateTime dateTime) {
         validateContext();
 
-        return new LocalDate(dateTime, getFixedOffsetTimeZone());
+        return ClockUtil.toLocalDate(dateTime, getFixedOffsetTimeZone());
     }
 
     private void validateContext() {
@@ -84,16 +53,19 @@ public class TimeAwareContext {
         }
     }
 
+    // For convenience (used in tests)
+
+    //@VisibleForTesting
     protected LocalTime computeReferenceTime(@Nullable final DateTime referenceTime) {
-        return referenceTime == null ? null : toDateTime(referenceTime, getFixedOffsetTimeZone()).toLocalTime();
+        return referenceTime == null ? null : ClockUtil.toDateTime(referenceTime, getFixedOffsetTimeZone()).toLocalTime();
     }
 
-    // For convenience, to be overridden in tests
-
+    //@VisibleForTesting
     public DateTimeZone getFixedOffsetTimeZone() {
         return fixedOffsetTimeZone;
     }
 
+    //@VisibleForTesting
     public LocalTime getReferenceTime() {
         return referenceTime;
     }
