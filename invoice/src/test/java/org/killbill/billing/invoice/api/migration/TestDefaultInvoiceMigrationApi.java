@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -43,7 +42,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
     private final Logger log = LoggerFactory.getLogger(TestDefaultInvoiceMigrationApi.class);
 
     private LocalDate date_migrated;
-    private DateTime date_regular;
+    private LocalDate date_regular;
 
     private UUID accountId;
     private UUID migrationInvoiceId;
@@ -57,7 +56,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         date_migrated = clock.getUTCToday().minusYears(1);
-        date_regular = clock.getUTCNow();
+        date_regular = clock.getUTCToday();
 
         final Account account = invoiceUtil.createAccount(callContext);
         accountId = account.getId();

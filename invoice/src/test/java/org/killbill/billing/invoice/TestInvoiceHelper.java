@@ -193,7 +193,7 @@ public class TestInvoiceHelper {
         this.invoiceConfig = invoiceConfig;
     }
 
-    public UUID generateRegularInvoice(final Account account, final DateTime targetDate, final CallContext callContext) throws Exception {
+    public UUID generateRegularInvoice(final Account account, final LocalDate targetDate, final CallContext callContext) throws Exception {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription.getBundleId()).thenReturn(new UUID(0L, 0L));

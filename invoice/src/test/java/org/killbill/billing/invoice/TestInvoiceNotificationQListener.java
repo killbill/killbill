@@ -33,7 +33,7 @@ public class TestInvoiceNotificationQListener extends InvoiceListener {
 
     @Inject
     public TestInvoiceNotificationQListener(final AccountInternalApi accountApi, final Clock clock, final InternalCallContextFactory internalCallContextFactory, final InvoiceDispatcher dispatcher) {
-        super(accountApi, clock, internalCallContextFactory, null, dispatcher);
+        super(accountApi, internalCallContextFactory, dispatcher);
     }
 
     @Override
