@@ -66,7 +66,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public Account getAccountByKey(final String key, final TenantContext context) throws AccountApiException {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         return getAccountByKey(key, internalTenantContext);
     }
 
@@ -85,7 +85,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
         }
 
         final AccountModelDao account = new AccountModelDao(data);
-        accountDao.create(account, internalCallContextFactory.createInternalCallContext(context));
+        accountDao.create(account, internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
 
         return new DefaultAccount(account);
     }
@@ -97,7 +97,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                               new SourcePaginationBuilder<AccountModelDao, AccountApiException>() {
                                                   @Override
                                                   public Pagination<AccountModelDao> build() {
-                                                      return accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                      return accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
                                               new Function<AccountModelDao, Account>() {
@@ -115,7 +115,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                               new SourcePaginationBuilder<AccountModelDao, AccountApiException>() {
                                                   @Override
                                                   public Pagination<AccountModelDao> build() {
-                                                      return accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                      return accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
                                               new Function<AccountModelDao, Account>() {
@@ -129,7 +129,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public UUID getIdFromKey(final String externalKey, final TenantContext context) throws AccountApiException {
-        return accountDao.getIdFromKey(externalKey, internalCallContextFactory.createInternalTenantContext(context));
+        return accountDao.getIdFromKey(externalKey, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
     }
 
     @Override
@@ -170,7 +170,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId, final TenantContext context) {
-        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountDao.getEmailsByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountDao.getEmailsByAccountId(accountId, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
                                                                          new Function<AccountEmailModelDao, AccountEmail>() {
                                                                              @Override
                                                                              public AccountEmail apply(final AccountEmailModelDao input) {

@@ -178,7 +178,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public SubscriptionBundle getActiveSubscriptionBundleForExternalKey(final String externalKey, final TenantContext context) throws SubscriptionApiException {
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         try {
             final UUID activeSubscriptionIdForKey = entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(externalKey, internalContext);
             if (activeSubscriptionIdForKey == null) {
@@ -193,7 +193,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public List<SubscriptionBundle> getSubscriptionBundlesForExternalKey(final String externalKey, final TenantContext context) throws SubscriptionApiException {
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         final List<SubscriptionBaseBundle> baseBundles = subscriptionBaseInternalApi.getBundlesForKey(externalKey, internalContext);
 
         final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>(baseBundles.size());
@@ -212,7 +212,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public Pagination<SubscriptionBundle> getSubscriptionBundles(final Long offset, final Long limit, final TenantContext context) {
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         return getEntityPaginationNoException(limit,
                                               new SourcePaginationBuilder<SubscriptionBaseBundle, SubscriptionApiException>() {
                                                   @Override
@@ -236,7 +236,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public Pagination<SubscriptionBundle> searchSubscriptionBundles(final String searchKey, final Long offset, final Long limit, final TenantContext context) {
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         return getEntityPaginationNoException(limit,
                                               new SourcePaginationBuilder<SubscriptionBaseBundle, SubscriptionApiException>() {
                                                   @Override
@@ -260,7 +260,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public void updateExternalKey(final UUID bundleId, final String newExternalKey, final CallContext callContext) throws EntitlementApiException {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(callContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(callContext);
 
         final SubscriptionBaseBundle bundle;
         final ImmutableAccountData account;
@@ -313,6 +313,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
         final InternalCallContext internalCallContextWithValidAccountId;
 
+        final InternalCallContext internalCallContext;
         final ImmutableAccountData account;
         final UUID accountId;
         final UUID bundleId;

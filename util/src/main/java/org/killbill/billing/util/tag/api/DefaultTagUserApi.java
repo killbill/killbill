@@ -74,7 +74,7 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public List<TagDefinition> getTagDefinitions(final TenantContext context) {
-        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
                                                                           new Function<TagDefinitionModelDao, TagDefinition>() {
                                                                               @Override
                                                                               public TagDefinition apply(final TagDefinitionModelDao input) {
@@ -88,26 +88,26 @@ public class DefaultTagUserApi implements TagUserApi {
         if (definitionName.matches(".*[A-Z].*")) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_HAS_UPPERCASE, definitionName);
         }
-        final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.create(definitionName, description, internalCallContextFactory.createInternalCallContext(context));
+        final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.create(definitionName, description, internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
         return new DefaultTagDefinition(tagDefinitionModelDao, TagModelDaoHelper.isControlTag(tagDefinitionModelDao.getName()));
     }
 
     @Override
     public void deleteTagDefinition(final UUID definitionId, final CallContext context) throws TagDefinitionApiException {
-        tagDefinitionDao.deleteById(definitionId, internalCallContextFactory.createInternalCallContext(context));
+        tagDefinitionDao.deleteById(definitionId, internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
     }
 
     @Override
     public TagDefinition getTagDefinition(final UUID tagDefinitionId, final TenantContext context)
             throws TagDefinitionApiException {
-        final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.getById(tagDefinitionId, internalCallContextFactory.createInternalTenantContext(context));
+        final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.getById(tagDefinitionId, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
         return new DefaultTagDefinition(tagDefinitionModelDao, TagModelDaoHelper.isControlTag(tagDefinitionModelDao.getName()));
     }
 
     @Override
     public List<TagDefinition> getTagDefinitions(final Collection<UUID> tagDefinitionIds, final TenantContext context)
             throws TagDefinitionApiException {
-        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getByIds(tagDefinitionIds, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getByIds(tagDefinitionIds, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
                                                                           new Function<TagDefinitionModelDao, TagDefinition>() {
                                                                               @Override
                                                                               public TagDefinition apply(final TagDefinitionModelDao input) {
@@ -148,7 +148,7 @@ public class DefaultTagUserApi implements TagUserApi {
                                               new SourcePaginationBuilder<TagModelDao, TagApiException>() {
                                                   @Override
                                                   public Pagination<TagModelDao> build() {
-                                                      return tagDao.searchTags(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                      return tagDao.searchTags(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
                                               TAG_MODEL_DAO_TAG_FUNCTION);
@@ -160,7 +160,7 @@ public class DefaultTagUserApi implements TagUserApi {
                                               new SourcePaginationBuilder<TagModelDao, TagApiException>() {
                                                   @Override
                                                   public Pagination<TagModelDao> build() {
-                                                      return tagDao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                      return tagDao.get(offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
                                               TAG_MODEL_DAO_TAG_FUNCTION);
@@ -177,13 +177,13 @@ public class DefaultTagUserApi implements TagUserApi {
     @Override
     public TagDefinition getTagDefinitionForName(final String tagDefinitionName, final TenantContext context)
             throws TagDefinitionApiException {
-        return new DefaultTagDefinition(tagDefinitionDao.getByName(tagDefinitionName, internalCallContextFactory.createInternalTenantContext(context)),
+        return new DefaultTagDefinition(tagDefinitionDao.getByName(tagDefinitionName, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
                                         TagModelDaoHelper.isControlTag(tagDefinitionName));
     }
 
     @Override
     public List<Tag> getTagsForObject(final UUID objectId, final ObjectType objectType, final boolean includedDeleted, final TenantContext context) {
-        return withModelTransform(tagDao.getTagsForObject(objectId, objectType, includedDeleted, internalCallContextFactory.createInternalTenantContext(context)));
+        return withModelTransform(tagDao.getTagsForObject(objectId, objectType, includedDeleted, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)));
     }
 
     @Override

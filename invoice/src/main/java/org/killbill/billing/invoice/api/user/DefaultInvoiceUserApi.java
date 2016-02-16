@@ -143,7 +143,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                   @Override
                                                   public Pagination<InvoiceModelDao> build() {
                                                       // Invoices will be shallow, i.e. won't contain items nor payments
-                                                      return dao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                      return dao.get(offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
                                               new Function<InvoiceModelDao, Invoice>() {
@@ -162,7 +162,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                   @Override
                                                   public Pagination<InvoiceModelDao> build() {
                                                       // Invoices will be shallow, i.e. won't contain items nor payments
-                                                      return dao.searchInvoices(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                      return dao.searchInvoices(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
                                               new Function<InvoiceModelDao, Invoice>() {
@@ -194,7 +194,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public Invoice getInvoiceByNumber(final Integer number, final TenantContext context) throws InvoiceApiException {
         // The account record id will be populated in the DAO
-        return new DefaultInvoice(dao.getByNumber(number, internalCallContextFactory.createInternalTenantContext(context)));
+        return new DefaultInvoice(dao.getByNumber(number, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)));
     }
 
     @Override
