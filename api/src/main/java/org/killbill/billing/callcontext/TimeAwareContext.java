@@ -64,7 +64,7 @@ public class TimeAwareContext {
                                           getReferenceTime().getSecondOfMinute(),
                                           getFixedOffsetTimeZone());
         } catch (final IllegalInstantException e) {
-            // DST gap
+            // DST gap (shouldn't happen when using fixed offset timezones)
             targetDateTime = localDate.toDateTimeAtStartOfDay(getFixedOffsetTimeZone());
         }
 
