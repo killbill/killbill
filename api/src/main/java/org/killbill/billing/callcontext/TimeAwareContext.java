@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.IllegalInstantException;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
@@ -53,13 +54,19 @@ public class TimeAwareContext {
     public DateTime toUTCDateTime(final LocalDate localDate) {
         validateContext();
 
-        final DateTime targetDateTime = new DateTime(localDate.getYear(),
-                                                     localDate.getMonthOfYear(),
-                                                     localDate.getDayOfMonth(),
-                                                     getReferenceTime().getHourOfDay(),
-                                                     getReferenceTime().getMinuteOfHour(),
-                                                     getReferenceTime().getSecondOfMinute(),
-                                                     getFixedOffsetTimeZone());
+         DateTime targetDateTime;
+        try {
+            targetDateTime = new DateTime(localDate.getYear(),
+                                          localDate.getMonthOfYear(),
+                                          localDate.getDayOfMonth(),
+                                          getReferenceTime().getHourOfDay(),
+                                          getReferenceTime().getMinuteOfHour(),
+                                          getReferenceTime().getSecondOfMinute(),
+                                          getFixedOffsetTimeZone());
+        } catch (final IllegalInstantException e) {
+            // DST gap
+            targetDateTime = localDate.toDateTimeAtStartOfDay(getFixedOffsetTimeZone());
+        }
 
         return toUTCDateTime(targetDateTime);
     }
