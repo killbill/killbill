@@ -178,7 +178,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public SubscriptionBundle getActiveSubscriptionBundleForExternalKey(final String externalKey, final TenantContext context) throws SubscriptionApiException {
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         try {
             final UUID activeSubscriptionIdForKey = entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(externalKey, internalContext);
             if (activeSubscriptionIdForKey == null) {
@@ -193,7 +193,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public List<SubscriptionBundle> getSubscriptionBundlesForExternalKey(final String externalKey, final TenantContext context) throws SubscriptionApiException {
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         final List<SubscriptionBaseBundle> baseBundles = subscriptionBaseInternalApi.getBundlesForKey(externalKey, internalContext);
 
         final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>(baseBundles.size());
@@ -212,7 +212,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public Pagination<SubscriptionBundle> getSubscriptionBundles(final Long offset, final Long limit, final TenantContext context) {
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         return getEntityPaginationNoException(limit,
                                               new SourcePaginationBuilder<SubscriptionBaseBundle, SubscriptionApiException>() {
                                                   @Override
@@ -236,7 +236,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public Pagination<SubscriptionBundle> searchSubscriptionBundles(final String searchKey, final Long offset, final Long limit, final TenantContext context) {
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         return getEntityPaginationNoException(limit,
                                               new SourcePaginationBuilder<SubscriptionBaseBundle, SubscriptionApiException>() {
                                                   @Override
@@ -260,7 +260,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public void updateExternalKey(final UUID bundleId, final String newExternalKey, final CallContext callContext) throws EntitlementApiException {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(callContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(callContext);
 
         final SubscriptionBaseBundle bundle;
         final ImmutableAccountData account;
@@ -311,8 +311,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(ErrorCode.SUB_BLOCKING_STATE_INVALID_ARG, "Need to specify a valid stateName");
         }
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(callContext);
 
+        final InternalCallContext internalCallContext;
         final ImmutableAccountData account;
         final UUID accountId;
         final UUID bundleId;
@@ -320,6 +320,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         try {
             switch (blockingState.getType()) {
                 case ACCOUNT:
+                    internalCallContext = internalCallContextFactory.createInternalCallContext(blockingState.getBlockedId(), ObjectType.ACCOUNT, callContext);
                     account = accountApi.getImmutableAccountDataById(blockingState.getBlockedId(), internalCallContext);
                     externalKey = account.getExternalKey();
                     accountId = account.getId();
@@ -327,6 +328,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                     break;
 
                 case SUBSCRIPTION_BUNDLE:
+                    internalCallContext = internalCallContextFactory.createInternalCallContext(blockingState.getBlockedId(), ObjectType.BUNDLE, callContext);
                     final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(blockingState.getBlockedId(), internalCallContext);
                     externalKey = bundle.getExternalKey();
                     bundleId = bundle.getId();
@@ -335,6 +337,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                     break;
 
                 case SUBSCRIPTION:
+                    internalCallContext = internalCallContextFactory.createInternalCallContext(blockingState.getBlockedId(), ObjectType.SUBSCRIPTION, callContext);
                     final Entitlement entitlement = entitlementInternalApi.getEntitlementForId(blockingState.getBlockedId(), internalCallContext);
                     bundleId = entitlement.getBundleId();
                     accountId = entitlement.getAccountId();
@@ -366,11 +369,9 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
         final WithEntitlementPlugin<Void> addBlockingStateWithPlugin = new WithEntitlementPlugin<Void>() {
 
-            final InternalCallContext internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-
             @Override
             public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-                entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingState, internalCallContextWithValidAccountId);
+                entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingState, internalCallContext);
                 return null;
             }
         };

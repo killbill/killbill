@@ -139,7 +139,7 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
             return defaultPlan;
         }
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(overrides.getCallContext());
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(overrides.getCallContext());
         return priceOverride.getOrCreateOverriddenPlan(defaultPlan, CatalogDateHelper.toUTCDateTime(getEffectiveDate()), overrides.getOverrides(), internalCallContext);
     }
 

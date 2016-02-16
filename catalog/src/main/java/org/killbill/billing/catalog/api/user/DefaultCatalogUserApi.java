@@ -18,7 +18,6 @@ package org.killbill.billing.catalog.api.user;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -53,7 +52,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
 
     @Override
     public Catalog getCatalog(final String catalogName, final TenantContext tenantContext) throws CatalogApiException {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
         return catalogService.getFullCatalog(internalTenantContext);
     }
 
@@ -75,8 +74,8 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     }
 
     private InternalTenantContext createInternalTenantContext(final TenantContext tenantContext) {
-        // Only tenantRecordId will be populated-- this is important to always create the (ehcache) key the same way
-        return internalCallContextFactory.createInternalTenantContext(tenantContext);
+        // Only tenantRecordId will be populated -- this is important to always create the (ehcache) key the same way
+        return internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
     }
 
 }

@@ -248,7 +248,7 @@ public class AuditChecker {
 
     private <T extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> M extractEntityModelFromEntityWithTargetRecordId(final UUID entityId, final UUID auditLogId, final Class<T> sqlDao, final CallContext context, final boolean useHistory) {
 
-        final M modelDaoThatGivesMeTableName = dbi.onDemand(sqlDao).getById(entityId.toString(), callContextFactory.createInternalCallContext(context));
+        final M modelDaoThatGivesMeTableName = dbi.onDemand(sqlDao).getById(entityId.toString(), callContextFactory.createInternalCallContextWithoutAccountRecordId(context));
 
         Integer targetRecordId = dbi.withHandle(new HandleCallback<Integer>() {
             @Override
@@ -263,7 +263,7 @@ public class AuditChecker {
             Long entityRecordId = nonEntityDao.retrieveHistoryTargetRecordId(Long.valueOf(targetRecordId), modelDaoThatGivesMeTableName.getHistoryTableName());
             targetRecordId = new Integer(entityRecordId.intValue());
         }
-        return dbi.onDemand(sqlDao).getByRecordId(Long.valueOf(targetRecordId), callContextFactory.createInternalCallContext(context));
+        return dbi.onDemand(sqlDao).getByRecordId(Long.valueOf(targetRecordId), callContextFactory.createInternalCallContextWithoutAccountRecordId(context));
     }
 
 }

@@ -86,7 +86,7 @@ public class InternalCallContextFactory {
      * @param context tenant callcontext (tenantId can be null only if multi-tenancy is disabled)
      * @return internal tenant callcontext
      */
-    public InternalTenantContext createInternalTenantContext(final TenantContext context) {
+    public InternalTenantContext createInternalTenantContextWithoutAccountRecordId(final TenantContext context) {
         // If tenant id is null, this will default to the default tenant record id (multi-tenancy disabled)
         final Long tenantRecordId = getTenantRecordIdSafe(context);
         return createInternalTenantContext(tenantRecordId, null);
@@ -207,7 +207,7 @@ public class InternalCallContextFactory {
      * @param context original call callcontext
      * @return internal call callcontext
      */
-    public InternalCallContext createInternalCallContext(final CallContext context) {
+    public InternalCallContext createInternalCallContextWithoutAccountRecordId(final CallContext context) {
         // If tenant id is null, this will default to the default tenant record id (multi-tenancy disabled)
         final Long tenantRecordId = getTenantRecordIdSafe(context);
         return new InternalCallContext(tenantRecordId, context, clock.getUTCNow());

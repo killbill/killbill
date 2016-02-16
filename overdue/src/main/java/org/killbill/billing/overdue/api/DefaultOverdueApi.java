@@ -65,7 +65,7 @@ public class DefaultOverdueApi implements OverdueApi {
     }
 
     private InternalTenantContext createInternalTenantContext(final TenantContext tenantContext) {
-        // Only tenantRecordId will be populated-- this is important to always create the (ehcache) key the same way
-        return internalCallContextFactory.createInternalTenantContext(tenantContext);
+        // Only tenantRecordId will be populated -- this is important to always create the (ehcache) key the same way
+        return internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
     }
 }

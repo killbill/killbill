@@ -83,7 +83,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
         final Tenant tenant = new DefaultTenant(data);
 
         try {
-            tenantDao.create(new TenantModelDao(tenant), internalCallContextFactory.createInternalCallContext(context));
+            tenantDao.create(new TenantModelDao(tenant), internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
         } catch (final TenantApiException e) {
             throw new TenantApiException(e, ErrorCode.TENANT_CREATION_FAILED);
         }
@@ -111,7 +111,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
 
     @Override
     public List<String> getTenantValuesForKey(final String key, final TenantContext context) throws TenantApiException {
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         if (!isCachedInTenantKVCache(key)) {
             return tenantDao.getTenantValueForKey(key, internalContext);
         } else {
@@ -122,7 +122,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
     @Override
     public void addTenantKeyValue(final String key, final String value, final CallContext context) throws TenantApiException {
         // Invalidate tenantKVCache after we store (to avoid race conditions). Multi-node invalidation will follow the TenantBroadcast pattern
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context);
         final String tenantKey = getCacheKeyName(key, internalContext);
         tenantDao.addTenantKeyValue(key, value, isSingleValueKey(key), internalContext);
         tenantKVCache.remove(tenantKey);
@@ -131,7 +131,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
     @Override
     public void deleteTenantKey(final String key, final CallContext context) throws TenantApiException {
         // Invalidate tenantKVCache after we delete (to avoid race conditions). Multi-node invalidation will follow the TenantBroadcast pattern
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context);
         final String tenantKey = getCacheKeyName(key, internalContext);
         tenantDao.deleteTenantKey(key, internalContext);
         tenantKVCache.remove(tenantKey);

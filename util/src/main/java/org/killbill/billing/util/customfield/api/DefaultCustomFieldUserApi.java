@@ -69,7 +69,7 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
                                               new SourcePaginationBuilder<CustomFieldModelDao, CustomFieldApiException>() {
                                                   @Override
                                                   public Pagination<CustomFieldModelDao> build() {
-                                                      return customFieldDao.searchCustomFields(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                      return customFieldDao.searchCustomFields(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
                                               CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION);
@@ -81,7 +81,7 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
                                               new SourcePaginationBuilder<CustomFieldModelDao, CustomFieldApiException>() {
                                                   @Override
                                                   public Pagination<CustomFieldModelDao> build() {
-                                                      return customFieldDao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                      return customFieldDao.get(offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
                                               CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION);
@@ -133,7 +133,7 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
 
     @Override
     public List<CustomField> getCustomFieldsForObject(final UUID objectId, final ObjectType objectType, final TenantContext context) {
-        return withCustomFieldsTransform(customFieldDao.getCustomFieldsForObject(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context)));
+        return withCustomFieldsTransform(customFieldDao.getCustomFieldsForObject(objectId, objectType, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)));
     }
 
     @Override

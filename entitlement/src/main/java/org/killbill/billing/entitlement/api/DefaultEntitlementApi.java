@@ -257,7 +257,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), eventsStreamForBaseSubscription.getInternalTenantContext());
 
                 try {
-                    final InternalCallContext context = internalCallContextFactory.createInternalCallContext(callContext);
+                    final InternalCallContext context = internalCallContextFactory.createInternalCallContext(eventsStreamForBaseSubscription.getAccountId(), callContext);
                     final EntitlementSpecifier specifier = getFirstEntitlementSpecifier(updatedPluginContext.getEntitlementSpecifiers());
                     final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundleId, specifier.getPlanPhaseSpecifier(), specifier.getOverrides(), requestedDate, context);
 
