@@ -258,12 +258,12 @@ public class TestInvoiceHelper {
 
         final Account account;
         if (isFastTest()) {
-            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountUserApi, accountApi, immutableAccountApi, nonEntityDao, internalCallContextFactory, callContext, internalCallContext);
+            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountUserApi, accountApi, immutableAccountApi, nonEntityDao, clock, internalCallContextFactory, callContext, internalCallContext);
         } else {
             account = accountUserApi.createAccount(accountData, callContext);
         }
 
-        GuicyKillbillTestSuite.refreshCallContext(account.getId(), internalCallContextFactory, callContext, internalCallContext);
+        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, callContext, internalCallContext);
 
         return account;
     }

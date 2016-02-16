@@ -148,12 +148,12 @@ public class TestPaymentHelper {
 
         Account account;
         if (isFastTest()) {
-            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountApi, accountInternalApi, immutableAccountInternalApi, nonEntityDao, internalCallContextFactory, context, internalCallContext);
+            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountApi, accountInternalApi, immutableAccountInternalApi, nonEntityDao, clock, internalCallContextFactory, context, internalCallContext);
         } else {
             account = accountApi.createAccount(accountData, context);
         }
 
-        GuicyKillbillTestSuite.refreshCallContext(account.getId(), internalCallContextFactory, context, internalCallContext);
+        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, context, internalCallContext);
 
         if (addPaymentMethod) {
             final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);

@@ -121,8 +121,6 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
                                                            transactions.get(0).getId(), TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.BRL,
                                                            "foo", "bar", internalCallContext);
 
-        internalCallContext.setAccountRecordId(123L);
-
         paymentStateContext = new PaymentStateContext(true,
                                                       paymentId,
                                                       null,

@@ -26,22 +26,14 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.ObjectType;
-import org.killbill.billing.entitlement.AccountEventsStreams;
-import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.EventsStream;
@@ -52,7 +44,10 @@ import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
-import org.killbill.billing.entitlement.dao.BlockingStateSqlDao;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
@@ -61,8 +56,6 @@ import com.google.common.collect.Iterables;
 
 public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
-    private BlockingStateSqlDao sqlDao;
-    private Account account;
     private DefaultEntitlement baseEntitlement;
     private DefaultEntitlement addOnEntitlement;
     // Dates for the base plan only
@@ -73,10 +66,8 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
-        sqlDao = dbi.onDemand(BlockingStateSqlDao.class);
-
         clock.setDay(initialDate);
-        account = createAccount(getAccountData(7));
+        final Account account = createAccount(getAccountData(7));
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE);
 
@@ -452,7 +443,6 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     private Collection<BlockingState> computeFutureBlockingStatesForAssociatedAddonsViaAccount(final DefaultEntitlement baseEntitlement) throws EntitlementApiException {
-        setContextAccountRecordId();
         final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(internalCallContext);
 
         final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(accountEventsStreams.getEventsStreams().values()),
@@ -471,7 +461,6 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     private Collection<BlockingState> computeBlockingStatesForAssociatedAddonsViaAccount(final DefaultEntitlement baseEntitlement, final DateTime effectiveDate) throws EntitlementApiException {
-        setContextAccountRecordId();
         final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(internalCallContext);
 
         final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(accountEventsStreams.getEventsStreams().values()),
@@ -492,9 +481,5 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
                                                                                            return input.getBlockedId().equals(blockedId);
                                                                                        }
                                                                                    }));
-    }
-
-    private void setContextAccountRecordId() {
-        internalCallContext.setAccountRecordId(nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID)));
     }
 }
