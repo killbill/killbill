@@ -237,5 +237,21 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         Assert.assertEquals(entitlement.getEffectiveStartDate().compareTo(new LocalDate("2015-03-08")), 0);
         Assert.assertEquals(((DefaultEntitlement) entitlement).getBasePlanSubscriptionBase().getStartDate().compareTo(new DateTime("2015-03-08T02:00:00.000-08:00")), 0);
+
+        invoiceChecker.checkChargedThroughDate(entitlement.getId(), new LocalDate("2015-04-08"), callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(31);
+        assertListenerStatus();
+
+        invoiceChecker.checkChargedThroughDate(entitlement.getId(), new LocalDate("2015-05-08"), callContext);
+
+        for (int i = 0; i < 25 ; i++) {
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+            clock.addMonths(1);
+            assertListenerStatus();
+
+            invoiceChecker.checkChargedThroughDate(entitlement.getId(), new LocalDate("2015-03-08").plusMonths(3 + i), callContext);
+        }
     }
 }
