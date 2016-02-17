@@ -31,8 +31,8 @@ import com.google.common.base.MoreObjects;
 public class ParentInvoiceItem extends InvoiceItemBase {
 
     public ParentInvoiceItem(@Nullable final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID childAccountId,
-                             final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, childAccountId, amount, currency);
+                             final BigDecimal amount, final Currency currency, final String description) {
+        super(id, createdDate, invoiceId, accountId, childAccountId, amount, currency, description);
     }
 
     @Override
@@ -42,6 +42,6 @@ public class ParentInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String getDescription() {
-        return MoreObjects.firstNonNull(description, "Parent summary");
+        return MoreObjects.firstNonNull(description, "Parent summary item");
     }
 }

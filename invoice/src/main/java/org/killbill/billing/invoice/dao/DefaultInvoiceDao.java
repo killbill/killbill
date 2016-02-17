@@ -980,7 +980,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     private void notifyOfParentInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InvoiceModelDao parentInvoice,
                                                final FutureAccountNotifications callbackDateTime, final InternalCallContext context) {
-        DateTime futureNotificationDate = parentInvoice.getCreatedDate();
+        DateTime futureNotificationDate = parentInvoice.getCreatedDate().withTimeAtStartOfDay().plusDays(1);
         AccountDateAndTimeZoneContext accountDateAndTimeZone;
         if ((callbackDateTime != null) && (callbackDateTime.getAccountDateAndTimeZoneContext() != null)) {
             accountDateAndTimeZone = callbackDateTime.getAccountDateAndTimeZoneContext();

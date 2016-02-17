@@ -711,22 +711,24 @@ public class InvoiceDispatcher {
         final InvoiceModelDao invoiceModelDao = invoiceDao.getById(invoiceId, context);
         final Invoice invoice = new DefaultInvoice(invoiceModelDao);
 
-        BigDecimal invoiceAmount = InvoiceCalculatorUtils.computeInvoiceBalance(invoice.getCurrency(), invoice.getInvoiceItems(), invoice.getPayments());
+        // BigDecimal invoiceAmount = InvoiceCalculatorUtils.computeInvoiceBalance(invoice.getCurrency(), invoice.getInvoiceItems(), invoice.getPayments());
+        BigDecimal invoiceAmount = invoice.getChargedAmount();
         InvoiceModelDao parentInvoice = invoiceDao.getParentDraftInvoice(account.getParentAccountId(), context);
 
         final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(account.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));
         final InternalCallContext parentContext = new InternalCallContext(context, parentAccountRecordId);
 
         final DateTime today = clock.getNow(account.getTimeZone());
+        final String description = account.getExternalKey().concat(" summary");
         if (parentInvoice != null) {
-            InvoiceItem invoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoice.getId(), account.getParentAccountId(), account.getId(), invoiceAmount, account.getCurrency());
+            InvoiceItem invoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoice.getId(), account.getParentAccountId(), account.getId(), invoiceAmount, account.getCurrency(), description);
             parentInvoice.addInvoiceItem(new InvoiceItemModelDao(invoiceItem));
             List<InvoiceModelDao> invoices = new ArrayList<InvoiceModelDao>();
             invoices.add(parentInvoice);
             invoiceDao.createInvoices(invoices, parentContext);
         } else {
             parentInvoice = new InvoiceModelDao(account.getParentAccountId(), today.toLocalDate(), account.getCurrency(), InvoiceStatus.DRAFT, true);
-            InvoiceItem invoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoice.getId(), account.getParentAccountId(), account.getId(), invoiceAmount, account.getCurrency());
+            InvoiceItem invoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoice.getId(), account.getParentAccountId(), account.getId(), invoiceAmount, account.getCurrency(), description);
             parentInvoice.addInvoiceItem(new InvoiceItemModelDao(invoiceItem));
 
             // build account date time zone

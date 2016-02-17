@@ -152,6 +152,7 @@ public class InvoiceListener {
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "CreateParentInvoice", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+            // TODO it may change to Account - #459
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(event.getAccountId(), context);
 
             // catch children invoices and populate the parent summary invoice

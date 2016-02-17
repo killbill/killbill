@@ -89,7 +89,7 @@ public class InvoiceItemFactory {
                 item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, description, amount, currency, linkedItemId);
                 break;
             case PARENT_SUMMARY:
-                item = new ParentInvoiceItem(id, createdDate, invoiceId, accountId, childAccountId, amount, currency);
+                item = new ParentInvoiceItem(id, createdDate, invoiceId, accountId, childAccountId, amount, currency, description);
                 break;
             default:
                 throw new RuntimeException("Unexpected type of event item " + type);
