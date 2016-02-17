@@ -42,6 +42,7 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.clock.ClockUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,7 +144,7 @@ public class BillCycleDayCalculator {
         }
 
         final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate(), initialPhaseType);
-        final int bcdLocal = context.toDateTime(date, account.getTimeZone()).getDayOfMonth();
+        final int bcdLocal = ClockUtil.toDateTime(date, account.getTimeZone()).getDayOfMonth();
         log.info("Calculated BCD: subscription id {}, subscription start {}, timezone {}, bcd {}",
                  subscription.getId(), date.toDateTimeISO(), account.getTimeZone(), bcdLocal);
 

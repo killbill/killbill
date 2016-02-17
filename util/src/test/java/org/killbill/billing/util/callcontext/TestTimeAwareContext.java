@@ -23,10 +23,14 @@ import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.callcontext.TimeAwareContext;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.account.AccountDateTimeUtils;
+import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -137,6 +141,50 @@ public class TestTimeAwareContext extends UtilTestSuiteNoDB {
         assertEquals(internalCallContext.toLocalDate(dateTime1), new LocalDate("2014-12-31"));
         assertEquals(internalCallContext.toLocalDate(dateTime2), new LocalDate("2015-08-31"));
         assertEquals(internalCallContext.toLocalDate(dateTime3), new LocalDate("2015-11-30"));
+    }
+
+    @Test(groups = "fast")
+    public void testIdempotencyOfDatesManipulation() throws Exception {
+        final ImmutableList.Builder<DateTimeZone> dateTimeZoneBuilder = ImmutableList.<DateTimeZone>builder();
+        dateTimeZoneBuilder.add(DateTimeZone.forID("HST"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("PST8PDT"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("MST"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("CST6CDT"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("EST"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("Brazil/DeNoronha"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("UTC"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("CET"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("Europe/Istanbul"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("Singapore"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("Japan"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("Australia/Sydney"));
+        dateTimeZoneBuilder.add(DateTimeZone.forID("Pacific/Tongatapu"));
+        final Iterable<DateTimeZone> dateTimeZones = dateTimeZoneBuilder.build();
+
+        final ImmutableList.Builder<DateTime> referenceDateTimeBuilder = ImmutableList.<DateTime>builder();
+        referenceDateTimeBuilder.add(new DateTime(2012, 1, 1, 1, 1, 1, DateTimeZone.UTC));
+        referenceDateTimeBuilder.add(new DateTime(2012, 3, 15, 12, 42, 0, DateTimeZone.forID("PST8PDT")));
+        referenceDateTimeBuilder.add(new DateTime(2012, 11, 15, 12, 42, 0, DateTimeZone.forID("PST8PDT")));
+        final Iterable<DateTime> referenceDateTimes = referenceDateTimeBuilder.build();
+
+        DateTime currentDateTime = new DateTime(2015, 1, 1, 1, 1, DateTimeZone.UTC);
+        final DateTime endDateTime = new DateTime(2020, 1, 1, 1, 1, DateTimeZone.UTC);
+        while (currentDateTime.compareTo(endDateTime) <= 0) {
+            for (final DateTimeZone dateTimeZone : dateTimeZones) {
+                for (final DateTime referenceDateTime : referenceDateTimes) {
+                    final TimeAwareContext timeAwareContext = new TimeAwareContext(dateTimeZone, referenceDateTime);
+
+                    final LocalDate computedLocalDate = timeAwareContext.toLocalDate(currentDateTime);
+                    final DateTime computedDateTime = timeAwareContext.toUTCDateTime(computedLocalDate);
+                    final LocalDate computedLocalDate2 = timeAwareContext.toLocalDate(computedDateTime);
+
+                    final String msg = String.format("currentDateTime=%s, localDate=%s, dateTime=%s, dateTimeZone=%s, referenceDateTime=%s", currentDateTime, computedLocalDate, computedDateTime, dateTimeZone, referenceDateTime);
+                    Assert.assertEquals(computedLocalDate2, computedLocalDate, msg);
+                }
+            }
+
+            currentDateTime = currentDateTime.plusHours(1);
+        }
     }
 
     private void refreshCallContext(final DateTime effectiveDateTime, final DateTimeZone timeZone) {

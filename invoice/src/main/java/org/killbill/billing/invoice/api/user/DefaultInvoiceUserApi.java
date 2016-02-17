@@ -28,14 +28,12 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -208,15 +206,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                             final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
-        final ImmutableAccountData account;
-        try {
-            account = accountUserApi.getImmutableAccountDataById(accountId, internalContext);
-        } catch (final AccountApiException e) {
-            throw new InvoiceApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, e.toString());
-        }
-
-        final DateTime processingDateTime = targetDate != null ? targetDate.toDateTimeAtCurrentTime(account.getTimeZone()) : null;
-        final Invoice result = dispatcher.processAccount(accountId, processingDateTime, dryRunArguments, internalContext);
+        final Invoice result = dispatcher.processAccount(accountId, targetDate, dryRunArguments, internalContext);
         if (result == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {

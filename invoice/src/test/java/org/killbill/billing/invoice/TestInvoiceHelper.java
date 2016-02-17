@@ -193,7 +193,7 @@ public class TestInvoiceHelper {
         this.invoiceConfig = invoiceConfig;
     }
 
-    public UUID generateRegularInvoice(final Account account, final DateTime targetDate, final CallContext callContext) throws Exception {
+    public UUID generateRegularInvoice(final Account account, final LocalDate targetDate, final CallContext callContext) throws Exception {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription.getBundleId()).thenReturn(new UUID(0L, 0L));
@@ -258,12 +258,12 @@ public class TestInvoiceHelper {
 
         final Account account;
         if (isFastTest()) {
-            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountUserApi, accountApi, immutableAccountApi, nonEntityDao, internalCallContextFactory, callContext, internalCallContext);
+            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountUserApi, accountApi, immutableAccountApi, nonEntityDao, clock, internalCallContextFactory, callContext, internalCallContext);
         } else {
             account = accountUserApi.createAccount(accountData, callContext);
         }
 
-        GuicyKillbillTestSuite.refreshCallContext(account.getId(), internalCallContextFactory, callContext, internalCallContext);
+        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, callContext, internalCallContext);
 
         return account;
     }
@@ -462,7 +462,7 @@ public class TestInvoiceHelper {
         }
 
         @Override
-        public DateTime getEffectiveDate() {
+        public LocalDate getEffectiveDate() {
             return null;
         }
 

@@ -78,7 +78,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
 
         TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
-                                                             SubscriptionEventType.START_BILLING, null, null, clock.getUTCNow(), null);
+                                                             SubscriptionEventType.START_BILLING, null, null, null, null);
         Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
@@ -93,7 +93,7 @@ public class TestIntegration extends TestIntegrationBase {
         // ADD ADD_ON ON THE SAME DAY
         //
         dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, null, null,
-                                         SubscriptionEventType.START_BILLING, null, bpSubscription.getBundleId(), clock.getUTCNow(), null);
+                                         SubscriptionEventType.START_BILLING, null, bpSubscription.getBundleId(), null, null);
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
@@ -109,7 +109,7 @@ public class TestIntegration extends TestIntegrationBase {
         // There is no invoice created as we only adjust the previous invoice.
         //
         dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
-                                         bpSubscription.getBundleId(), clock.getUTCNow(), null);
+                                         bpSubscription.getBundleId(), null, null);
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")));
         // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
@@ -153,7 +153,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
         TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null, SubscriptionEventType.CHANGE,
-                                                             subscription.getId(), subscription.getBundleId(), clock.getUTCNow(), null);
+                                                             subscription.getId(), subscription.getBundleId(), null, null);
         Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);

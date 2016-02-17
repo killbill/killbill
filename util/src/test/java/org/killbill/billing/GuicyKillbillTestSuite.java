@@ -30,6 +30,7 @@ import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
@@ -103,6 +104,7 @@ public class GuicyKillbillTestSuite {
     }
 
     public static void refreshCallContext(final UUID accountId,
+                                          final Clock clock,
                                           final InternalCallContextFactory internalCallContextFactory,
                                           final TenantContext callContext,
                                           final MutableInternalCallContext internalCallContext) {
@@ -110,10 +112,12 @@ public class GuicyKillbillTestSuite {
         internalCallContext.setAccountRecordId(tmp.getAccountRecordId());
         internalCallContext.setFixedOffsetTimeZone(tmp.getFixedOffsetTimeZone());
         internalCallContext.setReferenceTime(tmp.getReferenceTime());
+        internalCallContext.setCreatedDate(clock.getUTCNow());
+        internalCallContext.setUpdatedDate(clock.getUTCNow());
     }
 
     protected void refreshCallContext(final UUID accountId) {
-        refreshCallContext(accountId, internalCallContextFactory, callContext, internalCallContext);
+        refreshCallContext(accountId, clock, internalCallContextFactory, callContext, internalCallContext);
     }
 
     @BeforeMethod(alwaysRun = true)

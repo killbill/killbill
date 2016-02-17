@@ -138,6 +138,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
                                                      accountInternalApi,
                                                      immutableAccountInternalApi,
                                                      nonEntityDao,
+                                                     clock,
                                                      internalCallContextFactory,
                                                      callContext,
                                                      internalCallContext);

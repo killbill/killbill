@@ -51,8 +51,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -105,7 +103,6 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
-import org.killbill.clock.ClockUtil;
 import org.killbill.commons.metrics.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -366,7 +363,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
 
-        final DryRunArguments dryRunArguments = new DefaultDryRunArguments(dryRunSubscriptionSpec, account.getTimeZone(), account.getCurrency(), clock);
+        final DryRunArguments dryRunArguments = new DefaultDryRunArguments(dryRunSubscriptionSpec, account);
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRunArguments,
                                                                                  callContext);
@@ -952,13 +949,13 @@ public class InvoiceResource extends JaxRsResourceBase {
         private final DryRunType dryRunType;
         private final SubscriptionEventType action;
         private final UUID subscriptionId;
-        private final DateTime effectiveDate;
+        private final LocalDate effectiveDate;
         private final PlanPhaseSpecifier specifier;
         private final UUID bundleId;
         private final BillingActionPolicy billingPolicy;
         private final List<PlanPhasePriceOverride> overrides;
 
-        public DefaultDryRunArguments(final InvoiceDryRunJson input, final DateTimeZone accountTimeZone, final Currency currency, final Clock clock) {
+        public DefaultDryRunArguments(final InvoiceDryRunJson input, final Account account) {
             if (input == null) {
                 this.dryRunType = DryRunType.TARGET_DATE;
                 this.action = null;
@@ -973,7 +970,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                 this.action = input.getDryRunAction() != null ? SubscriptionEventType.valueOf(input.getDryRunAction()) : null;
                 this.subscriptionId = input.getSubscriptionId() != null ? UUID.fromString(input.getSubscriptionId()) : null;
                 this.bundleId = input.getBundleId() != null ? UUID.fromString(input.getBundleId()) : null;
-                this.effectiveDate = input.getEffectiveDate() != null ? ClockUtil.computeDateTimeWithUTCReferenceTime(input.getEffectiveDate(), clock.getUTCNow().toLocalTime(), accountTimeZone, clock) : null;
+                this.effectiveDate = input.getEffectiveDate();
                 this.billingPolicy = input.getBillingPolicy() != null ? BillingActionPolicy.valueOf(input.getBillingPolicy()) : null;
                 final PlanPhaseSpecifier planPhaseSpecifier = (input.getProductName() != null &&
                                                                input.getProductCategory() != null &&
@@ -991,9 +988,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                                      @Override
                                      public PlanPhasePriceOverride apply(@Nullable final PhasePriceOverrideJson input) {
                                          if (input.getPhaseName() != null) {
-                                             return new DefaultPlanPhasePriceOverride(input.getPhaseName(), currency, input.getFixedPrice(), input.getRecurringPrice());
+                                             return new DefaultPlanPhasePriceOverride(input.getPhaseName(), account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice());
                                          } else {
-                                             return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, currency, input.getFixedPrice(), input.getRecurringPrice());
+                                             return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice());
                                          }
                                      }
                                  })) : ImmutableList.<PlanPhasePriceOverride>of();
@@ -1021,7 +1018,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
 
         @Override
-        public DateTime getEffectiveDate() {
+        public LocalDate getEffectiveDate() {
             return effectiveDate;
         }
 
@@ -1040,5 +1037,4 @@ public class InvoiceResource extends JaxRsResourceBase {
             return overrides;
         }
     }
-
 }

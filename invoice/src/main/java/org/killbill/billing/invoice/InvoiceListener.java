@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -30,8 +32,6 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.billing.util.config.InvoiceConfig;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,27 +46,21 @@ public class InvoiceListener {
     private final InvoiceDispatcher dispatcher;
     private final InternalCallContextFactory internalCallContextFactory;
     private final AccountInternalApi accountApi;
-    private final InvoiceConfig invoiceConfig;
-    private final Clock clock;
 
     @Inject
-    public InvoiceListener(final AccountInternalApi accountApi, final Clock clock, final InternalCallContextFactory internalCallContextFactory,
-                           final InvoiceConfig invoiceConfig, final InvoiceDispatcher dispatcher) {
+    public InvoiceListener(final AccountInternalApi accountApi, final InternalCallContextFactory internalCallContextFactory, final InvoiceDispatcher dispatcher) {
         this.accountApi = accountApi;
         this.dispatcher = dispatcher;
-        this.invoiceConfig = invoiceConfig;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.clock = clock;
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void handleRepairSubscriptionEvent(final RepairSubscriptionInternalEvent event) {
-
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-            dispatcher.processAccount(event.getAccountId(), event.getEffectiveDate(), null, context);
-        } catch (InvoiceApiException e) {
+            dispatcher.processAccount(event.getAccountId(), context.toLocalDate(event.getEffectiveDate()), null, context);
+        } catch (final InvoiceApiException e) {
             log.error(e.getMessage());
         }
     }
@@ -74,7 +68,6 @@ public class InvoiceListener {
     @AllowConcurrentEvents
     @Subscribe
     public void handleSubscriptionTransition(final EffectiveSubscriptionInternalEvent event) {
-
         try {
             //  Skip future uncancel event
             //  Skip events which are marked as not being the last one
@@ -85,15 +78,12 @@ public class InvoiceListener {
             }
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             dispatcher.processSubscriptionForInvoiceGeneration(event, context);
-        } catch (InvoiceApiException e) {
+        } catch (final InvoiceApiException e) {
             log.error(e.getMessage());
         }
     }
 
-    @AllowConcurrentEvents
-    @Subscribe
     public void handleBlockingStateTransition(final BlockingTransitionInternalEvent event) {
-
         // We are only interested in blockBilling or unblockBilling transitions.
         if (!event.isTransitionedToUnblockedBilling() && !event.isTransitionedToBlockedBilling()) {
             return;
@@ -102,10 +92,10 @@ public class InvoiceListener {
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             final UUID accountId = accountApi.getByRecordId(event.getSearchKey1(), context);
-            dispatcher.processAccount(accountId, clock.getUTCNow(), null, context);
-        } catch (InvoiceApiException e) {
+            dispatcher.processAccount(accountId, null, null, context);
+        } catch (final InvoiceApiException e) {
             log.error(e.getMessage());
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             log.error(e.getMessage());
         }
     }
@@ -113,8 +103,8 @@ public class InvoiceListener {
     public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
-            dispatcher.processSubscriptionForInvoiceGeneration(subscriptionId, eventDateTime, context);
-        } catch (InvoiceApiException e) {
+            dispatcher.processSubscriptionForInvoiceGeneration(subscriptionId, context.toLocalDate(eventDateTime), context);
+        } catch (final InvoiceApiException e) {
             log.error(e.getMessage());
         }
     }
@@ -122,8 +112,8 @@ public class InvoiceListener {
     public void handleEventForInvoiceNotification(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
-            dispatcher.processSubscriptionForInvoiceNotification(subscriptionId, eventDateTime, context);
-        } catch (InvoiceApiException e) {
+            dispatcher.processSubscriptionForInvoiceNotification(subscriptionId, context.toLocalDate(eventDateTime), context);
+        } catch (final InvoiceApiException e) {
             log.error(e.getMessage());
         }
     }

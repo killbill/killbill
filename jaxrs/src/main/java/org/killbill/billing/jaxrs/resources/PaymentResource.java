@@ -124,7 +124,7 @@ public class PaymentResource extends ComboPaymentResource {
     @TimedResource(name = "getPayment")
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a payment by id", response = PaymentJson.class)
+    @ApiOperation(value = "Retrieve a payment by external key", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Payment not found")})
     public Response getPaymentByExternalKey(@QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                             @QueryParam(QUERY_EXTERNAL_KEY) final String paymentExternalKey,

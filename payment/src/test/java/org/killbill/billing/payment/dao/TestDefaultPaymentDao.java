@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
@@ -37,13 +37,13 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testPaymentCRUD() throws Exception {
         for (int i = 0; i < 3; i++) {
-            testPaymentCRUDForAccount(UUID.randomUUID(), i + 1);
+            testPaymentCRUDForAccount();
         }
     }
 
-    public void testPaymentCRUDForAccount(final UUID accountId, final int accountNb) {
-        // We need to create specific call contexts to make the account_record_id magic work
-        internalCallContext.setAccountRecordId((long) accountNb);
+    public void testPaymentCRUDForAccount() throws Exception {
+        final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
+        final UUID accountId = account.getId();
 
         final PaymentModelDao specifiedFirstPaymentModelDao = generatePaymentModelDao(accountId);
         final PaymentTransactionModelDao specifiedFirstPaymentTransactionModelDao = generatePaymentTransactionModelDao(specifiedFirstPaymentModelDao.getId());

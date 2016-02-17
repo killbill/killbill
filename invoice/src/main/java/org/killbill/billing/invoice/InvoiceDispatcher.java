@@ -108,6 +108,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 
@@ -165,19 +166,19 @@ public class InvoiceDispatcher {
     public void processSubscriptionForInvoiceGeneration(final EffectiveSubscriptionInternalEvent transition,
                                                         final InternalCallContext context) throws InvoiceApiException {
         final UUID subscriptionId = transition.getSubscriptionId();
-        final DateTime targetDate = transition.getEffectiveTransitionTime();
+        final LocalDate targetDate = context.toLocalDate(transition.getEffectiveTransitionTime());
         processSubscriptionForInvoiceGeneration(subscriptionId, targetDate, context);
     }
 
-    public void processSubscriptionForInvoiceGeneration(final UUID subscriptionId, final DateTime targetDate, final InternalCallContext context) throws InvoiceApiException {
+    public void processSubscriptionForInvoiceGeneration(final UUID subscriptionId, final LocalDate targetDate, final InternalCallContext context) throws InvoiceApiException {
         processSubscriptionInternal(subscriptionId, targetDate, false, context);
     }
 
-    public void processSubscriptionForInvoiceNotification(final UUID subscriptionId, final DateTime targetDate, final InternalCallContext context) throws InvoiceApiException {
+    public void processSubscriptionForInvoiceNotification(final UUID subscriptionId, final LocalDate targetDate, final InternalCallContext context) throws InvoiceApiException {
         final Invoice dryRunInvoice = processSubscriptionInternal(subscriptionId, targetDate, true, context);
         if (dryRunInvoice != null && dryRunInvoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
             final InvoiceNotificationInternalEvent event = new DefaultInvoiceNotificationInternalEvent(dryRunInvoice.getAccountId(), dryRunInvoice.getBalance(), dryRunInvoice.getCurrency(),
-                                                                                                       targetDate, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+                                                                                                       context.toUTCDateTime(targetDate), context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
             try {
                 eventBus.post(event);
             } catch (final EventBusException e) {
@@ -186,7 +187,7 @@ public class InvoiceDispatcher {
         }
     }
 
-    private Invoice processSubscriptionInternal(final UUID subscriptionId, final DateTime targetDate, final boolean dryRunForNotification, final InternalCallContext context) throws InvoiceApiException {
+    private Invoice processSubscriptionInternal(final UUID subscriptionId, final LocalDate targetDate, final boolean dryRunForNotification, final InternalCallContext context) throws InvoiceApiException {
         try {
             if (subscriptionId == null) {
                 log.error("Failed handling SubscriptionBase change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
@@ -203,7 +204,7 @@ public class InvoiceDispatcher {
         }
     }
 
-    public Invoice processAccount(final UUID accountId, @Nullable final DateTime targetDate,
+    public Invoice processAccount(final UUID accountId, @Nullable final LocalDate targetDate,
                                   @Nullable final DryRunArguments dryRunArguments, final InternalCallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
@@ -222,13 +223,18 @@ public class InvoiceDispatcher {
         return null;
     }
 
-    private Invoice processAccountWithLock(final UUID accountId, @Nullable final DateTime inputTargetDateTime,
+    private Invoice processAccountWithLock(final UUID accountId, @Nullable final LocalDate inputTargetDateMaybeNull,
                                            @Nullable final DryRunArguments dryRunArguments, final InternalCallContext context) throws InvoiceApiException {
-
         final boolean isDryRun = dryRunArguments != null;
-        // A null inputTargetDateTime is only allowed in dryRun mode to have the system compute it
-        Preconditions.checkArgument(inputTargetDateTime != null ||
-                                    (dryRunArguments != null && DryRunType.UPCOMING_INVOICE.equals(dryRunArguments.getDryRunType())), "inputTargetDateTime is required in non dryRun mode");
+        final boolean upcomingInvoiceDryRun = isDryRun && DryRunType.UPCOMING_INVOICE.equals(dryRunArguments.getDryRunType());
+
+        LocalDate inputTargetDate = inputTargetDateMaybeNull;
+        // A null inputTargetDate is only allowed in dryRun mode to have the system compute it
+        if (inputTargetDate == null && !upcomingInvoiceDryRun) {
+            inputTargetDate = clock.getUTCToday();
+        }
+        Preconditions.checkArgument(inputTargetDate != null || upcomingInvoiceDryRun, "inputTargetDate is required in non dryRun mode");
+
         try {
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
             final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, dryRunArguments, context);
@@ -236,11 +242,11 @@ public class InvoiceDispatcher {
                 return null;
             }
             final Iterable<UUID> filteredSubscriptionIdsForDryRun = getFilteredSubscriptionIdsForDryRun(dryRunArguments, billingEvents);
-            final List<DateTime> candidateDateTimes = (inputTargetDateTime != null) ?
-                                                      ImmutableList.of(inputTargetDateTime) :
-                                                      getUpcomingInvoiceCandidateDates(filteredSubscriptionIdsForDryRun, context);
-            for (final DateTime curTargetDateTime : candidateDateTimes) {
-                final Invoice invoice = processAccountWithLockAndInputTargetDate(accountId, curTargetDateTime, billingEvents, isDryRun, context);
+            final List<LocalDate> candidateTargetDates = (inputTargetDate != null) ?
+                                                         ImmutableList.<LocalDate>of(inputTargetDate) :
+                                                         getUpcomingInvoiceCandidateDates(filteredSubscriptionIdsForDryRun, context);
+            for (final LocalDate curTargetDate : candidateTargetDates) {
+                final Invoice invoice = processAccountWithLockAndInputTargetDate(accountId, curTargetDate, billingEvents, isDryRun, context);
                 if (invoice != null) {
                     filterInvoiceItemsForDryRun(filteredSubscriptionIdsForDryRun, invoice);
                     return invoice;
@@ -294,7 +300,7 @@ public class InvoiceDispatcher {
         });
     }
 
-    private Invoice processAccountWithLockAndInputTargetDate(final UUID accountId, final DateTime targetDateTime,
+    private Invoice processAccountWithLockAndInputTargetDate(final UUID accountId, final LocalDate targetDate,
                                                              final BillingEventSet billingEvents, final boolean isDryRun, final InternalCallContext context) throws InvoiceApiException {
         try {
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
@@ -310,7 +316,6 @@ public class InvoiceDispatcher {
                                                                                                 }));
 
             final Currency targetCurrency = account.getCurrency();
-            final LocalDate targetDate = context.toLocalDate(targetDateTime);
             final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, billingEvents, invoices, targetDate, targetCurrency, context);
             final Invoice invoice = invoiceWithMetadata.getInvoice();
 
@@ -323,9 +328,9 @@ public class InvoiceDispatcher {
             //
             if (invoice == null) {
                 if (isDryRun) {
-                    log.info("Generated null dryRun invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
+                    log.info("Generated null dryRun invoice for accountId {} and targetDate {}", accountId, targetDate);
                 } else {
-                    log.info("Generated null invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
+                    log.info("Generated null invoice for accountId {} and targetDate {}", accountId, targetDate);
 
                     final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
                                                                                context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
@@ -610,11 +615,16 @@ public class InvoiceDispatcher {
         }
     }
 
-    private List<DateTime> getUpcomingInvoiceCandidateDates(final Iterable<UUID> filteredSubscriptionIds, final InternalCallContext internalCallContext) {
+    private List<LocalDate> getUpcomingInvoiceCandidateDates(final Iterable<UUID> filteredSubscriptionIds, final InternalCallContext internalCallContext) {
         final Iterable<DateTime> nextScheduledInvoiceDates = getNextScheduledInvoiceEffectiveDate(filteredSubscriptionIds, internalCallContext);
         final Iterable<DateTime> nextScheduledSubscriptionsEventDates = subscriptionApi.getFutureNotificationsForAccount(internalCallContext);
-        Iterables.concat(nextScheduledInvoiceDates, nextScheduledSubscriptionsEventDates);
-        return UPCOMING_NOTIFICATION_DATE_ORDERING.sortedCopy(Iterables.concat(nextScheduledInvoiceDates, nextScheduledSubscriptionsEventDates));
+        return Lists.<DateTime, LocalDate>transform(UPCOMING_NOTIFICATION_DATE_ORDERING.sortedCopy(Iterables.<DateTime>concat(nextScheduledInvoiceDates, nextScheduledSubscriptionsEventDates)),
+                                                    new Function<DateTime, LocalDate>() {
+                                                        @Override
+                                                        public LocalDate apply(final DateTime input) {
+                                                            return internalCallContext.toLocalDate(input);
+                                                        }
+                                                    });
     }
 
     private Iterable<DateTime> getNextScheduledInvoiceEffectiveDate(final Iterable<UUID> filteredSubscriptionIds, final InternalCallContext internalCallContext) {
@@ -669,7 +679,7 @@ public class InvoiceDispatcher {
         }
 
         @Override
-        public DateTime getEffectiveDate() {
+        public LocalDate getEffectiveDate() {
             return null;
         }
 
