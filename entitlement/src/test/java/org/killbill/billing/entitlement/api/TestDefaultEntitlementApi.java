@@ -302,7 +302,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         // Block all entitlement in the bundle
         clock.addDays(5);
 
-        testListener.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
         entitlementApi.pause(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -329,13 +329,11 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         clock.addDays(3);
 
-        testListener.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
         entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        // Verify call is idempotent : The current semantics is to post the RESUME because we went through the operation, but not the BLOCK because the DAO logic
-        // filtered the event as the subscription was already resumed.
-        testListener.pushExpectedEvents(NextEvent.RESUME);
+        // Verify call is idempotent
         entitlementApi.resume(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -382,7 +380,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         // No event yet
         assertListenerStatus();
 
-        testListener.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
         clock.setDay(pauseDate);
         assertListenerStatus();
 
@@ -390,7 +388,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement baseEntitlementPaused = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
         assertEquals(baseEntitlementPaused.getState(), EntitlementState.BLOCKED);
 
-        testListener.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
+        testListener.pushExpectedEvents( NextEvent.BLOCK);
         clock.setDay(resumeDate);
         assertListenerStatus();
 
@@ -471,7 +469,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertTrue(blockingState.isBlockEntitlement());
 
 
-        // Check unblocking on another service will not bring the sate back to ACTIVE
+        // Check unblocking on another service will not bring the state back to ACTIVE
         clock.addDays(1);
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         entitlementApi.setBlockingState(baseEntitlement.getBundleId(), "UNBLOCK", "bar", null, false, false, false, ImmutableList.<PluginProperty>of(), callContext);

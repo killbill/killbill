@@ -19,6 +19,7 @@
 package org.killbill.billing.entitlement.api;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +64,7 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
+import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueueService;
 
 import com.google.common.base.Function;
@@ -73,6 +75,7 @@ import com.google.common.collect.Lists;
 
 public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements EntitlementApi {
 
+    public static final String ENT_STATE_START = "ENT_STARTED";
     public static final String ENT_STATE_BLOCKED = "ENT_BLOCKED";
     public static final String ENT_STATE_CLEAR = "ENT_CLEAR";
     public static final String ENT_STATE_CANCELLED = "ENT_CANCELLED";
@@ -142,10 +145,10 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
                     final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.createBundleForAccount(accountId, externalKey, contextWithValidAccountRecordId);
 
-                    final DateTime referenceTime = clock.getUTCNow();
                     final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), contextWithValidAccountRecordId);
                     final EntitlementSpecifier specifier = getFirstEntitlementSpecifier(updatedPluginContext.getEntitlementSpecifiers());
                     final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundle.getId(), specifier.getPlanPhaseSpecifier(), specifier.getOverrides(), requestedDate, contextWithValidAccountRecordId);
+
 
                     return new DefaultEntitlement(accountId, subscription.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
                                                   blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,

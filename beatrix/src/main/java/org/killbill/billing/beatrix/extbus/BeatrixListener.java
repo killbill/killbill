@@ -26,8 +26,10 @@ import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EntitlementTransitionType;
 import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
 import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.events.AccountCreationInternalEvent;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
@@ -161,7 +163,20 @@ public class BeatrixListener {
                     objectType = ObjectType.SUBSCRIPTION;
                 }
                 objectId = realEventBS.getBlockableId();
-                // Probably we should serialize the isTransitionedTo* from BlockingTransitionInternalEvent into the metdata section
+
+                if (EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(realEventBS.getService())) {
+                    if (DefaultEntitlementApi.ENT_STATE_START.equals(realEventBS.getStateName())) {
+                        eventBusType = ExtBusEventType.ENTITLEMENT_CREATION;
+                    } else if (DefaultEntitlementApi.ENT_STATE_BLOCKED.equals(realEventBS.getStateName())) {
+                        eventBusType = ExtBusEventType.BUNDLE_PAUSE;
+                    } else if (DefaultEntitlementApi.ENT_STATE_CLEAR.equals(realEventBS.getStateName())) {
+                        eventBusType = ExtBusEventType.BUNDLE_RESUME;
+                    } else if (DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(realEventBS.getStateName())) {
+                        eventBusType = ExtBusEventType.ENTITLEMENT_CANCEL;
+                    }
+                } else {
+                    eventBusType = ExtBusEventType.BLOCKING_STATE;
+                }
                 break;
 
             case ENTITLEMENT_TRANSITION:

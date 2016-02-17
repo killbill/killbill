@@ -223,14 +223,14 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final LocalDate pauseDate = new LocalDate(2013, 9, 17);
         entitlementApi.pause(baseEntitlement.getBundleId(), pauseDate, ImmutableList.<PluginProperty>of(), callContext);
 
-        testListener.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
         clock.setDay(pauseDate);
         assertListenerStatus();
 
         final LocalDate resumeDate = new LocalDate(2013, 12, 24);
         entitlementApi.resume(baseEntitlement.getBundleId(), resumeDate, ImmutableList.<PluginProperty>of(), callContext);
 
-        testListener.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
         clock.setDay(resumeDate);
         assertListenerStatus();
 

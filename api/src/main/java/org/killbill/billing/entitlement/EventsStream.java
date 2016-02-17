@@ -42,6 +42,8 @@ public interface EventsStream {
 
     EntitlementState getEntitlementState();
 
+    LocalDate getEntitlementEffectiveStartDate();
+
     LocalDate getEntitlementEffectiveEndDate();
 
     SubscriptionBase getSubscriptionBase();

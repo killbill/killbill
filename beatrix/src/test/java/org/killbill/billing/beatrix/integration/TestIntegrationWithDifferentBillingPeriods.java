@@ -199,7 +199,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         // 2012-5-12
         clock.addDays(10);
 
-        busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
         entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -218,7 +218,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         // 2012-6-4
         clock.addDays(23);
 
-        busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -279,13 +279,13 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         // 2012-5-12
         clock.addDays(10);
 
-        busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
         entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // 2012-6-4
         clock.addDays(23);
-        busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
         entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 

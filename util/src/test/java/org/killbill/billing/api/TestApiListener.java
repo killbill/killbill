@@ -30,7 +30,6 @@ import javax.inject.Inject;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.BroadcastInternalEvent;
 import org.killbill.billing.events.CustomFieldEvent;
-import org.killbill.billing.events.EffectiveEntitlementInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
@@ -129,7 +128,6 @@ public class TestApiListener {
         CUSTOM_FIELD,
     }
 
-
     @Subscribe
     public void handleBroadcastEvents(final BroadcastInternalEvent event) {
         log.info(String.format("Got BroadcastInternalEvent event %s", event.toString()));
@@ -137,27 +135,11 @@ public class TestApiListener {
         notifyIfStackEmpty();
     }
 
-
     @Subscribe
     public void handleRepairSubscriptionEvents(final RepairSubscriptionInternalEvent event) {
         log.info(String.format("Got RepairSubscriptionEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
         notifyIfStackEmpty();
-    }
-
-    @Subscribe
-    public void handleEntitlementEvents(final EffectiveEntitlementInternalEvent eventEffective) {
-        log.info(String.format("Got entitlement event %s", eventEffective.toString()));
-        switch (eventEffective.getTransitionType()) {
-            case BLOCK_BUNDLE:
-                assertEqualsNicely(NextEvent.PAUSE);
-                notifyIfStackEmpty();
-                break;
-            case UNBLOCK_BUNDLE:
-                assertEqualsNicely(NextEvent.RESUME);
-                notifyIfStackEmpty();
-                break;
-        }
     }
 
     @Subscribe

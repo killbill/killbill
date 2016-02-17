@@ -246,7 +246,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public LocalDate getEffectiveStartDate() {
-        return internalTenantContext.toLocalDate(getSubscriptionBase().getStartDate());
+        return eventsStream.getEntitlementEffectiveStartDate();
     }
 
     @Override

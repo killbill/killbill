@@ -312,8 +312,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         }
 
         final InternalCallContext internalCallContextWithValidAccountId;
-
-        final InternalCallContext internalCallContext;
         final ImmutableAccountData account;
         final UUID accountId;
         final UUID bundleId;

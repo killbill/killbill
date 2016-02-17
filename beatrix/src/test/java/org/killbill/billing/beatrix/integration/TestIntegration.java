@@ -581,7 +581,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // PAUSE THE ENTITLEMENT
         DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
-        busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
         entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -598,7 +598,7 @@ public class TestIntegration extends TestIntegrationBase {
         // MOVE CLOCK FORWARD ADN CHECK THERE IS NO NEW INVOICE
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
 
-        busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
         entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 

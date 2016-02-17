@@ -38,11 +38,9 @@ import org.killbill.billing.entitlement.AccountEntitlements;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.EntitlementService;
-import org.killbill.billing.entitlement.EntitlementTransitionType;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
-import org.killbill.billing.entitlement.api.DefaultEffectiveEntitlementEvent;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
 import org.killbill.billing.entitlement.api.DefaultEntitlementContext;
@@ -69,7 +67,6 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -177,20 +174,7 @@ public class DefaultEntitlementApiBase {
                         return null;
                     }
 
-                    final UUID blockingId = blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, true, true, true, baseSubscription, internalCallContext);
-
-                    // Should we send one event per entitlement in the bundle?
-                    // Code below only sends one event for the bundle and use the base entitlementId
-                    final DefaultEffectiveEntitlementEvent event = new DefaultEffectiveEntitlementEvent(blockingId, baseSubscription.getId(), bundleId, bundle.getAccountId(), EntitlementTransitionType.BLOCK_BUNDLE,
-                                                                                                        effectiveDate, clock.getUTCNow(),
-                                                                                                        internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(),
-                                                                                                        internalCallContext.getUserToken());
-
-                    try {
-                        eventBus.post(event);
-                    } catch (EventBusException e) {
-                        log.warn("Failed to post bus event for pause operation on bundle " + bundleId);
-                    }
+                    blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, true, true, true, baseSubscription, internalCallContext);
 
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
@@ -229,20 +213,7 @@ public class DefaultEntitlementApiBase {
                         return null;
                     }
 
-                    final UUID blockingId = blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, false, false, false, baseSubscription, internalCallContext);
-
-                    // Should we send one event per entitlement in the bundle?
-                    // Code below only sends one event for the bundle and use the base entitlementId
-                    final DefaultEffectiveEntitlementEvent event = new DefaultEffectiveEntitlementEvent(blockingId, baseSubscription.getId(), bundleId, bundle.getAccountId(), EntitlementTransitionType.UNBLOCK_BUNDLE,
-                                                                                                        effectiveDate, clock.getUTCNow(),
-                                                                                                        internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(),
-                                                                                                        internalCallContext.getUserToken());
-
-                    try {
-                        eventBus.post(event);
-                    } catch (EventBusException e) {
-                        log.warn("Failed to post bus event for resume operation on bundle " + bundleId);
-                    }
+                    blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, false, false, false, baseSubscription, internalCallContext);
 
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
@@ -262,15 +233,10 @@ public class DefaultEntitlementApiBase {
 
     private UUID blockUnblockBundle(final UUID bundleId, final String stateName, final String serviceName, @Nullable final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, @Nullable final SubscriptionBase inputBaseSubscription, final InternalCallContext internalCallContext)
             throws EntitlementApiException {
-        try {
-            final SubscriptionBase baseSubscription = inputBaseSubscription == null ? subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext) : inputBaseSubscription;
-            final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(localEffectiveDate, internalCallContext);
-            final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, stateName, serviceName, blockChange, blockEntitlement, blockBilling, effectiveDate);
-            entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(state), bundleId, internalCallContext);
-            return state.getId();
-        } catch (final SubscriptionBaseApiException e) {
-            throw new EntitlementApiException(e);
-        }
+        final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(localEffectiveDate, internalCallContext);
+        final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, stateName, serviceName, blockChange, blockEntitlement, blockBilling, effectiveDate);
+        entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(state), bundleId, internalCallContext);
+        return state.getId();
     }
 
     protected void recordPauseResumeNotificationEntry(final UUID entitlementId, final UUID bundleId, final DateTime effectiveDate, final boolean isPause, final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {

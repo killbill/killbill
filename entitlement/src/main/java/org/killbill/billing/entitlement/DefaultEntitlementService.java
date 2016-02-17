@@ -182,10 +182,18 @@ public class DefaultEntitlementService implements EntitlementService {
             return;
         }
 
-        final BusEvent event = new DefaultBlockingTransitionInternalEvent(key.getBlockableId(), key.getBlockingType(),
-                                                                          key.isTransitionedToBlockedBilling(), key.isTransitionedToUnblockedBilling(),
-                                                                          key.isTransitionedToBlockedEntitlement(), key.isTransitionToUnblockedEntitlement(),
-                                                                          internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), internalCallContext.getUserToken());
+        final BusEvent event = new DefaultBlockingTransitionInternalEvent(key.getBlockableId(),
+                                                                          key.getStateName(),
+                                                                          key.getService(),
+                                                                          key.getEffectiveDate(),
+                                                                          key.getBlockingType(),
+                                                                          key.isTransitionedToBlockedBilling(),
+                                                                          key.isTransitionedToUnblockedBilling(),
+                                                                          key.isTransitionedToBlockedEntitlement(),
+                                                                          key.isTransitionToUnblockedEntitlement(),
+                                                                          internalCallContext.getAccountRecordId(),
+                                                                          internalCallContext.getTenantRecordId(),
+                                                                          internalCallContext.getUserToken());
 
         try {
             eventBus.post(event);
