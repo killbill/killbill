@@ -146,7 +146,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @param invoiceId the invoice id
      * @param newState the new invoice state
      * @param context the tenant context
-     * @throws InvoiceApiException
+     * @throws InvoiceApiException if any unexpected error occurs
      */
     void changeInvoiceStatus(UUID invoiceId, InvoiceStatus newState, InternalCallContext context) throws InvoiceApiException;
 
@@ -155,7 +155,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      *
      * @param invoiceRelation the invoice relation object
      * @param context the tenant context
-     * @throws InvoiceApiException
+     * @throws InvoiceApiException if any unexpected error occurs
      */
     void createParentChildInvoiceRelation(final InvoiceParentChildModelDao invoiceRelation, final InternalCallContext context) throws InvoiceApiException;
 
@@ -164,7 +164,8 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      *
      * @param parentInvoiceId the parent invoice id
      * @param context the tenant context
-     * @throws InvoiceApiException
+     * @return a list of parent-children relation
+     * @throws InvoiceApiException if any unexpected error occurs
      */
     List<InvoiceParentChildModelDao> getChildInvoicesByParentInvoiceId(UUID parentInvoiceId, final InternalCallContext context) throws InvoiceApiException;
 
@@ -174,7 +175,18 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      *
      * @param parentAccountId the parent account id
      * @param context the tenant context
-     * @return
+     * @return a parent invoice in DRAFT status
+     * @throws InvoiceApiException if any unexpected error occurs
      */
     InvoiceModelDao getParentDraftInvoice(UUID parentAccountId, InternalCallContext context) throws InvoiceApiException;
+
+    /**
+     * Update invoice item amount
+     *
+     * @param invoiceItemId the invoice item id
+     * @param amount the new amount value
+     * @param context the tenant context
+     * @throws InvoiceApiException if any unexpected error occurs
+     */
+    void updateInvoiceItemAmount(UUID invoiceItemId, BigDecimal amount, InternalCallContext context) throws InvoiceApiException;
 }

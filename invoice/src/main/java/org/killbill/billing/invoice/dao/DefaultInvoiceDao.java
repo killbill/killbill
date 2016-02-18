@@ -1019,7 +1019,31 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             @Override
             public InvoiceModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-                return invoiceSqlDao.getParentDraftInvoice(parentAccountId.toString(), context);
+                InvoiceModelDao invoice = invoiceSqlDao.getParentDraftInvoice(parentAccountId.toString(), context);
+                if (invoice != null) {
+                    invoiceDaoHelper.populateChildren(invoice, entitySqlDaoWrapperFactory, context);
+                }
+                return invoice;
+            }
+        });
+    }
+
+    @Override
+    public void updateInvoiceItemAmount(final UUID invoiceItemId, final BigDecimal amount, final InternalCallContext context) throws InvoiceApiException {
+        transactionalSqlDao.execute(InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceItemSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+
+                // Retrieve the invoice and make sure it belongs to the right account
+                final InvoiceItemModelDao invoiceItem = transactional.getById(invoiceItemId.toString(), context);
+
+                if (invoiceItem == null ) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
+                }
+
+                transactional.updateAmount(invoiceItemId.toString(), amount, context);
+                return null;
             }
         });
     }

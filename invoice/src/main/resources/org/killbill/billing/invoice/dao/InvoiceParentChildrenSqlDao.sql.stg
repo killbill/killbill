@@ -33,4 +33,5 @@ getChildInvoicesByParentInvoiceId() ::= <<
      FROM <tableName()>
     WHERE parent_invoice_id = :parentInvoiceId
     <AND_CHECK_TENANT()>
+    <defaultOrderBy()>
  >>

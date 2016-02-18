@@ -69,3 +69,10 @@ getAdjustedOrRepairedInvoiceItemsByLinkedId() ::= <<
   <AND_CHECK_TENANT()>
   ;
 >>
+
+updateAmount() ::= <<
+    UPDATE <tableName()>
+    SET amount = :amount
+    WHERE id = :id
+    <AND_CHECK_TENANT()>;
+>>

@@ -45,6 +45,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.MockBillingEventSet;
 import org.killbill.billing.invoice.api.Invoice;
@@ -61,13 +62,16 @@ import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
+import org.killbill.billing.invoice.model.ParentInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.killbill.clock.ClockMock;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
@@ -1739,6 +1743,30 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(parentChildRelation.getChildAccountId(), childAccountId);
         assertEquals(parentChildRelation.getChildInvoiceId(), childInvoiceId);
         assertEquals(parentChildRelation.getParentInvoiceId(), parentInvoiceId);
+
+    }
+
+    @Test(groups = "slow")
+    public void testCreateParentInvoice() throws InvoiceApiException {
+
+        final UUID parentAccountId = UUID.randomUUID();
+        final UUID childAccountId = UUID.randomUUID();
+        final DateTime today = clock.getNow(account.getTimeZone());
+
+        InvoiceModelDao parentInvoice = new InvoiceModelDao(parentAccountId, today.toLocalDate(), account.getCurrency(), InvoiceStatus.DRAFT, true);
+        InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoice.getId(), parentAccountId, childAccountId, BigDecimal.TEN, account.getCurrency(), "");
+        parentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
+
+        // build account date time zone
+        final AccountDateAndTimeZoneContext accountDateTimeZone = new DefaultAccountDateAndTimeZoneContext(today, account.getTimeZone());
+        final FutureAccountNotifications futureAccountNotifications = new FutureAccountNotifications(accountDateTimeZone, null);
+        invoiceDao.createInvoice(parentInvoice, parentInvoice.getInvoiceItems(), true, futureAccountNotifications, context);
+
+        final InvoiceModelDao parentDraftInvoice = invoiceDao.getParentDraftInvoice(parentAccountId, context);
+
+        assertNotNull(parentDraftInvoice);
+        assertEquals(parentDraftInvoice.getStatus(), InvoiceStatus.DRAFT);
+        assertEquals(parentDraftInvoice.getInvoiceItems().size(), 1);
 
     }
 
