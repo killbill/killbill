@@ -27,7 +27,6 @@ import javax.inject.Named;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.entitlement.EntitlementService;
-import org.killbill.billing.entitlement.EntitlementTransitionType;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
 import org.killbill.billing.events.AccountChangeInternalEvent;
@@ -40,7 +39,6 @@ import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.events.CustomFieldCreationEvent;
 import org.killbill.billing.events.CustomFieldDeletionEvent;
-import org.killbill.billing.events.EntitlementInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
@@ -56,6 +54,7 @@ import org.killbill.billing.events.TenantConfigDeletionInternalEvent;
 import org.killbill.billing.events.UserTagCreationInternalEvent;
 import org.killbill.billing.events.UserTagDeletionInternalEvent;
 import org.killbill.billing.lifecycle.glue.BusModule;
+import org.killbill.billing.notification.plugin.api.BlockingStateMetadata;
 import org.killbill.billing.notification.plugin.api.BroadcastMetadata;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -176,17 +175,11 @@ public class BeatrixListener {
                     }
                 } else {
                     eventBusType = ExtBusEventType.BLOCKING_STATE;
-                }
-                break;
 
-            case ENTITLEMENT_TRANSITION:
-                final EntitlementInternalEvent realEventET = (EntitlementInternalEvent) event;
-                objectType = ObjectType.BUNDLE;
-                objectId = realEventET.getBundleId();
-                if (realEventET.getTransitionType() == EntitlementTransitionType.BLOCK_BUNDLE) {
-                    eventBusType = ExtBusEventType.BUNDLE_PAUSE;
-                } else if (realEventET.getTransitionType() == EntitlementTransitionType.UNBLOCK_BUNDLE) {
-                    eventBusType = ExtBusEventType.BUNDLE_RESUME;
+                    final BlockingStateMetadata metaDataObj = new BlockingStateMetadata(realEventBS.getBlockableId(), realEventBS.getService(), realEventBS.getStateName(), realEventBS.getBlockingType(), realEventBS.getEffectiveDate(),
+                                                                                        realEventBS.isTransitionedToBlockedBilling(), realEventBS.isTransitionedToUnblockedBilling(),
+                                                                                        realEventBS.isTransitionedToBlockedEntitlement(), realEventBS.isTransitionedToUnblockedEntitlement());
+                    metaData = objectMapper.writeValueAsString(metaDataObj);
                 }
                 break;
 
