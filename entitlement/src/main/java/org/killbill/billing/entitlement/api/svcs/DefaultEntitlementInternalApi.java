@@ -114,8 +114,8 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
                                                                                    entitlement.getExternalKey(),
                                                                                    null,
                                                                                    effectiveDate,
-                                                                                   // TODO this is incorrect, the date will be the result of the billingPolicy
-                                                                                   effectiveDate,
+                                                                                   null,
+                                                                                   billingPolicy,
                                                                                    properties,
                                                                                    callContext);
             pluginContexts.add(pluginContext);

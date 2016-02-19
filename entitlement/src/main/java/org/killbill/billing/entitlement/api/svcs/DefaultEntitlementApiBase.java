@@ -157,6 +157,7 @@ public class DefaultEntitlementApiBase {
                                                                                null,
                                                                                localEffectiveDate,
                                                                                localEffectiveDate,
+                                                                               null,
                                                                                properties,
                                                                                internalCallContextFactory.createCallContext(internalCallContext));
 
@@ -198,6 +199,7 @@ public class DefaultEntitlementApiBase {
                                                                                null,
                                                                                localEffectiveDate,
                                                                                localEffectiveDate,
+                                                                               null,
                                                                                properties,
                                                                                internalCallContextFactory.createCallContext(internalCallContext));
         final WithEntitlementPlugin<Void> resumeWithPlugin = new WithEntitlementPlugin<Void>() {

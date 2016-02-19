@@ -29,6 +29,7 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
@@ -144,17 +145,22 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
                     public boolean isAborted() {
                         return false;
                     }
-
                     @Override
-                    public LocalDate getAdjustedEffectiveDate() {
+                    public LocalDate getAdjustedEntitlementEffectiveDate() {
                         return null;
                     }
-
+                    @Override
+                    public LocalDate getAdjustedBillingEffectiveDate() {
+                        return null;
+                    }
+                    @Override
+                    public BillingActionPolicy getAdjustedBillingActionPolicy() {
+                        return null;
+                    }
                     @Override
                     public List<EntitlementSpecifier> getAdjustedEntitlementSpecifiers() {
                         return entitlementSpecifiers;
                     }
-
                     @Override
                     public Iterable<PluginProperty> getAdjustedPluginProperties() {
                         return null;

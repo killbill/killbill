@@ -282,6 +282,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                                                new ArrayList<EntitlementSpecifier>(),
                                                                                effectiveDate,
                                                                                effectiveDate,
+                                                                               null,
                                                                                ImmutableList.<PluginProperty>of(),
                                                                                callContext);
 
@@ -364,6 +365,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                                                externalKey,
                                                                                new ArrayList<EntitlementSpecifier>(),
                                                                                new LocalDate(blockingState.getEffectiveDate(), account.getTimeZone()),
+                                                                               null,
                                                                                null,
                                                                                properties,
                                                                                callContext);

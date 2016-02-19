@@ -298,6 +298,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Get the latest state from disk
         refresh(callContext);
 
+        final LocalDate billingEffectiveDate = overrideBillingEffectiveDate ? entitlementEffectiveDate : null;
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CANCEL_SUBSCRIPTION,
                                                                                getAccountId(),
                                                                                null,
@@ -305,8 +306,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                getExternalKey(),
                                                                                null,
                                                                                entitlementEffectiveDate,
-                                                                               // TODO wrong date
-                                                                               entitlementEffectiveDate,
+                                                                               billingEffectiveDate,
+                                                                               null,
                                                                                properties,
                                                                                callContext);
 
@@ -362,6 +363,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                null,
                                                                                getBundleId(),
                                                                                getExternalKey(),
+                                                                               null,
                                                                                null,
                                                                                null,
                                                                                null,
@@ -437,8 +439,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                getExternalKey(),
                                                                                null,
                                                                                entitlementEffectiveDate,
-                                                                               // TODO wrong date?
-                                                                               entitlementEffectiveDate,
+                                                                               null,
+                                                                               billingPolicy,
                                                                                properties,
                                                                                callContext);
 
@@ -514,6 +516,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                null,
                                                                                null,
                                                                                null,
+                                                                               null,
                                                                                properties,
                                                                                callContext);
 
@@ -575,6 +578,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                null,
                                                                                effectiveDate,
                                                                                effectiveDate,
+                                                                               null,
                                                                                properties,
                                                                                callContext);
 
@@ -637,8 +641,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                getExternalKey(),
                                                                                null,
                                                                                entitlementEffectiveDate,
-                                                                               // TODO wrong date
-                                                                               entitlementEffectiveDate,
+                                                                               null,
+                                                                               actionPolicy,
                                                                                properties,
                                                                                callContext);
 

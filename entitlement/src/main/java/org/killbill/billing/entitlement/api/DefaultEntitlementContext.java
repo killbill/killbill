@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
 import org.killbill.billing.entitlement.plugin.api.PriorEntitlementResult;
@@ -43,6 +44,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private final List<EntitlementSpecifier> entitlementSpecifiers;
     private final LocalDate entitlementEffectiveDate;
     private final LocalDate billingEffectiveDate;
+    private final BillingActionPolicy billingActionPolicy;
     private final Iterable<PluginProperty> pluginProperties;
     private final UUID userToken;
     private final String userName;
@@ -63,7 +65,9 @@ public class DefaultEntitlementContext implements EntitlementContext {
              prev.getBundleId(),
              prev.getExternalKey(),
              pluginResult != null && pluginResult.getAdjustedEntitlementSpecifiers() != null ? pluginResult.getAdjustedEntitlementSpecifiers() : prev.getEntitlementSpecifiers(),
-             pluginResult != null && pluginResult.getAdjustedEffectiveDate() != null ? pluginResult.getAdjustedEffectiveDate() : prev.getEntitlementEffectiveDate(), prev.getBillingEffectiveDate(),
+             pluginResult != null && pluginResult.getAdjustedEntitlementEffectiveDate() != null ? pluginResult.getAdjustedEntitlementEffectiveDate() : prev.getEntitlementEffectiveDate(),
+             pluginResult != null && pluginResult.getAdjustedBillingEffectiveDate() != null ? pluginResult.getAdjustedBillingEffectiveDate() : prev.getBillingEffectiveDate(),
+             pluginResult != null && pluginResult.getAdjustedBillingActionPolicy() != null ? pluginResult.getAdjustedBillingActionPolicy() : prev.getBillingActionPolicy(),
              pluginResult != null && pluginResult.getAdjustedPluginProperties() != null ? pluginResult.getAdjustedPluginProperties() : prev.getPluginProperties(),
              prev);
     }
@@ -76,9 +80,10 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      final List<EntitlementSpecifier> entitlementSpecifiers,
                                      @Nullable final LocalDate entitlementEffectiveDate,
                                      @Nullable final LocalDate billingEffectiveDate,
+                                     @Nullable final BillingActionPolicy actionPolicy,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final CallContext callContext) {
-        this(operationType, accountId, destinationAccountId, bundleId, externalKey, entitlementSpecifiers, entitlementEffectiveDate, billingEffectiveDate, pluginProperties,
+        this(operationType, accountId, destinationAccountId, bundleId, externalKey, entitlementSpecifiers, entitlementEffectiveDate, billingEffectiveDate, actionPolicy, pluginProperties,
              callContext.getUserToken(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(),
              callContext.getComments(), callContext.getCreatedDate(), callContext.getUpdatedDate(), callContext.getTenantId());
     }
@@ -92,6 +97,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      final List<EntitlementSpecifier> entitlementSpecifiers,
                                      @Nullable final LocalDate entitlementEffectiveDate,
                                      @Nullable final LocalDate billingEffectiveDate,
+                                     @Nullable final BillingActionPolicy actionPolicy,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final UUID userToken,
                                      final String userName,
@@ -110,6 +116,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
         this.entitlementSpecifiers = entitlementSpecifiers;
         this.entitlementEffectiveDate = entitlementEffectiveDate;
         this.billingEffectiveDate = billingEffectiveDate;
+        this.billingActionPolicy = actionPolicy;
         this.pluginProperties = pluginProperties;
         this.userToken = userToken;
         this.userName = userName;
@@ -161,6 +168,11 @@ public class DefaultEntitlementContext implements EntitlementContext {
     @Override
     public LocalDate getBillingEffectiveDate() {
         return billingEffectiveDate;
+    }
+
+    @Override
+    public BillingActionPolicy getBillingActionPolicy() {
+        return billingActionPolicy;
     }
 
     @Override

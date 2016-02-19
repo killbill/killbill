@@ -131,6 +131,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                entitlementSpecifierList,
                                                                                entitlementEffectiveDate,
                                                                                billingEffectiveDate,
+                                                                               null,
                                                                                properties,
                                                                                callContext);
 
@@ -198,6 +199,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                entitlementSpecifierList,
                                                                                entitlementEffectiveDate,
                                                                                billingEffectiveDate,
+                                                                               null,
                                                                                properties,
                                                                                callContext);
 
@@ -253,6 +255,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                entitlementSpecifierList,
                                                                                entitlementEffectiveDate,
                                                                                billingEffectiveDate,
+                                                                               null,
                                                                                properties,
                                                                                callContext);
 
@@ -407,6 +410,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                new ArrayList<EntitlementSpecifier>(),
                                                                                effectiveDate,
                                                                                effectiveDate,
+                                                                               null,
                                                                                properties,
                                                                                context);
 
