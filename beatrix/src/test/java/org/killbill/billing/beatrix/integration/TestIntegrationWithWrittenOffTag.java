@@ -77,7 +77,7 @@ public class TestIntegrationWithWrittenOffTag extends TestIntegrationBase {
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
         // set next invoice to fail and create network
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
         List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);

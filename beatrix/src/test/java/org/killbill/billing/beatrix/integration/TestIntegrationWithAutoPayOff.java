@@ -69,7 +69,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
         Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -110,7 +110,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
         Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -169,7 +169,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
         Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);

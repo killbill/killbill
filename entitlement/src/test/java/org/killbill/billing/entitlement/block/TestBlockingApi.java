@@ -137,8 +137,8 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
-        testListener.pushExpectedEvent(NextEvent.CREATE);
-        Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, ImmutableList.<PluginProperty>of(), callContext);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);

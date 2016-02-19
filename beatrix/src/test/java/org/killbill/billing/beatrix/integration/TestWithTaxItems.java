@@ -116,7 +116,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
 
         //
         // Create original subscription (Trial PHASE) -> $0 invoice.
-        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
@@ -127,7 +127,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         assertListenerStatus();
 
         // Add Cleaning ADD_ON => No Invoice
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Cleaning", ProductCategory.ADD_ON, BillingPeriod.MONTHLY);
         assertListenerStatus();
 

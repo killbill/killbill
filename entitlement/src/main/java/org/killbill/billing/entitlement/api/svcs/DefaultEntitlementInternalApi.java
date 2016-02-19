@@ -114,6 +114,8 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
                                                                                    entitlement.getExternalKey(),
                                                                                    null,
                                                                                    effectiveDate,
+                                                                                   // TODO this is incorrect, the date will be the result of the billingPolicy
+                                                                                   effectiveDate,
                                                                                    properties,
                                                                                    callContext);
             pluginContexts.add(pluginContext);
@@ -217,7 +219,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         @Override
         public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), internalCallContext);
+            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEntitlementEffectiveDate(), internalCallContext);
             // Avoid timing issues for IMM cancellations (we don't want an entitlement cancel date one second or so after the subscription cancel date or
             // add-ons cancellations computations won't work).
             if (effectiveDate.compareTo(entitlement.getSubscriptionBase().getEndDate()) > 0) {

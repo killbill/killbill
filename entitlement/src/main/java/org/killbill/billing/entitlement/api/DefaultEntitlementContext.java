@@ -41,7 +41,8 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private final UUID bundleId;
     private final String externalKey;
     private final List<EntitlementSpecifier> entitlementSpecifiers;
-    private final LocalDate effectiveDate;
+    private final LocalDate entitlementEffectiveDate;
+    private final LocalDate billingEffectiveDate;
     private final Iterable<PluginProperty> pluginProperties;
     private final UUID userToken;
     private final String userName;
@@ -62,7 +63,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
              prev.getBundleId(),
              prev.getExternalKey(),
              pluginResult != null && pluginResult.getAdjustedEntitlementSpecifiers() != null ? pluginResult.getAdjustedEntitlementSpecifiers() : prev.getEntitlementSpecifiers(),
-             pluginResult != null && pluginResult.getAdjustedEffectiveDate() != null ? pluginResult.getAdjustedEffectiveDate() : prev.getEffectiveDate(),
+             pluginResult != null && pluginResult.getAdjustedEffectiveDate() != null ? pluginResult.getAdjustedEffectiveDate() : prev.getEntitlementEffectiveDate(), prev.getBillingEffectiveDate(),
              pluginResult != null && pluginResult.getAdjustedPluginProperties() != null ? pluginResult.getAdjustedPluginProperties() : prev.getPluginProperties(),
              prev);
     }
@@ -73,10 +74,11 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      final UUID bundleId,
                                      final String externalKey,
                                      final List<EntitlementSpecifier> entitlementSpecifiers,
-                                     @Nullable final LocalDate effectiveDate,
+                                     @Nullable final LocalDate entitlementEffectiveDate,
+                                     @Nullable final LocalDate billingEffectiveDate,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final CallContext callContext) {
-        this(operationType, accountId, destinationAccountId, bundleId, externalKey, entitlementSpecifiers, effectiveDate, pluginProperties,
+        this(operationType, accountId, destinationAccountId, bundleId, externalKey, entitlementSpecifiers, entitlementEffectiveDate, billingEffectiveDate, pluginProperties,
              callContext.getUserToken(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(),
              callContext.getComments(), callContext.getCreatedDate(), callContext.getUpdatedDate(), callContext.getTenantId());
     }
@@ -88,7 +90,8 @@ public class DefaultEntitlementContext implements EntitlementContext {
                                      final UUID bundleId,
                                      final String externalKey,
                                      final List<EntitlementSpecifier> entitlementSpecifiers,
-                                     @Nullable final LocalDate effectiveDate,
+                                     @Nullable final LocalDate entitlementEffectiveDate,
+                                     @Nullable final LocalDate billingEffectiveDate,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final UUID userToken,
                                      final String userName,
@@ -105,7 +108,8 @@ public class DefaultEntitlementContext implements EntitlementContext {
         this.bundleId = bundleId;
         this.externalKey = externalKey;
         this.entitlementSpecifiers = entitlementSpecifiers;
-        this.effectiveDate = effectiveDate;
+        this.entitlementEffectiveDate = entitlementEffectiveDate;
+        this.billingEffectiveDate = billingEffectiveDate;
         this.pluginProperties = pluginProperties;
         this.userToken = userToken;
         this.userName = userName;
@@ -148,9 +152,15 @@ public class DefaultEntitlementContext implements EntitlementContext {
         return entitlementSpecifiers;
     }
 
+
     @Override
-    public LocalDate getEffectiveDate() {
-        return effectiveDate;
+    public LocalDate getEntitlementEffectiveDate() {
+        return entitlementEffectiveDate;
+    }
+
+    @Override
+    public LocalDate getBillingEffectiveDate() {
+        return billingEffectiveDate;
     }
 
     @Override

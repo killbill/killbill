@@ -156,6 +156,7 @@ public class DefaultEntitlementApiBase {
                                                                                null,
                                                                                null,
                                                                                localEffectiveDate,
+                                                                               localEffectiveDate,
                                                                                properties,
                                                                                internalCallContextFactory.createCallContext(internalCallContext));
 
@@ -167,7 +168,7 @@ public class DefaultEntitlementApiBase {
                     final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, internalCallContext);
                     final ImmutableAccountData account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), internalCallContext);
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
-                    final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), internalCallContext);
+                    final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBillingEffectiveDate(), internalCallContext);
 
                     if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone(), internalCallContext)) {
                         recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, true, internalCallContext);
@@ -196,6 +197,7 @@ public class DefaultEntitlementApiBase {
                                                                                null,
                                                                                null,
                                                                                localEffectiveDate,
+                                                                               localEffectiveDate,
                                                                                properties,
                                                                                internalCallContextFactory.createCallContext(internalCallContext));
         final WithEntitlementPlugin<Void> resumeWithPlugin = new WithEntitlementPlugin<Void>() {
@@ -206,7 +208,7 @@ public class DefaultEntitlementApiBase {
                     final ImmutableAccountData account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), internalCallContext);
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
 
-                    final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEffectiveDate(), internalCallContext);
+                    final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBillingEffectiveDate(), internalCallContext);
 
                     if (!dateHelper.isBeforeOrEqualsToday(effectiveDate, account.getTimeZone(), internalCallContext)) {
                         recordPauseResumeNotificationEntry(baseSubscription.getId(), bundleId, effectiveDate, false, internalCallContext);

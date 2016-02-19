@@ -273,13 +273,15 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
+        final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), account.getTimeZone());
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UPDATE_BUNDLE_EXTERNAL_KEY,
                                                                                bundle.getAccountId(),
                                                                                null,
                                                                                bundleId,
                                                                                newExternalKey,
                                                                                new ArrayList<EntitlementSpecifier>(),
-                                                                               new LocalDate(clock.getUTCNow(), account.getTimeZone()),
+                                                                               effectiveDate,
+                                                                               effectiveDate,
                                                                                ImmutableList.<PluginProperty>of(),
                                                                                callContext);
 
@@ -362,6 +364,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                                                externalKey,
                                                                                new ArrayList<EntitlementSpecifier>(),
                                                                                new LocalDate(blockingState.getEffectiveDate(), account.getTimeZone()),
+                                                                               null,
                                                                                properties,
                                                                                callContext);
 

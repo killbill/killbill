@@ -144,16 +144,16 @@ public class TestPublicBus extends TestIntegrationBase {
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
         //
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
         await().atMost(10, SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                // expecting ACCOUNT_CREATE, ACCOUNT_CHANGE, SUBSCRIPTION_CREATION (2), INVOICE_CREATION
-                return externalBusCount.get() == 5;
+                // expecting ACCOUNT_CREATE, ACCOUNT_CHANGE, SUBSCRIPTION_CREATION (2), ENTITLEMENT_CREATE INVOICE_CREATION
+                return externalBusCount.get() == 6;
             }
         });
 
@@ -164,7 +164,7 @@ public class TestPublicBus extends TestIntegrationBase {
             @Override
             public Boolean call() throws Exception {
                 // 5 + SUBSCRIPTION_TRANSITION, INVOICE, PAYMENT, INVOICE_PAYMENT
-                return externalBusCount.get() == 9;
+                return externalBusCount.get() == 10;
             }
         });
 

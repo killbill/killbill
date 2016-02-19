@@ -193,8 +193,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
                 return createAddOnEntitlement ?
-                       entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, inputLocalDate, pluginProperties, callContext) :
-                       entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, inputLocalDate, pluginProperties, callContext);
+                       entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, inputLocalDate, inputLocalDate, pluginProperties, callContext) :
+                       // TODO billingDate
+                       entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, inputLocalDate, inputLocalDate, pluginProperties, callContext);
             }
 
             private UUID getBundleIdForAddOnCreation(final SubscriptionJson entitlement) throws SubscriptionApiException {
@@ -315,7 +316,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
                 final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
                 return entitlementApi.createBaseEntitlementWithAddOns(account.getId(), baseEntitlement.getExternalKey(), entitlementSpecifierList,
-                                                                      inputLocalDate, pluginProperties, callContext);
+                                                                      inputLocalDate, inputLocalDate, pluginProperties, callContext);
             }
 
             @Override
