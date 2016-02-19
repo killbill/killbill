@@ -647,7 +647,146 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         final List<Entitlement> allEntitlementsForAccount = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
         assertTrue(allEntitlementsForAccount.size() == 0);
+    }
 
+
+    @Test(groups = "slow")
+    public void testCreateBaseWithDifferentInTheFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final LocalDate entitlementDate = initialDate.plusDays(3);
+        final LocalDate billingDate = initialDate.plusDays(5);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, entitlementDate, billingDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(entitlement.getState(), EntitlementState.PENDING);
+        assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
+
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        clock.addDays(3);
+        assertListenerStatus();
+
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        clock.addDays(2);
+        assertListenerStatus();
+    }
+
+
+    @Test(groups = "slow")
+    public void testCreateBaseWithEntitlementInTheFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final LocalDate entitlementDate = initialDate.plusDays(3);
+        final LocalDate billingDate = null;
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, entitlementDate, billingDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(entitlement.getState(), EntitlementState.PENDING);
+        assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
+
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        clock.addDays(3);
+        assertListenerStatus();
+
+        final Entitlement entitlementActive = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlementActive.getState(), EntitlementState.ACTIVE);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseWithBillingInTheFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final LocalDate entitlementDate = null;
+        final LocalDate billingDate = initialDate.plusDays(5);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, entitlementDate, billingDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getEffectiveStartDate(), initialDate);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        clock.addDays(5);
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseWithDifferentInThePast() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final LocalDate entitlementDate = initialDate.minusDays(3);
+        final LocalDate billingDate = initialDate.minusDays(5);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, entitlementDate, billingDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseWithEntitlementInThePast() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final LocalDate entitlementDate = initialDate.minusDays(3);
+        final LocalDate billingDate = null;
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, entitlementDate, billingDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseWithBillingInThePast() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final LocalDate entitlementDate = null;
+        final LocalDate billingDate = initialDate.minusDays(5);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, entitlementDate, billingDate, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getEffectiveStartDate(), initialDate);
     }
 
 }
