@@ -37,8 +37,6 @@ import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
-import org.killbill.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
-import org.killbill.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import org.killbill.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
 import org.killbill.billing.subscription.api.timeline.BundleBaseTimeline;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseRepairException;
@@ -213,7 +211,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
             final DefaultSubscriptionBaseBundle subscriptionBundleData = new DefaultSubscriptionBaseBundle(bundleKey, destAccountId, effectiveTransferDate,
                                                                                                            bundle.getOriginalCreatedDate(), clock.getUTCNow(), clock.getUTCNow());
-            final List<SubscriptionMigrationData> subscriptionMigrationDataList = new LinkedList<SubscriptionMigrationData>();
+            final List<SubscriptionTransferData> subscriptionTransferDataList = new LinkedList<SubscriptionTransferData>();
 
             final List<TransferCancelData> transferCancelDataList = new LinkedList<TransferCancelData>();
 
@@ -266,15 +264,15 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                                                                     ImmutableList.<SubscriptionBaseEvent>of(), fromInternalCallContext);
 
                 final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate, fromInternalCallContext);
-                final SubscriptionMigrationData curData = new SubscriptionMigrationData(defaultSubscriptionBase, events, null);
-                subscriptionMigrationDataList.add(curData);
+                final SubscriptionTransferData curData = new SubscriptionTransferData(defaultSubscriptionBase, events, null);
+                subscriptionTransferDataList.add(curData);
             }
-            BundleMigrationData bundleMigrationData = new BundleMigrationData(subscriptionBundleData, subscriptionMigrationDataList);
+            BundleTransferData bundleTransferData = new BundleTransferData(subscriptionBundleData, subscriptionTransferDataList);
 
             // Atomically cancelWithRequestedDate all subscription on old account and create new bundle, subscriptions, events for new account
-            dao.transfer(sourceAccountId, destAccountId, bundleMigrationData, transferCancelDataList, fromInternalCallContext, toInternalCallContext);
+            dao.transfer(sourceAccountId, destAccountId, bundleTransferData, transferCancelDataList, fromInternalCallContext, toInternalCallContext);
 
-            return bundleMigrationData.getData();
+            return bundleTransferData.getData();
         } catch (SubscriptionBaseRepairException e) {
             throw new SubscriptionBaseTransferApiException(e);
         } catch (CatalogApiException e) {

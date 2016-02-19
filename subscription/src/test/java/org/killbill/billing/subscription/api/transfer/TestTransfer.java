@@ -33,8 +33,6 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
-import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.slf4j.Logger;
@@ -71,55 +69,6 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         newAccountId = account.getId();
     }
 
-    @Test(groups = "slow")
-    public void testTransferMigratedSubscriptionWithCTDInFuture() throws Exception {
-        final DateTime startDate = clock.getUTCNow().minusMonths(2);
-        final DateTime beforeMigration = clock.getUTCNow();
-        final AccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlan(startDate);
-        final DateTime afterMigration = clock.getUTCNow();
-
-        testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-        migrationApi.migrate(toBeMigrated, callContext);
-        assertListenerStatus();
-
-        final List<SubscriptionBaseBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
-        assertEquals(bundles.size(), 1);
-        final SubscriptionBaseBundle bundle = bundles.get(0);
-
-        final DateTime bundleCreatedDate = bundle.getCreatedDate();
-
-        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), null, internalCallContext);
-        assertEquals(subscriptions.size(), 1);
-        final SubscriptionBase subscription = subscriptions.get(0);
-        testUtil.assertDateWithin(subscription.getStartDate(), beforeMigration.minusMonths(2), afterMigration.minusMonths(2));
-        assertEquals(subscription.getEndDate(), null);
-        assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
-        assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
-        assertEquals(subscription.getState(), EntitlementState.ACTIVE);
-        assertEquals(subscription.getCurrentPlan().getName(), "shotgun-annual");
-        assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
-        // WE should see MIGRATE_ENTITLEMENT and then MIGRATE_BILLING in the future
-        assertEquals(subscriptionInternalApi.getBillingTransitions(subscription, internalCallContext).size(), 1);
-        assertEquals(subscriptionInternalApi.getBillingTransitions(subscription, internalCallContext).get(0).getTransitionType(), SubscriptionBaseTransitionType.MIGRATE_BILLING);
-        assertTrue(subscriptionInternalApi.getBillingTransitions(subscription, internalCallContext).get(0).getEffectiveTransitionTime().compareTo(clock.getUTCNow()) > 0);
-        assertListenerStatus();
-
-        // MOVE A LITTLE, STILL IN TRIAL
-        clock.addDays(20);
-
-        final DateTime transferRequestedDate = clock.getUTCNow();
-
-        testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        testListener.pushExpectedEvent(NextEvent.CANCEL);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, false, true, callContext);
-        assertListenerStatus();
-
-        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalCallContext);
-        assertTrue(oldBaseSubscription.getState() == EntitlementState.CANCELLED);
-        // The MIGRATE_BILLING event should have been invalidated
-        assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 0);
-        //assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).get(0).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
-    }
 
     @Test(groups = "slow")
     public void testTransferBPInTrialWithNoCTD() throws Exception {

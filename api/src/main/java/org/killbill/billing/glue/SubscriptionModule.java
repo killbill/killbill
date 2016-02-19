@@ -22,8 +22,6 @@ public interface SubscriptionModule {
 
     public void installSubscriptionTransferApi();
 
-    public void installSubscriptionMigrationApi();
-
     public void installSubscriptionInternalApi();
 
     public void installSubscriptionTimelineApi();

@@ -19,7 +19,6 @@
 package org.killbill.billing.subscription.api.user;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,8 +27,6 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -38,16 +35,9 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
-import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
-import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
-import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.BundleMigration;
-import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.SubscriptionMigration;
-import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi.SubscriptionMigrationCase;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
@@ -177,169 +167,6 @@ public class TestSubscriptionHelper {
         }
     }
 
-    public void printSubscriptionTransitions(final List<EffectiveSubscriptionInternalEvent> transitions) {
-        for (final EffectiveSubscriptionInternalEvent cur : transitions) {
-            log.debug("Transition " + cur);
-        }
-    }
-
-    /**
-     * ***********************************************************
-     * Utilities for migration tests
-     * *************************************************************
-     */
-
-    public AccountMigration createAccountForMigrationTest(final List<List<SubscriptionMigrationCaseWithCTD>> cases) {
-        final Account account;
-        try {
-            final Account accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
-                                                                .email(UUID.randomUUID().toString().substring(1, 8))
-                                                                .build();
-            account = accountApi.createAccount(accountData, callContext);
-        } catch (final AccountApiException e) {
-            throw new AssertionError(e.getLocalizedMessage());
-        }
-
-        return new AccountMigration() {
-
-            @Override
-            public BundleMigration[] getBundles() {
-                final List<BundleMigration> bundles = new ArrayList<BundleMigration>();
-                final BundleMigration bundle0 = new BundleMigration() {
-                    @Override
-                    public SubscriptionMigration[] getSubscriptions() {
-                        final SubscriptionMigration[] result = new SubscriptionMigration[cases.size()];
-
-                        for (int i = 0; i < cases.size(); i++) {
-                            final List<SubscriptionMigrationCaseWithCTD> curCases = cases.get(i);
-                            final SubscriptionMigration subscription = new SubscriptionMigration() {
-                                @Override
-                                public SubscriptionMigrationCaseWithCTD[] getSubscriptionCases() {
-                                    return curCases.toArray(new SubscriptionMigrationCaseWithCTD[curCases.size()]);
-                                }
-
-                                @Override
-                                public ProductCategory getCategory() {
-                                    return curCases.get(0).getPlanPhaseSpecifier().getProductCategory();
-                                }
-
-                                @Override
-                                public DateTime getChargedThroughDate() {
-                                    for (final SubscriptionMigrationCaseWithCTD cur : curCases) {
-                                        if (cur.getChargedThroughDate() != null) {
-                                            return cur.getChargedThroughDate();
-                                        }
-                                    }
-                                    return null;
-                                }
-                            };
-                            result[i] = subscription;
-                        }
-                        return result;
-                    }
-
-                    @Override
-                    public String getBundleKey() {
-                        return "12345";
-                    }
-                };
-                bundles.add(bundle0);
-                return bundles.toArray(new BundleMigration[bundles.size()]);
-            }
-
-            @Override
-            public UUID getAccountKey() {
-                return account.getId();
-            }
-        };
-    }
-
-    public AccountMigration createAccountForMigrationWithRegularBasePlanAndAddons(final DateTime initialBPstart, final DateTime initalAddonStart) {
-
-        final List<SubscriptionMigrationCaseWithCTD> cases = new LinkedList<SubscriptionMigrationCaseWithCTD>();
-        cases.add(new SubscriptionMigrationCaseWithCTD(
-                new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
-                initialBPstart,
-                null,
-                initialBPstart.plusYears(1)));
-
-        final List<SubscriptionMigrationCaseWithCTD> firstAddOnCases = new LinkedList<SubscriptionMigrationCaseWithCTD>();
-        firstAddOnCases.add(new SubscriptionMigrationCaseWithCTD(
-                new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.DISCOUNT),
-                initalAddonStart,
-                initalAddonStart.plusMonths(1),
-                initalAddonStart.plusMonths(1)));
-        firstAddOnCases.add(new SubscriptionMigrationCaseWithCTD(
-                new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
-                initalAddonStart.plusMonths(1),
-                null,
-                null));
-
-        final List<List<SubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<SubscriptionMigrationCaseWithCTD>>();
-        input.add(cases);
-        input.add(firstAddOnCases);
-        return createAccountForMigrationTest(input);
-    }
-
-    public AccountMigration createAccountForMigrationWithRegularBasePlan(final DateTime startDate) {
-        final List<SubscriptionMigrationCaseWithCTD> cases = new LinkedList<SubscriptionMigrationCaseWithCTD>();
-        cases.add(new SubscriptionMigrationCaseWithCTD(
-                new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
-                startDate,
-                null,
-                startDate.plusYears(1)));
-        final List<List<SubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<SubscriptionMigrationCaseWithCTD>>();
-        input.add(cases);
-        return createAccountForMigrationTest(input);
-    }
-
-    public AccountMigration createAccountForMigrationWithRegularBasePlanFutreCancelled(final DateTime startDate) {
-        final List<SubscriptionMigrationCaseWithCTD> cases = new LinkedList<SubscriptionMigrationCaseWithCTD>();
-        cases.add(new SubscriptionMigrationCaseWithCTD(
-                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
-                startDate,
-                startDate.plusYears(1),
-                startDate.plusYears(1)));
-        final List<List<SubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<SubscriptionMigrationCaseWithCTD>>();
-        input.add(cases);
-        return createAccountForMigrationTest(input);
-    }
-
-    public AccountMigration createAccountForMigrationFuturePendingPhase(final DateTime trialDate) {
-        final List<SubscriptionMigrationCaseWithCTD> cases = new LinkedList<SubscriptionMigrationCaseWithCTD>();
-        cases.add(new SubscriptionMigrationCaseWithCTD(
-                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL),
-                trialDate,
-                trialDate.plusDays(30),
-                trialDate.plusDays(30)));
-        cases.add(new SubscriptionMigrationCaseWithCTD(
-                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
-                trialDate.plusDays(30),
-                null,
-                null));
-        final List<List<SubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<SubscriptionMigrationCaseWithCTD>>();
-        input.add(cases);
-        return createAccountForMigrationTest(input);
-    }
-
-    public AccountMigration createAccountForMigrationFuturePendingChange() {
-        final List<SubscriptionMigrationCaseWithCTD> cases = new LinkedList<SubscriptionMigrationCaseWithCTD>();
-        final DateTime effectiveDate = clock.getUTCNow().minusDays(10);
-        cases.add(new SubscriptionMigrationCaseWithCTD(
-                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
-                effectiveDate,
-                effectiveDate.plusMonths(1),
-                effectiveDate.plusMonths(1)));
-        cases.add(new SubscriptionMigrationCaseWithCTD(
-                new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
-                effectiveDate.plusMonths(1).plusDays(1),
-                null,
-                null));
-        final List<List<SubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<SubscriptionMigrationCaseWithCTD>>();
-        input.add(cases);
-        return createAccountForMigrationTest(input);
-    }
-
     public static DateTime addOrRemoveDuration(final DateTime input, final List<Duration> durations, final boolean add) {
         DateTime result = input;
         for (final Duration cur : durations) {
@@ -371,40 +198,6 @@ public class TestSubscriptionHelper {
         final List<Duration> list = new ArrayList<Duration>();
         list.add(duration);
         return addOrRemoveDuration(input, list, true);
-    }
-
-    public static class SubscriptionMigrationCaseWithCTD implements SubscriptionMigrationCase {
-
-        private final PlanPhaseSpecifier pps;
-        private final DateTime effDt;
-        private final DateTime cancelDt;
-        private final DateTime ctd;
-
-        public SubscriptionMigrationCaseWithCTD(final PlanPhaseSpecifier pps, final DateTime effDt, final DateTime cancelDt, final DateTime ctd) {
-            this.pps = pps;
-            this.cancelDt = cancelDt;
-            this.effDt = effDt;
-            this.ctd = ctd;
-        }
-
-        @Override
-        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-            return pps;
-        }
-
-        @Override
-        public DateTime getEffectiveDate() {
-            return effDt;
-        }
-
-        @Override
-        public DateTime getCancelledDate() {
-            return cancelDt;
-        }
-
-        public DateTime getChargedThroughDate() {
-            return ctd;
-        }
     }
 
 }
