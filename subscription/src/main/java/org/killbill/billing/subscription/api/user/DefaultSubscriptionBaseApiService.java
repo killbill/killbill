@@ -113,7 +113,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public DefaultSubscriptionBase createPlans(final Iterable<SubscriptionSpecifier> subscriptions, final CallContext context) throws SubscriptionBaseApiException {
+    public List<DefaultSubscriptionBase> createPlans(final Iterable<SubscriptionSpecifier> subscriptions, final CallContext context) throws SubscriptionBaseApiException {
 
         Map<UUID, List<SubscriptionBaseEvent>> eventsMap = new HashMap<UUID, List<SubscriptionBaseEvent>>();
         List<DefaultSubscriptionBase> subscriptionBaseList = new ArrayList<DefaultSubscriptionBase>();
@@ -126,7 +126,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                                subscriptionBase.getBundleStartDate(), subscriptionBase.getActiveVersion(), subscription.getPlan(),
                                                                                subscription.getInitialPhase(), subscription.getRealPriceList(),
                                                                                subscription.getEffectiveDate(), subscription.getProcessedDate(), false, internalCallContext);
-
                 eventsMap.put(subscriptionBase.getId(), events);
                 subscriptionBaseList.add(subscriptionBase);
 
@@ -138,15 +137,24 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscriptionBaseList.get(0).getBundleId(), context);
         dao.createSubscriptionWithAddOns(subscriptionBaseList, eventsMap, internalCallContext);
 
+
         final DefaultSubscriptionBase baseSubscription = findBaseSubscription(subscriptionBaseList);
         try {
             baseSubscription.rebuildTransitions(dao.getEventsForSubscription(baseSubscription.getId(), internalCallContext),
                                                 catalogService.getFullCatalog(internalCallContext));
+
+            for (final DefaultSubscriptionBase input  :subscriptionBaseList) {
+                if (input.getId().equals(baseSubscription.getId())) {
+                    continue;
+                }
+
+                input.rebuildTransitions(dao.getEventsForSubscription(input.getId(), internalCallContext),
+                                         catalogService.getFullCatalog(internalCallContext));
+            }
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
-
-        return baseSubscription;
+        return subscriptionBaseList;
     }
 
     private DefaultSubscriptionBase findBaseSubscription(final List<DefaultSubscriptionBase> subscriptionBaseList) {

@@ -45,7 +45,7 @@ public interface SubscriptionBaseInternalApi {
     public SubscriptionBase createSubscription(UUID bundleId, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, DateTime requestedDateWithMs,
                                                InternalCallContext context) throws SubscriptionBaseApiException;
 
-    public SubscriptionBase createBaseSubscriptionWithAddOns(UUID bundleId, Iterable<EntitlementSpecifier> entitlements, DateTime requestedDateWithMs,
+    public List<SubscriptionBase> createBaseSubscriptionWithAddOns(UUID bundleId, Iterable<EntitlementSpecifier> entitlements, DateTime requestedDateWithMs,
                                                              InternalCallContext context) throws SubscriptionBaseApiException;
 
     public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, InternalCallContext context) throws SubscriptionBaseApiException;

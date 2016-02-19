@@ -47,7 +47,7 @@ public interface SubscriptionBaseApiService {
                                               CallContext context)
             throws SubscriptionBaseApiException;
 
-    public DefaultSubscriptionBase createPlans(Iterable<SubscriptionSpecifier> subscriptions, CallContext context)
+    public List<DefaultSubscriptionBase> createPlans(Iterable<SubscriptionSpecifier> subscriptions, CallContext context)
             throws SubscriptionBaseApiException;
 
     @Deprecated

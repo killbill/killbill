@@ -164,7 +164,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBase createBaseSubscriptionWithAddOns(final UUID bundleId, final Iterable<EntitlementSpecifier> entitlements, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public List<SubscriptionBase> createBaseSubscriptionWithAddOns(final UUID bundleId, final Iterable<EntitlementSpecifier> entitlements, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
 
         final DateTime now = clock.getUTCNow();
         final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
@@ -209,7 +209,13 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 subscriptions.add(subscription);
             }
 
-            return apiService.createPlans(subscriptions, callContext);
+            final List<DefaultSubscriptionBase> result = apiService.createPlans(subscriptions, callContext);
+            return ImmutableList.copyOf(Iterables.transform(result, new Function<DefaultSubscriptionBase, SubscriptionBase>() {
+                @Override
+                public SubscriptionBase apply(final DefaultSubscriptionBase input) {
+                    return (SubscriptionBase) input;
+                }
+            }));
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
