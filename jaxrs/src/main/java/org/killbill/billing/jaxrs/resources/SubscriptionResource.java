@@ -92,6 +92,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.wordnik.swagger.annotations.Api;
@@ -152,7 +153,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @ApiOperation(value = "Create an entitlement")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
     public Response createEntitlement(final SubscriptionJson entitlement,
-                                      @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                      @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */
+                                      @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
+                                      @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
                                       @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                       @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -166,6 +169,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                              entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set",
                              entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
                              entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+
+        logDeprecationParameterWarningIfNeeded(QUERY_REQUESTED_DT, QUERY_ENTITLEMENT_REQUESTED_DT, QUERY_BILLING_REQUESTED_DT);
+
         // For ADD_ON we can provide externalKey or the bundleId
         final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
         if (createAddOnEntitlement) {
@@ -186,16 +192,16 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                                        ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), phaseType);
 
-                final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
+                final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate, callContext) : toLocalDate(entitlementDate, callContext);
+                final LocalDate resolvedBillingDate = requestedDate != null ? toLocalDate(requestedDate, callContext) : toLocalDate(billingDate, callContext);
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
                                                                  ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
 
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
                 return createAddOnEntitlement ?
-                       entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, inputLocalDate, inputLocalDate, pluginProperties, callContext) :
-                       // TODO billingDate
-                       entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, inputLocalDate, inputLocalDate, pluginProperties, callContext);
+                       entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, pluginProperties, callContext) :
+                       entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, resolvedEntitlementDate, resolvedBillingDate, pluginProperties, callContext);
             }
 
             private UUID getBundleIdForAddOnCreation(final SubscriptionJson entitlement) throws SubscriptionApiException {
@@ -231,15 +237,17 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @ApiOperation(value = "Create an entitlement with addOn products")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
     public Response createEntitlementWithAddOns(final List<SubscriptionJson> entitlements,
-                                      @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                      @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-                                      @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
-                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                      @HeaderParam(HDR_REASON) final String reason,
-                                      @HeaderParam(HDR_COMMENT) final String comment,
-                                      @javax.ws.rs.core.Context final HttpServletRequest request,
-                                      @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
+                                                @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */
+                                                @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
+                                                @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
+                                                @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+                                                @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+                                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                @HeaderParam(HDR_REASON) final String reason,
+                                                @HeaderParam(HDR_COMMENT) final String comment,
+                                                @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
 
         Preconditions.checkArgument(Iterables.size(entitlements) > 0, "Subscription list mustn't be null or empty.");
 
@@ -250,6 +258,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                  entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set for each element",
                                  entitlement.getPriceList(), "SubscriptionJson priceList needs to be set for each element");
         }
+
+        logDeprecationParameterWarningIfNeeded(QUERY_REQUESTED_DT, QUERY_ENTITLEMENT_REQUESTED_DT, QUERY_BILLING_REQUESTED_DT);
 
         final int baseSubscriptionsSize = Iterables.size(Iterables.filter(entitlements, new Predicate<SubscriptionJson>() {
             @Override
@@ -314,9 +324,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     entitlementSpecifierList.add(specifier);
                 }
 
-                final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
+                final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate, callContext) : toLocalDate(entitlementDate, callContext);
+                final LocalDate resolvedBillingDate = requestedDate != null ? toLocalDate(requestedDate, callContext) : toLocalDate(billingDate, callContext);
                 return entitlementApi.createBaseEntitlementWithAddOns(account.getId(), baseEntitlement.getExternalKey(), entitlementSpecifierList,
-                                                                      inputLocalDate, inputLocalDate, pluginProperties, callContext);
+                                                                      resolvedEntitlementDate, resolvedBillingDate, pluginProperties, callContext);
             }
 
             @Override
