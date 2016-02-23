@@ -72,8 +72,7 @@ public class InvoiceListener {
             //  Skip future uncancel event
             //  Skip events which are marked as not being the last one
             if (event.getTransitionType() == SubscriptionBaseTransitionType.UNCANCEL ||
-                event.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT
-                || event.getRemainingEventsForUserOperation() > 0) {
+                event.getRemainingEventsForUserOperation() > 0) {
                 return;
             }
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());

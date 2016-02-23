@@ -81,27 +81,12 @@ public class SubscriptionBaseTransitionDataIterator implements Iterator<Subscrip
         if (visibility == Visibility.FROM_DISK_ONLY && ! ((SubscriptionBaseTransitionData) input).isFromDisk()) {
             return true;
         }
-        if ((kind == Kind.SUBSCRIPTION && shouldSkipForSubscriptionEvents((SubscriptionBaseTransitionData) input)) ||
-            (kind == Kind.BILLING && shouldSkipForBillingEvents((SubscriptionBaseTransitionData) input))) {
-            return true;
-        }
         if ((timeLimit == TimeLimit.FUTURE_ONLY && !input.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) ||
                 ((timeLimit == TimeLimit.PAST_OR_PRESENT_ONLY && input.getEffectiveTransitionTime().isAfter(clock.getUTCNow())))) {
             return true;
         }
         return false;
     }
-
-    private boolean shouldSkipForSubscriptionEvents(final SubscriptionBaseTransitionData input) {
-        // SubscriptionBase system knows about all events except for MIGRATE_BILLING
-        return (input.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_BILLING);
-    }
-
-    private boolean shouldSkipForBillingEvents(final SubscriptionBaseTransitionData input) {
-        // Junction system knows about all events except for MIGRATE_ENTITLEMENT
-        return input.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT;
-    }
-
 
     @Override
     public SubscriptionBaseTransition next() {

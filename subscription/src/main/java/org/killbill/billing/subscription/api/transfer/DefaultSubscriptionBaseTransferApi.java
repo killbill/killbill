@@ -105,7 +105,6 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
         switch (existingEvent.getSubscriptionTransitionType()) {
             case TRANSFER:
-            case MIGRATE_ENTITLEMENT:
             case RE_CREATE:
             case CREATE:
                 newEvent = new ApiEventTransfer(apiBuilder);
@@ -121,12 +120,6 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                            PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(), currentPhase.getName(), effectiveDate);
                 break;
 
-            // Ignore these events except if it's the first event for the new subscription
-            case MIGRATE_BILLING:
-                if (firstEvent) {
-                    newEvent = new ApiEventTransfer(apiBuilder);
-                }
-                break;
             case CANCEL:
                 break;
 

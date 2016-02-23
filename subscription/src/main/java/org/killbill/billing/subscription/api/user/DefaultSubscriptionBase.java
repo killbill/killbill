@@ -149,7 +149,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         if (pendingTransition != null &&
             (pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.CREATE) ||
              pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.TRANSFER) ||
-             pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.MIGRATE_BILLING) ||
              pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.RE_CREATE))) {
             return EntitlementState.PENDING;
         }
@@ -164,9 +163,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
         final SubscriptionBaseTransitionData initialTransition = (SubscriptionBaseTransitionData) transitions.get(0);
         switch (initialTransition.getApiEventType()) {
-            case MIGRATE_BILLING:
-            case MIGRATE_ENTITLEMENT:
-                return EntitlementSourceType.MIGRATED;
             case TRANSFER:
                 return EntitlementSourceType.TRANSFERRED;
             default:
@@ -459,14 +455,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
                 Visibility.ALL, TimeLimit.ALL);
-        // Remove anything prior to first CREATE or MIGRATE_BILLING
+        // Remove anything prior to first CREATE
         boolean foundInitialEvent = false;
         while (it.hasNext()) {
             final SubscriptionBaseTransitionData curTransition = (SubscriptionBaseTransitionData) it.next();
             if (!foundInitialEvent) {
                 foundInitialEvent = curTransition.getEventType() == EventType.API_USER &&
                                     (curTransition.getApiEventType() == ApiEventType.CREATE ||
-                                     curTransition.getApiEventType() == ApiEventType.MIGRATE_BILLING ||
                                      curTransition.getApiEventType() == ApiEventType.TRANSFER);
             }
             if (foundInitialEvent) {
@@ -493,8 +488,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             if (cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT) {
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
                 return cur;
             }
         }
@@ -545,8 +539,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT) {
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
                 return cur.getEffectiveTransitionTime();
             }
         }
@@ -606,8 +599,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
                     switch (apiEventType) {
                         case TRANSFER:
-                        case MIGRATE_BILLING:
-                        case MIGRATE_ENTITLEMENT:
                         case CREATE:
                         case RE_CREATE:
                             prevEventId = null;

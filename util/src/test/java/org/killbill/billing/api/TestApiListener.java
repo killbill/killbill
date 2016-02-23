@@ -100,8 +100,6 @@ public class TestApiListener {
     }
 
     public enum NextEvent {
-        MIGRATE_ENTITLEMENT,
-        MIGRATE_BILLING,
         BROADCAST_SERVICE,
         CREATE,
         TRANSFER,
@@ -155,14 +153,6 @@ public class TestApiListener {
         switch (eventEffective.getTransitionType()) {
             case TRANSFER:
                 assertEqualsNicely(NextEvent.TRANSFER);
-                notifyIfStackEmpty();
-                break;
-            case MIGRATE_ENTITLEMENT:
-                assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
-                notifyIfStackEmpty();
-                break;
-            case MIGRATE_BILLING:
-                assertEqualsNicely(NextEvent.MIGRATE_BILLING);
                 notifyIfStackEmpty();
                 break;
             case CREATE:
