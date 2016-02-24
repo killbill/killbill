@@ -29,7 +29,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
@@ -51,11 +50,11 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
 
     private BlockingStateOrdering() {}
 
-    public static void insertSorted(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> result) {
-        INSTANCE.computeEvents(entitlements, internalTenantContext, result);
+    public static void insertSorted(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> inputAndOutputResult) {
+        INSTANCE.computeEvents(entitlements, internalTenantContext, inputAndOutputResult);
     }
 
-    private void computeEvents(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> result) {
+    private void computeEvents(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> inputAndOutputResult) {
         final Collection<UUID> allEntitlementUUIDs = new HashSet<UUID>();
         final Collection<BlockingState> blockingStates = new LinkedList<BlockingState>();
         for (final Entitlement entitlement : entitlements) {
@@ -65,15 +64,15 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
         }
 
         // Trust the incoming ordering here: blocking states were sorted using ProxyBlockingStateDao#sortedCopy
-        for (final BlockingState bs : blockingStates) {
-            final List<SubscriptionEvent> newEvents = new ArrayList<SubscriptionEvent>();
-            final int index = insertFromBlockingEvent(allEntitlementUUIDs, bs, bs.getEffectiveDate(), newEvents, internalTenantContext, result);
-            insertAfterIndex(result, newEvents, index);
+        for (final BlockingState currentBlockingState : blockingStates) {
+            final List<SubscriptionEvent> outputNewEvents = new ArrayList<SubscriptionEvent>();
+            final int index = insertFromBlockingEvent(allEntitlementUUIDs, currentBlockingState, inputAndOutputResult, internalTenantContext, outputNewEvents);
+            insertAfterIndex(inputAndOutputResult, outputNewEvents, index);
         }
     }
 
     // Returns the index and the newEvents generated from the incoming blocking state event. Those new events will all be created for the same effectiveDate and should be ordered.
-    private int insertFromBlockingEvent(final Collection<UUID> allEntitlementUUIDs, final BlockingState bs, final DateTime bsEffectiveDate, final Collection<SubscriptionEvent> newEvents, final InternalTenantContext internalTenantContext, final List<SubscriptionEvent> result) {
+    private int insertFromBlockingEvent(final Collection<UUID> allEntitlementUUIDs, final BlockingState currentBlockingState, final List<SubscriptionEvent> inputExistingEvents, final InternalTenantContext internalTenantContext, final Collection<SubscriptionEvent> outputNewEvents) {
         // Keep the current state per entitlement
         final Map<UUID, TargetState> targetStates = new HashMap<UUID, TargetState>();
         for (final UUID cur : allEntitlementUUIDs) {
@@ -84,12 +83,12 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
         // Find out where to insert next event, and calculate current state for each entitlement at the position where we stop.
         //
         int index = -1;
-        final Iterator<SubscriptionEvent> it = result.iterator();
+        final Iterator<SubscriptionEvent> it = inputExistingEvents.iterator();
         // Where we need to insert in that stream
         DefaultSubscriptionEvent curInsertion = null;
         while (it.hasNext()) {
             final DefaultSubscriptionEvent cur = (DefaultSubscriptionEvent) it.next();
-            final int compEffectiveDate = bsEffectiveDate.compareTo(cur.getEffectiveDateTime());
+            final int compEffectiveDate = currentBlockingState.getEffectiveDate().compareTo(cur.getEffectiveDateTime());
             final boolean shouldContinue = (compEffectiveDate >= 0);
             if (!shouldContinue) {
                 break;
@@ -122,17 +121,17 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
         }
 
         // Extract the list of targets based on the type of blocking state
-        final List<UUID> targetEntitlementIds = bs.getType() == BlockingStateType.SUBSCRIPTION ? ImmutableList.<UUID>of(bs.getBlockedId()) :
+        final List<UUID> targetEntitlementIds = currentBlockingState.getType() == BlockingStateType.SUBSCRIPTION ? ImmutableList.<UUID>of(currentBlockingState.getBlockedId()) :
                                                 ImmutableList.<UUID>copyOf(allEntitlementUUIDs);
 
         // For each target compute the new events that should be inserted in the stream
         for (final UUID targetEntitlementId : targetEntitlementIds) {
-            final SubscriptionEvent[] prevNext = findPrevNext(result, targetEntitlementId, curInsertion);
+            final SubscriptionEvent[] prevNext = findPrevNext(inputExistingEvents, targetEntitlementId, curInsertion);
             final TargetState curTargetState = targetStates.get(targetEntitlementId);
 
-            final List<SubscriptionEventType> eventTypes = curTargetState.addStateAndReturnEventTypes(bs);
+            final List<SubscriptionEventType> eventTypes = curTargetState.addStateAndReturnEventTypes(currentBlockingState);
             for (final SubscriptionEventType t : eventTypes) {
-                newEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], targetEntitlementId, bs, t, internalTenantContext));
+                outputNewEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], targetEntitlementId, currentBlockingState, t, internalTenantContext));
             }
         }
         return index;
@@ -202,8 +201,10 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
         final PlanPhase nextPlanPhase;
         final PriceList nextPriceList;
         final BillingPeriod nextBillingPeriod;
-        if (SubscriptionEventType.PAUSE_ENTITLEMENT.equals(eventType) || SubscriptionEventType.PAUSE_BILLING.equals(eventType) ||
-            SubscriptionEventType.RESUME_ENTITLEMENT.equals(eventType) || SubscriptionEventType.RESUME_BILLING.equals(eventType) ||
+        if (SubscriptionEventType.PAUSE_ENTITLEMENT.equals(eventType) ||
+            SubscriptionEventType.PAUSE_BILLING.equals(eventType) ||
+            SubscriptionEventType.RESUME_ENTITLEMENT.equals(eventType) ||
+            SubscriptionEventType.RESUME_BILLING.equals(eventType) ||
             (SubscriptionEventType.SERVICE_STATE_CHANGE.equals(eventType) && (prev == null || (!SubscriptionEventType.STOP_ENTITLEMENT.equals(prev.getSubscriptionEventType()) && !SubscriptionEventType.STOP_BILLING.equals(prev.getSubscriptionEventType()))))) {
             // Enforce next = prev for pause/resume events as well as service changes
             nextProduct = prevProduct;
@@ -347,11 +348,16 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                                                                               bs.getEffectiveDate());
 
             final List<SubscriptionEventType> result = new ArrayList<SubscriptionEventType>(4);
-            if (fixedBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
+            if (fixedBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_START)) {
+                isEntitlementStarted = true;
+                result.add(SubscriptionEventType.START_ENTITLEMENT);
+                return result;
+            } else if (fixedBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
                 isEntitlementStopped = true;
                 result.add(SubscriptionEventType.STOP_ENTITLEMENT);
                 return result;
             }
+
 
             //
             // We look at the effect of the incoming event for the specific service, and then recompute the state after so we can compare if anything has changed

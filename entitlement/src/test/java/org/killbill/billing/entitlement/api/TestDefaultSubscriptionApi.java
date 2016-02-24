@@ -177,7 +177,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         final Account account2 = createAccount(getAccountData(7));
 
-        testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.CANCEL, NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK);
         entitlementApi.transferEntitlements(account.getId(), account2.getId(), externalKey, new LocalDate(clock.getUTCNow(), account.getTimeZone()), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 

@@ -264,13 +264,15 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
     }
 
     @Test(groups = "fast")
-    public void testOneEntitlementNoBlockingStates() throws CatalogApiException {
+    public void testOneSimpleEntitlement() throws CatalogApiException {
         clock.setDay(new LocalDate(2013, 1, 1));
 
         final DateTimeZone accountTimeZone = DateTimeZone.UTC;
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = "foo";
+
+        final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
 
         final UUID entitlementId = UUID.randomUUID();
 
@@ -280,6 +282,12 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
         final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), null, "trial");
         allTransitions.add(tr1);
+
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+        blockingStates.add(bsCreate);
+
 
         effectiveDate = effectiveDate.plusDays(30);
         clock.addDays(30);
@@ -292,7 +300,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         allTransitions.add(tr3);
 
         final List<Entitlement> entitlements = new ArrayList<Entitlement>();
-        final Entitlement entitlement = createEntitlement(entitlementId, allTransitions);
+        final Entitlement entitlement = createEntitlement(entitlementId, allTransitions, blockingStates);
         entitlements.add(entitlement);
 
         final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
@@ -320,7 +328,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(3).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
-        assertEquals(events.get(0).getNextPhase().getName(), "trial");
         assertNull(events.get(1).getPrevPhase());
         assertEquals(events.get(1).getNextPhase().getName(), "trial");
         assertEquals(events.get(2).getPrevPhase().getName(), "trial");
@@ -347,6 +354,11 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
         final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), null, "trial");
         allTransitions.add(tr1);
+
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+        blockingStates.add(bsCreate);
 
         // Block the bundle before the subscription
         effectiveDate = effectiveDate.plusDays(15);
@@ -391,11 +403,8 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(3).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
-        assertEquals(events.get(0).getNextPhase().getName(), "trial");
         assertNull(events.get(1).getPrevPhase());
         assertEquals(events.get(1).getNextPhase().getName(), "trial");
-        assertEquals(events.get(2).getPrevPhase().getName(), "trial");
-        assertNull(events.get(2).getNextPhase());
         assertEquals(events.get(3).getPrevPhase().getName(), "trial");
         assertNull(events.get(3).getNextPhase());
     }
@@ -418,6 +427,12 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
         final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), null, "trial");
         allTransitions.add(tr1);
+
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+
+        blockingStates.add(bsCreate);
 
         effectiveDate = effectiveDate.plusDays(30);
         clock.addDays(30);
@@ -507,7 +522,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(8).getServiceName(), service);
 
         assertNull(events.get(0).getPrevPhase());
-        assertEquals(events.get(0).getNextPhase().getName(), "trial");
         assertNull(events.get(1).getPrevPhase());
         assertEquals(events.get(1).getNextPhase().getName(), "trial");
 
@@ -546,6 +560,13 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
         final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), null, "trial");
         allTransitions.add(tr1);
+
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+
+        blockingStates.add(bsCreate);
+
 
         effectiveDate = effectiveDate.plusDays(30);
         clock.addDays(30);
@@ -652,7 +673,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(9).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
-        assertEquals(events.get(0).getNextPhase().getName(), "trial");
         assertNull(events.get(1).getPrevPhase());
         assertEquals(events.get(1).getNextPhase().getName(), "trial");
 
@@ -703,6 +723,13 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), null, "trial");
         allTransitions.add(tr1);
 
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+
+        blockingStates.add(bsCreate);
+
+
         effectiveDate = effectiveDate.plusDays(30);
         clock.addDays(30);
         final SubscriptionBaseTransition tr2 = createTransition(entitlementId, EventType.PHASE, null, requestedDate, effectiveDate, clock.getUTCNow(), "trial", "phase");
@@ -752,7 +779,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(4).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
-        assertEquals(events.get(0).getNextPhase().getName(), "trial");
         assertNull(events.get(1).getPrevPhase());
         assertEquals(events.get(1).getNextPhase().getName(), "trial");
         assertEquals(events.get(2).getPrevPhase().getName(), "trial");
@@ -781,6 +807,13 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
         final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), null, "trial");
         allTransitions.add(tr1);
+
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+
+        blockingStates.add(bsCreate);
+
 
         effectiveDate = effectiveDate.plusDays(30);
         clock.addDays(30);
@@ -835,7 +868,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(5).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
-        assertEquals(events.get(0).getNextPhase().getName(), "trial");
         assertNull(events.get(1).getPrevPhase());
         assertEquals(events.get(1).getNextPhase().getName(), "trial");
 
@@ -872,10 +904,23 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final SubscriptionBaseTransition ent1Tr1 = createTransition(entitlementId1, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), null, "trial1");
         allTransitions1.add(ent1Tr1);
 
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId1, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+
+        blockingStates.add(bsCreate);
+
+
         effectiveDate = effectiveDate.plusDays(15);
         clock.addDays(15);
         final SubscriptionBaseTransition ent2Tr1 = createTransition(entitlementId2, EventType.API_USER, ApiEventType.TRANSFER, requestedDate, effectiveDate, clock.getUTCNow(), null, "phase2");
         allTransitions2.add(ent2Tr1);
+
+        final BlockingState bsCreate2 = new DefaultBlockingState(UUID.randomUUID(), entitlementId2, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+
+        blockingStates.add(bsCreate2);
 
         effectiveDate = effectiveDate.plusDays(15);
         clock.addDays(15);
@@ -951,7 +996,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(8).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
-        assertEquals(events.get(0).getNextPhase().getName(), "trial1");
         assertNull(events.get(1).getPrevPhase());
         assertEquals(events.get(1).getNextPhase().getName(), "trial1");
 
@@ -995,6 +1039,13 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         DateTime effectiveDate = new DateTime(2013, 1, 1, 23, 11, 8, 0, DateTimeZone.UTC);
         final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), null, "trial");
         allTransitions.add(tr1);
+
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+
+        blockingStates.add(bsCreate);
+
 
         effectiveDate = effectiveDate.plusDays(30);
         clock.addDays(30);
@@ -1074,7 +1125,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(5).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
-        assertEquals(events.get(0).getNextPhase().getName(), "trial");
         assertNull(events.get(1).getPrevPhase());
         assertEquals(events.get(1).getNextPhase().getName(), "trial");
 
@@ -1108,6 +1158,13 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
         final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), null, "trial");
         allTransitions.add(tr1);
+
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+
+        blockingStates.add(bsCreate);
+
 
         // Overlapping ENT_STATE_BLOCKED - should merge
         effectiveDate = effectiveDate.plusDays(5);
@@ -1164,7 +1221,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(3).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
-        assertEquals(events.get(0).getNextPhase().getName(), "trial");
         assertNull(events.get(1).getPrevPhase());
         assertEquals(events.get(1).getNextPhase().getName(), "trial");
 
@@ -1193,6 +1249,13 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
         final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, requestedDate, effectiveDate, clock.getUTCNow(), null, "trial");
         allTransitions.add(tr1);
+
+        final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+
+        blockingStates.add(bsCreate);
+
 
         // 2013-02-10
         effectiveDate = effectiveDate.plusDays(40);
@@ -1286,7 +1349,6 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(10).getServiceName(), overdueService);
 
         assertNull(events.get(0).getPrevPhase());
-        assertEquals(events.get(0).getNextPhase().getName(), "trial");
         assertNull(events.get(1).getPrevPhase());
         assertEquals(events.get(1).getNextPhase().getName(), "trial");
 

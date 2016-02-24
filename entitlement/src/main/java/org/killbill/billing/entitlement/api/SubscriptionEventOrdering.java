@@ -92,9 +92,9 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
     private List<SubscriptionEventType> toEventTypes(final SubscriptionBaseTransitionType in) {
         switch (in) {
             case CREATE:
-                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.START_ENTITLEMENT, SubscriptionEventType.START_BILLING);
+                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.START_BILLING);
             case TRANSFER:
-                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.START_ENTITLEMENT, SubscriptionEventType.START_BILLING);
+                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.START_BILLING);
             case CHANGE:
                 return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.CHANGE);
             case CANCEL:
