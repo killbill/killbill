@@ -24,6 +24,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
@@ -31,6 +32,7 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.util.audit.AccountAuditLogs;
+import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -111,7 +113,8 @@ public class SubscriptionJson extends JsonBase {
         }
 
         public EventSubscriptionJson(final SubscriptionEvent subscriptionEvent, @Nullable final AccountAuditLogs accountAuditLogs) {
-            super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscriptionEvent(subscriptionEvent.getId())));
+
+            super(toAuditLogJson(getAuditLogsForSubscriptionEvent(subscriptionEvent, accountAuditLogs)));
             final BillingPeriod billingPeriod = subscriptionEvent.getNextBillingPeriod() != null ? subscriptionEvent.getNextBillingPeriod() : subscriptionEvent.getPrevBillingPeriod();
             final Product product = subscriptionEvent.getNextProduct() != null ? subscriptionEvent.getNextProduct() : subscriptionEvent.getPrevProduct();
             final PriceList priceList = subscriptionEvent.getNextPriceList() != null ? subscriptionEvent.getNextPriceList() : subscriptionEvent.getPrevPriceList();
@@ -127,6 +130,20 @@ public class SubscriptionJson extends JsonBase {
             this.serviceName = subscriptionEvent.getServiceName();
             this.serviceStateName = subscriptionEvent.getServiceStateName();
             this.phase = phase != null ? phase.getName() : null;
+        }
+
+
+        private static List<AuditLog> getAuditLogsForSubscriptionEvent(final SubscriptionEvent subscriptionEvent, @Nullable final AccountAuditLogs accountAuditLogs) {
+            if (accountAuditLogs == null) {
+                return null;
+            }
+            final ObjectType subscriptionEventObjectType = subscriptionEvent.getSubscriptionEventType().getObjectType();
+            if (subscriptionEventObjectType == ObjectType.SUBSCRIPTION_EVENT) {
+                return accountAuditLogs.getAuditLogsForSubscriptionEvent(subscriptionEvent.getId());
+            } else if (subscriptionEventObjectType == ObjectType.BLOCKING_STATES) {
+                return accountAuditLogs.getAuditLogsForBlockingState(subscriptionEvent.getId());
+            }
+            throw new IllegalStateException("Unepxected objectType " + subscriptionEventObjectType + " for SubscriptionEvent " + subscriptionEvent.getId());
         }
 
         public String getEventId() {
