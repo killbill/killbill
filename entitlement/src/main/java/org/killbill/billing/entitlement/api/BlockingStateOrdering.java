@@ -24,11 +24,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
@@ -40,8 +43,13 @@ import org.killbill.billing.entitlement.block.BlockingChecker.BlockingAggregator
 import org.killbill.billing.entitlement.block.DefaultBlockingChecker.DefaultBlockingAggregator;
 import org.killbill.billing.junction.DefaultBlockingState;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 // Given an event stream (across one or multiple entitlements), insert the blocking events at the right place
 public class BlockingStateOrdering extends EntitlementOrderingBase {
@@ -52,9 +60,12 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
 
     public static void insertSorted(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> inputAndOutputResult) {
         INSTANCE.computeEvents(entitlements, internalTenantContext, inputAndOutputResult);
+
     }
 
     private void computeEvents(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> inputAndOutputResult) {
+
+
         final Collection<UUID> allEntitlementUUIDs = new HashSet<UUID>();
         final Collection<BlockingState> blockingStates = new LinkedList<BlockingState>();
         for (final Entitlement entitlement : entitlements) {
@@ -63,16 +74,19 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
             blockingStates.addAll(((DefaultEntitlement) entitlement).getEventsStream().getBlockingStates());
         }
 
+        final SupportForOlderVersionThan_0_17_X backwardCompatibleContext = new SupportForOlderVersionThan_0_17_X(inputAndOutputResult, blockingStates);
+
         // Trust the incoming ordering here: blocking states were sorted using ProxyBlockingStateDao#sortedCopy
         for (final BlockingState currentBlockingState : blockingStates) {
             final List<SubscriptionEvent> outputNewEvents = new ArrayList<SubscriptionEvent>();
-            final int index = insertFromBlockingEvent(allEntitlementUUIDs, currentBlockingState, inputAndOutputResult, internalTenantContext, outputNewEvents);
+            final int index = insertFromBlockingEvent(allEntitlementUUIDs, currentBlockingState, inputAndOutputResult, backwardCompatibleContext, internalTenantContext, outputNewEvents);
             insertAfterIndex(inputAndOutputResult, outputNewEvents, index);
         }
+        backwardCompatibleContext.addMissing_START_ENTITLEMENT(inputAndOutputResult, internalTenantContext);
     }
 
     // Returns the index and the newEvents generated from the incoming blocking state event. Those new events will all be created for the same effectiveDate and should be ordered.
-    private int insertFromBlockingEvent(final Collection<UUID> allEntitlementUUIDs, final BlockingState currentBlockingState, final List<SubscriptionEvent> inputExistingEvents, final InternalTenantContext internalTenantContext, final Collection<SubscriptionEvent> outputNewEvents) {
+    private int insertFromBlockingEvent(final Collection<UUID> allEntitlementUUIDs, final BlockingState currentBlockingState, final List<SubscriptionEvent> inputExistingEvents, final SupportForOlderVersionThan_0_17_X backwardCompatibleContext, final InternalTenantContext internalTenantContext, final Collection<SubscriptionEvent> outputNewEvents) {
         // Keep the current state per entitlement
         final Map<UUID, TargetState> targetStates = new HashMap<UUID, TargetState>();
         for (final UUID cur : allEntitlementUUIDs) {
@@ -104,6 +118,10 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                     curTargetState.setEntitlementStopped();
                     break;
                 case START_BILLING:
+                    // For older subscriptions we miss the START_ENTITLEMENT (the START_BILLING marks both start of billing and entitlement)
+                    if (backwardCompatibleContext.isOlderEntitlement(cur.getEntitlementId())) {
+                        curTargetState.setEntitlementStarted();
+                    }
                     curTargetState.setBillingStarted();
                     break;
                 case PAUSE_BILLING:
@@ -343,7 +361,7 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                                                                               bs.getStateName(),
                                                                               bs.getService(),
                                                                               bs.isBlockChange(),
-                                                                              (bs.isBlockEntitlement() && isEntitlementStarted && !isEntitlementStopped),
+                                                                              (bs.isBlockEntitlement() && isEntitlementStarted &&  !isEntitlementStopped),
                                                                               (bs.isBlockBilling() && isBillingStarted && !isBillingStopped),
                                                                               bs.getEffectiveDate());
 
@@ -375,7 +393,7 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
             }
             final BlockingAggregator stateAfter = getState();
 
-            final boolean shouldResumeEntitlement = isEntitlementStarted && !isEntitlementStopped && stateBefore.isBlockEntitlement() && !stateAfter.isBlockEntitlement();
+            final boolean shouldResumeEntitlement = isEntitlementStarted &&  !isEntitlementStopped && stateBefore.isBlockEntitlement() && !stateAfter.isBlockEntitlement();
             if (shouldResumeEntitlement) {
                 result.add(SubscriptionEventType.RESUME_ENTITLEMENT);
             }
@@ -384,7 +402,7 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                 result.add(SubscriptionEventType.RESUME_BILLING);
             }
 
-            final boolean shouldBlockEntitlement = isEntitlementStarted && !isEntitlementStopped && !stateBefore.isBlockEntitlement() && stateAfter.isBlockEntitlement();
+            final boolean shouldBlockEntitlement = isEntitlementStarted &&  !isEntitlementStopped && !stateBefore.isBlockEntitlement() && stateAfter.isBlockEntitlement();
             if (shouldBlockEntitlement) {
                 result.add(SubscriptionEventType.PAUSE_ENTITLEMENT);
             }
@@ -407,4 +425,85 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
             return aggrBefore;
         }
     }
+
+    //
+    // The logic to add the missing START_ENTITLEMENT for older subscriptions is contained in this class. When we want/need to drop backward compatibility we can
+    // simply drop this class and where it is called.
+    //
+    private static class SupportForOlderVersionThan_0_17_X {
+
+        private final Set<UUID> olderEntitlementSet;
+
+        public SupportForOlderVersionThan_0_17_X(final List<SubscriptionEvent> initialEntitlementEvents, final Collection<BlockingState> blockingStates) {
+            this.olderEntitlementSet = computeOlderEntitlementSet(initialEntitlementEvents, blockingStates);
+        }
+
+        public boolean isOlderEntitlement(final UUID entitlementId) {
+            return olderEntitlementSet.contains(entitlementId);
+        }
+
+        public void addMissing_START_ENTITLEMENT(final LinkedList<SubscriptionEvent> inputAndOutputResult, final InternalTenantContext internalTenantContext) {
+
+            // Insert missing START_ENTITLEMENT right before START_BILLING (same event as START_BILLING but with different type=START_ENTITLEMENT to be compatible with old code)
+            final ListIterator<SubscriptionEvent> it = inputAndOutputResult.listIterator();
+            while (it.hasNext()) {
+                final SubscriptionEvent cur = it.next();
+                if (cur.getSubscriptionEventType() == SubscriptionEventType.START_BILLING && olderEntitlementSet.contains(cur.getEntitlementId())) {
+                    final SubscriptionEvent newEntitlementStartEvent = new DefaultSubscriptionEvent(cur.getId(),
+                                                                                                    cur.getEntitlementId(),
+                                                                                                    internalTenantContext.toUTCDateTime(cur.getEffectiveDate()),
+                                                                                                    SubscriptionEventType.START_ENTITLEMENT,
+                                                                                                    false,
+                                                                                                    false,
+                                                                                                    DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                                                    SubscriptionEventType.START_ENTITLEMENT.toString(),
+                                                                                                    cur.getPrevProduct(),
+                                                                                                    cur.getPrevPlan(),
+                                                                                                    cur.getPrevPhase(),
+                                                                                                    cur.getPrevPriceList(),
+                                                                                                    cur.getPrevBillingPeriod(),
+                                                                                                    cur.getNextProduct(),
+                                                                                                    cur.getNextPlan(),
+                                                                                                    cur.getNextPhase(),
+                                                                                                    cur.getNextPriceList(),
+                                                                                                    cur.getNextBillingPeriod(),
+                                                                                                    internalTenantContext.toUTCDateTime(cur.getEffectiveDate()),
+                                                                                                    internalTenantContext);
+                    it.previous();
+                    it.add(newEntitlementStartEvent);
+                    it.next();
+                }
+            }
+        }
+
+        private Set<UUID> computeOlderEntitlementSet(final List<SubscriptionEvent> initialEntitlementEvents, final Collection<BlockingState> blockingStates) {
+
+            final Set<UUID> START_BILLING_entitlementIdSet = ImmutableSet.copyOf(Iterables.transform(Iterables.filter(initialEntitlementEvents, new Predicate<SubscriptionEvent>() {
+                @Override
+                public boolean apply(final SubscriptionEvent input) {
+                    return input.getSubscriptionEventType() == SubscriptionEventType.START_BILLING;
+                }
+            }), new Function<SubscriptionEvent, UUID>() {
+                @Override
+                public UUID apply(final SubscriptionEvent input) {
+                    return input.getEntitlementId();
+                }
+            }));
+
+            final Set<UUID> ENT_STATE_START_entitlementIdSet = ImmutableSet.copyOf(Iterables.transform(Iterables.filter(blockingStates, new Predicate<BlockingState>() {
+                @Override
+                public boolean apply(final BlockingState input) {
+                    return input.getService().equals(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME) && input.getStateName().equals(DefaultEntitlementApi.ENT_STATE_START);
+                }
+            }), new Function<BlockingState, UUID>() {
+                @Override
+                public UUID apply(final BlockingState input) {
+                    return input.getBlockedId();
+                }
+            }));
+
+            return Sets.<UUID>difference(START_BILLING_entitlementIdSet, ENT_STATE_START_entitlementIdSet);
+        }
+    }
+
 }

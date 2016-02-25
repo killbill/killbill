@@ -24,7 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -80,7 +79,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
             for (final SubscriptionBaseTransition tr : baseTransitions) {
                 final List<SubscriptionEventType> eventTypes = toEventTypes(tr.getTransitionType());
                 for (final SubscriptionEventType eventType : eventTypes) {
-                    final SubscriptionEvent event = toSubscriptionEvent(tr, eventType, base.getStartDate(), internalTenantContext);
+                    final SubscriptionEvent event = toSubscriptionEvent(tr, eventType, internalTenantContext);
                     insertSubscriptionEvent(event, result);
                 }
             }
@@ -147,7 +146,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
         result.add(index, event);
     }
 
-    private SubscriptionEvent toSubscriptionEvent(final SubscriptionBaseTransition in, final SubscriptionEventType eventType, final DateTime referenceTime, final InternalTenantContext internalTenantContext) {
+    private SubscriptionEvent toSubscriptionEvent(final SubscriptionBaseTransition in, final SubscriptionEventType eventType, final InternalTenantContext internalTenantContext) {
         return new DefaultSubscriptionEvent(in.getId(),
                                             in.getSubscriptionId(),
                                             in.getEffectiveTransitionTime(),
