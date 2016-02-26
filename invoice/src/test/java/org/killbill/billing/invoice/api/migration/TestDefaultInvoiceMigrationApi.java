@@ -65,7 +65,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
     }
 
     private UUID createAndCheckMigrationInvoice(final UUID accountId) throws InvoiceApiException {
-        final UUID migrationInvoiceId = migrationApi.createMigrationInvoice(accountId, date_migrated, MIGRATION_INVOICE_AMOUNT,
+        final UUID migrationInvoiceId = invoiceUserApi.createMigrationInvoice(accountId, date_migrated, MIGRATION_INVOICE_AMOUNT,
                                                                             MIGRATION_INVOICE_CURRENCY, callContext);
         Assert.assertNotNull(migrationInvoiceId);
         //Double check it was created and values are correct

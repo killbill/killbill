@@ -25,7 +25,6 @@ import org.killbill.billing.invoice.InvoiceTagHandler;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.invoice.api.InvoiceMigrationApi;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceService;
@@ -33,7 +32,6 @@ import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
-import org.killbill.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
 import org.killbill.billing.invoice.api.svcs.DefaultInvoiceInternalApi;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceUserApi;
 import org.killbill.billing.invoice.dao.CBADao;
@@ -104,10 +102,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         bind(ResourceBundleFactory.class).to(DefaultResourceBundleFactory.class).asEagerSingleton();
     }
 
-    @Override
-    public void installInvoiceMigrationApi() {
-        bind(InvoiceMigrationApi.class).to(DefaultInvoiceMigrationApi.class).asEagerSingleton();
-    }
 
     protected void installNotifiers() {
         bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
@@ -163,7 +157,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoiceUserApi();
         installInvoiceInternalApi();
         installInvoicePaymentApi();
-        installInvoiceMigrationApi();
         installResourceBundleFactory();
         bind(RawUsageOptimizer.class).asEagerSingleton();
         bind(InvoiceApiHelper.class).asEagerSingleton();
