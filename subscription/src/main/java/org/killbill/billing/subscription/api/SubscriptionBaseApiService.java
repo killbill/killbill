@@ -50,10 +50,6 @@ public interface SubscriptionBaseApiService {
     public List<DefaultSubscriptionBase> createPlans(Iterable<SubscriptionSpecifier> subscriptions, CallContext context)
             throws SubscriptionBaseApiException;
 
-    @Deprecated
-    public boolean recreatePlan(DefaultSubscriptionBase subscription, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, DateTime requestedDateWithMs, CallContext context)
-            throws SubscriptionBaseApiException;
-
     public boolean cancel(DefaultSubscriptionBase subscription, CallContext context)
             throws SubscriptionBaseApiException;
 
@@ -99,7 +95,7 @@ public interface SubscriptionBaseApiService {
     public List<SubscriptionBaseEvent> getEventsOnCreation(UUID bundleId, UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate, long activeVersion,
                                                            Plan plan, PhaseType initialPhase,
                                                            String realPriceList, DateTime effectiveDate, DateTime processedDate,
-                                                           boolean reCreate, InternalTenantContext context)
+                                                           InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
 
     public List<SubscriptionBaseEvent> getEventsOnChangePlan(DefaultSubscriptionBase subscription, Plan newPlan,

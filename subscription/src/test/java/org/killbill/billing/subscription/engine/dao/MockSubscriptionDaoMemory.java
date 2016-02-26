@@ -239,16 +239,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void recreateSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> recreateEvents, final InternalCallContext context) {
-        synchronized (events) {
-            events.addAll(recreateEvents);
-            for (final SubscriptionBaseEvent cur : recreateEvents) {
-                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
-            }
-        }
-    }
-
-    @Override
     public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final List<SubscriptionBaseEvent> dryRunEvents, final InternalTenantContext context) {
         final List<SubscriptionBase> results = new ArrayList<SubscriptionBase>();
         for (final SubscriptionBase cur : subscriptions) {

@@ -38,12 +38,6 @@ public enum ApiEventType {
             return SubscriptionBaseTransitionType.CHANGE;
         }
     },
-    RE_CREATE {
-        @Override
-        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-            return SubscriptionBaseTransitionType.RE_CREATE;
-        }
-    },
     CANCEL {
         @Override
         public SubscriptionBaseTransitionType getSubscriptionTransitionType() {

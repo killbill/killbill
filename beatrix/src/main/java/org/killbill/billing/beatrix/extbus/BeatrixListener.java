@@ -137,7 +137,6 @@ public class BeatrixListener {
                 objectType = ObjectType.SUBSCRIPTION;
                 objectId = realEventST.getSubscriptionId();
                 if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
-                    realEventST.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE ||
                     realEventST.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_CREATION;
                 } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.CANCEL) {

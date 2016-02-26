@@ -103,7 +103,6 @@ public class TestApiListener {
         BROADCAST_SERVICE,
         CREATE,
         TRANSFER,
-        RE_CREATE,
         CHANGE,
         CANCEL,
         UNCANCEL,
@@ -157,10 +156,6 @@ public class TestApiListener {
                 break;
             case CREATE:
                 assertEqualsNicely(NextEvent.CREATE);
-                notifyIfStackEmpty();
-                break;
-            case RE_CREATE:
-                assertEqualsNicely(NextEvent.RE_CREATE);
                 notifyIfStackEmpty();
                 break;
             case CANCEL:
