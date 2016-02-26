@@ -136,7 +136,7 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
     public void testEventTotalOrdering() {
         final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE, 1L);
         final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CANCEL, 2L);
-        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.RE_CREATE, 3L);
+        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CANCEL, 3L);
 
         final SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
         set.add(event2);

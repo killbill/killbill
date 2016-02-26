@@ -33,10 +33,6 @@ public enum SubscriptionBaseTransitionType {
      */
     CHANGE,
     /**
-     * Occurs when a user restarted a {@code SubscriptionBase} after it had been cancelled
-     */
-    RE_CREATE,
-    /**
      * Occurs when a user cancelled the {@code SubscriptionBase}
      */
     CANCEL,

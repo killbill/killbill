@@ -92,16 +92,12 @@ public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
         final ApiEventBase result;
         if (apiEventType == ApiEventType.CREATE) {
             result = new ApiEventCreate(this);
-        } else if (apiEventType == ApiEventType.RE_CREATE) {
-            result = new ApiEventReCreate(this);
         } else if (apiEventType == ApiEventType.TRANSFER) {
             result = new ApiEventTransfer(this);
         } else if (apiEventType == ApiEventType.CHANGE) {
             result = new ApiEventChange(this);
         } else if (apiEventType == ApiEventType.CANCEL) {
             result = new ApiEventCancel(this);
-        } else if (apiEventType == ApiEventType.RE_CREATE) {
-            result = new ApiEventReCreate(this);
         } else if (apiEventType == ApiEventType.UNCANCEL) {
             result = new ApiEventUncancel(this);
         } else {

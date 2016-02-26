@@ -152,7 +152,6 @@ public class PlanAligner extends BaseAligner {
             switch (lastPlanTransition.getTransitionType()) {
                 // If we never had any Plan change, borrow the logic for createPlan alignment
                 case CREATE:
-                case RE_CREATE:
                 case TRANSFER:
                     final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getAlignStartDate(),
                                                                                subscription.getBundleStartDate(),

@@ -105,7 +105,6 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
         switch (existingEvent.getSubscriptionTransitionType()) {
             case TRANSFER:
-            case RE_CREATE:
             case CREATE:
                 newEvent = new ApiEventTransfer(apiBuilder);
                 break;

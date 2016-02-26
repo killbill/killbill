@@ -151,11 +151,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final SubscriptionBaseTransition pendingTransition = getPendingTransition();
         if (pendingTransition != null &&
             (pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.CREATE) ||
-             pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.TRANSFER) ||
-             pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.RE_CREATE))) {
+             pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.TRANSFER))) {
             return EntitlementState.PENDING;
         }
-
         throw new IllegalStateException("Should return a valid EntitlementState");
     }
 
@@ -221,11 +219,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             }
         }
         return null;
-    }
-
-    public boolean recreate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate,
-                            final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.recreatePlan(this, spec, overrides, requestedDate, context);
     }
 
     @Override
@@ -498,7 +491,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         while (it.hasNext()) {
             final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
             if (cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
                 return cur;
@@ -550,7 +542,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             if (cur.getTransitionType() == SubscriptionBaseTransitionType.PHASE
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
                 return cur.getEffectiveTransitionTime();
             }
@@ -612,7 +603,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     switch (apiEventType) {
                         case TRANSFER:
                         case CREATE:
-                        case RE_CREATE:
                             prevEventId = null;
                             prevCreatedDate = null;
                             previousState = null;

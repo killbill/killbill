@@ -524,7 +524,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                         final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, context);
                         final UUID subscriptionId = UUIDs.randomUUID();
                         dryRunEvents = apiService.getEventsOnCreation(bundleId, subscriptionId, startEffectiveDate, bundleStartDate, 1L, plan, inputSpec.getPhaseType(), realPriceList,
-                                                                      startEffectiveDate, utcNow, false, context);
+                                                                      startEffectiveDate, utcNow, context);
                         final SubscriptionBuilder builder = new SubscriptionBuilder()
                                 .setId(subscriptionId)
                                 .setBundleId(bundleId)
