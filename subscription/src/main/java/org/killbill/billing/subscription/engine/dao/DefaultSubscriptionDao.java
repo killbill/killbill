@@ -825,7 +825,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                         final DateTime now = clock.getUTCNow();
                         final SubscriptionBaseEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                                   .setSubscriptionId(reloaded.getId())
-                                                                                                  .setActiveVersion(((DefaultSubscriptionBase) reloaded).getActiveVersion())
                                                                                                   .setEffectiveDate(baseTriggerEventForAddOnCancellation.getEffectiveDate())
                                                                                                   .setCreatedDate(baseTriggerEventForAddOnCancellation.getCreatedDate())
                                                                                                   // This event is only there to indicate the ADD_ON is future canceled, but it is not there

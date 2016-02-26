@@ -43,7 +43,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
     private String planName;
     private String phaseName;
     private String priceListName;
-    private long currentVersion;
     private boolean isActive;
 
     public SubscriptionEventModelDao() {
@@ -52,7 +51,7 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
 
     public SubscriptionEventModelDao(final UUID id, final long totalOrdering, final EventType eventType, final ApiEventType userType,
                                      final DateTime effectiveDate, final UUID subscriptionId,
-                                     final String planName, final String phaseName, final String priceListName, final long currentVersion,
+                                     final String planName, final String phaseName, final String priceListName,
                                      final boolean active, final DateTime createDate, final DateTime updateDate) {
         super(id, createDate, updateDate);
         this.totalOrdering = totalOrdering;
@@ -63,7 +62,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         this.planName = planName;
         this.phaseName = phaseName;
         this.priceListName = priceListName;
-        this.currentVersion = currentVersion;
         this.isActive = active;
     }
 
@@ -77,7 +75,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         this.planName = eventType == EventType.API_USER ? ((ApiEvent) src).getEventPlan() : null;
         this.phaseName = eventType == EventType.API_USER ? ((ApiEvent) src).getEventPlanPhase() : ((PhaseEvent) src).getPhase();
         this.priceListName = eventType == EventType.API_USER ? ((ApiEvent) src).getPriceList() : null;
-        this.currentVersion = src.getActiveVersion();
         this.isActive = src.isActive();
     }
 
@@ -111,10 +108,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
 
     public String getPriceListName() {
         return priceListName;
-    }
-
-    public long getCurrentVersion() {
-        return currentVersion;
     }
 
     // TODO required for jdbi binder
@@ -158,10 +151,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         this.priceListName = priceListName;
     }
 
-    public void setCurrentVersion(final long currentVersion) {
-        this.currentVersion = currentVersion;
-    }
-
     public void setIsActive(final boolean isActive) {
         this.isActive = isActive;
     }
@@ -181,7 +170,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
                 .setCreatedDate(src.getCreatedDate())
                 .setUpdatedDate(src.getUpdatedDate())
                 .setEffectiveDate(src.getEffectiveDate())
-                .setActiveVersion(src.getCurrentVersion())
                 .setActive(src.isActive());
 
         SubscriptionBaseEvent result;
@@ -214,7 +202,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         sb.append(", planName='").append(planName).append('\'');
         sb.append(", phaseName='").append(phaseName).append('\'');
         sb.append(", priceListName='").append(priceListName).append('\'');
-        sb.append(", currentVersion=").append(currentVersion);
         sb.append(", isActive=").append(isActive);
         sb.append('}');
         return sb.toString();
@@ -234,9 +221,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
 
         final SubscriptionEventModelDao that = (SubscriptionEventModelDao) o;
 
-        if (currentVersion != that.currentVersion) {
-            return false;
-        }
         if (isActive != that.isActive) {
             return false;
         }
@@ -279,7 +263,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         result = 31 * result + (planName != null ? planName.hashCode() : 0);
         result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
         result = 31 * result + (priceListName != null ? priceListName.hashCode() : 0);
-        result = 31 * result + (int) (currentVersion ^ (currentVersion >>> 32));
         result = 31 * result + (isActive ? 1 : 0);
         return result;
     }

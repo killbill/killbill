@@ -52,20 +52,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
-
-        /*
-        final VersionedCatalogLoader versionedCatalogLoader = new VersionedCatalogLoader(clock);
-        final CatalogConfig config = new ConfigurationObjectFactory(new ConfigSource() {
-            final Map<String, String> properties = ImmutableMap.<String, String>of("org.killbill.catalog.uri", "file:src/test/resources/testInput.xml");
-
-            @Override
-            public String getString(final String propertyName) {
-                return properties.get(propertyName);
-            }
-        }).build(CatalogConfig.class);
-
-        catalogService = new DefaultCatalogService(config, versionedCatalogLoader);
-        */
         planAligner = new PlanAligner(catalogService);
 
     }
@@ -171,8 +157,8 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final SubscriptionBaseEvent event = createSubscriptionEvent(builder.getAlignStartDate(),
                                                                     productName,
                                                                     phaseType,
-                                                                    ApiEventType.CREATE,
-                                                                    defaultSubscriptionBase.getActiveVersion());
+                                                                    ApiEventType.CREATE
+                                                                   );
         defaultSubscriptionBase.rebuildTransitions(ImmutableList.<SubscriptionBaseEvent>of(event), catalogService.getFullCatalog(internalCallContext));
 
         Assert.assertEquals(defaultSubscriptionBase.getAllTransitions().size(), 1);
@@ -190,13 +176,13 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final SubscriptionBaseEvent previousEvent = createSubscriptionEvent(defaultSubscriptionBase.getStartDate(),
                                                                             previousProductName,
                                                                             commonPhaseType,
-                                                                            ApiEventType.CREATE,
-                                                                            defaultSubscriptionBase.getActiveVersion());
+                                                                            ApiEventType.CREATE
+                                                                           );
         final SubscriptionBaseEvent event = createSubscriptionEvent(effectiveChangeDate,
                                                                     newProductName,
                                                                     commonPhaseType,
-                                                                    ApiEventType.CHANGE,
-                                                                    defaultSubscriptionBase.getActiveVersion());
+                                                                    ApiEventType.CHANGE
+                                                                   );
 
         defaultSubscriptionBase.rebuildTransitions(ImmutableList.<SubscriptionBaseEvent>of(previousEvent, event), catalogService.getFullCatalog(internalCallContext));
 
@@ -210,8 +196,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
     private SubscriptionBaseEvent createSubscriptionEvent(final DateTime effectiveDate,
                                                           final String productName,
                                                           final PhaseType phaseType,
-                                                          final ApiEventType apiEventType,
-                                                          final long activeVersion) {
+                                                          final ApiEventType apiEventType) {
         final ApiEventBuilder eventBuilder = new ApiEventBuilder();
         eventBuilder.setEffectiveDate(effectiveDate);
         eventBuilder.setEventPlan(productName);
@@ -220,7 +205,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
         // We don't really use the following but the code path requires it
         eventBuilder.setFromDisk(true);
-        eventBuilder.setActiveVersion(activeVersion);
 
         return new ApiEventBase(eventBuilder.setApiEventType(apiEventType));
     }

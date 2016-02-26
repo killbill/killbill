@@ -41,17 +41,6 @@ public interface SubscriptionEventSqlDao extends EntitySqlDao<SubscriptionEventM
     public void unactiveEvent(@Bind("id") String id,
                               @BindBean final InternalCallContext context);
 
-    @SqlUpdate
-    @Audited(ChangeType.UPDATE)
-    public void reactiveEvent(@Bind("id") String id,
-                              @BindBean final InternalCallContext context);
-
-    @SqlUpdate
-    @Audited(ChangeType.UPDATE)
-    public void updateVersion(@Bind("id") String id,
-                              @Bind("currentVersion") Long currentVersion,
-                              @BindBean final InternalCallContext context);
-
     @SqlQuery
     public List<SubscriptionEventModelDao> getFutureActiveEventForSubscription(@Bind("subscriptionId") String subscriptionId,
                                                                               @Bind("now") Date now,

@@ -34,8 +34,6 @@ public interface SubscriptionBaseEvent extends Comparable<SubscriptionBaseEvent>
 
     public long getTotalOrdering();
 
-    public long getActiveVersion();
-
     public boolean isActive();
 
     public DateTime getEffectiveDate();

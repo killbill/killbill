@@ -79,7 +79,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     // Those can be modified through non User APIs, and a new SubscriptionBase
     // object would be created
     //
-    private final long activeVersion;
     private final DateTime chargedThroughDate;
 
     //
@@ -109,7 +108,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.alignStartDate = builder.getAlignStartDate();
         this.bundleStartDate = builder.getBundleStartDate();
         this.category = builder.getCategory();
-        this.activeVersion = builder.getActiveVersion();
         this.chargedThroughDate = builder.getChargedThroughDate();
         this.migrated = builder.isMigrated();
     }
@@ -123,7 +121,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.alignStartDate = internalSubscription.getAlignStartDate();
         this.bundleStartDate = internalSubscription.getBundleStartDate();
         this.category = internalSubscription.getCategory();
-        this.activeVersion = internalSubscription.getActiveVersion();
         this.chargedThroughDate = internalSubscription.getChargedThroughDate();
         this.migrated = internalSubscription.isMigrated();
         this.transitions = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions());
@@ -447,10 +444,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
-    public long getActiveVersion() {
-        return activeVersion;
-    }
-
     public List<SubscriptionBaseTransition> getBillingTransitions() {
 
         if (transitions == null) {
@@ -577,7 +570,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         for (final SubscriptionBaseEvent cur : inputEvents) {
 
-            if (!cur.isActive() || cur.getActiveVersion() < activeVersion) {
+            if (!cur.isActive()) {
                 continue;
             }
 

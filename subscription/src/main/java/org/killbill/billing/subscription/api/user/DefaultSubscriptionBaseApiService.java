@@ -107,7 +107,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
 
         try {
-            final List<SubscriptionBaseEvent> events = getEventsOnCreation(subscription.getBundleId(), subscription.getId(), subscription.getAlignStartDate(), subscription.getBundleStartDate(), subscription.getActiveVersion(),
+            final List<SubscriptionBaseEvent> events = getEventsOnCreation(subscription.getBundleId(), subscription.getId(), subscription.getAlignStartDate(), subscription.getBundleStartDate(),
                                                                            plan, initialPhase, realPriceList, effectiveDate, processedDate, internalCallContext);
             dao.createSubscription(subscription, events, internalCallContext);
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog(internalCallContext));
@@ -128,7 +128,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(subscription.getBuilder(), this, clock);
                 final InternalCallContext internalCallContext = createCallContextFromBundleId(subscriptionBase.getBundleId(), context);
                 final List<SubscriptionBaseEvent> events = getEventsOnCreation(subscriptionBase.getBundleId(), subscriptionBase.getId(), subscriptionBase.getAlignStartDate(),
-                                                                               subscriptionBase.getBundleStartDate(), subscriptionBase.getActiveVersion(), subscription.getPlan(),
+                                                                               subscriptionBase.getBundleStartDate(), subscription.getPlan(),
                                                                                subscription.getInitialPhase(), subscription.getRealPriceList(),
                                                                                subscription.getEffectiveDate(), subscription.getProcessedDate(), internalCallContext);
                 eventsMap.put(subscriptionBase.getId(), events);
@@ -274,7 +274,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final DateTime now = clock.getUTCNow();
         final SubscriptionBaseEvent uncancelEvent = new ApiEventUncancel(new ApiEventBuilder()
                                                                                  .setSubscriptionId(subscription.getId())
-                                                                                 .setActiveVersion(subscription.getActiveVersion())
                                                                                  .setEffectiveDate(now)
                                                                                  .setFromDisk(true));
 
@@ -284,7 +283,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, internalCallContext);
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                                          PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(), nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
+                                          PhaseEventData.createNextPhaseEvent(subscription.getId(), nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                           null;
         if (nextPhaseEvent != null) {
             uncancelEvents.add(nextPhaseEvent);
@@ -430,7 +429,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public List<SubscriptionBaseEvent> getEventsOnCreation(final UUID bundleId, final UUID subscriptionId, final DateTime alignStartDate, final DateTime bundleStartDate, final long activeVersion,
+    public List<SubscriptionBaseEvent> getEventsOnCreation(final UUID bundleId, final UUID subscriptionId, final DateTime alignStartDate, final DateTime bundleStartDate,
                                                            final Plan plan, final PhaseType initialPhase,
                                                            final String realPriceList, final DateTime effectiveDate, final DateTime processedDate,
                                                            final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
@@ -442,14 +441,13 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 .setEventPlan(plan.getName())
                 .setEventPlanPhase(curAndNextPhases[0].getPhase().getName())
                 .setEventPriceList(realPriceList)
-                .setActiveVersion(activeVersion)
                 .setEffectiveDate(effectiveDate)
                 .setFromDisk(true);
         final ApiEvent creationEvent = new ApiEventCreate(createBuilder);
 
         final TimedPhase nextTimedPhase = curAndNextPhases[1];
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                                          PhaseEventData.createNextPhaseEvent(subscriptionId, activeVersion, nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
+                                          PhaseEventData.createNextPhaseEvent(subscriptionId, nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                           null;
         final List<SubscriptionBaseEvent> events = new ArrayList<SubscriptionBaseEvent>();
         events.add(creationEvent);
@@ -484,13 +482,12 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                              .setEventPlan(newPlan.getName())
                                                                              .setEventPlanPhase(currentTimedPhase.getPhase().getName())
                                                                              .setEventPriceList(newPriceList)
-                                                                             .setActiveVersion(subscription.getActiveVersion())
                                                                              .setEffectiveDate(effectiveDate)
                                                                              .setFromDisk(true));
 
         final TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList, effectiveDate, internalTenantContext);
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                                          PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(),
+                                          PhaseEventData.createNextPhaseEvent(subscription.getId(),
                                                                               nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                           null;
 
@@ -515,7 +512,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final List<SubscriptionBaseEvent> cancelEvents = new ArrayList<SubscriptionBaseEvent>();
         final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                              .setSubscriptionId(subscription.getId())
-                                                                             .setActiveVersion(subscription.getActiveVersion())
                                                                              .setEffectiveDate(effectiveDate)
                                                                              .setFromDisk(true));
         cancelEvents.add(cancelEvent);
@@ -571,7 +567,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 //
                 final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                      .setSubscriptionId(cur.getId())
-                                                                                     .setActiveVersion(cur.getActiveVersion())
                                                                                      .setEffectiveDate(effectiveDate)
                                                                                      .setFromDisk(true));
                 subscriptionsToBeCancelled.add(cur);

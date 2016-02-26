@@ -32,13 +32,11 @@ public class SubscriptionBuilder {
     private DateTime updatedDate;
     private DateTime alignStartDate;
     private DateTime bundleStartDate;
-    private Long activeVersion;
     private ProductCategory category;
     private DateTime chargedThroughDate;
     private boolean migrated;
 
     public SubscriptionBuilder() {
-        this.activeVersion = SubscriptionEvents.INITIAL_VERSION;
     }
 
     public SubscriptionBuilder(final DefaultSubscriptionBase original) {
@@ -47,7 +45,6 @@ public class SubscriptionBuilder {
         this.alignStartDate = original.getAlignStartDate();
         this.bundleStartDate = original.getBundleStartDate();
         this.category = original.getCategory();
-        this.activeVersion = original.getActiveVersion();
         this.chargedThroughDate = original.getChargedThroughDate();
         this.migrated = original.isMigrated();
     }
@@ -81,12 +78,6 @@ public class SubscriptionBuilder {
         this.bundleStartDate = bundleStartDate;
         return this;
     }
-
-    public SubscriptionBuilder setActiveVersion(final long activeVersion) {
-        this.activeVersion = activeVersion;
-        return this;
-    }
-
     public SubscriptionBuilder setChargedThroughDate(final DateTime chargedThroughDate) {
         this.chargedThroughDate = chargedThroughDate;
         return this;
@@ -125,11 +116,6 @@ public class SubscriptionBuilder {
     public DateTime getBundleStartDate() {
         return bundleStartDate;
     }
-
-    public Long getActiveVersion() {
-        return activeVersion;
-    }
-
     public ProductCategory getCategory() {
         return category;
     }

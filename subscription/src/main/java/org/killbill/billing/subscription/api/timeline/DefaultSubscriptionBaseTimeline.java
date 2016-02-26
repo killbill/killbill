@@ -45,12 +45,10 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
     private final UUID id;
     private final List<ExistingEvent> existingEvents;
-    private final long activeVersion;
 
     public DefaultSubscriptionBaseTimeline(final DefaultSubscriptionBase input, final Catalog catalog) throws CatalogApiException {
         this.id = input.getId();
-        this.existingEvents = toExistingEvents(catalog, input.getActiveVersion(), input.getCategory(), input.getEvents());
-        this.activeVersion = input.getActiveVersion();
+        this.existingEvents = toExistingEvents(catalog, input.getCategory(), input.getEvents());
     }
 
     private BillingPeriod getBillingPeriod(final Catalog catalog, @Nullable final String phaseName, final DateTime effectiveDate, DateTime startDate) throws CatalogApiException {
@@ -61,7 +59,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
         return phase.getRecurring() != null ? phase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
     }
 
-    private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long activeVersion, final ProductCategory category, final List<SubscriptionBaseEvent> events)
+    private List<ExistingEvent> toExistingEvents(final Catalog catalog, final ProductCategory category, final List<SubscriptionBaseEvent> events)
             throws CatalogApiException {
 
         final List<ExistingEvent> result = new LinkedList<SubscriptionBaseTimeline.ExistingEvent>();
@@ -76,11 +74,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
         for (final SubscriptionBaseEvent cur : events) {
 
-            // First active event is used to figure out which catalog version to use.
-            //startDate = (startDate == null && cur.getActiveVersion() == activeVersion) ?  cur.getEffectiveDate() : startDate;
-
-            // STEPH that needs to be reviewed if we support multi version events
-            if (cur.getActiveVersion() != activeVersion || !cur.isActive()) {
+            if (!cur.isActive()) {
                 continue;
             }
             startDate = (startDate == null) ? cur.getEffectiveDate() : startDate;
@@ -184,11 +178,6 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
     @Override
     public List<ExistingEvent> getExistingEvents() {
         return existingEvents;
-    }
-
-    @Override
-    public long getActiveVersion() {
-        return activeVersion;
     }
 
     private void sortExistingEvent(final List<ExistingEvent> events) {

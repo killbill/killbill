@@ -109,8 +109,6 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionBaseEvent trialEvent = events.get(0);
         final SubscriptionBaseEvent phaseEvent = events.get(1);
 
-        assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
-        //assertEquals(subscription.getAccount(), account.getId());
         assertEquals(subscription.getBundleId(), bundle.getId());
         assertEquals(subscription.getStartDate(), requestedDate);
 
@@ -139,8 +137,6 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                                                                           testUtil.getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), null, clock.getUTCNow(), false, internalCallContext);
         assertNotNull(subscription);
 
-        assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
-        //assertEquals(subscription.getAccount(), account.getId());
         assertEquals(subscription.getBundleId(), bundle.getId());
         testUtil.assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
         testUtil.assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
@@ -173,8 +169,6 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                                                                           null, clock.getUTCNow(), false, internalCallContext);
         assertNotNull(subscription);
 
-        assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
-        //assertEquals(subscription.getAccount(), account.getId());
         assertEquals(subscription.getBundleId(), bundle.getId());
         testUtil.assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
         testUtil.assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());

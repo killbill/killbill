@@ -39,12 +39,6 @@ public interface SubscriptionBaseTimeline extends Entity {
      */
     public List<ExistingEvent> getExistingEvents();
 
-    /**
-     * @return the active version for the event stream
-     */
-    public long getActiveVersion();
-
-
 
     public interface ExistingEvent {
 

@@ -99,7 +99,6 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 .setEventPlan(existingEvent.getPlanName())
                 .setEventPlanPhase(currentPhase.getName())
                 .setEventPriceList(spec.getPriceListName())
-                .setActiveVersion(subscription.getActiveVersion())
                 .setEffectiveDate(effectiveDate)
                 .setFromDisk(true);
 
@@ -116,7 +115,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
             case PHASE:
                 newEvent = firstEvent ? new ApiEventTransfer(apiBuilder) :
-                           PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(), currentPhase.getName(), effectiveDate);
+                           PhaseEventData.createNextPhaseEvent(subscription.getId(), currentPhase.getName(), effectiveDate);
                 break;
 
             case CANCEL:
@@ -228,7 +227,6 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
                     final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                          .setSubscriptionId(cur.getId())
-                                                                                         .setActiveVersion(cur.getActiveVersion())
                                                                                          .setEffectiveDate(effectiveCancelDate)
                                                                                          .setFromDisk(true));
 

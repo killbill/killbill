@@ -31,7 +31,6 @@ public abstract class EventBase implements SubscriptionBaseEvent {
     private final DateTime effectiveDate;
 
     private final long totalOrdering;
-    private final long activeVersion;
     private final boolean isActive;
 
     public EventBase(final EventBaseBuilder<?> builder) {
@@ -41,7 +40,6 @@ public abstract class EventBase implements SubscriptionBaseEvent {
         this.createdDate = builder.getCreatedDate();
         this.updatedDate = builder.getUpdatedDate();
         this.effectiveDate = builder.getEffectiveDate();
-        this.activeVersion = builder.getActiveVersion();
         this.isActive = builder.isActive();
     }
 
@@ -73,11 +71,6 @@ public abstract class EventBase implements SubscriptionBaseEvent {
     @Override
     public DateTime getUpdatedDate() {
         return updatedDate;
-    }
-
-    @Override
-    public long getActiveVersion() {
-        return activeVersion;
     }
 
     @Override
