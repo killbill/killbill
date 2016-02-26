@@ -122,7 +122,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDateWithMs, final boolean isMigrated, final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
             final String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final DateTime now = clock.getUTCNow();
@@ -156,7 +156,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                  .setBundleId(bundleId)
                                                  .setCategory(plan.getProduct().getCategory())
                                                  .setBundleStartDate(bundleStartDate)
-                                                 .setAlignStartDate(effectiveDate),
+                                                 .setAlignStartDate(effectiveDate)
+                                                 .setMigrated(isMigrated),
                                          plan, spec.getPhaseType(), realPriceList, effectiveDate, now, callContext);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
@@ -164,7 +165,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public List<SubscriptionBase> createBaseSubscriptionWithAddOns(final UUID bundleId, final Iterable<EntitlementSpecifier> entitlements, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public List<SubscriptionBase> createBaseSubscriptionWithAddOns(final UUID bundleId, final Iterable<EntitlementSpecifier> entitlements, final DateTime requestedDateWithMs, final boolean isMigrated, final InternalCallContext context) throws SubscriptionBaseApiException {
 
         final DateTime now = clock.getUTCNow();
         final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
@@ -204,7 +205,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                 .setBundleId(bundleId)
                                                 .setCategory(plan.getProduct().getCategory())
                                                 .setBundleStartDate(effectiveDate)
-                                                .setAlignStartDate(effectiveDate));
+                                                .setAlignStartDate(effectiveDate)
+                                                .setMigrated(isMigrated));
 
                 subscriptions.add(subscription);
             }

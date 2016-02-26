@@ -60,14 +60,14 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final Account account = createAccount(getAccountData(7));
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement1 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement1 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         // Sleep 1 sec so created date are apart from each other and ordering in the bundle does not default on the UUID which is random.
         try {
             Thread.sleep(1000);
         } catch (InterruptedException ignore) {
         }
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         testListener.pushExpectedEvents(NextEvent.BLOCK);
@@ -113,7 +113,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         assertEquals(entitlement.getAccountId(), account.getId());
         assertEquals(entitlement.getExternalKey(), externalKey);
@@ -147,7 +147,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec2, externalKey, null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement2 = entitlementApi.createBaseEntitlement(account.getId(), spec2, externalKey, null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         assertEquals(entitlement2.getAccountId(), account.getId());
         assertEquals(entitlement2.getExternalKey(), externalKey);
@@ -218,7 +218,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         // Create entitlement
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Get the phase event out of the way
@@ -276,7 +276,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final LocalDate effectiveDate = initialDate.plusMonths(1);
 
         // Create entitlement and check each field
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, null, effectiveDate, effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, null, effectiveDate, effectiveDate, false, ImmutableList.<PluginProperty>of(), callContext);
 
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
 
@@ -308,7 +308,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final LocalDate futureDate = new LocalDate(2013, 9, 1);
 
         // No CREATE event as this is set in the future
-        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
 
@@ -336,7 +336,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
 
         final Iterable<BlockingState> iterableForCreateState = subscriptionApi.getBlockingStates(account.getId(), ImmutableList.of(BlockingStateType.SUBSCRIPTION), null, OrderingType.ASCENDING, SubscriptionApi.ALL_EVENTS, callContext);
         assertTrue(iterableForCreateState.iterator().hasNext());

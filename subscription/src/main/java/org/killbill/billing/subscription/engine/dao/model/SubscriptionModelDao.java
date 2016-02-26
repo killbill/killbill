@@ -37,11 +37,12 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
     private DateTime bundleStartDate;
     private long activeVersion;
     private DateTime chargedThroughDate;
+    private boolean migrated;
 
     public SubscriptionModelDao() { /* For the DAO mapper */ }
 
     public SubscriptionModelDao(final UUID id, final UUID bundleId, final ProductCategory category, final DateTime startDate, final DateTime bundleStartDate,
-                                final long activeVersion, final DateTime chargedThroughDate, final DateTime createdDate, final DateTime updateDate) {
+                                final long activeVersion, final DateTime chargedThroughDate, final boolean migrated, final DateTime createdDate, final DateTime updateDate) {
         super(id, createdDate, updateDate);
         this.bundleId = bundleId;
         this.category = category;
@@ -49,11 +50,12 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
         this.bundleStartDate = bundleStartDate;
         this.activeVersion = activeVersion;
         this.chargedThroughDate = chargedThroughDate;
+        this.migrated = migrated;
     }
 
     public SubscriptionModelDao(final DefaultSubscriptionBase src) {
         this(src.getId(), src.getBundleId(), src.getCategory(), src.getAlignStartDate(), src.getBundleStartDate(), src.getActiveVersion(),
-             src.getChargedThroughDate(), src.getCreatedDate(), src.getUpdatedDate());
+             src.getChargedThroughDate(), src.isMigrated(), src.getCreatedDate(), src.getUpdatedDate());
     }
 
     public UUID getBundleId() {
@@ -104,6 +106,14 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
         this.chargedThroughDate = chargedThroughDate;
     }
 
+    public boolean isMigrated() {
+        return migrated;
+    }
+
+    public void setMigrated(final boolean migrated) {
+        this.migrated = migrated;
+    }
+
     public static SubscriptionBase toSubscription(final SubscriptionModelDao src) {
         if (src == null) {
             return null;
@@ -118,6 +128,7 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
                                             .setAlignStartDate(src.getStartDate())
                                             .setActiveVersion(src.getActiveVersion())
                                             .setChargedThroughDate(src.getChargedThroughDate())
+                                            .setMigrated(src.isMigrated())
                                             .setCreatedDate(src.getCreatedDate())
                                             .setUpdatedDate(src.getUpdatedDate()));
     }
@@ -132,6 +143,7 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
         sb.append(", bundleStartDate=").append(bundleStartDate);
         sb.append(", activeVersion=").append(activeVersion);
         sb.append(", chargedThroughDate=").append(chargedThroughDate);
+        sb.append(", migrated=").append(migrated);
         sb.append('}');
         return sb.toString();
     }
@@ -165,6 +177,9 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
         if (chargedThroughDate != null ? !chargedThroughDate.equals(that.chargedThroughDate) : that.chargedThroughDate != null) {
             return false;
         }
+        if (migrated != that.migrated) {
+            return false;
+        }
         if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {
             return false;
         }
@@ -181,6 +196,7 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
         result = 31 * result + (bundleStartDate != null ? bundleStartDate.hashCode() : 0);
         result = 31 * result + (int) (activeVersion ^ (activeVersion >>> 32));
         result = 31 * result + (chargedThroughDate != null ? chargedThroughDate.hashCode() : 0);
+        result = 31 * result + Boolean.valueOf(migrated).hashCode();
         return result;
     }
 

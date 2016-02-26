@@ -35,6 +35,7 @@ public class SubscriptionBuilder {
     private Long activeVersion;
     private ProductCategory category;
     private DateTime chargedThroughDate;
+    private boolean migrated;
 
     public SubscriptionBuilder() {
         this.activeVersion = SubscriptionEvents.INITIAL_VERSION;
@@ -48,6 +49,7 @@ public class SubscriptionBuilder {
         this.category = original.getCategory();
         this.activeVersion = original.getActiveVersion();
         this.chargedThroughDate = original.getChargedThroughDate();
+        this.migrated = original.isMigrated();
     }
 
     public SubscriptionBuilder setId(final UUID id) {
@@ -90,6 +92,11 @@ public class SubscriptionBuilder {
         return this;
     }
 
+    public SubscriptionBuilder setMigrated(final boolean migrated) {
+        this.migrated = migrated;
+        return this;
+    }
+
     public SubscriptionBuilder setCategory(final ProductCategory category) {
         this.category = category;
         return this;
@@ -129,6 +136,10 @@ public class SubscriptionBuilder {
 
     public DateTime getChargedThroughDate() {
         return chargedThroughDate;
+    }
+
+    public boolean isMigrated() {
+        return migrated;
     }
 
     private void checkAllFieldsSet() {

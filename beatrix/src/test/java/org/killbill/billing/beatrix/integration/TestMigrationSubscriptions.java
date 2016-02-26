@@ -73,7 +73,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         // Entitlement wil be created in PENDING state
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, ImmutableList.<PluginProperty>of(), callContext);
         Assert.assertEquals(entitlement.getState(), EntitlementState.PENDING);
 
         // Move clock to entitlementMigrationDate (migration cutOverDate), and expect the associated event
@@ -129,7 +129,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Entitlement wil be created in ACTIVE state because entitlementMigrationDate was set in the past
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         Assert.assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
@@ -174,7 +174,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Entitlement wil be created in ACTIVE state because entitlementMigrationDate was set in the past
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         Assert.assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
@@ -236,7 +236,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         specifierList.add(addOnEntitlementSpecifier1);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.BLOCK);
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, entitlementMigrationDate, billingMigrationDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, entitlementMigrationDate, billingMigrationDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         Assert.assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
 

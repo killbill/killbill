@@ -73,6 +73,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     private final DateTime alignStartDate;
     private final DateTime bundleStartDate;
     private final ProductCategory category;
+    private final boolean migrated;
 
     //
     // Those can be modified through non User APIs, and a new SubscriptionBase
@@ -110,6 +111,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.category = builder.getCategory();
         this.activeVersion = builder.getActiveVersion();
         this.chargedThroughDate = builder.getChargedThroughDate();
+        this.migrated = builder.isMigrated();
     }
 
     // Used for API to make sure we have a clock and an apiService set before we return the object
@@ -123,6 +125,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.category = internalSubscription.getCategory();
         this.activeVersion = internalSubscription.getActiveVersion();
         this.chargedThroughDate = internalSubscription.getChargedThroughDate();
+        this.migrated = internalSubscription.isMigrated();
         this.transitions = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions());
         this.events = internalSubscription.getEvents();
     }
@@ -161,12 +164,16 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         if (transitions == null) {
             return null;
         }
-        final SubscriptionBaseTransitionData initialTransition = (SubscriptionBaseTransitionData) transitions.get(0);
-        switch (initialTransition.getApiEventType()) {
-            case TRANSFER:
-                return EntitlementSourceType.TRANSFERRED;
-            default:
-                return EntitlementSourceType.NATIVE;
+        if (isMigrated()) {
+            return EntitlementSourceType.MIGRATED;
+        } else {
+            final SubscriptionBaseTransitionData initialTransition = (SubscriptionBaseTransitionData) transitions.get(0);
+            switch (initialTransition.getApiEventType()) {
+                case TRANSFER:
+                    return EntitlementSourceType.TRANSFERRED;
+                default:
+                    return EntitlementSourceType.NATIVE;
+            }
         }
     }
 
@@ -360,6 +367,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     @Override
     public DateTime getChargedThroughDate() {
         return chargedThroughDate;
+    }
+
+    @Override
+    public boolean isMigrated() {
+        return migrated;
     }
 
     @Override

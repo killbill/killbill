@@ -213,7 +213,7 @@ public class TestSubscription extends TestIntegrationBase {
         specifierList.add(addOnEntitlementSpecifier2);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, initialDate, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         checkNoMoreInvoiceToGenerate(account);
 
@@ -259,7 +259,7 @@ public class TestSubscription extends TestIntegrationBase {
         final LocalDate futureDate = new LocalDate(2015, 10, 1);
 
         // No CREATE event as this is set in the future
-        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
@@ -291,7 +291,7 @@ public class TestSubscription extends TestIntegrationBase {
         final LocalDate futureDate = new LocalDate(2015, 10, 1);
 
         // No CREATE event as this is set in the future
-        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(createdEntitlement.getState(), EntitlementState.PENDING);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);

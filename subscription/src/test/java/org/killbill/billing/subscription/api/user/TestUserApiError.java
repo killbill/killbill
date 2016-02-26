@@ -92,7 +92,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         try {
             subscriptionInternalApi.createSubscription(bundleId,
                                                        testUtil.getProductSpecifier(productName, planSet, term, null),
-                                                       null, clock.getUTCNow(), internalCallContext);
+                                                       null, clock.getUTCNow(), false, internalCallContext);
             Assert.fail("Exception expected, error code: " + expected);
         } catch (final SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), expected.getCode());

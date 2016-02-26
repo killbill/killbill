@@ -167,6 +167,11 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
+    public boolean isMigrated() {
+        return false;
+    }
+
+    @Override
     public ProductCategory getCategory() {
         return sub.getCategory();
     }

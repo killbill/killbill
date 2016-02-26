@@ -74,6 +74,7 @@ public interface JaxrsResource {
     public static final String QUERY_CALL_TIMEOUT = "callTimeoutSec";
     public static final String QUERY_TARGET_DATE = "targetDate";
     public static final String QUERY_BILLING_POLICY = "billingPolicy";
+    public static final String QUERY_MIGRATED = "migrated";
     public static final String QUERY_ENTITLEMENT_POLICY = "entitlementPolicy";
     public static final String QUERY_SEARCH_OFFSET = "offset";
     public static final String QUERY_SEARCH_LIMIT = "limit";

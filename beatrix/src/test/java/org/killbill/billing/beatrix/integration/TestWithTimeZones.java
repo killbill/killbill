@@ -134,7 +134,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", ProductCategory.BASE, BillingPeriod.MONTHLY, "notrial", null);
-        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), null, null, ImmutableList.<PluginProperty>of(), callContext);
+        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Cancel the next month specifying just a LocalDate
@@ -179,7 +179,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", ProductCategory.BASE, BillingPeriod.MONTHLY, "notrial", null);
-        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), null, null, ImmutableList.<PluginProperty>of(), callContext);
+        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Cancel the next month specifying just a LocalDate
@@ -232,7 +232,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", ProductCategory.BASE, BillingPeriod.MONTHLY, "notrial", null);
         // Pass a date of today, to trigger TimeAwareContext#toUTCDateTime
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), clock.getUTCToday(), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), clock.getUTCToday(), clock.getUTCToday(), false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         Assert.assertEquals(entitlement.getEffectiveStartDate().compareTo(new LocalDate("2015-03-08")), 0);

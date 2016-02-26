@@ -92,7 +92,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.wordnik.swagger.annotations.Api;
@@ -156,6 +155,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */
                                       @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
                                       @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
+                                      @QueryParam(QUERY_MIGRATED) @DefaultValue("false") final Boolean isMigrated,
                                       @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                       @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -200,8 +200,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
                 return createAddOnEntitlement ?
-                       entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, pluginProperties, callContext) :
-                       entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, resolvedEntitlementDate, resolvedBillingDate, pluginProperties, callContext);
+                       entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext) :
+                       entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext);
             }
 
             private UUID getBundleIdForAddOnCreation(final SubscriptionJson entitlement) throws SubscriptionApiException {
@@ -240,6 +240,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                 @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */
                                                 @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
                                                 @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
+                                                @QueryParam(QUERY_MIGRATED) @DefaultValue("false") final Boolean isMigrated,
                                                 @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                                 @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
                                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -327,7 +328,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate, callContext) : toLocalDate(entitlementDate, callContext);
                 final LocalDate resolvedBillingDate = requestedDate != null ? toLocalDate(requestedDate, callContext) : toLocalDate(billingDate, callContext);
                 return entitlementApi.createBaseEntitlementWithAddOns(account.getId(), baseEntitlement.getExternalKey(), entitlementSpecifierList,
-                                                                      resolvedEntitlementDate, resolvedBillingDate, pluginProperties, callContext);
+                                                                      resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext);
             }
 
             @Override

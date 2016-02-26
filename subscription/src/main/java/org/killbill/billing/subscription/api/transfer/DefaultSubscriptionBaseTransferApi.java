@@ -233,7 +233,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                                                          .setEffectiveDate(effectiveCancelDate)
                                                                                          .setFromDisk(true));
 
-                    TransferCancelData cancelData = new TransferCancelData(oldSubscription, cancelEvent);
+                    final TransferCancelData cancelData = new TransferCancelData(oldSubscription, cancelEvent);
                     transferCancelDataList.add(cancelData);
                 }
 

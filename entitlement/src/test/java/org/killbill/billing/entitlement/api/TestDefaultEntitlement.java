@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -54,9 +55,10 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
 
         clock.addDays(5);
 
@@ -67,6 +69,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
         assertEquals(entitlement2.getEffectiveEndDate(), clock.getUTCToday());
+        assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
     }
 
     @Test(groups = "slow")
@@ -80,7 +83,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
@@ -113,7 +116,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
@@ -146,7 +149,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
@@ -171,7 +174,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
@@ -214,7 +217,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         final DateTime ctd = clock.getUTCNow().plusDays(30).plusMonths(1);
@@ -254,7 +257,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Immediate change during trial
@@ -288,7 +291,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         clock.addDays(1);
@@ -339,7 +342,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         // Create entitlement and check each field
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, startDate, startDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, startDate, startDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         assertEquals(entitlement.getState(), EntitlementState.PENDING);
 
