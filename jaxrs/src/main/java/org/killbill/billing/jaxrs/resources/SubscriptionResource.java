@@ -61,6 +61,7 @@ import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
+import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.NullInvoiceInternalEvent;
@@ -526,9 +527,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         @Override
         public void onSubscriptionBaseTransition(final EffectiveSubscriptionInternalEvent event) {
-
             log.info(String.format("Got event SubscriptionBaseTransition token = %s, type = %s, remaining = %d ",
                                    event.getUserToken(), event.getTransitionType(), event.getRemainingEventsForUserOperation()));
+        }
+
+        @Override
+        public void onBlockingState(final BlockingTransitionInternalEvent event) {
+            log.info(String.format("Got event BlockingTransitionInternalEvent token = %s", event.getUserToken()));
         }
 
         @Override
