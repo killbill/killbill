@@ -41,12 +41,14 @@ import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
@@ -62,7 +64,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 2);
         for (final Invoice invoiceJson : invoices) {
             Assert.assertEquals(invoiceJson.getAuditLogs().size(), 1);
@@ -239,7 +241,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
@@ -300,7 +302,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
@@ -439,7 +441,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final UUID invoiceId = invoices.get(1).getInvoiceId();
@@ -469,7 +471,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final UUID invoiceId = invoices.get(1).getInvoiceId();
@@ -498,7 +500,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final UUID invoiceId = invoices.get(1).getInvoiceId();
@@ -553,4 +555,38 @@ public class TestInvoice extends TestJaxrsBase {
         }
         Assert.assertNull(page);
     }
+
+    @Test(groups = "slow", description = "Can create a migration invoice")
+    public void testInvoiceMigration() throws Exception {
+        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, true);
+        assertEquals(invoices.size(), 2);
+
+        // Migrate an invoice with one external charge
+        final BigDecimal chargeAmount = BigDecimal.TEN;
+        final InvoiceItem externalCharge = new InvoiceItem();
+        externalCharge.setStartDate(new LocalDate());
+        externalCharge.setAccountId(accountJson.getAccountId());
+        externalCharge.setAmount(chargeAmount);
+        externalCharge.setItemType(InvoiceItemType.EXTERNAL_CHARGE.toString());
+        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+
+        final Account accountWithBalance = killBillClient.getAccount(accountJson.getAccountId(), true, true);
+
+        final Invoice migrationInvoice = killBillClient.createMigrationInvoice(accountJson.getAccountId(), null, ImmutableList.<InvoiceItem>of(externalCharge), createdBy, reason, comment);
+        assertEquals(migrationInvoice.getBalance(), BigDecimal.ZERO);
+        assertEquals(migrationInvoice.getItems().size(), 1);
+        assertEquals(migrationInvoice.getItems().get(0).getAmount().compareTo(chargeAmount), 0);
+        assertEquals(migrationInvoice.getItems().get(0).getCurrency(), Currency.valueOf(accountJson.getCurrency()));
+
+
+        final List<Invoice> invoicesWithMigration = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, true);
+        assertEquals(invoicesWithMigration.size(), 3);
+
+        final Account accountWithBalanceAfterMigration = killBillClient.getAccount(accountJson.getAccountId(), true, true);
+        assertEquals(accountWithBalanceAfterMigration.getAccountBalance().compareTo(accountWithBalance.getAccountBalance()), 0);
+    }
+
 }

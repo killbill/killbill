@@ -28,7 +28,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -38,7 +37,6 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.MigrationPlan;
 import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
@@ -118,8 +116,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final TenantContext context) {
-        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(internalCallContextFactory.createInternalTenantContext(accountId, context));
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, boolean includesMigrated, final TenantContext context) {
+        final List<InvoiceModelDao> invoicesByAccount = includesMigrated ?
+                                                        dao.getAllInvoicesByAccount(internalCallContextFactory.createInternalTenantContext(accountId, context)) :
+                                                        dao.getInvoicesByAccount(internalCallContextFactory.createInternalTenantContext(accountId, context));
+
         return fromInvoiceModelDao(invoicesByAccount);
     }
 
@@ -454,18 +455,36 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final BigDecimal balance, final Currency currency, final CallContext context) {
+    public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final Iterable<InvoiceItem> items, final CallContext context) {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
-
         final LocalDate createdDate = internalCallContext.toLocalDate(internalCallContext.getCreatedDate());
-        final InvoiceModelDao migrationInvoice = new InvoiceModelDao(accountId, createdDate, targetDate, currency, true);
-        final InvoiceItemModelDao migrationInvoiceItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.FIXED, migrationInvoice.getId(), accountId, null, null,
-                                                                                 null, MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME, null,
-                                                                                 targetDate, null, balance, null, currency, null);
+        final InvoiceModelDao migrationInvoice = new InvoiceModelDao(accountId, createdDate, targetDate, items.iterator().next().getCurrency(), true);
 
-        dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),
-                          true, new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
 
+        final List<InvoiceItemModelDao> itemModelDaos = ImmutableList.copyOf(Iterables.transform(items, new Function<InvoiceItem, InvoiceItemModelDao>() {
+            @Override
+            public InvoiceItemModelDao apply(final InvoiceItem input) {
+                return new InvoiceItemModelDao(internalCallContext.getCreatedDate(),
+                                               input.getInvoiceItemType(),
+                                               migrationInvoice.getId(),
+                                               accountId,
+                                               input.getBundleId(),
+                                               input.getSubscriptionId(),
+                                               input.getDescription(),
+                                               input.getPlanName(),
+                                               input.getPhaseName(),
+                                               input.getUsageName(),
+                                               input.getStartDate(),
+                                               input.getEndDate(),
+                                               input.getAmount(),
+                                               input.getRate(),
+                                               input.getCurrency(),
+                                               input.getLinkedItemId());
+
+            }
+        }));
+
+        dao.createInvoice(migrationInvoice, itemModelDaos, true, new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
         return migrationInvoice.getId();
     }
 

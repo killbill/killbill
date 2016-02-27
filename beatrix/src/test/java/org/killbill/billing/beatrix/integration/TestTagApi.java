@@ -85,7 +85,7 @@ public class TestTagApi extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         Assert.assertEquals(invoices.size(), 1);
 
         final Invoice invoice = invoices.get(0);

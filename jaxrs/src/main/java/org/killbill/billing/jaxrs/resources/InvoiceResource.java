@@ -315,6 +315,31 @@ public class InvoiceResource extends JaxRsResourceBase {
 
     @TimedResource
     @POST
+    @Path("/" + MIGRATION + "/{accountId:" + UUID_PATTERN + "}")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Create a migration invoice", response = InvoiceJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
+    public Response createMigrationInvoice(final Iterable<InvoiceItemJson> items,
+                                           @PathParam("accountId") final String accountId,
+                                           @Nullable @QueryParam(QUERY_TARGET_DATE) final String targetDate,
+                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                           @HeaderParam(HDR_REASON) final String reason,
+                                           @HeaderParam(HDR_COMMENT) final String comment,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request,
+                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
+        final Iterable<InvoiceItem> sanitizedInvoiceItems = validateSanitizeAndTranformInputItems(account.getCurrency(), items);
+        final LocalDate resolvedTargetDate =  toLocalDateDefaultToday(account, targetDate, callContext);
+        final UUID invoiceId = invoiceApi.createMigrationInvoice(UUID.fromString(accountId), resolvedTargetDate, sanitizedInvoiceItems, callContext);
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", invoiceId);
+    }
+
+
+    @TimedResource
+    @POST
     @Path("/" + DRY_RUN)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -468,20 +493,11 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
-        final Iterable<InvoiceItemJson> sanitizedExternalChargesJson = cloneRefundItemsWithValidCurrency(account.getCurrency(), externalChargesJson);
+        final Iterable<InvoiceItem> sanitizedExternalChargesJson = validateSanitizeAndTranformInputItems(account.getCurrency(), externalChargesJson);
 
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate = toLocalDateDefaultToday(account, requestedDateTimeString, callContext);
-
-        final Iterable<InvoiceItem> externalCharges = Iterables.<InvoiceItemJson, InvoiceItem>transform(sanitizedExternalChargesJson,
-                                                                                                        new Function<InvoiceItemJson, InvoiceItem>() {
-                                                                                                            @Override
-                                                                                                            public InvoiceItem apply(final InvoiceItemJson invoiceItemJson) {
-                                                                                                                return invoiceItemJson.toInvoiceItem();
-                                                                                                            }
-                                                                                                        }
-                                                                                                       );
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, externalCharges, callContext);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, sanitizedExternalChargesJson, callContext);
 
         if (payInvoice) {
             final Collection<UUID> paidInvoices = new HashSet<UUID>();
@@ -505,9 +521,9 @@ public class InvoiceResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(createdExternalChargesJson).build();
     }
 
-    private Iterable<InvoiceItemJson> cloneRefundItemsWithValidCurrency(final Currency accountCurrency, final Iterable<InvoiceItemJson> inputItems) throws InvoiceApiException {
+    private Iterable<InvoiceItem> validateSanitizeAndTranformInputItems(final Currency accountCurrency, final Iterable<InvoiceItemJson> inputItems) throws InvoiceApiException {
         try {
-            return Iterables.transform(inputItems, new Function<InvoiceItemJson, InvoiceItemJson>() {
+            final Iterable<InvoiceItemJson> sanitized = Iterables.transform(inputItems, new Function<InvoiceItemJson, InvoiceItemJson>() {
                 @Override
                 public InvoiceItemJson apply(final InvoiceItemJson input) {
                     if (input.getCurrency() != null) {
@@ -518,7 +534,8 @@ public class InvoiceResource extends JaxRsResourceBase {
                     } else {
                         return new InvoiceItemJson(null,
                                                    input.getInvoiceId(),
-                                                   null, input.getAccountId(),
+                                                   null,
+                                                   input.getAccountId(),
                                                    input.getBundleId(),
                                                    input.getSubscriptionId(),
                                                    input.getPlanName(),
@@ -532,6 +549,13 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                    accountCurrency,
                                                    null);
                     }
+                }
+            });
+
+            return Iterables.transform(sanitized, new Function<InvoiceItemJson, InvoiceItem>() {
+                @Override
+                public InvoiceItem apply(final InvoiceItemJson input) {
+                    return input.toInvoiceItem();
                 }
             });
         } catch (IllegalArgumentException e) {

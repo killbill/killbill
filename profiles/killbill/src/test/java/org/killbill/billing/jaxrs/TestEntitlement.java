@@ -206,7 +206,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription subscription = killBillClient.createSubscription(input, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
     }
@@ -251,7 +251,7 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(bundle.getExternalKey(), "base");
         assertEquals(bundle.getSubscriptions().size(), 3);
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 1);
     }
 

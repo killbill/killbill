@@ -434,7 +434,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 2);
 
         final Invoice invoice1 = invoices.get(0).getInvoiceItems().get(0).getInvoiceItemType() == InvoiceItemType.RECURRING ?

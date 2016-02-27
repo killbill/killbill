@@ -84,7 +84,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -98,7 +98,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 

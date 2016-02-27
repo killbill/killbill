@@ -622,14 +622,14 @@ public class TestIntegration extends TestIntegrationBase {
 
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
         assertNotNull(invoices);
         assertTrue(invoices.size() == 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 2);
 
@@ -644,7 +644,7 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 8);
 
@@ -655,7 +655,7 @@ public class TestIntegration extends TestIntegrationBase {
             assertListenerStatus();
         }
 
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 14);
 

@@ -47,7 +47,8 @@ public class InvoiceModelDaoHelper {
                                                                 public InvoicePayment apply(final InvoicePaymentModelDao input) {
                                                                     return new DefaultInvoicePayment(input);
                                                                 }
-                                                            }));
+                                                            }),
+                                                            invoiceModelDao.isMigrated() || invoiceModelDao.isWrittenOff());
     }
 
     public static BigDecimal getCBAAmount(final InvoiceModelDao invoiceModelDao) {

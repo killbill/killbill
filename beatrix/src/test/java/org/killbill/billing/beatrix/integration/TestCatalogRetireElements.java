@@ -68,7 +68,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
                                                            ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
@@ -92,7 +92,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 3);
         for (final Invoice invoice : invoices) {
             assertEquals(invoice.getInvoiceItems().get(0).getPlanName(), "pistol-monthly");
@@ -119,7 +119,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
                                                            ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
@@ -148,7 +148,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 4);
         for (final Invoice invoice : invoices) {
             assertEquals(invoice.getInvoiceItems().get(0).getPlanName(), "pistol-monthly");
@@ -177,7 +177,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         assertListenerStatus();
 
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
 
         // Move out a month.
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -208,7 +208,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 5);
 
         assertTrue(invoices.get(0).getInvoiceItems().get(0).getPhaseName().equals("discount-pistol-monthly-trial"));
