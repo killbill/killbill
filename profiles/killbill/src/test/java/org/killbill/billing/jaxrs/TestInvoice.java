@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -90,6 +90,105 @@ public class TestInvoice extends TestJaxrsBase {
         // Check we can retrieve the invoice by number
         final Invoice firstInvoiceByNumberJson = killBillClient.getInvoice(invoiceJson.getInvoiceNumber());
         assertEquals(firstInvoiceByNumberJson, invoiceJson);
+
+        // Check we can retrieve the HTML version
+        final String htmlInvoice = killBillClient.getInvoiceAsHtml(invoiceJson.getInvoiceId());
+        assertEquals(htmlInvoice, "<html>\n" +
+                                  "    <head>\n" +
+                                  "        <style type=\"text/css\">\n" +
+                                  "            th {align=left; width=225px; border-bottom: solid 2px black;}\n" +
+                                  "        </style>\n" +
+                                  "    </head>\n" +
+                                  "    <body>\n" +
+                                  "        <h1>invoiceTitle</h1>\n" +
+                                  "        <table>\n" +
+                                  "            <tr>\n" +
+                                  "                <td rowspan=3 width=350px>Insert image here</td>\n" +
+                                  "                <td width=100px/>\n" +
+                                  "                <td width=225px/>\n" +
+                                  "                <td width=225px/>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td />\n" +
+                                  "                <td align=right>invoiceDate</td>\n" +
+                                  "                <td>25 avr. 2012</td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td />\n" +
+                                  "                <td align=right>invoiceNumber</td>\n" +
+                                  "                <td>1</td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td>companyName</td>\n" +
+                                  "                <td></td>\n" +
+                                  "                <td align=right>accountOwnerName</td>\n" +
+                                  "                <td>" + accountJson.getName() + "</td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td>companyAddress</td>\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "                <td>" + accountJson.getEmail() + "</td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td>companyCityProvincePostalCode</td>\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "                <td>" + accountJson.getPhone() + "</td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td>companyCountry</td>\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td><companyUrl</td>\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "            </tr>\n" +
+                                  "        </table>\n" +
+                                  "        <br />\n" +
+                                  "        <br />\n" +
+                                  "        <br />\n" +
+                                  "        <table>\n" +
+                                  "            <tr>\n" +
+                                  "                <th>invoiceItemBundleName</td>\n" +
+                                  "                <th>invoiceItemDescription</td>\n" +
+                                  "                <th>invoiceItemServicePeriod</td>\n" +
+                                  "                <th>invoiceItemAmount</td>\n" +
+                                  "            </tr>\n" +
+                                  "            \n" +
+                                  "            <tr>\n" +
+                                  "                <td>shotgun-monthly-trial</td>\n" +
+                                  "                <td>Monthly shotgun plan</td>\n" +
+                                  "                <td>25 avr. 2012</td>\n" +
+                                  "                <td>USD 0E-9</td>\n" +
+                                  "            </tr>\n" +
+                                  "            \n" +
+                                  "            <tr>\n" +
+                                  "                <td colspan=4 />\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td colspan=2 />\n" +
+                                  "                <td align=right><strong>invoiceAmount</strong></td>\n" +
+                                  "                <td align=right><strong>0.00</strong></td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td colspan=2 />\n" +
+                                  "                <td align=right><strong>invoiceAmountPaid</strong></td>\n" +
+                                  "                <td align=right><strong>0</strong></td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td colspan=2 />\n" +
+                                  "                <td align=right><strong>invoiceBalance</strong></td>\n" +
+                                  "                <td align=right><strong>0.00</strong></td>\n" +
+                                  "            </tr>\n" +
+                                  "        </table>\n" +
+                                  "    </body>\n" +
+                                  "</html>\n" +
+                                  "\n");
 
         // Then create a dryRun for next upcoming invoice
         final InvoiceDryRun dryRunArg = new InvoiceDryRun(DryRunType.UPCOMING_INVOICE, null,
