@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
 import org.killbill.billing.catalog.api.Duration;
@@ -73,9 +74,27 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
             case YEARS:
                 return dateTime.plusYears(number);
             case UNLIMITED:
-                return dateTime.plusYears(100);
             default:
-                return dateTime;
+                throw new  IllegalStateException("Unexpected duration unit " + unit);
+        }
+    }
+
+    @Override
+    public LocalDate addToLocalDate(final LocalDate localDate) {
+        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {
+            return localDate;
+        }
+
+        switch (unit) {
+            case DAYS:
+                return localDate.plusDays(number);
+            case MONTHS:
+                return localDate.plusMonths(number);
+            case YEARS:
+                return localDate.plusYears(number);
+            case UNLIMITED:
+            default:
+                throw new  IllegalStateException("Unexpected duration unit " + unit);
         }
     }
 

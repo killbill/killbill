@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
@@ -144,9 +145,12 @@ public class TestSubscriptionHelper {
 
             @Override
             public DateTime addToDateTime(final DateTime dateTime) {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
+                return null;
             }
-
+            @Override
+            public LocalDate addToLocalDate(final LocalDate localDate) {
+                return null;
+            }
             @Override
             public Period toJodaPeriod() {
                 throw new UnsupportedOperationException();

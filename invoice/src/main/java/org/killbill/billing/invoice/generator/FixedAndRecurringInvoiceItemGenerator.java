@@ -257,8 +257,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             firstStartDate = matchItem.getStartDate();
         }
 
-        final LocalDate result  = addDurationToLocalDate(firstStartDate, thisEvent.getPlanPhase().getDuration());
-        return result;
+        return firstStartDate != null ? thisEvent.getPlanPhase().getDuration().addToLocalDate(firstStartDate) : null;
     }
 
     private void updatePerSubscriptionNextNotificationDate(final UUID subscriptionId, final LocalDate nextBillingCycleDate, final List<InvoiceItem> newProposedItems, final BillingMode billingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
@@ -404,26 +403,4 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             }
         }
     }
-
-    // That code should belong to Duration/DefaultDuration but requires a change api (not possible for 0.16.3, but will be moreved in 0.17.0)
-    private LocalDate addDurationToLocalDate(@Nullable final LocalDate inputDate, final Duration duration) {
-
-        if (inputDate == null) {
-            return inputDate;
-        }
-
-        switch (duration.getUnit()) {
-            case DAYS:
-                return inputDate.plusDays(duration.getNumber());
-            case MONTHS:
-                return inputDate.plusMonths(duration.getNumber());
-            case YEARS:
-                return inputDate.plusYears(duration.getNumber());
-            case UNLIMITED:
-                return inputDate.plusYears(100);
-            default:
-                throw new IllegalStateException("Unknwon duration " + duration.getUnit());
-        }
-    }
-
 }
