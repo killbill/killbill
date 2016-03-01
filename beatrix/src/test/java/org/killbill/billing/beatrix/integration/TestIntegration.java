@@ -663,4 +663,73 @@ public class TestIntegration extends TestIntegrationBase {
 
         checkNoMoreInvoiceToGenerate(account);
     }
+
+    @Test(groups = "slow")
+    public void testFixedTermPlan() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2015, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+
+        // First invoice
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, /* NextEvent.BLOCK, */ NextEvent.INVOICE);
+
+
+        // Second invoice -> first recurring for Refurbish-Maintenance
+        addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Refurbish-Maintenance", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, /* NextEvent.BLOCK, */ NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("599.95")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 4, 1), new LocalDate(2015, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("199.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 5, 1), new LocalDate(2015, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("199.95")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 5, 1), new LocalDate(2015, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        // 2015-5-1
+        // Third invoice -> second recurring for Refurbish-Maintenance
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30); // Also = 1 month because or initial date 2015, 4, 1
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+
+        // Next 10 invoices -> third to twelve **and last** recurring for Refurbish-Maintenance
+        LocalDate startDate = new LocalDate(2015, 6, 1);
+        for (int i = 0; i < 10; i++) {
+
+            final LocalDate endDate = startDate.plusMonths(1);
+            expectedInvoices.add(new ExpectedInvoiceItemCheck(startDate, endDate, InvoiceItemType.RECURRING, new BigDecimal("199.95")));
+            expectedInvoices.add(new ExpectedInvoiceItemCheck(startDate, endDate, InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+            clock.addMonths(1);
+            assertListenerStatus();
+
+            invoiceChecker.checkInvoice(account.getId(), 4 + i, callContext, expectedInvoices);
+            expectedInvoices.clear();
+
+            startDate = endDate;
+        }
+
+        // We check there is no more recurring for Refurbish-Maintenance
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+
+        invoiceChecker.checkInvoice(account.getId(), 14, callContext, expectedInvoices);
+        expectedInvoices.clear();
+    }
 }

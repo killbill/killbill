@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -63,6 +63,7 @@ public class DefaultControlInitiated implements LeavingStateCallback {
             final PaymentModelDao payment = paymentDao.getPayment(stateContext.getPaymentId(), stateContext.getInternalCallContext());
             Preconditions.checkNotNull(payment, "payment cannot be null for id " + stateContext.getPaymentId());
             stateContext.setPaymentExternalKey(payment.getExternalKey());
+            stateContext.setPaymentMethodId(payment.getPaymentMethodId());
         } else if (stateContext.getPaymentExternalKey() == null) {
             stateContext.setPaymentExternalKey(UUIDs.randomUUID().toString());
         }
@@ -72,6 +73,11 @@ public class DefaultControlInitiated implements LeavingStateCallback {
             stateContext.setPaymentTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey());
         } else if (stateContext.getPaymentTransactionExternalKey() == null) {
             stateContext.setPaymentTransactionExternalKey(UUIDs.randomUUID().toString());
+        }
+
+        if (stateContext.getPaymentMethodId() == null) {
+            // Similar logic in PaymentAutomatonRunner
+            stateContext.setPaymentMethodId(stateContext.getAccount().getPaymentMethodId());
         }
 
         if (state.getName().equals(initialState.getName()) || state.getName().equals(retriedState.getName())) {
