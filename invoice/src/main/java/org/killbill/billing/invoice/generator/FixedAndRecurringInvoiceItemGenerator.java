@@ -169,7 +169,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
         // For FIXEDTERM phases we need to stop when the specified duration has been reached
         final LocalDate maxEndDate = thisEvent.getPlanPhase().getPhaseType() == PhaseType.FIXEDTERM ?
-                                     computeMaxEndDateForFixedTermPlanPhase(thisEvent, internalCallContext) :
+                                     thisEvent.getPlanPhase().getDuration().addToLocalDate(internalCallContext.toLocalDate(thisEvent.getEffectiveDate())) :
                                      null;
 
         // Handle recurring items
@@ -222,15 +222,6 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                             .append(item);
         }
         return items;
-    }
-
-    //
-    // Go through invoices in reverse order and for each invoice extract a possible item for that subscription and the phaseName associated with this billing event
-    // Computes the startDate for that first one seen in that uninterrupted sequence and then add the FIXEDTERM duration to compute the max endDate
-    //
-    private LocalDate computeMaxEndDateForFixedTermPlanPhase(final BillingEvent thisEvent, final InternalCallContext callContext) {
-        final LocalDate eventEffectiveDate = callContext.toLocalDate(thisEvent.getEffectiveDate());
-        return thisEvent.getPlanPhase().getDuration().addToLocalDate(eventEffectiveDate);
     }
 
     private void updatePerSubscriptionNextNotificationDate(final UUID subscriptionId, final LocalDate nextBillingCycleDate, final List<InvoiceItem> newProposedItems, final BillingMode billingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
