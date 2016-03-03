@@ -23,6 +23,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.management.RuntimeErrorException;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -101,7 +102,13 @@ public class BeatrixListener {
                 externalBus.post(externalEvent);
             }
         } catch (final EventBusException e) {
+            //
+            // When using PersistentBus this should never be reached, because errors are caught at the 'ext' bus level and retried until either success or event row is moved to FAILED status.
+            // However when using InMemoryBus, this can happen as there is no retry logic (at the 'ext' bus level) and so we should re-throw at this level to kick-in the retry logic from the 'main' bus
+            // (The use of RuntimeException is somewhat arbitrary)
+            //
             log.warn("Failed to dispatch external bus events", e);
+            throw new RuntimeException(e);
         } catch (JsonProcessingException e) {
             log.warn("Failed to dispatch external bus events", e);
         }
