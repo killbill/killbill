@@ -255,7 +255,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     @Override
     public PaymentTransactionInfoPlugin voidPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final Iterable<PluginProperty> properties, final CallContext context)
             throws PaymentPluginApiException {
-        return getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.VOID, BigDecimal.ZERO, null, properties);
+        return getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.VOID, null, null, properties);
     }
 
     @Override
@@ -358,7 +358,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         return getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.REFUND, refundAmount, currency, properties);
     }
 
-    private PaymentTransactionInfoPlugin getPaymentTransactionInfoPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType type, final BigDecimal amount, @Nullable final Currency currency, final Iterable<PluginProperty> pluginProperties) throws PaymentPluginApiException {
+    private PaymentTransactionInfoPlugin getPaymentTransactionInfoPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType type, @Nullable final BigDecimal amount, @Nullable final Currency currency, final Iterable<PluginProperty> pluginProperties) throws PaymentPluginApiException {
         if (makePluginWaitSomeMilliseconds.get() > 0) {
             try {
                 Thread.sleep(makePluginWaitSomeMilliseconds.get());
@@ -394,7 +394,8 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             payments.put(kbPaymentId.toString(), info);
         }
 
-        final BigDecimal processedAmount = MoreObjects.firstNonNull(overrideNextProcessedAmount.getAndSet(null), amount);
+        final BigDecimal overrideNextProcessedAmount = this.overrideNextProcessedAmount.getAndSet(null);
+        final BigDecimal processedAmount = overrideNextProcessedAmount != null ? overrideNextProcessedAmount : amount;
         Currency processedCurrency = overrideNextProcessedCurrency.getAndSet(null);
         if (processedCurrency == null) {
             processedCurrency = currency;
