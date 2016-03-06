@@ -19,9 +19,11 @@ package org.killbill.billing.jaxrs;
 
 import java.util.UUID;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.RolledUpUsage;
@@ -114,5 +116,63 @@ public class TestUsage extends TestJaxrsBase {
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().get(0).getUnitType(), "bullets");
         Assert.assertEquals((long) retrievedUsage4.getRolledUpUnits().get(0).getAmount(), 5);
+    }
+
+    @Test(groups = "slow", description = "Test tracking ID already exists")
+    public void testRecordUsageTrackingIdExists() throws Exception {
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription base = new Subscription();
+        base.setAccountId(accountJson.getAccountId());
+        base.setProductName("Pistol");
+        base.setProductCategory(ProductCategory.BASE);
+        base.setBillingPeriod(BillingPeriod.MONTHLY);
+        base.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        final Subscription addOn = new Subscription();
+        addOn.setAccountId(accountJson.getAccountId());
+        addOn.setProductName("Bullets");
+        addOn.setProductCategory(ProductCategory.ADD_ON);
+        addOn.setBillingPeriod(BillingPeriod.NO_BILLING_PERIOD);
+        addOn.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        final Bundle bundle = killBillClient.createSubscriptionWithAddOns(ImmutableList.<Subscription>of(base, addOn),
+                                                                          null,
+                                                                          DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                          createdBy,
+                                                                          reason,
+                                                                          comment);
+        final UUID addOnSubscriptionId = Iterables.<Subscription>find(bundle.getSubscriptions(),
+                                                                      new Predicate<Subscription>() {
+                                                                          @Override
+                                                                          public boolean apply(final Subscription input) {
+                                                                              return ProductCategory.ADD_ON.equals(input.getProductCategory());
+                                                                          }
+                                                                      }).getSubscriptionId();
+
+        final UsageRecord usageRecord1 = new UsageRecord();
+        usageRecord1.setAmount(10L);
+        usageRecord1.setRecordDate(clock.getUTCToday().minusDays(1));
+
+        final UnitUsageRecord unitUsageRecord = new UnitUsageRecord();
+        unitUsageRecord.setUnitType("bullets");
+        unitUsageRecord.setUsageRecords(ImmutableList.<UsageRecord>of(usageRecord1));
+
+        final SubscriptionUsageRecord usage = new SubscriptionUsageRecord();
+        usage.setSubscriptionId(addOnSubscriptionId);
+        usage.setTrackingId(UUID.randomUUID().toString());
+        usage.setUnitUsageRecords(ImmutableList.<UnitUsageRecord>of(unitUsageRecord));
+
+        killBillClient.createSubscriptionUsageRecord(usage, createdBy, reason, comment);
+
+        try {
+            killBillClient.createSubscriptionUsageRecord(usage, createdBy, reason, comment);
+            Assert.fail();
+        }
+        catch (final KillBillClientException e) {
+            Assert.assertEquals(e.getBillingException().getCode(), (Integer) ErrorCode.USAGE_RECORD_TRACKING_ID_ALREADY_EXISTS.getCode());
+        }
+
     }
 }

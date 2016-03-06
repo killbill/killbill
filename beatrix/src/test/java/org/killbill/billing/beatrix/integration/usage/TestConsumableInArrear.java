@@ -41,6 +41,7 @@ import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UnitUsageRecord;
+import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.skife.jdbi.v2.Handle;
@@ -245,12 +246,12 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         Assert.assertEquals(countNotifications.intValue(), 4);
     }
 
-    private void setUsage(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) {
+    private void setUsage(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
         final List<UsageRecord> usageRecords = new ArrayList<UsageRecord>();
         usageRecords.add(new UsageRecord(startDate, amount));
         final List<UnitUsageRecord> unitUsageRecords = new ArrayList<UnitUsageRecord>();
         unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
-        final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, unitUsageRecords);
+        final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, UUID.randomUUID().toString(), unitUsageRecords);
         usageUserApi.recordRolledUpUsage(record, context);
     }
 }
