@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.invoice.api.Invoice;
@@ -56,7 +55,8 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     private final Currency processedCurrency;
     private final InvoiceStatus status;
-    private final boolean parentInvoice;
+    private final boolean isParentInvoice;
+    private final Invoice parentInvoice;
 
 
     // Used to create a new invoice
@@ -70,7 +70,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     public DefaultInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
                           final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice, final InvoiceStatus status) {
-        this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice, false, status, false);
+        this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice, false, status, false, null);
     }
 
 
@@ -79,7 +79,8 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
              invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
              invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated(),
-             invoiceModelDao.isWrittenOff(), invoiceModelDao.getStatus(), invoiceModelDao.isParentInvoice());
+             invoiceModelDao.isWrittenOff(), invoiceModelDao.getStatus(), invoiceModelDao.isParentInvoice(),
+             invoiceModelDao.getParentInvoice());
         addInvoiceItems(Collections2.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final InvoiceItemModelDao input) {
@@ -96,14 +97,14 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     // Used to create a new parent invoice
     public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final Currency currency) {
-        this(UUID.randomUUID(), null, accountId, null, invoiceDate, null, currency, currency, false, false, InvoiceStatus.DRAFT, true);
+        this(UUID.randomUUID(), null, accountId, null, invoiceDate, null, currency, currency, false, false, InvoiceStatus.DRAFT, true, null);
     }
 
     private DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
                            @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
                            @Nullable final LocalDate targetDate, final Currency currency, final Currency processedCurrency,
                            final boolean isMigrationInvoice, final boolean isWrittenOff,
-                           final InvoiceStatus status, final boolean parentInvoice) {
+                           final InvoiceStatus status, final boolean isParentInvoice, final InvoiceModelDao parentInvoice) {
         super(invoiceId, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -116,14 +117,16 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this.invoiceItems = new ArrayList<InvoiceItem>();
         this.payments = new ArrayList<InvoicePayment>();
         this.status = status;
-        this.parentInvoice = parentInvoice;
+        this.isParentInvoice = isParentInvoice;
+        this.parentInvoice = (parentInvoice != null) ? new DefaultInvoice(parentInvoice) : null;
     }
 
 
     // Semi deep copy where we copy the lists but not the elements in the lists since they are immutables.
     @Override
     public Object clone() {
-        final Invoice clonedInvoice = new DefaultInvoice(getId(),  getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice(), isWrittenOff(), getStatus(), isParentInvoice());
+        InvoiceModelDao parentInvoiceModelDao = (parentInvoice != null) ? new InvoiceModelDao(parentInvoice) : null;
+        final Invoice clonedInvoice = new DefaultInvoice(getId(),  getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice(), isWrittenOff(), getStatus(), isParentInvoice(), parentInvoiceModelDao);
         clonedInvoice.getInvoiceItems().addAll(getInvoiceItems());
         clonedInvoice.getPayments().addAll(getPayments());
         return clonedInvoice;
@@ -246,7 +249,11 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     @Override
     public BigDecimal getBalance() {
-        return isWrittenOff ? BigDecimal.ZERO : InvoiceCalculatorUtils.computeInvoiceBalance(currency, invoiceItems, payments);
+        return isWrittenOff || hasZeroParentBalance() ? BigDecimal.ZERO : InvoiceCalculatorUtils.computeInvoiceBalance(currency, invoiceItems, payments);
+    }
+
+    private boolean hasZeroParentBalance() {
+        return (parentInvoice != null) && (parentInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
     }
 
     public boolean isWrittenOff() {
@@ -260,14 +267,14 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     @Override
     public boolean isParentInvoice() {
-        return parentInvoice;
+        return isParentInvoice;
     }
 
     @Override
     public String toString() {
         return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId
                + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount()
-               + ", status=" + status + ", isParentInvoice=" + parentInvoice + "]";
+               + ", status=" + status + ", isParentInvoice=" + isParentInvoice + "]";
     }
 
 }

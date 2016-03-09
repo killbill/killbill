@@ -48,6 +48,7 @@ import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
+import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentPoster;
 import org.killbill.billing.util.AccountDateAndTimeZoneContext;
@@ -394,7 +395,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 BigDecimal accountBalance = BigDecimal.ZERO;
                 final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(entitySqlDaoWrapperFactory, context);
                 for (final InvoiceModelDao cur : invoices) {
-                    accountBalance = accountBalance.add(InvoiceModelDaoHelper.getBalance(cur));
+                    accountBalance = accountBalance.add((new DefaultInvoice(cur)).getBalance());
                     cba = cba.add(InvoiceModelDaoHelper.getCBAAmount(cur));
                 }
                 return accountBalance.subtract(cba);

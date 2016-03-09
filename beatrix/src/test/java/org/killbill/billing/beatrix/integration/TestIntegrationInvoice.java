@@ -393,6 +393,11 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertTrue(parentInvoice.isParentInvoice());
         assertEquals(parentInvoice.getBalance().toString(), "279.90");
 
+        // Check Child Balance. It should be > 0 here because Parent didn't pay yet.
+        List<Invoice> child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), callContext);
+        assertEquals(child1Invoices.size(), 2);
+        assertTrue(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO) > 0);
+
         // Moving a day the NotificationQ calls the commitInvoice. Now payment is expected
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(1);
@@ -400,6 +405,12 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+
+        // Check Child Balance. It should be = 0 because parent invoice had already paid.
+        child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), callContext);
+        assertEquals(child1Invoices.size(), 2);
+        assertTrue(parentInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
+        assertTrue(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO) == 0);
 
     }
 

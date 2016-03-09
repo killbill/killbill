@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceStatus;
@@ -44,12 +43,13 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     private Currency currency;
     private boolean migrated;
     private InvoiceStatus status;
-    private boolean parentInvoice;
+    private boolean isParentInvoice;
 
     // Not in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems = new LinkedList<InvoiceItemModelDao>();
     private List<InvoicePaymentModelDao> invoicePayments = new LinkedList<InvoicePaymentModelDao>();
     private Currency processedCurrency;
+    private InvoiceModelDao parentInvoice;
 
     private boolean isWrittenOff;
 
@@ -57,7 +57,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
 
     public InvoiceModelDao(final UUID id, @Nullable final DateTime createdDate, final UUID accountId,
                            @Nullable final Integer invoiceNumber, final LocalDate invoiceDate, final LocalDate targetDate,
-                           final Currency currency, final boolean migrated, final InvoiceStatus status, final boolean parentInvoice) {
+                           final Currency currency, final boolean migrated, final InvoiceStatus status, final boolean isParentInvoice) {
         super(id, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -67,7 +67,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.migrated = migrated;
         this.isWrittenOff = false;
         this.status = status;
-        this.parentInvoice = parentInvoice;
+        this.isParentInvoice = isParentInvoice;
     }
 
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final boolean migrated) {
@@ -148,7 +148,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     }
 
     public boolean isParentInvoice() {
-        return parentInvoice;
+        return isParentInvoice;
     }
 
     public void setAccountId(final UUID accountId) {
@@ -195,8 +195,16 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.status = status;
     }
 
-    public void setParentInvoice(final boolean parentInvoice) {
+    public void setParentInvoice(final boolean isParentInvoice) {
+        this.isParentInvoice = isParentInvoice;
+    }
+
+    public void addParentInvoice(InvoiceModelDao parentInvoice) {
         this.parentInvoice = parentInvoice;
+    }
+
+    public InvoiceModelDao getParentInvoice() {
+        return parentInvoice;
     }
 
     @Override
@@ -213,6 +221,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         sb.append(", invoicePayments=").append(invoicePayments);
         sb.append(", processedCurrency=").append(processedCurrency);
         sb.append(", isWrittenOff=").append(isWrittenOff);
+        sb.append(", isParentInvoice=").append(isParentInvoice);
         sb.append(", parentInvoice=").append(parentInvoice);
         sb.append('}');
         return sb.toString();
@@ -262,7 +271,10 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         if (invoicePayments != null ? !invoicePayments.equals(that.invoicePayments) : that.invoicePayments != null) {
             return false;
         }
-        if (parentInvoice != that.parentInvoice) {
+        if (isParentInvoice != that.isParentInvoice) {
+            return false;
+        }
+        if (parentInvoice != null ? !parentInvoice.equals(that.parentInvoice) : that.parentInvoice != null) {
             return false;
         }
         return processedCurrency == that.processedCurrency;
@@ -282,7 +294,8 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         result = 31 * result + (invoicePayments != null ? invoicePayments.hashCode() : 0);
         result = 31 * result + (processedCurrency != null ? processedCurrency.hashCode() : 0);
         result = 31 * result + (isWrittenOff ? 1 : 0);
-        result = 31 * result + (parentInvoice ? 1 : 0);
+        result = 31 * result + (isParentInvoice ? 1 : 0);
+        result = 31 * result + (parentInvoice != null ? parentInvoice.hashCode() : 0);
         return result;
     }
 

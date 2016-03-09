@@ -40,6 +40,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -57,10 +58,12 @@ public class InvoiceDaoHelper {
     private static final Logger log = LoggerFactory.getLogger(InvoiceDaoHelper.class);
 
     private final TagInternalApi tagInternalApi;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public InvoiceDaoHelper(final TagInternalApi tagInternalApi) {
+    public InvoiceDaoHelper(final TagInternalApi tagInternalApi, final InternalCallContextFactory internalCallContextFactory) {
         this.tagInternalApi = tagInternalApi;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     /**
@@ -226,12 +229,14 @@ public class InvoiceDaoHelper {
         getInvoiceItemsWithinTransaction(ImmutableList.<InvoiceModelDao>of(invoice), entitySqlDaoWrapperFactory, context);
         getInvoicePaymentsWithinTransaction(ImmutableList.<InvoiceModelDao>of(invoice), entitySqlDaoWrapperFactory, context);
         setInvoiceWrittenOff(invoice, context);
+        getParentInvoice(ImmutableList.<InvoiceModelDao>of(invoice), entitySqlDaoWrapperFactory, context);
     }
 
     public void populateChildren(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         getInvoiceItemsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
         getInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
         setInvoicesWrittenOff(invoices, context);
+        getParentInvoice(invoices, entitySqlDaoWrapperFactory, context);
     }
 
     public List<InvoiceModelDao> getAllInvoicesByAccountFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
@@ -323,6 +328,21 @@ public class InvoiceDaoHelper {
                 return  input.getTagDefinitionId().equals(ControlTagType.WRITTEN_OFF.getId());
             }
         });
+    }
+
+    private void getParentInvoice(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext internalTenantContext) {
+
+        final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+        for (InvoiceModelDao invoice : invoices) {
+            if (invoice.isParentInvoice()) continue;
+            final InvoiceModelDao parentInvoice = invoiceSqlDao.getParentInvoiceByChildInvoiceId(invoice.getId().toString(), internalTenantContext);
+            if (parentInvoice != null) {
+                final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(parentInvoice.getAccountId(), ObjectType.ACCOUNT, internalCallContextFactory.createTenantContext(internalTenantContext));
+                final InternalTenantContext parentContext = internalCallContextFactory.createInternalTenantContext(internalTenantContext.getTenantRecordId(), parentAccountRecordId);
+                populateChildren(parentInvoice, entitySqlDaoWrapperFactory, parentContext);
+                invoice.addParentInvoice(parentInvoice);
+            }
+        }
     }
 
 }
