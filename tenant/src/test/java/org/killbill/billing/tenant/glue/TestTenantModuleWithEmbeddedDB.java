@@ -19,6 +19,7 @@
 package org.killbill.billing.tenant.glue;
 
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.SecurityModule;
@@ -38,5 +39,6 @@ public class TestTenantModuleWithEmbeddedDB extends TestTenantModule {
         install(new NonEntityDaoModule(configSource));
         install(new SecurityModule(configSource));
         install(new ShiroModuleNoDB(configSource));
+        install(new MockAccountModule(configSource));
     }
 }

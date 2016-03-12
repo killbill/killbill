@@ -58,21 +58,20 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
     //
     @Test(groups = "slow")
     public void testDryRunWithNoTargetDate() throws Exception {
-
         final int billingDay = 14;
         final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
 
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
-        // set clock to the initial start date
-        clock.setTime(initialCreationDate);
         int invoiceItemCount = 1;
 
         //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
         //
-        DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         DefaultSubscriptionBase subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
@@ -90,7 +89,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -104,7 +103,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -113,7 +112,6 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, dryRun, callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
     }
-
 
     //
     // More sophisticated test with two non aligned subscriptions that verifies the behavior of using invoice dryRun api with no date
@@ -124,20 +122,19 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
     //
     @Test(groups = "slow")
     public void testDryRunWithNoTargetDateAndMultipleNonAlignedSubscriptions() throws Exception {
-
-        // billing date for the monthly
-        final int billingDay = 14;
-
         // Set in such a way that annual billing date will be the 1st
         final DateTime initialCreationDate = new DateTime(2014, 1, 2, 0, 0, 0, 0, testTimeZone);
         clock.setTime(initialCreationDate);
+
+        // billing date for the monthly
+        final int billingDay = 14;
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
         int invoiceItemCount = 1;
 
         // Create ANNUAL BP
-        DefaultEntitlement baseEntitlementAnnual = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKeyAnnual", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.INVOICE);
+        DefaultEntitlement baseEntitlementAnnual = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKeyAnnual", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         DefaultSubscriptionBase subscriptionAnnual = subscriptionDataFromSubscription(baseEntitlementAnnual.getSubscriptionBase());
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
@@ -170,7 +167,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         clock.setTime(secondSubscriptionCreationDate);
 
         // Create the monthly
-        DefaultEntitlement baseEntitlementMonthly = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        DefaultEntitlement baseEntitlementMonthly = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         DefaultSubscriptionBase subscriptionMonthly = subscriptionDataFromSubscription(baseEntitlementMonthly.getSubscriptionBase());
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(secondSubscriptionCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
@@ -214,23 +211,20 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
     }
 
-
     @Test(groups = "slow")
     public void testApplyCreditOnExistingBalance() throws Exception {
-
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
 
         final int billingDay = 14;
-        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
 
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
-        // set clock to the initial start date
-        clock.setTime(initialCreationDate);
-
-        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         // Move through time and verify we get the same invoice
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
@@ -248,7 +242,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("300"), new LocalDate(clock.getUTCNow(), account.getTimeZone()), account.getCurrency(), true, callContext);
+        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("300"), new LocalDate(clock.getUTCNow(), account.getTimeZone()), account.getCurrency(), true, null, callContext);
         assertListenerStatus();
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -279,18 +273,15 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         final int billingDay = 14;
         final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
 
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
-        // set clock to the initial start date
-        clock.setTime(initialCreationDate);
         int invoiceItemCount = 1;
 
-        //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
-        //
-        DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY,  NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         DefaultSubscriptionBase subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
@@ -301,7 +292,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -323,7 +314,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
 
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedDraftInvoices);
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);
@@ -343,24 +334,24 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         final int billingDay = 14;
         final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
 
         log.info("Beginning test with BCD of " + billingDay);
         final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
         final Account child1Account = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
         final Account child2Account = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
 
-        // set clock to the initial start date
-        clock.setTime(initialCreationDate);
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        DefaultEntitlement baseEntitlementChild1 = createBaseEntitlementAndCheckForCompletion(child1Account.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
-        DefaultEntitlement baseEntitlementChild2 = createBaseEntitlementAndCheckForCompletion(child2Account.getId(), "bundleKey2", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        DefaultEntitlement baseEntitlementChild1 = createBaseEntitlementAndCheckForCompletion(child1Account.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        DefaultEntitlement baseEntitlementChild2 = createBaseEntitlementAndCheckForCompletion(child2Account.getId(), "bundleKey2", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         // First Parent invoice over TRIAL period
 
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
         assertEquals(parentInvoices.size(), 1);
 
         Invoice parentInvoice = parentInvoices.get(0);
@@ -384,7 +375,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // Second Parent invoice over Recurring period
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
@@ -394,7 +385,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getBalance().toString(), "279.90");
 
         // Check Child Balance. It should be > 0 here because Parent didn't pay yet.
-        List<Invoice> child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), callContext);
+        List<Invoice> child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), false, callContext);
         assertEquals(child1Invoices.size(), 2);
         assertTrue(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO) > 0);
 
@@ -407,7 +398,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
 
         // Check Child Balance. It should be = 0 because parent invoice had already paid.
-        child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), callContext);
+        child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), false, callContext);
         assertEquals(child1Invoices.size(), 2);
         assertTrue(parentInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
         assertTrue(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO) == 0);
@@ -420,17 +411,18 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final int billingDay = 14;
         final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
 
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+
         log.info("Beginning test with BCD of " + billingDay);
         final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
         final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
 
-        // set clock to the initial start date
-        clock.setTime(initialCreationDate);
-
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        DefaultEntitlement baseEntitlementChild = createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        DefaultEntitlement baseEntitlementChild = createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         // Moving a day the NotificationQ calls the commitInvoice. No payment is expected because balance is 0
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
@@ -443,7 +435,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // check parent Invoice with child plan amount
-        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), callContext);
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         Invoice parentInvoice = parentInvoices.get(1);
@@ -458,7 +450,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // check parent invoice. Expected to have the same invoice item but the amount updated
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
@@ -476,5 +468,4 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
 
     }
-
 }

@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,7 +23,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -42,10 +43,19 @@ public class InternalCallContext extends InternalTenantContext {
     private final DateTime createdDate;
     private final DateTime updatedDate;
 
-    public InternalCallContext(final Long tenantRecordId, @Nullable final Long accountRecordId, final UUID userToken, final String userName,
-                               final CallOrigin callOrigin, final UserType userType, final String reasonCode, final String comment,
-                               final DateTime createdDate, final DateTime updatedDate) {
-        super(tenantRecordId, accountRecordId);
+    public InternalCallContext(final Long tenantRecordId,
+                               @Nullable final Long accountRecordId,
+                               @Nullable final DateTimeZone fixedOffsetTimeZone,
+                               @Nullable final DateTime referenceDateTime,
+                               final UUID userToken,
+                               final String userName,
+                               final CallOrigin callOrigin,
+                               final UserType userType,
+                               final String reasonCode,
+                               final String comment,
+                               final DateTime createdDate,
+                               final DateTime updatedDate) {
+        super(tenantRecordId, accountRecordId, fixedOffsetTimeZone, referenceDateTime);
         this.userToken = userToken;
         this.createdBy = userName;
         this.updatedBy = userName;
@@ -53,26 +63,38 @@ public class InternalCallContext extends InternalTenantContext {
         this.contextUserType = userType;
         this.reasonCode = reasonCode;
         this.comments = comment;
-        this.createdDate = new DateTime(createdDate, DateTimeZone.UTC);
+        this.createdDate = createdDate;
         this.updatedDate = updatedDate;
     }
 
-    public InternalCallContext(final Long tenantRecordId, @Nullable final Long accountRecordId, final CallContext callContext) {
-        this(tenantRecordId, accountRecordId, callContext.getUserToken(), callContext.getUserName(), callContext.getCallOrigin(),
-             callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getCreatedDate(),
-             callContext.getUpdatedDate());
+    public InternalCallContext(final Long tenantRecordId, final CallContext callContext, final DateTime utcNow) {
+        this(tenantRecordId,
+             null,
+             null,
+             null,
+             callContext.getUserToken(),
+             callContext.getUserName(),
+             callContext.getCallOrigin(),
+             callContext.getUserType(),
+             callContext.getReasonCode(),
+             callContext.getComments(),
+             utcNow,
+             utcNow);
     }
 
-    public InternalCallContext(final InternalCallContext context, final Long accountRecordId) {
-        this(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getCreatedBy(), context.getCallOrigin(),
-             context.getContextUserType(), context.getReasonCode(), context.getComments(), context.getCreatedDate(),
-             context.getUpdatedDate());
-    }
-
-    public InternalCallContext(final InternalCallContext context, final Long accountRecordId, final Long tenantRecordId) {
-        this(tenantRecordId, accountRecordId, context.getUserToken(), context.getCreatedBy(), context.getCallOrigin(),
-             context.getContextUserType(), context.getReasonCode(), context.getComments(), context.getCreatedDate(),
-             context.getUpdatedDate());
+    public InternalCallContext(final InternalCallContext context, final Long accountRecordId, final DateTimeZone fixedOffsetTimeZone, final DateTime referenceDateTime, final DateTime utcNow) {
+        this(context.getTenantRecordId(),
+             accountRecordId,
+             fixedOffsetTimeZone,
+             referenceDateTime,
+             context.getUserToken(),
+             context.getCreatedBy(),
+             context.getCallOrigin(),
+             context.getContextUserType(),
+             context.getReasonCode(),
+             context.getComments(),
+             utcNow,
+             utcNow);
     }
 
     // TODO should not be needed if all services are using internal API

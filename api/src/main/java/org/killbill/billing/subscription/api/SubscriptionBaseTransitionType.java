@@ -21,17 +21,9 @@ package org.killbill.billing.subscription.api;
  */
 public enum SubscriptionBaseTransitionType {
     /**
-     * Occurs when a {@code SubscriptionBase} got migrated to mark the start of the subscription
-     */
-    MIGRATE_ENTITLEMENT,
-    /**
      * Occurs when a a user created a {@code SubscriptionBase} (not migrated)
      */
     CREATE,
-    /**
-     * Occurs when a {@code SubscriptionBase} got migrated to mark the start of the billing
-     */
-    MIGRATE_BILLING,
     /**
      * Occurs when a {@code SubscriptionBase} got transferred to mark the start of the subscription
      */
@@ -40,10 +32,6 @@ public enum SubscriptionBaseTransitionType {
      * Occurs when a user changed the current {@code Plan} of the {@code SubscriptionBase}
      */
     CHANGE,
-    /**
-     * Occurs when a user restarted a {@code SubscriptionBase} after it had been cancelled
-     */
-    RE_CREATE,
     /**
      * Occurs when a user cancelled the {@code SubscriptionBase}
      */

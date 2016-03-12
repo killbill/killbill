@@ -20,22 +20,10 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 
 public enum ApiEventType {
-    MIGRATE_ENTITLEMENT {
-        @Override
-        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-            return SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT;
-        }
-    },
     CREATE {
         @Override
         public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
             return SubscriptionBaseTransitionType.CREATE;
-        }
-    },
-    MIGRATE_BILLING {
-        @Override
-        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-            return SubscriptionBaseTransitionType.MIGRATE_BILLING;
         }
     },
     TRANSFER {
@@ -48,12 +36,6 @@ public enum ApiEventType {
         @Override
         public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
             return SubscriptionBaseTransitionType.CHANGE;
-        }
-    },
-    RE_CREATE {
-        @Override
-        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-            return SubscriptionBaseTransitionType.RE_CREATE;
         }
     },
     CANCEL {

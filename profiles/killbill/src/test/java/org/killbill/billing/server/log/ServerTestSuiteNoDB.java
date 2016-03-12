@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,7 +17,18 @@
 
 package org.killbill.billing.server.log;
 
+import org.killbill.billing.GuicyKillbillTestModule;
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
+import org.testng.annotations.BeforeClass;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 public abstract class ServerTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
+
+    @BeforeClass(groups = "fast")
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new TestServerModuleNoDB(configSource));
+        injector.injectMembers(this);
+    }
 }

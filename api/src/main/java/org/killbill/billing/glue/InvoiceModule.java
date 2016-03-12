@@ -22,7 +22,5 @@ public interface InvoiceModule {
 
     public void installInvoicePaymentApi();
 
-    public void installInvoiceMigrationApi();
-
     public void installInvoiceInternalApi();
 }

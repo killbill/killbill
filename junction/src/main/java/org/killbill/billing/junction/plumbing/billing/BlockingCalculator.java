@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -33,8 +34,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
-import org.killbill.billing.account.api.Account;
+import org.joda.time.Days;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
@@ -103,7 +103,6 @@ public class BlockingCalculator {
         final SortedSet<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
         final SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
 
-
         final List<BlockingState> blockingEvents = blockingApi.getBlockingAllForAccount(context);
 
         final Iterable<BlockingState> accountBlockingEvents = Iterables.filter(blockingEvents, new Predicate<BlockingState>() {
@@ -118,7 +117,7 @@ public class BlockingCalculator {
 
         for (final UUID bundleId : bundleMap.keySet()) {
 
-            final List<BlockingState> bundleBlockingEvents = perBundleBlockingEvents.get(bundleId)  != null ? perBundleBlockingEvents.get(bundleId) : ImmutableList.<BlockingState>of();
+            final List<BlockingState> bundleBlockingEvents = perBundleBlockingEvents.get(bundleId) != null ? perBundleBlockingEvents.get(bundleId) : ImmutableList.<BlockingState>of();
 
             for (final SubscriptionBase subscription : bundleMap.get(bundleId)) {
                 // Avoid inserting additional events for subscriptions that don't even have a START event
@@ -144,10 +143,9 @@ public class BlockingCalculator {
         }
     }
 
-
     final List<BlockingState> getAggregateBlockingEventsPerSubscription(final Iterable<BlockingState> subscriptionBlockingEvents, final Iterable<BlockingState> bundleBlockingEvents, final Iterable<BlockingState> accountBlockingEvents) {
         final Iterable<BlockingState> tmp = Iterables.concat(subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents);
-        final List<BlockingState> result  = Lists.newArrayList(tmp);
+        final List<BlockingState> result = Lists.newArrayList(tmp);
         Collections.sort(result);
         return result;
     }
@@ -161,7 +159,7 @@ public class BlockingCalculator {
         });
 
         final Map<UUID, List<BlockingState>> perTypeBlockingEvents = new HashMap<UUID, List<BlockingState>>();
-        for  (final BlockingState cur : bundleBlockingEvents) {
+        for (final BlockingState cur : bundleBlockingEvents) {
             if (!perTypeBlockingEvents.containsKey(cur.getBlockedId())) {
                 perTypeBlockingEvents.put(cur.getBlockedId(), new ArrayList<BlockingState>());
             }
@@ -352,7 +350,7 @@ public class BlockingCalculator {
         final DateTime endDate = firstNonBlocking == null ? null : firstNonBlocking.getEffectiveDate();
         if (lastOne != null && lastOne.getEnd().compareTo(startDate) == 0) {
             lastOne.setEnd(endDate);
-        } else if (endDate == null || startDate.toLocalDate().compareTo(endDate.toLocalDate()) != 0) {
+        } else if (endDate == null || Days.daysBetween(startDate, endDate).getDays() >= 1) {
             // Don't disable for periods less than a day (see https://github.com/killbill/killbill/issues/267)
             result.add(new DisabledDuration(startDate, endDate));
         }

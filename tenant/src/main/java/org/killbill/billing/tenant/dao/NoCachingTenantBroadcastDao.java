@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,10 +21,13 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantApiException;
+import org.killbill.billing.tenant.glue.DefaultTenantModule;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
@@ -37,8 +40,8 @@ import org.skife.jdbi.v2.IDBI;
 public class NoCachingTenantBroadcastDao extends EntityDaoBase<TenantBroadcastModelDao, Entity, TenantApiException> implements TenantBroadcastDao {
 
     @Inject
-    public NoCachingTenantBroadcastDao(final IDBI dbi, final Clock clock) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, null, null), TenantBroadcastSqlDao.class);
+    public NoCachingTenantBroadcastDao(final IDBI dbi, final Clock clock, @Named(DefaultTenantModule.NO_CACHING_TENANT) final InternalCallContextFactory internalCallContextFactory) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, null, null, internalCallContextFactory), TenantBroadcastSqlDao.class);
     }
 
     @Override

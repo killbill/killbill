@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -43,12 +43,14 @@ import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
@@ -64,7 +66,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 2);
         for (final Invoice invoiceJson : invoices) {
             Assert.assertEquals(invoiceJson.getAuditLogs().size(), 1);
@@ -92,6 +94,105 @@ public class TestInvoice extends TestJaxrsBase {
         // Check we can retrieve the invoice by number
         final Invoice firstInvoiceByNumberJson = killBillClient.getInvoice(invoiceJson.getInvoiceNumber());
         assertEquals(firstInvoiceByNumberJson, invoiceJson);
+
+        // Check we can retrieve the HTML version
+        final String htmlInvoice = killBillClient.getInvoiceAsHtml(invoiceJson.getInvoiceId());
+        assertEquals(htmlInvoice, "<html>\n" +
+                                  "    <head>\n" +
+                                  "        <style type=\"text/css\">\n" +
+                                  "            th {align=left; width=225px; border-bottom: solid 2px black;}\n" +
+                                  "        </style>\n" +
+                                  "    </head>\n" +
+                                  "    <body>\n" +
+                                  "        <h1>invoiceTitle</h1>\n" +
+                                  "        <table>\n" +
+                                  "            <tr>\n" +
+                                  "                <td rowspan=3 width=350px>Insert image here</td>\n" +
+                                  "                <td width=100px/>\n" +
+                                  "                <td width=225px/>\n" +
+                                  "                <td width=225px/>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td />\n" +
+                                  "                <td align=right>invoiceDate</td>\n" +
+                                  "                <td>25 avr. 2012</td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td />\n" +
+                                  "                <td align=right>invoiceNumber</td>\n" +
+                                  "                <td>1</td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td>companyName</td>\n" +
+                                  "                <td></td>\n" +
+                                  "                <td align=right>accountOwnerName</td>\n" +
+                                  "                <td>" + accountJson.getName() + "</td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td>companyAddress</td>\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "                <td>" + accountJson.getEmail() + "</td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td>companyCityProvincePostalCode</td>\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "                <td>" + accountJson.getPhone() + "</td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td>companyCountry</td>\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td><companyUrl</td>\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "                <td />\n" +
+                                  "            </tr>\n" +
+                                  "        </table>\n" +
+                                  "        <br />\n" +
+                                  "        <br />\n" +
+                                  "        <br />\n" +
+                                  "        <table>\n" +
+                                  "            <tr>\n" +
+                                  "                <th>invoiceItemBundleName</td>\n" +
+                                  "                <th>invoiceItemDescription</td>\n" +
+                                  "                <th>invoiceItemServicePeriod</td>\n" +
+                                  "                <th>invoiceItemAmount</td>\n" +
+                                  "            </tr>\n" +
+                                  "            \n" +
+                                  "            <tr>\n" +
+                                  "                <td>shotgun-monthly-trial</td>\n" +
+                                  "                <td>Monthly shotgun plan</td>\n" +
+                                  "                <td>25 avr. 2012</td>\n" +
+                                  "                <td>USD 0E-9</td>\n" +
+                                  "            </tr>\n" +
+                                  "            \n" +
+                                  "            <tr>\n" +
+                                  "                <td colspan=4 />\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td colspan=2 />\n" +
+                                  "                <td align=right><strong>invoiceAmount</strong></td>\n" +
+                                  "                <td align=right><strong>0.00</strong></td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td colspan=2 />\n" +
+                                  "                <td align=right><strong>invoiceAmountPaid</strong></td>\n" +
+                                  "                <td align=right><strong>0</strong></td>\n" +
+                                  "            </tr>\n" +
+                                  "            <tr>\n" +
+                                  "                <td colspan=2 />\n" +
+                                  "                <td align=right><strong>invoiceBalance</strong></td>\n" +
+                                  "                <td align=right><strong>0.00</strong></td>\n" +
+                                  "            </tr>\n" +
+                                  "        </table>\n" +
+                                  "    </body>\n" +
+                                  "</html>\n" +
+                                  "\n");
 
         // Then create a dryRun for next upcoming invoice
         final InvoiceDryRun dryRunArg = new InvoiceDryRun(DryRunType.UPCOMING_INVOICE, null,
@@ -241,7 +342,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
@@ -302,7 +403,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
@@ -342,7 +443,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setAmount(chargeAmount);
         externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
         externalCharge.setDescription(UUID.randomUUID().toString());
-        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, true, createdBy, reason, comment);
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), false, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
@@ -379,7 +480,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge2.setDescription(UUID.randomUUID().toString());
         externalCharges.add(externalCharge2);
 
-        final List<InvoiceItem> createdExternalCharges = killBillClient.createExternalCharges(externalCharges, clock.getUTCNow(), false, true, createdBy, reason, comment);
+        final List<InvoiceItem> createdExternalCharges = killBillClient.createExternalCharges(externalCharges, clock.getUTCToday(), false, true, createdBy, reason, comment);
         assertEquals(createdExternalCharges.size(), 2);
         assertEquals(createdExternalCharges.get(0).getCurrency().toString(), accountJson.getCurrency());
         assertEquals(createdExternalCharges.get(1).getCurrency().toString(), accountJson.getCurrency());
@@ -401,7 +502,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
         externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
-        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), true, true, createdBy, reason, comment);
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), true, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
@@ -426,7 +527,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setAmount(chargeAmount);
         externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
         externalCharge.setBundleId(bundleId);
-        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, true, createdBy, reason, comment);
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), false, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
@@ -441,7 +542,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final UUID invoiceId = invoices.get(1).getInvoiceId();
@@ -455,7 +556,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setAmount(chargeAmount);
         externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
         externalCharge.setInvoiceId(invoiceId);
-        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, true, createdBy, reason, comment);
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), false, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
         assertNull(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId());
@@ -471,7 +572,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final UUID invoiceId = invoices.get(1).getInvoiceId();
@@ -485,7 +586,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setAmount(chargeAmount);
         externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
         externalCharge.setInvoiceId(invoiceId);
-        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), true, true, createdBy, reason, comment);
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), true, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
         assertNull(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId());
@@ -500,7 +601,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final UUID invoiceId = invoices.get(1).getInvoiceId();
@@ -516,7 +617,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
         externalCharge.setInvoiceId(invoiceId);
         externalCharge.setBundleId(bundleId);
-        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCNow(), false, true, createdBy, reason, comment);
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), false, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
         assertEquals(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId(), bundleId);
@@ -576,7 +677,38 @@ public class TestInvoice extends TestJaxrsBase {
 
         invoice = killBillClient.getInvoice(creditJson.getInvoiceId());
         Assert.assertEquals(invoice.getStatus(), InvoiceStatus.COMMITTED.toString());
+    }
+    @Test(groups = "slow", description = "Can create a migration invoice")
+    public void testInvoiceMigration() throws Exception {
+        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
+        // Get the invoices
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, true);
+        assertEquals(invoices.size(), 2);
+
+        // Migrate an invoice with one external charge
+        final BigDecimal chargeAmount = BigDecimal.TEN;
+        final InvoiceItem externalCharge = new InvoiceItem();
+        externalCharge.setStartDate(new LocalDate());
+        externalCharge.setAccountId(accountJson.getAccountId());
+        externalCharge.setAmount(chargeAmount);
+        externalCharge.setItemType(InvoiceItemType.EXTERNAL_CHARGE.toString());
+        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+
+        final Account accountWithBalance = killBillClient.getAccount(accountJson.getAccountId(), true, true);
+
+        final Invoice migrationInvoice = killBillClient.createMigrationInvoice(accountJson.getAccountId(), null, ImmutableList.<InvoiceItem>of(externalCharge), createdBy, reason, comment);
+        assertEquals(migrationInvoice.getBalance(), BigDecimal.ZERO);
+        assertEquals(migrationInvoice.getItems().size(), 1);
+        assertEquals(migrationInvoice.getItems().get(0).getAmount().compareTo(chargeAmount), 0);
+        assertEquals(migrationInvoice.getItems().get(0).getCurrency(), Currency.valueOf(accountJson.getCurrency()));
+
+
+        final List<Invoice> invoicesWithMigration = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, true);
+        assertEquals(invoicesWithMigration.size(), 3);
+
+        final Account accountWithBalanceAfterMigration = killBillClient.getAccount(accountJson.getAccountId(), true, true);
+        assertEquals(accountWithBalanceAfterMigration.getAccountBalance().compareTo(accountWithBalance.getAccountBalance()), 0);
     }
 
 }

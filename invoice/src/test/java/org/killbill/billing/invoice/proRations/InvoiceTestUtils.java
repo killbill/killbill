@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -43,7 +42,6 @@ import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
-import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.killbill.clock.Clock;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -108,9 +106,7 @@ public class InvoiceTestUtils {
         }
         Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
 
-        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC);
-
-        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
+        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, true, new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
 
         return invoice;
     }

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -40,6 +42,7 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.clock.ClockUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,7 +126,7 @@ public class BillCycleDayCalculator {
         // TODO - this should be extracted somewhere, along with this code above
         final PhaseType initialPhaseType;
         final List<EffectiveSubscriptionInternalEvent> transitions = subscriptionApi.getAllTransitions(subscription, context);
-        if (transitions.size() == 0) {
+        if (transitions.isEmpty()) {
             initialPhaseType = null;
         } else {
             final DateTime requestedDate = subscription.getStartDate();
@@ -141,10 +144,9 @@ public class BillCycleDayCalculator {
         }
 
         final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate(), initialPhaseType);
-        final int bcdUTC = date.toDateTime(DateTimeZone.UTC).getDayOfMonth();
-        final int bcdLocal = date.toDateTime(account.getTimeZone()).getDayOfMonth();
-        log.info("Calculated BCD: subscription id {}, subscription start {}, timezone {}, bcd UTC {}, bcd local {}",
-                 subscription.getId(), date.toDateTimeISO(), account.getTimeZone(), bcdUTC, bcdLocal);
+        final int bcdLocal = ClockUtil.toDateTime(date, account.getTimeZone()).getDayOfMonth();
+        log.info("Calculated BCD: subscription id {}, subscription start {}, timezone {}, bcd {}",
+                 subscription.getId(), date.toDateTimeISO(), account.getTimeZone(), bcdLocal);
 
         return bcdLocal;
     }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -47,9 +47,8 @@ import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.subscription.api.migration.AccountMigrationData;
-import org.killbill.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
-import org.killbill.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import org.killbill.billing.subscription.api.transfer.BundleTransferData;
+import org.killbill.billing.subscription.api.transfer.SubscriptionTransferData;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultRequestedSubscriptionEvent;
@@ -73,11 +72,10 @@ import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
-import org.killbill.billing.subscription.events.user.ApiEventMigrateBilling;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
-import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
@@ -118,8 +116,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     @Inject
     public DefaultSubscriptionDao(final IDBI dbi, final Clock clock, final AddonUtils addonUtils,
                                   final NotificationQueueService notificationQueueService, final PersistentBus eventBus, final CatalogService catalogService,
-                                  final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), BundleSqlDao.class);
+                                  final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), BundleSqlDao.class);
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
@@ -540,28 +538,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public void recreateSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> recreateEvents, final InternalCallContext context) {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-
-                for (final SubscriptionBaseEvent cur : recreateEvents) {
-                    transactional.create(new SubscriptionEventModelDao(cur), context);
-
-                    final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
-                    recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
-                }
-
-                // Notify the Bus of the latest requested change
-                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, recreateEvents.get(recreateEvents.size() - 1), SubscriptionBaseTransitionType.RE_CREATE, context);
-
-                return null;
-            }
-        });
-    }
-
-    @Override
     public void cancelSubscriptionsOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
@@ -642,13 +618,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
                 final UUID subscriptionId = subscription.getId();
 
-                final List<SubscriptionBaseEvent> changeEventsTweakedWithMigrateBilling = reinsertFutureMigrateBillingEventOnChangeFromTransaction(subscriptionId,
-                                                                                                                                                   changeEvents,
-                                                                                                                                                   entitySqlDaoWrapperFactory,
-                                                                                                                                                   context);
                 cancelFutureEventsFromTransaction(subscriptionId, changeEvents.get(0).getEffectiveDate(), entitySqlDaoWrapperFactory, context);
 
-                for (final SubscriptionBaseEvent cur : changeEventsTweakedWithMigrateBilling) {
+                for (final SubscriptionBaseEvent cur : changeEvents) {
                     transactional.create(new SubscriptionEventModelDao(cur), context);
 
                     final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
@@ -656,7 +628,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 }
 
                 // Notify the Bus of the latest requested change
-                final SubscriptionBaseEvent finalEvent = changeEventsTweakedWithMigrateBilling.get(changeEvents.size() - 1);
+                final SubscriptionBaseEvent finalEvent = changeEvents.get(changeEvents.size() - 1);
                 notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, finalEvent, SubscriptionBaseTransitionType.CHANGE, context);
 
                 // Cancel associated add-ons
@@ -667,92 +639,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         });
     }
 
-    //
-    // This piece of code has been isolated in its own method in order to allow for migrated subscriptions to have their plan to changed prior
-    // to MIGRATE_BILLING; the effect will be to reflect the change from an subscription point of view while ignoring the change until we hit
-    // the begining of the billing, that is when we hit the MIGRATE_BILLING event. If we had a clear separation between subscription and
-    // billing that would not be needed.
-    //
-    // If there is a change of plan prior to a future MIGRATE_BILLING, we want to modify the existing MIGRATE_BILLING so it reflects
-    // the new plan, phase, pricelist; Invoice will only see the MIGRATE_BILLING as things prior to that will be ignored, so we need to make sure
-    // that event reflects the correct subscription information.
-    //
-    //
-    final List<SubscriptionBaseEvent> reinsertFutureMigrateBillingEventOnChangeFromTransaction(final UUID subscriptionId, final List<SubscriptionBaseEvent> changeEvents, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
-        final SubscriptionEventModelDao migrateBillingEvent = findFutureEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, EventType.API_USER, ApiEventType.MIGRATE_BILLING, context);
-        if (migrateBillingEvent == null) {
-            // No future migrate billing : returns same list
-            return changeEvents;
-        }
 
-        String prevPlan = null;
-        String prevPhase = null;
-        String prevPriceList = null;
-        String curPlan = null;
-        String curPhase = null;
-        String curPriceList = null;
-        for (SubscriptionBaseEvent cur : changeEvents) {
-            switch (cur.getType()) {
-                case API_USER:
-                    final ApiEvent apiEvent = (ApiEvent) cur;
-                    curPlan = apiEvent.getEventPlan();
-                    curPhase = apiEvent.getEventPlanPhase();
-                    curPriceList = apiEvent.getPriceList();
-                    break;
-
-                case PHASE:
-                    final PhaseEvent phaseEvent = (PhaseEvent) cur;
-                    curPhase = phaseEvent.getPhase();
-                    break;
-
-                default:
-                    throw new SubscriptionBaseError("Unknown event type " + cur.getType());
-            }
-
-            if (cur.getEffectiveDate().compareTo(migrateBillingEvent.getEffectiveDate()) > 0) {
-                if (cur.getType() == EventType.API_USER && ((ApiEvent) cur).getApiEventType() == ApiEventType.CHANGE) {
-                    // This is an EOT change that is occurring after the MigrateBilling : returns same list
-                    return changeEvents;
-                }
-                // We found the first event after the migrate billing
-                break;
-            }
-            prevPlan = curPlan;
-            prevPhase = curPhase;
-            prevPriceList = curPriceList;
-        }
-
-        if (prevPlan != null) {
-            // Create the new MIGRATE_BILLING with same effectiveDate but new plan information
-            final DateTime now = clock.getUTCNow();
-            final ApiEventBuilder builder = new ApiEventBuilder()
-                    .setActive(true)
-                    .setApiEventType(ApiEventType.MIGRATE_BILLING)
-                    .setFromDisk(true)
-                    .setTotalOrdering(migrateBillingEvent.getTotalOrdering())
-                    .setUuid(UUIDs.randomUUID())
-                    .setSubscriptionId(migrateBillingEvent.getSubscriptionId())
-                    .setCreatedDate(now)
-                    .setUpdatedDate(now)
-                    .setEffectiveDate(migrateBillingEvent.getEffectiveDate())
-                    .setActiveVersion(migrateBillingEvent.getCurrentVersion())
-                    .setEventPlan(prevPlan)
-                    .setEventPlanPhase(prevPhase)
-                    .setEventPriceList(prevPriceList);
-
-            final SubscriptionBaseEvent newMigrateBillingEvent = new ApiEventMigrateBilling(builder);
-            changeEvents.add(newMigrateBillingEvent);
-
-            Collections.sort(changeEvents, new Comparator<SubscriptionBaseEvent>() {
-                @Override
-                public int compare(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2) {
-                    return o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-                }
-            });
-        }
-
-        return changeEvents;
-    }
 
     private List<SubscriptionBaseEvent> filterSubscriptionBaseEvents(final List<SubscriptionEventModelDao> models) {
         final Collection<SubscriptionEventModelDao> filteredModels = Collections2.filter(models, new Predicate<SubscriptionEventModelDao>() {
@@ -938,7 +825,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                         final DateTime now = clock.getUTCNow();
                         final SubscriptionBaseEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                                   .setSubscriptionId(reloaded.getId())
-                                                                                                  .setActiveVersion(((DefaultSubscriptionBase) reloaded).getActiveVersion())
                                                                                                   .setEffectiveDate(baseTriggerEventForAddOnCancellation.getEffectiveDate())
                                                                                                   .setCreatedDate(baseTriggerEventForAddOnCancellation.getCreatedDate())
                                                                                                   // This event is only there to indicate the ADD_ON is future canceled, but it is not there
@@ -993,22 +879,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public void migrate(final UUID accountId, final AccountMigrationData accountData, final InternalCallContext context) {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-
-                for (final BundleMigrationData curBundle : accountData.getData()) {
-                    migrateBundleDataFromTransaction(curBundle, transactional, entitySqlDaoWrapperFactory, context);
-                }
-                return null;
-            }
-        });
-    }
-
-    @Override
-    public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleMigrationData bundleTransferData,
+    public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleTransferData bundleTransferData,
                          final List<TransferCancelData> transferCancelData, final InternalCallContext fromContext, final InternalCallContext toContext) {
 
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
@@ -1021,7 +892,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     cancelSubscriptionFromTransaction(cancel.getSubscription(), cancel.getCancelEvent(), entitySqlDaoWrapperFactory, fromContext, 0);
                 }
 
-                migrateBundleDataFromTransaction(bundleTransferData, transactional, entitySqlDaoWrapperFactory, toContext);
+                transferBundleDataFromTransaction(bundleTransferData, transactional, entitySqlDaoWrapperFactory, toContext);
                 return null;
             }
         });
@@ -1123,8 +994,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }
     }
 
-    private void migrateBundleDataFromTransaction(final BundleMigrationData bundleTransferData, final SubscriptionEventSqlDao transactional,
-                                                  final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException {
+    private void transferBundleDataFromTransaction(final BundleTransferData bundleTransferData, final SubscriptionEventSqlDao transactional,
+                                                   final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException {
 
         final SubscriptionSqlDao transSubDao = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
         final BundleSqlDao transBundleDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
@@ -1137,7 +1008,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             return;
         }
 
-        for (final SubscriptionMigrationData curSubscription : bundleTransferData.getSubscriptions()) {
+        for (final SubscriptionTransferData curSubscription : bundleTransferData.getSubscriptions()) {
             final DefaultSubscriptionBase subData = curSubscription.getData();
             for (final SubscriptionBaseEvent curEvent : curSubscription.getInitialEvents()) {
                 transactional.create(new SubscriptionEventModelDao(curEvent), context);
@@ -1150,7 +1021,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
             // Notify the Bus of the latest requested change
             final SubscriptionBaseEvent finalEvent = curSubscription.getInitialEvents().get(curSubscription.getInitialEvents().size() - 1);
-            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subData, finalEvent, SubscriptionBaseTransitionType.MIGRATE_BILLING, context);
+            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subData, finalEvent, SubscriptionBaseTransitionType.TRANSFER, context);
         }
 
         transBundleDao.create(new SubscriptionBundleModelDao(bundleData), context);

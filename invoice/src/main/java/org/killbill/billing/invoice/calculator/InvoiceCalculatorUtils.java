@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -72,16 +71,20 @@ public abstract class InvoiceCalculatorUtils {
 
     public static BigDecimal computeInvoiceBalance(final Currency currency,
                                                    @Nullable final Iterable<InvoiceItem> invoiceItems,
-                                                   @Nullable final Iterable<InvoicePayment> invoicePayments) {
-        final BigDecimal invoiceBalance = computeInvoiceAmountCharged(currency, invoiceItems)
+                                                   @Nullable final Iterable<InvoicePayment> invoicePayments,
+                                                   boolean writtenOffOrMigrated) {
+        if (writtenOffOrMigrated) {
+            return BigDecimal.ZERO;
+        }
+
+        final BigDecimal amountPaid = computeInvoiceAmountPaid(currency, invoicePayments)
+                .add(computeInvoiceAmountRefunded(currency, invoicePayments));
+
+        final BigDecimal chargedAmount = computeInvoiceAmountCharged(currency, invoiceItems)
                 .add(computeInvoiceAmountCredited(currency, invoiceItems))
-                .add(computeInvoiceAmountAdjustedForAccountCredit(currency, invoiceItems))
-                .add(
-                        computeInvoiceAmountPaid(currency, invoicePayments).negate()
-                                .add(
-                                        computeInvoiceAmountRefunded(currency, invoicePayments).negate()
-                                    )
-                    );
+                .add(computeInvoiceAmountAdjustedForAccountCredit(currency, invoiceItems));
+
+        final BigDecimal invoiceBalance = chargedAmount.add(amountPaid.negate());
 
         return KillBillMoney.of(invoiceBalance, currency);
     }

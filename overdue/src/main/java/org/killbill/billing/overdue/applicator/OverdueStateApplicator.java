@@ -318,7 +318,7 @@ public class OverdueStateApplicator {
             computeEntitlementsToCancel(account, toBeCancelled, callContext);
 
             try {
-                entitlementInternalApi.cancel(toBeCancelled, new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, ImmutableList.<PluginProperty>of(), context);
+                entitlementInternalApi.cancel(toBeCancelled, clock.getToday(account.getTimeZone()), actionPolicy, ImmutableList.<PluginProperty>of(), context);
             } catch (final EntitlementApiException e) {
                 throw new OverdueException(e);
             }

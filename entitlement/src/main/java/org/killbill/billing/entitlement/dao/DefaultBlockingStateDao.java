@@ -47,6 +47,7 @@ import org.killbill.billing.entitlement.block.StatelessBlockingChecker;
 import org.killbill.billing.entitlement.engine.core.BlockingTransitionNotificationKey;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -112,8 +113,8 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
     private final StatelessBlockingChecker statelessBlockingChecker = new StatelessBlockingChecker();
 
     public DefaultBlockingStateDao(final IDBI dbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
-                                   final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), BlockingStateSqlDao.class);
+                                   final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), BlockingStateSqlDao.class);
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.eventBus = eventBus;
@@ -226,9 +227,11 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                         }
                     }
 
+                    boolean inserted = false;
                     // Create the state, if needed
                     if (!blockingStatesToRemove.contains(newBlockingStateModelDao.getId())) {
                         sqlDao.create(newBlockingStateModelDao, context);
+                        inserted = true;
                     }
 
                     final BlockingAggregator currentState = getBlockedStatus(sqlDao, entitySqlDaoWrapperFactory.getHandle(), state.getBlockedId(), state.getType(), bundleId, upToDate, context);
@@ -238,7 +241,9 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                                                                      state.getEffectiveDate(),
                                                                      state.getBlockedId(),
                                                                      state.getType(),
+                                                                     state.getStateName(),
                                                                      state.getService(),
+                                                                     inserted,
                                                                      previousState,
                                                                      currentState,
                                                                      context);
@@ -277,7 +282,9 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                                                               final DateTime effectiveDate,
                                                               final UUID blockableId,
                                                               final BlockingStateType type,
+                                                              final String stateName,
                                                               final String serviceName,
+                                                              final boolean blockingStateInserted,
                                                               final BlockingAggregator previousState,
                                                               final BlockingAggregator currentState,
                                                               final InternalCallContext context) {
@@ -289,18 +296,31 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
         if (effectiveDate.compareTo(clock.getUTCNow()) > 0) {
             // Add notification entry to send the bus event at the effective date
-            final NotificationEvent notificationEvent = new BlockingTransitionNotificationKey(blockingStateId, blockableId, type,
-                                                                                              isTransitionToBlockedBilling, isTransitionToUnblockedBilling,
-                                                                                              isTransitionToBlockedEntitlement, isTransitionToUnblockedEntitlement);
+            final NotificationEvent notificationEvent = new BlockingTransitionNotificationKey(blockingStateId,
+                                                                                              blockableId,
+                                                                                              stateName,
+                                                                                              serviceName,
+                                                                                              effectiveDate,
+                                                                                              type,
+                                                                                              isTransitionToBlockedBilling,
+                                                                                              isTransitionToUnblockedBilling,
+                                                                                              isTransitionToBlockedEntitlement,
+                                                                                              isTransitionToUnblockedEntitlement);
             recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, effectiveDate, notificationEvent, context);
         } else {
-            // TODO Do we want to send a DefaultEffectiveEntitlementEvent for entitlement specific blocking states?
-            // Don't post if nothing has changed for entitlement-service
-            if (!serviceName.equals(EntitlementService.ENTITLEMENT_SERVICE_NAME) || !previousState.equals(currentState)) {
-                final BusEvent event = new DefaultBlockingTransitionInternalEvent(blockableId, type,
-                                                                                  isTransitionToBlockedBilling, isTransitionToUnblockedBilling,
-                                                                                  isTransitionToBlockedEntitlement, isTransitionToUnblockedEntitlement,
-                                                                                  context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+            if (blockingStateInserted) {
+                final BusEvent event = new DefaultBlockingTransitionInternalEvent(blockableId,
+                                                                                  stateName,
+                                                                                  serviceName,
+                                                                                  effectiveDate,
+                                                                                  type,
+                                                                                  isTransitionToBlockedBilling,
+                                                                                  isTransitionToUnblockedBilling,
+                                                                                  isTransitionToBlockedEntitlement,
+                                                                                  isTransitionToUnblockedEntitlement,
+                                                                                  context.getAccountRecordId(),
+                                                                                  context.getTenantRecordId(),
+                                                                                  context.getUserToken());
                 notifyBusFromTransaction(entitySqlDaoWrapperFactory, event);
             } else {
                 log.debug("Skipping event for service {} and blockableId {} (previousState={}, currentState={})", serviceName, blockableId, previousState, currentState);

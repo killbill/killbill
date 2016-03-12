@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,17 +21,16 @@ package org.killbill.billing.entitlement;
 import java.util.UUID;
 
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.config.Ini;
 import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.Factory;
 import org.apache.shiro.util.ThreadContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
@@ -58,6 +57,7 @@ import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseServ
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.tag.dao.TagDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.ClockMock;
@@ -118,6 +118,8 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected InternalCallContextFactory internalCallContextFactory;
     @Inject
     protected SecurityApi securityApi;
+    @Inject
+    protected NonEntityDao nonEntityDao;
 
     protected Catalog catalog;
 
@@ -277,6 +279,14 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
                                        .paymentMethodId(UUID.randomUUID())
                                        .timeZone(DateTimeZone.UTC)
                                        .build();
+    }
+
+    protected Account createAccount(final AccountData accountData) throws AccountApiException {
+        final Account account = accountApi.createAccount(accountData, callContext);
+
+        refreshCallContext(account.getId());
+
+        return account;
     }
 
     protected void assertListenerStatus() {

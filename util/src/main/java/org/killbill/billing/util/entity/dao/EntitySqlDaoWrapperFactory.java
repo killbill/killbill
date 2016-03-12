@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,6 +21,7 @@ package org.killbill.billing.util.entity.dao;
 import java.lang.reflect.Proxy;
 
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.clock.Clock;
@@ -40,12 +41,14 @@ public class EntitySqlDaoWrapperFactory {
     private final CacheControllerDispatcher cacheControllerDispatcher;
 
     private final NonEntityDao nonEntityDao;
+    private final InternalCallContextFactory internalCallContextFactory;
 
-    public EntitySqlDaoWrapperFactory(final Handle handle, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+    public EntitySqlDaoWrapperFactory(final Handle handle, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.handle = handle;
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.nonEntityDao = nonEntityDao;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     /**
@@ -73,7 +76,7 @@ public class EntitySqlDaoWrapperFactory {
         final ClassLoader classLoader = newSqlDao.getClass().getClassLoader();
         final Class[] interfacesToImplement = {newSqlDaoClass};
         final EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntityModelDao, NewEntity> wrapperInvocationHandler =
-                new EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntityModelDao, NewEntity>(newSqlDaoClass, newSqlDao, handle, clock, cacheControllerDispatcher, nonEntityDao);
+                new EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntityModelDao, NewEntity>(newSqlDaoClass, newSqlDao, handle, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
 
         final Object newSqlDaoObject = Proxy.newProxyInstance(classLoader, interfacesToImplement, wrapperInvocationHandler);
         return newSqlDaoClass.cast(newSqlDaoObject);

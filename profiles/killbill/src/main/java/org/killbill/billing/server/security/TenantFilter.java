@@ -131,6 +131,8 @@ public class TenantFilter implements Filter {
                     isTenantCreationRequest(path, httpMethod) ||
                     // Retrieve user permissions should not require tenant info since this is cross tenants
                     isPermissionRequest(path, httpMethod) ||
+                    // Node request are cross tenant
+                    isNodeCreationRequest(path, httpMethod) ||
                     // Metrics servlets
                     isMetricsRequest(path, httpMethod) ||
                     // See KillBillShiroWebModule#CorsBasicHttpAuthenticationFilter
@@ -155,6 +157,10 @@ public class TenantFilter implements Filter {
 
     private boolean isTenantCreationRequest(final String path, final String httpMethod) {
         return JaxrsResource.TENANTS_PATH.equals(path) && "POST".equals(httpMethod);
+    }
+
+    private boolean isNodeCreationRequest(final String path, final String httpMethod) {
+        return JaxrsResource.NODES_INFO_PATH.equals(path) && "POST".equals(httpMethod);
     }
 
     private boolean isMetricsRequest(final String path, final String httpMethod) {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,7 +32,6 @@ import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
-import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
@@ -41,6 +40,7 @@ import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.glue.TestDefaultSubscriptionModuleNoDB;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.SubscriptionConfig;
 import org.killbill.clock.ClockMock;
 import org.mockito.Mockito;
@@ -68,8 +68,6 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected SubscriptionBaseTransferApi transferApi;
 
-    @Inject
-    protected SubscriptionBaseMigrationApi migrationApi;
     @Inject
     protected SubscriptionBaseTimelineApi repairApi;
 
@@ -100,6 +98,9 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @Inject
     protected MockNonEntityDao mockNonEntityDao;
+
+    @Inject
+    protected InternalCallContextFactory internalCallContextFactory;
 
     protected Catalog catalog;
     protected AccountData accountData;

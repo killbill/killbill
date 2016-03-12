@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,7 +20,9 @@ package org.killbill.billing;
 
 import java.util.UUID;
 
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -37,10 +39,18 @@ public class GuicyKillbillTestModule extends KillBillModule {
     // That we we have only one clock and all internalContext/callcontext are consistent
     //
 
-    private final InternalCallContext internalCallContext = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),
-                                                                                    UUID.randomUUID().toString(), CallOrigin.TEST,
-                                                                                    UserType.TEST, "Testing", "This is a test",
-                                                                                    GuicyKillbillTestSuite.getClock().getUTCNow(), GuicyKillbillTestSuite.getClock().getUTCNow());
+    private final MutableInternalCallContext internalCallContext = new MutableInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID,
+                                                                                                  1687L,
+                                                                                                  DateTimeZone.UTC,
+                                                                                                  GuicyKillbillTestSuite.getClock().getUTCNow(),
+                                                                                                  UUID.randomUUID(),
+                                                                                                  UUID.randomUUID().toString(),
+                                                                                                  CallOrigin.TEST,
+                                                                                                  UserType.TEST,
+                                                                                                  "Testing",
+                                                                                                  "This is a test",
+                                                                                                  GuicyKillbillTestSuite.getClock().getUTCNow(),
+                                                                                                  GuicyKillbillTestSuite.getClock().getUTCNow());
 
     private final CallContext callContext = internalCallContext.toCallContext(null);
 
@@ -53,6 +63,7 @@ public class GuicyKillbillTestModule extends KillBillModule {
         bind(ClockMock.class).toInstance(GuicyKillbillTestSuite.getClock());
         bind(Clock.class).to(ClockMock.class);
         bind(InternalCallContext.class).toInstance(internalCallContext);
+        bind(MutableInternalCallContext.class).toInstance(internalCallContext);
         bind(CallContext.class).toInstance(callContext);
     }
 }

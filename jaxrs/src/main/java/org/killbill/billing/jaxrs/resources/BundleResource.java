@@ -205,12 +205,10 @@ public class BundleResource extends JaxRsResourceBase {
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
-
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
-        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
-        final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
+        final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
         entitlementApi.pause(bundleId, inputLocalDate, pluginProperties, callContext);
         return Response.status(Status.OK).build();
     }
@@ -230,12 +228,10 @@ public class BundleResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
-
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
-        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
-        final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
+        final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
         entitlementApi.resume(bundleId, inputLocalDate, pluginProperties, callContext);
         return Response.status(Status.OK).build();
     }
@@ -362,7 +358,7 @@ public class BundleResource extends JaxRsResourceBase {
         final UUID bundleId = UUID.fromString(id);
 
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
-        final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
+        final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
 
         final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, policy, pluginProperties, callContext);
         return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundleId, uriInfo.getBaseUri().toString());

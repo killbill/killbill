@@ -249,7 +249,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     @Override
     public BigDecimal getBalance() {
-        return isWrittenOff || hasZeroParentBalance() ? BigDecimal.ZERO : InvoiceCalculatorUtils.computeInvoiceBalance(currency, invoiceItems, payments);
+        return hasZeroParentBalance() ? BigDecimal.ZERO : InvoiceCalculatorUtils.computeInvoiceBalance(currency, invoiceItems, payments, isWrittenOff() || isMigrationInvoice());
     }
 
     private boolean hasZeroParentBalance() {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,13 +19,18 @@
 package org.killbill.billing;
 
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
@@ -44,7 +49,10 @@ public class GuicyKillbillTestSuite {
     private boolean hasFailed = false;
 
     @Inject
-    protected InternalCallContext internalCallContext;
+    protected InternalCallContextFactory internalCallContextFactory;
+
+    @Inject
+    protected MutableInternalCallContext internalCallContext;
 
     @Inject
     protected CallContext callContext;
@@ -95,11 +103,30 @@ public class GuicyKillbillTestSuite {
         return theStaticClock;
     }
 
+    public static void refreshCallContext(final UUID accountId,
+                                          final Clock clock,
+                                          final InternalCallContextFactory internalCallContextFactory,
+                                          final TenantContext callContext,
+                                          final MutableInternalCallContext internalCallContext) {
+        final InternalTenantContext tmp = internalCallContextFactory.createInternalTenantContext(accountId, callContext);
+        internalCallContext.setAccountRecordId(tmp.getAccountRecordId());
+        internalCallContext.setFixedOffsetTimeZone(tmp.getFixedOffsetTimeZone());
+        internalCallContext.setReferenceTime(tmp.getReferenceTime());
+        internalCallContext.setCreatedDate(clock.getUTCNow());
+        internalCallContext.setUpdatedDate(clock.getUTCNow());
+    }
+
+    protected void refreshCallContext(final UUID accountId) {
+        refreshCallContext(accountId, clock, internalCallContextFactory, callContext, internalCallContext);
+    }
+
     @BeforeMethod(alwaysRun = true)
     public void beforeMethodAlwaysRun(final Method method) throws Exception {
         log.info("***************************************************************************************************");
         log.info("*** Starting test {}:{}", method.getDeclaringClass().getName(), method.getName());
         log.info("***************************************************************************************************");
+
+        internalCallContext.reset();
     }
 
     @AfterMethod(alwaysRun = true)

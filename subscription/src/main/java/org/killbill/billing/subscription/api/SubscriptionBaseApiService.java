@@ -31,7 +31,6 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -47,11 +46,7 @@ public interface SubscriptionBaseApiService {
                                               CallContext context)
             throws SubscriptionBaseApiException;
 
-    public DefaultSubscriptionBase createPlans(Iterable<SubscriptionSpecifier> subscriptions, CallContext context)
-            throws SubscriptionBaseApiException;
-
-    @Deprecated
-    public boolean recreatePlan(DefaultSubscriptionBase subscription, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, DateTime requestedDateWithMs, CallContext context)
+    public List<DefaultSubscriptionBase> createPlans(Iterable<SubscriptionSpecifier> subscriptions, CallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean cancel(DefaultSubscriptionBase subscription, CallContext context)
@@ -96,10 +91,10 @@ public interface SubscriptionBaseApiService {
     //
     // Lower level APIs for dryRun functionality
     //
-    public List<SubscriptionBaseEvent> getEventsOnCreation(UUID bundleId, UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate, long activeVersion,
+    public List<SubscriptionBaseEvent> getEventsOnCreation(UUID bundleId, UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate,
                                                            Plan plan, PhaseType initialPhase,
                                                            String realPriceList, DateTime effectiveDate, DateTime processedDate,
-                                                           boolean reCreate, InternalTenantContext context)
+                                                           InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
 
     public List<SubscriptionBaseEvent> getEventsOnChangePlan(DefaultSubscriptionBase subscription, Plan newPlan,

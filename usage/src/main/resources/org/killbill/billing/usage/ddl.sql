@@ -5,7 +5,7 @@ CREATE TABLE rolled_up_usage (
     record_id serial unique,
     id varchar(36) NOT NULL,
     subscription_id varchar(36),
-    unit_type varchar(50),
+    unit_type varchar(255),
     record_date date NOT NULL,
     amount bigint NOT NULL,
     created_by varchar(50) NOT NULL,

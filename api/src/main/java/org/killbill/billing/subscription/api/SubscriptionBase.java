@@ -96,6 +96,8 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public DateTime getChargedThroughDate();
 
+    public boolean isMigrated();
+
     public ProductCategory getCategory();
 
     public SubscriptionBaseTransition getPendingTransition();

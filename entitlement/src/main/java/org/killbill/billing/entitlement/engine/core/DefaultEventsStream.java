@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -71,7 +73,9 @@ public class DefaultEventsStream implements EventsStream {
 
     private BlockingAggregator blockingAggregator;
     private List<BlockingState> subscriptionEntitlementStates;
+    private LocalDate entitlementEffectiveStartDate;
     private LocalDate entitlementEffectiveEndDate;
+    private BlockingState entitlementStartEvent;
     private BlockingState entitlementCancelEvent;
     private EntitlementState entitlementState;
 
@@ -140,6 +144,11 @@ public class DefaultEventsStream implements EventsStream {
     @Override
     public EntitlementState getEntitlementState() {
         return entitlementState;
+    }
+
+    @Override
+    public LocalDate getEntitlementEffectiveStartDate() {
+        return entitlementEffectiveStartDate;
     }
 
     @Override
@@ -353,6 +362,7 @@ public class DefaultEventsStream implements EventsStream {
     private void setup() {
         computeEntitlementBlockingStates();
         computeBlockingAggregator();
+        computeEntitlementStartEvent();
         computeEntitlementCancelEvent();
         computeStateForEntitlement();
     }
@@ -390,6 +400,20 @@ public class DefaultEventsStream implements EventsStream {
         return ImmutableList.<BlockingState>copyOf(currentBlockingStatePerService.values());
     }
 
+    private void computeEntitlementStartEvent() {
+        entitlementStartEvent = Iterables.<BlockingState>tryFind(subscriptionEntitlementStates,
+                                                                  new Predicate<BlockingState>() {
+                                                                      @Override
+                                                                      public boolean apply(final BlockingState input) {
+                                                                          return DefaultEntitlementApi.ENT_STATE_START.equals(input.getStateName());
+                                                                      }
+                                                                  }).orNull();
+
+        // Note that we still default to subscriptionBase.startDate (for compatibility issue where ENT_STATE_START does not exist)
+        entitlementEffectiveStartDate = entitlementStartEvent != null ?
+                                        internalTenantContext.toLocalDate(entitlementStartEvent.getEffectiveDate()) :
+                                        internalTenantContext.toLocalDate(getSubscriptionBase().getStartDate());
+    }
 
     private void computeEntitlementCancelEvent() {
         entitlementCancelEvent = Iterables.<BlockingState>tryFind(subscriptionEntitlementStates,
@@ -399,16 +423,20 @@ public class DefaultEventsStream implements EventsStream {
                                                                           return DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
                                                                       }
                                                                   }).orNull();
-        entitlementEffectiveEndDate = entitlementCancelEvent != null ?  new LocalDate(entitlementCancelEvent.getEffectiveDate(), account.getTimeZone()) : null;
+        entitlementEffectiveEndDate = entitlementCancelEvent != null ? internalTenantContext.toLocalDate(entitlementCancelEvent.getEffectiveDate()) : null;
     }
 
     private void computeStateForEntitlement() {
         // Current state for the ENTITLEMENT_SERVICE_NAME is set to cancelled
-        if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(new LocalDate(utcNow, account.getTimeZone())) <= 0) {
+        if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(internalTenantContext.toLocalDate(utcNow)) <= 0) {
             entitlementState = EntitlementState.CANCELLED;
         } else {
-            // Gather states across all services and check if one of them is set to 'blockEntitlement'
-            entitlementState = (blockingAggregator != null && blockingAggregator.isBlockEntitlement() ? EntitlementState.BLOCKED : EntitlementState.ACTIVE);
+            if (entitlementEffectiveStartDate.compareTo(new LocalDate(utcNow, account.getTimeZone())) > 0) {
+                entitlementState = EntitlementState.PENDING;
+            } else {
+                // Gather states across all services and check if one of them is set to 'blockEntitlement'
+                entitlementState = (blockingAggregator != null && blockingAggregator.isBlockEntitlement() ? EntitlementState.BLOCKED : EntitlementState.ACTIVE);
+            }
         }
     }
 

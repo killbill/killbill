@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -28,9 +30,9 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.DefaultAccountEmail;
-import org.killbill.billing.account.api.DefaultImmutableAccountData;
 import org.killbill.billing.account.api.DefaultMutableAccountData;
 import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.account.api.user.DefaultAccountApiBase;
 import org.killbill.billing.account.dao.AccountDao;
@@ -43,7 +45,6 @@ import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
-import org.killbill.billing.util.cache.ImmutableAccountCacheLoader.LoaderCallback;
 import org.killbill.billing.util.dao.NonEntityDao;
 
 import com.google.common.base.Function;
@@ -52,21 +53,18 @@ import com.google.common.collect.ImmutableList;
 
 public class DefaultAccountInternalApi extends DefaultAccountApiBase implements AccountInternalApi {
 
+    private final ImmutableAccountInternalApi immutableAccountInternalApi;
     private final AccountDao accountDao;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
-    private final CacheController accountCacheController;
     private final CacheController bcdCacheController;
-    private final NonEntityDao nonEntityDao;
 
     @Inject
-    public DefaultAccountInternalApi(final AccountDao accountDao,
+    public DefaultAccountInternalApi(final ImmutableAccountInternalApi immutableAccountInternalApi,
+                                     final AccountDao accountDao,
                                      final NonEntityDao nonEntityDao,
                                      final CacheControllerDispatcher cacheControllerDispatcher) {
         super(accountDao, nonEntityDao, cacheControllerDispatcher);
+        this.immutableAccountInternalApi = immutableAccountInternalApi;
         this.accountDao = accountDao;
-        this.nonEntityDao = nonEntityDao;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
-        this.accountCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
         this.bcdCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_BCD);
     }
 
@@ -142,14 +140,12 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
 
     @Override
     public ImmutableAccountData getImmutableAccountDataById(final UUID accountId, final InternalTenantContext context) throws AccountApiException {
-        final Long recordId = nonEntityDao.retrieveRecordIdFromObject(accountId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
-        return getImmutableAccountDataByRecordId(recordId, context);
+        return immutableAccountInternalApi.getImmutableAccountDataById(accountId, context);
     }
 
     @Override
     public ImmutableAccountData getImmutableAccountDataByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
-        final CacheLoaderArgument arg = createImmutableAccountCacheLoaderArgument(context);
-        return (ImmutableAccountData) accountCacheController.get(recordId, arg);
+        return immutableAccountInternalApi.getImmutableAccountDataByRecordId(recordId, context);
     }
 
     private AccountModelDao getAccountModelDaoByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
@@ -163,20 +159,6 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
     private int getBCDInternal(final UUID accountId, final InternalTenantContext context) {
         final Integer bcd = accountDao.getAccountBCD(accountId, context);
         return bcd != null ? bcd : DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
-    }
-
-    private CacheLoaderArgument createImmutableAccountCacheLoaderArgument(final InternalTenantContext context) {
-        final LoaderCallback loaderCallback = new LoaderCallback() {
-            @Override
-            public Object loadAccount(final Long recordId, final InternalTenantContext context) {
-                final Account account = getAccountByRecordIdInternal(recordId, context);
-                return account != null ? new DefaultImmutableAccountData(account) : null;
-            }
-        };
-        final Object[] args = new Object[1];
-        args[0] = loaderCallback;
-        final ObjectType irrelevant = null;
-        return new CacheLoaderArgument(irrelevant, args, context);
     }
 
     private CacheLoaderArgument createBCDCacheLoaderArgument(final InternalTenantContext context) {

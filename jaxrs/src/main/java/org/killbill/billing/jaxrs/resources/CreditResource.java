@@ -124,11 +124,11 @@ public class CreditResource extends JaxRsResourceBase {
         if (json.getInvoiceId() != null) {
             // Apply an invoice level credit
             credit = invoiceUserApi.insertCreditForInvoice(account.getId(), UUID.fromString(json.getInvoiceId()), json.getCreditAmount(),
-                                                           effectiveDate, account.getCurrency(), callContext);
+                                                           effectiveDate, account.getCurrency(), json.getDescription(), callContext);
         } else {
             // Apply a account level credit
             credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), effectiveDate,
-                                                 account.getCurrency(), autoCommit, callContext);
+                                                 account.getCurrency(), autoCommit, json.getDescription(), callContext);
         }
 
         return uriBuilder.buildResponse(uriInfo, CreditResource.class, "getCredit", credit.getId());

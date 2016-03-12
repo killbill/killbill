@@ -40,6 +40,8 @@ public class CreditJson extends JsonBase {
     private final LocalDate effectiveDate;
     @ApiModelProperty(dataType = "java.util.UUID", required = true)
     private final String accountId;
+    private final String description;
+
 
     @JsonCreator
     public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
@@ -47,12 +49,14 @@ public class CreditJson extends JsonBase {
                       @JsonProperty("invoiceNumber") final String invoiceNumber,
                       @JsonProperty("effectiveDate") final LocalDate effectiveDate,
                       @JsonProperty("accountId") final String accountId,
+                      @JsonProperty("description") final String description,
                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.creditAmount = creditAmount;
         this.invoiceId = invoiceId;
         this.invoiceNumber = invoiceNumber;
         this.effectiveDate = effectiveDate;
+        this.description = description;
         this.accountId = accountId;
     }
 
@@ -63,6 +67,7 @@ public class CreditJson extends JsonBase {
         this.invoiceId = toString(credit.getInvoiceId());
         this.invoiceNumber = invoice.getInvoiceNumber().toString();
         this.effectiveDate = credit.getStartDate();
+        this.description = credit.getDescription();
     }
 
     public CreditJson(final Invoice invoice, final InvoiceItem credit) {
@@ -89,6 +94,10 @@ public class CreditJson extends JsonBase {
         return accountId;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -97,6 +106,7 @@ public class CreditJson extends JsonBase {
         sb.append(", invoiceId=").append(invoiceId);
         sb.append(", invoiceNumber='").append(invoiceNumber).append('\'');
         sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", description=").append(description);
         sb.append(", accountId=").append(accountId);
         sb.append('}');
         return sb.toString();
@@ -123,6 +133,9 @@ public class CreditJson extends JsonBase {
         if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
             return false;
         }
+        if (description != null ? !description.equals(that.description) : that.description != null) {
+            return false;
+        }
         if (!((effectiveDate == null && that.effectiveDate == null) ||
               (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
             return false;
@@ -135,6 +148,7 @@ public class CreditJson extends JsonBase {
     public int hashCode() {
         int result = creditAmount != null ? creditAmount.hashCode() : 0;
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (invoiceNumber != null ? invoiceNumber.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         return result;

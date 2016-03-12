@@ -152,10 +152,6 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
                 return;
             }
-            if (subscription.getActiveVersion() > event.getActiveVersion()) {
-                // Skip repaired events
-                return;
-            }
 
             boolean eventSent = false;
             if (event.getType() == EventType.PHASE) {
@@ -187,7 +183,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
             final DateTime now = clock.getUTCNow();
             final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, context);
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                                              PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(),
+                                              PhaseEventData.createNextPhaseEvent(subscription.getId(),
                                                                                   nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                               null;
             if (nextPhaseEvent != null) {

@@ -33,8 +33,6 @@ import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.account.api.DefaultAccountEmail;
 import org.killbill.billing.account.api.DefaultMutableAccountData;
 import org.killbill.billing.account.api.MutableAccountData;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -112,29 +110,28 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         // Special test to verify audits - they are handled a bit differently due to the account record id (see EntitySqlDaoWrapperInvocationHandler#insertAudits)
         final AccountModelDao account1 = createTestAccount();
         accountDao.create(account1, internalCallContext);
-        final Long account1RecordId = nonEntityDao.retrieveAccountRecordIdFromObject(account1.getId(), ObjectType.ACCOUNT, null);
-        final InternalCallContext internalCallContext1 = new InternalCallContext(internalCallContext, account1RecordId);
+        refreshCallContext(account1.getId());
 
         // Verify audits via account record id
-        final DefaultAccountAuditLogs auditLogsForAccount1ViaAccountRecordId1 = auditDao.getAuditLogsForAccountRecordId(AuditLevel.FULL, internalCallContext1);
+        final DefaultAccountAuditLogs auditLogsForAccount1ViaAccountRecordId1 = auditDao.getAuditLogsForAccountRecordId(AuditLevel.FULL, internalCallContext);
         Assert.assertEquals(auditLogsForAccount1ViaAccountRecordId1.getAuditLogsForAccount().size(), 1);
         Assert.assertEquals(auditLogsForAccount1ViaAccountRecordId1.getAuditLogsForAccount().get(0).getChangeType(), ChangeType.INSERT);
 
         // Add an entry in the account_history table to make sure we pick up the right
         // record id / target record id / account record id in the audit_log table
-        accountDao.updatePaymentMethod(account1.getId(), UUID.randomUUID(), internalCallContext1);
+        accountDao.updatePaymentMethod(account1.getId(), UUID.randomUUID(), internalCallContext);
 
         final AccountModelDao account2 = createTestAccount();
         accountDao.create(account2, internalCallContext);
-        final Long account2RecordId = nonEntityDao.retrieveAccountRecordIdFromObject(account2.getId(), ObjectType.ACCOUNT, null);
-        final InternalTenantContext internalTenantContext2 = new InternalCallContext(internalCallContext, account2RecordId);
+        refreshCallContext(account2.getId());
 
         // Verify audits via account record id
-        final DefaultAccountAuditLogs auditLogsForAccount2ViaAccountRecordId = auditDao.getAuditLogsForAccountRecordId(AuditLevel.FULL, internalTenantContext2);
+        final DefaultAccountAuditLogs auditLogsForAccount2ViaAccountRecordId = auditDao.getAuditLogsForAccountRecordId(AuditLevel.FULL, internalCallContext);
         Assert.assertEquals(auditLogsForAccount2ViaAccountRecordId.getAuditLogsForAccount().size(), 1);
         Assert.assertEquals(auditLogsForAccount2ViaAccountRecordId.getAuditLogsForAccount().get(0).getChangeType(), ChangeType.INSERT);
 
-        final DefaultAccountAuditLogs auditLogsForAccount1ViaAccountRecordId2 = auditDao.getAuditLogsForAccountRecordId(AuditLevel.FULL, internalCallContext1);
+        refreshCallContext(account1.getId());
+        final DefaultAccountAuditLogs auditLogsForAccount1ViaAccountRecordId2 = auditDao.getAuditLogsForAccountRecordId(AuditLevel.FULL, internalCallContext);
         Assert.assertEquals(auditLogsForAccount1ViaAccountRecordId2.getAuditLogsForAccount().size(), 2);
         Assert.assertEquals(auditLogsForAccount1ViaAccountRecordId2.getAuditLogsForAccount().get(0).getChangeType(), ChangeType.INSERT);
         Assert.assertEquals(auditLogsForAccount1ViaAccountRecordId2.getAuditLogsForAccount().get(1).getChangeType(), ChangeType.UPDATE);

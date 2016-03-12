@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,13 +29,17 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.GuicyKillbillTestSuite;
+import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -76,11 +80,12 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
-import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.mockito.Mockito;
@@ -148,6 +153,7 @@ public class TestInvoiceHelper {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
+    private final ImmutableAccountInternalApi immutableAccountApi;
     private final InvoicePluginDispatcher invoicePluginDispatcher;
     private final AccountUserApi accountUserApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
@@ -155,7 +161,8 @@ public class TestInvoiceHelper {
     private final InvoiceDao invoiceDao;
     private final GlobalLocker locker;
     private final Clock clock;
-    private final InternalCallContext internalCallContext;
+    private final NonEntityDao nonEntityDao;
+    private final MutableInternalCallContext internalCallContext;
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceConfig invoiceConfig;
     // Low level SqlDao used by the tests to directly insert rows
@@ -165,12 +172,13 @@ public class TestInvoiceHelper {
 
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
-                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final InvoicePluginDispatcher invoicePluginDispatcher, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
-                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final InternalCallContext internalCallContext, final InvoiceConfig invoiceConfig,
+                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final ImmutableAccountInternalApi immutableAccountApi, final InvoicePluginDispatcher invoicePluginDispatcher, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
+                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher, final MutableInternalCallContext internalCallContext, final InvoiceConfig invoiceConfig,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;
+        this.immutableAccountApi = immutableAccountApi;
         this.invoicePluginDispatcher = invoicePluginDispatcher;
         this.accountUserApi = accountUserApi;
         this.subscriptionApi = subscriptionApi;
@@ -178,6 +186,7 @@ public class TestInvoiceHelper {
         this.invoiceDao = invoiceDao;
         this.locker = locker;
         this.clock = clock;
+        this.nonEntityDao = nonEntityDao;
         this.internalCallContext = internalCallContext;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
@@ -185,7 +194,7 @@ public class TestInvoiceHelper {
         this.invoiceConfig = invoiceConfig;
     }
 
-    public UUID generateRegularInvoice(final Account account, final DateTime targetDate, final CallContext callContext) throws Exception {
+    public UUID generateRegularInvoice(final Account account, final LocalDate targetDate, final CallContext callContext) throws Exception {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription.getBundleId()).thenReturn(new UUID(0L, 0L));
@@ -234,37 +243,30 @@ public class TestInvoiceHelper {
     }
 
     public Account createAccount(final CallContext callContext) throws AccountApiException {
-        final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
-                                                                .firstNameLength(6)
-                                                                .email(UUID.randomUUID().toString().substring(1, 8))
-                                                                .phone(UUID.randomUUID().toString().substring(1, 8))
-                                                                .migrated(false)
-                                                                .isNotifiedForInvoices(true)
-                                                                .externalKey(UUID.randomUUID().toString().substring(1, 8))
-                                                                .billingCycleDayLocal(31)
-                                                                .currency(accountCurrency)
-                                                                .paymentMethodId(UUID.randomUUID())
-                                                                .timeZone(DateTimeZone.UTC)
-                                                                .build();
-        return accountUserApi.createAccount(accountData, callContext);
-    }
+        final Account accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+                                                            .firstNameLength(6)
+                                                            .email(UUID.randomUUID().toString().substring(1, 8))
+                                                            .phone(UUID.randomUUID().toString().substring(1, 8))
+                                                            .migrated(false)
+                                                            .isNotifiedForInvoices(true)
+                                                            .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                                                            .billingCycleDayLocal(31)
+                                                            .currency(accountCurrency)
+                                                            .paymentMethodId(UUID.randomUUID())
+                                                            .timeZone(DateTimeZone.UTC)
+                                                            .createdDate(clock.getUTCNow())
+                                                            .build();
 
-    public Account createChildAccount(final UUID parentAccountId, final CallContext callContext) throws AccountApiException {
-        final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
-                                                                .firstNameLength(6)
-                                                                .email(UUID.randomUUID().toString().substring(1, 8))
-                                                                .phone(UUID.randomUUID().toString().substring(1, 8))
-                                                                .migrated(false)
-                                                                .isNotifiedForInvoices(true)
-                                                                .externalKey(UUID.randomUUID().toString().substring(1, 8))
-                                                                .billingCycleDayLocal(31)
-                                                                .currency(accountCurrency)
-                                                                .paymentMethodId(UUID.randomUUID())
-                                                                .timeZone(DateTimeZone.UTC)
-                                                                .parentAccountId(parentAccountId)
-                                                                .isPaymentDelegatedToParent(false)
-                                                                .build();
-        return accountUserApi.createAccount(accountData, callContext);
+        final Account account;
+        if (isFastTest()) {
+            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountUserApi, accountApi, immutableAccountApi, nonEntityDao, clock, internalCallContextFactory, callContext, internalCallContext);
+        } else {
+            account = accountUserApi.createAccount(accountData, callContext);
+        }
+
+        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, callContext, internalCallContext);
+
+        return account;
     }
 
     public void createInvoiceItem(final InvoiceItem invoiceItem, final InternalCallContext internalCallContext) throws EntityPersistenceException {
@@ -306,8 +308,7 @@ public class TestInvoiceHelper {
                                                                                                                                          }));
 
         // The test does not use the invoice callback notifier hence the empty map
-        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC);
-        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
+        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
     }
 
     public void createPayment(final InvoicePayment invoicePayment, final InternalCallContext internalCallContext) {
@@ -462,7 +463,7 @@ public class TestInvoiceHelper {
         }
 
         @Override
-        public DateTime getEffectiveDate() {
+        public LocalDate getEffectiveDate() {
             return null;
         }
 
@@ -480,5 +481,10 @@ public class TestInvoiceHelper {
         public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
             return null;
         }
+    }
+
+    // Unfortunately, this helper is shared across fast and slow tests
+    private boolean isFastTest() {
+        return Mockito.mockingDetails(accountApi).isMock();
     }
 }

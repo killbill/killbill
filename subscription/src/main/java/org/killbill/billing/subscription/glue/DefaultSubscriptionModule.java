@@ -20,13 +20,10 @@ package org.killbill.billing.subscription.glue;
 
 import org.killbill.billing.glue.SubscriptionModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.subscription.alignment.MigrationPlanAligner;
 import org.killbill.billing.subscription.alignment.PlanAligner;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
-import org.killbill.billing.subscription.api.migration.DefaultSubscriptionBaseMigrationApi;
-import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
 import org.killbill.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
 import org.killbill.billing.subscription.api.timeline.DefaultSubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
@@ -61,11 +58,8 @@ public class DefaultSubscriptionModule extends KillBillModule implements Subscri
         bind(DefaultSubscriptionBaseService.class).asEagerSingleton();
         bind(PlanAligner.class).asEagerSingleton();
         bind(AddonUtils.class).asEagerSingleton();
-        bind(MigrationPlanAligner.class).asEagerSingleton();
-
         installSubscriptionService();
         installSubscriptionTimelineApi();
-        installSubscriptionMigrationApi();
         installSubscriptionInternalApi();
         installSubscriptionTransferApi();
     }
@@ -85,11 +79,6 @@ public class DefaultSubscriptionModule extends KillBillModule implements Subscri
     @Override
     public void installSubscriptionTimelineApi() {
         bind(SubscriptionBaseTimelineApi.class).to(DefaultSubscriptionBaseTimelineApi.class).asEagerSingleton();
-    }
-
-    @Override
-    public void installSubscriptionMigrationApi() {
-        bind(SubscriptionBaseMigrationApi.class).to(DefaultSubscriptionBaseMigrationApi.class).asEagerSingleton();
     }
 
     @Override

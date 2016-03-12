@@ -39,12 +39,6 @@ public interface SubscriptionBaseTimeline extends Entity {
      */
     public List<ExistingEvent> getExistingEvents();
 
-    /**
-     * @return the active version for the event stream
-     */
-    public long getActiveVersion();
-
-
 
     public interface ExistingEvent {
 
@@ -59,10 +53,6 @@ public interface SubscriptionBaseTimeline extends Entity {
          */
         public PlanPhaseSpecifier getPlanPhaseSpecifier();
 
-        /**
-         * @return the date at which this event should be inserted into the stream
-         */
-        public DateTime getRequestedDate();
 
         /**
          * @return the {@code SubscriptionBaseTransitionType} for the event

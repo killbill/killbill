@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,6 +18,7 @@
 
 package org.killbill.billing.subscription.engine.dao;
 
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.skife.jdbi.v2.IDBI;
 
 import org.killbill.bus.api.PersistentBus;
@@ -32,7 +35,8 @@ public class MockSubscriptionDaoSql extends DefaultSubscriptionDao {
 
     @Inject
     public MockSubscriptionDaoSql(final IDBI dbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                                  final PersistentBus eventBus, final CatalogService catalogService, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
-        super(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService, cacheControllerDispatcher, nonEntityDao);
+                                  final PersistentBus eventBus, final CatalogService catalogService, final CacheControllerDispatcher cacheControllerDispatcher,
+                                  final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
+        super(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 }

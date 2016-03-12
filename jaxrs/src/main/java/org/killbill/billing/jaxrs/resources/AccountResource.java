@@ -396,7 +396,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Callable<List<Invoice>> invoicesCallable = new Callable<List<Invoice>>() {
             @Override
             public List<Invoice> call() throws Exception {
-                return invoiceApi.getInvoicesByAccount(account.getId(), tenantContext);
+                return invoiceApi.getInvoicesByAccount(account.getId(), false, tenantContext);
             }
         };
         final Callable<List<InvoicePayment>> invoicePaymentsCallable = new Callable<List<InvoicePayment>>() {
@@ -587,6 +587,7 @@ public class AccountResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getInvoices(@PathParam("accountId") final String accountIdString,
                                 @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                                @QueryParam(QUERY_WITH_MIGRATION_INVOICES) @DefaultValue("false") final boolean withMigrationInvoices,
                                 @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
@@ -598,7 +599,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final List<Invoice> invoices = unpaidInvoicesOnly ?
                                        new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, tenantContext)) :
-                                       invoiceApi.getInvoicesByAccount(accountId, tenantContext);
+                                       invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, tenantContext);
 
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
 
@@ -689,7 +690,7 @@ public class AccountResource extends JaxRsResourceBase {
         // then we apply some credit on the account.
         //
         if (externalPayment && remainingRequestPayment.compareTo(BigDecimal.ZERO) > 0) {
-            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), true, callContext);
+            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), true, "pay all invoices", callContext);
         }
         return Response.status(Status.OK).build();
     }

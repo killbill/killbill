@@ -14,24 +14,20 @@
  * under the License.
  */
 
-package org.killbill.billing.account.api;
+package org.killbill.billing.beatrix;
 
-import java.util.List;
+import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
+import org.killbill.billing.beatrix.integration.BeatrixIntegrationModuleNoDB;
+import org.testng.annotations.BeforeClass;
 
-import org.joda.time.DateTime;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
-/**
- * The interface {@code MigrationAccountData}
- */
-public interface MigrationAccountData extends AccountData {
+public abstract class BeatrixTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
-    /**
-     *
-     * @return the createdDate for
-     */
-    public DateTime getCreatedDate();
-
-    public DateTime getUpdatedDate();
-
-    public List<String> getAdditionalContactEmails();
+    @BeforeClass(groups = "fast")
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new BeatrixIntegrationModuleNoDB(configSource));
+        injector.injectMembers(this);
+    }
 }

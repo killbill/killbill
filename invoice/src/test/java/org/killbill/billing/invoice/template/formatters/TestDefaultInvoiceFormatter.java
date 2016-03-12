@@ -122,7 +122,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                                                                                                         fixedItem.getStartDate(), fixedItem.getAmount(),
                                                                                                         fixedItem.getCurrency());
         final CreditAdjInvoiceItem creditAdjInvoiceItem = new CreditAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
-                                                                                   fixedItem.getStartDate(), BigDecimal.ONE.negate(), fixedItem.getCurrency());
+                                                                                   fixedItem.getStartDate(), null, BigDecimal.ONE.negate(), fixedItem.getCurrency());
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
                                                                                                          fixedItem.getStartDate(), creditAdjInvoiceItem.getAmount().negate(),
                                                                                                          fixedItem.getCurrency());

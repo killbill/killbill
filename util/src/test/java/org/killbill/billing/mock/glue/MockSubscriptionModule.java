@@ -22,7 +22,6 @@ import org.killbill.billing.glue.SubscriptionModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
-import org.killbill.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.util.glue.KillBillModule;
@@ -39,10 +38,6 @@ public class MockSubscriptionModule extends KillBillModule implements Subscripti
         bind(SubscriptionBaseService.class).toInstance(Mockito.mock(SubscriptionBaseService.class));
     }
 
-    @Override
-    public void installSubscriptionMigrationApi() {
-        bind(SubscriptionBaseMigrationApi.class).toInstance(Mockito.mock(SubscriptionBaseMigrationApi.class));
-    }
 
     @Override
     public void installSubscriptionInternalApi() {
@@ -52,7 +47,6 @@ public class MockSubscriptionModule extends KillBillModule implements Subscripti
     @Override
     protected void configure() {
         installSubscriptionService();
-        installSubscriptionMigrationApi();
         installSubscriptionInternalApi();
         installSubscriptionTimelineApi();
         installSubscriptionTransferApi();

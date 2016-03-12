@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,22 +19,16 @@
 package org.killbill.billing.invoice;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
-import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 
 public class MockBillingEventSet extends TreeSet<BillingEvent> implements BillingEventSet {
 
@@ -40,7 +36,6 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
 
     private boolean isAccountInvoiceOff;
     private List<UUID> subscriptionIdsWithAutoInvoiceOff;
-    private AccountDateAndTimeZoneContext accountDateAndTimeZoneContext;
 
     public MockBillingEventSet() {
         super();
@@ -48,27 +43,9 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
         this.subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
     }
 
-    @Override
-    public boolean add(final BillingEvent e) {
-        if (accountDateAndTimeZoneContext == null) {
-            this.accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(e.getEffectiveDate(), DateTimeZone.UTC);
-        }
-        return super.add(e);
-    }
-
-    @Override
-    public boolean addAll(final Collection<? extends BillingEvent> all) {
-        if (accountDateAndTimeZoneContext == null) {
-            this.accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(all.iterator().next().getEffectiveDate(), DateTimeZone.UTC);
-        }
-        return super.addAll(all);
-    }
-
-
     public void addSubscriptionWithAutoInvoiceOff(final UUID subscriptionId) {
         subscriptionIdsWithAutoInvoiceOff.add(subscriptionId);
     }
-
 
     @Override
     public boolean isAccountAutoInvoiceOff() {
@@ -83,11 +60,6 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     @Override
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
-    }
-
-    @Override
-    public AccountDateAndTimeZoneContext getAccountDateAndTimeZoneContext() {
-        return accountDateAndTimeZoneContext;
     }
 
     @Override

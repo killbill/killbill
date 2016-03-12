@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.annotation.Nullable;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
@@ -46,6 +49,7 @@ import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -68,6 +72,8 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     private final AtomicBoolean makeNextInvoiceFailWithException = new AtomicBoolean(false);
     private final AtomicBoolean makeAllInvoicesFailWithError = new AtomicBoolean(false);
     private final AtomicInteger makePluginWaitSomeMilliseconds = new AtomicInteger(0);
+    private final AtomicReference<BigDecimal> overrideNextProcessedAmount = new AtomicReference<BigDecimal>();
+    private final AtomicReference<Currency> overrideNextProcessedCurrency = new AtomicReference<Currency>();
 
     private final Map<String, InternalPaymentInfo> payments = new ConcurrentHashMap<String, InternalPaymentInfo>();
     private final Map<String, List<PaymentTransactionInfoPlugin>> paymentTransactions = new ConcurrentHashMap<String, List<PaymentTransactionInfoPlugin>>();
@@ -192,6 +198,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         makeAllInvoicesFailWithError.set(false);
         makeNextInvoiceFailWithError.set(false);
         makePluginWaitSomeMilliseconds.set(0);
+        overrideNextProcessedAmount.set(null);
         paymentMethods.clear();
         payments.clear();
         paymentTransactions.clear();
@@ -212,6 +219,14 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
 
     public void makePluginWaitSomeMilliseconds(final int milliseconds) {
         makePluginWaitSomeMilliseconds.set(milliseconds);
+    }
+
+    public void overrideNextProcessedAmount(final BigDecimal amount) {
+        overrideNextProcessedAmount.set(amount);
+    }
+
+    public void overrideNextProcessedCurrency(final Currency currency) {
+        overrideNextProcessedCurrency.set(currency);
     }
 
     public void updatePaymentTransactions(final UUID paymentId, final List<PaymentTransactionInfoPlugin> newTransactions) {
@@ -343,7 +358,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         return getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.REFUND, refundAmount, currency, properties);
     }
 
-    private PaymentTransactionInfoPlugin getPaymentTransactionInfoPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType type, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> pluginProperties) throws PaymentPluginApiException {
+    private PaymentTransactionInfoPlugin getPaymentTransactionInfoPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType type, final BigDecimal amount, @Nullable final Currency currency, final Iterable<PluginProperty> pluginProperties) throws PaymentPluginApiException {
         if (makePluginWaitSomeMilliseconds.get() > 0) {
             try {
                 Thread.sleep(makePluginWaitSomeMilliseconds.get());
@@ -379,7 +394,13 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             payments.put(kbPaymentId.toString(), info);
         }
 
-        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, amount, currency, clock.getUTCNow(), clock.getUTCNow(), status, errorCode, error);
+        final BigDecimal processedAmount = MoreObjects.firstNonNull(overrideNextProcessedAmount.getAndSet(null), amount);
+        Currency processedCurrency = overrideNextProcessedCurrency.getAndSet(null);
+        if (processedCurrency == null) {
+            processedCurrency = currency;
+        }
+
+        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, processedAmount, processedCurrency, clock.getUTCNow(), clock.getUTCNow(), status, errorCode, error);
         List<PaymentTransactionInfoPlugin> existingTransactions = paymentTransactions.get(kbPaymentId.toString());
         if (existingTransactions == null) {
             existingTransactions = new ArrayList<PaymentTransactionInfoPlugin>();

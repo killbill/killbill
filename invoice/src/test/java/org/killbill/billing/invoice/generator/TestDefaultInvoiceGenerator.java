@@ -33,7 +33,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.MockInternationalPrice;
 import org.killbill.billing.catalog.MockPlan;

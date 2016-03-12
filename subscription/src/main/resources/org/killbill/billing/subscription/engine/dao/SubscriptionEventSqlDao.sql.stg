@@ -16,13 +16,11 @@ order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
 tableFields(prefix) ::= <<
   <prefix> event_type
 , <prefix> user_type
-, <prefix> requested_date
 , <prefix> effective_date
 , <prefix> subscription_id
 , <prefix> plan_name
 , <prefix> phase_name
 , <prefix> price_list_name
-, <prefix> current_version
 , <prefix> is_active
 , <prefix> created_by
 , <prefix> created_date
@@ -33,13 +31,11 @@ tableFields(prefix) ::= <<
 tableValues() ::= <<
   :eventType
 , :userType
-, :requestedDate
 , :effectiveDate
 , :subscriptionId
 , :planName
 , :phaseName
 , :priceListName
-, :currentVersion
 , :isActive
 , :createdBy
 , :createdDate
@@ -47,18 +43,6 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
-
-updateVersion() ::= <<
-update <tableName()>
-set
-current_version = :currentVersion
-, updated_by = :createdBy
-, updated_date = :createdDate
-where
-id = :id
-<AND_CHECK_TENANT()>
-;
->>
 
 unactiveEvent() ::= <<
 update <tableName()>
@@ -72,17 +56,6 @@ id = :id
 ;
 >>
 
-reactiveEvent() ::= <<
-update <tableName()>
-set
-is_active = true
-, updated_by = :createdBy
-, updated_date = :createdDate
-where
-event_id = :eventId
-<AND_CHECK_TENANT()>
-;
->>
 
 
 

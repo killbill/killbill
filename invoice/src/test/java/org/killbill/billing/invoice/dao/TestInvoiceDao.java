@@ -46,6 +46,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.MockBillingEventSet;
 import org.killbill.billing.invoice.api.Invoice;
@@ -69,9 +70,7 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 import org.killbill.billing.util.currency.KillBillMoney;
-import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.killbill.clock.ClockMock;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
@@ -550,7 +549,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                     endDate, rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
-        final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), rate1.negate(), Currency.USD);
+        final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), null, rate1.negate(), Currency.USD);
         invoiceUtil.createInvoiceItem(creditItem, context);
 
         final BigDecimal balance = invoiceDao.getAccountBalance(accountId, context);
@@ -925,7 +924,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(cba.compareTo(new BigDecimal("0.00")), 0);
 
         // FINALLY ISSUE A CREDIT ADJ
-        final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice2.getId(), accountId, new LocalDate(), rate2.negate(), Currency.USD);
+        final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice2.getId(), accountId, new LocalDate(), null, rate2.negate(), Currency.USD);
         invoiceUtil.createInvoiceItem(creditItem, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
@@ -1721,6 +1720,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                           invoiceModelDao.getId(),
                                                                           accountId,
                                                                           effectiveDate,
+                                                                          null,
                                                                           // Note! The amount is negated here!
                                                                           creditAmount.negate(),
                                                                           invoiceModelDao.getCurrency());
@@ -1758,8 +1758,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         parentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
 
         // build account date time zone
-        final AccountDateAndTimeZoneContext accountDateTimeZone = new DefaultAccountDateAndTimeZoneContext(today, account.getTimeZone());
-        final FutureAccountNotifications futureAccountNotifications = new FutureAccountNotifications(accountDateTimeZone, null);
+        final FutureAccountNotifications futureAccountNotifications = new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of());
         invoiceDao.createInvoice(parentInvoice, parentInvoice.getInvoiceItems(), true, futureAccountNotifications, context);
 
         final InvoiceModelDao parentDraftInvoice = invoiceDao.getParentDraftInvoice(parentAccountId, context);

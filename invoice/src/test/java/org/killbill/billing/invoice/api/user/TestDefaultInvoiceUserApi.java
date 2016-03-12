@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -59,10 +61,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         super.beforeMethod();
         final Account account = invoiceUtil.createAccount(callContext);
         accountId = account.getId();
-        invoiceId = invoiceUtil.generateRegularInvoice(account, clock.getUTCNow(), callContext);
+        invoiceId = invoiceUtil.generateRegularInvoice(account, null, callContext);
     }
-
-
 
     @Test(groups = "slow")
     public void testPostExternalChargeOnNewInvoice() throws Exception {
@@ -202,14 +202,30 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Adjust the invoice for the full amount
         final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, invoiceBalance,
-                                                                                    clock.getUTCToday(), accountCurrency, callContext);
+                                                                                    clock.getUTCToday(), accountCurrency, "some description", callContext);
+        Assert.assertEquals(creditInvoiceItem.getInvoiceId(), invoiceId);
+        Assert.assertEquals(creditInvoiceItem.getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
+        Assert.assertEquals(creditInvoiceItem.getAccountId(), accountId);
+        Assert.assertEquals(creditInvoiceItem.getAmount().compareTo(invoiceBalance.negate()), 0);
+        Assert.assertEquals(creditInvoiceItem.getCurrency(), accountCurrency);
+        Assert.assertEquals(creditInvoiceItem.getDescription(), "some description");
+        Assert.assertNull(creditInvoiceItem.getLinkedItemId());
 
+        // Verify the adjusted invoice balance
+        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
+        Assert.assertEquals(adjustedInvoiceBalance.compareTo(BigDecimal.ZERO), 0);
+
+        // Verify the adjusted account balance
+        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
+        Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
     }
+
 
     @Test(groups = "slow")
     public void testCantAdjustInvoiceWithNegativeAmount() throws Exception {
         try {
-            invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, BigDecimal.TEN.negate(), clock.getUTCToday(), accountCurrency, callContext);
+            invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, BigDecimal.TEN.negate(), clock.getUTCToday(), accountCurrency,
+                                                  null, callContext);
             Assert.fail("Should not have been able to adjust an invoice with a negative amount");
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.CREDIT_AMOUNT_INVALID.getCode());
@@ -232,7 +248,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Adjust the invoice for the full amount
         final InvoiceItem adjInvoiceItem = invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(),
-                                                                                      clock.getUTCToday(), callContext);
+                                                                                      clock.getUTCToday(), null, callContext);
         Assert.assertEquals(adjInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(adjInvoiceItem.getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
         Assert.assertEquals(adjInvoiceItem.getAccountId(), accountId);
@@ -267,7 +283,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal adjAmount = invoiceItem.getAmount().divide(BigDecimal.TEN);
         final InvoiceItem adjInvoiceItem = invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(),
                                                                                       clock.getUTCToday(), adjAmount, accountCurrency,
-                                                                                      callContext);
+                                                                                      null, callContext);
         Assert.assertEquals(adjInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(adjInvoiceItem.getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
         Assert.assertEquals(adjInvoiceItem.getAccountId(), accountId);
@@ -290,7 +306,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         try {
             invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(), clock.getUTCToday(),
-                                                       BigDecimal.TEN.negate(), accountCurrency, callContext);
+                                                       BigDecimal.TEN.negate(), accountCurrency, null, callContext);
             Assert.fail("Should not have been able to adjust an item with a negative amount");
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_SHOULD_BE_POSITIVE.getCode());
@@ -339,7 +355,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         // Adjust the invoice for the full amount
         final BigDecimal creditAmount = BigDecimal.TEN;
         final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCreditForInvoice(accountId, null, creditAmount,
-                                                                                    clock.getUTCToday(), accountCurrency, callContext);
+                                                                                    clock.getUTCToday(), accountCurrency, null, callContext);
 
         final UUID invoiceId = creditInvoiceItem.getInvoiceId();
         Invoice creditInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);

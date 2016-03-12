@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.overdue.service.DefaultOverdueService;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -48,10 +49,10 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     public DefaultOverduePosterBase(final NotificationQueueService notificationQueueService,
-                                    final IDBI dbi, final Clock clock,
-                                    final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+                                    final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+                                    final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     @Override

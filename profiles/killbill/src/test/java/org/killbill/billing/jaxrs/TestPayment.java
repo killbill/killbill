@@ -80,7 +80,11 @@ public class TestPayment extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testCreateRetrievePayment() throws Exception {
         final Account account = createAccountWithDefaultPaymentMethod();
-        testCreateRetrievePayment(account, null, UUID.randomUUID().toString(), 1);
+        final String externalPaymentKey = UUID.randomUUID().toString();
+        final UUID paymentId = testCreateRetrievePayment(account, null, externalPaymentKey, 1);
+
+        final Payment payment = killBillClient.getPaymentByExternalKey(externalPaymentKey);
+        assertEquals(payment.getPaymentId(), paymentId);
 
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), account.getAccountId(), false, PLUGIN_NAME, new PaymentMethodPluginDetail());
         final PaymentMethod nonDefaultPaymentMethod = killBillClient.createPaymentMethod(paymentMethodJson, createdBy, reason, comment);
@@ -156,7 +160,7 @@ public class TestPayment extends TestJaxrsBase {
         refundTransaction.setTransactionExternalKey(refundTransactionExternalKey);
         refundTransaction.setAmount(purchaseAmount);
         refundTransaction.setCurrency(authPayment.getCurrency());
-        final Payment refundPayment = killBillClient.refundPayment(refundTransaction, pluginProperties, createdBy, reason, comment);
+        final Payment refundPayment = killBillClient.refundPayment(refundTransaction, null, pluginProperties, createdBy, reason, comment);
         verifyPaymentWithPendingRefund(account, paymentMethodId, paymentExternalKey, purchaseTransactionExternalKey, purchaseAmount, refundTransactionExternalKey, refundPayment);
 
         // We cannot complete using just the payment id as JAX-RS doesn't know which transaction to complete
@@ -221,7 +225,7 @@ public class TestPayment extends TestJaxrsBase {
 
         // Void payment using externalKey
         final String voidTransactionExternalKey = UUID.randomUUID().toString();
-        final Payment voidPayment = killBillClient.voidPayment(null, paymentExternalKey, voidTransactionExternalKey, ImmutableMap.<String, String>of(), createdBy, reason, comment);
+        final Payment voidPayment = killBillClient.voidPayment(null, paymentExternalKey, voidTransactionExternalKey, null, ImmutableMap.<String, String>of(), createdBy, reason, comment);
         verifyPaymentTransaction(accountJson, voidPayment.getPaymentId(), paymentExternalKey, voidPayment.getTransactions().get(1),
                                  voidTransactionExternalKey, null, "VOID", "SUCCESS");
     }
@@ -244,7 +248,7 @@ public class TestPayment extends TestJaxrsBase {
         Assert.assertNull(payment);
     }
 
-    private void testCreateRetrievePayment(final Account account, @Nullable final UUID paymentMethodId,
+    private UUID testCreateRetrievePayment(final Account account, @Nullable final UUID paymentMethodId,
                                            final String paymentExternalKey, final int paymentNb) throws Exception {
         // Authorization
         final String authTransactionExternalKey = UUID.randomUUID().toString();
@@ -290,6 +294,8 @@ public class TestPayment extends TestJaxrsBase {
                       BigDecimal.TEN, BigDecimal.TEN, new BigDecimal("2"), new BigDecimal("2"), 4, paymentNb);
         verifyPaymentTransaction(account, authPayment.getPaymentId(), paymentExternalKey, refundPayment.getTransactions().get(3),
                                  refundTransactionExternalKey, refundTransaction.getAmount(), "REFUND", "SUCCESS");
+
+        return authPayment.getPaymentId();
     }
 
     private Payment createVerifyTransaction(final Account account,

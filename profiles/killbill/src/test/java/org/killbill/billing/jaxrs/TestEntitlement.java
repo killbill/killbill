@@ -145,26 +145,11 @@ public class TestEntitlement extends TestJaxrsBase {
         subscription.setBillingPeriod(BillingPeriod.ANNUAL);
         subscription.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        try {
-            killBillClient.updateSubscription(subscription, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
-            Assert.fail();
-        } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
-        }
+        assertNull(killBillClient.updateSubscription(subscription, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment));
 
-        try {
-            killBillClient.cancelSubscription(subscriptionId, createdBy, reason, comment);
-            Assert.fail();
-        } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
-        }
+        killBillClient.cancelSubscription(subscriptionId, createdBy, reason, comment);
 
-        try {
-            killBillClient.getSubscription(subscriptionId);
-            Assert.fail();
-        } catch (final KillBillClientException e) {
-            Assert.assertEquals(e.getBillingException().getClassName(), "org.killbill.billing.util.callcontext.InternalCallContextFactory$ObjectDoesNotExist");
-        }
+        assertNull(killBillClient.getSubscription(subscriptionId));
     }
 
     @Test(groups = "slow", description = "Can override billing policy on change")
@@ -221,7 +206,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription subscription = killBillClient.createSubscription(input, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
     }
@@ -261,12 +246,12 @@ public class TestEntitlement extends TestJaxrsBase {
         subscriptions.add(base);
         subscriptions.add(addOn1);
         subscriptions.add(addOn2);
-        final Bundle bundle = killBillClient.createSubscriptionWithAddOns(subscriptions, initialDate, 10, "createdBy", "", "");
+        final Bundle bundle = killBillClient.createSubscriptionWithAddOns(subscriptions, initialDate.toLocalDate(), 10, "createdBy", "", "");
         assertNotNull(bundle);
         assertEquals(bundle.getExternalKey(), "base");
         assertEquals(bundle.getSubscriptions().size(), 3);
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 1);
     }
 
@@ -283,7 +268,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setProductCategory(ProductCategory.BASE);
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        final Subscription entitlementJson = killBillClient.createSubscription(input, initialDate.plusMonths(1), -1, createdBy, reason, comment);
+        final Subscription entitlementJson = killBillClient.createSubscription(input, initialDate.toLocalDate().plusMonths(1), -1, createdBy, reason, comment);
 
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());

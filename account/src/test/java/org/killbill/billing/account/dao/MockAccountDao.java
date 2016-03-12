@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,12 +18,11 @@
 
 package org.killbill.billing.account.dao;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import org.testng.Assert;
 
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.ErrorCode;
@@ -33,8 +34,6 @@ import org.killbill.billing.account.api.DefaultMutableAccountData;
 import org.killbill.billing.account.api.user.DefaultAccountChangeEvent;
 import org.killbill.billing.account.api.user.DefaultAccountCreationEvent;
 import org.killbill.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.AccountChangeInternalEvent;
@@ -42,6 +41,10 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.clock.Clock;
+import org.testng.Assert;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -53,10 +56,12 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
     private final MockEntityDaoBase<AccountModelDao, Account, AccountApiException> accountSqlDao = new MockEntityDaoBase<AccountModelDao, Account, AccountApiException>();
     private final MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException> accountEmailSqlDao = new MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException>();
     private final PersistentBus eventBus;
+    private final Clock clock;
 
     @Inject
-    public MockAccountDao(final PersistentBus eventBus) {
+    public MockAccountDao(final PersistentBus eventBus, final Clock clock) {
         this.eventBus = eventBus;
+        this.clock = clock;
     }
 
     @Override
@@ -82,8 +87,8 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
         final long tenantRecordId = context == null ? InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID
                                                     : context.getTenantRecordId();
         final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), currentAccount, account,
-                                                                                     accountRecordId, tenantRecordId, UUID.randomUUID()
-        );
+                                                                                     accountRecordId, tenantRecordId, UUID.randomUUID(),
+                                                                                     clock.getUTCNow());
         if (changeEvent.hasChanges()) {
             try {
                 eventBus.post(changeEvent);
@@ -107,7 +112,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
 
     @Override
     public Pagination<AccountModelDao> searchAccounts(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
-        final List<AccountModelDao> results = new LinkedList<AccountModelDao>();
+        final Collection<AccountModelDao> results = new LinkedList<AccountModelDao>();
         int maxNbRecords = 0;
         for (final AccountModelDao account : getAll(context)) {
             maxNbRecords++;
@@ -146,7 +151,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
     public void addEmail(final AccountEmailModelDao email, final InternalCallContext context) {
         try {
             accountEmailSqlDao.create(email, context);
-        } catch (BillingExceptionBase billingExceptionBase) {
+        } catch (final BillingExceptionBase billingExceptionBase) {
             Assert.fail(billingExceptionBase.toString());
         }
     }

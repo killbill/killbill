@@ -18,6 +18,7 @@ package org.killbill.billing.entitlement.api;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.BusEventBase;
 
@@ -28,6 +29,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class DefaultBlockingTransitionInternalEvent extends BusEventBase implements BlockingTransitionInternalEvent {
 
     private final UUID blockableId;
+    private final String stateName;
+    private final String service;
+    private final DateTime effectiveDate;
     private final BlockingStateType blockingType;
     private final Boolean isTransitionedToBlockedBilling;
     private final Boolean isTransitionedToUnblockedBilling;
@@ -36,6 +40,9 @@ public class DefaultBlockingTransitionInternalEvent extends BusEventBase impleme
 
     @JsonCreator
     public DefaultBlockingTransitionInternalEvent(@JsonProperty("blockableId") final UUID blockableId,
+                                                  @JsonProperty("stateName") final String stateName,
+                                                  @JsonProperty("service") final String service,
+                                                  @JsonProperty("effectiveDate") final DateTime effectiveDate,
                                                   @JsonProperty("blockingType") final BlockingStateType blockingType,
                                                   @JsonProperty("isTransitionedToBlockedBilling") final Boolean transitionedToBlockedBilling,
                                                   @JsonProperty("isTransitionedToUnblockedBilling") final Boolean transitionedToUnblockedBilling,
@@ -47,6 +54,9 @@ public class DefaultBlockingTransitionInternalEvent extends BusEventBase impleme
         super(searchKey1, searchKey2, userToken);
         this.blockableId = blockableId;
         this.blockingType = blockingType;
+        this.service = service;
+        this.stateName = stateName;
+        this.effectiveDate = effectiveDate;
         isTransitionedToBlockedBilling = transitionedToBlockedBilling;
         isTransitionedToUnblockedBilling = transitionedToUnblockedBilling;
         isTransitionedToBlockedEntitlement = transitionedToBlockedEntitlement;
@@ -61,6 +71,21 @@ public class DefaultBlockingTransitionInternalEvent extends BusEventBase impleme
     @Override
     public BlockingStateType getBlockingType() {
         return blockingType;
+    }
+
+    @Override
+    public String getStateName() {
+        return stateName;
+    }
+
+    @Override
+    public String getService() {
+        return service;
+    }
+
+    @Override
+    public DateTime getEffectiveDate() {
+        return effectiveDate;
     }
 
     @JsonProperty("isTransitionedToBlockedBilling")
@@ -110,6 +135,15 @@ public class DefaultBlockingTransitionInternalEvent extends BusEventBase impleme
         if (blockingType != that.blockingType) {
             return false;
         }
+        if (stateName != null ? !stateName.equals(that.stateName) : that.stateName != null) {
+            return false;
+        }
+        if (service != null ? !service.equals(that.service) : that.service != null) {
+            return false;
+        }
+        if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
+            return false;
+        }
         if (isTransitionedToBlockedBilling != null ? !isTransitionedToBlockedBilling.equals(that.isTransitionedToBlockedBilling) : that.isTransitionedToBlockedBilling != null) {
             return false;
         }
@@ -130,6 +164,9 @@ public class DefaultBlockingTransitionInternalEvent extends BusEventBase impleme
     public int hashCode() {
         int result = blockableId != null ? blockableId.hashCode() : 0;
         result = 31 * result + (blockingType != null ? blockingType.hashCode() : 0);
+        result = 31 * result + (stateName != null ? stateName.hashCode() : 0);
+        result = 31 * result + (service != null ? service.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (isTransitionedToBlockedBilling != null ? isTransitionedToBlockedBilling.hashCode() : 0);
         result = 31 * result + (isTransitionedToUnblockedBilling != null ? isTransitionedToUnblockedBilling.hashCode() : 0);
         result = 31 * result + (isTransitionedToBlockedEntitlement != null ? isTransitionedToBlockedEntitlement.hashCode() : 0);
@@ -142,6 +179,9 @@ public class DefaultBlockingTransitionInternalEvent extends BusEventBase impleme
         final StringBuilder sb = new StringBuilder("DefaultBlockingTransitionInternalEvent{");
         sb.append("blockableId=").append(blockableId);
         sb.append(", blockingType=").append(blockingType);
+        sb.append(", stateName=").append(stateName);
+        sb.append(", service=").append(service);
+        sb.append(", effectiveDate=").append(effectiveDate);
         sb.append(", isTransitionedToBlockedBilling=").append(isTransitionedToBlockedBilling);
         sb.append(", isTransitionedToUnblockedBilling=").append(isTransitionedToUnblockedBilling);
         sb.append(", isTransitionedToBlockedEntitlement=").append(isTransitionedToBlockedEntitlement);

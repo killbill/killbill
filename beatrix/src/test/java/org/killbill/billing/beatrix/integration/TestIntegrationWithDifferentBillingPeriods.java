@@ -58,12 +58,12 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         final String productName = "Shotgun";
 
         //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
         //
 
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
@@ -72,7 +72,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         clock.addDays(31);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 2);
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
@@ -85,7 +85,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
 
         changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.ANNUAL, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE,  NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 3);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -113,12 +113,12 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         final String productName = "Pistol";
 
         //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
         //
 
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
@@ -127,7 +127,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         clock.addDays(31);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 2);
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
@@ -140,7 +140,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
 
         changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.QUARTERLY, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 3);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -153,12 +153,12 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         // Move to 1020-08-01
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(20);
         clock.addMonths(2);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 4);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -182,12 +182,12 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         final String productName = "Shotgun";
 
         //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
         //
 
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
@@ -199,11 +199,11 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         // 2012-5-12
         clock.addDays(10);
 
-        busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
         entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 3);
 
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -218,11 +218,11 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         // 2012-6-4
         clock.addDays(23);
 
-        busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 4);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -230,11 +230,11 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 4), new LocalDate(2012, 6, 4), InvoiceItemType.CBA_ADJ, new BigDecimal("-2327.62")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addYears(1);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 5);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -257,12 +257,12 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         final String productName = "Shotgun";
 
         //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
         //
 
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
@@ -279,13 +279,13 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         // 2012-5-12
         clock.addDays(10);
 
-        busHandler.pushExpectedEvents(NextEvent.PAUSE, NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
         entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // 2012-6-4
         clock.addDays(23);
-        busHandler.pushExpectedEvents(NextEvent.RESUME, NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
         entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -294,7 +294,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 3);
 
 
@@ -307,11 +307,11 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 12), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2327.62")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addYears(1);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 4);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -337,9 +337,9 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         clock.setDeltaFromReality(startDate.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
 
         // Create subscription and check we get the initial invoice for the 30 days TRIAL
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of TRIAL and verify we invioice for a full year
@@ -347,7 +347,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         clock.addDays(30);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 2);
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2015, 1, 1), new LocalDate(2016, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
@@ -363,7 +363,7 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         clock.addDays(73);
 
         changeEntitlementAndCheckForCompletion(bpEntitlement, "Assault-Rifle", BillingPeriod.ANNUAL, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE,  NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 3);
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2015, 3, 15), new LocalDate(2016, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("5770.44")),

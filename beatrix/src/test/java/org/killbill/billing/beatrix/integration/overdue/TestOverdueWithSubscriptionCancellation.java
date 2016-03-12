@@ -30,7 +30,6 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.testng.annotations.Test;
@@ -70,24 +69,26 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
     public void testCheckSubscriptionCancellation() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
 
-        final DefaultEntitlement addOn1 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Holster", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement addOn1 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Holster", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
-        final DefaultEntitlement addOn2 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Holster", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement addOn2 = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Holster", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         // Cancel addOn1 one day after
         clock.addDays(1);
-        cancelEntitlementAndCheckForCompletion(addOn1, clock.getUTCNow(), NextEvent.BLOCK, NextEvent.CANCEL);
+        cancelEntitlementAndCheckForCompletion(addOn1, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
 
         // DAY 30 have to get out of trial before first payment
-        addDaysAndCheckForCompletion(29, NextEvent.PHASE,  NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(29, NextEvent.PHASE,  NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
 
@@ -116,31 +117,33 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // 2012-05-01T00:03:53.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
 
-        final DefaultEntitlement baseEntitlement2 = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey2", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement2 = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey2", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final SubscriptionBundle bundle2 = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement2.getId(), new LocalDate(2012, 5, 1), callContext);
 
-        final DefaultEntitlement baseEntitlement3 = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey3", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement3 = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey3", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final SubscriptionBundle bundle3 = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement2.getId(), new LocalDate(2012, 5, 1), callContext);
 
         // Cancel bundle 2 one day after (2012-05-02)
         clock.addDays(1);
-        cancelEntitlementAndCheckForCompletion(baseEntitlement2, clock.getUTCNow(), NextEvent.BLOCK, NextEvent.CANCEL);
+        cancelEntitlementAndCheckForCompletion(baseEntitlement2, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
         final SubscriptionBase cancelledBaseSubscription2 = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement2.getId(), callContext)).getSubscriptionBase();
         assertTrue(cancelledBaseSubscription2.getState() == EntitlementState.CANCELLED);
 
         // DAY 30 have to get out of trial before first payment (2012-05-31)
-        addDaysAndCheckForCompletion(29, NextEvent.PHASE,  NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        addDaysAndCheckForCompletion(29, NextEvent.PHASE,  NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         invoiceChecker.checkInvoice(account.getId(),
                                     4,
                                     callContext,

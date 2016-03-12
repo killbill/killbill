@@ -24,6 +24,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.util.account.AccountDateTimeUtils;
 
 public class MockAccountBuilder {
 
@@ -61,7 +62,6 @@ public class MockAccountBuilder {
     }
 
     public MockAccountBuilder(final AccountData data) {
-        this.id = UUID.randomUUID();
         this.address1(data.getAddress1());
         this.address2(data.getAddress2());
         this.billingCycleDayLocal(data.getBillCycleDayLocal());
@@ -83,6 +83,13 @@ public class MockAccountBuilder {
         this.postalCode(data.getPostalCode());
         this.stateOrProvince(data.getStateOrProvince());
         this.timeZone(data.getTimeZone());
+        if (data instanceof Account) {
+            this.id = ((Account) data).getId();
+            this.createdDate(((Account) data).getCreatedDate());
+            this.updatedDate(((Account) data).getUpdatedDate());
+        } else {
+            this.id = UUID.randomUUID();
+        }
     }
 
     public MockAccountBuilder externalKey(final String externalKey) {
@@ -219,109 +226,101 @@ public class MockAccountBuilder {
 
             @Override
             public String getName() {
-
                 return name;
             }
 
             @Override
             public Integer getFirstNameLength() {
-
                 return firstNameLength;
             }
 
             @Override
             public String getEmail() {
-
                 return email;
             }
 
             @Override
             public Integer getBillCycleDayLocal() {
-
                 return billingCycleDayLocal;
             }
 
             @Override
             public Currency getCurrency() {
-
                 return currency;
             }
 
             @Override
             public UUID getPaymentMethodId() {
-
                 return paymentMethodId;
             }
 
             @Override
             public DateTimeZone getTimeZone() {
-
                 return timeZone;
             }
 
             @Override
-            public String getLocale() {
+            public DateTimeZone getFixedOffsetTimeZone() {
+                return AccountDateTimeUtils.getFixedOffsetTimeZone(this);
+            }
 
+            @Override
+            public DateTime getReferenceTime() {
+                return AccountDateTimeUtils.getReferenceDateTime(this);
+            }
+
+            @Override
+            public String getLocale() {
                 return locale;
             }
 
             @Override
             public String getAddress1() {
-
                 return address1;
             }
 
             @Override
             public String getAddress2() {
-
                 return address2;
             }
 
             @Override
             public String getCompanyName() {
-
                 return companyName;
             }
 
             @Override
             public String getCity() {
-
                 return city;
             }
 
             @Override
             public String getStateOrProvince() {
-
                 return stateOrProvince;
             }
 
             @Override
             public String getPostalCode() {
-
                 return postalCode;
             }
 
             @Override
             public String getCountry() {
-
                 return country;
             }
 
             @Override
             public String getPhone() {
-
                 return phone;
             }
 
             @Override
             public Boolean isMigrated() {
-
                 return migrated;
             }
 
             @Override
             public Boolean isNotifiedForInvoices() {
-
                 return isNotifiedForInvoices;
             }
 

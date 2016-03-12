@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
@@ -91,7 +92,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
     }
 
     @Override
-    public void cancel(final Iterable<Entitlement> entitlements, final LocalDate effectiveDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
+    public void cancel(final Iterable<Entitlement> entitlements, @Nullable final LocalDate effectiveDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
         final CallContext callContext = internalCallContextFactory.createCallContext(internalCallContext);
 
         final ImmutableMap.Builder<BlockingState, Optional<UUID>> blockingStates = new ImmutableMap.Builder<BlockingState, Optional<UUID>>();
@@ -113,6 +114,8 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
                                                                                    entitlement.getExternalKey(),
                                                                                    null,
                                                                                    effectiveDate,
+                                                                                   null,
+                                                                                   billingPolicy,
                                                                                    properties,
                                                                                    callContext);
             pluginContexts.add(pluginContext);
@@ -216,8 +219,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         @Override
         public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-            final LocalDate effectiveLocalDate = new LocalDate(updatedPluginContext.getEffectiveDate(), entitlement.getAccountTimeZone());
-            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(effectiveLocalDate, entitlement.getSubscriptionBase().getStartDate(), internalCallContext);
+            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEntitlementEffectiveDate(), internalCallContext);
             // Avoid timing issues for IMM cancellations (we don't want an entitlement cancel date one second or so after the subscription cancel date or
             // add-ons cancellations computations won't work).
             if (effectiveDate.compareTo(entitlement.getSubscriptionBase().getEndDate()) > 0) {

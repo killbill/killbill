@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -39,8 +40,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -91,6 +90,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
@@ -298,51 +298,19 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-    protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) throws AccountApiException {
-        final LocalDate maybeResult = extractLocalDate(inputDate);
-        if (maybeResult != null) {
-            return maybeResult;
-        }
-        Account account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
-        final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
-        return toLocalDate(account, inputDateTime, context);
+    protected LocalDate toLocalDateDefaultToday(final UUID accountId, @Nullable final String inputDate, final TenantContext context) throws AccountApiException {
+        final Account account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
+        return toLocalDateDefaultToday(account, inputDate, context);
     }
 
-    protected LocalDate toLocalDate(final Account account, final String inputDate, final TenantContext context) {
-
-        final LocalDate maybeResult = extractLocalDate(inputDate);
-        if (maybeResult != null) {
-            return maybeResult;
-        }
-        final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
-        return toLocalDate(account, inputDateTime, context);
+    protected LocalDate toLocalDateDefaultToday(final Account account, @Nullable final String inputDate, final TenantContext context) {
+        // TODO Switch to cached normalized timezone when available
+        return MoreObjects.firstNonNull(toLocalDate(inputDate, context), clock.getToday(account.getTimeZone()));
     }
 
-    private LocalDate toLocalDate(final Account account, final DateTime inputDate, final TenantContext context) {
-        if (account == null && inputDate == null) {
-            // We have no inputDate and so accountTimeZone so we default to LocalDate as seen in UTC
-            return new LocalDate(clock.getUTCNow(), DateTimeZone.UTC);
-        } else if (account == null && inputDate != null) {
-            // We were given a date but can't get timezone, default in UTC
-            return new LocalDate(inputDate, DateTimeZone.UTC);
-        } else if (account != null && inputDate == null) {
-            // We have no inputDate but for accountTimeZone so default to LocalDate as seen in account timezone
-            return new LocalDate(clock.getUTCNow(), account.getTimeZone());
-        } else {
-            // Precise LocalDate as requested
-            return new LocalDate(inputDate, account.getTimeZone());
-        }
-    }
-
-    private LocalDate extractLocalDate(final String inputDate) {
-        if (inputDate != null) {
-            try {
-                final LocalDate localDate = LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
-                return localDate;
-            } catch (final IllegalArgumentException expectedAndIgnore) {
-            }
-        }
-        return null;
+    // API for subscription and invoice generation: keep null, the lower layers will default to now()
+    protected LocalDate toLocalDate(@Nullable final String inputDate, final TenantContext context) {
+        return inputDate == null ? null : LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
     }
 
     protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<PluginPropertyJson> pluginProperties) {
@@ -475,4 +443,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         Preconditions.checkArgument(actual == expected, errorMessage);
     }
 
+    protected void logDeprecationParameterWarningIfNeeded(@Nullable final String deprecatedParam, final String...replacementParams) {
+        if (deprecatedParam != null) {
+            log.warn(String.format("Parameter %s is being deprecated: Instead use parameters %s", deprecatedParam, Joiner.on(",").join(replacementParams)));
+        }
+    }
 }

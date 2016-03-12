@@ -73,12 +73,12 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     private final DateTime alignStartDate;
     private final DateTime bundleStartDate;
     private final ProductCategory category;
+    private final boolean migrated;
 
     //
     // Those can be modified through non User APIs, and a new SubscriptionBase
     // object would be created
     //
-    private final long activeVersion;
     private final DateTime chargedThroughDate;
 
     //
@@ -108,8 +108,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.alignStartDate = builder.getAlignStartDate();
         this.bundleStartDate = builder.getBundleStartDate();
         this.category = builder.getCategory();
-        this.activeVersion = builder.getActiveVersion();
         this.chargedThroughDate = builder.getChargedThroughDate();
+        this.migrated = builder.isMigrated();
     }
 
     // Used for API to make sure we have a clock and an apiService set before we return the object
@@ -121,8 +121,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.alignStartDate = internalSubscription.getAlignStartDate();
         this.bundleStartDate = internalSubscription.getBundleStartDate();
         this.category = internalSubscription.getCategory();
-        this.activeVersion = internalSubscription.getActiveVersion();
         this.chargedThroughDate = internalSubscription.getChargedThroughDate();
+        this.migrated = internalSubscription.isMigrated();
         this.transitions = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions());
         this.events = internalSubscription.getEvents();
     }
@@ -139,8 +139,19 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public EntitlementState getState() {
-        return (getPreviousTransition() == null) ? null
-                                                 : getPreviousTransition().getNextState();
+
+        final SubscriptionBaseTransition previousTransition = getPreviousTransition();
+        if (previousTransition != null) {
+            return previousTransition.getNextState();
+        }
+
+        final SubscriptionBaseTransition pendingTransition = getPendingTransition();
+        if (pendingTransition != null &&
+            (pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.CREATE) ||
+             pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.TRANSFER))) {
+            return EntitlementState.PENDING;
+        }
+        throw new IllegalStateException("Should return a valid EntitlementState");
     }
 
     @Override
@@ -148,15 +159,16 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         if (transitions == null) {
             return null;
         }
-        final SubscriptionBaseTransitionData initialTransition = (SubscriptionBaseTransitionData) transitions.get(0);
-        switch (initialTransition.getApiEventType()) {
-            case MIGRATE_BILLING:
-            case MIGRATE_ENTITLEMENT:
-                return EntitlementSourceType.MIGRATED;
-            case TRANSFER:
-                return EntitlementSourceType.TRANSFERRED;
-            default:
-                return EntitlementSourceType.NATIVE;
+        if (isMigrated()) {
+            return EntitlementSourceType.MIGRATED;
+        } else {
+            final SubscriptionBaseTransitionData initialTransition = (SubscriptionBaseTransitionData) transitions.get(0);
+            switch (initialTransition.getApiEventType()) {
+                case TRANSFER:
+                    return EntitlementSourceType.TRANSFERRED;
+                default:
+                    return EntitlementSourceType.NATIVE;
+            }
         }
     }
 
@@ -204,11 +216,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             }
         }
         return null;
-    }
-
-    public boolean recreate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate,
-                            final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.recreatePlan(this, spec, overrides, requestedDate, context);
     }
 
     @Override
@@ -353,6 +360,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
+    public boolean isMigrated() {
+        return migrated;
+    }
+
+    @Override
     public List<SubscriptionBaseTransition> getAllTransitions() {
         if (transitions == null) {
             return Collections.emptyList();
@@ -432,10 +444,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
-    public long getActiveVersion() {
-        return activeVersion;
-    }
-
     public List<SubscriptionBaseTransition> getBillingTransitions() {
 
         if (transitions == null) {
@@ -445,14 +453,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
                 Visibility.ALL, TimeLimit.ALL);
-        // Remove anything prior to first CREATE or MIGRATE_BILLING
+        // Remove anything prior to first CREATE
         boolean foundInitialEvent = false;
         while (it.hasNext()) {
             final SubscriptionBaseTransitionData curTransition = (SubscriptionBaseTransitionData) it.next();
             if (!foundInitialEvent) {
                 foundInitialEvent = curTransition.getEventType() == EventType.API_USER &&
                                     (curTransition.getApiEventType() == ApiEventType.CREATE ||
-                                     curTransition.getApiEventType() == ApiEventType.MIGRATE_BILLING ||
                                      curTransition.getApiEventType() == ApiEventType.TRANSFER);
             }
             if (foundInitialEvent) {
@@ -477,10 +484,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         while (it.hasNext()) {
             final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
             if (cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT) {
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
                 return cur;
             }
         }
@@ -530,9 +535,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             if (cur.getTransitionType() == SubscriptionBaseTransitionType.PHASE
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER
                 || cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE
-                || cur.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT) {
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
                 return cur.getEffectiveTransitionTime();
             }
         }
@@ -555,7 +558,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         EntitlementState nextState = null;
         String nextPlanName = null;
         String nextPhaseName = null;
-        String nextPriceListName = null;
 
         UUID prevEventId = null;
         DateTime prevCreatedDate = null;
@@ -568,7 +570,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         for (final SubscriptionBaseEvent cur : inputEvents) {
 
-            if (!cur.isActive() || cur.getActiveVersion() < activeVersion) {
+            if (!cur.isActive()) {
                 continue;
             }
 
@@ -593,10 +595,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
                     switch (apiEventType) {
                         case TRANSFER:
-                        case MIGRATE_BILLING:
-                        case MIGRATE_ENTITLEMENT:
                         case CREATE:
-                        case RE_CREATE:
                             prevEventId = null;
                             prevCreatedDate = null;
                             previousState = null;
@@ -606,12 +605,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             nextState = EntitlementState.ACTIVE;
                             nextPlanName = userEV.getEventPlan();
                             nextPhaseName = userEV.getEventPlanPhase();
-                            nextPriceListName = userEV.getPriceList();
                             break;
                         case CHANGE:
                             nextPlanName = userEV.getEventPlan();
                             nextPhaseName = userEV.getEventPlanPhase();
-                            nextPriceListName = userEV.getPriceList();
                             break;
                         case CANCEL:
                             nextState = EntitlementState.CANCELLED;
@@ -636,10 +633,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
             nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
             nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getEffectiveDate(), getAlignStartDate()) : null;
-
-            // See issue https://github.com/killbill/killbill/issues/464
-            final DateTime catalogEffectiveDateForPriceList = transitions.isEmpty() ? cur.getEffectiveDate() : transitions.get(0).getEffectiveTransitionTime();
-            nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, catalogEffectiveDateForPriceList) : null;
+            nextPriceList = (nextPlan != null) ? nextPlan.getPriceList() : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, cur.getType(), apiEventType,

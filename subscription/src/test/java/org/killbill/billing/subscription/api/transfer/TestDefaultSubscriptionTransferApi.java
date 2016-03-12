@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -64,10 +65,9 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         super.beforeMethod();
         final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
         final SubscriptionDao dao = Mockito.mock(SubscriptionDao.class);
-         final CatalogService catalogService = new MockCatalogService(new MockCatalog(), cacheControllerDispatcher);
+        final CatalogService catalogService = new MockCatalogService(new MockCatalog(), cacheControllerDispatcher);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
-        final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, new CacheControllerDispatcher());
         transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogService, apiService, internalCallContextFactory);
     }
 
@@ -104,71 +104,6 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         Assert.assertEquals(((ApiEventTransfer) events.get(0)).getApiEventType(), ApiEventType.TRANSFER);
     }
 
-    @Test(groups = "fast")
-    public void testEventsAfterTransferForMigratedBundle1() throws Exception {
-        // MIGRATE_ENTITLEMENT then MIGRATE_BILLING (both in the past)
-        final DateTime transferDate = clock.getUTCNow();
-        final DateTime migrateSubscriptionEventEffectiveDate = transferDate.minusDays(10);
-        final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate.plusDays(1);
-        final List<SubscriptionBaseEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
-
-        Assert.assertEquals(events.size(), 1);
-        Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
-        Assert.assertEquals(events.get(0).getEffectiveDate(), transferDate);
-        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getApiEventType(), ApiEventType.TRANSFER);
-    }
-
-    @Test(groups = "fast")
-    public void testEventsAfterTransferForMigratedBundle2() throws Exception {
-        // MIGRATE_ENTITLEMENT and MIGRATE_BILLING at the same time (both in the past)
-        final DateTime transferDate = clock.getUTCNow();
-        final DateTime migrateSubscriptionEventEffectiveDate = transferDate.minusDays(10);
-        final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate;
-        final List<SubscriptionBaseEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
-
-        Assert.assertEquals(events.size(), 1);
-        Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
-        Assert.assertEquals(events.get(0).getEffectiveDate(), transferDate);
-        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getApiEventType(), ApiEventType.TRANSFER);
-    }
-
-    @Test(groups = "fast")
-    public void testEventsAfterTransferForMigratedBundle3() throws Exception {
-        // MIGRATE_ENTITLEMENT then MIGRATE_BILLING (the latter in the future)
-        final DateTime transferDate = clock.getUTCNow();
-        final DateTime migrateSubscriptionEventEffectiveDate = transferDate.minusDays(10);
-        final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate.plusDays(20);
-        final List<SubscriptionBaseEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
-
-        Assert.assertEquals(events.size(), 1);
-        Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
-        Assert.assertEquals(events.get(0).getEffectiveDate(), transferDate);
-        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getApiEventType(), ApiEventType.TRANSFER);
-    }
-
-    @Test(groups = "fast")
-    public void testEventsAfterTransferForMigratedBundle4() throws Exception {
-        // MIGRATE_ENTITLEMENT then MIGRATE_BILLING (both in the future)
-        final DateTime transferDate = clock.getUTCNow();
-        final DateTime migrateSubscriptionEventEffectiveDate = transferDate.plusDays(10);
-        final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate.plusDays(20);
-        final List<SubscriptionBaseEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
-
-        Assert.assertEquals(events.size(), 1);
-        Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
-        Assert.assertEquals(events.get(0).getEffectiveDate(), migrateSubscriptionEventEffectiveDate);
-        Assert.assertEquals(((ApiEventTransfer) events.get(0)).getApiEventType(), ApiEventType.TRANSFER);
-    }
-
-    private List<SubscriptionBaseEvent> transferBundle(final DateTime migrateSubscriptionEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate,
-                                                       final DateTime transferDate) throws SubscriptionBaseTransferApiException {
-        final ImmutableList<ExistingEvent> existingEvents = createMigrateEvents(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate);
-        final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();
-        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
-
-        return transferApi.toEvents(existingEvents, subscription, transferDate, internalCallContext);
-    }
-
     private ExistingEvent createEvent(final DateTime eventEffectiveDate, final SubscriptionBaseTransitionType subscriptionTransitionType) {
         return new ExistingEvent() {
             @Override
@@ -199,94 +134,10 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             }
 
             @Override
-            public DateTime getRequestedDate() {
-                return getEffectiveDate();
-            }
-
-            @Override
             public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                 return subscriptionTransitionType;
             }
         };
     }
 
-    private ImmutableList<ExistingEvent> createMigrateEvents(final DateTime migrateSubscriptionEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate) {
-        final ExistingEvent migrateEntitlementEvent = new ExistingEvent() {
-            @Override
-            public DateTime getEffectiveDate() {
-                return migrateSubscriptionEventEffectiveDate;
-            }
-
-            @Override
-            public String getPlanName() {
-                return "BicycleTrialEvergreen1USD";
-            }
-
-            @Override
-            public String getPlanPhaseName() {
-                return "BicycleTrialEvergreen1USD-trial";
-            }
-
-            @Override
-            public UUID getEventId() {
-                return UUID.randomUUID();
-            }
-
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-                return new PlanPhaseSpecifier("BicycleTrialEvergreen1USD", ProductCategory.BASE, BillingPeriod.NO_BILLING_PERIOD,
-                                              PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.FIXEDTERM);
-            }
-
-            @Override
-            public DateTime getRequestedDate() {
-                return getEffectiveDate();
-            }
-
-            @Override
-            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-                return SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT;
-            }
-        };
-
-        final ExistingEvent migrateBillingEvent = new ExistingEvent() {
-
-            @Override
-            public DateTime getEffectiveDate() {
-                return migrateBillingEventEffectiveDate;
-            }
-
-            @Override
-            public String getPlanName() {
-                return migrateEntitlementEvent.getPlanName();
-            }
-
-            @Override
-            public String getPlanPhaseName() {
-                return migrateEntitlementEvent.getPlanPhaseName();
-            }
-
-            @Override
-            public UUID getEventId() {
-                return UUID.randomUUID();
-            }
-
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-                return migrateEntitlementEvent.getPlanPhaseSpecifier();
-            }
-
-            @Override
-            public DateTime getRequestedDate() {
-                return migrateEntitlementEvent.getRequestedDate();
-            }
-
-            @Override
-            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-                return SubscriptionBaseTransitionType.MIGRATE_BILLING;
-            }
-        };
-
-        return ImmutableList.<ExistingEvent>of(migrateEntitlementEvent, migrateBillingEvent);
-    }
 }

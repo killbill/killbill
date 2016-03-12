@@ -84,8 +84,8 @@ public class DefaultOverdueInternalApi implements OverdueInternalApi {
     @Override
     public OverdueState getOverdueStateFor(final ImmutableAccountData overdueable, final TenantContext context) throws OverdueException {
         try {
-            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
-            final BlockingState blockingStateForService = accessApi.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContextFactory.createInternalTenantContext(context));
+            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(overdueable.getId(), context);
+            final BlockingState blockingStateForService = accessApi.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalTenantContext);
             final String stateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
             final OverdueConfig overdueConfig = overdueConfigCache.getOverdueConfig(internalTenantContext);
             final OverdueStateSet states = ((DefaultOverdueConfig) overdueConfig).getOverdueStatesAccount();
@@ -99,7 +99,7 @@ public class DefaultOverdueInternalApi implements OverdueInternalApi {
     public BillingState getBillingStateFor(final ImmutableAccountData overdueable, final TenantContext context) throws OverdueException {
         log.debug("Billing state of of {} requested", overdueable.getId());
 
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(overdueable.getId(), context);
         final OverdueWrapper wrapper = factory.createOverdueWrapperFor(overdueable, internalTenantContext);
         return wrapper.billingState(internalTenantContext);
     }

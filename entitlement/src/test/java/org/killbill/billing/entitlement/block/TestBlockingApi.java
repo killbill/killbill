@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -88,8 +88,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final boolean blockEntitlement = false;
         final boolean blockBilling = false;
 
-        final Account account = accountApi.createAccount(getAccountData(7), callContext);
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+        final Account account = createAccount(getAccountData(7));
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
@@ -118,7 +117,6 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertEquals(history.get(1).getStateName(), overdueStateName2);
     }
 
-
     @Test(groups = "slow")
     public void testBlockingAcrossTypes() throws Exception {
 
@@ -130,8 +128,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final boolean blockEntitlement = true;
         final boolean blockBilling = false;
 
-        final Account account = accountApi.createAccount(getAccountData(7), callContext);
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+        final Account account = createAccount(getAccountData(7));
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, stateNameBlock, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
@@ -140,8 +137,8 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
-        testListener.pushExpectedEvent(NextEvent.CREATE);
-        Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
@@ -149,7 +146,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Add blocking at bundle level.
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameBlock, service, clock.getUTCToday(), blockBilling, blockEntitlement, blockChange, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameBlock, service, null, blockBilling, blockEntitlement, blockChange, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
 
@@ -170,7 +167,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Remove blocking at bundle level.
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameUnBlock, service, clock.getUTCToday(), false, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameUnBlock, service, null, false, false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);

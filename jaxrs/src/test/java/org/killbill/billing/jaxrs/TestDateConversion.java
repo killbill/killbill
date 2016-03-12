@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -55,22 +57,18 @@ public class TestDateConversion extends JaxRsResourceBase {
     //
     // BASIC Tests to understand how toLocalDate converts different inputs (null, LocalDate, DateTime)
     //
-    @Test(groups = "fast")
-    public void testDateTimeConversion() throws AccountApiException {
-        final UUID accountId = setupAccount(DateTimeZone.forOffsetHours(-8));
-        final String input = "2013-08-26T06:50:20Z";
-        final LocalDate result = toLocalDate(accountId, input, null);
-        Assert.assertTrue(result.compareTo(new LocalDate(2013, 8, 25)) == 0);
-    }
-
 
     @Test(groups = "fast")
     public void testNullConversion() throws AccountApiException {
+        final String input = null;
+
+        final LocalDate result = toLocalDate(input, null);
+        Assert.assertNull(result);
+
         final UUID accountId = setupAccount(DateTimeZone.forOffsetHours(-8));
         ((ClockMock) clock).setTime(new DateTime("2013-08-26T06:50:20Z"));
-        final String input = null;
-        final LocalDate result = toLocalDate(accountId, input, null);
-        Assert.assertTrue(result.compareTo(new LocalDate(2013, 8, 25)) == 0);
+        final LocalDate result2 = toLocalDateDefaultToday(accountId, input, null);
+        Assert.assertTrue(result2.compareTo(new LocalDate(2013, 8, 25)) == 0);
         ((ClockMock) clock).resetDeltaFromReality();
     }
 
@@ -78,7 +76,7 @@ public class TestDateConversion extends JaxRsResourceBase {
     public void testLocalDateConversion() throws AccountApiException {
         final UUID accountId = setupAccount(DateTimeZone.forOffsetHours(-8));
         final String input = "2013-08-25";
-        final LocalDate result = toLocalDate(accountId, input, null);
+        final LocalDate result = toLocalDate(input, null);
         Assert.assertTrue(result.compareTo(new LocalDate(2013, 8, 25)) == 0);
     }
 

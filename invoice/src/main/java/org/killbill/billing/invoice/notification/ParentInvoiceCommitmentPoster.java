@@ -25,7 +25,6 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -52,7 +51,6 @@ public class ParentInvoiceCommitmentPoster {
     public void insertParentInvoiceFromTransactionInternal(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                            final UUID invoiceId,
                                                            final DateTime futureNotificationTime,
-                                                           final AccountDateAndTimeZoneContext accountDateAndTimeZoneContext,
                                                            final InternalCallContext internalCallContext) {
         final NotificationQueue commitInvoiceQueue;
         try {
@@ -65,8 +63,8 @@ public class ParentInvoiceCommitmentPoster {
                 @Override
                 public boolean apply(final NotificationEventWithMetadata<ParentInvoiceCommitmentNotificationKey> input) {
 
-                    final LocalDate notificationEffectiveLocaleDate = accountDateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(futureNotificationTime);
-                    final LocalDate eventEffectiveLocaleDate = accountDateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(input.getEffectiveDate());
+                    final LocalDate notificationEffectiveLocaleDate = internalCallContext.toLocalDate(futureNotificationTime);
+                    final LocalDate eventEffectiveLocaleDate = internalCallContext.toLocalDate(input.getEffectiveDate());
 
                     return notificationEffectiveLocaleDate.compareTo(eventEffectiveLocaleDate) == 0;
                 }

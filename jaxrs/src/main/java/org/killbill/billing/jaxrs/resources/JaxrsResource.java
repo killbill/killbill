@@ -67,11 +67,14 @@ public interface JaxrsResource {
     public static final String QUERY_EXTERNAL_KEY = "externalKey";
     public static final String QUERY_API_KEY = "apiKey";
     public static final String QUERY_REQUESTED_DT = "requestedDate";
+    public static final String QUERY_ENTITLEMENT_REQUESTED_DT = "entitlementDate";
+    public static final String QUERY_BILLING_REQUESTED_DT = "billingDate";
     public static final String QUERY_CALL_COMPLETION = "callCompletion";
     public static final String QUERY_USE_REQUESTED_DATE_FOR_BILLING = "useRequestedDateForBilling";
     public static final String QUERY_CALL_TIMEOUT = "callTimeoutSec";
     public static final String QUERY_TARGET_DATE = "targetDate";
     public static final String QUERY_BILLING_POLICY = "billingPolicy";
+    public static final String QUERY_MIGRATED = "migrated";
     public static final String QUERY_ENTITLEMENT_POLICY = "entitlementPolicy";
     public static final String QUERY_SEARCH_OFFSET = "offset";
     public static final String QUERY_SEARCH_LIMIT = "limit";
@@ -82,6 +85,7 @@ public interface JaxrsResource {
     public static final String QUERY_ACCOUNT_ID = "accountId";
 
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
+    public static final String QUERY_WITH_MIGRATION_INVOICES = "withMigrationInvoices";
     public static final String QUERY_UNPAID_INVOICES_ONLY = "unpaidInvoicesOnly";
 
     public static final String QUERY_PAYMENT_EXTERNAL = "externalPayment";
@@ -241,6 +245,7 @@ public interface JaxrsResource {
     public static final String COMMIT_INVOICE = "commitInvoice";
 
     public static final String COMBO = "combo";
+    public static final String MIGRATION = "migration";
 
     public static final String CHILDREN = "children";
     public static final String CHILDREN_PATH = PREFIX + "/" + CHILDREN;

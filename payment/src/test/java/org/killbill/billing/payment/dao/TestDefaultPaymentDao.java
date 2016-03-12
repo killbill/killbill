@@ -1,8 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
@@ -36,27 +37,27 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testPaymentCRUD() throws Exception {
         for (int i = 0; i < 3; i++) {
-            testPaymentCRUDForAccount(UUID.randomUUID(), i + 1);
+            testPaymentCRUDForAccount();
         }
     }
 
-    public void testPaymentCRUDForAccount(final UUID accountId, final int accountNb) {
-        // We need to create specific call contexts to make the account_record_id magic work
-        final InternalCallContext accountCallContext = new InternalCallContext(internalCallContext, (long) accountNb);
+    public void testPaymentCRUDForAccount() throws Exception {
+        final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
+        final UUID accountId = account.getId();
 
         final PaymentModelDao specifiedFirstPaymentModelDao = generatePaymentModelDao(accountId);
         final PaymentTransactionModelDao specifiedFirstPaymentTransactionModelDao = generatePaymentTransactionModelDao(specifiedFirstPaymentModelDao.getId());
 
         // Create and verify the payment and transaction
-        final PaymentModelDao firstPaymentModelDao = paymentDao.insertPaymentWithFirstTransaction(specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao, accountCallContext);
+        final PaymentModelDao firstPaymentModelDao = paymentDao.insertPaymentWithFirstTransaction(specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao, internalCallContext);
         verifyPayment(firstPaymentModelDao, specifiedFirstPaymentModelDao);
-        verifyPaymentAndTransactions(accountCallContext, specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao);
+        verifyPaymentAndTransactions(internalCallContext, specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao);
 
         // Create a second transaction for the same payment
         final PaymentTransactionModelDao specifiedSecondPaymentTransactionModelDao = generatePaymentTransactionModelDao(specifiedFirstPaymentModelDao.getId());
-        final PaymentTransactionModelDao secondTransactionModelDao = paymentDao.updatePaymentWithNewTransaction(specifiedFirstPaymentTransactionModelDao.getPaymentId(), specifiedSecondPaymentTransactionModelDao, accountCallContext);
+        final PaymentTransactionModelDao secondTransactionModelDao = paymentDao.updatePaymentWithNewTransaction(specifiedFirstPaymentTransactionModelDao.getPaymentId(), specifiedSecondPaymentTransactionModelDao, internalCallContext);
         verifyPaymentTransaction(secondTransactionModelDao, specifiedSecondPaymentTransactionModelDao);
-        verifyPaymentAndTransactions(accountCallContext, specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao, specifiedSecondPaymentTransactionModelDao);
+        verifyPaymentAndTransactions(internalCallContext, specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao, specifiedSecondPaymentTransactionModelDao);
 
         // Update the latest transaction
         final BigDecimal processedAmount = new BigDecimal("902341.23232");
@@ -74,9 +75,9 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                            processedCurrency,
                                                            gatewayErrorCode,
                                                            gatewayErrorMsg,
-                                                           accountCallContext);
+                                                           internalCallContext);
 
-        final PaymentTransactionModelDao updatedSecondPaymentTransactionModelDao = paymentDao.getPaymentTransaction(specifiedSecondPaymentTransactionModelDao.getId(), accountCallContext);
+        final PaymentTransactionModelDao updatedSecondPaymentTransactionModelDao = paymentDao.getPaymentTransaction(specifiedSecondPaymentTransactionModelDao.getId(), internalCallContext);
         Assert.assertEquals(updatedSecondPaymentTransactionModelDao.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
         Assert.assertEquals(updatedSecondPaymentTransactionModelDao.getGatewayErrorMsg(), gatewayErrorMsg);
         Assert.assertEquals(updatedSecondPaymentTransactionModelDao.getGatewayErrorMsg(), gatewayErrorMsg);
@@ -86,14 +87,14 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
             final PaymentModelDao paymentModelDao = generatePaymentModelDao(accountId);
             final PaymentTransactionModelDao paymentTransactionModelDao = generatePaymentTransactionModelDao(paymentModelDao.getId());
 
-            final PaymentModelDao insertedPaymentModelDao = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, paymentTransactionModelDao, accountCallContext);
+            final PaymentModelDao insertedPaymentModelDao = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, paymentTransactionModelDao, internalCallContext);
             verifyPayment(insertedPaymentModelDao, paymentModelDao);
 
             // Verify search APIs
             Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(paymentModelDao.getPaymentMethodId().toString(), 0L, 100L, internalCallContext).iterator()).size(), 1);
             Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(paymentModelDao.getExternalKey(), 0L, 100L, internalCallContext).iterator()).size(), 1);
         }
-        Assert.assertEquals(paymentDao.getPaymentsForAccount(specifiedFirstPaymentModelDao.getAccountId(), accountCallContext).size(), 4);
+        Assert.assertEquals(paymentDao.getPaymentsForAccount(specifiedFirstPaymentModelDao.getAccountId(), internalCallContext).size(), 4);
 
         // Verify search APIs
         Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(accountId.toString(), 0L, 100L, internalCallContext).iterator()).size(), 4);

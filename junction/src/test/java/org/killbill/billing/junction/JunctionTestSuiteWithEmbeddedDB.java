@@ -23,6 +23,9 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
@@ -40,7 +43,9 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
+import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.ClockMock;
 import org.slf4j.Logger;
@@ -82,6 +87,8 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     protected SubscriptionBaseService subscriptionBaseService;
     @Inject
     protected EntitlementService entitlementService;
+    @Inject
+    protected NonEntityDao nonEntityDao;
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
 
@@ -204,6 +211,14 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
                                        .paymentMethodId(UUID.randomUUID())
                                        .timeZone(DateTimeZone.UTC)
                                        .build();
+    }
+
+    protected Account createAccount(final AccountData accountData) throws AccountApiException {
+        final Account account = accountApi.createAccount(accountData, callContext);
+
+        refreshCallContext(account.getId());
+
+        return account;
     }
 
     protected void assertListenerStatus() {

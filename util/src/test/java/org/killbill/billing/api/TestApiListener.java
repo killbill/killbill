@@ -30,13 +30,13 @@ import javax.inject.Inject;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.BroadcastInternalEvent;
 import org.killbill.billing.events.CustomFieldEvent;
-import org.killbill.billing.events.EffectiveEntitlementInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
 import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
+import org.killbill.billing.events.NullInvoiceInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
@@ -100,12 +100,9 @@ public class TestApiListener {
     }
 
     public enum NextEvent {
-        MIGRATE_ENTITLEMENT,
-        MIGRATE_BILLING,
         BROADCAST_SERVICE,
         CREATE,
         TRANSFER,
-        RE_CREATE,
         CHANGE,
         CANCEL,
         UNCANCEL,
@@ -113,6 +110,7 @@ public class TestApiListener {
         RESUME,
         PHASE,
         BLOCK,
+        NULL_INVOICE,
         INVOICE,
         INVOICE_NOTIFICATION,
         INVOICE_ADJUSTMENT,
@@ -127,7 +125,6 @@ public class TestApiListener {
         CUSTOM_FIELD,
     }
 
-
     @Subscribe
     public void handleBroadcastEvents(final BroadcastInternalEvent event) {
         log.info(String.format("Got BroadcastInternalEvent event %s", event.toString()));
@@ -135,27 +132,11 @@ public class TestApiListener {
         notifyIfStackEmpty();
     }
 
-
     @Subscribe
     public void handleRepairSubscriptionEvents(final RepairSubscriptionInternalEvent event) {
         log.info(String.format("Got RepairSubscriptionEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
         notifyIfStackEmpty();
-    }
-
-    @Subscribe
-    public void handleEntitlementEvents(final EffectiveEntitlementInternalEvent eventEffective) {
-        log.info(String.format("Got entitlement event %s", eventEffective.toString()));
-        switch (eventEffective.getTransitionType()) {
-            case BLOCK_BUNDLE:
-                assertEqualsNicely(NextEvent.PAUSE);
-                notifyIfStackEmpty();
-                break;
-            case UNBLOCK_BUNDLE:
-                assertEqualsNicely(NextEvent.RESUME);
-                notifyIfStackEmpty();
-                break;
-        }
     }
 
     @Subscribe
@@ -173,20 +154,8 @@ public class TestApiListener {
                 assertEqualsNicely(NextEvent.TRANSFER);
                 notifyIfStackEmpty();
                 break;
-            case MIGRATE_ENTITLEMENT:
-                assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
-                notifyIfStackEmpty();
-                break;
-            case MIGRATE_BILLING:
-                assertEqualsNicely(NextEvent.MIGRATE_BILLING);
-                notifyIfStackEmpty();
-                break;
             case CREATE:
                 assertEqualsNicely(NextEvent.CREATE);
-                notifyIfStackEmpty();
-                break;
-            case RE_CREATE:
-                assertEqualsNicely(NextEvent.RE_CREATE);
                 notifyIfStackEmpty();
                 break;
             case CANCEL:
@@ -235,6 +204,13 @@ public class TestApiListener {
     public void handleInvoiceNotificationEvents(final InvoiceNotificationInternalEvent event) {
         log.info(String.format("Got Invoice notification event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE_NOTIFICATION);
+        notifyIfStackEmpty();
+    }
+
+    @Subscribe
+    public void handleNullInvoiceEvents(final NullInvoiceInternalEvent event) {
+        log.info(String.format("Got Null Invoice event %s", event.toString()));
+        assertEqualsNicely(NextEvent.NULL_INVOICE);
         notifyIfStackEmpty();
     }
 

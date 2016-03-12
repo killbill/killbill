@@ -55,13 +55,10 @@ public class VersionedCatalogLoader implements CatalogLoader {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.io.ICatalogLoader#loadDefaultCatalog(java.lang.String)
-      */
     @Override
     public VersionedCatalog loadDefaultCatalog(final String uriString) throws CatalogApiException {
         try {
-            List<URI> xmlURIs;
+            final List<URI> xmlURIs;
             if (uriString.endsWith(XML_EXTENSION)) { // Assume its an xml file
                 xmlURIs = new ArrayList<URI>();
                 xmlURIs.add(new URI(uriString));
@@ -77,7 +74,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
             }
             return result;
         } catch (Exception e) {
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog ", e);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog: ", e.getMessage());
         }
     }
 

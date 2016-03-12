@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Usage;
@@ -35,7 +37,6 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.usage.ContiguousIntervalConsumableInArrear.ConsumableInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -75,7 +76,7 @@ public class SubscriptionConsumableInArrear {
     private final LocalDate targetDate;
     private final List<RawUsage> rawSubscriptionUsage;
     private final LocalDate rawUsageStartDate;
-    private final AccountDateAndTimeZoneContext dateAndTimeZoneContext;
+    private final InternalTenantContext internalTenantContext;
 
     public SubscriptionConsumableInArrear(final UUID accountId,
                                           final UUID invoiceId,
@@ -83,14 +84,14 @@ public class SubscriptionConsumableInArrear {
                                           final List<RawUsage> rawUsage,
                                           final LocalDate targetDate,
                                           final LocalDate rawUsageStartDate,
-                                          final AccountDateAndTimeZoneContext dateAndTimeZoneContext) {
+                                          final InternalTenantContext internalTenantContext) {
 
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.subscriptionBillingEvents = subscriptionBillingEvents;
         this.targetDate = targetDate;
         this.rawUsageStartDate = rawUsageStartDate;
-        this.dateAndTimeZoneContext= dateAndTimeZoneContext;
+        this.internalTenantContext = internalTenantContext;
         // Extract raw usage for that subscription and sort it by date
         this.rawSubscriptionUsage = Ordering.<RawUsage>from(RAW_USAGE_DATE_COMPARATOR).sortedCopy(Iterables.filter(rawUsage, new Predicate<RawUsage>() {
             @Override
@@ -148,7 +149,7 @@ public class SubscriptionConsumableInArrear {
                 // Add inflight usage interval if non existent
                 ContiguousIntervalConsumableInArrear existingInterval = inFlightInArrearUsageIntervals.get(usage.getName());
                 if (existingInterval == null) {
-                    existingInterval = new ContiguousIntervalConsumableInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, targetDate, rawUsageStartDate, dateAndTimeZoneContext);
+                    existingInterval = new ContiguousIntervalConsumableInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, targetDate, rawUsageStartDate, internalTenantContext);
                     inFlightInArrearUsageIntervals.put(usage.getName(), existingInterval);
                 }
                 // Add billing event for that usage interval

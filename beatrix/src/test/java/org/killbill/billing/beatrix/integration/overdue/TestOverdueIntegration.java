@@ -121,9 +121,11 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -208,9 +210,11 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -302,9 +306,11 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -403,9 +409,11 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
@@ -491,9 +499,11 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -569,11 +579,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Make sure the account doesn't have any payment method
         accountInternalApi.removePaymentMethod(account.getId(), internalCallContext);
 
         // Create subscription
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -664,8 +676,10 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Create a subscription without failing payments
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -701,8 +715,10 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Create subscription and don't fail payments
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -733,7 +749,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
         // Now, refund the second (first non-zero dollar) invoice
-        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), false, PLUGIN_PROPERTIES, callContext);
+        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).get(1).getPayments().get(0).getPaymentId(), false, PLUGIN_PROPERTIES, callContext);
         refundPaymentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         // We should now be in OD1
         checkODState("OD1");
@@ -745,8 +761,10 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Create subscription and don't fail payments
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -777,7 +795,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
-        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
+        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
         final Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, ImmutableList.<PluginProperty>of(), callContext);
         createChargeBackAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         // We should now be in OD1
@@ -790,9 +808,11 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -838,9 +858,11 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
+        setupAccount();
+
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -939,9 +961,9 @@ public class TestOverdueIntegration extends TestOverdueBase {
                     createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
                 } else {
                     if (extraPayment) {
-                        createPaymentAndCheckForCompletion(account, invoice, NextEvent.BLOCK, NextEvent.TAG, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+                        createPaymentAndCheckForCompletion(account, invoice, NextEvent.BLOCK, NextEvent.TAG, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
                     } else {
-                        createPaymentAndCheckForCompletion(account, invoice, NextEvent.BLOCK, NextEvent.TAG, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+                        createPaymentAndCheckForCompletion(account, invoice, NextEvent.BLOCK, NextEvent.TAG, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
                     }
                 }
             }

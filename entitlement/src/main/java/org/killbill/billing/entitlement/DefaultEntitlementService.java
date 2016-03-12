@@ -142,9 +142,9 @@ public class DefaultEntitlementService implements EntitlementService {
                 EntitlementNotificationKeyAction.CANCEL.equals(entitlementNotificationKeyAction)) {
                 blockAddOnsIfRequired(key, (DefaultEntitlement) entitlement, callContext, internalCallContext);
             } else if (EntitlementNotificationKeyAction.PAUSE.equals(entitlementNotificationKeyAction)) {
-                entitlementInternalApi.pause(key.getBundleId(), key.getEffectiveDate().toLocalDate(), ImmutableList.<PluginProperty>of(), internalCallContext);
+                entitlementInternalApi.pause(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate()), ImmutableList.<PluginProperty>of(), internalCallContext);
             } else if (EntitlementNotificationKeyAction.RESUME.equals(entitlementNotificationKeyAction)) {
-                entitlementInternalApi.resume(key.getBundleId(), key.getEffectiveDate().toLocalDate(), ImmutableList.<PluginProperty>of(), internalCallContext);
+                entitlementInternalApi.resume(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate()), ImmutableList.<PluginProperty>of(), internalCallContext);
             }
         } catch (final EntitlementApiException e) {
             log.error("Error processing event for entitlement {}" + entitlement.getId(), e);
@@ -182,10 +182,18 @@ public class DefaultEntitlementService implements EntitlementService {
             return;
         }
 
-        final BusEvent event = new DefaultBlockingTransitionInternalEvent(key.getBlockableId(), key.getBlockingType(),
-                                                                          key.isTransitionedToBlockedBilling(), key.isTransitionedToUnblockedBilling(),
-                                                                          key.isTransitionedToBlockedEntitlement(), key.isTransitionToUnblockedEntitlement(),
-                                                                          internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), internalCallContext.getUserToken());
+        final BusEvent event = new DefaultBlockingTransitionInternalEvent(key.getBlockableId(),
+                                                                          key.getStateName(),
+                                                                          key.getService(),
+                                                                          key.getEffectiveDate(),
+                                                                          key.getBlockingType(),
+                                                                          key.isTransitionedToBlockedBilling(),
+                                                                          key.isTransitionedToUnblockedBilling(),
+                                                                          key.isTransitionedToBlockedEntitlement(),
+                                                                          key.isTransitionToUnblockedEntitlement(),
+                                                                          internalCallContext.getAccountRecordId(),
+                                                                          internalCallContext.getTenantRecordId(),
+                                                                          internalCallContext.getUserToken());
 
         try {
             eventBus.post(event);

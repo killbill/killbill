@@ -21,6 +21,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.events.AccountCreationInternalEvent;
+import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
@@ -37,7 +38,9 @@ public interface CompletionUserRequestWaiter {
 
     public void onAccountChange(final AccountChangeInternalEvent curEvent);
 
-    public void onSubscriptionBaseTransition(final EffectiveSubscriptionInternalEvent curEventEffective);
+    public void onSubscriptionBaseTransition(final EffectiveSubscriptionInternalEvent curEvent);
+
+    public void onBlockingState(final BlockingTransitionInternalEvent curEvent);
 
     public void onInvoiceCreation(final InvoiceCreationInternalEvent curEvent);
 

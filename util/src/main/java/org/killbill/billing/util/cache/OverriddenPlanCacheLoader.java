@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,15 +17,12 @@
 
 package org.killbill.billing.util.cache;
 
-import java.util.List;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +32,8 @@ public class OverriddenPlanCacheLoader extends BaseCacheLoader {
 
     private final Logger log = LoggerFactory.getLogger(OverriddenPlanCacheLoader.class);
 
-
     @Inject
-    public OverriddenPlanCacheLoader(final TenantInternalApi tenantApi) {
+    public OverriddenPlanCacheLoader() {
         super();
     }
 

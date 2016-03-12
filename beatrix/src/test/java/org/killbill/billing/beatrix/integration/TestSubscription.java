@@ -39,6 +39,7 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Subscription;
@@ -63,22 +64,22 @@ public class TestSubscription extends TestIntegrationBase {
     public void testForcePolicy() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         final LocalDate today = new LocalDate(2012, 4, 1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
         //
 
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
@@ -87,7 +88,7 @@ public class TestSubscription extends TestIntegrationBase {
         clock.addDays(40);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 2);
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
@@ -109,7 +110,7 @@ public class TestSubscription extends TestIntegrationBase {
 
         changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.MONTHLY, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE);
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 3);
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
@@ -118,7 +119,7 @@ public class TestSubscription extends TestIntegrationBase {
         //
         changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.ANNUAL, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE);
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 4);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -141,22 +142,22 @@ public class TestSubscription extends TestIntegrationBase {
     public void testChangeOfPlan() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         final LocalDate today = new LocalDate(2012, 4, 1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
         //
 
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
@@ -165,7 +166,7 @@ public class TestSubscription extends TestIntegrationBase {
         clock.addDays(40);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 2);
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
@@ -176,7 +177,7 @@ public class TestSubscription extends TestIntegrationBase {
         // (Note that, the catalog is configured to use  CHANGE_OF_PLAN when moving to that plan and Not CHANGE_OF_PRICELIST which has not been implement;
         // this is a bit misleading since we are changing pricelist, but in that case pricelist change has no effect)
         changeEntitlementAndCheckForCompletion(bpEntitlement, "Assault-Rifle", BillingPeriod.ANNUAL, "rescue", BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 3);
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
@@ -211,8 +212,8 @@ public class TestSubscription extends TestIntegrationBase {
         specifierList.add(addOnEntitlementSpecifier1);
         specifierList.add(addOnEntitlementSpecifier2);
 
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         checkNoMoreInvoiceToGenerate(account);
 
@@ -234,7 +235,7 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(addOnEntitlement2.getLastActiveProduct().getName(), "Laser-Scope");
         assertEquals(addOnEntitlement2.getLastActiveProductCategory(), ProductCategory.ADD_ON);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertTrue(invoices.size() == 1); // ONLY ONE INVOICE
         assertTrue(invoices.get(0).getInvoiceItems().size() == 3);
 
@@ -244,14 +245,10 @@ public class TestSubscription extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(initialDate, null, InvoiceItemType.FIXED, new BigDecimal("0"))); // Shotgun
 
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
-
     }
-
-
 
     @Test(groups = "slow")
     public void testCancelFutureSubscriptionWithPolicy() throws Exception {
-
         final LocalDate initialDate = new LocalDate(2015, 9, 1);
         clock.setDay(initialDate);
 
@@ -262,7 +259,7 @@ public class TestSubscription extends TestIntegrationBase {
         final LocalDate futureDate = new LocalDate(2015, 10, 1);
 
         // No CREATE event as this is set in the future
-        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
@@ -273,8 +270,7 @@ public class TestSubscription extends TestIntegrationBase {
         assertListenerStatus();
 
         // Move off trial and reach start/cancellation date
-        // NextEvent.INVOICE is required because of #467
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
         clock.addDays(30);
         assertListenerStatus();
 
@@ -285,7 +281,6 @@ public class TestSubscription extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testCancelFutureSubscriptionWithRequestedDate() throws Exception {
-
         final LocalDate initialDate = new LocalDate(2015, 9, 1);
         clock.setDay(initialDate);
 
@@ -296,7 +291,8 @@ public class TestSubscription extends TestIntegrationBase {
         final LocalDate futureDate = new LocalDate(2015, 10, 1);
 
         // No CREATE event as this is set in the future
-        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(createdEntitlement.getState(), EntitlementState.PENDING);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
@@ -315,13 +311,12 @@ public class TestSubscription extends TestIntegrationBase {
         assertListenerStatus();
 
         // Move off trial and reach start/cancellation date
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
         clock.addDays(30);
         assertListenerStatus();
 
         // Just to make sure we really don't invoice for anything move to next month
         clock.addMonths(1);
         assertListenerStatus();
-
     }
 }

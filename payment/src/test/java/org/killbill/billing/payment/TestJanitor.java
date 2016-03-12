@@ -288,7 +288,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.assertListenerStatus();
 
         // Artificially move the transaction status to UNKNOWN
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
@@ -321,7 +320,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.assertListenerStatus();
 
         // Artificially move the transaction status to UNKNOWN
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
@@ -367,8 +365,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, ImmutableList.<PluginProperty>of(), callContext);
 
         // Artificially move the transaction status to UNKNOWN
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
@@ -401,8 +397,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                                transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-
         // Artificially move the transaction status to PENDING
         final String paymentStateName = paymentSMHelper.getPendingStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
@@ -433,8 +427,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), paymentExternalKey,
                                                                transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
-
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
 
         // Artificially move the transaction status to PENDING AND update state on the plugin as well
         final List<PaymentTransactionInfoPlugin> paymentTransactions = mockPaymentProviderPlugin.getPaymentInfo(account.getId(), payment.getId(), ImmutableList.<PluginProperty>of(), callContext);

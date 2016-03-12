@@ -7,8 +7,8 @@ tableFields(prefix) ::= <<
 , <prefix>category
 , <prefix>start_date
 , <prefix>bundle_start_date
-, <prefix>active_version
 , <prefix>charged_through_date
+, <prefix>migrated
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -20,8 +20,8 @@ tableValues() ::= <<
 , :category
 , :startDate
 , :bundleStartDate
-, :activeVersion
 , :chargedThroughDate
+, :migrated
 , :createdBy
 , :createdDate
 , :updatedBy
@@ -50,25 +50,3 @@ where id = :id
 ;
 >>
 
-updateActiveVersion() ::= <<
-update <tableName()>
-set
-active_version = :activeVersion
-, updated_by = :createdBy
-, updated_date = :createdDate
-where id = :id
-;
->>
-
-updateForRepair() ::= <<
-update <tableName()>
-set
-active_version = :activeVersion
-, start_date = :startDate
-, bundle_start_date = :bundleStartDate
-, updated_by = :createdBy
-, updated_date = :createdDate
-where id = :id
-<AND_CHECK_TENANT()>
-;
->>
