@@ -68,9 +68,10 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
 
     public static final String PLUGIN_NAME = "__NO_OP__";
 
-    private final AtomicBoolean makeNextInvoiceFailWithError = new AtomicBoolean(false);
-    private final AtomicBoolean makeNextInvoiceFailWithException = new AtomicBoolean(false);
-    private final AtomicBoolean makeAllInvoicesFailWithError = new AtomicBoolean(false);
+    private final AtomicBoolean makeNextPaymentFailWithError = new AtomicBoolean(false);
+    private final AtomicBoolean makeNextPaymentFailWithCancellation = new AtomicBoolean(false);
+    private final AtomicBoolean makeNextPaymentFailWithException = new AtomicBoolean(false);
+    private final AtomicBoolean makeAllPaymentsFailWithError = new AtomicBoolean(false);
     private final AtomicInteger makePluginWaitSomeMilliseconds = new AtomicInteger(0);
     private final AtomicReference<BigDecimal> overrideNextProcessedAmount = new AtomicReference<BigDecimal>();
     private final AtomicReference<Currency> overrideNextProcessedCurrency = new AtomicReference<Currency>();
@@ -194,9 +195,10 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     public void clear() {
-        makeNextInvoiceFailWithException.set(false);
-        makeAllInvoicesFailWithError.set(false);
-        makeNextInvoiceFailWithError.set(false);
+        makeNextPaymentFailWithException.set(false);
+        makeAllPaymentsFailWithError.set(false);
+        makeNextPaymentFailWithError.set(false);
+        makeNextPaymentFailWithCancellation.set(false);
         makePluginWaitSomeMilliseconds.set(0);
         overrideNextProcessedAmount.set(null);
         paymentMethods.clear();
@@ -206,15 +208,19 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     public void makeNextPaymentFailWithError() {
-        makeNextInvoiceFailWithError.set(true);
+        makeNextPaymentFailWithError.set(true);
+    }
+
+    public void makeNextPaymentFailWithCancellation() {
+        makeNextPaymentFailWithCancellation.set(true);
     }
 
     public void makeNextPaymentFailWithException() {
-        makeNextInvoiceFailWithException.set(true);
+        makeNextPaymentFailWithException.set(true);
     }
 
     public void makeAllInvoicesFailWithError(final boolean failure) {
-        makeAllInvoicesFailWithError.set(failure);
+        makeAllPaymentsFailWithError.set(failure);
     }
 
     public void makePluginWaitSomeMilliseconds(final int milliseconds) {
@@ -368,7 +374,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             }
         }
 
-        if (makeNextInvoiceFailWithException.getAndSet(false)) {
+        if (makeNextPaymentFailWithException.getAndSet(false)) {
             throw new PaymentPluginApiException("", "test error");
         }
 
@@ -382,8 +388,12 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         final PaymentPluginStatus status;
         if (paymentPluginStatusOverride != null && paymentPluginStatusOverride.getValue() != null) {
             status = PaymentPluginStatus.valueOf(paymentPluginStatusOverride.getValue().toString());
+        } else if (makeAllPaymentsFailWithError.get() || makeNextPaymentFailWithError.getAndSet(false)) {
+            status = PaymentPluginStatus.ERROR;
+        } else if (makeNextPaymentFailWithCancellation.getAndSet(false)) {
+            status = PaymentPluginStatus.CANCELED;
         } else {
-            status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
+            status = PaymentPluginStatus.PROCESSED;
         }
         final String errorCode = status == PaymentPluginStatus.PROCESSED ? "" : GATEWAY_ERROR_CODE;
         final String error = status == PaymentPluginStatus.PROCESSED ? "" : GATEWAY_ERROR;
