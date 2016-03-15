@@ -37,6 +37,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.MockBillingEventSet;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
@@ -160,7 +161,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
     }
 
     @Test(groups = "fast")
-    public void testProcessFixedBillingEventsWithCancellationOnSameDay() {
+    public void testProcessFixedBillingEventsWithCancellationOnSameDay() throws InvoiceApiException {
 
         final LocalDate targetDate = new LocalDate("2016-01-08");
 
@@ -193,7 +194,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
     }
 
     @Test(groups = "fast")
-    public void testProcessFixedBillingEventsWithCancellationOnNextDay() {
+    public void testProcessFixedBillingEventsWithCancellationOnNextDay() throws InvoiceApiException {
 
         final LocalDate targetDate = new LocalDate("2016-01-08");
 
@@ -229,7 +230,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
 
 
     @Test(groups = "fast")
-    public void testProcessFixedBillingEventsWithMultipleChangeOnSameDay() {
+    public void testProcessFixedBillingEventsWithMultipleChangeOnSameDay() throws InvoiceApiException {
 
         final LocalDate targetDate = new LocalDate("2016-01-08");
 

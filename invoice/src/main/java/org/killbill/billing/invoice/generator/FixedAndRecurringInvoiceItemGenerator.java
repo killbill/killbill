@@ -32,6 +32,7 @@ import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.invoice.api.Invoice;
@@ -47,6 +48,7 @@ import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,8 +63,11 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
     private static final Logger log = LoggerFactory.getLogger(FixedAndRecurringInvoiceItemGenerator.class);
 
+    private final Clock clock;
+
     @Inject
-    public FixedAndRecurringInvoiceItemGenerator() {
+    public FixedAndRecurringInvoiceItemGenerator(final Clock clock) {
+        this.clock = clock;
     }
 
     public List<InvoiceItem> generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
@@ -128,7 +133,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
     @VisibleForTesting
     void processFixedBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events, final LocalDate targetDate,
-                                   final Currency currency, final List<InvoiceItem> proposedItems, final InternalCallContext internalCallContext) {
+                                   final Currency currency, final List<InvoiceItem> proposedItems, final InternalCallContext internalCallContext) throws InvoiceApiException {
         InvoiceItem prevItem = null;
 
         final Iterator<BillingEvent> eventIt = events.iterator();
@@ -165,66 +170,75 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                     final StringBuilder logStringBuilder, final BillingMode billingMode,
                                                     final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                     final InternalCallContext internalCallContext) throws InvoiceApiException {
-        final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
-        // For FIXEDTERM phases we need to stop when the specified duration has been reached
-        final LocalDate maxEndDate = thisEvent.getPlanPhase().getPhaseType() == PhaseType.FIXEDTERM ?
-                                     thisEvent.getPlanPhase().getDuration().addToLocalDate(internalCallContext.toLocalDate(thisEvent.getEffectiveDate())) :
-                                     null;
+        try {
 
-        // Handle recurring items
-        final BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
-        if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-            final LocalDate startDate = internalCallContext.toLocalDate(thisEvent.getEffectiveDate());
+            final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
-            if (!startDate.isAfter(targetDate)) {
-                final LocalDate endDate = (nextEvent == null) ? null : internalCallContext.toLocalDate(nextEvent.getEffectiveDate());
+            // For FIXEDTERM phases we need to stop when the specified duration has been reached
+            final LocalDate maxEndDate = thisEvent.getPlanPhase().getPhaseType() == PhaseType.FIXEDTERM ?
+                                         thisEvent.getPlanPhase().getDuration().addToLocalDate(internalCallContext.toLocalDate(thisEvent.getEffectiveDate())) :
+                                         null;
 
-                final int billCycleDayLocal = thisEvent.getBillCycleDayLocal();
+            // Handle recurring items
+            final BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
+            if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
+                final LocalDate startDate = internalCallContext.toLocalDate(thisEvent.getEffectiveDate());
 
-                final RecurringInvoiceItemDataWithNextBillingCycleDate itemDataWithNextBillingCycleDate;
-                try {
-                    itemDataWithNextBillingCycleDate = generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod, billingMode);
-                } catch (InvalidDateSequenceException e) {
-                    throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
-                }
+                if (!startDate.isAfter(targetDate)) {
+                    final LocalDate endDate = (nextEvent == null) ? null : internalCallContext.toLocalDate(nextEvent.getEffectiveDate());
 
-                for (final RecurringInvoiceItemData itemDatum : itemDataWithNextBillingCycleDate.getItemData()) {
+                    final int billCycleDayLocal = thisEvent.getBillCycleDayLocal();
 
-                    // Stop if there a maxEndDate and we have reached it
-                    if (maxEndDate != null && maxEndDate.compareTo(itemDatum.getEndDate()) < 0) {
-                        break;
+                    final RecurringInvoiceItemDataWithNextBillingCycleDate itemDataWithNextBillingCycleDate;
+                    try {
+                        itemDataWithNextBillingCycleDate = generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod, billingMode);
+                    } catch (InvalidDateSequenceException e) {
+                        throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                     }
-                    final BigDecimal rate = thisEvent.getRecurringPrice();
-                    if (rate != null) {
-                        final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
-                        final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
-                                                                                            accountId,
-                                                                                            thisEvent.getSubscription().getBundleId(),
-                                                                                            thisEvent.getSubscription().getId(),
-                                                                                            thisEvent.getPlan().getName(),
-                                                                                            thisEvent.getPlanPhase().getName(),
-                                                                                            itemDatum.getStartDate(),
-                                                                                            itemDatum.getEndDate(),
-                                                                                            amount, rate, currency);
-                        items.add(recurringItem);
+
+                    for (final RecurringInvoiceItemData itemDatum : itemDataWithNextBillingCycleDate.getItemData()) {
+
+                        // Stop if there a maxEndDate and we have reached it
+                        if (maxEndDate != null && maxEndDate.compareTo(itemDatum.getEndDate()) < 0) {
+                            break;
+                        }
+                        final BigDecimal rate = thisEvent.getRecurringPrice(internalCallContext.toUTCDateTime(itemDatum.getStartDate()));
+                        if (rate != null) {
+                            final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
+                            final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
+                                                                                                accountId,
+                                                                                                thisEvent.getSubscription().getBundleId(),
+                                                                                                thisEvent.getSubscription().getId(),
+                                                                                                thisEvent.getPlan().getName(),
+                                                                                                thisEvent.getPlanPhase().getName(),
+                                                                                                itemDatum.getStartDate(),
+                                                                                                itemDatum.getEndDate(),
+                                                                                                amount, rate, currency);
+                            items.add(recurringItem);
+                        }
                     }
+                    updatePerSubscriptionNextNotificationDate(thisEvent.getSubscription().getId(), itemDataWithNextBillingCycleDate.getNextBillingCycleDate(), items, billingMode,
+                                                              perSubscriptionFutureNotificationDate);
                 }
-                updatePerSubscriptionNextNotificationDate(thisEvent.getSubscription().getId(), itemDataWithNextBillingCycleDate.getNextBillingCycleDate(), items, billingMode, perSubscriptionFutureNotificationDate);
             }
-        }
 
-        // For debugging purposes
-        logStringBuilder.append("\n")
-                        .append(thisEvent);
-        for (final InvoiceItem item : items) {
-            logStringBuilder.append("\n\t")
-                            .append(item);
+            // For debugging purposes
+            logStringBuilder.append("\n")
+                            .append(thisEvent);
+            for (final InvoiceItem item : items) {
+                logStringBuilder.append("\n\t")
+                                .append(item);
+            }
+            return items;
+
+        } catch (final CatalogApiException e) {
+            throw new InvoiceApiException(e);
         }
-        return items;
     }
 
-    private void updatePerSubscriptionNextNotificationDate(final UUID subscriptionId, final LocalDate nextBillingCycleDate, final List<InvoiceItem> newProposedItems, final BillingMode billingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
+    private void updatePerSubscriptionNextNotificationDate(final UUID subscriptionId, final LocalDate nextBillingCycleDate, final List<InvoiceItem> newProposedItems, final BillingMode billingMode,
+                                                           final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
 
         LocalDate nextNotificationDate = null;
         switch (billingMode) {
@@ -247,6 +261,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             default:
                 throw new IllegalStateException("Unrecognized billing mode " + billingMode);
         }
+
         if (nextNotificationDate != null) {
             SubscriptionFutureNotificationDates subscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates.get(subscriptionId);
             if (subscriptionFutureNotificationDates == null) {
@@ -350,7 +365,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     }
 
     private InvoiceItem generateFixedPriceItem(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent,
-                                               final LocalDate targetDate, final Currency currency, final InternalCallContext internalCallContext) {
+                                               final LocalDate targetDate, final Currency currency, final InternalCallContext internalCallContext) throws InvoiceApiException {
         final LocalDate roundedStartDate = internalCallContext.toLocalDate(thisEvent.getEffectiveDate());
         if (roundedStartDate.isAfter(targetDate)) {
             return null;

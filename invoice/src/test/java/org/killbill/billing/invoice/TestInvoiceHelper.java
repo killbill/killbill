@@ -21,6 +21,7 @@ package org.killbill.billing.invoice;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -95,6 +96,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class TestInvoiceHelper {
 
@@ -392,7 +394,7 @@ public class TestInvoiceHelper {
             }
 
             @Override
-            public BigDecimal getRecurringPrice() {
+            public BigDecimal getRecurringPrice(DateTime effectiveDate) {
                 return recurringPrice;
             }
 

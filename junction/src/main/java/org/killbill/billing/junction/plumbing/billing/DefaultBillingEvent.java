@@ -47,7 +47,6 @@ public class DefaultBillingEvent implements BillingEvent {
     private final PlanPhase planPhase;
     private final Plan plan;
     private final BigDecimal fixedPrice;
-    private final BigDecimal recurringPrice;
     private final Currency currency;
     private final String description;
     private final BillingPeriod billingPeriod;
@@ -57,7 +56,13 @@ public class DefaultBillingEvent implements BillingEvent {
 
     private final List<Usage> usages;
 
+    private final Catalog catalog;
+    private final boolean isDisableEvent;
+    private final PlanPhase nextPlanPhase;
+
     public DefaultBillingEvent(final ImmutableAccountData account, final EffectiveSubscriptionInternalEvent transition, final SubscriptionBase subscription, final int billCycleDayLocal, final Currency currency, final Catalog catalog) throws CatalogApiException {
+
+        this.catalog = catalog;
 
         final boolean isActive = transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL;
 
@@ -71,34 +76,35 @@ public class DefaultBillingEvent implements BillingEvent {
         this.plan = (planName != null) ? catalog.findPlan(planName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final String nextPhaseName = transition.getNextPhase();
-        final PlanPhase nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        this.nextPlanPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final String prevPhaseName = transition.getPreviousPhase();
-        final PlanPhase prevPhase = (prevPhaseName != null) ? catalog.findPhase(prevPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        final PlanPhase prevPlanPhase = (prevPhaseName != null) ? catalog.findPhase(prevPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
-        this.fixedPrice = getFixedPrice(nextPhase, currency);
-        this.recurringPrice = getRecurringPrice(nextPhase, currency);
-
+        this.fixedPrice = getFixedPrice(nextPlanPhase, currency);
         this.currency = currency;
         this.description = transition.getTransitionType().toString();
-        this.billingPeriod = getRecurringBillingPeriod(isActive ? nextPhase : prevPhase);
+        this.billingPeriod = getRecurringBillingPeriod(isActive ? nextPlanPhase : prevPlanPhase);
         this.type = transition.getTransitionType();
         this.totalOrdering = transition.getTotalOrdering();
         this.timeZone = account.getTimeZone();
         this.usages = initializeUsage(isActive);
+        this.isDisableEvent = false;
     }
 
     public DefaultBillingEvent(final SubscriptionBase subscription, final DateTime effectiveDate, final boolean isActive,
-                               final Plan plan, final PlanPhase planPhase,
-                               final BigDecimal fixedPrice, final BigDecimal recurringPrice, final Currency currency,
+                               final Plan plan, final PlanPhase planPhase, final BigDecimal fixedPrice,
+                               final Currency currency,
                                final BillingPeriod billingPeriod, final int billCycleDayLocal,
-                               final String description, final long totalOrdering, final SubscriptionBaseTransitionType type, final DateTimeZone timeZone) {
+                               final String description, final long totalOrdering, final SubscriptionBaseTransitionType type, final DateTimeZone timeZone,
+                               final Catalog catalog,
+                               final boolean isDisableEvent) {
+        this.catalog = catalog;
         this.subscription = subscription;
         this.effectiveDate = effectiveDate;
         this.plan = plan;
         this.planPhase = planPhase;
         this.fixedPrice = fixedPrice;
-        this.recurringPrice = recurringPrice;
         this.currency = currency;
         this.billingPeriod = billingPeriod;
         this.billCycleDayLocal = billCycleDayLocal;
@@ -107,7 +113,8 @@ public class DefaultBillingEvent implements BillingEvent {
         this.totalOrdering = totalOrdering;
         this.timeZone = timeZone;
         this.usages = initializeUsage(isActive);
-
+        this.isDisableEvent = isDisableEvent;
+        this.nextPlanPhase = isDisableEvent ? null : planPhase;
     }
 
     @Override
@@ -197,8 +204,12 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public BigDecimal getRecurringPrice() {
-        return recurringPrice;
+    public BigDecimal getRecurringPrice(final DateTime effectiveDate) throws CatalogApiException {
+        if (isDisableEvent || nextPlanPhase == null) {
+            return null;
+        }
+        final PlanPhase effectivePlanPhase = effectiveDate != null ? catalog.findPhase(nextPlanPhase.getName(), effectiveDate, subscription.getStartDate()) : nextPlanPhase;
+        return getRecurringPrice(effectivePlanPhase, currency);
     }
 
     @Override
@@ -267,16 +278,10 @@ public class DefaultBillingEvent implements BillingEvent {
         if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
             return false;
         }
-        if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) {
-            return false;
-        }
         if (plan != null ? !plan.equals(that.plan) : that.plan != null) {
             return false;
         }
         if (planPhase != null ? !planPhase.equals(that.planPhase) : that.planPhase != null) {
-            return false;
-        }
-        if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null) {
             return false;
         }
         if (subscription != null ? !subscription.equals(that.subscription) : that.subscription != null) {
@@ -302,8 +307,6 @@ public class DefaultBillingEvent implements BillingEvent {
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (planPhase != null ? planPhase.hashCode() : 0);
         result = 31 * result + (plan != null ? plan.hashCode() : 0);
-        result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);
-        result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
