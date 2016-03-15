@@ -26,7 +26,6 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
-import org.killbill.billing.events.RepairSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -52,17 +51,6 @@ public class InvoiceListener {
         this.accountApi = accountApi;
         this.dispatcher = dispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
-    }
-
-    @AllowConcurrentEvents
-    @Subscribe
-    public void handleRepairSubscriptionEvent(final RepairSubscriptionInternalEvent event) {
-        try {
-            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-            dispatcher.processAccount(event.getAccountId(), context.toLocalDate(event.getEffectiveDate()), null, context);
-        } catch (final InvoiceApiException e) {
-            log.error(e.getMessage());
-        }
     }
 
     @AllowConcurrentEvents
