@@ -252,7 +252,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             }
             final Recurring recurring = phase.getRecurring();
             if (recurring == null || recurring.getRecurringPrice() == null || recurring.getRecurringPrice().isZero()) {
-                result = phase.getDuration().addToDateTime(result);
+                try {
+                    result = phase.getDuration().addToDateTime(result);
+                } catch (final CatalogApiException ignored) {
+                }
             } else {
                 break;
             }
