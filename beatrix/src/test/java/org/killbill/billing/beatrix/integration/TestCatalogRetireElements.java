@@ -45,7 +45,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource() {
-        return super.getConfigSource("/beatrixVersionedCatalog.properties");
+        return super.getConfigSource("/beatrixCatalogRetireElements.properties");
     }
 
     @Test(groups = "slow")

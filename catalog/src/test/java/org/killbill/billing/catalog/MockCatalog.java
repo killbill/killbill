@@ -17,6 +17,7 @@
 package org.killbill.billing.catalog;
 
 import java.util.Date;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 
