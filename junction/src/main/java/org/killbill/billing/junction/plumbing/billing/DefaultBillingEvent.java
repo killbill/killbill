@@ -336,7 +336,7 @@ public class DefaultBillingEvent implements BillingEvent {
         if (!isActive) {
             return result;
         }
-        if (planPhase != null) {
+        if (planPhase != null && planPhase.getUsages() != null) {
             result = Lists.newArrayList();
             for (Usage usage : planPhase.getUsages()) {
                 result.add(usage);

@@ -48,7 +48,7 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOve
                 return state;
             }
         }
-        throw new OverdueApiException(ErrorCode.CAT_NO_SUCH_OVEDUE_STATE, stateName);
+        throw new OverdueApiException(ErrorCode.CAT_NO_SUCH_OVERDUE_STATE, stateName);
     }
 
     /* (non-Javadoc)
