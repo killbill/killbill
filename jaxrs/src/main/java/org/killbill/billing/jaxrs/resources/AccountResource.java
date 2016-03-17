@@ -82,7 +82,7 @@ import org.killbill.billing.jaxrs.json.PaymentTransactionJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.overdue.OverdueInternalApi;
+import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.api.OverdueException;
@@ -138,7 +138,7 @@ public class AccountResource extends JaxRsResourceBase {
     private final SubscriptionApi subscriptionApi;
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
-    private final OverdueInternalApi overdueApi;
+    private final OverdueApi overdueApi;
     private final PaymentConfig paymentConfig;
     private final JaxrsExecutors jaxrsExecutors;
     private final JaxrsConfig jaxrsConfig;
@@ -153,7 +153,7 @@ public class AccountResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final SubscriptionApi subscriptionApi,
-                           final OverdueInternalApi overdueApi,
+                           final OverdueApi overdueApi,
                            final Clock clock,
                            final PaymentConfig paymentConfig,
                            final JaxrsExecutors jaxrsExecutors,
@@ -367,7 +367,6 @@ public class AccountResource extends JaxRsResourceBase {
        */
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     }
-
 
     @TimedResource
     @GET
@@ -792,7 +791,6 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-
     @TimedResource
     @PUT
     @Consumes(APPLICATION_JSON)
@@ -964,7 +962,7 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
-        final OverdueState overdueState = overdueApi.getOverdueStateFor(account, tenantContext);
+        final OverdueState overdueState = overdueApi.getOverdueStateFor(account.getId(), tenantContext);
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState, paymentConfig)).build();
     }
@@ -1058,7 +1056,6 @@ public class AccountResource extends JaxRsResourceBase {
                                tagUserApi.getTagsForAccount(accountId, includedDeleted, tenantContext);
         return createTagResponse(accountId, tags, auditMode, tenantContext);
     }
-
 
     @TimedResource
     @POST
@@ -1169,7 +1166,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                                                }
                                                                            }
                                                                           )
-                                                    .orNull();
+                .orNull();
         if (existingEmail == null) {
             accountUserApi.addEmail(accountId, json.toAccountEmail(UUIDs.randomUUID()), callContext);
         }
