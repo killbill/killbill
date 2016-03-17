@@ -43,7 +43,7 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;

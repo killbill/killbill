@@ -21,7 +21,7 @@ import java.util.List;
 import org.joda.time.Period;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueState;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -56,7 +56,8 @@ public class OverdueStateJson {
     public OverdueStateJson(final OverdueState overdueState, final PaymentConfig paymentConfig) {
         this.name = overdueState.getName();
         this.externalMessage = overdueState.getExternalMessage();
-        this.daysBetweenPaymentRetries = paymentConfig.getPaymentFailureRetryDays();
+        // TODO this is broken if the per tenant system property was updated, but should we really return that in the OverdueState ?
+        this.daysBetweenPaymentRetries = paymentConfig.getPaymentFailureRetryDays(null);
         this.disableEntitlementAndChangesBlocked = overdueState.isDisableEntitlementAndChangesBlocked();
         this.blockChanges = overdueState.isBlockChanges();
         this.isClearState = overdueState.isClearState();

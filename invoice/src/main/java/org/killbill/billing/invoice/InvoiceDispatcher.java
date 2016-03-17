@@ -86,7 +86,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -413,7 +413,7 @@ public class InvoiceDispatcher {
         }
 
         // If dryRunNotification is enabled we also need to fetch the upcoming PHASE dates (we add SubscriptionNotification with isForInvoiceNotificationTrigger = false)
-        final boolean isInvoiceNotificationEnabled = invoiceConfig.getDryRunNotificationSchedule().getMillis() > 0;
+        final boolean isInvoiceNotificationEnabled = invoiceConfig.getDryRunNotificationSchedule(context).getMillis() > 0;
         if (isInvoiceNotificationEnabled) {
             final Map<UUID, DateTime> upcomingPhasesForSubscriptions = subscriptionApi.getNextFutureEventForSubscriptions(SubscriptionBaseTransitionType.PHASE, context);
             for (final UUID cur : upcomingPhasesForSubscriptions.keySet()) {

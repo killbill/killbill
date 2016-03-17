@@ -33,6 +33,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.MockInternationalPrice;
 import org.killbill.billing.catalog.MockPlan;
@@ -62,7 +63,7 @@ import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.util.config.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
@@ -109,7 +110,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final Clock clock = new DefaultClock();
         final InvoiceConfig invoiceConfig = new InvoiceConfig() {
             @Override
-            public int getNumberOfMonthsInFuture() {
+            public int getNumberOfMonthsInFuture(final InternalTenantContext context) {
                 return 36;
             }
 
@@ -119,12 +120,12 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
             }
 
             @Override
-            public TimeSpan getDryRunNotificationSchedule() {
+            public TimeSpan getDryRunNotificationSchedule(final InternalTenantContext context) {
                 return new TimeSpan("0s");
             }
 
             @Override
-            public int getMaxRawUsagePreviousPeriod() {
+            public int getMaxRawUsagePreviousPeriod(final InternalTenantContext context) {
                 return -1;
             }
 

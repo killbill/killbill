@@ -50,7 +50,7 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
@@ -825,7 +825,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
                                              final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext internalCallContext) {
 
-        final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule().getMillis();
+        final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule(internalCallContext).getMillis();
         final boolean isInvoiceNotificationEnabled = dryRunNotificationTime > 0;
         for (final UUID subscriptionId : callbackDateTimePerSubscriptions.getNotifications().keySet()) {
             final List<SubscriptionNotification> callbackDateTimeUTC = callbackDateTimePerSubscriptions.getNotifications().get(subscriptionId);

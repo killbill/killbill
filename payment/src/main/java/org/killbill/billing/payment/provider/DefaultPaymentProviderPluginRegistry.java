@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 
 import com.google.inject.Inject;
 

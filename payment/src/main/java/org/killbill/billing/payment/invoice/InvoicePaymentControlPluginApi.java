@@ -63,7 +63,7 @@ import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
@@ -410,10 +410,10 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final PaymentTransactionModelDao lastTransaction = purchasedTransactions.get(purchasedTransactions.size() - 1);
         switch (lastTransaction.getTransactionStatus()) {
             case PAYMENT_FAILURE:
-                return getNextRetryDateForPaymentFailure(purchasedTransactions);
+                return getNextRetryDateForPaymentFailure(purchasedTransactions, internalContext);
 
             case PLUGIN_FAILURE:
-                return getNextRetryDateForPluginFailure(purchasedTransactions);
+                return getNextRetryDateForPluginFailure(purchasedTransactions, internalContext);
 
             case UNKNOWN:
             default:
@@ -421,10 +421,10 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
     }
 
-    private DateTime getNextRetryDateForPaymentFailure(final List<PaymentTransactionModelDao> purchasedTransactions) {
+    private DateTime getNextRetryDateForPaymentFailure(final List<PaymentTransactionModelDao> purchasedTransactions, final InternalCallContext internalContext) {
 
         DateTime result = null;
-        final List<Integer> retryDays = paymentConfig.getPaymentFailureRetryDays();
+        final List<Integer> retryDays = paymentConfig.getPaymentFailureRetryDays(internalContext);
         final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, TransactionStatus.PAYMENT_FAILURE);
         final int retryCount = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
         if (retryCount < retryDays.size()) {
@@ -441,17 +441,17 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         return result;
     }
 
-    private DateTime getNextRetryDateForPluginFailure(final List<PaymentTransactionModelDao> purchasedTransactions) {
+    private DateTime getNextRetryDateForPluginFailure(final List<PaymentTransactionModelDao> purchasedTransactions, final InternalCallContext internalContext) {
 
         DateTime result = null;
         final int attemptsInState = getNumberAttemptsInState(purchasedTransactions, TransactionStatus.PLUGIN_FAILURE);
         final int retryAttempt = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
 
-        if (retryAttempt < paymentConfig.getPluginFailureRetryMaxAttempts()) {
-            int nbSec = paymentConfig.getPluginFailureInitialRetryInSec();
+        if (retryAttempt < paymentConfig.getPluginFailureRetryMaxAttempts(internalContext)) {
+            int nbSec = paymentConfig.getPluginFailureInitialRetryInSec(internalContext);
             int remainingAttempts = retryAttempt;
             while (--remainingAttempts > 0) {
-                nbSec = nbSec * paymentConfig.getPluginFailureRetryMultiplier();
+                nbSec = nbSec * paymentConfig.getPluginFailureRetryMultiplier(internalContext);
             }
             result = clock.getUTCNow().plusSeconds(nbSec);
             log.debug("Next retryDate={}, retryAttempt={}, now={}", result, retryAttempt, clock.getUTCNow());

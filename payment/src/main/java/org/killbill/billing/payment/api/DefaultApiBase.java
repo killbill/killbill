@@ -26,9 +26,12 @@ import javax.annotation.Nullable;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +41,12 @@ public class DefaultApiBase {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultApiBase.class);
 
-    private final PaymentConfig paymentConfig;
+    protected final PaymentConfig paymentConfig;
+    protected final InternalCallContextFactory internalCallContextFactory;
 
-    public DefaultApiBase(final PaymentConfig paymentConfig) {
+    public DefaultApiBase(final PaymentConfig paymentConfig, final InternalCallContextFactory internalCallContextFactory) {
         this.paymentConfig = paymentConfig;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     protected void logAPICall(final String transactionType, final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, @Nullable final UUID transactionId, @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey) {
@@ -83,19 +88,23 @@ public class DefaultApiBase {
         }
     }
 
-    protected List<String> toPaymentControlPluginNames(final PaymentOptions paymentOptions) {
+    protected List<String> toPaymentControlPluginNames(final PaymentOptions paymentOptions, final CallContext callContext) {
+
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
+
         // Special path for JAX-RS InvoicePayment endpoints (see JaxRsResourceBase)
-        if (paymentConfig.getPaymentControlPluginNames() != null &&
+        final List<String> controlPluginNames = paymentConfig.getPaymentControlPluginNames(internalTenantContext);
+        if (controlPluginNames != null &&
             paymentOptions.getPaymentControlPluginNames() != null &&
             paymentOptions.getPaymentControlPluginNames().size() == 1 &&
             InvoicePaymentControlPluginApi.PLUGIN_NAME.equals(paymentOptions.getPaymentControlPluginNames().get(0))) {
             final List<String> paymentControlPluginNames = new LinkedList<String>(paymentOptions.getPaymentControlPluginNames());
-            paymentControlPluginNames.addAll(paymentConfig.getPaymentControlPluginNames());
+            paymentControlPluginNames.addAll(controlPluginNames);
             return paymentControlPluginNames;
         } else if (paymentOptions.getPaymentControlPluginNames() != null && !paymentOptions.getPaymentControlPluginNames().isEmpty()) {
             return paymentOptions.getPaymentControlPluginNames();
-        } else if (paymentConfig.getPaymentControlPluginNames() != null && !paymentConfig.getPaymentControlPluginNames().isEmpty()) {
-            return paymentConfig.getPaymentControlPluginNames();
+        } else if (controlPluginNames != null && !controlPluginNames.isEmpty()) {
+            return controlPluginNames;
         } else {
             return ImmutableList.<String>of();
         }

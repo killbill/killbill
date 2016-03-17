@@ -19,7 +19,6 @@ package org.killbill.billing.payment.core.sm;
 import java.util.Collections;
 
 import org.killbill.automaton.OperationResult;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.DefaultPayment;
 import org.killbill.billing.payment.api.DefaultPaymentTransaction;
 import org.killbill.billing.payment.api.Payment;
@@ -34,8 +33,7 @@ import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
-import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 

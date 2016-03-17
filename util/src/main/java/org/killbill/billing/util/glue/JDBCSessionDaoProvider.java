@@ -23,7 +23,7 @@ import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.skife.jdbi.v2.IDBI;
 
-import org.killbill.billing.util.config.RbacConfig;
+import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
 
 public class JDBCSessionDaoProvider implements Provider<JDBCSessionDao> {

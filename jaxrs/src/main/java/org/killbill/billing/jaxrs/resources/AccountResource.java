@@ -55,7 +55,6 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountEmail;
-import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.catalog.api.Currency;
@@ -105,8 +104,8 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.JaxrsConfig;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.JaxrsConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -154,7 +153,6 @@ public class AccountResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final SubscriptionApi subscriptionApi,
-                           final AccountInternalApi accountInternalApi,
                            final OverdueInternalApi overdueApi,
                            final Clock clock,
                            final PaymentConfig paymentConfig,

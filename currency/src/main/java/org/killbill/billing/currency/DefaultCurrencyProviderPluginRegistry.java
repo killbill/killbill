@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.killbill.billing.currency.plugin.api.CurrencyPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.util.config.CurrencyConfig;
 
 import com.google.inject.Inject;
 

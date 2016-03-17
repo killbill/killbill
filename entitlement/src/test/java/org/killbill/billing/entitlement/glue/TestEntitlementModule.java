@@ -22,6 +22,7 @@ import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
+import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.KillBillShiroAopModule;
 import org.killbill.billing.util.glue.KillBillShiroModule;
 import org.killbill.billing.util.glue.SecurityModule;
@@ -40,6 +41,7 @@ public class TestEntitlementModule extends DefaultEntitlementModule {
     protected void configure() {
         super.configure();
         install(new CacheModule(configSource));
+        install(new ConfigModule(configSource));
         install(new CallContextModule(configSource));
         install(new MockTenantModule(configSource));
 

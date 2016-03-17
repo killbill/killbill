@@ -19,11 +19,10 @@ package org.killbill.billing.util.callcontext;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestDefaultCallContext extends UtilTestSuiteNoDB {
 

@@ -19,10 +19,8 @@
 package org.killbill.billing.catalog;
 
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.platform.api.KillbillService.ServiceException;
-import org.killbill.billing.util.config.CatalogConfig;
-import org.killbill.clock.DefaultClock;
+import org.killbill.billing.util.config.definition.CatalogConfig;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

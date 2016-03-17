@@ -26,7 +26,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.currency.plugin.api.CurrencyPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.util.config.CurrencyConfig;
+import org.killbill.billing.util.config.definition.CurrencyConfig;
 
 public class DefaultCurrencyConversionApi implements CurrencyConversionApi {
 

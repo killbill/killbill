@@ -42,7 +42,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;

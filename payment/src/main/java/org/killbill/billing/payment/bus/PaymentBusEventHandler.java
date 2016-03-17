@@ -40,7 +40,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +95,7 @@ public class PaymentBusEventHandler {
             final CallContext callContext = internalCallContextFactory.createCallContext(internalContext);
 
             final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
-            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames() != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames()) : new LinkedList<String>();
+            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames(internalContext) != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames(internalContext)) : new LinkedList<String>();
             paymentControlPluginNames.add(InvoicePaymentControlPluginApi.PLUGIN_NAME);
             pluginControlPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(),
                                                          properties, paymentControlPluginNames, callContext, internalContext);

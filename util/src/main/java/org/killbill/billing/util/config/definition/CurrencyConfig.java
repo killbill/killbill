@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -14,17 +15,16 @@
  * under the License.
  */
 
-package org.killbill.billing.util.config;
+package org.killbill.billing.util.config.definition;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.Description;
 
-public interface CacheConfig extends KillbillConfig {
+public interface CurrencyConfig extends KillbillConfig {
 
-    @Config("org.killbill.cache.config.location")
-    @Default("ehcache.xml")
-    @Description("Path to Ehcache XML configuration")
-    public String getCacheConfigLocation();
-
+    @Config("org.killbill.currency.provider.default")
+    @Default("killbill-currency-plugin")
+    @Description("Default currency provider to use")
+    public String getDefaultCurrencyProvider();
 }

@@ -35,7 +35,7 @@ import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationEvent;

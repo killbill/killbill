@@ -18,6 +18,8 @@ package org.killbill.billing.glue;
 
 public interface InvoiceModule {
 
+    static final String STATIC_CONFIG = "StaticConfig";
+
     public void installInvoiceUserApi();
 
     public void installInvoicePaymentApi();

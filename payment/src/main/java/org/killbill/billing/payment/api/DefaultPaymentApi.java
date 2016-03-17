@@ -37,7 +37,7 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,15 +53,13 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     private final PaymentProcessor paymentProcessor;
     private final PaymentMethodProcessor paymentMethodProcessor;
     private final PluginControlPaymentProcessor pluginControlPaymentProcessor;
-    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultPaymentApi(final PaymentConfig paymentConfig, final PaymentProcessor paymentProcessor, final PaymentMethodProcessor paymentMethodProcessor, final PluginControlPaymentProcessor pluginControlPaymentProcessor, final InternalCallContextFactory internalCallContextFactory) {
-        super(paymentConfig);
+        super(paymentConfig, internalCallContextFactory);
         this.paymentProcessor = paymentProcessor;
         this.paymentMethodProcessor = paymentMethodProcessor;
         this.pluginControlPaymentProcessor = pluginControlPaymentProcessor;
-        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -87,7 +85,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     public Payment createAuthorizationWithPaymentControl(final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency,
                                                          @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey,
                                                          final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
-        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
         if (paymentControlPluginNames.isEmpty()) {
             return createAuthorization(account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey, properties, callContext);
         }
@@ -128,7 +126,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     @Override
     public Payment createCaptureWithPaymentControl(final Account account, final UUID paymentId, final BigDecimal amount, final Currency currency, @Nullable final String paymentTransactionExternalKey,
                                                    final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
-        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
         if (paymentControlPluginNames.isEmpty()) {
             return createCapture(account, paymentId, amount, currency, paymentTransactionExternalKey, properties, callContext);
         }
@@ -166,7 +164,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     @Override
     public Payment createPurchaseWithPaymentControl(final Account account, @Nullable final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency, @Nullable  final String paymentExternalKey, final String paymentTransactionExternalKey,
                                                     final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
-        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
         if (paymentControlPluginNames.isEmpty()) {
             return createPurchase(account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey, properties, callContext);
         }
@@ -214,7 +212,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
     @Override
     public Payment createVoidWithPaymentControl(final Account account, final UUID paymentId, final String paymentTransactionExternalKey, final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
-        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
         if (paymentControlPluginNames.isEmpty()) {
             return createVoid(account, paymentId, paymentTransactionExternalKey, properties, callContext);
         }
@@ -253,7 +251,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     @Override
     public Payment createRefundWithPaymentControl(final Account account, @Nullable final UUID paymentId, @Nullable final BigDecimal amount, final Currency currency, final String paymentTransactionExternalKey, final Iterable<PluginProperty> properties,
                                                   final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
-        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
         if (paymentControlPluginNames.isEmpty()) {
             return createRefund(account, paymentId, amount, currency, paymentTransactionExternalKey, properties, callContext);
         }
@@ -302,7 +300,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     public Payment createCreditWithPaymentControl(final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, final BigDecimal amount, final Currency currency,
                                                   @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey,
                                                   final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
-        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
         if (paymentControlPluginNames.isEmpty()) {
             return createCredit(account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey, properties, callContext);
         }
@@ -357,7 +355,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
     @Override
     public Payment createChargebackWithPaymentControl(final Account account, final UUID paymentId, final BigDecimal amount, final Currency currency, final String paymentTransactionExternalKey, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
-        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
         if (paymentControlPluginNames.isEmpty()) {
             return createChargeback(account, paymentId, amount, currency, paymentTransactionExternalKey, callContext);
         }

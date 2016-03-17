@@ -72,6 +72,12 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
     }
 
     @Override
+    public String getTenantConfig(final InternalTenantContext tenantContext) {
+        final List<String> values = tenantDao.getTenantValueForKey(TenantKey.PER_TENANT_CONFIG.toString(), tenantContext);
+        return getUniqueValue(values, "per tenant config", tenantContext);
+    }
+
+    @Override
     public String getInvoiceTemplate(final Locale locale, final InternalTenantContext tenantContext) {
         final List<String> values = tenantDao.getTenantValueForKey(LocaleUtils.localeString(locale, TenantKey.INVOICE_TEMPLATE.toString()), tenantContext);
         return getUniqueValue(values, "invoice template", tenantContext);

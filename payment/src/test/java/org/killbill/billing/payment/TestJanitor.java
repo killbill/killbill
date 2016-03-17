@@ -445,7 +445,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.assertListenerStatus();
 
         // 15s,1m,3m,1h,1d,1d,1d,1d,1d
-        for (final TimeSpan cur : paymentConfig.getIncompleteTransactionsRetries()) {
+        for (final TimeSpan cur : paymentConfig.getIncompleteTransactionsRetries(internalCallContext)) {
             // Verify there is a notification to retry updating the value
             assertEquals(getPendingNotificationCnt(internalCallContext), 1);
 

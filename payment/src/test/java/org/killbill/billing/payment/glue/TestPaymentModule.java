@@ -31,9 +31,10 @@ import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagUserApi;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
+import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
@@ -72,6 +73,7 @@ public class TestPaymentModule extends PaymentModule {
         install(new MemoryGlobalLockerModule(configSource));
         install(new MockTenantModule(configSource));
         install(new CacheModule(configSource));
+        install(new ConfigModule(configSource));
         install(new CallContextModule(configSource));
 
         installExternalApis();
