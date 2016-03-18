@@ -132,7 +132,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, stateNameBlock, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingInternalApi.setBlockingState(state1, internalCallContext);
+        subscriptionApi.addBlockingState(state1, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
@@ -146,7 +146,8 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Add blocking at bundle level.
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameBlock, service, null, blockBilling, blockEntitlement, blockChange, ImmutableList.<PluginProperty>of(), callContext);
+        final BlockingState state2 = new DefaultBlockingState(baseEntitlement.getBundleId(), BlockingStateType.SUBSCRIPTION_BUNDLE, stateNameBlock, service, blockChange, blockEntitlement, blockBilling, null);
+        subscriptionApi.addBlockingState(state2, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
 
@@ -156,8 +157,8 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Remove blocking at account level
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        final BlockingState state2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, stateNameUnBlock, service, false, false, false, clock.getUTCNow());
-        blockingInternalApi.setBlockingState(state2, internalCallContext);
+        final BlockingState state3 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, stateNameUnBlock, service, false, false, false, clock.getUTCNow());
+        subscriptionApi.addBlockingState(state3, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
@@ -167,7 +168,8 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Remove blocking at bundle level.
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
-        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), stateNameUnBlock, service, null, false, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final BlockingState state4 = new DefaultBlockingState(baseEntitlement.getBundleId(), BlockingStateType.SUBSCRIPTION_BUNDLE, stateNameUnBlock, service, false, false, false, null);
+        subscriptionApi.addBlockingState(state4, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);

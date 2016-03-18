@@ -44,6 +44,8 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
@@ -55,6 +57,7 @@ import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -245,6 +248,7 @@ public class BundleResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response addBundleBlockingState(final BlockingStateJson json,
                                            @PathParam(ID_PARAM_NAME) final String id,
+                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                            @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
@@ -259,8 +263,10 @@ public class BundleResource extends JaxRsResourceBase {
         final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
         final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
 
-        entitlementApi.setBlockingState(bundleId, json.getStateName(), json.getService(), json.getEffectiveDate(), isBlockBilling, isBlockEntitlement, isBlockChange, pluginProperties, callContext);
+        final LocalDate resolvedRequestedDate = requestedDate != null ? toLocalDate(requestedDate, callContext) : toLocalDate(requestedDate, callContext);
 
+        final BlockingState input = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, json.getStateName(), json.getService(), isBlockChange, isBlockEntitlement, isBlockBilling, null);
+        subscriptionApi.addBlockingState(input, resolvedRequestedDate, pluginProperties, callContext);
         return Response.status(Status.OK).build();
     }
 
