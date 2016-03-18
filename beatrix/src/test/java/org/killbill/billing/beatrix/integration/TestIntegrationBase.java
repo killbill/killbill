@@ -498,24 +498,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected Payment refundPaymentWithAdjustmentAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
-            @Override
-            public Payment apply(@Nullable final Void input) {
-
-                final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
-                properties.add(prop1);
-                try {
-                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
-                                                                     properties, PAYMENT_OPTIONS, callContext);
-                } catch (final PaymentApiException e) {
-                    fail(e.toString());
-                    return null;
-                }
-            }
-        }, events);
-    }
 
     protected Payment refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final Payment payment, final Map<UUID, BigDecimal> iias, final NextEvent... events) {
         return refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment, payment.getPurchasedAmount(), payment.getCurrency(), iias, events);

@@ -155,6 +155,10 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public Map<UUID, BigDecimal> validateInvoiceItemAdjustments(final UUID paymentId, final Map<UUID, BigDecimal> idWithAmount, final InternalTenantContext context) throws InvoiceApiException {
+        // We want to validate that only refund with invoice *item* adjustments are allowed (as opposed to refund with invoice adjustment)
+        if (idWithAmount.size() == 0) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_ITEMS_ADJUSTMENT_MISSING);
+        }
         final InvoicePayment invoicePayment = getInvoicePayment(paymentId, InvoicePaymentType.ATTEMPT, context);
         return dao.computeItemAdjustments(invoicePayment.getInvoiceId().toString(), idWithAmount, context);
     }
