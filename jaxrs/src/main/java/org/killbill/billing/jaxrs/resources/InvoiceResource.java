@@ -157,7 +157,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final TenantUserApi tenantApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.invoiceApi = invoiceApi;
         this.invoiceNotifier = invoiceNotifier;
         this.tenantApi = tenantApi;
@@ -299,7 +299,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final HttpServletRequest request,
                                         @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final LocalDate inputDate = toLocalDate(targetDate, callContext);
+        final LocalDate inputDate = toLocalDate(targetDate);
 
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, null,
@@ -361,10 +361,10 @@ public class InvoiceResource extends JaxRsResourceBase {
             } else if (DryRunType.SUBSCRIPTION_ACTION.name().equals(dryRunSubscriptionSpec.getDryRunType()) && dryRunSubscriptionSpec.getEffectiveDate() != null) {
                 inputDate = dryRunSubscriptionSpec.getEffectiveDate();
             } else {
-                inputDate = toLocalDate(targetDate, callContext);
+                inputDate = toLocalDate(targetDate);
             }
         } else {
-            inputDate = toLocalDate(targetDate, callContext);
+            inputDate = toLocalDate(targetDate);
         }
 
         // Passing a null or empty body means we are trying to generate an invoice with a (future) targetDate

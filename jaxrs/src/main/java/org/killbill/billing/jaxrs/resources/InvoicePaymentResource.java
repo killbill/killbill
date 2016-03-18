@@ -98,7 +98,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                   final InvoicePaymentApi invoicePaymentApi,
                                   final Clock clock,
                                   final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.invoicePaymentApi = invoicePaymentApi;
     }
 

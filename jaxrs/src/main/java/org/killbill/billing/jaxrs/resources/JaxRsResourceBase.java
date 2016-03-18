@@ -30,10 +30,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -49,14 +49,21 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.entitlement.api.SubscriptionApi;
+import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.JsonBase;
 import org.killbill.billing.jaxrs.json.PluginPropertyJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -110,6 +117,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final AuditUserApi auditUserApi;
     protected final AccountUserApi accountUserApi;
     protected final PaymentApi paymentApi;
+    protected final SubscriptionApi subscriptionApi;
     protected final Context context;
     protected final Clock clock;
 
@@ -122,6 +130,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                              final AuditUserApi auditUserApi,
                              final AccountUserApi accountUserApi,
                              final PaymentApi paymentApi,
+                             final SubscriptionApi subscriptionApi,
                              final Clock clock,
                              final Context context) {
         this.uriBuilder = uriBuilder;
@@ -130,6 +139,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         this.auditUserApi = auditUserApi;
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
+        this.subscriptionApi = subscriptionApi;
         this.clock = clock;
         this.context = context;
     }
@@ -137,6 +147,33 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected ObjectType getObjectType() {
         return null;
     }
+
+    public Response addBlockingState(final BlockingStateJson json,
+                                     final String id,
+                                     final BlockingStateType type,
+                                     final String requestedDate,
+                                     final List<String> pluginPropertiesString,
+                                     final String createdBy,
+                                     final String reason,
+                                     final String comment,
+                                     final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID blockableId = UUID.fromString(id);
+
+        final boolean isBlockBilling = (json.isBlockBilling() != null && json.isBlockBilling());
+        final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
+        final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
+
+        final LocalDate resolvedRequestedDate = toLocalDate(requestedDate);
+        final BlockingState input = new DefaultBlockingState(blockableId, type, json.getStateName(), json.getService(), isBlockChange, isBlockEntitlement, isBlockBilling, null);
+        subscriptionApi.addBlockingState(input, resolvedRequestedDate, pluginProperties, callContext);
+        return Response.status(Status.OK).build();
+    }
+
+
+
 
     protected Response getTags(final UUID accountId, final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {
         final List<Tag> tags = tagUserApi.getTagsForObject(taggedObjectId, getObjectType(), includeDeleted, context);
@@ -305,11 +342,11 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected LocalDate toLocalDateDefaultToday(final Account account, @Nullable final String inputDate, final TenantContext context) {
         // TODO Switch to cached normalized timezone when available
-        return MoreObjects.firstNonNull(toLocalDate(inputDate, context), clock.getToday(account.getTimeZone()));
+        return MoreObjects.firstNonNull(toLocalDate(inputDate), clock.getToday(account.getTimeZone()));
     }
 
     // API for subscription and invoice generation: keep null, the lower layers will default to now()
-    protected LocalDate toLocalDate(@Nullable final String inputDate, final TenantContext context) {
+    protected LocalDate toLocalDate(@Nullable final String inputDate) {
         return inputDate == null ? null : LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
     }
 

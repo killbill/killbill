@@ -51,6 +51,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.OrderingType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
@@ -58,6 +59,9 @@ import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
@@ -70,6 +74,7 @@ import org.killbill.billing.jaxrs.JaxrsExecutors;
 import org.killbill.billing.jaxrs.json.AccountEmailJson;
 import org.killbill.billing.jaxrs.json.AccountJson;
 import org.killbill.billing.jaxrs.json.AccountTimelineJson;
+import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.InvoiceEmailJson;
@@ -159,7 +164,7 @@ public class AccountResource extends JaxRsResourceBase {
                            final JaxrsExecutors jaxrsExecutors,
                            final JaxrsConfig jaxrsConfig,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, paymentApi, subscriptionApi, clock, context);
         this.subscriptionApi = subscriptionApi;
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;
@@ -966,6 +971,57 @@ public class AccountResource extends JaxRsResourceBase {
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState, paymentConfig)).build();
     }
+
+
+    /*
+     * *************************      BLOCKING STATE     *****************************
+     */
+
+    @TimedResource
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + BLOCK)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve blocking states for account", response = BlockingStateJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
+    public Response getBlockingStates(@PathParam(ID_PARAM_NAME) final String id,
+                                      @QueryParam(QUERY_BLOCKING_STATE_TYPES) final List<BlockingStateType> typeFilter,
+                                      @QueryParam(QUERY_BLOCKING_STATE_SVCS) final List<String> svcsFilter,
+                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
+
+        final TenantContext tenantContext = this.context.createContext(request);
+        final UUID accountId = UUID.fromString(id);
+        final Iterable<BlockingState> blockingStates = subscriptionApi.getBlockingStates(accountId, typeFilter, svcsFilter, OrderingType.ASCENDING, SubscriptionApi.ALL_EVENTS, tenantContext);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
+
+        final List<BlockingStateJson> result = ImmutableList.copyOf(Iterables.transform(blockingStates, new Function<BlockingState, BlockingStateJson>() {
+            @Override
+            public BlockingStateJson apply(final BlockingState input) {
+                return new BlockingStateJson(input, accountAuditLogs);
+            }
+        }));
+
+        return Response.status(Status.OK).entity(result).build();
+    }
+
+    @TimedResource
+    @PUT
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + BLOCK)
+    @Consumes(APPLICATION_JSON)
+    @ApiOperation(value = "Block an account")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response addAccountBlockingState(final BlockingStateJson json,
+                                           @PathParam(ID_PARAM_NAME) final String id,
+                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                           @HeaderParam(HDR_REASON) final String reason,
+                                           @HeaderParam(HDR_COMMENT) final String comment,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+        return addBlockingState(json, id, BlockingStateType.ACCOUNT, requestedDate, pluginPropertiesString, createdBy, reason, comment, request);
+    }
+
 
     /*
      * *************************      CUSTOM FIELDS     *****************************

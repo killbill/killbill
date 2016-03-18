@@ -85,6 +85,10 @@ public interface JaxrsResource {
 
     public static final String QUERY_ACCOUNT_ID = "accountId";
 
+    public static final String QUERY_BLOCKING_STATE_TYPES = "blockingStateTypes";
+    public static final String QUERY_BLOCKING_STATE_SVCS = "blockingStateSvcs";
+
+
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
     public static final String QUERY_WITH_MIGRATION_INVOICES = "withMigrationInvoices";
     public static final String QUERY_UNPAID_INVOICES_ONLY = "unpaidInvoicesOnly";

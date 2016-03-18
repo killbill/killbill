@@ -96,7 +96,7 @@ public class TestResource extends JaxRsResourceBase {
                         final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final RecordIdApi recordIdApi,
                         final PersistentBus persistentBus, final NotificationQueueService notificationQueueService, final PaymentApi paymentApi,
                         final Clock clock, final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.persistentBus = persistentBus;
         this.notificationQueueService = notificationQueueService;
         this.recordIdApi = recordIdApi;

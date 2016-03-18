@@ -44,7 +44,6 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -57,7 +56,6 @@ import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -103,7 +101,7 @@ public class BundleResource extends JaxRsResourceBase {
                           final PaymentApi paymentApi,
                           final Clock clock,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, subscriptionApi, clock, context);
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;
     }
@@ -211,7 +209,7 @@ public class BundleResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
-        final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
+        final LocalDate inputLocalDate = toLocalDate(requestedDate);
         entitlementApi.pause(bundleId, inputLocalDate, pluginProperties, callContext);
         return Response.status(Status.OK).build();
     }
@@ -234,7 +232,7 @@ public class BundleResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
-        final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
+        final LocalDate inputLocalDate = toLocalDate(requestedDate);
         entitlementApi.resume(bundleId, inputLocalDate, pluginProperties, callContext);
         return Response.status(Status.OK).build();
     }
@@ -254,20 +252,7 @@ public class BundleResource extends JaxRsResourceBase {
                                            @HeaderParam(HDR_REASON) final String reason,
                                            @HeaderParam(HDR_COMMENT) final String comment,
                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
-
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID bundleId = UUID.fromString(id);
-
-        final boolean isBlockBilling = (json.isBlockBilling() != null && json.isBlockBilling());
-        final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
-        final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
-
-        final LocalDate resolvedRequestedDate = requestedDate != null ? toLocalDate(requestedDate, callContext) : toLocalDate(requestedDate, callContext);
-
-        final BlockingState input = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, json.getStateName(), json.getService(), isBlockChange, isBlockEntitlement, isBlockBilling, null);
-        subscriptionApi.addBlockingState(input, resolvedRequestedDate, pluginProperties, callContext);
-        return Response.status(Status.OK).build();
+        return addBlockingState(json, id, BlockingStateType.SUBSCRIPTION_BUNDLE, requestedDate, pluginPropertiesString, createdBy, reason, comment, request);
     }
 
 
@@ -364,7 +349,7 @@ public class BundleResource extends JaxRsResourceBase {
         final UUID bundleId = UUID.fromString(id);
 
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
-        final LocalDate inputLocalDate = toLocalDate(requestedDate, callContext);
+        final LocalDate inputLocalDate = toLocalDate(requestedDate);
 
         final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, policy, pluginProperties, callContext);
         return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundleId, uriInfo.getBaseUri().toString());
