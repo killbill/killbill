@@ -88,52 +88,6 @@ public class TestInvoicePayment extends TestJaxrsBase {
         verifyInvoice(paymentJson, expectedInvoiceBalance);
     }
 
-    @Test(groups = "slow", description = "Can create a full refund with invoice adjustment")
-    public void testFullRefundWithInvoiceAdjustment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
-
-        // Issue a refund for the full amount
-        final BigDecimal refundAmount = paymentJson.getPurchasedAmount();
-        final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
-
-        final InvoicePayments invoicePayments = killBillClient.getInvoicePayment(paymentJson.getTargetInvoiceId());
-        Assert.assertEquals(invoicePayments.size(), 1);
-
-        // Post and verify the refund
-        final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
-        refund.setPaymentId(paymentJson.getPaymentId());
-        refund.setAmount(refundAmount);
-        refund.setIsAdjusted(true);
-        final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, createdBy, reason, comment);
-        verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
-
-        // Verify the invoice balance
-        verifyInvoice(paymentJson, expectedInvoiceBalance);
-
-        final InvoicePayments invoicePaymentsAfterRefund = killBillClient.getInvoicePayment(paymentJson.getTargetInvoiceId());
-        Assert.assertEquals(invoicePaymentsAfterRefund.size(), 1);
-
-    }
-
-    @Test(groups = "slow", description = "Can create a partial refund with invoice adjustment")
-    public void testPartialRefundWithInvoiceAdjustment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
-
-        // Issue a refund for a fraction of the amount
-        final BigDecimal refundAmount = getFractionOfAmount(paymentJson.getPurchasedAmount());
-        final BigDecimal expectedInvoiceBalance = BigDecimal.ZERO;
-
-        // Post and verify the refund
-        final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
-        refund.setPaymentId(paymentJson.getPaymentId());
-        refund.setAmount(refundAmount);
-        refund.setIsAdjusted(true);
-        final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, createdBy, reason, comment);
-        verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
-
-        // Verify the invoice balance
-        verifyInvoice(paymentJson, expectedInvoiceBalance);
-    }
 
     @Test(groups = "slow", description = "Can create a full refund with invoice item adjustment")
     public void testRefundWithFullInvoiceItemAdjustment() throws Exception {
