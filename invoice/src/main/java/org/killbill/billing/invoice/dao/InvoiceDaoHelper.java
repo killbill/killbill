@@ -81,10 +81,6 @@ public class InvoiceDaoHelper {
                                                         final InternalTenantContext context) throws InvoiceApiException {
         // Populate the missing amounts for individual items, if needed
         final Map<UUID, BigDecimal> outputItemIdsWithAmounts = new HashMap<UUID, BigDecimal>();
-        if (invoiceItemIdsWithNullAmounts.size() == 0) {
-            return outputItemIdsWithAmounts;
-        }
-
         // Retrieve invoice before the Refund
         final InvoiceModelDao invoice = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class).getById(invoiceId, context);
         if (invoice != null) {

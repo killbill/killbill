@@ -51,15 +51,6 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         verifyRefund(THIRTY, BigDecimal.TEN, BigDecimal.TEN, false, ImmutableMap.<UUID, BigDecimal>of());
     }
 
-    @Test(groups = "slow")
-    public void testFullRefundWithInvoiceAdjustment() throws Exception {
-        verifyRefund(THIRTY, THIRTY, BigDecimal.ZERO, true, ImmutableMap.<UUID, BigDecimal>of());
-    }
-
-    @Test(groups = "slow")
-    public void testPartialRefundWithInvoiceAdjustment() throws Exception {
-        verifyRefund(THIRTY, BigDecimal.TEN, BigDecimal.ZERO, true, ImmutableMap.<UUID, BigDecimal>of());
-    }
 
     @Test(groups = "slow")
     public void testFullRefundWithBothInvoiceItemAdjustments() throws Exception {
