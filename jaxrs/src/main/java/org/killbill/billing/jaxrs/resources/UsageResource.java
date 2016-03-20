@@ -47,6 +47,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
+import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -101,7 +102,9 @@ public class UsageResource extends JaxRsResourceBase {
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final HttpServletRequest request,
-                                @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException {
+                                @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException,
+                                                                                        AccountApiException,
+                                                                                        UsageApiException {
         verifyNonNullOrEmpty(json, "SubscriptionUsageRecordJson body should be specified");
         verifyNonNullOrEmpty(json.getSubscriptionId(), "SubscriptionUsageRecordJson subscriptionId needs to be set",
                              json.getUnitUsageRecords(), "SubscriptionUsageRecordJson unitUsageRecords needs to be set");

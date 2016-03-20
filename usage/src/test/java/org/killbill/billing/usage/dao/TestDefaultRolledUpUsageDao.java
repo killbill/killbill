@@ -17,14 +17,18 @@
 
 package org.killbill.billing.usage.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.UsageTestSuiteWithEmbeddedDB;
+import org.killbill.billing.util.UUIDs;
+import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
 
@@ -37,8 +41,12 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final Long amount1 = 10L;
         final Long amount2 = 5L;
 
-        rolledUpUsageDao.record(subscriptionId, unitType, startDate, amount1, internalCallContext);
-        rolledUpUsageDao.record(subscriptionId, unitType, endDate.minusDays(1), amount2, internalCallContext);
+        RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType, startDate, amount1, UUID.randomUUID().toString());
+        RolledUpUsageModelDao usage2 = new RolledUpUsageModelDao(subscriptionId, unitType, endDate.minusDays(1), amount2, UUID.randomUUID().toString());
+        List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
+        usages.add(usage1);
+        usages.add(usage2);
+        rolledUpUsageDao.record(usages, internalCallContext);
 
         final List<RolledUpUsageModelDao> result = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContext);
         assertEquals(result.size(), 2);
@@ -63,10 +71,14 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final Long amount2 = 5L;
         final Long amount3 = 13L;
 
-        rolledUpUsageDao.record(subscriptionId, unitType1, startDate, amount1, internalCallContext);
-        rolledUpUsageDao.record(subscriptionId, unitType1, startDate.plusDays(1), amount2, internalCallContext);
-
-        rolledUpUsageDao.record(subscriptionId, unitType2, endDate.minusDays(1), amount3, internalCallContext);
+        RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType1, startDate, amount1, UUID.randomUUID().toString());
+        RolledUpUsageModelDao usage2 = new RolledUpUsageModelDao(subscriptionId, unitType1, startDate.plusDays(1), amount2, UUID.randomUUID().toString());
+        RolledUpUsageModelDao usage3 = new RolledUpUsageModelDao(subscriptionId, unitType2, endDate.minusDays(1), amount3, UUID.randomUUID().toString());
+        List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
+        usages.add(usage1);
+        usages.add(usage2);
+        usages.add(usage3);
+        rolledUpUsageDao.record(usages, internalCallContext);
 
         final List<RolledUpUsageModelDao> result = rolledUpUsageDao.getAllUsageForSubscription(subscriptionId, startDate, endDate, internalCallContext);
         assertEquals(result.size(), 3);
@@ -91,9 +103,71 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final LocalDate startDate = new LocalDate(2013, 1, 1);
         final LocalDate endDate = new LocalDate(2013, 2, 1);
 
-        rolledUpUsageDao.record(subscriptionId, unitType, endDate, 9L, internalCallContext);
+        RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType, endDate, 9L, UUID.randomUUID().toString());
+        List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
+        usages.add(usage1);
+        rolledUpUsageDao.record(usages, internalCallContext);
 
         final List<RolledUpUsageModelDao> result = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContext);
         assertEquals(result.size(), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testDuplicateRecords() {
+        final UUID subscriptionId = UUID.randomUUID();
+        final String unitType1 = "foo";
+        final String unitType2 = "bar";
+        final LocalDate startDate = new LocalDate(2013, 1, 1);
+        final LocalDate endDate = new LocalDate(2013, 2, 1);
+        final Long amount1 = 10L;
+        final Long amount2 = 5L;
+        final Long amount3 = 13L;
+
+        RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType1, startDate, amount1, UUID.randomUUID().toString());
+        RolledUpUsageModelDao usage2 = new RolledUpUsageModelDao(subscriptionId, unitType1, startDate.plusDays(1), amount2, UUID.randomUUID().toString());
+        RolledUpUsageModelDao usage3 = new RolledUpUsageModelDao(subscriptionId, unitType2, endDate.minusDays(1), amount3, UUID.randomUUID().toString());
+
+        List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
+        usages.add(usage1);
+        usages.add(usage2);
+        usages.add(usage3);
+        rolledUpUsageDao.record(usages, internalCallContext);
+
+        final List<RolledUpUsageModelDao> result = rolledUpUsageDao.getAllUsageForSubscription(subscriptionId, startDate, endDate, internalCallContext);
+        assertEquals(result.size(), 3);
+
+        try {
+            rolledUpUsageDao.record(usages, internalCallContext);
+            fail("duplicate records accepted");
+        } catch (UnableToExecuteStatementException e) {
+            assertEquals(result.size(), 3);
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testRecordsWithTrackingIdExist() {
+        final UUID subscriptionId = UUIDs.randomUUID();
+        final String unitType1 = "foo";
+        final String unitType2 = "bar";
+        final LocalDate startDate = new LocalDate(2013, 1, 1);
+        final LocalDate endDate = new LocalDate(2013, 2, 1);
+        final Long amount1 = 10L;
+        final Long amount2 = 5L;
+        final Long amount3 = 13L;
+
+        String trackingId = UUIDs.randomUUID().toString();
+
+        RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType1, startDate, amount1, trackingId);
+        RolledUpUsageModelDao usage2 = new RolledUpUsageModelDao(subscriptionId, unitType1, startDate.plusDays(1), amount2, trackingId);
+        RolledUpUsageModelDao usage3 = new RolledUpUsageModelDao(subscriptionId, unitType2, endDate.minusDays(1), amount3, UUID.randomUUID().toString());
+
+        List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
+        usages.add(usage1);
+        usages.add(usage2);
+        usages.add(usage3);
+        rolledUpUsageDao.record(usages, internalCallContext);
+
+        assertEquals(rolledUpUsageDao.recordsWithTrackingIdExist(subscriptionId, trackingId, internalCallContext),
+                     Boolean.TRUE);
     }
 }

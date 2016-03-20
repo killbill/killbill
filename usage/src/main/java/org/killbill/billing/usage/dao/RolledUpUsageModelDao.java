@@ -26,25 +26,35 @@ import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
+import com.google.common.base.Strings;
+
 public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
     private UUID subscriptionId;
     private String unitType;
     private LocalDate recordDate;
     private Long amount;
+    private String trackingId;
 
     public RolledUpUsageModelDao() { /* For the DAO mapper */ }
 
-    public RolledUpUsageModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final UUID subscriptionId, final String unitType, final LocalDate recordDate, final Long amount) {
+    public RolledUpUsageModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final UUID subscriptionId, final String unitType, final LocalDate recordDate, final Long amount, final String trackingId) {
         super(id, createdDate, updatedDate);
         this.subscriptionId = subscriptionId;
         this.unitType = unitType;
         this.recordDate = recordDate;
         this.amount = amount;
+
+        if(Strings.isNullOrEmpty(trackingId)){
+            this.trackingId = UUIDs.randomUUID().toString();
+        }
+        else {
+            this.trackingId = trackingId;
+        }
     }
 
-    public RolledUpUsageModelDao(final UUID subscriptionId, final String unitType, final LocalDate recordDate, final Long amount) {
-        this(UUIDs.randomUUID(), null, null, subscriptionId, unitType, recordDate, amount);
+    public RolledUpUsageModelDao(final UUID subscriptionId, final String unitType, final LocalDate recordDate, final Long amount, final String trackingId) {
+        this(UUIDs.randomUUID(), null, null, subscriptionId, unitType, recordDate, amount, trackingId);
     }
 
     public UUID getSubscriptionId() {
@@ -79,6 +89,14 @@ public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityM
         this.amount = amount;
     }
 
+    public String getTrackingId() {
+        return trackingId;
+    }
+
+    public void setTrackingId(final String trackingId) {
+        this.trackingId = trackingId;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -88,6 +106,7 @@ public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityM
         sb.append(", unitType='").append(unitType).append('\'');
         sb.append(", recordDate=").append(recordDate);
         sb.append(", amount=").append(amount);
+        sb.append(", trackingId=").append(trackingId);
         sb.append('}');
         return sb.toString();
     }
@@ -118,7 +137,9 @@ public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityM
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
         }
-
+        if (trackingId != null ? !trackingId.equals(that.trackingId) : that.trackingId != null) {
+            return false;
+        }
         return true;
     }
 
@@ -129,6 +150,7 @@ public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityM
         result = 31 * result + (unitType != null ? unitType.hashCode() : 0);
         result = 31 * result + (recordDate != null ? recordDate.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (trackingId != null ? trackingId.hashCode() : 0);
         return result;
     }
 
