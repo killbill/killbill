@@ -55,7 +55,7 @@ public class InvoiceItemJson extends JsonBase {
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final BigDecimal amount;
-    private final Currency currency;
+    private final String currency;
 
     @JsonCreator
     public InvoiceItemJson(@JsonProperty("invoiceItemId") final String invoiceItemId,
@@ -72,7 +72,7 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("startDate") final LocalDate startDate,
                            @JsonProperty("endDate") final LocalDate endDate,
                            @JsonProperty("amount") final BigDecimal amount,
-                           @JsonProperty("currency") final Currency currency,
+                           @JsonProperty("currency") final String currency,
                            @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.invoiceItemId = invoiceItemId;
@@ -97,7 +97,7 @@ public class InvoiceItemJson extends JsonBase {
              toString(item.getAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
              item.getPlanName(), item.getPhaseName(), item.getUsageName(), item.getInvoiceItemType().toString(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
-             item.getAmount(), item.getCurrency(), toAuditLogJson(auditLogs));
+             item.getAmount(), item.getCurrency().name(), toAuditLogJson(auditLogs));
     }
 
     public InvoiceItem toInvoiceItem() {
@@ -134,7 +134,7 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public Currency getCurrency() {
-                return currency;
+                return Currency.valueOf(currency);
             }
 
             @Override
@@ -259,7 +259,7 @@ public class InvoiceItemJson extends JsonBase {
         return amount;
     }
 
-    public Currency getCurrency() {
+    public String getCurrency() {
         return currency;
     }
 
@@ -306,7 +306,7 @@ public class InvoiceItemJson extends JsonBase {
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
-        if (currency != that.currency) {
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
         if (description != null ? !description.equals(that.description) : that.description != null) {

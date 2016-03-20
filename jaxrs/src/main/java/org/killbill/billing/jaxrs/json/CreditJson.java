@@ -42,12 +42,12 @@ public class CreditJson extends JsonBase {
     @ApiModelProperty(dataType = "java.util.UUID", required = true)
     private final String accountId;
     private final String description;
-    private final Currency currency;
+    private final String currency;
 
 
     @JsonCreator
     public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
-                      @JsonProperty("currency") final Currency currency,
+                      @JsonProperty("currency") final String currency,
                       @JsonProperty("invoiceId") final String invoiceId,
                       @JsonProperty("invoiceNumber") final String invoiceNumber,
                       @JsonProperty("effectiveDate") final LocalDate effectiveDate,
@@ -68,7 +68,7 @@ public class CreditJson extends JsonBase {
         super(toAuditLogJson(auditLogs));
         this.accountId = toString(credit.getAccountId());
         this.creditAmount = credit.getAmount();
-        this.currency = credit.getCurrency();
+        this.currency = credit.getCurrency().name();
         this.invoiceId = toString(credit.getInvoiceId());
         this.invoiceNumber = invoice.getInvoiceNumber().toString();
         this.effectiveDate = credit.getStartDate();
@@ -103,7 +103,7 @@ public class CreditJson extends JsonBase {
         return description;
     }
 
-    public Currency getCurrency() {
+    public String getCurrency() {
         return currency;
     }
 
@@ -137,7 +137,7 @@ public class CreditJson extends JsonBase {
               (creditAmount != null && that.creditAmount != null && creditAmount.compareTo(that.creditAmount) == 0))) {
             return false;
         }
-        if (currency != that.currency) {
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
