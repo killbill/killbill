@@ -730,6 +730,13 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         testAccountBalanceWithRefundAndCBAInternal(true, refundAmount, expectedBalance);
     }
 
+    @Test(groups = "slow")
+    public void testAccountBalanceWithLargeRefundAndCBANoAdj() throws InvoiceApiException, EntityPersistenceException {
+        final BigDecimal refundAmount = new BigDecimal("20.00");
+        final BigDecimal expectedBalance = new BigDecimal("10.00");
+        testAccountBalanceWithRefundAndCBAInternal(false, refundAmount, expectedBalance);
+    }
+
     private void testAccountBalanceWithRefundAndCBAInternal(final boolean withAdjustment, final BigDecimal refundAmount, final BigDecimal expectedFinalBalance) throws InvoiceApiException, EntityPersistenceException {
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
@@ -785,7 +792,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(cba.compareTo(new BigDecimal("10.00")), 0);
 
         // PARTIAL REFUND on the payment
-        invoiceDao.createRefund(paymentId, refundAmount, withAdjustment, ImmutableMap.<UUID, BigDecimal>of(item2Replace.getId(), refundAmount), UUID.randomUUID().toString(), context);
+        final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts = new HashMap<UUID, BigDecimal>();
+        if (withAdjustment) {
+            invoiceItemIdsWithAmounts.put(item2Replace.getId(), refundAmount);
+        }
+        invoiceDao.createRefund(paymentId, refundAmount, withAdjustment, invoiceItemIdsWithAmounts, UUID.randomUUID().toString(), context);
 
         balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(expectedFinalBalance), 0);

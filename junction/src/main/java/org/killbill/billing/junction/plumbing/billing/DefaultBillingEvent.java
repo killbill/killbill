@@ -272,6 +272,9 @@ public class DefaultBillingEvent implements BillingEvent {
         if (currency != that.currency) {
             return false;
         }
+        if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) {
+            return false;
+        }
         if (description != null ? !description.equals(that.description) : that.description != null) {
             return false;
         }
@@ -304,6 +307,7 @@ public class DefaultBillingEvent implements BillingEvent {
     public int hashCode() {
         int result = 31 * billCycleDayLocal;
         result = 31 * result + (subscription != null ? subscription.hashCode() : 0);
+        result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (planPhase != null ? planPhase.hashCode() : 0);
         result = 31 * result + (plan != null ? plan.hashCode() : 0);
