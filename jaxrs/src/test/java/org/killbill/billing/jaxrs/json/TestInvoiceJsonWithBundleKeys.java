@@ -111,6 +111,6 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final String invoiceNumber = UUID.randomUUID().toString();
         final LocalDate effectiveDate = clock.getUTCToday();
         final String accountId = UUID.randomUUID().toString();
-        return new CreditJson(creditAmount, currency, invoiceId, invoiceNumber, effectiveDate,  accountId, null, null);
+        return new CreditJson(creditAmount, currency.name(), invoiceId, invoiceNumber, effectiveDate,  accountId, null, null);
     }
 }

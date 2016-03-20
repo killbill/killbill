@@ -463,7 +463,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     UUID.fromString(json.getInvoiceItemId()),
                                                                     requestedDate,
                                                                     json.getAmount(),
-                                                                    json.getCurrency(),
+                                                                    Currency.valueOf(json.getCurrency()),
                                                                     json.getDescription(),
                                                                     callContext);
         }
@@ -546,7 +546,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                    input.getStartDate(),
                                                    input.getEndDate(),
                                                    input.getAmount(),
-                                                   accountCurrency,
+                                                   accountCurrency.name(),
                                                    null);
                     }
                 }
