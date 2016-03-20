@@ -138,7 +138,7 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
         final String voidKey = UUID.randomUUID().toString();
         final Payment voidTransaction = paymentProcessor.createVoid(true, null, account, paymentId, voidKey,
                                                                     SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
-        verifyPayment(voidTransaction, paymentExternalKey, TEN, ZERO, ZERO, 2);
+        verifyPayment(voidTransaction, paymentExternalKey, ZERO, ZERO, ZERO, 2);
         verifyPaymentTransaction(voidTransaction.getTransactions().get(1), voidKey, TransactionType.VOID, null, paymentId);
         paymentBusListener.verify(2, account.getId(), paymentId, null);
     }
@@ -241,7 +241,7 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
             Assert.assertEquals(event.getPaymentId(), paymentId);
             Assert.assertEquals(event.getAccountId(), accountId);
             if (amount == null) {
-                Assert.assertEquals(event.getAmount().compareTo(BigDecimal.ZERO), 0);
+                Assert.assertNull(event.getAmount());
             } else {
                 Assert.assertEquals(event.getAmount().compareTo(amount), 0);
             }
