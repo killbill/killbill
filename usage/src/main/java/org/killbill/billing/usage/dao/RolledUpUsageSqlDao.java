@@ -32,14 +32,13 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @EntitySqlDaoStringTemplate
 public interface RolledUpUsageSqlDao extends EntitySqlDao<RolledUpUsageModelDao, Entity> {
 
     @SqlBatch
     void create(@BindBean Iterable<RolledUpUsageModelDao> usages,
-                       @InternalTenantContextBinder final InternalCallContext context);
+                @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
     Long recordsWithTrackingIdExist(@Bind("subscriptionId") final UUID subscriptionId,
@@ -48,19 +47,19 @@ public interface RolledUpUsageSqlDao extends EntitySqlDao<RolledUpUsageModelDao,
 
     @SqlQuery
     List<RolledUpUsageModelDao> getUsageForSubscription(@Bind("subscriptionId") final UUID subscriptionId,
-                                                               @Bind("startDate") final Date startDate,
-                                                               @Bind("endDate") final Date endDate,
-                                                               @Bind("unitType") final String unitType,
-                                                               @InternalTenantContextBinder final InternalTenantContext context);
+                                                        @Bind("startDate") final Date startDate,
+                                                        @Bind("endDate") final Date endDate,
+                                                        @Bind("unitType") final String unitType,
+                                                        @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     List<RolledUpUsageModelDao> getAllUsageForSubscription(@Bind("subscriptionId") final UUID subscriptionId,
-                                                                  @Bind("startDate") final Date startDate,
-                                                                  @Bind("endDate") final Date endDate,
-                                                                  @InternalTenantContextBinder final InternalTenantContext context);
+                                                           @Bind("startDate") final Date startDate,
+                                                           @Bind("endDate") final Date endDate,
+                                                           @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     List<RolledUpUsageModelDao> getRawUsageForAccount(@Bind("startDate") final Date startDate,
-                                                             @Bind("endDate") final Date endDate,
-                                                             @InternalTenantContextBinder final InternalTenantContext context);
+                                                      @Bind("endDate") final Date endDate,
+                                                      @InternalTenantContextBinder final InternalTenantContext context);
 }
