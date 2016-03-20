@@ -37,6 +37,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Currency;
@@ -192,7 +193,10 @@ public class BlockingCalculator {
     }
 
     protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription, final InternalTenantContext context) throws CatalogApiException {
+
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
+        final Catalog catalog = catalogService.getFullCatalog(context);
+
         for (final DisabledDuration duration : disabledDuration) {
             // The first one before the blocked duration
             final BillingEvent precedingInitialEvent = precedingBillingEventForSubscription(duration.getStart(), billingEvents, subscription);
@@ -200,12 +204,12 @@ public class BlockingCalculator {
             final BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), billingEvents, subscription);
 
             if (precedingInitialEvent != null) { // there is a preceding billing event
-                result.add(createNewDisableEvent(duration.getStart(), precedingInitialEvent, context));
+                result.add(createNewDisableEvent(duration.getStart(), precedingInitialEvent, catalog, context));
                 if (duration.getEnd() != null) { // no second event in the pair means they are still disabled (no re-enable)
-                    result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent, context));
+                    result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent, catalog, context));
                 }
             } else if (precedingFinalEvent != null) { // can happen - e.g. phase event
-                result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent, context));
+                result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent, catalog, context));
             }
             // N.B. if there's no precedingInitial and no precedingFinal then there's nothing to do
         }
@@ -245,7 +249,7 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected BillingEvent createNewDisableEvent(final DateTime odEventTime, final BillingEvent previousEvent, final InternalTenantContext context) throws CatalogApiException {
+    protected BillingEvent createNewDisableEvent(final DateTime odEventTime, final BillingEvent previousEvent, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
         final int billCycleDay = previousEvent.getBillCycleDayLocal();
         final SubscriptionBase subscription = previousEvent.getSubscription();
         final DateTime effectiveDate = odEventTime;
@@ -266,10 +270,10 @@ public class BlockingCalculator {
         return new DefaultBillingEvent(subscription, effectiveDate, true, plan, planPhase, fixedPrice,
                                        currency,
                                        billingPeriod, billCycleDay,
-                                       description, totalOrdering, type, tz, catalogService.getFullCatalog(context), true);
+                                       description, totalOrdering, type, tz, catalog, true);
     }
 
-    protected BillingEvent createNewReenableEvent(final DateTime odEventTime, final BillingEvent previousEvent, final InternalTenantContext context) throws CatalogApiException {
+    protected BillingEvent createNewReenableEvent(final DateTime odEventTime, final BillingEvent previousEvent, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
         // All fields are populated with the event state from before the blocking period, for invoice to resume invoicing
         final int billCycleDay = previousEvent.getBillCycleDayLocal();
         final SubscriptionBase subscription = previousEvent.getSubscription();
@@ -287,7 +291,7 @@ public class BlockingCalculator {
         return new DefaultBillingEvent(subscription, effectiveDate, true, plan, planPhase, fixedPrice,
                                        currency,
                                        billingPeriod, billCycleDay,
-                                       description, totalOrdering, type, tz, catalogService.getFullCatalog(context), false);
+                                       description, totalOrdering, type, tz, catalog, false);
     }
 
     protected Hashtable<UUID, List<SubscriptionBase>> createBundleSubscriptionMap(final SortedSet<BillingEvent> billingEvents) {

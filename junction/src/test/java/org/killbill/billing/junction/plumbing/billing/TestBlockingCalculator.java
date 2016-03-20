@@ -33,11 +33,9 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.MockPlan;
-import org.killbill.billing.catalog.MockPlanPhase;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.Fixed;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -594,7 +592,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final DateTime now = clock.getUTCNow();
         final BillingEvent event = new MockBillingEvent();
 
-        final BillingEvent result = blockingCalculator.createNewDisableEvent(now, event, internalCallContext);
+        final BillingEvent result = blockingCalculator.createNewDisableEvent(now, event, null, internalCallContext);
         assertEquals(result.getBillCycleDayLocal(), event.getBillCycleDayLocal());
         assertEquals(result.getEffectiveDate(), now);
         assertEquals(result.getPlanPhase(), event.getPlanPhase());
@@ -614,7 +612,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final DateTime now = clock.getUTCNow();
         final BillingEvent event = new MockBillingEvent();
 
-        final BillingEvent result = blockingCalculator.createNewReenableEvent(now, event, internalCallContext);
+        final BillingEvent result = blockingCalculator.createNewReenableEvent(now, event, null, internalCallContext);
         assertEquals(result.getBillCycleDayLocal(), event.getBillCycleDayLocal());
         assertEquals(result.getEffectiveDate(), now);
         assertEquals(result.getPlanPhase(), event.getPlanPhase());
