@@ -64,7 +64,7 @@ public class DefaultUsageUserApi implements UsageUserApi {
 
     @Override
     public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
-        final List<RolledUpUsageModelDao> usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContextFactory.createInternalTenantContext(tenantContext));
+        final List<RolledUpUsageModelDao> usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContext));
         final List<RolledUpUnit> rolledUpAmount = getRolledUpUnits(usageForSubscription);
         return new DefaultRolledUpUsage(subscriptionId, startDate, endDate, rolledUpAmount);
     }

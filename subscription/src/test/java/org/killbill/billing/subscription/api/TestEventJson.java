@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,16 +21,15 @@ package org.killbill.billing.subscription.api;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
+import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
+import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
+import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
-import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
-import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
-import org.killbill.billing.util.jackson.ObjectMapper;
-
-public class TestEventJson extends GuicyKillbillTestSuiteNoDB {
+public class TestEventJson extends SubscriptionTestSuiteNoDB {
 
     private final ObjectMapper mapper = new ObjectMapper();
 

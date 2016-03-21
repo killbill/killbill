@@ -37,6 +37,7 @@ import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
 import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
+import org.killbill.billing.events.NullInvoiceInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
@@ -113,6 +114,7 @@ public class TestApiListener {
         RESUME,
         PHASE,
         BLOCK,
+        NULL_INVOICE,
         INVOICE,
         INVOICE_NOTIFICATION,
         INVOICE_ADJUSTMENT,
@@ -235,6 +237,13 @@ public class TestApiListener {
     public void handleInvoiceNotificationEvents(final InvoiceNotificationInternalEvent event) {
         log.info(String.format("Got Invoice notification event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE_NOTIFICATION);
+        notifyIfStackEmpty();
+    }
+
+    @Subscribe
+    public void handleNullInvoiceEvents(final NullInvoiceInternalEvent event) {
+        log.info(String.format("Got Null Invoice event %s", event.toString()));
+        assertEqualsNicely(NextEvent.NULL_INVOICE);
         notifyIfStackEmpty();
     }
 

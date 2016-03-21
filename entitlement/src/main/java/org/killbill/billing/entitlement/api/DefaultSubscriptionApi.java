@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -121,10 +121,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public SubscriptionBundle getSubscriptionBundle(final UUID bundleId, final TenantContext tenantContext) throws SubscriptionApiException {
-
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext);
-
-
         final UUID accountId = internalCallContextFactory.getAccountId(bundleId, ObjectType.BUNDLE, tenantContext);
 
         final Optional<SubscriptionBundle> bundleOptional = Iterables.<SubscriptionBundle>tryFind(getSubscriptionBundlesForAccount(accountId, tenantContext),
@@ -241,10 +237,11 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     private List<SubscriptionBundle> getSubscriptionBundlesForAccount(final UUID accountId, final TenantContext tenantContext) throws SubscriptionApiException {
+        final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
+
         // Retrieve entitlements
         final AccountEntitlements accountEntitlements;
         try {
-            final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
             accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccountId(accountId, internalTenantContextWithValidAccountRecordId);
         } catch (final EntitlementApiException e) {
             throw new SubscriptionApiException(e);
@@ -261,11 +258,11 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             final List<Subscription> subscriptionsForBundle = subscriptionsPerBundle.get(bundleId);
             final String externalKey = subscriptionsForBundle.get(0).getExternalKey();
 
-            final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountTimeZone,
-                                                                                              accountId,
+            final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId,
                                                                                               bundleId,
                                                                                               externalKey,
-                                                                                              accountEntitlements.getEntitlements().get(bundleId));
+                                                                                              accountEntitlements.getEntitlements().get(bundleId),
+                                                                                              internalTenantContextWithValidAccountRecordId);
 
             final SubscriptionBaseBundle baseBundle = accountEntitlements.getBundles().get(bundleId);
             final SubscriptionBundle subscriptionBundle = new DefaultSubscriptionBundle(bundleId,

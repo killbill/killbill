@@ -24,10 +24,10 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.beatrix.BeatrixTestSuite;
+import org.killbill.billing.beatrix.BeatrixTestSuiteNoDB;
 import org.killbill.billing.util.jackson.ObjectMapper;
 
-public class TestEventJson extends BeatrixTestSuite {
+public class TestEventJson extends BeatrixTestSuiteNoDB {
 
     private final ObjectMapper mapper = new ObjectMapper();
 

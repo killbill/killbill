@@ -52,10 +52,8 @@ public class TestWithTimeZones extends TestIntegrationBase {
     // Verify that recurring invoice items are correctly computed although we went through and out of daylight saving transitions
     @Test(groups = "slow")
     public void testWithDayLightSaving() throws Exception {
-
         // Start with a date in daylight saving period  and make sure we use a time of 8 hour so that we we reach standard time
         // the next month where the difference is 9 hours, a transformation from DateTime to LocalDate with the account time zone would bring us a day earlier
-        //
         clock.setTime(new DateTime("2015-09-01T08:01:01.000Z"));
 
         final DateTimeZone tz = DateTimeZone.forID("America/Juneau");
@@ -76,9 +74,9 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
 
-        TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
-                                                             SubscriptionEventType.START_BILLING, null, null, clock.getUTCNow(), null);
-        Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
+        final TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
+                                                                   SubscriptionEventType.START_BILLING, null, null, clock.getUTCNow(), null);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 9, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
@@ -97,7 +95,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         LocalDate startDate = new LocalDate(2015, 11, 1);
         // We loop 18 times to go over a year and transitions several times between winter and summer (daylight saving)
         for (int i = 0; i < 18; i++) {
-            LocalDate endDate = startDate.plusMonths(1);
+            final LocalDate endDate = startDate.plusMonths(1);
 
             busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
             clock.addMonths(1);
@@ -109,10 +107,9 @@ public class TestWithTimeZones extends TestIntegrationBase {
         }
     }
 
-    // Verify cancellation logic when we exit daylight savind period
+    // Verify cancellation logic when we exit daylight saving period
     @Test(groups = "slow")
     public void testCancellationFrom_PDT_to_PST() throws Exception {
-
         // Start with a date in daylight saving period (PDT) and make sure we use a time of 7 hour so that we we reach standard time (PST)
         // the next month where the difference is 8 hours, a transformation from DateTime to LocalDate with the account time zone would bring us a day earlier
         // (e.g new LocalDate("2015-12-01T07:01:01.000Z", tz) -> "2015-11-30.
@@ -143,27 +140,18 @@ public class TestWithTimeZones extends TestIntegrationBase {
         // Cancel the next month specifying just a LocalDate
         final LocalDate cancellationDate = new LocalDate("2015-12-01", tz);
         entitlement = entitlement.cancelEntitlementWithDate(cancellationDate, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
 
         // Verify first entitlement is correctly cancelled on the right date
         Assert.assertEquals(entitlement.getEffectiveEndDate(), cancellationDate);
 
-        // We move the clock to the date of the next invoice notification 2015-12-01 07:01:01 (invoice is using a fixed offset of 7 hours and all billing events are converted using that offset)
-        clock.setTime(new DateTime("2015-12-01T07:01:02"));
-        // Unfortunately we did not plug NullInvoice events so we cannot synchronize on that (See https://github.com/killbill/killbill/issues/448)
+        // We now move the clock to the date of the cancellation, which match the cancellation day from the client point of view
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        clock.setTime(new DateTime("2015-12-01T07:01:02Z"));
         assertListenerStatus();
 
-        // We now move the clock to the date of the cancellation (one hour later), which match the cancellation day from the client point of view
-        //
-        // For curious reader, the reason why the time end up being '8:01:0' comes from (https://github.com/killbill/killbill-commons/blob/master/clock/src/main/java/org/killbill/clock/ClockUtil.java#L51):
-        // We compute a DateTime in the account timezone by specifying explicitly the year-month-day we want to end up in, and shoving *a time*. The reason why we end up on an 8:01:02 is not necessarily so important,
-        // What's important is that by construction that DateTime is guaranteed to match a LocalDate of 2015-12-01
-        //
-        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
-        clock.setTime(new DateTime("2015-12-01T08:01:02"));
-        assertListenerStatus();
-
-        // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01"
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01")
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         Assert.assertEquals(invoices.size(), 1);
     }
 
@@ -171,7 +159,6 @@ public class TestWithTimeZones extends TestIntegrationBase {
     // an offset of 8 hours and then go through 7 hours so anyway we would stay in the same day.
     @Test(groups = "slow")
     public void testCancellationFrom_PST_to_PDT() throws Exception {
-
         clock.setTime(new DateTime("2015-02-01T08:01:01.000Z"));
 
         final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
@@ -203,16 +190,13 @@ public class TestWithTimeZones extends TestIntegrationBase {
         // Verify first entitlement is correctly cancelled on the right date
         Assert.assertEquals(entitlement.getEffectiveEndDate(), cancellationDate);
 
-
         // We now move the clock to the date of the cancellation  which match the cancellation day from the client point of view
-        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
         clock.setTime(new DateTime("2015-03-01T08:01:02"));
         assertListenerStatus();
 
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01"
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         Assert.assertEquals(invoices.size(), 1);
-
     }
-
 }

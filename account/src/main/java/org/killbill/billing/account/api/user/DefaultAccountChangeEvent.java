@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,9 +19,11 @@
 package org.killbill.billing.account.api.user;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.account.api.DefaultChangedField;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.events.AccountChangeInternalEvent;
@@ -47,10 +51,16 @@ public class DefaultAccountChangeEvent extends BusEventBase implements AccountCh
         this.changedFields = changedFields;
     }
 
-    public DefaultAccountChangeEvent(final UUID id, final AccountModelDao oldData, final AccountModelDao newData, final Long searchKey1, final Long searchKey2, final UUID userToken) {
+    public DefaultAccountChangeEvent(final UUID id,
+                                     final AccountModelDao oldData,
+                                     final AccountModelDao newData,
+                                     final Long searchKey1,
+                                     final Long searchKey2,
+                                     final UUID userToken,
+                                     final DateTime changeDate) {
         super(searchKey1, searchKey2, userToken);
         this.accountId = id;
-        this.changedFields = calculateChangedFields(oldData, newData);
+        this.changedFields = calculateChangedFields(oldData, newData, changeDate);
     }
 
     @JsonIgnore
@@ -73,7 +83,7 @@ public class DefaultAccountChangeEvent extends BusEventBase implements AccountCh
     @JsonIgnore
     @Override
     public boolean hasChanges() {
-        return (changedFields.size() > 0);
+        return (!changedFields.isEmpty());
     }
 
     @Override
@@ -116,57 +126,56 @@ public class DefaultAccountChangeEvent extends BusEventBase implements AccountCh
         return true;
     }
 
-    private List<ChangedField> calculateChangedFields(final AccountModelDao oldData, final AccountModelDao newData) {
-
+    private List<ChangedField> calculateChangedFields(final AccountModelDao oldData, final AccountModelDao newData, final DateTime changeDate) {
         final List<ChangedField> tmpChangedFields = new ArrayList<ChangedField>();
 
         addIfValueChanged(tmpChangedFields, "externalKey",
-                          oldData.getExternalKey(), newData.getExternalKey());
+                          oldData.getExternalKey(), newData.getExternalKey(), changeDate);
 
         addIfValueChanged(tmpChangedFields, "email",
-                          oldData.getEmail(), newData.getEmail());
+                          oldData.getEmail(), newData.getEmail(), changeDate);
 
         addIfValueChanged(tmpChangedFields, "firstName",
-                          oldData.getName(), newData.getName());
+                          oldData.getName(), newData.getName(), changeDate);
 
         addIfValueChanged(tmpChangedFields, "currency",
                           (oldData.getCurrency() != null) ? oldData.getCurrency().toString() : null,
-                          (newData.getCurrency() != null) ? newData.getCurrency().toString() : null);
+                          (newData.getCurrency() != null) ? newData.getCurrency().toString() : null, changeDate);
 
         addIfValueChanged(tmpChangedFields,
                           "billCycleDayLocal",
-                          String.valueOf(oldData.getBillingCycleDayLocal()), String.valueOf(newData.getBillingCycleDayLocal()));
+                          String.valueOf(oldData.getBillingCycleDayLocal()), String.valueOf(newData.getBillingCycleDayLocal()), changeDate);
 
         addIfValueChanged(tmpChangedFields, "paymentMethodId",
                           (oldData.getPaymentMethodId() != null) ? oldData.getPaymentMethodId().toString() : null,
-                          (newData.getPaymentMethodId() != null) ? newData.getPaymentMethodId().toString() : null);
+                          (newData.getPaymentMethodId() != null) ? newData.getPaymentMethodId().toString() : null, changeDate);
 
-        addIfValueChanged(tmpChangedFields, "locale", oldData.getLocale(), newData.getLocale());
+        addIfValueChanged(tmpChangedFields, "locale", oldData.getLocale(), newData.getLocale(), changeDate);
 
         addIfValueChanged(tmpChangedFields, "timeZone",
                           (oldData.getTimeZone() == null) ? null : oldData.getTimeZone().toString(),
-                          (newData.getTimeZone() == null) ? null : newData.getTimeZone().toString());
+                          (newData.getTimeZone() == null) ? null : newData.getTimeZone().toString(), changeDate);
 
-        addIfValueChanged(tmpChangedFields, "address1", oldData.getAddress1(), newData.getAddress1());
-        addIfValueChanged(tmpChangedFields, "address2", oldData.getAddress2(), newData.getAddress2());
-        addIfValueChanged(tmpChangedFields, "city", oldData.getCity(), newData.getCity());
-        addIfValueChanged(tmpChangedFields, "stateOrProvince", oldData.getStateOrProvince(), newData.getStateOrProvince());
-        addIfValueChanged(tmpChangedFields, "country", oldData.getCountry(), newData.getCountry());
-        addIfValueChanged(tmpChangedFields, "postalCode", oldData.getPostalCode(), newData.getPostalCode());
-        addIfValueChanged(tmpChangedFields, "phone", oldData.getPhone(), newData.getPhone());
+        addIfValueChanged(tmpChangedFields, "address1", oldData.getAddress1(), newData.getAddress1(), changeDate);
+        addIfValueChanged(tmpChangedFields, "address2", oldData.getAddress2(), newData.getAddress2(), changeDate);
+        addIfValueChanged(tmpChangedFields, "city", oldData.getCity(), newData.getCity(), changeDate);
+        addIfValueChanged(tmpChangedFields, "stateOrProvince", oldData.getStateOrProvince(), newData.getStateOrProvince(), changeDate);
+        addIfValueChanged(tmpChangedFields, "country", oldData.getCountry(), newData.getCountry(), changeDate);
+        addIfValueChanged(tmpChangedFields, "postalCode", oldData.getPostalCode(), newData.getPostalCode(), changeDate);
+        addIfValueChanged(tmpChangedFields, "phone", oldData.getPhone(), newData.getPhone(), changeDate);
 
         return tmpChangedFields;
     }
 
-    private void addIfValueChanged(final List<ChangedField> inputList, final String key, final String oldData, final String newData) {
+    private void addIfValueChanged(final Collection<ChangedField> inputList, final String key, final String oldData, final String newData, final DateTime changeDate) {
         // If both null => no changes
         if (newData == null && oldData == null) {
             // If only one is null
         } else if (newData == null || oldData == null) {
-            inputList.add(new DefaultChangedField(key, oldData, newData));
+            inputList.add(new DefaultChangedField(key, oldData, newData, changeDate));
             // If neither are null we can safely compare values
         } else if (!newData.equals(oldData)) {
-            inputList.add(new DefaultChangedField(key, oldData, newData));
+            inputList.add(new DefaultChangedField(key, oldData, newData, changeDate));
         }
     }
 }

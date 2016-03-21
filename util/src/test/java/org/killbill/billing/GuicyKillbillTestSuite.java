@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -44,7 +44,7 @@ public class GuicyKillbillTestSuite {
     private boolean hasFailed = false;
 
     @Inject
-    protected InternalCallContext internalCallContext;
+    protected MutableInternalCallContext internalCallContext;
 
     @Inject
     protected CallContext callContext;
@@ -100,6 +100,8 @@ public class GuicyKillbillTestSuite {
         log.info("***************************************************************************************************");
         log.info("*** Starting test {}:{}", method.getDeclaringClass().getName(), method.getName());
         log.info("***************************************************************************************************");
+
+        internalCallContext.reset();
     }
 
     @AfterMethod(alwaysRun = true)

@@ -130,7 +130,6 @@ public class UsageResource extends JaxRsResourceBase {
                              @QueryParam(QUERY_START_DATE) final String startDate,
                              @QueryParam(QUERY_END_DATE) final String endDate,
                              @javax.ws.rs.core.Context final HttpServletRequest request) {
-
         if (startDate == null || endDate == null) {
             return Response.status(Status.BAD_REQUEST).build();
         }

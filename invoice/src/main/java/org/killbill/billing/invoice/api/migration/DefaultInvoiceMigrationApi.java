@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,17 +24,11 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.ImmutableAccountData;
-import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
-import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
-import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.MigrationPlan;
-import org.killbill.clock.Clock;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceMigrationApi;
 import org.killbill.billing.invoice.dao.DefaultInvoiceDao;
@@ -40,7 +36,10 @@ import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,17 +49,14 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceMigrationApi.class);
 
-    private final AccountInternalApi accountUserApi;
     private final DefaultInvoiceDao dao;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultInvoiceMigrationApi(final AccountInternalApi accountUserApi,
-                                      final DefaultInvoiceDao dao,
+    public DefaultInvoiceMigrationApi(final DefaultInvoiceDao dao,
                                       final Clock clock,
                                       final InternalCallContextFactory internalCallContextFactory) {
-        this.accountUserApi = accountUserApi;
         this.dao = dao;
         this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -68,13 +64,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
 
     @Override
     public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final BigDecimal balance, final Currency currency, final CallContext context) {
-        ImmutableAccountData account;
-        try {
-            account = accountUserApi.getImmutableAccountDataById(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
-        } catch (AccountApiException e) {
-            log.warn("Unable to find account for id {}", accountId);
-            return null;
-        }
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
         final InvoiceModelDao migrationInvoice = new InvoiceModelDao(accountId, clock.getUTCToday(), targetDate, currency, true);
         final InvoiceItemModelDao migrationInvoiceItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.FIXED, migrationInvoice.getId(), accountId, null, null,
@@ -82,9 +72,9 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
                                                                                  targetDate, null, balance, null, currency, null);
 
         final DateTime wrongEffectiveDateButDoesNotMatter = null;
-        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(wrongEffectiveDateButDoesNotMatter, account.getTimeZone());
+        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(wrongEffectiveDateButDoesNotMatter, internalCallContext);
         dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),
-                          true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContextFactory.createInternalCallContext(accountId, context));
+                          true, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
 
         return migrationInvoice.getId();
     }

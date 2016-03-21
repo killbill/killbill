@@ -37,8 +37,8 @@ public class TestEventJson extends AccountTestSuiteNoDB {
     @Test(groups = "fast", description="Test Account event deserialization")
     public void testDefaultAccountChangeEvent() throws Exception {
         final List<ChangedField> changes = new ArrayList<ChangedField>();
-        changes.add(new DefaultChangedField("fieldXX", "valueX", "valueXXX"));
-        changes.add(new DefaultChangedField("fieldYY", "valueY", "valueYYY"));
+        changes.add(new DefaultChangedField("fieldXX", "valueX", "valueXXX", clock.getUTCNow()));
+        changes.add(new DefaultChangedField("fieldYY", "valueY", "valueYYY", clock.getUTCNow()));
         final AccountChangeInternalEvent e = new DefaultAccountChangeEvent(changes, UUID.randomUUID(), 1L, 2L, null);
 
         final String json = mapper.writeValueAsString(e);

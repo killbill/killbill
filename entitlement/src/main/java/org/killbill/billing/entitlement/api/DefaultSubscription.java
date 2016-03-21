@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,7 +31,7 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
 
     @Override
     public LocalDate getBillingStartDate() {
-        return new LocalDate(getSubscriptionBase().getStartDate(), getAccountTimeZone());
+        return internalTenantContext.toLocalDate(getSubscriptionBase().getStartDate(), getSubscriptionBase().getStartDate());
     }
 
     @Override
@@ -51,16 +51,16 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
             futureOrCurrentEndDate = futureOrCurrentEndDateForSubscription;
         }
 
-        return futureOrCurrentEndDate != null ? new LocalDate(futureOrCurrentEndDate, getAccountTimeZone()) : null;
+        return futureOrCurrentEndDate != null ? internalTenantContext.toLocalDate(futureOrCurrentEndDate, getSubscriptionBase().getStartDate()) : null;
     }
 
     @Override
     public LocalDate getChargedThroughDate() {
-        return getSubscriptionBase().getChargedThroughDate() != null ? new LocalDate(getSubscriptionBase().getChargedThroughDate(), getAccountTimeZone()) : null;
+        return getSubscriptionBase().getChargedThroughDate() != null ? internalTenantContext.toLocalDate(getSubscriptionBase().getChargedThroughDate(), getSubscriptionBase().getStartDate()) : null;
     }
 
     @Override
     public List<SubscriptionEvent> getSubscriptionEvents() {
-        return SubscriptionEventOrdering.sortedCopy(this, getAccountTimeZone());
+        return SubscriptionEventOrdering.sortedCopy(this, internalTenantContext);
     }
 }

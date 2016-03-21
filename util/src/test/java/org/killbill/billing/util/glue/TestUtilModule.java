@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 
 package org.killbill.billing.util.glue;
 
+import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
@@ -29,9 +30,12 @@ public class TestUtilModule extends KillBillModule {
         super(configSource);
     }
 
-    // TODO STEPH this is bad-- because DefaultAuditUserApi is using SubscriptionBaseTimeline API
-    public void installHack() {
+    // TODO this is bad!
+    public void installHacks() {
+        // DefaultAuditUserApi is using SubscriptionBaseTimeline API
         bind(SubscriptionBaseTimelineApi.class).toInstance(Mockito.mock(SubscriptionBaseTimelineApi.class));
+        // InternalCallContextFactory is using AccountInternalApi
+        install(new MockAccountModule(configSource));
     }
 
     @Override
@@ -39,6 +43,6 @@ public class TestUtilModule extends KillBillModule {
         //install(new CallContextModule());
         install(new CacheModule(configSource));
         install(new MockTenantModule(configSource));
-        installHack();
+        installHacks();
     }
 }

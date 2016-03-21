@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,21 +19,14 @@
 package org.killbill.billing;
 
 import java.lang.reflect.Method;
-import java.util.UUID;
 
+import org.killbill.clock.Clock;
+import org.killbill.clock.ClockMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-
-import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.callcontext.CallOrigin;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.clock.Clock;
-import org.killbill.clock.ClockMock;
 
 public class KillbillTestSuite {
 
@@ -41,12 +36,6 @@ public class KillbillTestSuite {
     private boolean hasFailed = false;
 
     protected Clock clock = new ClockMock();
-
-    protected final InternalCallContext internalCallContext = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),
-                                                                                      UUID.randomUUID().toString(), CallOrigin.TEST,
-                                                                                      UserType.TEST, "Testing", "This is a test",
-                                                                                      clock.getUTCNow(), clock.getUTCNow());
-    protected final CallContext callContext = internalCallContext.toCallContext(null);
 
     @BeforeMethod(alwaysRun = true)
     public void startTestSuite(final Method method) throws Exception {

@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
@@ -36,6 +37,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -76,10 +78,13 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
@@ -155,7 +160,9 @@ public class TestInvoiceHelper {
     private final InvoiceDao invoiceDao;
     private final GlobalLocker locker;
     private final Clock clock;
-    private final InternalCallContext internalCallContext;
+    private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final MutableInternalCallContext internalCallContext;
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceConfig invoiceConfig;
     // Low level SqlDao used by the tests to directly insert rows
@@ -166,7 +173,7 @@ public class TestInvoiceHelper {
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
                              final BillingInternalApi billingApi, final AccountInternalApi accountApi, final InvoicePluginDispatcher invoicePluginDispatcher, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
-                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final InternalCallContext internalCallContext, final InvoiceConfig invoiceConfig,
+                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher, final MutableInternalCallContext internalCallContext, final InvoiceConfig invoiceConfig,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
         this.billingApi = billingApi;
@@ -178,6 +185,8 @@ public class TestInvoiceHelper {
         this.invoiceDao = invoiceDao;
         this.locker = locker;
         this.clock = clock;
+        this.nonEntityDao = nonEntityDao;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.internalCallContext = internalCallContext;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
@@ -189,7 +198,7 @@ public class TestInvoiceHelper {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription.getBundleId()).thenReturn(new UUID(0L, 0L));
-        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
         final PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();
         final DateTime effectiveDate = new DateTime().minusDays(1);
@@ -246,7 +255,13 @@ public class TestInvoiceHelper {
                                                                 .paymentMethodId(UUID.randomUUID())
                                                                 .timeZone(DateTimeZone.UTC)
                                                                 .build();
-        return accountUserApi.createAccount(accountData, callContext);
+        final Account account = accountUserApi.createAccount(accountData, callContext);
+
+        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
+        internalCallContext.setAccountRecordId(accountRecordId);
+        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
+
+        return account;
     }
 
     public void createInvoiceItem(final InvoiceItem invoiceItem, final InternalCallContext internalCallContext) throws EntityPersistenceException {
@@ -288,7 +303,7 @@ public class TestInvoiceHelper {
                                                                                                                                          }));
 
         // The test does not use the invoice callback notifier hence the empty map
-        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.UTC);
+        final DefaultAccountDateAndTimeZoneContext dateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), internalCallContext);
         invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, new FutureAccountNotifications(dateAndTimeZoneContext, ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
     }
 

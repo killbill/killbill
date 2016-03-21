@@ -20,6 +20,7 @@ package org.killbill.billing.subscription.glue;
 
 import org.killbill.billing.GuicyKillbillTestNoDBModule;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
@@ -40,8 +41,7 @@ public class TestDefaultSubscriptionModuleNoDB extends TestDefaultSubscriptionMo
     @Override
     protected void configure() {
         install(new GuicyKillbillTestNoDBModule(configSource));
-
-        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
+        install(new MockAccountModule(configSource));
 
         super.configure();
 

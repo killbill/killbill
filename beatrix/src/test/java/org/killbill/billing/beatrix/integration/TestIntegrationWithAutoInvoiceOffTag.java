@@ -137,7 +137,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
         add_AUTO_INVOICING_OFF_Tag(bpEntitlement.getSubscriptionBase().getBundleId(), ObjectType.BUNDLE);
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(40); // DAY 40 out of trial
         assertListenerStatus();
 

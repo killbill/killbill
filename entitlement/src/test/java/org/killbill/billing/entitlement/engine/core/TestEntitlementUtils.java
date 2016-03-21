@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,7 +26,10 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
+import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -71,10 +76,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         sqlDao = dbi.onDemand(BlockingStateSqlDao.class);
 
         clock.setDay(initialDate);
-        account = accountApi.createAccount(getAccountData(7), callContext);
-
-        // Override the context with the right account record id
-        internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+        account = createAccount(getAccountData(7));
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE);
 
@@ -450,8 +452,10 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     private Collection<BlockingState> computeFutureBlockingStatesForAssociatedAddonsViaAccount(final DefaultEntitlement baseEntitlement) throws EntitlementApiException {
-        final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(baseEntitlement.getAccountId(), callContext);
-        final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(context).getEventsStreams().values()),
+        setContextAccountRecordId();
+        final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(internalCallContext);
+
+        final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(accountEventsStreams.getEventsStreams().values()),
                                                                        new Predicate<EventsStream>() {
                                                                            @Override
                                                                            public boolean apply(final EventsStream input) {
@@ -467,8 +471,10 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     private Collection<BlockingState> computeBlockingStatesForAssociatedAddonsViaAccount(final DefaultEntitlement baseEntitlement, final DateTime effectiveDate) throws EntitlementApiException {
-        final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(baseEntitlement.getAccountId(), callContext);
-        final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(context).getEventsStreams().values()),
+        setContextAccountRecordId();
+        final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(internalCallContext);
+
+        final EventsStream eventsStream = Iterables.<EventsStream>find(Iterables.<EventsStream>concat(accountEventsStreams.getEventsStreams().values()),
                                                                        new Predicate<EventsStream>() {
                                                                            @Override
                                                                            public boolean apply(final EventsStream input) {
@@ -486,5 +492,9 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
                                                                                            return input.getBlockedId().equals(blockedId);
                                                                                        }
                                                                                    }));
+    }
+
+    private void setContextAccountRecordId() {
+        internalCallContext.setAccountRecordId(nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID)));
     }
 }

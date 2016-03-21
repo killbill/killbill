@@ -19,6 +19,7 @@
 package org.killbill.billing.catalog.glue;
 
 import org.killbill.billing.GuicyKillbillTestNoDBModule;
+import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -36,5 +37,6 @@ public class TestCatalogModule extends CatalogModule {
         install(new MockNonEntityDaoModule(configSource));
         install(new CacheModule(configSource));
         install(new MockTenantModule(configSource));
+        install(new MockAccountModule(configSource));
     }
 }
