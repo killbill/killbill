@@ -111,6 +111,12 @@
             <artifactId>shiro-guice</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>4.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.jdbi</groupId>
             <artifactId>jdbi</artifactId>
         </dependency>
