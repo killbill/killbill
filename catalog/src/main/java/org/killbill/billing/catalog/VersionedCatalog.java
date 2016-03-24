@@ -176,8 +176,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
             if (!subscriptionStartDate.isBefore(catalogEffectiveDate)) { // Its a new subscription this plan always applies
                 return plan;
             } else { //Its an existing subscription
-                if (plan.getEffectiveDateForExistingSubscriptons() != null) { //if it is null any change to this does not apply to existing subscriptions
-                    final DateTime existingSubscriptionDate = CatalogDateHelper.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptons());
+                if (plan.getEffectiveDateForExistingSubscriptions() != null) { //if it is null any change to this does not apply to existing subscriptions
+                    final DateTime existingSubscriptionDate = CatalogDateHelper.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptions());
                     if (requestedDate.isAfter(existingSubscriptionDate)) { // this plan is now applicable to existing subs
                         return plan;
                     }

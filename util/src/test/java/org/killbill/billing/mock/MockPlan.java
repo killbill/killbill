@@ -63,7 +63,7 @@ public class MockPlan implements Plan {
     }
 
     @Override
-    public Date getEffectiveDateForExistingSubscriptons() {
+    public Date getEffectiveDateForExistingSubscriptions() {
         return new Date();
     }
 
