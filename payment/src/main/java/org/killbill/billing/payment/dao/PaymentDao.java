@@ -84,7 +84,7 @@ public interface PaymentDao {
 
     public PaymentMethodModelDao getPaymentMethodByExternalKeyIncludedDeleted(String paymentMethodExternalKey, InternalTenantContext context);
 
-    public List<PaymentMethodModelDao> getPaymentMethods(UUID accountId, InternalTenantContext context);
+    public List<PaymentMethodModelDao> getPaymentMethods(InternalTenantContext context);
 
     public Pagination<PaymentMethodModelDao> getPaymentMethods(String pluginName, Long offset, Long limit, InternalTenantContext context);
 
@@ -92,5 +92,5 @@ public interface PaymentDao {
 
     public void deletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 
-    public List<PaymentMethodModelDao> refreshPaymentMethods(UUID accountId, String pluginName, List<PaymentMethodModelDao> paymentMethods, InternalCallContext context);
+    public List<PaymentMethodModelDao> refreshPaymentMethods(String pluginName, List<PaymentMethodModelDao> paymentMethods, InternalCallContext context);
 }

@@ -33,7 +33,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
-import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -42,8 +41,6 @@ import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
@@ -432,7 +429,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     @Override
     public List<PaymentMethod> getAccountPaymentMethods(final UUID accountId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context)
             throws PaymentApiException {
-        return paymentMethodProcessor.getPaymentMethods(accountId, withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return paymentMethodProcessor.getPaymentMethods(withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(accountId, context));
     }
 
     @Override

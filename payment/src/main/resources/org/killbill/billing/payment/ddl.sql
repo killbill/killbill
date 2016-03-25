@@ -77,7 +77,6 @@ CREATE TABLE payment_methods (
 CREATE UNIQUE INDEX payment_methods_id ON payment_methods(id);
 CREATE UNIQUE INDEX payment_methods_external_key ON payment_methods(external_key, tenant_record_id);
 CREATE INDEX payment_methods_plugin_name ON payment_methods(plugin_name);
-CREATE INDEX payment_methods_active_accnt ON payment_methods(is_active, account_id);
 CREATE INDEX payment_methods_tenant_account_record_id ON payment_methods(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS payment_method_history;
