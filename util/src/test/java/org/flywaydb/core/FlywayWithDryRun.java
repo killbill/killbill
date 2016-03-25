@@ -54,7 +54,6 @@ public class FlywayWithDryRun extends Flyway {
                                    final FlywayCallback[] flywayCallbacks) {
                 final Table metaDataDBTable = schemas[0].getTable(getTable());
 
-                @SuppressWarnings("deprecation")
                 final DbMigrateWithDryRun dbMigrate = new DbMigrateWithDryRun(sqlStatements,
                                                                               placeholderReplacer,
                                                                               getEncoding(),
@@ -67,7 +66,7 @@ public class FlywayWithDryRun extends Flyway {
                                                                               migrationResolver,
                                                                               getTarget(),
                                                                               isIgnoreFutureMigrations(),
-                                                                              isIgnoreFailedFutureMigration(),
+                                                                              false,
                                                                               isOutOfOrder(),
                                                                               flywayCallbacks);
                 return dbMigrate.dryRunMigrate();

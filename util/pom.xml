@@ -259,6 +259,30 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>assemble-migrator</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>killbill</finalName>
+                            <archive>
+                                <manifest>
+                                    <mainClass>org.killbill.billing.util.migration.Migrator</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <descriptor>src/main/assembly/migrator.xml</descriptor>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
