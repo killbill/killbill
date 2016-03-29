@@ -4,8 +4,8 @@ DROP TABLE IF EXISTS rolled_up_usage;
 CREATE TABLE rolled_up_usage (
     record_id serial unique,
     id varchar(36) NOT NULL,
-    subscription_id varchar(36),
-    unit_type varchar(255),
+    subscription_id varchar(36) NOT NULL,
+    unit_type varchar(255) NOT NULL,
     record_date date NOT NULL,
     amount bigint NOT NULL,
     tracking_id varchar(128) NOT NULL,
