@@ -16,6 +16,8 @@
 
 package org.killbill.billing.jaxrs.util;
 
+import java.util.UUID;
+
 import javax.servlet.ServletRequest;
 
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
@@ -26,6 +28,7 @@ import org.killbill.billing.util.callcontext.CallContextFactory;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.commons.request.Request;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -48,8 +51,10 @@ public class Context {
         try {
             Preconditions.checkNotNull(createdBy, String.format("Header %s needs to be set", JaxrsResource.HDR_CREATED_BY));
             final Tenant tenant = getTenantFromRequest(request);
+
+
             return contextFactory.createCallContext(tenant == null ? null : tenant.getId(), createdBy, origin, userType, reason,
-                                                    comment, UUIDs.randomUUID());
+                                                    comment, getOrCreateUserToken());
         } catch (final NullPointerException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
@@ -63,6 +68,21 @@ public class Context {
         } else {
             return contextFactory.createTenantContext(tenant.getId());
         }
+    }
+
+    // Use REQUEST_ID_HEADER if this is provided and lloks like a UUID, if not allocate a random one.
+    private UUID getOrCreateUserToken() {
+        UUID userToken;
+        if (Request.getPerThreadRequestData().getRequestId() != null) {
+            try {
+                userToken = UUID.fromString(Request.getPerThreadRequestData().getRequestId());
+            } catch (final IllegalArgumentException ignored) {
+                userToken = UUIDs.randomUUID();
+            }
+        } else {
+            userToken = UUIDs.randomUUID();
+        }
+        return userToken;
     }
 
     private Tenant getTenantFromRequest(final ServletRequest request) {
