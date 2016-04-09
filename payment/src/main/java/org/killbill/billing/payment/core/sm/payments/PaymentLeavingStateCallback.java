@@ -72,7 +72,7 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
             }
 
             // Validate the payment transactions belong to the right payment
-            validatePaymentId(existingPaymentTransactions);
+            validatePaymentIdAndTransactionType(existingPaymentTransactions);
 
             // Validate some constraints on the unicity of that paymentTransactionExternalKey
             validateUniqueTransactionExternalKey(existingPaymentTransactions);
@@ -134,10 +134,14 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
     }
 
     // At this point, the payment id should have been populated for follow-up transactions (see PaymentAutomationRunner#run)
-    protected void validatePaymentId(final List<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
+    protected void validatePaymentIdAndTransactionType(final List<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
         for (final PaymentTransactionModelDao paymentTransactionModelDao : existingPaymentTransactions) {
             if (!paymentTransactionModelDao.getPaymentId().equals(paymentStateContext.getPaymentId())) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, paymentTransactionModelDao.getId(), "does not belong to payment " + paymentStateContext.getPaymentId());
+            }
+            if (paymentStateContext.getTransactionType() != null && paymentTransactionModelDao.getTransactionType() != paymentStateContext.getTransactionType()) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, paymentTransactionModelDao.getId(), "has a transaction type of " + paymentTransactionModelDao.getTransactionType() +
+                                                                                                                       " instead of requested " + paymentStateContext.getTransactionType());
             }
         }
     }

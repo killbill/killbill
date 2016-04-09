@@ -1286,6 +1286,34 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertTrue(spyLogger.contains("TimeoutException.*" + pluginName, Optional.of(SpyLogger.LOG_LEVEL_WARN)));
     }
 
+
+    @Test(groups = "slow")
+    public void testSanityAcrossTransactionTypes() throws PaymentApiException {
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "ahhhhhhhh";
+        final String transactionExternalKey = "okkkkkkk";
+
+        final Payment pendingPayment = createPayment(TransactionType.AUTHORIZE, null, paymentExternalKey, transactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
+        assertNotNull(pendingPayment);
+        Assert.assertEquals(pendingPayment.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 1);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getCurrency(), account.getCurrency());
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
+
+
+        try {
+            createPayment(TransactionType.PURCHASE, null, paymentExternalKey, transactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
+            Assert.fail("PURCHASE transaction with same key should have failed");
+        } catch (final PaymentApiException expected) {
+            Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+        }
+
+    }
+
     private void verifyRefund(final Payment refund, final String paymentExternalKey, final String paymentTransactionExternalKey, final String refundTransactionExternalKey, final BigDecimal requestedAmount, final BigDecimal refundAmount, final TransactionStatus transactionStatus) {
         Assert.assertEquals(refund.getExternalKey(), paymentExternalKey);
         Assert.assertEquals(refund.getTransactions().size(), 2);
