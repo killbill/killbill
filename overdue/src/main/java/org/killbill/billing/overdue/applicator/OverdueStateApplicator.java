@@ -27,7 +27,6 @@ import java.util.UUID;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -171,11 +170,20 @@ public class OverdueStateApplicator {
         } catch (final AccountApiException e) {
             throw new OverdueException(e);
         }
+
+        final OverdueChangeInternalEvent event;
         try {
-            bus.post(createOverdueEvent(account, previousOverdueState.getName(), nextOverdueState.getName(), isBlockBillingTransition(previousOverdueState, nextOverdueState),
-                                        isUnblockBillingTransition(previousOverdueState, nextOverdueState), context));
+            event = createOverdueEvent(account, previousOverdueState.getName(), nextOverdueState.getName(), isBlockBillingTransition(previousOverdueState, nextOverdueState),
+                                       isUnblockBillingTransition(previousOverdueState, nextOverdueState), context);
+        } catch (final BlockingApiException e) {
+            log.warn(String.format("Failed to create OverdueChangeInternalEvent for accountId='%s'", account.getId()), e);
+            return;
+        }
+
+        try {
+            bus.post(event);
         } catch (final Exception e) {
-            log.error("Error posting overdue change event to bus", e);
+            log.warn(String.format("Failed to post event %s", event), e);
         }
     }
 
@@ -218,11 +226,19 @@ public class OverdueStateApplicator {
             throw new OverdueException(e);
         }
 
+        final OverdueChangeInternalEvent event;
         try {
-            bus.post(createOverdueEvent(account, previousOverdueState.getName(), clearState.getName(), isBlockBillingTransition(previousOverdueState, clearState),
-                                        isUnblockBillingTransition(previousOverdueState, clearState), context));
+            event = createOverdueEvent(account, previousOverdueState.getName(), clearState.getName(), isBlockBillingTransition(previousOverdueState, clearState),
+                                       isUnblockBillingTransition(previousOverdueState, clearState), context);
+        } catch (final BlockingApiException e) {
+            log.warn(String.format("Failed to create OverdueChangeInternalEvent for accountId='%s'", account.getId()), e);
+            return;
+        }
+
+        try {
+            bus.post(event);
         } catch (final Exception e) {
-            log.error("Error posting overdue change event to bus", e);
+            log.warn(String.format("Failed to post event %s", event), e);
         }
     }
 
@@ -372,11 +388,11 @@ public class OverdueStateApplicator {
                 emailSender.sendPlainTextEmail(to, cc, subject, emailBody);
             }
         } catch (final IOException e) {
-            log.warn(String.format("Unable to generate or send overdue notification email for account %s and overdueable %s", account.getId(), account.getId()), e);
+            log.warn(String.format("Unable to generate or send overdue notification email for accountId='%s'", account.getId()), e);
         } catch (final EmailApiException e) {
-            log.warn(String.format("Unable to send overdue notification email for account %s and overdueable %s", account.getId(), account.getId()), e);
+            log.warn(String.format("Unable to send overdue notification email for accountId='%s'", account.getId()), e);
         } catch (final MustacheException e) {
-            log.warn(String.format("Unable to generate overdue notification email for account %s and overdueable %s", account.getId(), account.getId()), e);
+            log.warn(String.format("Unable to generate overdue notification email for accountId='%s'", account.getId()), e);
         }
     }
 

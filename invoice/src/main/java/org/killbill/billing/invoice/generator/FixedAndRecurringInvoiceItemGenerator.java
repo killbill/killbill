@@ -103,10 +103,11 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         }
 
         // Pretty-print the generated invoice items from the junction events
-        final StringBuilder logStringBuilder = new StringBuilder("Proposed Invoice items for invoiceId ")
+        final StringBuilder logStringBuilder = new StringBuilder("Proposed Invoice items for invoiceId='")
                 .append(invoiceId)
-                .append(" and accountId ")
-                .append(accountId);
+                .append("', accountId='")
+                .append(accountId)
+                .append("'");
 
         final Iterator<BillingEvent> eventIt = events.iterator();
         BillingEvent nextEvent = eventIt.next();

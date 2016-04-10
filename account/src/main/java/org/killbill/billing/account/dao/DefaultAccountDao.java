@@ -94,7 +94,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         try {
             eventBus.postFromTransaction(creationEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
-            log.warn("Failed to post account creation event for account " + savedAccount.getId(), e);
+            log.warn(String.format("Failed to post account creation event for accountId='%s'", savedAccount.getId()), e);
         }
     }
 
@@ -166,7 +166,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 try {
                     eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
                 } catch (final EventBusException e) {
-                    log.warn("Failed to post account change event for account " + accountId, e);
+                    log.warn(String.format("Failed to post account change event for accountId='%s'", accountId), e);
                 }
 
                 return null;
@@ -205,7 +205,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 try {
                     eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
                 } catch (final EventBusException e) {
-                    log.warn("Failed to post account change event for account " + accountId, e);
+                    log.warn(String.format("Failed to post account change event for accountId='%s'", accountId), e);
                 }
                 return null;
             }

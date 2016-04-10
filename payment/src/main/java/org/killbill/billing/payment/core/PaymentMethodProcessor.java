@@ -139,7 +139,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                                     accountInternalApi.updatePaymentMethod(account.getId(), pm.getId(), context);
                                                                                                                 }
                                                                                                             } catch (final PaymentPluginApiException e) {
-                                                                                                                log.warn("Error adding payment method " + pm.getId() + " for plugin " + paymentPluginServiceName, e);
+                                                                                                                log.warn(String.format("Error adding paymentMethodId='%s', plugin='%s'", pm.getId(), paymentPluginServiceName), e);
                                                                                                                 throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                                                                                                             } catch (final AccountApiException e) {
                                                                                                                 throw new PaymentApiException(e);
@@ -176,7 +176,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         try {
             paymentMethodPlugin = pluginApi.getPaymentMethodDetail(account.getId(), pm.getId(), properties, callContext);
         } catch (final PaymentPluginApiException e) {
-            log.warn("Error retrieving payment method " + pm.getId() + " from plugin " + pm.getPluginName(), e);
+            log.warn(String.format("Error retrieving paymentMethodId='%s', plugin='%s'", pm.getId(), pm.getPluginName()), e);
             return null;
         }
 
@@ -227,7 +227,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 final PaymentPluginApi pluginApi = getPaymentPluginApi(paymentMethodModelDao.getPluginName());
                 paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), properties, tenantContext);
             } catch (final PaymentPluginApiException e) {
-                log.warn("Error retrieving payment method " + paymentMethodModelDao.getId() + " from plugin " + paymentMethodModelDao.getPluginName(), e);
+                log.warn(String.format("Error retrieving paymentMethodId='%s', plugin='%s'", paymentMethodModelDao.getId(), paymentMethodModelDao.getPluginName()), e);
                 throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_METHODS, paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId());
             }
         } else {
@@ -413,7 +413,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                             } else {
                                 final boolean isAccountAutoPayOff = isAccountAutoPayOff(account.getId(), context);
                                 if (!isAccountAutoPayOff) {
-                                    log.info("Setting account {} to AUTO_PAY_OFF because of default payment method deletion", account.getId());
+                                    log.info("Setting AUTO_PAY_OFF on accountId='{}' because of default payment method deletion", account.getId());
                                     setAccountAutoPayOff(account.getId(), context);
                                 }
                                 accountInternalApi.removePaymentMethod(account.getId(), context);
@@ -424,7 +424,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         paymentDao.deletedPaymentMethod(paymentMethodId, context);
                         return PluginDispatcher.createPluginDispatcherReturnType(null);
                     } catch (final PaymentPluginApiException e) {
-                        log.warn("Error deleting payment method " + paymentMethodId, e);
+                        log.warn(String.format("Error deleting paymentMethodId='%s'", paymentMethodId), e);
                         throw new PaymentApiException(ErrorCode.PAYMENT_DEL_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                     } catch (final AccountApiException e) {
                         throw new PaymentApiException(e);
@@ -502,7 +502,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 return ImmutableList.<PaymentMethod>of();
             }
         } catch (final PaymentPluginApiException e) {
-            log.warn("Error refreshing payment methods for account " + account.getId() + " and plugin " + pluginName, e);
+            log.warn(String.format("Error refreshing payment methods for accountId='%s', plugin='%s'", account.getId(), pluginName), e);
             throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
         }
 
@@ -541,7 +541,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     try {
                         pluginApi.resetPaymentMethods(account.getId(), pluginPmsWithId, properties, callContext);
                     } catch (final PaymentPluginApiException e) {
-                        log.warn("Error resetting payment methods for account " + account.getId() + " and plugin " + pluginName, e);
+                        log.warn(String.format("Error resetting payment methods for accountId='%s', plugin='%s'", account.getId(), pluginName), e);
                         throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                     }
                     try {

@@ -182,7 +182,7 @@ public class InvoiceDispatcher {
             try {
                 eventBus.post(event);
             } catch (EventBusException e) {
-                log.error("Failed to post event " + event, e);
+                log.warn(String.format("Failed to post event %s", event), e);
             }
         }
     }
@@ -324,15 +324,15 @@ public class InvoiceDispatcher {
             //
             if (invoice == null) {
                 if (isDryRun) {
-                    log.info("Generated null dryRun invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
+                    log.info("Generated null dryRun invoice for accountId='{}', targetDate='{}', targetDateTime='{}'", accountId, targetDate, targetDateTime);
                 } else {
-                    log.info("Generated null invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
+                    log.info("Generated null invoice for accountId='{}', targetDate='{}', targetDateTime='{}'", accountId, targetDate, targetDateTime);
 
                     final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
                                                                                context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
 
                     commitInvoiceAndSetFutureNotifications(account, null, ImmutableList.<InvoiceItemModelDao>of(), futureAccountNotifications, false, context);
-                    postEvent(event, accountId, context);
+                    postEvent(event);
                 }
                 return null;
             }
@@ -451,10 +451,10 @@ public class InvoiceDispatcher {
     private void logInvoiceWithItems(final ImmutableAccountData account, final Invoice invoice, final LocalDate targetDate, final Set<UUID> adjustedUniqueOtherInvoiceId, final boolean isRealInvoiceWithItems) {
         final StringBuilder tmp = new StringBuilder();
         if (isRealInvoiceWithItems) {
-            tmp.append(String.format("Generated invoice %s with %d items for accountId %s and targetDate %s:\n", invoice.getId(), invoice.getNumberOfItems(), account.getId(), targetDate));
+            tmp.append(String.format("Generated invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':\n", invoice.getId(), invoice.getNumberOfItems(), account.getId(), targetDate));
         } else {
             final String adjustedInvoices = JOINER_COMMA.join(adjustedUniqueOtherInvoiceId.toArray(new UUID[adjustedUniqueOtherInvoiceId.size()]));
-            tmp.append(String.format("Adjusting existing invoices %s with %d items for accountId %s and targetDate %s:\n",
+            tmp.append(String.format("Adjusting existing invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':\n",
                                      adjustedInvoices, invoice.getNumberOfItems(), account.getId(), targetDate));
         }
         for (InvoiceItem item : invoice.getInvoiceItems()) {
@@ -499,7 +499,7 @@ public class InvoiceDispatcher {
             events.add(event);
         }
         for (final InvoiceInternalEvent event : events) {
-            postEvent(event, account.getId(), context);
+            postEvent(event);
         }
     }
 
@@ -554,11 +554,11 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void postEvent(final BusInternalEvent event, final UUID accountId, final InternalCallContext context) {
+    private void postEvent(final BusInternalEvent event) {
         try {
             eventBus.post(event);
         } catch (final EventBusException e) {
-            log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
+            log.warn(String.format("Failed to post event %s", event), e);
         }
     }
 

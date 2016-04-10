@@ -154,16 +154,16 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null && existingInvoicePayment.isSuccess()) {
                         // Only one successful purchase per payment (the invoice could be linked to multiple successful payments though)
-                        log.info("onSuccessCall was already completed for payment purchase: " + paymentControlContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for purchase paymentId='{}'", paymentControlContext.getPaymentId());
                     } else {
                         final BigDecimal invoicePaymentAmount;
                         if (paymentControlContext.getCurrency() == paymentControlContext.getProcessedCurrency()) {
                             invoicePaymentAmount = paymentControlContext.getProcessedAmount();
                         } else {
-                            log.warn("Currency {} of invoice payment {} doesn't match invoice currency {}, assuming it is a full payment" , paymentControlContext.getProcessedCurrency(), paymentControlContext.getPaymentId(), paymentControlContext.getCurrency());
+                            log.warn("processedCurrency='{}' of invoice paymentId='{}' doesn't match invoice currency='{}', assuming it is a full payment" , paymentControlContext.getProcessedCurrency(), paymentControlContext.getPaymentId(), paymentControlContext.getCurrency());
                             invoicePaymentAmount = paymentControlContext.getAmount();
                         }
-                        log.debug("Notifying invoice of successful payment: id={}, amount={}, currency={}, invoiceId={}", paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
+                        log.debug("Notifying invoice of successful paymentId='{}', amount='{}', currency='{}', invoiceId='{}'", paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
                         invoiceApi.notifyOfPayment(invoiceId,
                                                    invoicePaymentAmount,
                                                    paymentControlContext.getCurrency(),
@@ -186,7 +186,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForChargeback(paymentControlContext.getPaymentId(), internalContext);
                     if (existingInvoicePayment != null) {
                         // We don't support partial chargebacks (yet?)
-                        log.info("onSuccessCall was already completed for payment chargeback: " + paymentControlContext.getPaymentId());
+                        log.info("onSuccessCall was already completed for chargeback paymentId='{}'", paymentControlContext.getPaymentId());
                     } else {
                         final InvoicePayment linkedInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
 
@@ -211,7 +211,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     throw new IllegalStateException("Unexpected transactionType " + transactionType);
             }
         } catch (final InvoiceApiException e) {
-            log.error("InvoicePaymentControlPluginApi onSuccessCall failed for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
+            log.error(String.format("onSuccessCall failed for attemptId='%s', transactionType='%s'", paymentControlContext.getAttemptPaymentId(), transactionType), e);
         }
 
         return new DefaultOnSuccessPaymentControlResult();
@@ -503,15 +503,13 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     private BigDecimal validateAndComputePaymentAmount(final Invoice invoice, @Nullable final BigDecimal inputAmount, final boolean isApiPayment) {
 
         if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
-            log.info("Invoice " + invoice.getId() + " has already been paid");
+            log.info("invoiceId='{}' has already been paid", invoice.getId());
             return BigDecimal.ZERO;
         }
         if (isApiPayment &&
             inputAmount != null &&
             invoice.getBalance().compareTo(inputAmount) < 0) {
-            log.info("Invoice " + invoice.getId() +
-                     " has a balance of " + invoice.getBalance().floatValue() +
-                     " less than retry payment amount of " + inputAmount.floatValue());
+            log.info("invoiceId='{}' has a balance='{}' < retry paymentAmount='{}'", invoice.getId(), invoice.getBalance().floatValue(), inputAmount.floatValue());
             return BigDecimal.ZERO;
         }
         if (inputAmount == null) {

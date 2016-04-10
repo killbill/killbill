@@ -102,7 +102,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 @Override
                 public void handleReadyNotification(final NotificationEvent inputKey, final DateTime eventDateTime, final UUID fromNotificationQueueUserToken, final Long accountRecordId, final Long tenantRecordId) {
                     if (!(inputKey instanceof SubscriptionNotificationKey)) {
-                        log.error("SubscriptionBase service received an unexpected event type {}" + inputKey.getClass().getName());
+                        log.error("SubscriptionBase service received an unexpected event className='{}'", inputKey.getClass().getName());
                         return;
                     }
 
@@ -110,7 +110,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                     final SubscriptionBaseEvent event = dao.getEventById(key.getEventId(), internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
                     if (event == null) {
                         // This can be expected if the event is soft deleted (is_active = 0)
-                        log.info("Failed to extract event for notification key {}", inputKey);
+                        log.debug("Failed to extract event for notification key {}", inputKey);
                         return;
                     }
 
@@ -149,7 +149,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
         try {
             final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(event.getSubscriptionId(), context);
             if (subscription == null) {
-                log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
+                log.warn("Error retrieving subscriptionId='{}'", event.getSubscriptionId());
                 return;
             }
             if (subscription.getActiveVersion() > event.getActiveVersion()) {
@@ -176,9 +176,9 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 eventBus.post(busEvent);
             }
         } catch (final EventBusException e) {
-            log.warn("Failed to post subscription event " + event, e);
+            log.warn(String.format("Failed to post event %s", event), e);
         } catch (final CatalogApiException e) {
-            log.warn("Failed to post subscription event " + event, e);
+            log.warn(String.format("Failed to post event %s", event), e);
         }
     }
 
@@ -195,7 +195,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 return true;
             }
         } catch (final SubscriptionBaseError e) {
-            log.error(String.format("Failed to insert next phase for subscription %s", subscription.getId()), e);
+            log.error(String.format("Error inserting next phase for subscriptionId='%s'", subscription.getId()), e);
         }
 
         return false;

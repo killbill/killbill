@@ -165,14 +165,13 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         if (originalExceptionOrCause instanceof OperationException) {
             return (OperationException) originalExceptionOrCause;
         } else if (originalExceptionOrCause instanceof LockFailedException) {
-            final String format = String.format("Failed to lock account %s", paymentStateContext.getAccount().getExternalKey());
-            logger.error(String.format(format));
+            logger.warn(String.format("Failed to lock accountId='%s'", paymentStateContext.getAccount().getId()));
         } else if (originalExceptionOrCause instanceof TimeoutException) {
-            logger.warn("RetryOperationCallback call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
+            logger.warn("Call TIMEOUT for accountId='{}'", paymentStateContext.getAccount().getId());
         } else if (originalExceptionOrCause instanceof InterruptedException) {
-            logger.error("RetryOperationCallback call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
+            logger.warn("Call was interrupted for accountId='{}'", paymentStateContext.getAccount().getId());
         } else /* most probably RuntimeException */ {
-            logger.warn("RetryOperationCallback failed for account {}", paymentStateContext.getAccount().getExternalKey(), e);
+            logger.warn("Operation failed for accountId='{}'", paymentStateContext.getAccount().getId(), e);
         }
         return new OperationException(e, getOperationResultOnException(paymentStateContext));
     }

@@ -124,7 +124,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         if (transaction == null ||
             transaction.getTransactionStatus() == TransactionStatus.PLUGIN_FAILURE ||
             transaction.getTransactionStatus() == TransactionStatus.PAYMENT_FAILURE) {
-            log.info("Janitor AttemptCompletionTask moving attempt " + attempt.getId() + " -> ABORTED");
+            log.info("Moving attemptId='{}' to ABORTED", attempt.getId());
             paymentDao.updatePaymentAttempt(attempt.getId(), attempt.getTransactionId(), "ABORTED", internalCallContext);
             return;
         }
@@ -140,7 +140,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
             transaction.getTransactionStatus() == TransactionStatus.PENDING) {
 
             try {
-                log.info("Janitor AttemptCompletionTask completing attempt " + attempt.getId() + " -> SUCCESS");
+                log.info("Moving attemptId='{}' to SUCCESS", attempt.getId());
 
                 final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
                 final boolean isApiPayment = true; // unclear
@@ -166,11 +166,11 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
                 //
                 pluginControlledPaymentAutomatonRunner.completeRun(paymentStateContext);
             } catch (final AccountApiException e) {
-                log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
+                log.warn(String.format("Error completing paymentAttemptId='%s'", attempt.getId()), e);
             } catch (final PluginPropertySerializerException e) {
-                log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
+                log.warn(String.format("Error completing paymentAttemptId='%s'", attempt.getId()), e);
             } catch (final PaymentApiException e) {
-                log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
+                log.warn(String.format("Error completing paymentAttemptId='%s'", attempt.getId()), e);
             }
         }
     }

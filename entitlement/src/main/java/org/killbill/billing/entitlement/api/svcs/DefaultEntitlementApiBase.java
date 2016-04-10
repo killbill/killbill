@@ -189,7 +189,7 @@ public class DefaultEntitlementApiBase {
                     try {
                         eventBus.post(event);
                     } catch (EventBusException e) {
-                        log.warn("Failed to post bus event for pause operation on bundle " + bundleId);
+                        log.warn(String.format("Failed to post event %s", event), e);
                     }
 
                 } catch (SubscriptionBaseApiException e) {
@@ -241,7 +241,7 @@ public class DefaultEntitlementApiBase {
                     try {
                         eventBus.post(event);
                     } catch (EventBusException e) {
-                        log.warn("Failed to post bus event for resume operation on bundle " + bundleId);
+                        log.warn(String.format("Failed to post event %s", event), e);
                     }
 
                 } catch (SubscriptionBaseApiException e) {

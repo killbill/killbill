@@ -110,7 +110,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
 
         // Pretty-print the events, before and after the blocking calculator does its magic
-        final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId ").append(accountId);
+        final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
         eventsToString(logStringBuilder, result, "\nBilling Events Raw");
         blockCalculator.insertBlockingEvents(result, skippedSubscriptions, context);
         eventsToString(logStringBuilder, result, "\nBilling Events After Blocking");

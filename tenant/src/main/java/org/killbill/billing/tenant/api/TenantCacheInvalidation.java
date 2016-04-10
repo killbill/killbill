@@ -198,7 +198,7 @@ public class TenantCacheInvalidation {
                             try {
                                 parent.getEventBus().post(event);
                             } catch (final EventBusException e) {
-                                logger.warn("Failed post bus event " + event, e);
+                                logger.warn(String.format("Failed to post event %s", event), e);
                             }
                         }
                     } else {

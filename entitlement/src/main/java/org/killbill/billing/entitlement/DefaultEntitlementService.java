@@ -107,7 +107,7 @@ public class DefaultEntitlementService implements EntitlementService {
                     } else if (inputKey instanceof BlockingTransitionNotificationKey) {
                         processBlockingNotification((BlockingTransitionNotificationKey) inputKey, internalCallContext);
                     } else if (inputKey != null) {
-                        log.error("Entitlement service received an unexpected event type {}" + inputKey.getClass());
+                        log.error("Entitlement service received an unexpected event className='{}", inputKey.getClass());
                     } else {
                         log.error("Entitlement service received an unexpected null event");
                     }
@@ -127,12 +127,12 @@ public class DefaultEntitlementService implements EntitlementService {
         try {
             entitlement = entitlementInternalApi.getEntitlementForId(key.getEntitlementId(), internalCallContext);
         } catch (final EntitlementApiException e) {
-            log.error("Error retrieving entitlement for id " + key.getEntitlementId(), e);
+            log.error(String.format("Error retrieving entitlementId='%s'", key.getEntitlementId()), e);
             return;
         }
 
         if (!(entitlement instanceof DefaultEntitlement)) {
-            log.error("Entitlement service received an unexpected entitlement class type {}" + entitlement.getClass().getName());
+            log.error(String.format("Error retrieving entitlementId='%s', unexpected entitlement className='%s'", key.getEntitlementId(), entitlement.getClass().getName()));
             return;
         }
 
@@ -147,7 +147,7 @@ public class DefaultEntitlementService implements EntitlementService {
                 entitlementInternalApi.resume(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate(), ((DefaultEntitlement) entitlement).getSubscriptionBase().getStartDate()), ImmutableList.<PluginProperty>of(), internalCallContext);
             }
         } catch (final EntitlementApiException e) {
-            log.error("Error processing event for entitlement {}" + entitlement.getId(), e);
+            log.error(String.format("Error processing event for entitlementId='%s'", entitlement.getId()), e);
         }
     }
 
@@ -190,7 +190,7 @@ public class DefaultEntitlementService implements EntitlementService {
         try {
             eventBus.post(event);
         } catch (final EventBusException e) {
-            log.warn("Failed to post event {}", e);
+            log.warn(String.format("Failed to post event %s", event), e);
         }
     }
 

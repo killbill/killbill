@@ -225,20 +225,20 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                                        internalCallContext);
 
         } catch (final AccountApiException e) {
-            log.warn("Failed to retry attempt " + attemptId + toPluginNamesOnError(" for plugins ", paymentControlPluginNames), e);
+            log.warn(String.format("Failed to retry attemptId='%s', paymentControlPlugins='%s'", attemptId, toPluginNamesOnError(paymentControlPluginNames)), e);
         } catch (final PaymentApiException e) {
-            log.warn("Failed to retry attempt " + attemptId + toPluginNamesOnError(" for plugins ", paymentControlPluginNames), e);
+            log.warn(String.format("Failed to retry attemptId='%s', paymentControlPlugins='%s'", attemptId, toPluginNamesOnError(paymentControlPluginNames)), e);
         } catch (final PluginPropertySerializerException e) {
-            log.warn("Failed to retry attempt " + attemptId + toPluginNamesOnError(" for plugins ", paymentControlPluginNames), e);
+            log.warn(String.format("Failed to retry attemptId='%s', paymentControlPlugins='%s'", attemptId, toPluginNamesOnError(paymentControlPluginNames)), e);
         } catch (final MissingEntryException e) {
-            log.warn("Failed to retry attempt " + attemptId + toPluginNamesOnError(" for plugins ", paymentControlPluginNames), e);
+            log.warn(String.format("Failed to retry attemptId='%s', paymentControlPlugins='%s'", attemptId, toPluginNamesOnError(paymentControlPluginNames)), e);
         }
     }
 
-    private String toPluginNamesOnError(final String prefixMessage, final Collection<String> paymentControlPluginNames) {
+    private String toPluginNamesOnError(final Collection<String> paymentControlPluginNames) {
         if (paymentControlPluginNames == null || paymentControlPluginNames.isEmpty()) {
             return "";
         }
-        return prefixMessage + "(" + JOINER.join(paymentControlPluginNames) + ")";
+        return JOINER.join(paymentControlPluginNames);
     }
 }

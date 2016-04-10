@@ -104,7 +104,7 @@ public class TenantFilter implements Filter {
             chain.doFilter(request, response);
         } catch (final TenantApiException e) {
             // Should never happen since Shiro validated the credentials?
-            log.warn("Couldn't find the tenant?", e);
+            log.error("Couldn't find the tenant? - should never happen!", e);
         }
     }
 

@@ -55,7 +55,7 @@ public class DefaultServerService implements ServerService {
         try {
             bus.register(pushNotificationListener);
         } catch (final EventBusException e) {
-            log.warn("Failed to initialize Server service :", e);
+            log.warn("Failed to register PushNotificationListener", e);
         }
     }
 
@@ -64,7 +64,7 @@ public class DefaultServerService implements ServerService {
         try {
             bus.unregister(pushNotificationListener);
         } catch (final EventBusException e) {
-            log.warn("Failed to stop Server service :", e);
+            log.warn("Failed to unregister PushNotificationListener", e);
         }
     }
 }

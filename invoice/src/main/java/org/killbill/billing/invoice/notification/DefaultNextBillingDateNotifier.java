@@ -70,33 +70,29 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
         final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+                if (!(notificationKey instanceof NextBillingDateNotificationKey)) {
+                    log.error("Invoice service received an unexpected event className='{}", notificationKey.getClass());
+                    return;
+                }
+
+                final NextBillingDateNotificationKey key = (NextBillingDateNotificationKey) notificationKey;
+
+                // Just to ensure compatibility with json that might not have that targetDate field (old versions < 0.13.6)
+                final DateTime targetDate = key.getTargetDate() != null ? key.getTargetDate() : eventDate;
                 try {
-                    if (!(notificationKey instanceof NextBillingDateNotificationKey)) {
-                        log.error("Invoice service received an unexpected event type {}", notificationKey.getClass().getName());
+                    final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(key.getUuidKey(), callContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
+                    if (subscription == null) {
+                        log.warn("Unable to retrieve subscriptionId='{}' for event {}", key.getUuidKey(), key);
                         return;
                     }
-
-                    final NextBillingDateNotificationKey key = (NextBillingDateNotificationKey) notificationKey;
-
-                    // Just to ensure compatibility with json that might not have that targetDate field (old versions < 0.13.6)
-                    final DateTime targetDate = key.getTargetDate() != null ? key.getTargetDate() : eventDate;
-                    try {
-                        final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(key.getUuidKey(), callContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
-                        if (subscription == null) {
-                            log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")");
-                            return;
-                        }
-                        if (key.isDryRunForInvoiceNotification() != null && // Just to ensure compatibility with json that might not have that field (old versions < 0.13.6)
-                            key.isDryRunForInvoiceNotification()) {
-                            processEventForInvoiceNotification(key.getUuidKey(), targetDate, userToken, accountRecordId, tenantRecordId);
-                        } else {
-                            processEventForInvoiceGeneration(key.getUuidKey(), targetDate, userToken, accountRecordId, tenantRecordId);
-                        }
-                    } catch (SubscriptionBaseApiException e) {
-                        log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")", e);
+                    if (key.isDryRunForInvoiceNotification() != null && // Just to ensure compatibility with json that might not have that field (old versions < 0.13.6)
+                        key.isDryRunForInvoiceNotification()) {
+                        processEventForInvoiceNotification(key.getUuidKey(), targetDate, userToken, accountRecordId, tenantRecordId);
+                    } else {
+                        processEventForInvoiceGeneration(key.getUuidKey(), targetDate, userToken, accountRecordId, tenantRecordId);
                     }
-                } catch (IllegalArgumentException e) {
-                    log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
+                } catch (SubscriptionBaseApiException e) {
+                    log.error(String.format("Error retrieving subscriptionId='%s'", key.getUuidKey()), e);
                 }
             }
         };
