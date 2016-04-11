@@ -184,7 +184,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                     try {
                         bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
                     } catch (final PersistentBus.EventBusException e) {
-                        log.warn(String.format("Failed to post tag definition creation event for tagDefinitionId='%s'", tagDefinition.getId()), e);
+                        log.warn("Failed to post tag definition creation event for tagDefinitionId='{}'", tagDefinition.getId(), e);
                     }
 
                     return tagDefinition;
@@ -263,7 +263,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
         try {
             bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final PersistentBus.EventBusException e) {
-            log.warn(String.format("Failed to post tag definition event for tagDefinitionId='%s'", tagDefinition.getId().toString()), e);
+            log.warn("Failed to post tag definition event for tagDefinitionId='{}'", tagDefinition.getId().toString(), e);
         }
     }
 

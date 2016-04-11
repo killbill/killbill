@@ -1082,7 +1082,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             final DefaultSubscriptionBase upToDateSubscription = createSubscriptionWithNewEvent(subscription, immediateEvent, context);
             notifyBusOfEffectiveImmediateChange(entitySqlDaoWrapperFactory, upToDateSubscription, immediateEvent, seqId, context);
         } catch (final CatalogApiException e) {
-            log.warn(String.format("Failed to post effective event for subscriptionId='%s'", subscription.getId()), e);
+            log.warn("Failed to post effective event for subscriptionId='{}'", subscription.getId(), e);
         }
     }
 
@@ -1098,7 +1098,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
             eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
-            log.warn(String.format("Failed to post effective event for subscriptionId='%s'", subscription.getId()), e);
+            log.warn("Failed to post effective event for subscriptionId='{}'", subscription.getId(), e);
         }
     }
 
@@ -1107,7 +1107,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         try {
             eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, transitionType, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()), entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
-            log.warn(String.format("Failed to post requested change event for subscriptionId='%s'", subscription.getId()), e);
+            log.warn("Failed to post requested change event for subscriptionId='{}'", subscription.getId(), e);
         }
     }
 

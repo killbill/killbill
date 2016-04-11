@@ -182,7 +182,7 @@ public class InvoiceDispatcher {
             try {
                 eventBus.post(event);
             } catch (EventBusException e) {
-                log.warn(String.format("Failed to post event %s", event), e);
+                log.warn("Failed to post event {}", event, e);
             }
         }
     }
@@ -190,7 +190,7 @@ public class InvoiceDispatcher {
     private Invoice processSubscriptionInternal(final UUID subscriptionId, final DateTime targetDate, final boolean dryRunForNotification, final InternalCallContext context) throws InvoiceApiException {
         try {
             if (subscriptionId == null) {
-                log.error("Failed handling SubscriptionBase change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
+                log.warn("Failed handling SubscriptionBase change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
                 return null;
             }
             final UUID accountId = subscriptionApi.getAccountIdFromSubscriptionId(subscriptionId, context);
@@ -198,7 +198,7 @@ public class InvoiceDispatcher {
 
             return processAccount(accountId, targetDate, dryRunArguments, context);
         } catch (final SubscriptionBaseApiException e) {
-            log.error("Failed handling SubscriptionBase change.",
+            log.warn("Failed handling SubscriptionBase change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
             return null;
         }
@@ -212,9 +212,7 @@ public class InvoiceDispatcher {
 
             return processAccountWithLock(accountId, targetDate, dryRunArguments, context);
         } catch (final LockFailedException e) {
-            // Not good!
-            log.error(String.format("Failed to process invoice for account %s, targetDate %s",
-                                    accountId.toString(), targetDate), e);
+            log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId.toString(), targetDate, e);
         } finally {
             if (lock != null) {
                 lock.release();
@@ -558,7 +556,7 @@ public class InvoiceDispatcher {
         try {
             eventBus.post(event);
         } catch (final EventBusException e) {
-            log.warn(String.format("Failed to post event %s", event), e);
+            log.warn("Failed to post event {}", event, e);
         }
     }
 

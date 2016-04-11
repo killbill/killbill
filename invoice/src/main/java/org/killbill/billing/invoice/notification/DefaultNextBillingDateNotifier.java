@@ -92,7 +92,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
                         processEventForInvoiceGeneration(key.getUuidKey(), targetDate, userToken, accountRecordId, tenantRecordId);
                     }
                 } catch (SubscriptionBaseApiException e) {
-                    log.error(String.format("Error retrieving subscriptionId='%s'", key.getUuidKey()), e);
+                    log.warn("Error retrieving subscriptionId='{}'", key.getUuidKey(), e);
                 }
             }
         };

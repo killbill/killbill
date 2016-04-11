@@ -106,10 +106,10 @@ public class BeatrixListener {
             // However when using InMemoryBus, this can happen as there is no retry logic (at the 'ext' bus level) and so we should re-throw at this level to kick-in the retry logic from the 'main' bus
             // (The use of RuntimeException is somewhat arbitrary)
             //
-            log.warn(String.format("Failed to post event %s", event), e);
+            log.warn("Failed to post event {}", event, e);
             throw new RuntimeException(e);
         } catch (JsonProcessingException e) {
-            log.warn(String.format("Failed to post event %s", event), e);
+            log.warn("Failed to post event {}", event, e);
         }
     }
 

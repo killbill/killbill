@@ -74,7 +74,7 @@ public class DefaultPaginationHelper {
                     maxNbRecords = Math.max(maxNbRecords, pages.getMaxNbRecords());
                 }
             } catch (final BillingExceptionBase e) {
-                log.warn(String.format("Error while searching plugin='%s'", pluginName), e);
+                log.warn("Error while searching plugin='{}'", pluginName, e);
                 // Non-fatal, continue to search other plugins
             }
         }

@@ -189,7 +189,7 @@ public class DefaultEntitlementApiBase {
                     try {
                         eventBus.post(event);
                     } catch (EventBusException e) {
-                        log.warn(String.format("Failed to post event %s", event), e);
+                        log.warn("Failed to post event {}", event, e);
                     }
 
                 } catch (SubscriptionBaseApiException e) {
@@ -241,7 +241,7 @@ public class DefaultEntitlementApiBase {
                     try {
                         eventBus.post(event);
                     } catch (EventBusException e) {
-                        log.warn(String.format("Failed to post event %s", event), e);
+                        log.warn("Failed to post event {}", event, e);
                     }
 
                 } catch (SubscriptionBaseApiException e) {

@@ -176,9 +176,9 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 eventBus.post(busEvent);
             }
         } catch (final EventBusException e) {
-            log.warn(String.format("Failed to post event %s", event), e);
+            log.warn("Failed to post event {}", event, e);
         } catch (final CatalogApiException e) {
-            log.warn(String.format("Failed to post event %s", event), e);
+            log.warn("Failed to post event {}", event, e);
         }
     }
 
@@ -195,7 +195,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 return true;
             }
         } catch (final SubscriptionBaseError e) {
-            log.error(String.format("Error inserting next phase for subscriptionId='%s'", subscription.getId()), e);
+            log.warn("Error inserting next phase for subscriptionId='{}'", subscription.getId(), e);
         }
 
         return false;

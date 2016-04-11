@@ -460,7 +460,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         try {
             eventBus.post(event);
         } catch (final EventBusException e) {
-            log.warn(String.format("Failed to post event %s", event), e);
+            log.warn("Failed to post event {}", event, e);
         }
     }
 

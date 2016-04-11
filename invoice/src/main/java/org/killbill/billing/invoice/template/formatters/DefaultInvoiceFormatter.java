@@ -284,7 +284,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
                 }
             }
         } catch (final CurrencyConversionException e) {
-            logger.warn(String.format("Failed to retrieve currency conversion rates for currency='%s', dateConversion='%s'", currency, latestPaymentDate), e);
+            logger.warn("Failed to retrieve currency conversion rates for currency='{}', dateConversion='{}'", currency, latestPaymentDate, e);
             return null;
         }
         logger.warn("Failed to retrieve currency conversion rates for currency='{}', dateConversion='{}'", currency, latestPaymentDate);

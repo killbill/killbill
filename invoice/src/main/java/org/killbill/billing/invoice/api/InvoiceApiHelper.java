@@ -103,7 +103,7 @@ public class InvoiceApiHelper {
             final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, internalCallContext);
             return fromInvoiceItemModelDao(createdInvoiceItems);
         } catch (final LockFailedException e) {
-            log.error(String.format("Failed to process invoice items for account %s", accountId.toString()), e);
+            log.warn("Failed to process invoice items for accountId='{}'", accountId.toString(), e);
             return ImmutableList.<InvoiceItem>of();
         } finally {
             if (lock != null) {

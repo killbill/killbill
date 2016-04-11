@@ -225,13 +225,13 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                                        internalCallContext);
 
         } catch (final AccountApiException e) {
-            log.warn(String.format("Failed to retry attemptId='%s', paymentControlPlugins='%s'", attemptId, toPluginNamesOnError(paymentControlPluginNames)), e);
+            log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final PaymentApiException e) {
-            log.warn(String.format("Failed to retry attemptId='%s', paymentControlPlugins='%s'", attemptId, toPluginNamesOnError(paymentControlPluginNames)), e);
+            log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final PluginPropertySerializerException e) {
-            log.warn(String.format("Failed to retry attemptId='%s', paymentControlPlugins='%s'", attemptId, toPluginNamesOnError(paymentControlPluginNames)), e);
+            log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final MissingEntryException e) {
-            log.warn(String.format("Failed to retry attemptId='%s', paymentControlPlugins='%s'", attemptId, toPluginNamesOnError(paymentControlPluginNames)), e);
+            log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         }
     }
 

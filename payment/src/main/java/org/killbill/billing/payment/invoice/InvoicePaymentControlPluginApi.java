@@ -211,7 +211,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     throw new IllegalStateException("Unexpected transactionType " + transactionType);
             }
         } catch (final InvoiceApiException e) {
-            log.error(String.format("onSuccessCall failed for attemptId='%s', transactionType='%s'", paymentControlContext.getAttemptPaymentId(), transactionType), e);
+            log.warn("onSuccessCall failed for attemptId='{}', transactionType='{}'", paymentControlContext.getAttemptPaymentId(), transactionType, e);
         }
 
         return new DefaultOnSuccessPaymentControlResult();

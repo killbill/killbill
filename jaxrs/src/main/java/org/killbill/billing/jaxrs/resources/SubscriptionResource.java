@@ -92,7 +92,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.wordnik.swagger.annotations.Api;
@@ -515,20 +514,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
         @Override
         public void onSubscriptionBaseTransition(final EffectiveSubscriptionInternalEvent event) {
 
-            log.info(String.format("Got event SubscriptionBaseTransition token='%s', type='%s', remaining='%d'",
-                                   event.getUserToken(), event.getTransitionType(), event.getRemainingEventsForUserOperation()));
+            log.info("Got event SubscriptionBaseTransition token='{}', type='{}', remaining='{}'", event.getUserToken(), event.getTransitionType(), event.getRemainingEventsForUserOperation());
         }
 
         @Override
         public void onEmptyInvoice(final NullInvoiceInternalEvent event) {
-            log.info(String.format("Got event EmptyInvoiceNotification token='%s'", event.getUserToken()));
+            log.info("Got event EmptyInvoiceNotification token='{}'", event.getUserToken());
             notifyForCompletion();
         }
 
         @Override
         public void onInvoiceCreation(final InvoiceCreationInternalEvent event) {
 
-            log.info(String.format("Got event InvoiceCreationNotification token='%s'", event.getUserToken()));
+            log.info("Got event InvoiceCreationNotification token='{}'", event.getUserToken());
             if (event.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
                 notifyForCompletion();
             }
@@ -536,19 +534,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         @Override
         public void onPaymentInfo(final PaymentInfoInternalEvent event) {
-            log.info(String.format("Got event PaymentInfo token='%s'", event.getUserToken()));
+            log.info("Got event PaymentInfo token='{}'", event.getUserToken());
             notifyForCompletion();
         }
 
         @Override
         public void onPaymentError(final PaymentErrorInternalEvent event) {
-            log.info(String.format("Got event PaymentError token='%s'", event.getUserToken()));
+            log.info("Got event PaymentError token='{}'", event.getUserToken());
             notifyForCompletion();
         }
 
         @Override
         public void onPaymentPluginError(final PaymentPluginErrorInternalEvent event) {
-            log.info(String.format("Got event PaymentPluginError token='%s'", event.getUserToken()));
+            log.info("Got event PaymentPluginError token='{}'", event.getUserToken());
             notifyForCompletion();
         }
     }

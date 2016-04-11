@@ -176,14 +176,14 @@ public class OverdueStateApplicator {
             event = createOverdueEvent(account, previousOverdueState.getName(), nextOverdueState.getName(), isBlockBillingTransition(previousOverdueState, nextOverdueState),
                                        isUnblockBillingTransition(previousOverdueState, nextOverdueState), context);
         } catch (final BlockingApiException e) {
-            log.warn(String.format("Failed to create OverdueChangeInternalEvent for accountId='%s'", account.getId()), e);
+            log.warn("Failed to create OverdueChangeInternalEvent for accountId='{}'", account.getId(), e);
             return;
         }
 
         try {
             bus.post(event);
         } catch (final Exception e) {
-            log.warn(String.format("Failed to post event %s", event), e);
+            log.warn("Failed to post event {}", event, e);
         }
     }
 
@@ -231,14 +231,14 @@ public class OverdueStateApplicator {
             event = createOverdueEvent(account, previousOverdueState.getName(), clearState.getName(), isBlockBillingTransition(previousOverdueState, clearState),
                                        isUnblockBillingTransition(previousOverdueState, clearState), context);
         } catch (final BlockingApiException e) {
-            log.warn(String.format("Failed to create OverdueChangeInternalEvent for accountId='%s'", account.getId()), e);
+            log.warn("Failed to create OverdueChangeInternalEvent for accountId='{}'", account.getId(), e);
             return;
         }
 
         try {
             bus.post(event);
         } catch (final Exception e) {
-            log.warn(String.format("Failed to post event %s", event), e);
+            log.warn("Failed to post event {}", event, e);
         }
     }
 
@@ -388,11 +388,11 @@ public class OverdueStateApplicator {
                 emailSender.sendPlainTextEmail(to, cc, subject, emailBody);
             }
         } catch (final IOException e) {
-            log.warn(String.format("Unable to generate or send overdue notification email for accountId='%s'", account.getId()), e);
+            log.warn("Unable to generate or send overdue notification email for accountId='{}'", account.getId(), e);
         } catch (final EmailApiException e) {
-            log.warn(String.format("Unable to send overdue notification email for accountId='%s'", account.getId()), e);
+            log.warn("Unable to send overdue notification email for accountId='{}'", account.getId(), e);
         } catch (final MustacheException e) {
-            log.warn(String.format("Unable to generate overdue notification email for accountId='%s'", account.getId()), e);
+            log.warn("Unable to generate overdue notification email for accountId='{}'", account.getId(), e);
         }
     }
 

@@ -315,7 +315,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     }
                 }
             } catch (final CatalogApiException e) {
-                log.warn(String.format("Failed to get subscriptions for bundleId='%s'", cur.getId()), e);
+                log.warn("Failed to get subscriptions for bundleId='{}'", cur.getId(), e);
                 return null;
             }
         }

@@ -166,11 +166,11 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
                 //
                 pluginControlledPaymentAutomatonRunner.completeRun(paymentStateContext);
             } catch (final AccountApiException e) {
-                log.warn(String.format("Error completing paymentAttemptId='%s'", attempt.getId()), e);
+                log.warn("Error completing paymentAttemptId='{}'", attempt.getId(), e);
             } catch (final PluginPropertySerializerException e) {
-                log.warn(String.format("Error completing paymentAttemptId='%s'", attempt.getId()), e);
+                log.warn("Error completing paymentAttemptId='{}'", attempt.getId(), e);
             } catch (final PaymentApiException e) {
-                log.warn(String.format("Error completing paymentAttemptId='%s'", attempt.getId()), e);
+                log.warn("Error completing paymentAttemptId='{}'", attempt.getId(), e);
             }
         }
     }

@@ -146,7 +146,7 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
         try {
             bus.postFromTransaction(customFieldEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final PersistentBus.EventBusException e) {
-            log.warn(String.format("Failed to post tag event for customFieldId='%s'", customField.getId().toString()), e);
+            log.warn("Failed to post tag event for customFieldId='{}'", customField.getId().toString(), e);
         }
 
     }

@@ -848,7 +848,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             eventBus.postFromTransaction(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, context.getAccountRecordId(), context.getTenantRecordId(), userToken),
                                          entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
-            log.warn(String.format("Failed to post adjustment event for invoiceId='%s'", invoiceId), e);
+            log.warn("Failed to post adjustment event for invoiceId='{}'", invoiceId, e);
         }
     }
 
@@ -887,7 +887,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         try {
             eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
-            log.warn(String.format("Failed to post invoice payment event for invoiceId='%s'", invoicePaymentModelDao.getInvoiceId()), e);
+            log.warn("Failed to post invoice payment event for invoiceId='{}'", invoicePaymentModelDao.getInvoiceId(), e);
         }
     }
 

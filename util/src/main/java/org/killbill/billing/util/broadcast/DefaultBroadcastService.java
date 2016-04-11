@@ -143,7 +143,7 @@ public class DefaultBroadcastService implements BroadcastService {
                 try {
                     eventBus.post(event);
                 } catch (final EventBusException e) {
-                    logger.warn(String.format("Failed to post event %s", event), e);
+                    logger.warn("Failed to post event {}", event, e);
                 } finally {
                     parent.setLatestRecordIdProcessed(cur.getRecordId());
                 }

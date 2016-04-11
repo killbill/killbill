@@ -165,7 +165,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         if (originalExceptionOrCause instanceof OperationException) {
             return (OperationException) originalExceptionOrCause;
         } else if (originalExceptionOrCause instanceof LockFailedException) {
-            logger.warn(String.format("Failed to lock accountId='%s'", paymentStateContext.getAccount().getId()));
+            logger.warn("Failed to lock accountId='{}'", paymentStateContext.getAccount().getId());
         } else if (originalExceptionOrCause instanceof TimeoutException) {
             logger.warn("Call TIMEOUT for accountId='{}'", paymentStateContext.getAccount().getId());
         } else if (originalExceptionOrCause instanceof InterruptedException) {
