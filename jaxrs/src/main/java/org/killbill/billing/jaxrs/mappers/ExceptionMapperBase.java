@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -112,55 +114,40 @@ public abstract class ExceptionMapperBase {
     }
 
     protected Response buildConflictingRequestResponse(final Exception e, final UriInfo uriInfo) {
-        // Log the full stacktrace
-        log.warn("Conflicting request", e);
-
         final Response.ResponseBuilder responseBuilder = Response.status(Status.CONFLICT);
         serializeException(e, uriInfo, responseBuilder);
-        return responseBuilder.build();
+        return new LoggingResponse(e, responseBuilder.build());
     }
 
     protected Response buildNotFoundResponse(final Exception e, final UriInfo uriInfo) {
-        // Log the full stacktrace
-        log.info("Not found", e);
-
         final Response.ResponseBuilder responseBuilder = Response.status(Status.NOT_FOUND);
         serializeException(e, uriInfo, responseBuilder);
-        return responseBuilder.build();
+        return new LoggingResponse(e, responseBuilder.build());
     }
 
     protected Response buildBadRequestResponse(final Exception e, final UriInfo uriInfo) {
-        // Log the full stacktrace
-        log.warn("Bad request", e);
-
         final Response.ResponseBuilder responseBuilder = Response.status(Status.BAD_REQUEST);
         serializeException(e, uriInfo, responseBuilder);
-        return responseBuilder.build();
+        return new LoggingResponse(e, responseBuilder.build());
     }
 
     protected Response buildAuthorizationErrorResponse(final Exception e, final UriInfo uriInfo) {
-        // Log the full stacktrace
-        log.warn("Authorization error", e);
-
         // TODO Forbidden?
         final Response.ResponseBuilder responseBuilder = Response.status(Status.UNAUTHORIZED);
         serializeException(e, uriInfo, responseBuilder);
-        return responseBuilder.build();
+        return new LoggingResponse(e, responseBuilder.build());
     }
 
     protected Response buildInternalErrorResponse(final Exception e, final UriInfo uriInfo) {
-        // Log the full stacktrace
-        log.warn("Internal error", e);
-
         final Response.ResponseBuilder responseBuilder = Response.status(Status.INTERNAL_SERVER_ERROR);
         serializeException(e, uriInfo, responseBuilder);
-        return responseBuilder.build();
+        return new LoggingResponse(e, responseBuilder.build());
     }
 
     protected Response buildPluginTimeoutResponse(final Exception e, final UriInfo uriInfo) {
         final Response.ResponseBuilder responseBuilder = Response.status(Status.ACCEPTED);
         serializeException(e, uriInfo, responseBuilder);
-        return responseBuilder.build();
+        return new LoggingResponse(e, responseBuilder.build());
     }
 
     private void serializeException(final Exception e, final UriInfo uriInfo, final Response.ResponseBuilder responseBuilder) {
