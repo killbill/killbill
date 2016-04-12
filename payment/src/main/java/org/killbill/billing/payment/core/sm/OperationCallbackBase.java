@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOperationException extends Exception> {
 
-    protected final Logger logger = LoggerFactory.getLogger(OperationCallbackBase.class);
+    private final Logger logger = LoggerFactory.getLogger(OperationCallbackBase.class);
 
     private final GlobalLocker locker;
     private final PluginDispatcher<OperationResult> paymentPluginDispatcher;

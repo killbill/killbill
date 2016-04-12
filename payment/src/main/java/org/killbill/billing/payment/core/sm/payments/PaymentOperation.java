@@ -45,6 +45,8 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
@@ -53,6 +55,8 @@ import com.google.common.collect.Iterables;
 
 // Encapsulates the payment specific logic
 public abstract class PaymentOperation extends OperationCallbackBase<PaymentTransactionInfoPlugin, PaymentPluginApiException> implements OperationCallback {
+
+    private final Logger logger = LoggerFactory.getLogger(PaymentOperation.class);
 
     protected final PaymentAutomatonDAOHelper daoHelper;
     protected PaymentPluginApi plugin;
