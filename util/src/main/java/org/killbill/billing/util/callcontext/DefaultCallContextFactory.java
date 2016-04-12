@@ -20,8 +20,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
-
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.callcontext.DefaultTenantContext;
 import org.killbill.clock.Clock;
@@ -44,23 +42,7 @@ public class DefaultCallContextFactory implements CallContextFactory {
 
     @Override
     public CallContext createCallContext(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin,
-                                         final UserType userType, @Nullable final UUID userToken) {
-        return new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
-    }
-
-    @Override
-    public CallContext createCallContext(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin,
                                          final UserType userType, final String reasonCode, final String comment, final UUID userToken) {
         return new DefaultCallContext(tenantId, userName, callOrigin, userType, reasonCode, comment, userToken, clock);
-    }
-
-    @Override
-    public CallContext createCallContext(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType) {
-        return createCallContext(tenantId, userName, callOrigin, userType, null);
-    }
-
-    @Override
-    public CallContext toMigrationCallContext(final CallContext callContext, final DateTime createdDate, final DateTime updatedDate) {
-        return new MigrationCallContext(callContext, createdDate, updatedDate);
     }
 }
