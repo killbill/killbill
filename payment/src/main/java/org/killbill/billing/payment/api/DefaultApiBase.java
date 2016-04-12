@@ -47,37 +47,45 @@ public class DefaultApiBase {
     protected void logAPICall(final String transactionType, final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, @Nullable final UUID transactionId, @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder();
-            logLine.append("PaymentApi : ")
+            logLine.append("PaymentApi: transactionType='")
                    .append(transactionType)
-                   .append(", account = ")
-                   .append(account.getId());
+                   .append("', accountId='")
+                   .append(account.getId())
+                   .append("'");
             if (paymentMethodId != null) {
-                logLine.append(", paymentMethodId = ")
-                       .append(paymentMethodId);
+                logLine.append(", paymentMethodId='")
+                       .append(paymentMethodId)
+                       .append("'");
             }
             if (paymentExternalKey != null) {
-                logLine.append(", paymentExternalKey = ")
-                       .append(paymentExternalKey);
+                logLine.append(", paymentExternalKey='")
+                       .append(paymentExternalKey)
+                       .append("'");
             }
             if (paymentTransactionExternalKey != null) {
-                logLine.append(", paymentTransactionExternalKey = ")
-                       .append(paymentTransactionExternalKey);
+                logLine.append(", paymentTransactionExternalKey='")
+                       .append(paymentTransactionExternalKey)
+                       .append("'");
             }
             if (paymentId != null) {
-                logLine.append(", paymentId = ")
-                       .append(paymentId);
+                logLine.append(", paymentId='")
+                       .append(paymentId)
+                       .append("'");
             }
             if (transactionId != null) {
-                logLine.append(", transactionId = ")
-                       .append(transactionId);
+                logLine.append(", transactionId='")
+                       .append(transactionId)
+                       .append("'");
             }
             if (amount != null) {
-                logLine.append(", amount = ")
-                       .append(amount);
+                logLine.append(", amount='")
+                       .append(amount)
+                       .append("'");
             }
             if (currency != null) {
-                logLine.append(", currency = ")
-                       .append(currency);
+                logLine.append(", currency='")
+                       .append(currency)
+                       .append("'");
             }
             log.info(logLine.toString());
         }
