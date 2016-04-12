@@ -179,6 +179,9 @@
         <appender-ref ref="SIFT-jdbc-connection"/>
     </logger>
 
+    <!-- See https://github.com/jOOQ/jOOQ/issues/4019 -->
+    <logger name="org.jooq.Constants" level="OFF"/>
+
     <!-- Silence verbose loggers in DEBUG mode -->
     <logger name="com.dmurph" level="OFF"/>
     <logger name="org.killbill.billing.notificationq" level="INFO"/>
