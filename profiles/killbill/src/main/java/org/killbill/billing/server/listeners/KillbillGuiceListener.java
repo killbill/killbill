@@ -63,6 +63,9 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
                                                                              // Swagger integration
                                                                              .addJaxrsResource("com.wordnik.swagger.jersey.listing");
 
+        // Set the per-thread RequestData first
+        builder.addJerseyFilter(RequestDataFilter.class.getName());
+
         //
         // Add jersey filters which are executed prior jersey write the output stream
         //
@@ -79,7 +82,6 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
             builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());
         }
         builder.addJerseyFilter(ProfilingContainerResponseFilter.class.getName());
-        builder.addJerseyFilter(RequestDataFilter.class.getName());
 
         // Broader, to support the "Try it out!" feature
         //builder.addFilter("/" + SWAGGER_PATH + "*", ResponseCorsFilter.class);
