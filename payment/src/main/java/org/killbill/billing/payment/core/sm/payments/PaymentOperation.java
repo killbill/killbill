@@ -88,25 +88,26 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
 
     @Override
     protected OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e) {
-
         // If this is an ExecutionException we attempt to extract the cause first
-        final Throwable originalExceptionOrCause = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
+        final Throwable originalExceptionOrCausePossiblyOperationException = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
+
+        // Unwrap OperationException too (doOperationCallback wraps exceptions in OperationException)
+        final Throwable originalExceptionOrCause = originalExceptionOrCausePossiblyOperationException instanceof OperationException ? MoreObjects.firstNonNull(originalExceptionOrCausePossiblyOperationException.getCause(), originalExceptionOrCausePossiblyOperationException) : originalExceptionOrCausePossiblyOperationException;
 
         //
         // Any case of exception (checked or runtime) should lead to a TransactionStatus.UNKNOWN (and a XXX_ERRORED payment state).
         // In order to reach that state we create PaymentTransactionInfoPlugin with an PaymentPluginStatus.UNDEFINED status (and an OperationResult.EXCEPTION).
         //
         if (originalExceptionOrCause instanceof LockFailedException) {
-            logger.warn("Failed to lock account {}", paymentStateContext.getAccount().getExternalKey());
+            logger.warn("Failed to lock accountExternalKey='{}'", paymentStateContext.getAccount().getExternalKey());
         } else if (originalExceptionOrCause instanceof TimeoutException) {
-            logger.error("Plugin call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
+            logger.warn("Plugin call TIMEOUT for accountExternalKey='{}'", paymentStateContext.getAccount().getExternalKey());
         } else if (originalExceptionOrCause instanceof InterruptedException) {
-            logger.error("Plugin call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
+            logger.warn("Plugin call was interrupted for accountExternalKey='{}'", paymentStateContext.getAccount().getExternalKey());
         } else {
-            logger.warn("Payment plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), originalExceptionOrCause);
+            logger.warn("Payment plugin call threw an exception for accountExternalKey='{}'", paymentStateContext.getAccount().getExternalKey(), originalExceptionOrCause);
         }
         return convertToUnknownTransactionStatusAndErroredPaymentState(originalExceptionOrCause);
-
     }
 
     //

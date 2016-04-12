@@ -150,7 +150,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                 } catch (final RuntimeException e) {
                     // Attempts to set the retry date in context if needed.
                     executePluginOnFailureCallsAndSetRetryDate(paymentControlContext);
-                    throw e;
+                    throw new OperationException(e, OperationResult.EXCEPTION);
                 }
             }
         });
@@ -158,9 +158,11 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
     @Override
     protected OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e) {
-
         // If this is an ExecutionException we attempt to extract the cause first
-        final Throwable originalExceptionOrCause = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
+        final Throwable originalExceptionOrCausePossiblyOperationException = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
+
+        // Unwrap OperationException too (doOperationCallback wraps exceptions in OperationException)
+        final Throwable originalExceptionOrCause = originalExceptionOrCausePossiblyOperationException instanceof OperationException ? MoreObjects.firstNonNull(originalExceptionOrCausePossiblyOperationException.getCause(), originalExceptionOrCausePossiblyOperationException) : originalExceptionOrCausePossiblyOperationException;
 
         if (originalExceptionOrCause instanceof OperationException) {
             return (OperationException) originalExceptionOrCause;
@@ -170,10 +172,10 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
             logger.warn("Call TIMEOUT for accountId='{}'", paymentStateContext.getAccount().getId());
         } else if (originalExceptionOrCause instanceof InterruptedException) {
             logger.warn("Call was interrupted for accountId='{}'", paymentStateContext.getAccount().getId());
-        } else /* most probably RuntimeException */ {
+        } else {
             logger.warn("Operation failed for accountId='{}'", paymentStateContext.getAccount().getId(), e);
         }
-        return new OperationException(e, getOperationResultOnException(paymentStateContext));
+        return new OperationException(originalExceptionOrCause, getOperationResultOnException(paymentStateContext));
     }
 
     private OperationResult getOperationResultOnException(final PaymentStateContext paymentStateContext) {
