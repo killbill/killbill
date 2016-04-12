@@ -23,7 +23,7 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- See http://jira.qos.ch/browse/LOGBACK-262 -->
-            <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} rId='%requestId', thread='%thread', level='%level', logger='%logger{0}', %maskedMsg%n%ex</pattern>
+            <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} rId='%requestId', th='%thread', lvl='%level', log='%logger{0}', %maskedMsg%n%ex</pattern>
         </encoder>
     </appender>
 
