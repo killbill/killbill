@@ -139,7 +139,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                                     accountInternalApi.updatePaymentMethod(account.getId(), pm.getId(), context);
                                                                                                                 }
                                                                                                             } catch (final PaymentPluginApiException e) {
-                                                                                                                log.warn("Error adding paymentMethodId='{}', plugin='{}'", pm.getId(), paymentPluginServiceName, e);
                                                                                                                 throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                                                                                                             } catch (final AccountApiException e) {
                                                                                                                 throw new PaymentApiException(e);
@@ -176,7 +175,11 @@ public class PaymentMethodProcessor extends ProcessorBase {
         try {
             paymentMethodPlugin = pluginApi.getPaymentMethodDetail(account.getId(), pm.getId(), properties, callContext);
         } catch (final PaymentPluginApiException e) {
-            log.warn("Error retrieving paymentMethodId='{}', plugin='{}'", pm.getId(), pm.getPluginName(), e);
+            if (e.getCause() == null) {
+                log.warn("Error retrieving paymentMethodId='{}', plugin='{}', errorMessage='{}', errorType='{}'", pm.getId(), pm.getPluginName(), e.getErrorMessage(), e.getErrorType());
+            } else {
+                log.warn("Error retrieving paymentMethodId='{}', plugin='{}', errorMessage='{}', errorType='{}'", pm.getId(), pm.getPluginName(), e.getErrorMessage(), e.getErrorType(), e);
+            }
             return null;
         }
 
@@ -227,7 +230,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 final PaymentPluginApi pluginApi = getPaymentPluginApi(paymentMethodModelDao.getPluginName());
                 paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), properties, tenantContext);
             } catch (final PaymentPluginApiException e) {
-                log.warn("Error retrieving paymentMethodId='{}', plugin='{}'", paymentMethodModelDao.getId(), paymentMethodModelDao.getPluginName(), e);
                 throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_METHODS, paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId());
             }
         } else {
@@ -270,7 +272,11 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                try {
                                                    paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), properties, tenantContext);
                                                } catch (final PaymentPluginApiException e) {
-                                                   log.warn("Unable to find payment method id " + paymentMethodModelDao.getId() + " in plugin " + pluginName);
+                                                   if (e.getCause() == null) {
+                                                       log.warn("Error retrieving paymentMethodId='{}', plugin='{}', errorMessage='{}', errorType='{}'", paymentMethodModelDao.getId(), pluginName, e.getErrorMessage(), e.getErrorType());
+                                                   } else {
+                                                       log.warn("Error retrieving paymentMethodId='{}', plugin='{}', errorMessage='{}', errorType='{}'", paymentMethodModelDao.getId(), pluginName, e.getErrorMessage(), e.getErrorType(), e);
+                                                   }
                                                    // We still want to return a payment method object, even though the plugin details are missing
                                                }
                                            }
@@ -424,7 +430,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         paymentDao.deletedPaymentMethod(paymentMethodId, context);
                         return PluginDispatcher.createPluginDispatcherReturnType(null);
                     } catch (final PaymentPluginApiException e) {
-                        log.warn("Error deleting paymentMethodId='{}'", paymentMethodId, e);
                         throw new PaymentApiException(ErrorCode.PAYMENT_DEL_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                     } catch (final AccountApiException e) {
                         throw new PaymentApiException(e);
@@ -502,7 +507,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 return ImmutableList.<PaymentMethod>of();
             }
         } catch (final PaymentPluginApiException e) {
-            log.warn("Error refreshing payment methods for accountId='{}', plugin='{}'", account.getId(), pluginName, e);
             throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
         }
 
@@ -541,7 +545,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     try {
                         pluginApi.resetPaymentMethods(account.getId(), pluginPmsWithId, properties, callContext);
                     } catch (final PaymentPluginApiException e) {
-                        log.warn("Error resetting payment methods for accountId='{}', plugin='{}'", account.getId(), pluginName, e);
                         throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                     }
                     try {
