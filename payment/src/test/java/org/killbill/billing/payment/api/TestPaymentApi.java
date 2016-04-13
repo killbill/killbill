@@ -1270,11 +1270,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
                 assertNotNull(thrownException);
 
-                Throwable operationException = thrownException.getCause();
-                assertNotNull(operationException);
-                assertTrue(operationException instanceof OperationException);
-
-                Throwable timeoutException = operationException.getCause();
+                Throwable timeoutException = thrownException.getCause();
                 assertNotNull(timeoutException);
                 assertTrue(timeoutException instanceof TimeoutException);
 

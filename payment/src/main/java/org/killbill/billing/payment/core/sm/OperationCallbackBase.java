@@ -72,14 +72,14 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
             logger.debug("Successful plugin(s) call of {} for account {} with result {}", pluginNames, account.getExternalKey(), operationResult);
             return operationResult;
         } catch (final ExecutionException e) {
-            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
+            throw unwrapExceptionFromDispatchedTask(e);
         } catch (final TimeoutException e) {
             logger.warn("TimeoutException while executing the plugin(s) {}", pluginNames);
-            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
+            throw unwrapExceptionFromDispatchedTask(e);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.warn("InterruptedException while executing the following plugin(s): {}", pluginNames);
-            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
+            throw unwrapExceptionFromDispatchedTask(e);
         }
     }
 
@@ -91,5 +91,5 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
     //
     protected abstract CallbackOperationResult doCallSpecificOperationCallback() throws CallbackOperationException;
 
-    protected abstract OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e);
+    protected abstract OperationException unwrapExceptionFromDispatchedTask(final Exception e);
 }

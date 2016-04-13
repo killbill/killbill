@@ -157,7 +157,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
     }
 
     @Override
-    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e) {
+    protected OperationException unwrapExceptionFromDispatchedTask(final Exception e) {
         // If this is an ExecutionException we attempt to extract the cause first
         final Throwable originalExceptionOrCausePossiblyOperationException = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
 

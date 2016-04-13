@@ -72,22 +72,29 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
+        final String pluginName;
         try {
-            final String pluginName = daoHelper.getPaymentProviderPluginName();
+            pluginName = daoHelper.getPaymentProviderPluginName();
             this.plugin = daoHelper.getPaymentPluginApi(pluginName);
-
-            if (paymentStateContext.shouldLockAccountAndDispatch()) {
-                return doOperationCallbackWithDispatchAndAccountLock(pluginName);
-            } else {
-                return doSimpleOperationCallback();
-            }
-        } catch (final Exception e) {
+        } catch (final PaymentApiException e) {
             throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
+        }
+
+        if (paymentStateContext.shouldLockAccountAndDispatch()) {
+            // This will already call unwrapExceptionFromDispatchedTask
+            return doOperationCallbackWithDispatchAndAccountLock(pluginName);
+        } else {
+            try {
+                return doSimpleOperationCallback();
+            } catch (final Exception e) {
+                // We need to unwrap OperationException (see doSimpleOperationCallback below)
+                throw unwrapExceptionFromDispatchedTask(e);
+            }
         }
     }
 
     @Override
-    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e) {
+    protected OperationException unwrapExceptionFromDispatchedTask(final Exception e) {
         // If this is an ExecutionException we attempt to extract the cause first
         final Throwable originalExceptionOrCausePossiblyOperationException = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
 
