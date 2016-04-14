@@ -31,6 +31,25 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class InvoiceDateUtils {
 
+    public static int calculateNumberOfWholeBillingPeriods(final LocalDate startDate, final LocalDate endDate, final BillingPeriod billingPeriod) {
+        final int numberOfMonths = Months.monthsBetween(startDate, endDate).getMonths();
+        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
+        return numberOfMonths / numberOfMonthsInPeriod;
+    }
+
+    public static BigDecimal calculateProRationBeforeFirstBillingPeriod(final LocalDate startDate, final LocalDate nextBillingCycleDate,
+                                                                        final BillingPeriod billingPeriod) {
+        final LocalDate previousBillingCycleDate = nextBillingCycleDate.minus(billingPeriod.getPeriod());
+        return calculateProrationBetweenDates(startDate, nextBillingCycleDate, previousBillingCycleDate, nextBillingCycleDate);
+    }
+
+    public static BigDecimal calculateProRationAfterLastBillingCycleDate(final LocalDate endDate, final LocalDate previousBillThroughDate,
+                                                                         final BillingPeriod billingPeriod) {
+        // Note: assumption is that previousBillThroughDate is correctly aligned with the billing cycle day
+        final LocalDate nextBillThroughDate = previousBillThroughDate.plus(billingPeriod.getPeriod());
+        return calculateProrationBetweenDates(previousBillThroughDate, endDate, previousBillThroughDate, nextBillThroughDate);
+    }
+
     /**
      * Called internally to calculate proration or when we recalculate approximate repair amount
      *
@@ -38,9 +57,8 @@ public class InvoiceDateUtils {
      * @param endDate                  end date of the prorated interval
      * @param previousBillingCycleDate start date of the period
      * @param nextBillingCycleDate     end date of the period
-     * @return
      */
-    public static BigDecimal calculateProrationBetweenDates(final LocalDate startDate, final LocalDate endDate, final LocalDate previousBillingCycleDate, final LocalDate nextBillingCycleDate) {
+    private static BigDecimal calculateProrationBetweenDates(final LocalDate startDate, final LocalDate endDate, final LocalDate previousBillingCycleDate, final LocalDate nextBillingCycleDate) {
         final int daysBetween = Days.daysBetween(previousBillingCycleDate, nextBillingCycleDate).getDays();
         return calculateProrationBetweenDates(startDate, endDate, daysBetween);
     }
@@ -54,69 +72,5 @@ public class InvoiceDateUtils {
         final BigDecimal days = new BigDecimal(Days.daysBetween(startDate, endDate).getDays());
 
         return days.divide(daysInPeriod, KillBillMoney.MAX_SCALE, KillBillMoney.ROUNDING_METHOD);
-    }
-
-    public static BigDecimal calculateProRationBeforeFirstBillingPeriod(final LocalDate startDate, final LocalDate nextBillingCycleDate,
-                                                                        final BillingPeriod billingPeriod) {
-        final LocalDate previousBillingCycleDate = nextBillingCycleDate.plusMonths(-billingPeriod.getNumberOfMonths());
-
-        return calculateProrationBetweenDates(startDate, nextBillingCycleDate, previousBillingCycleDate, nextBillingCycleDate);
-    }
-
-    public static int calculateNumberOfWholeBillingPeriods(final LocalDate startDate, final LocalDate endDate, final BillingPeriod billingPeriod) {
-        final int numberOfMonths = Months.monthsBetween(startDate, endDate).getMonths();
-        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
-        return numberOfMonths / numberOfMonthsInPeriod;
-    }
-
-    public static LocalDate calculateEffectiveEndDate(final LocalDate billCycleDate, final LocalDate targetDate,
-                                                      final BillingPeriod billingPeriod) {
-        if (targetDate.isBefore(billCycleDate)) {
-            return billCycleDate;
-        }
-
-        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
-        int numberOfPeriods = 0;
-        LocalDate proposedDate = billCycleDate;
-
-        while (!proposedDate.isAfter(targetDate)) {
-            proposedDate = billCycleDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
-            numberOfPeriods += 1;
-        }
-
-        return proposedDate;
-    }
-
-    public static BigDecimal calculateProRationAfterLastBillingCycleDate(final LocalDate endDate, final LocalDate previousBillThroughDate,
-                                                                         final BillingPeriod billingPeriod) {
-        // Note: assumption is that previousBillThroughDate is correctly aligned with the billing cycle day
-        final LocalDate nextBillThroughDate = previousBillThroughDate.plusMonths(billingPeriod.getNumberOfMonths());
-        return calculateProrationBetweenDates(previousBillThroughDate, endDate, previousBillThroughDate, nextBillThroughDate);
-    }
-
-    @VisibleForTesting
-    static LocalDate calculateBillingCycleDateOnOrAfter(final LocalDate date, final int billingCycleDayLocal) {
-        final int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
-
-        final LocalDate fixedDate;
-        if (billingCycleDayLocal > lastDayOfMonth) {
-            fixedDate = new LocalDate(date.getYear(), date.getMonthOfYear(), lastDayOfMonth, date.getChronology());
-        } else {
-            fixedDate = new LocalDate(date.getYear(), date.getMonthOfYear(), billingCycleDayLocal, date.getChronology());
-        }
-
-        LocalDate proposedDate = fixedDate;
-        while (proposedDate.isBefore(date)) {
-            proposedDate = proposedDate.plusMonths(1);
-        }
-        return proposedDate;
-    }
-
-    public static LocalDate calculateBillingCycleDateAfter(final LocalDate date, final int billingCycleDayLocal) {
-        LocalDate proposedDate = calculateBillingCycleDateOnOrAfter(date, billingCycleDayLocal);
-        if (date.compareTo(proposedDate) == 0) {
-            proposedDate = proposedDate.plusMonths(1);
-        }
-        return proposedDate;
     }
 }
