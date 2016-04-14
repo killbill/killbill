@@ -51,11 +51,15 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 public class PluginControlPaymentProcessor extends ProcessorBase {
+
+    private static final Logger log = LoggerFactory.getLogger(PluginControlPaymentProcessor.class);
 
     private static final Joiner JOINER = Joiner.on(", ");
 
