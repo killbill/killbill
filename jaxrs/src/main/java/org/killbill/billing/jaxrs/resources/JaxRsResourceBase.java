@@ -344,7 +344,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             case 1:
                 return pendingTransaction.iterator().next();
             default:
-                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, String.format("Illegal payment state: Found multiple PENDING payment transactions for paymentId=%s", initialPayment.getId()));
+                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, String.format("Illegal payment state: Found multiple PENDING payment transactions for paymentId='%s'", initialPayment.getId()));
 
         }
     }
