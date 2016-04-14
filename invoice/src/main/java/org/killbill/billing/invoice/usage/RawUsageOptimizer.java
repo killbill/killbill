@@ -128,7 +128,7 @@ public class RawUsageOptimizer {
         for (BillingPeriod bp : BillingPeriod.values()) {
             if (bp != BillingPeriod.NO_BILLING_PERIOD) {
                 final LocalDate tmp = perBillingPeriodMostRecentConsumableInArrearItemEndDate[idx];
-                final LocalDate targetBillingPeriodDate = tmp != null ? InvoiceDateUtils.returnByNPeriods(tmp, bp, config.getMaxRawUsagePreviousPeriod()) : null;
+                final LocalDate targetBillingPeriodDate = tmp != null ? InvoiceDateUtils.recedeByNPeriods(tmp, bp, config.getMaxRawUsagePreviousPeriod()) : null;
                 if (targetStartDate == null || (targetBillingPeriodDate != null && targetBillingPeriodDate.compareTo(targetStartDate) < 0)) {
                     targetStartDate = targetBillingPeriodDate;
                 }

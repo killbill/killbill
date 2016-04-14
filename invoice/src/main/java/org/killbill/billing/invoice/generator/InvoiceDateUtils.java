@@ -94,7 +94,7 @@ public class InvoiceDateUtils {
         return proposedDate;
     }
 
-    public static LocalDate returnByNPeriods(final LocalDate initialDate, final BillingPeriod billingPeriod, final int nbPeriods) {
+    public static LocalDate recedeByNPeriods(final LocalDate initialDate, final BillingPeriod billingPeriod, final int nbPeriods) {
         LocalDate proposedDate = initialDate;
         for (int i = 0; i < nbPeriods; i++) {
             proposedDate = proposedDate.minus(billingPeriod.getPeriod());
