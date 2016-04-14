@@ -60,7 +60,7 @@ eval set -- "${ARGS}"
 
 function usage() {
     echo -n "./db_helper"
-    echo -n " -a|--action <create|clean|dump>"
+    echo -n " -a|--action <create|clean|dump|migrate|dryRunMigrate|repair|info>"
     echo -n " --driver <mysql|postgres> (default = mysql)"
     echo -n " -h|--host host (default = localhost)"
     echo -n " --port port"
@@ -159,6 +159,20 @@ function cleanup() {
     rm -f "/tmp/*.$$"
 }
 
+function flyway() {
+    flyway_bin=util/target/killbill-flyway.jar
+    if [ ! -f "$flyway_bin" ]; then
+        echo "File $flyway_bin does not exists - build util first"
+        usage
+    fi
+
+    locations=
+    for migration_dir in `find */src/main/resources -type d -name migration`; do
+        locations="${locations}filesystem:$migration_dir,"
+    done
+
+    java -jar $flyway_bin -locations=$locations -user=$USER -password=$PWD -url=$URL ${@}
+}
 
 while true; do
   case "$1" in
@@ -178,7 +192,7 @@ done
 
 
 if [ -z $ACTION ]; then
-    echo "Need to specify an action <CREATE|CLEAN|DUMP>"
+    echo "Need to specify an action"
     usage
 fi
 
@@ -194,6 +208,12 @@ if [ $DRIVER == "mysql" ] && [ -z $PORT ]; then
 fi
 if [ $DRIVER == "postgres" ] && [ -z $PORT ]; then
     PORT=$PORT_POSTGRES
+fi
+if [ $DRIVER == "mysql" ] && [ -z $URL ]; then
+    URL=jdbc:mysql://$HOST:$PORT/$DATABASE
+fi
+if [ $DRIVER == "postgres" ] && [ -z $URL ]; then
+    URL=jdbc:postgresql://$HOST:$PORT/$DATABASE
 fi
 
 
@@ -231,6 +251,10 @@ if [ $ACTION == "clean" ]; then
         psql -h $HOST -p $PORT -U $USER -d $DATABASE < $CLEAN_FILE
         clean_pgfile
     fi
+fi
+
+if [ $ACTION == "migrate" ] || [ $ACTION == "dryRunMigrate" ] || [ $ACTION == "repair" ] || [ $ACTION == "info" ]; then
+    flyway $ACTION
 fi
 
 cleanup

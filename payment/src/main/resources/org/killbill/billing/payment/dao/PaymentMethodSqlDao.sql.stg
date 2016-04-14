@@ -75,21 +75,21 @@ where id = :id
 ;
 >>
 
-getByAccountId(accountId) ::= <<
+getForAccount() ::= <<
 select
 <allTableFields()>
 from <tableName()>
-where account_id = :accountId
+where <accountRecordIdField()> = :accountRecordId
 <andCheckSoftDeletionWithComma()>
 <AND_CHECK_TENANT()>
 ;
 >>
 
-getByAccountIdIncludedDelete(accountId) ::= <<
+getForAccountIncludedDelete() ::= <<
 select
 <allTableFields()>
 from <tableName()>
-where account_id = :accountId
+where <accountRecordIdField()> = :accountRecordId
 <AND_CHECK_TENANT()>
 ;
 >>

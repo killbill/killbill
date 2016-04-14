@@ -40,6 +40,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -71,6 +72,7 @@ import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -335,9 +337,54 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-    protected LocalDate toLocalDateDefaultToday(final UUID accountId, @Nullable final String inputDate, final TenantContext context) throws AccountApiException {
-        final Account account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
-        return toLocalDateDefaultToday(account, inputDate, context);
+    protected PaymentTransaction lookupPendingTransaction(final Payment initialPayment, @Nullable final String transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
+        final Collection<PaymentTransaction> pendingTransaction  =  Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {
+            @Override
+            public boolean apply(final PaymentTransaction input) {
+                if (input.getTransactionStatus() != TransactionStatus.PENDING) {
+                    return false;
+                }
+                if (transactionId != null && !transactionId.equals(input.getId().toString())) {
+                    return false;
+                }
+                if (transactionExternalKey != null && !transactionExternalKey.equals(input.getExternalKey())) {
+                    return false;
+                }
+                if (transactionType != null && !transactionType.equals(input.getTransactionType().name())) {
+                    return false;
+                }
+                //
+                // If we were given a transactionId or a transactionExternalKey or a transactionType we checked there was a match;
+                // In the worst case, if we were given nothing, we return the PENDING transaction for that payment
+                //
+                return true;
+            }
+        });
+        switch (pendingTransaction.size()) {
+            // Nothing: invalid input...
+            case 0:
+                final String parameterType;
+                final String parameterValue;
+                if (transactionId != null) {
+                    parameterType = "transactionId";
+                    parameterValue = transactionId;
+                } else if (transactionExternalKey != null) {
+                    parameterType = "transactionExternalKey";
+                    parameterValue = transactionExternalKey;
+                } else if (transactionType != null) {
+                    parameterType = "transactionType";
+                    parameterValue = transactionType;
+                } else {
+                    parameterType = "paymentId";
+                    parameterValue = initialPayment.getId().toString();
+                }
+                throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, parameterType, parameterValue);
+            case 1:
+                return pendingTransaction.iterator().next();
+            default:
+                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, String.format("Illegal payment state: Found multiple PENDING payment transactions for paymentId='%s'", initialPayment.getId()));
+
+        }
     }
 
     protected LocalDate toLocalDateDefaultToday(final Account account, @Nullable final String inputDate, final TenantContext context) {

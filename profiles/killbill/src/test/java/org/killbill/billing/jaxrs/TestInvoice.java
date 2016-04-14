@@ -118,7 +118,7 @@ public class TestInvoice extends TestJaxrsBase {
                                   "            <tr>\n" +
                                   "                <td />\n" +
                                   "                <td align=right>invoiceNumber</td>\n" +
-                                  "                <td>1</td>\n" +
+                                  "                <td>" + invoiceJson.getInvoiceNumber() + "</td>\n" +
                                   "            </tr>\n" +
                                   "            <tr>\n" +
                                   "                <td>companyName</td>\n" +

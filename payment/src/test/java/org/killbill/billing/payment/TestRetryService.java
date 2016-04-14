@@ -34,7 +34,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.dao.MockPaymentDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
@@ -70,7 +69,6 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         setDefaultPollInterval(Duration.ONE_HUNDRED_MILLISECONDS);
         Awaitility.setDefaultPollDelay(Duration.SAME_AS_POLL_INTERVAL);
 
-        ((MockPaymentDao) paymentDao).reset();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
         mockPaymentProviderPlugin.clear();
         retryService.initialize();

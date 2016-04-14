@@ -96,6 +96,7 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentOptions;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.UUIDs;
@@ -119,6 +120,7 @@ import org.killbill.commons.metrics.MetricTag;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -917,11 +919,27 @@ public class AccountResource extends JaxRsResourceBase {
                              json.getAmount(), "PaymentTransactionJson amount needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final UUID paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
         final UUID paymentId = json.getPaymentId() == null ? null : UUID.fromString(json.getPaymentId());
 
+        //
+        // If paymentId was specified, it means we are attempting a payment completion. The preferred way is to use the PaymentResource
+        // (PUT /1.0/kb/payments/{paymentId}/completeTransaction), but for backward compatibility we still allow the call to proceed
+        // as long as the request/existing state is healthy (i.e there is a matching PENDING transaction)
+        //
+        final UUID paymentMethodId;
+        if (paymentId != null) {
+            final Payment initialPayment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
+            final PaymentTransaction pendingTransaction = lookupPendingTransaction(initialPayment,
+                                                                                   json != null ? json.getTransactionId() : null,
+                                                                                   json != null ? json.getTransactionExternalKey() : null,
+                                                                                   json != null ? json.getTransactionType() : null);
+            paymentMethodId = initialPayment.getPaymentMethodId();
+        } else {
+            paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
+        }
         validatePaymentMethodForAccount(account.getId(), paymentMethodId, callContext);
+
 
         final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
