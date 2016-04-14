@@ -49,14 +49,12 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     private final BroadcastApi broadcastApi;
     private final NodeInfoMapper mapper;
     private final Clock clock;
-    private final PluginsInfoApi pluginInfoApi;
     private final Function<NodeInfoModelDao, NodeInfo> nodeTransfomer;
 
     @Inject
-    public DefaultKillbillNodesApi(final NodeInfoDao nodeInfoDao, final BroadcastApi broadcastApi, final NodeInfoMapper mapper, final Clock clock, final PluginsInfoApi pluginInfoApi) {
+    public DefaultKillbillNodesApi(final NodeInfoDao nodeInfoDao, final BroadcastApi broadcastApi, final NodeInfoMapper mapper, final Clock clock) {
         this.nodeInfoDao = nodeInfoDao;
         this.broadcastApi = broadcastApi;
-        this.pluginInfoApi = pluginInfoApi;
         this.clock = clock;
         this.mapper = mapper;
         this.nodeTransfomer = new Function<NodeInfoModelDao, NodeInfo>() {
@@ -104,10 +102,10 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     }
 
     @Override
-    public void notifyPluginChanged(final PluginInfo plugin) {
+    public void notifyPluginChanged(final PluginInfo plugin,final Iterable<PluginInfo> latestPlugins) {
         final String updatedNodeInfoJson;
         try {
-            updatedNodeInfoJson = computeLatestNodeInfo();
+            updatedNodeInfoJson = computeLatestNodeInfo(latestPlugins);
             nodeInfoDao.updateNodeInfo(CreatorName.get(), updatedNodeInfoJson);
         } catch (final IOException e) {
             logger.warn("Failed to update nodeInfo after plugin change", e);
@@ -115,12 +113,11 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     }
 
 
-    private String computeLatestNodeInfo() throws IOException {
+    private String computeLatestNodeInfo(final Iterable<PluginInfo> rawPluginInfo) throws IOException {
 
         final NodeInfoModelDao nodeInfo = nodeInfoDao.getByNodeName(CreatorName.get());
         NodeInfoModelJson nodeInfoJson = mapper.deserializeNodeInfo(nodeInfo.getNodeInfo());
 
-        final Iterable<PluginInfo> rawPluginInfo = pluginInfoApi.getPluginsInfo();
         final List<PluginInfo> pluginInfos = rawPluginInfo.iterator().hasNext() ? ImmutableList.<PluginInfo>copyOf(rawPluginInfo) : ImmutableList.<PluginInfo>of();
 
         final NodeInfoModelJson updatedNodeInfoJson = new NodeInfoModelJson(CreatorName.get(),
