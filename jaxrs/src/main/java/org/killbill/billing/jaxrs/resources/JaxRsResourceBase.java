@@ -387,6 +387,11 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
+    protected LocalDate toLocalDateDefaultToday(final UUID accountId, @Nullable final String inputDate, final TenantContext context) throws AccountApiException {
+        final Account account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
+        return toLocalDateDefaultToday(account, inputDate, context);
+    }
+
     protected LocalDate toLocalDateDefaultToday(final Account account, @Nullable final String inputDate, final TenantContext context) {
         // TODO Switch to cached normalized timezone when available
         return MoreObjects.firstNonNull(toLocalDate(inputDate), clock.getToday(account.getTimeZone()));

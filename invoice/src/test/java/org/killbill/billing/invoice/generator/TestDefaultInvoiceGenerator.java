@@ -183,6 +183,45 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         assertEquals(invoice.getNumberOfItems(), 2);
         assertEquals(invoice.getBalance(), KillBillMoney.of(TWENTY, invoice.getCurrency()));
         assertEquals(invoice.getInvoiceItems().get(0).getSubscriptionId(), sub.getId());
+
+        assertEquals(invoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), new LocalDate(2011, 9, 1));
+        assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), new LocalDate(2011, 10, 1));
+
+        assertEquals(invoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(invoice.getInvoiceItems().get(1).getStartDate(), new LocalDate(2011, 10, 1));
+        assertEquals(invoice.getInvoiceItems().get(1).getEndDate(), new LocalDate(2011, 11, 1));
+    }
+
+    @Test(groups = "fast")
+    public void testWithSingleThirtyDaysEvent() throws InvoiceApiException, CatalogApiException {
+        final BillingEventSet events = new MockBillingEventSet();
+
+        final SubscriptionBase sub = createSubscription();
+        final LocalDate startDate = invoiceUtil.buildDate(2011, 9, 1);
+
+        final Plan plan = new MockPlan();
+        final BigDecimal rate1 = TEN;
+        final PlanPhase phase = createMockThirtyDaysPlanPhase(rate1);
+
+        final BillingEvent event = createBillingEvent(sub.getId(), sub.getBundleId(), startDate, plan, phase, 1);
+        events.add(event);
+
+        final LocalDate targetDate = invoiceUtil.buildDate(2011, 10, 3);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, null, targetDate, Currency.USD, internalCallContext);
+        final Invoice invoice = invoiceWithMetadata.getInvoice();
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 2);
+        assertEquals(invoice.getBalance(), KillBillMoney.of(TWENTY, invoice.getCurrency()));
+        assertEquals(invoice.getInvoiceItems().get(0).getSubscriptionId(), sub.getId());
+
+        assertEquals(invoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), new LocalDate(2011, 9, 1));
+        assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), new LocalDate(2011, 10, 1));
+
+        assertEquals(invoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(invoice.getInvoiceItems().get(1).getStartDate(), new LocalDate(2011, 10, 1));
+        assertEquals(invoice.getInvoiceItems().get(1).getEndDate(), new LocalDate(2011, 10, 31));
     }
 
     private SubscriptionBase createSubscription() {
@@ -771,6 +810,11 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final PlanPhase phase1 = createMockMonthlyPlanPhase(null, ZERO, PhaseType.TRIAL);
         events.add(createBillingEvent(UUID.randomUUID(), UUID.randomUUID(), clock.getUTCToday(), plan1, phase1, 1));
         generator.generateInvoice(account, events, null, targetDate, Currency.USD, internalCallContext);
+    }
+
+    private MockPlanPhase createMockThirtyDaysPlanPhase(@Nullable final BigDecimal recurringRate) {
+        return new MockPlanPhase(new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD)),
+                                 null, BillingPeriod.THIRTY_DAYS);
     }
 
     private MockPlanPhase createMockMonthlyPlanPhase() {

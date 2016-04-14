@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,6 +30,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.generator.InvoiceDateUtils;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.RawUsage;
@@ -101,7 +102,7 @@ public class RawUsageOptimizer {
         int idx = 0;
         for (BillingPeriod bp : BillingPeriod.values()) {
             if (bp != BillingPeriod.NO_BILLING_PERIOD) {
-                final LocalDate makerDateThanCannotBeChosenAsTheMinOfAllDates = targetDate.plusMonths(config.getMaxRawUsagePreviousPeriod(internalCallContext) * bp.getNumberOfMonths());
+                final LocalDate makerDateThanCannotBeChosenAsTheMinOfAllDates = InvoiceDateUtils.advanceByNPeriods(targetDate, bp, config.getMaxRawUsagePreviousPeriod(internalCallContext));
                 perBillingPeriodMostRecentConsumableInArrearItemEndDate[idx++] = (knownUsageBillingPeriod.contains(bp)) ? null : makerDateThanCannotBeChosenAsTheMinOfAllDates;
             }
         }
@@ -127,7 +128,7 @@ public class RawUsageOptimizer {
         for (BillingPeriod bp : BillingPeriod.values()) {
             if (bp != BillingPeriod.NO_BILLING_PERIOD) {
                 final LocalDate tmp = perBillingPeriodMostRecentConsumableInArrearItemEndDate[idx];
-                final LocalDate targetBillingPeriodDate = tmp != null ? tmp.minusMonths(config.getMaxRawUsagePreviousPeriod(internalCallContext) * bp.getNumberOfMonths()) : null;
+                final LocalDate targetBillingPeriodDate = tmp != null ? InvoiceDateUtils.recedeByNPeriods(tmp, bp, config.getMaxRawUsagePreviousPeriod(internalCallContext)) : null;
                 if (targetStartDate == null || (targetBillingPeriodDate != null && targetBillingPeriodDate.compareTo(targetStartDate) < 0)) {
                     targetStartDate = targetBillingPeriodDate;
                 }
