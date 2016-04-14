@@ -586,7 +586,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
-                    fail();
+                    fail("Unable to create entitlement", e);
                     return null;
                 }
             }

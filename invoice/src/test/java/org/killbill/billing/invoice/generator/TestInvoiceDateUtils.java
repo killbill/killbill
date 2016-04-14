@@ -20,13 +20,11 @@ package org.killbill.billing.invoice.generator;
 
 import java.math.BigDecimal;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestInvoiceDateUtils extends InvoiceTestSuiteNoDB {
 
@@ -40,10 +38,76 @@ public class TestInvoiceDateUtils extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testCalculateNbOfBillingPeriods() throws Exception {
-        final LocalDate firstBCD = new LocalDate(2012, 7, 16);
-        final LocalDate lastBCD = new LocalDate(2012, 9, 16);
-        final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
-        final int numberOfWholeBillingPeriods = InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(firstBCD, lastBCD, billingPeriod);
-        Assert.assertEquals(numberOfWholeBillingPeriods, 2);
+        Assert.assertEquals(InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(new LocalDate(2012, 7, 16), new LocalDate(2012, 9, 15), BillingPeriod.MONTHLY), 1);
+        Assert.assertEquals(InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(new LocalDate(2012, 7, 16), new LocalDate(2012, 9, 16), BillingPeriod.MONTHLY), 2);
+        Assert.assertEquals(InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(new LocalDate(2012, 7, 16), new LocalDate(2012, 9, 17), BillingPeriod.MONTHLY), 2);
+
+        Assert.assertEquals(InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(new LocalDate(2012, 7, 16), new LocalDate(2012, 9, 13), BillingPeriod.THIRTY_DAYS), 1);
+        Assert.assertEquals(InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(new LocalDate(2012, 7, 16), new LocalDate(2012, 9, 14), BillingPeriod.THIRTY_DAYS), 2);
+        Assert.assertEquals(InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(new LocalDate(2012, 7, 16), new LocalDate(2012, 9, 15), BillingPeriod.THIRTY_DAYS), 2);
+
+        Assert.assertEquals(InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(new LocalDate(2012, 7, 16), new LocalDate(2012, 7, 29), BillingPeriod.WEEKLY), 1);
+        Assert.assertEquals(InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(new LocalDate(2012, 7, 16), new LocalDate(2012, 7, 30), BillingPeriod.WEEKLY), 2);
+        Assert.assertEquals(InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(new LocalDate(2012, 7, 16), new LocalDate(2012, 7, 31), BillingPeriod.WEEKLY), 2);
+    }
+
+    @Test(groups = "fast")
+    public void testAdvanceByNPeriods() throws Exception {
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.MONTHLY, 0), new LocalDate(2016, 4, 8));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.MONTHLY, 1), new LocalDate(2016, 5, 8));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.MONTHLY, 2), new LocalDate(2016, 6, 8));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.MONTHLY, 3), new LocalDate(2016, 7, 8));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.MONTHLY, 4), new LocalDate(2016, 8, 8));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.MONTHLY, 5), new LocalDate(2016, 9, 8));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.MONTHLY, 6), new LocalDate(2016, 10, 8));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.MONTHLY, 7), new LocalDate(2016, 11, 8));
+
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.THIRTY_DAYS, 0), new LocalDate(2016, 4, 8));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.THIRTY_DAYS, 1), new LocalDate(2016, 5, 8));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.THIRTY_DAYS, 2), new LocalDate(2016, 6, 7));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.THIRTY_DAYS, 3), new LocalDate(2016, 7, 7));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.THIRTY_DAYS, 4), new LocalDate(2016, 8, 6));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.THIRTY_DAYS, 5), new LocalDate(2016, 9, 5));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.THIRTY_DAYS, 6), new LocalDate(2016, 10, 5));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.THIRTY_DAYS, 7), new LocalDate(2016, 11, 4));
+
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.WEEKLY, 0), new LocalDate(2016, 4, 8));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.WEEKLY, 1), new LocalDate(2016, 4, 15));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.WEEKLY, 2), new LocalDate(2016, 4, 22));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.WEEKLY, 3), new LocalDate(2016, 4, 29));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.WEEKLY, 4), new LocalDate(2016, 5, 6));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.WEEKLY, 5), new LocalDate(2016, 5, 13));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.WEEKLY, 6), new LocalDate(2016, 5, 20));
+        Assert.assertEquals(InvoiceDateUtils.advanceByNPeriods(new LocalDate(2016, 4, 8), BillingPeriod.WEEKLY, 7), new LocalDate(2016, 5, 27));
+    }
+
+    @Test(groups = "fast")
+    public void testReturnByNPeriods() throws Exception {
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 8), BillingPeriod.MONTHLY, 7), new LocalDate(2016, 4, 8));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 8), BillingPeriod.MONTHLY, 6), new LocalDate(2016, 5, 8));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 8), BillingPeriod.MONTHLY, 5), new LocalDate(2016, 6, 8));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 8), BillingPeriod.MONTHLY, 4), new LocalDate(2016, 7, 8));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 8), BillingPeriod.MONTHLY, 3), new LocalDate(2016, 8, 8));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 8), BillingPeriod.MONTHLY, 2), new LocalDate(2016, 9, 8));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 8), BillingPeriod.MONTHLY, 1), new LocalDate(2016, 10, 8));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 8), BillingPeriod.MONTHLY, 0), new LocalDate(2016, 11, 8));
+
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 4), BillingPeriod.THIRTY_DAYS, 7), new LocalDate(2016, 4, 8));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 4), BillingPeriod.THIRTY_DAYS, 6), new LocalDate(2016, 5, 8));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 4), BillingPeriod.THIRTY_DAYS, 5), new LocalDate(2016, 6, 7));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 4), BillingPeriod.THIRTY_DAYS, 4), new LocalDate(2016, 7, 7));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 4), BillingPeriod.THIRTY_DAYS, 3), new LocalDate(2016, 8, 6));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 4), BillingPeriod.THIRTY_DAYS, 2), new LocalDate(2016, 9, 5));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 4), BillingPeriod.THIRTY_DAYS, 1), new LocalDate(2016, 10, 5));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 11, 4), BillingPeriod.THIRTY_DAYS, 0), new LocalDate(2016, 11, 4));
+
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 5, 27), BillingPeriod.WEEKLY, 7), new LocalDate(2016, 4, 8));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 5, 27), BillingPeriod.WEEKLY, 6), new LocalDate(2016, 4, 15));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 5, 27), BillingPeriod.WEEKLY, 5), new LocalDate(2016, 4, 22));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 5, 27), BillingPeriod.WEEKLY, 4), new LocalDate(2016, 4, 29));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 5, 27), BillingPeriod.WEEKLY, 3), new LocalDate(2016, 5, 6));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 5, 27), BillingPeriod.WEEKLY, 2), new LocalDate(2016, 5, 13));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 5, 27), BillingPeriod.WEEKLY, 1), new LocalDate(2016, 5, 20));
+        Assert.assertEquals(InvoiceDateUtils.returnByNPeriods(new LocalDate(2016, 5, 27), BillingPeriod.WEEKLY, 0), new LocalDate(2016, 5, 27));
     }
 }

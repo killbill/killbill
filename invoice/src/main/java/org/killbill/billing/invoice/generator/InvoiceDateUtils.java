@@ -23,18 +23,30 @@ import java.math.BigDecimal;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
-
+import org.joda.time.Weeks;
+import org.joda.time.Years;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.util.currency.KillBillMoney;
-
-import com.google.common.annotations.VisibleForTesting;
 
 public class InvoiceDateUtils {
 
     public static int calculateNumberOfWholeBillingPeriods(final LocalDate startDate, final LocalDate endDate, final BillingPeriod billingPeriod) {
-        final int numberOfMonths = Months.monthsBetween(startDate, endDate).getMonths();
-        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
-        return numberOfMonths / numberOfMonthsInPeriod;
+        final int numberBetween;
+        final int numberInPeriod;
+        if (billingPeriod.getPeriod().getDays() != 0) {
+            numberBetween = Days.daysBetween(startDate, endDate).getDays();
+            numberInPeriod = billingPeriod.getPeriod().getDays();
+        } else if (billingPeriod.getPeriod().getWeeks() != 0) {
+            numberBetween = Weeks.weeksBetween(startDate, endDate).getWeeks();
+            numberInPeriod = billingPeriod.getPeriod().getWeeks();
+        } else if (billingPeriod.getPeriod().getMonths() != 0) {
+            numberBetween = Months.monthsBetween(startDate, endDate).getMonths();
+            numberInPeriod = billingPeriod.getPeriod().getMonths();
+        } else {
+            numberBetween = Years.yearsBetween(startDate, endDate).getYears();
+            numberInPeriod = billingPeriod.getPeriod().getYears();
+        }
+        return numberBetween / numberInPeriod;
     }
 
     public static BigDecimal calculateProRationBeforeFirstBillingPeriod(final LocalDate startDate, final LocalDate nextBillingCycleDate,
@@ -72,5 +84,21 @@ public class InvoiceDateUtils {
         final BigDecimal days = new BigDecimal(Days.daysBetween(startDate, endDate).getDays());
 
         return days.divide(daysInPeriod, KillBillMoney.MAX_SCALE, KillBillMoney.ROUNDING_METHOD);
+    }
+
+    public static LocalDate advanceByNPeriods(final LocalDate initialDate, final BillingPeriod billingPeriod, final int nbPeriods) {
+        LocalDate proposedDate = initialDate;
+        for (int i = 0; i < nbPeriods; i++) {
+            proposedDate = proposedDate.plus(billingPeriod.getPeriod());
+        }
+        return proposedDate;
+    }
+
+    public static LocalDate returnByNPeriods(final LocalDate initialDate, final BillingPeriod billingPeriod, final int nbPeriods) {
+        LocalDate proposedDate = initialDate;
+        for (int i = 0; i < nbPeriods; i++) {
+            proposedDate = proposedDate.minus(billingPeriod.getPeriod());
+        }
+        return proposedDate;
     }
 }
