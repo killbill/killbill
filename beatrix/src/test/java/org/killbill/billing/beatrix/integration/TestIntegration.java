@@ -796,14 +796,14 @@ public class TestIntegration extends TestIntegrationBase {
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 3, 26), new LocalDate(2016, 4, 25), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addDays(26);
+        clock.setDay(new LocalDate(2016, 3, 26));
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 24, callContext, expectedInvoices);
         expectedInvoices.clear();
 
         // We check there is no more recurring for Refurbish-Maintenance
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
-        clock.addDays(15);
+        clock.setDay(new LocalDate(2016, 4, 1));
         assertListenerStatus();
     }
 }
