@@ -316,7 +316,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                     return false;
                 }
                 //
-                // If we were given a transactionId or  transactionExternalKey or a transactionType we checked there was a match;
+                // If we were given a transactionId or a transactionExternalKey or a transactionType we checked there was a match;
                 // In the worst case, if we were given nothing, we return the PENDING transaction for that payment
                 //
                 return true;
@@ -344,7 +344,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             case 1:
                 return pendingTransaction.iterator().next();
             default:
-                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, String.format("Illegal payment state: Found multiple PENDING payment transactions for payment id=%s", initialPayment.getId()));
+                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, String.format("Illegal payment state: Found multiple PENDING payment transactions for paymentId=%s", initialPayment.getId()));
 
         }
     }
