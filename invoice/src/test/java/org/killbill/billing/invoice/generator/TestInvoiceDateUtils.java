@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,15 +29,6 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 
 public class TestInvoiceDateUtils extends InvoiceTestSuiteNoDB {
-
-    @Test(groups = "fast")
-    public void testLastBCDShouldNotBeBeforePreviousBCD() throws Exception {
-        final LocalDate from = new LocalDate("2012-07-16");
-        final LocalDate previousBCD = new LocalDate("2012-08-15");
-        final int bcdLocal = 15;
-        final LocalDate lastBCD = InvoiceDateUtils.calculateLastBillingCycleDateBefore(from, previousBCD, bcdLocal, BillingPeriod.MONTHLY);
-        Assert.assertEquals(lastBCD, new LocalDate("2012-08-15"));
-    }
 
     @Test(groups = "fast")
     public void testNextBCDShouldNotBeInThePast() throws Exception {
@@ -102,15 +95,6 @@ public class TestInvoiceDateUtils extends InvoiceTestSuiteNoDB {
         final LocalDate effectiveEndDate = InvoiceDateUtils.calculateEffectiveEndDate(firstBCD, targetDate, billingPeriod);
         // TODO should that be 2012-09-15?
         Assert.assertEquals(effectiveEndDate, new LocalDate(2012, 9, 16));
-    }
-
-    @Test(groups = "fast")
-    public void testLastBCD() throws Exception {
-        final LocalDate firstBCD = new LocalDate(2012, 7, 16);
-        final LocalDate effectiveEndDate = new LocalDate(2012, 9, 15);
-        final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
-        final LocalDate lastBCD = InvoiceDateUtils.calculateLastBillingCycleDateBefore(effectiveEndDate, firstBCD, 16, billingPeriod);
-        Assert.assertEquals(lastBCD, new LocalDate(2012, 8, 16));
     }
 
     @Test(groups = "fast")
