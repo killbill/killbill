@@ -456,12 +456,6 @@
         <linkStateMachine>
             <initialStateMachine>AUTHORIZE</initialStateMachine>
             <initialState>AUTH_SUCCESS</initialState>
-            <finalStateMachine>AUTHORIZE</finalStateMachine>
-            <finalState>AUTH_INIT</finalState>
-        </linkStateMachine>
-        <linkStateMachine>
-            <initialStateMachine>AUTHORIZE</initialStateMachine>
-            <initialState>AUTH_SUCCESS</initialState>
             <finalStateMachine>CAPTURE</finalStateMachine>
             <finalState>CAPTURE_INIT</finalState>
         </linkStateMachine>
