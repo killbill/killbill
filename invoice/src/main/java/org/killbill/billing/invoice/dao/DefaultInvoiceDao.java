@@ -447,7 +447,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final InvoicePaymentModelDao payment = Iterables.tryFind(paymentsForId, new Predicate<InvoicePaymentModelDao>() {
                     @Override
                     public boolean apply(final InvoicePaymentModelDao input) {
-                        return input.getType() == InvoicePaymentType.ATTEMPT;
+                        return input.getType() == InvoicePaymentType.ATTEMPT && input.getSuccess();
                     }
                 }).orNull();
                 if (payment == null) {
