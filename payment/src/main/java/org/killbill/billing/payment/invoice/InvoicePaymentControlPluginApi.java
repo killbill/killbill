@@ -169,6 +169,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                    paymentControlContext.getCurrency(),
                                                    paymentControlContext.getProcessedCurrency(),
                                                    paymentControlContext.getPaymentId(),
+                                                   paymentControlContext.getTransactionExternalKey(),
                                                    paymentControlContext.getCreatedDate(),
                                                    true,
                                                    internalContext);
@@ -234,6 +235,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                // processed currency may be null so we use currency; processed currency will be updated if/when payment succeeds
                                                paymentControlContext.getCurrency(),
                                                paymentControlContext.getPaymentId(),
+                                               paymentControlContext.getTransactionExternalKey(),
                                                paymentControlContext.getCreatedDate(),
                                                false,
                                                internalContext);

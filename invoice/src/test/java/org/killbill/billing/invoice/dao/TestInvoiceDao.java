@@ -151,7 +151,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal paymentAmount = new BigDecimal("11.00");
         final UUID paymentId = UUID.randomUUID();
 
-        final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, clock.getUTCNow().plusDays(12), paymentAmount, Currency.USD, Currency.USD, true);
+        final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, clock.getUTCNow().plusDays(12), paymentAmount, Currency.USD, Currency.USD, null, true);
         invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment), context);
 
         final InvoiceModelDao retrievedInvoice = invoiceDao.getById(invoiceId, context);
@@ -522,7 +522,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoiceItem(item2, context);
 
         final BigDecimal payment1 = new BigDecimal("48.0");
-        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, true);
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, null, true);
         invoiceUtil.createPayment(payment, context);
 
         final BigDecimal balance = invoiceDao.getAccountBalance(accountId, context);
@@ -587,7 +587,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoice(invoice1, true, context);
 
         final BigDecimal payment1 = new BigDecimal("48.0");
-        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, true);
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, null, true);
         invoiceUtil.createPayment(payment, context);
 
         final BigDecimal balance = invoiceDao.getAccountBalance(accountId, context);
@@ -628,7 +628,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // Pay the whole thing
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = rate1;
-        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, true);
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, null, true);
         invoiceUtil.createPayment(payment, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
@@ -677,7 +677,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // Pay the whole thing
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = amount;
-        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, true);
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, null, true);
         invoiceUtil.createPayment(payment, context);
         balancePriorRefund = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balancePriorRefund.compareTo(new BigDecimal("0.00")), 0);
@@ -782,7 +782,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // Pay the whole thing
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = amount1.add(rate1);
-        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, true);
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, null, true);
         invoiceUtil.createPayment(payment, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
@@ -873,7 +873,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Pay the whole thing
         final BigDecimal payment1 = amount1.add(rate1);
-        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, true);
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, null, true);
         invoiceUtil.createPayment(payment, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
@@ -1324,7 +1324,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // SECOND CREATE THE PAYMENT
         final BigDecimal paymentAmount = new BigDecimal("239.00");
         final UUID paymentId = UUID.randomUUID();
-        final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, clock.getUTCNow(), paymentAmount, Currency.USD, Currency.USD, true);
+        final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, clock.getUTCNow(), paymentAmount, Currency.USD, Currency.USD, null, true);
         invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment), context);
 
         // AND THEN THIRD THE REFUND
@@ -1474,7 +1474,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final UUID paymentId = UUID.randomUUID();
         final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), clock.getUTCNow().plusDays(12), new BigDecimal("10.0"),
-                                                                                      Currency.USD, Currency.USD, true);
+                                                                                      Currency.USD, Currency.USD, null, true);
 
         invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment), context);
 
@@ -1535,7 +1535,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final UUID paymentId = UUID.randomUUID();
 
         final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), clock.getUTCNow().plusDays(12), paymentAmount,
-                                                                                      Currency.USD, Currency.USD, true);
+                                                                                      Currency.USD, Currency.USD, null, true);
         invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment), context);
 
         // Create invoice 2
@@ -1636,14 +1636,14 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
 
         final UUID paymentId = UUID.randomUUID();
-        final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), clock.getUTCNow().plusDays(12), BigDecimal.TEN, Currency.USD, Currency.USD, false);
+        final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), clock.getUTCNow().plusDays(12), BigDecimal.TEN, Currency.USD, Currency.USD, null, false);
         invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment), context);
 
         final InvoiceModelDao retrievedInvoice1 = invoiceDao.getById(invoice.getId(), context);
         assertEquals(retrievedInvoice1.getInvoicePayments().size(), 1);
         assertEquals(retrievedInvoice1.getInvoicePayments().get(0).getSuccess(), Boolean.FALSE);
 
-        final DefaultInvoicePayment defaultInvoicePayment2 = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), clock.getUTCNow().plusDays(12), BigDecimal.TEN, Currency.USD, Currency.USD, true);
+        final DefaultInvoicePayment defaultInvoicePayment2 = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), clock.getUTCNow().plusDays(12), BigDecimal.TEN, Currency.USD, Currency.USD, null, true);
         invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment2), context);
 
         final InvoiceModelDao retrievedInvoice2 = invoiceDao.getById(invoice.getId(), context);
