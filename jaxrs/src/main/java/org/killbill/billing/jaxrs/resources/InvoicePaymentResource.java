@@ -125,7 +125,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final InvoicePayment invoicePayment = Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
             @Override
             public boolean apply(final InvoicePayment input) {
-                return input.getType() == InvoicePaymentType.ATTEMPT;
+                return input.getType() == InvoicePaymentType.ATTEMPT && input.isSuccess();
             }
         }).orNull();
         final UUID invoiceId = invoicePayment != null ? invoicePayment.getInvoiceId() : null;

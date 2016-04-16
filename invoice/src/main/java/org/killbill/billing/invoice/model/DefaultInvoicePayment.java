@@ -45,7 +45,7 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
 
     public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
                                  final BigDecimal amount, final Currency currency, final Currency processedCurrency, final String paymentCookieId, final Boolean isSuccess) {
-        this(UUIDs.randomUUID(), null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, null, null, isSuccess);
+        this(UUIDs.randomUUID(), null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, paymentCookieId, null, isSuccess);
     }
 
     public DefaultInvoicePayment(final UUID id, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,

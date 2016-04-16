@@ -178,7 +178,7 @@ public class TestInvoice extends TestJaxrsBase {
                                   "            <tr>\n" +
                                   "                <td colspan=2 />\n" +
                                   "                <td align=right><strong>invoiceAmountPaid</strong></td>\n" +
-                                  "                <td align=right><strong>0</strong></td>\n" +
+                                  "                <td align=right><strong>0.00</strong></td>\n" +
                                   "            </tr>\n" +
                                   "            <tr>\n" +
                                   "                <td colspan=2 />\n" +

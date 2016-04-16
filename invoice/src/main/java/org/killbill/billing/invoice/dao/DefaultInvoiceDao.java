@@ -411,7 +411,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoicePaymentModelDao> getInvoicePayments(final UUID paymentId, final InternalTenantContext context) {
+    public List<InvoicePaymentModelDao> getInvoicePaymentsByPaymentId(final UUID paymentId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoicePaymentModelDao>>() {
             @Override
             public List<InvoicePaymentModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -672,32 +672,61 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
+
     @Override
-    public void notifyOfPayment(final InvoicePaymentModelDao invoicePayment, final InternalCallContext context) {
+    public void notifyOfPaymentInit(final InvoicePaymentModelDao invoicePayment, final InternalCallContext context) {
+        notifyOfPaymentCompletionInternal(invoicePayment, false, context);
+    }
+
+
+    @Override
+    public void notifyOfPaymentCompletion(final InvoicePaymentModelDao invoicePayment, final InternalCallContext context) {
+        notifyOfPaymentCompletionInternal(invoicePayment, true, context);
+    }
+
+    public void notifyOfPaymentCompletionInternal(final InvoicePaymentModelDao invoicePayment, final boolean completion, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
-
-                // If the payment id is null, the payment wasn't attempted (e.g. no payment method). We don't record an attempt but send an event nonetheless (e.g. for Overdue)
-                if (invoicePayment.getPaymentId() != null) {
-                    final List<InvoicePaymentModelDao> invoicePayments = transactional.getInvoicePayments(invoicePayment.getPaymentId().toString(), context);
+                //
+                // In case of notifyOfPaymentInit we always want to record the row with success = false
+                // Otherwise, if the payment id is null, the payment wasn't attempted (e.g. no payment method so we don't record an attempt but send
+                // an event nonetheless (e.g. for Overdue)
+                //
+                if (!completion || invoicePayment.getPaymentId() != null) {
+                    //
+                    // extract entries by invoiceId (which is always set, as opposed to paymentId) and then filter based on type and
+                    // paymentCookieId = transactionExternalKey
+                    //
+                    final List<InvoicePaymentModelDao> invoicePayments = transactional.getPaymentsForInvoice(invoicePayment.getInvoiceId().toString(), context);
                     final InvoicePaymentModelDao existingAttempt = Iterables.tryFind(invoicePayments, new Predicate<InvoicePaymentModelDao>() {
                         @Override
                         public boolean apply(final InvoicePaymentModelDao input) {
-                            return input.getType() == InvoicePaymentType.ATTEMPT;
+                            return input.getType() == InvoicePaymentType.ATTEMPT &&
+                                   input.getPaymentCookieId().equals(invoicePayment.getPaymentCookieId());
                         }
                     }).orNull();
+
                     if (existingAttempt == null) {
                         transactional.create(invoicePayment, context);
                     } else if (!existingAttempt.getSuccess() && invoicePayment.getSuccess()) {
-                        transactional.updateAttempt(existingAttempt.getRecordId(), invoicePayment.getPaymentDate().toDate(), invoicePayment.getAmount(), invoicePayment.getCurrency(), invoicePayment.getProcessedCurrency(), context);
+                        transactional.updateAttempt(existingAttempt.getRecordId(),
+                                                    invoicePayment.getPaymentId().toString(),
+                                                    invoicePayment.getPaymentDate().toDate(),
+                                                    invoicePayment.getAmount(),
+                                                    invoicePayment.getCurrency(),
+                                                    invoicePayment.getProcessedCurrency(),
+                                                    invoicePayment.getPaymentCookieId(),
+                                                    null,
+                                                    context);
                     }
                 }
 
-                final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID), entitySqlDaoWrapperFactory.getHandle());
-                notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, invoicePayment, accountId, context.getUserToken(), context);
-
+                if (completion) {
+                    final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID), entitySqlDaoWrapperFactory.getHandle());
+                    notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, invoicePayment, accountId, context.getUserToken(), context);
+                }
                 return null;
             }
         });
