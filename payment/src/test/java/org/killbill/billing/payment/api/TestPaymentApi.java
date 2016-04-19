@@ -1268,7 +1268,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             } catch (final PaymentApiException e) {
             }
 
-            // Attempt to create another {AUTH, PURCHASE, CREDIT} with same key => 3key constraint should make the request fail
+            // Attempt to create another {AUTH, PURCHASE, CREDIT} with same key => key constraint should make the request fail
             try {
                 createPayment(transactionType, processedPayment.getId(), paymentExternalKey, keyA, requestedAmount, PaymentPluginStatus.PROCESSED);
                 Assert.fail("Retrying initial successful transaction (AUTHORIZE, PURCHASE, CREDIT) with same transaction key should fail");
