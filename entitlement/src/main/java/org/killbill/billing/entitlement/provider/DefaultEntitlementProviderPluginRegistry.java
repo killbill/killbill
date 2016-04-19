@@ -41,13 +41,13 @@ public class DefaultEntitlementProviderPluginRegistry implements OSGIServiceRegi
 
     @Override
     public void registerService(final OSGIServiceDescriptor desc, final EntitlementPluginApi service) {
-        log.info("DefaultEntitlementProviderPluginRegistry registering service " + desc.getRegistrationName());
+        log.info("Registering service='{}'", desc.getRegistrationName());
         pluginsByName.put(desc.getRegistrationName(), service);
     }
 
     @Override
     public void unregisterService(final String serviceName) {
-        log.info("DefaultEntitlementProviderPluginRegistry unregistering service " + serviceName);
+        log.info("Unregistering service='{}'", serviceName);
         pluginsByName.remove(serviceName);
     }
 

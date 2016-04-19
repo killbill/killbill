@@ -77,7 +77,7 @@ public class DefaultPaymentService implements PaymentService {
             eventBus.register(paymentBusEventHandler);
             eventBus.register(tagHandler);
         } catch (final PersistentBus.EventBusException e) {
-            log.error("Unable to register with the EventBus!", e);
+            log.error("Failed to register bus handlers", e);
         }
         paymentExecutors.initialize();
         retryService.initialize();
@@ -96,7 +96,7 @@ public class DefaultPaymentService implements PaymentService {
             eventBus.unregister(paymentBusEventHandler);
             eventBus.unregister(tagHandler);
         } catch (final PersistentBus.EventBusException e) {
-            throw new RuntimeException("Unable to unregister to the EventBus!", e);
+            throw new RuntimeException("Failed to unregister bus handlers", e);
         }
         retryService.stop();
         janitor.stop();

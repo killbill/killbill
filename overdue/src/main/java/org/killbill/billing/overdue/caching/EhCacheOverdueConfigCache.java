@@ -60,7 +60,7 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
             defaultOverdueConfig = XMLLoader.getObjectFromUri(noOverdueConfigURI, DefaultOverdueConfig.class);
         } catch (final Exception e) {
             defaultOverdueConfig = new DefaultOverdueConfig();
-            log.warn("Exception loading NoOverdueConfig - should never happen!", e);
+            log.error("Exception loading NoOverdueConfig - should never happen!", e);
         }
     }
 

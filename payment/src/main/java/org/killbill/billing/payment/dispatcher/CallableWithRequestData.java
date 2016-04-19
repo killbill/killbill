@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.dispatcher;
 
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -26,6 +27,7 @@ import org.apache.shiro.util.ThreadContext;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
+import org.slf4j.MDC;
 
 public class CallableWithRequestData<T> implements Callable<T> {
 
@@ -33,13 +35,20 @@ public class CallableWithRequestData<T> implements Callable<T> {
     private final Random random;
     private final SecurityManager securityManager;
     private final Subject subject;
+    private final Map<String, String> mdcContextMap;
     private final Callable<T> delegate;
 
-    public CallableWithRequestData(final RequestData requestData, final Random random, final SecurityManager securityManager, final Subject subject, final Callable<T> delegate) {
+    public CallableWithRequestData(final RequestData requestData,
+                                   final Random random,
+                                   final SecurityManager securityManager,
+                                   final Subject subject,
+                                   final Map<String, String> mdcContextMap,
+                                   final Callable<T> delegate) {
         this.requestData = requestData;
         this.random = random;
         this.securityManager = securityManager;
         this.subject = subject;
+        this.mdcContextMap = mdcContextMap;
         this.delegate = delegate;
     }
 
@@ -50,12 +59,14 @@ public class CallableWithRequestData<T> implements Callable<T> {
             UUIDs.setRandom(random);
             ThreadContext.bind(securityManager);
             ThreadContext.bind(subject);
+            MDC.setContextMap(mdcContextMap);
             return delegate.call();
         } finally {
             Request.resetPerThreadRequestData();
             UUIDs.setRandom(null);
             ThreadContext.unbindSecurityManager();
             ThreadContext.unbindSubject();
+            MDC.clear();
         }
     }
 }

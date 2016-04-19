@@ -113,7 +113,7 @@ public class PushNotificationListener {
                     });
             response = futureStatus.get(timeoutSec, TimeUnit.SECONDS);
         } catch (final Exception e) {
-            log.warn(String.format("Failed to push notification %s for the tenant %s", url, tenantId), e);
+            log.warn("Failed to push notification url='{}', tenantId='{}'", url, tenantId, e);
             return false;
         }
         return response.getStatusCode() >= 200 && response.getStatusCode() < 300;

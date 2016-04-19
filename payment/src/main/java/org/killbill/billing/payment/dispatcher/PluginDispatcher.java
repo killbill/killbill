@@ -31,6 +31,7 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.ProfilingData;
 import org.killbill.commons.request.Request;
+import org.slf4j.MDC;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -62,6 +63,7 @@ public class PluginDispatcher<ReturnType> {
                                                                                                                      UUIDs.getRandom(),
                                                                                                                      ThreadContext.getSecurityManager(),
                                                                                                                      ThreadContext.getSubject(),
+                                                                                                                     MDC.getCopyOfContextMap(),
                                                                                                                      task);
 
         final Future<PluginDispatcherReturnType<ReturnType>> future = pluginExecutor.submit(callableWithRequestData);

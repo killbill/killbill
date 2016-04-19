@@ -21,7 +21,8 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%date [%thread] %-5level %logger{36} - %maskedMsg%n%ex</pattern>
+            <!-- See http://jira.qos.ch/browse/LOGBACK-262 -->
+            <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', tRId='%X{kb.tenantRecordId}', aRId='%X{kb.accountRecordId}', lvl='%level', log='%logger{0}', %maskedMsg%n%ex</pattern>
         </encoder>
     </appender>
 
@@ -177,6 +178,9 @@
     <logger name="jdbc.connection" level="OFF" additivity="false">
         <appender-ref ref="SIFT-jdbc-connection"/>
     </logger>
+
+    <!-- See https://github.com/jOOQ/jOOQ/issues/4019 -->
+    <logger name="org.jooq.Constants" level="OFF"/>
 
     <!-- Silence verbose loggers in DEBUG mode -->
     <logger name="com.dmurph" level="OFF"/>

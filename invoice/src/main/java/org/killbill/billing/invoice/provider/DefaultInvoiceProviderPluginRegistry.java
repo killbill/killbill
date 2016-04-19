@@ -41,13 +41,13 @@ public class DefaultInvoiceProviderPluginRegistry implements OSGIServiceRegistra
 
     @Override
     public void registerService(final OSGIServiceDescriptor desc, final InvoicePluginApi service) {
-        log.info("DefaultInvoiceProviderPluginRegistry registering service " + desc.getRegistrationName());
+        log.info("Registering service='{}'", desc.getRegistrationName());
         pluginsByName.put(desc.getRegistrationName(), service);
     }
 
     @Override
     public void unregisterService(final String serviceName) {
-        log.info("DefaultInvoiceProviderPluginRegistry unregistering service " + serviceName);
+        log.info("Unregistering service='{}'", serviceName);
         pluginsByName.remove(serviceName);
     }
 

@@ -124,10 +124,10 @@ public abstract class BaseRetryService implements RetryService {
                     }
                 }
             } catch (final NoSuchNotificationQueue e) {
-                log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, getQueueName()));
+                log.error("Failed to retrieve notification queue='{}', service='{}'", getQueueName(), DefaultPaymentService.SERVICE_NAME);
                 return false;
             } catch (final IOException e) {
-                log.error(String.format("Failed to serialize notificationQueue event for objectId %s", objectId));
+                log.error("Failed to serialize notificationQueue event for objectId='{}'", objectId);
                 return false;
             }
             return true;

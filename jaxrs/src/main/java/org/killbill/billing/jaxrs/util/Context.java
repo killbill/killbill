@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -26,6 +28,7 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallContextFactory;
 import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.commons.request.Request;
@@ -37,13 +40,15 @@ public class Context {
 
     private final CallOrigin origin;
     private final UserType userType;
-    final CallContextFactory contextFactory;
+    private final CallContextFactory contextFactory;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public Context(final CallContextFactory factory) {
+    public Context(final CallContextFactory factory, final InternalCallContextFactory internalCallContextFactory) {
         this.origin = CallOrigin.EXTERNAL;
         this.userType = UserType.CUSTOMER;
         this.contextFactory = factory;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     public CallContext createContext(final String createdBy, final String reason, final String comment, final ServletRequest request)
@@ -51,23 +56,31 @@ public class Context {
         try {
             Preconditions.checkNotNull(createdBy, String.format("Header %s needs to be set", JaxrsResource.HDR_CREATED_BY));
             final Tenant tenant = getTenantFromRequest(request);
+            final CallContext callContext = contextFactory.createCallContext(tenant == null ? null : tenant.getId(), createdBy, origin, userType, reason,
+                                                                             comment, getOrCreateUserToken());
 
+            populateMDCContext(callContext);
 
-            return contextFactory.createCallContext(tenant == null ? null : tenant.getId(), createdBy, origin, userType, reason,
-                                                    comment, getOrCreateUserToken());
+            return callContext;
         } catch (final NullPointerException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
     }
 
     public TenantContext createContext(final ServletRequest request) {
+        final TenantContext tenantContext;
+
         final Tenant tenant = getTenantFromRequest(request);
         if (tenant == null) {
             // Multi-tenancy may not have been configured - default to "default" tenant (see InternalCallContextFactory)
-            return contextFactory.createTenantContext(null);
+            tenantContext = contextFactory.createTenantContext(null);
         } else {
-            return contextFactory.createTenantContext(tenant.getId());
+            tenantContext = contextFactory.createTenantContext(tenant.getId());
         }
+
+        populateMDCContext(tenantContext);
+
+        return tenantContext;
     }
 
     // Use REQUEST_ID_HEADER if this is provided and lloks like a UUID, if not allocate a random one.
@@ -93,5 +106,10 @@ public class Context {
         } else {
             return (Tenant) tenantObject;
         }
+    }
+
+    private void populateMDCContext(final TenantContext tenantContext) {
+        // InternalCallContextFactory will do it for us
+        internalCallContextFactory.createInternalTenantContext(tenantContext);
     }
 }

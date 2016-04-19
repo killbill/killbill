@@ -76,7 +76,7 @@ public abstract class PaymentEnteringStateCallback implements EnteringStateCallb
             try {
                 daoHelper.getEventBus().post(event);
             } catch (EventBusException e) {
-                logger.error("Failed to post Payment event event for account {} ", paymentStateContext.getAccount().getId(), e);
+                logger.warn("Failed to post event {}", event, e);
             }
         }
     }
