@@ -74,7 +74,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
         if (paymentId == null) {
             checkNotNullParameter(amount, "amount");
-            checkPositiveAmount(amount);
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(properties, "plugin properties");
@@ -115,7 +114,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
         if (paymentId == null) {
             checkNotNullParameter(amount, "amount");
-            checkPositiveAmount(amount);
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(properties, "plugin properties");
@@ -149,9 +147,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
+        checkNotNullParameter(amount, "amount");
         checkNotNullParameter(currency, "currency");
         checkNotNullParameter(properties, "plugin properties");
-        checkPositiveAmount(amount);
 
         final String transactionType = TransactionType.CAPTURE.name();
         logAPICall(transactionType, account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey, null, null);
@@ -186,9 +184,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
+        checkNotNullParameter(amount, "amount");
         checkNotNullParameter(currency, "currency");
         checkNotNullParameter(properties, "plugin properties");
-        checkPositiveAmount(amount);
 
         final String transactionType = TransactionType.CAPTURE.name();
         logAPICall(transactionType, account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey, null, paymentControlPluginNames);
@@ -220,7 +218,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
         if (paymentId == null) {
             checkNotNullParameter(amount, "amount");
-            checkPositiveAmount(amount);
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(properties, "plugin properties");
@@ -259,7 +256,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(account, "account");
         if (paymentId == null) {
             checkNotNullParameter(amount, "amount");
-            checkPositiveAmount(amount);
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
@@ -370,9 +366,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
         checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(properties, "plugin properties");
-        if (amount != null) {
-            checkPositiveAmount(amount);
-        }
 
         final String transactionType = TransactionType.REFUND.name();
         logAPICall(transactionType, account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey, null, null);
@@ -412,9 +405,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
         checkNotNullParameter(properties, "plugin properties");
-        if (amount != null) {
-            checkPositiveAmount(amount);
-        }
 
         final String transactionType = TransactionType.REFUND.name();
         logAPICall(transactionType, account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey, null, paymentControlPluginNames);
@@ -447,7 +437,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
         if (paymentId == null) {
             checkNotNullParameter(amount, "amount");
-            checkPositiveAmount(amount);
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(properties, "plugin properties");
@@ -488,7 +477,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(paymentMethodId, "paymentMethodId");
         if (paymentId == null) {
             checkNotNullParameter(amount, "amount");
-            checkPositiveAmount(amount);
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(properties, "plugin properties");
@@ -560,7 +548,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(amount, "amount");
         checkNotNullParameter(currency, "currency");
         checkNotNullParameter(paymentId, "paymentId");
-        checkPositiveAmount(amount);
 
         final String transactionType = TransactionType.CHARGEBACK.name();
         logAPICall(transactionType, account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey, null, null);
@@ -596,7 +583,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(amount, "amount");
         checkNotNullParameter(currency, "currency");
         checkNotNullParameter(paymentId, "paymentId");
-        checkPositiveAmount(amount);
 
         final String transactionType = TransactionType.CHARGEBACK.name();
         logAPICall(transactionType, account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey, null, paymentControlPluginNames);

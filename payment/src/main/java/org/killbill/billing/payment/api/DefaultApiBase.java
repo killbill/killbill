@@ -136,11 +136,4 @@ public class DefaultApiBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, parameterName, "should not be null");
         }
     }
-
-    protected void checkPositiveAmount(final BigDecimal amount) throws PaymentApiException {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, "amount", "should be greater than 0");
-        }
-    }
-
 }
