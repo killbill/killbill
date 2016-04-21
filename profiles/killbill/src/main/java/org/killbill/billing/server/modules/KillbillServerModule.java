@@ -90,6 +90,7 @@ import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.ResultSetMapperFactory;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
 import com.google.inject.multibindings.Multibinder;
 
 public class KillbillServerModule extends KillbillPlatformModule {
@@ -200,6 +201,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
 
     protected void configureFilters() {
         bind(ResponseCorsFilter.class).asEagerSingleton();
+        bind(MDCInsertingServletFilter.class).asEagerSingleton();
     }
 
     protected void configurePushNotification() {

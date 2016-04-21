@@ -69,7 +69,7 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         builder.addJerseyFilter(RequestDataFilter.class.getName());
 
         // Logback default MDC
-        builder.addJerseyFilter(MDCInsertingServletFilter.class.getName());
+        builder.addFilter("/*", MDCInsertingServletFilter.class);
 
         // Kill Bill specific MDC
         builder.addJerseyFilter(KillbillMDCInsertingServletFilter.class.getName());
