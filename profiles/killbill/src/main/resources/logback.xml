@@ -43,7 +43,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -64,7 +64,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -85,7 +85,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -106,7 +106,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -127,7 +127,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -148,7 +148,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date [%thread] %maskedMsg%n%ex</pattern>
+                    <pattern>%date [%thread] %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>

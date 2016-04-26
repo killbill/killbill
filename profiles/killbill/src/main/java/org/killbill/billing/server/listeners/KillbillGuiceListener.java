@@ -35,11 +35,9 @@ import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.security.TenantFilter;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.skeleton.modules.BaseServerModuleBuilder;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
@@ -69,7 +67,7 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         builder.addJerseyFilter(RequestDataFilter.class.getName());
 
         // Logback default MDC
-        builder.addJerseyFilter(MDCInsertingServletFilter.class.getName());
+        builder.addFilter("/*", MDCInsertingServletFilter.class);
 
         // Kill Bill specific MDC
         builder.addJerseyFilter(KillbillMDCInsertingServletFilter.class.getName());
@@ -111,18 +109,6 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         final ImmutableMap<String, String> defaultProperties = ImmutableMap.<String, String>of("org.killbill.server.updateCheck.url",
                                                                                                "https://raw.github.com/killbill/killbill/master/profiles/killbill/src/main/resources/update-checker/killbill-server-update-list.properties");
         return new DefaultKillbillConfigSource(defaultProperties);
-    }
-
-    @Override
-    protected void startLifecycleStage1() {
-        super.startLifecycleStage1();
-
-        // Work-around for http://jira.qos.ch/browse/LOGBACK-730
-        final ILoggerFactory iLoggerFactory = LoggerFactory.getILoggerFactory();
-        if (iLoggerFactory instanceof LoggerContext) {
-            final LoggerContext lc = (LoggerContext) iLoggerFactory;
-            lc.setPackagingDataEnabled(false);
-        }
     }
 
     @Override
