@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -152,7 +152,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(invoiceItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
         Assert.assertEquals(invoiceItems.get(0).getStartDate(), new LocalDate("2012-05-01"));
         Assert.assertNull(invoiceItems.get(0).getEndDate());
-        Assert.assertEquals(invoiceItems.get(0).getAmount(), BigDecimal.ZERO);
+        Assert.assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertNull(invoiceItems.get(0).getRate());
 
         Assert.assertEquals(invoiceItems.get(1).getInvoiceItemType(), InvoiceItemType.RECURRING);
