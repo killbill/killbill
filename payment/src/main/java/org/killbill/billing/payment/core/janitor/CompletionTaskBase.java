@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 
 abstract class CompletionTaskBase<T> implements Runnable {
 
-    protected Logger log = LoggerFactory.getLogger(CompletionTaskBase.class);
+    private static final Logger log = LoggerFactory.getLogger(CompletionTaskBase.class);
 
     protected final PaymentConfig paymentConfig;
     protected final Clock clock;
