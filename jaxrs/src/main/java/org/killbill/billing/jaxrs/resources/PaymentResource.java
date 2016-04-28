@@ -291,35 +291,36 @@ public class PaymentResource extends ComboPaymentResource {
                                                                                    json != null ? json.getTransactionExternalKey() : null,
                                                                                    json != null ? json.getTransactionType() : null);
 
-            final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
-            switch (pendingTransaction.getTransactionType()) {
+        final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
+        final Payment result;
+        switch (pendingTransaction.getTransactionType()) {
             case AUTHORIZE:
-                paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
+                result = paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
                                                                  initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
                                                                  pluginProperties, paymentOptions, callContext);
                 break;
             case CAPTURE:
-                paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), amount, currency, pendingTransaction.getExternalKey(),
+                result = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), amount, currency, pendingTransaction.getExternalKey(),
                                                            pluginProperties, paymentOptions, callContext);
                 break;
             case PURCHASE:
-                paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
+                result = paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
                                                             initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
                                                             pluginProperties, paymentOptions, callContext);
                 break;
             case CREDIT:
-                paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
+                result = paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
                                                           initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
                                                           pluginProperties, paymentOptions, callContext);
                 break;
             case REFUND:
-                paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), amount, currency,
+                result = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), amount, currency,
                                                           pendingTransaction.getExternalKey(), pluginProperties, paymentOptions, callContext);
                 break;
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + pendingTransaction.getTransactionType() + " cannot be completed").build();
         }
-        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", initialPayment.getId());
+        return createPaymentResponse(uriInfo, result, pendingTransaction.getTransactionType(), pendingTransaction.getExternalKey());
     }
 
     @TimedResource(name = "captureAuthorization")
@@ -383,7 +384,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
                                                          json.getTransactionExternalKey(), pluginProperties, paymentOptions, callContext);
-        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
+        return createPaymentResponse(uriInfo, payment, TransactionType.CAPTURE, json.getTransactionExternalKey());
     }
 
     @TimedResource(name = "refundPayment")
@@ -449,8 +450,8 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
                                                         json.getTransactionExternalKey(), pluginProperties, paymentOptions, callContext);
-        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
 
+        return createPaymentResponse(uriInfo, payment, TransactionType.REFUND, json.getTransactionExternalKey());
     }
 
     @TimedResource(name = "voidPayment")
@@ -510,7 +511,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createVoidWithPaymentControl(account, initialPayment.getId(), transactionExternalKey,
                                                                         pluginProperties, paymentOptions, callContext);
-        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
+        return createPaymentResponse(uriInfo, payment, TransactionType.VOID, json.getTransactionExternalKey());
     }
 
     @TimedResource(name = "chargebackPayment")
@@ -574,7 +575,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createChargebackWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
                                                             json.getTransactionExternalKey(), paymentOptions, callContext);
-        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
+        return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey());
     }
 
     @TimedResource
@@ -628,7 +629,7 @@ public class PaymentResource extends ComboPaymentResource {
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
         }
-        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", result.getId());
+        return createPaymentResponse(uriInfo, result, transactionType, paymentTransactionJson.getTransactionExternalKey());
     }
 
     @Override
