@@ -30,12 +30,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
@@ -475,4 +477,32 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         Preconditions.checkArgument(actual == expected, errorMessage);
     }
 
+    protected Response createPaymentResponse(UriInfo uriInfo, Payment payment, TransactionType transactionType, @Nullable String transactionExternalKey) {
+        final PaymentTransaction createdTransaction = findCreatedTransaction(payment, transactionType, transactionExternalKey);
+        switch (createdTransaction.getTransactionStatus()) {
+            case PENDING:
+            case SUCCESS:
+                return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
+            case PAYMENT_FAILURE:
+                return Response.status(402).build();
+            case PAYMENT_SYSTEM_OFF:
+            case UNKNOWN:
+                return Response.status(Status.SERVICE_UNAVAILABLE).build();
+            case PLUGIN_FAILURE:
+                return Response.status(502).build();
+        }
+        // Should never happen
+        return Response.serverError().build();
+    }
+
+    private PaymentTransaction findCreatedTransaction(Payment payment, TransactionType transactionType, @Nullable String transactionExternalKey) {
+        for(PaymentTransaction transaction : payment.getTransactions()) {
+            if (transaction.getTransactionType() == transactionType
+                && Objects.equals(transaction.getExternalKey(), transactionExternalKey)) {
+                return transaction;
+            }
+        }
+        // If nothing is found, return last transaction
+        return Iterables.getLast(payment.getTransactions());
+    }
 }
