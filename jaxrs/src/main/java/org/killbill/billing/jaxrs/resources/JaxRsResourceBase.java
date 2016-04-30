@@ -547,6 +547,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                 return Response.status(402).build();
             case PAYMENT_SYSTEM_OFF:
             case UNKNOWN:
+                // Return a 503
                 return Response.status(Status.SERVICE_UNAVAILABLE).build();
             case PLUGIN_FAILURE:
                 return Response.status(502).build();
