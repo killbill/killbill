@@ -544,12 +544,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             case SUCCESS:
                 return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
             case PAYMENT_FAILURE:
+                // 402 - Payment Required
                 return Response.status(402).build();
             case PAYMENT_SYSTEM_OFF:
             case UNKNOWN:
-                // Return a 503
+                // 503 - Service Unavailable
                 return Response.status(Status.SERVICE_UNAVAILABLE).build();
             case PLUGIN_FAILURE:
+                // 502 - Bad Gateway
                 return Response.status(502).build();
         }
         // Should never happen
