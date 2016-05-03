@@ -64,7 +64,8 @@ public class PaymentPluginDispatcher {
                 log.warn(format);
                 throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
             } else {
-                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+                // Unwraps the ExecutionException (e.getCause()), since it's a dispatch implementation detail
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
             }
         }
     }
