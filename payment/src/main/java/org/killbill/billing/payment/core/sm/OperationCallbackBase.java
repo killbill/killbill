@@ -24,8 +24,10 @@ import java.util.concurrent.TimeoutException;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.ProcessorBase.CallableWithAccountLock;
 import org.killbill.billing.payment.core.ProcessorBase.DispatcherCallback;
+import org.killbill.billing.payment.dispatcher.PaymentPluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.util.config.PaymentConfig;
@@ -68,17 +70,10 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
                                                                                                                                            paymentConfig,
                                                                                                                                            callback);
             logger.debug("Calling plugin(s) {}", pluginNames);
-            final OperationResult operationResult = paymentPluginDispatcher.dispatchWithTimeout(task);
+            final OperationResult operationResult = PaymentPluginDispatcher.dispatchWithExceptionHandling(account, pluginNames, task, paymentPluginDispatcher);
             logger.debug("Successful plugin(s) call of {} for account {} with result {}", pluginNames, account.getExternalKey(), operationResult);
             return operationResult;
-        } catch (final ExecutionException e) {
-            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
-        } catch (final TimeoutException e) {
-            logger.warn("TimeoutException while executing the plugin(s) {}", pluginNames);
-            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.warn("InterruptedException while executing the following plugin(s): {}", pluginNames);
+        } catch (final PaymentApiException e) {
             throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
         }
     }
@@ -91,5 +86,5 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
     //
     protected abstract CallbackOperationResult doCallSpecificOperationCallback() throws CallbackOperationException;
 
-    protected abstract OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e);
+    protected abstract OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final PaymentApiException e);
 }
