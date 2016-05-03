@@ -158,7 +158,8 @@ public abstract class ExceptionMapperBase {
     }
 
     protected Response buildPluginTimeoutResponse(final Exception e, final UriInfo uriInfo) {
-        final Response.ResponseBuilder responseBuilder = Response.status(Status.ACCEPTED);
+        // 504 - Gateway Timeout
+        final Response.ResponseBuilder responseBuilder = Response.status(504);
         serializeException(e, uriInfo, responseBuilder);
         return responseBuilder.build();
     }

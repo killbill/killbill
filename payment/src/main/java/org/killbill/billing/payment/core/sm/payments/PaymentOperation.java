@@ -68,41 +68,29 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
+        final String pluginName;
         try {
-            final String pluginName = daoHelper.getPaymentProviderPluginName();
+            pluginName = daoHelper.getPaymentProviderPluginName();
             this.plugin = daoHelper.getPaymentPluginApi(pluginName);
+        } catch (final PaymentApiException e) {
+            throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
+        }
 
+        try {
             if (paymentStateContext.shouldLockAccountAndDispatch()) {
                 return doOperationCallbackWithDispatchAndAccountLock(pluginName);
             } else {
                 return doSimpleOperationCallback();
             }
-        } catch (final Exception e) {
+        } catch (OperationException e) {
             throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
         }
     }
 
     @Override
-    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e) {
-
-        // If this is an ExecutionException we attempt to extract the cause first
-        final Throwable originalExceptionOrCause = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
-
-        //
-        // Any case of exception (checked or runtime) should lead to a TransactionStatus.UNKNOWN (and a XXX_ERRORED payment state).
-        // In order to reach that state we create PaymentTransactionInfoPlugin with an PaymentPluginStatus.UNDEFINED status (and an OperationResult.EXCEPTION).
-        //
-        if (originalExceptionOrCause instanceof LockFailedException) {
-            logger.warn("Failed to lock account {}", paymentStateContext.getAccount().getExternalKey());
-        } else if (originalExceptionOrCause instanceof TimeoutException) {
-            logger.error("Plugin call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
-        } else if (originalExceptionOrCause instanceof InterruptedException) {
-            logger.error("Plugin call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
-        } else {
-            logger.warn("Payment plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), originalExceptionOrCause);
-        }
-        return convertToUnknownTransactionStatusAndErroredPaymentState(originalExceptionOrCause);
-
+    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final PaymentApiException e) {
+        logger.warn("Payment plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), e);
+        return convertToUnknownTransactionStatusAndErroredPaymentState(e);
     }
 
     //
@@ -111,7 +99,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     // - Construct a PaymentTransactionInfoPlugin whose PaymentPluginStatus = UNDEFINED to end up with a paymentTransactionStatus = UNKNOWN and have a chance to
     //   be fixed by Janitor.
     //
-    private OperationException convertToUnknownTransactionStatusAndErroredPaymentState(final Throwable e) {
+    private OperationException convertToUnknownTransactionStatusAndErroredPaymentState(final Exception e) {
 
         final PaymentTransactionInfoPlugin paymentInfoPlugin = new DefaultNoOpPaymentInfoPlugin(paymentStateContext.getPaymentId(),
                                                                                                 paymentStateContext.getTransactionId(),
@@ -124,6 +112,9 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                 null,
                                                                                                 null);
         paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
+        if (e instanceof OperationException) {
+            return (OperationException) e;
+        }
         return new OperationException(e, OperationResult.EXCEPTION);
     }
 

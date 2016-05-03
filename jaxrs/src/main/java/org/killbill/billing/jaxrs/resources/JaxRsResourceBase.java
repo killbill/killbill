@@ -91,12 +91,14 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public abstract class JaxRsResourceBase implements JaxrsResource {
 
@@ -475,4 +477,48 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         Preconditions.checkArgument(actual == expected, errorMessage);
     }
 
+    protected Response createPaymentResponse(final UriInfo uriInfo, final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey) {
+        final PaymentTransaction createdTransaction = findCreatedTransaction(payment, transactionType, transactionExternalKey);
+        Preconditions.checkNotNull(createdTransaction, "No transaction of type '%s' found", transactionType);
+
+        switch (createdTransaction.getTransactionStatus()) {
+            case PENDING:
+            case SUCCESS:
+                return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
+            case PAYMENT_FAILURE:
+                // 402 - Payment Required
+                return Response.status(402).build();
+            case PAYMENT_SYSTEM_OFF:
+            case UNKNOWN:
+                // 503 - Service Unavailable
+                return Response.status(Status.SERVICE_UNAVAILABLE).build();
+            case PLUGIN_FAILURE:
+                // 502 - Bad Gateway
+                return Response.status(502).build();
+        }
+        // Should never happen
+        return Response.serverError().build();
+    }
+
+    private PaymentTransaction findCreatedTransaction(final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey) {
+        // Make sure we start looking from the latest transaction created
+        final List<PaymentTransaction> reversedTransactions = Lists.reverse(payment.getTransactions());
+        final Iterable<PaymentTransaction> matchingTransactions = Iterables.filter(reversedTransactions, new Predicate<PaymentTransaction>() {
+            @Override
+            public boolean apply(final PaymentTransaction input) {
+                return input.getTransactionType() == transactionType;
+            }
+        });
+
+        if (transactionExternalKey != null) {
+            for (final PaymentTransaction transaction : matchingTransactions) {
+                if (Objects.equal(transaction.getExternalKey(), transactionExternalKey)) {
+                    return transaction;
+                }
+            }
+        }
+
+        // If nothing is found, return the latest transaction of given type
+        return Iterables.getFirst(matchingTransactions, null);
+    }
 }
