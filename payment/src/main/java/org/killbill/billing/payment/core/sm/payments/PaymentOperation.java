@@ -82,10 +82,10 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
         } else {
             try {
                 return doSimpleOperationCallback();
-	        } catch (final OperationException e) {
-    	        throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
-        	}
-		}
+            } catch (final OperationException e) {
+                throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
+            }
+        }
     }
 
     @Override
