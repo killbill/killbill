@@ -90,7 +90,6 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
 
     @Override
     protected OperationException unwrapExceptionFromDispatchedTask(final PaymentApiException e) {
-        logger.warn("Payment plugin call threw an exception for accountExternalKey='{}'", paymentStateContext.getAccount().getExternalKey(), e);
         return convertToUnknownTransactionStatusAndErroredPaymentState(e);
     }
 

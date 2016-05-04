@@ -67,9 +67,7 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
                                                                                                                                            account.getExternalKey(),
                                                                                                                                            paymentConfig,
                                                                                                                                            callback);
-            logger.debug("Calling plugin(s) {}", pluginNames);
             final OperationResult operationResult = PaymentPluginDispatcher.dispatchWithExceptionHandling(account, pluginNames, task, paymentPluginDispatcher);
-            logger.debug("Successful plugin(s) call of {} for account {} with result {}", pluginNames, account.getExternalKey(), operationResult);
             return operationResult;
         } catch (final PaymentApiException e) {
             throw unwrapExceptionFromDispatchedTask(e);
