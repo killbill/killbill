@@ -20,10 +20,10 @@ package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
@@ -35,13 +35,16 @@ import org.killbill.billing.control.plugin.api.PaymentControlApiException;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
+import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -63,6 +66,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
 
+    private MockPaymentControlProviderPlugin mockPaymentControlProviderPlugin;
+
     final PaymentOptions INVOICE_PAYMENT = new PaymentOptions() {
         @Override
         public boolean isExternalPayment() {
@@ -72,6 +77,18 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         @Override
         public List<String> getPaymentControlPluginNames() {
             return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        }
+    };
+
+    final PaymentOptions CONTROL_PLUGIN_OPTIONS = new PaymentOptions() {
+        @Override
+        public boolean isExternalPayment() {
+            return true;
+        }
+
+        @Override
+        public List<String> getPaymentControlPluginNames() {
+            return Arrays.asList(MockPaymentControlProviderPlugin.PLUGIN_NAME);
         }
     };
 
@@ -88,6 +105,24 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         super.beforeMethod();
         mockPaymentProviderPlugin.clear();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
+
+        mockPaymentControlProviderPlugin = new MockPaymentControlProviderPlugin();;
+        controlPluginRegistry.registerService(new OSGIServiceDescriptor() {
+            @Override
+            public String getPluginSymbolicName() {
+                return null;
+            }
+
+            @Override
+            public String getPluginName() {
+                return MockPaymentControlProviderPlugin.PLUGIN_NAME;
+            }
+
+            @Override
+            public String getRegistrationName() {
+                return MockPaymentControlProviderPlugin.PLUGIN_NAME;
+            }
+        }, mockPaymentControlProviderPlugin);
     }
 
     @Test(groups = "slow")
@@ -250,6 +285,55 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     }
 
+    @Test(groups = "slow")
+    public void testCreatePurchasePaymentPluginException() {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithException();
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "pay external key";
+        final String transactionExternalKey = "txn external key";
+        try {
+            paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED,
+                                      paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertTrue(e.getCause() instanceof PaymentPluginApiException);
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testCreatePurchaseWithControlPaymentPluginException() throws Exception {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithException();
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "pay controle external key";;
+        final String transactionExternalKey = "txn control external key";
+        try {
+            paymentApi.createPurchaseWithPaymentControl(
+                    account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED,
+                    paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), CONTROL_PLUGIN_OPTIONS, callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertTrue(e.getCause() instanceof PaymentPluginApiException);
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testCreatePurchaseWithControlPluginException() throws Exception {
+        mockPaymentControlProviderPlugin.throwsException(new IllegalStateException());
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "pay controle external key";;
+        final String transactionExternalKey = "txn control external key";
+        try {
+            paymentApi.createPurchaseWithPaymentControl(
+                    account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED,
+                    paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), CONTROL_PLUGIN_OPTIONS, callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertTrue(e.getCause() instanceof IllegalStateException);
+        }
+    }
 
     @Test(groups = "slow")
     public void testCreateSuccessAuthVoid() throws PaymentApiException {
@@ -1180,8 +1264,25 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds((int) (paymentConfig.getPaymentPluginTimeout().getMillis() + 100));
         try {
-            final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
-                                                              ImmutableList.<PluginProperty>of(), callContext);
+            paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED,
+                                      paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertEquals(e.getCode(), ErrorCode.PAYMENT_PLUGIN_TIMEOUT.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testCreatePurchaseWithControlTimeout() throws Exception {
+        final BigDecimal requestedAmount = BigDecimal.ONE;
+        final String paymentExternalKey = "111111";
+        final String transactionExternalKey = "11111";
+
+        mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds((int) (paymentConfig.getPaymentPluginTimeout().getMillis() + 100));
+        try {
+            paymentApi.createPurchaseWithPaymentControl(
+                    account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey,
+                    transactionExternalKey, ImmutableList.<PluginProperty>of(), CONTROL_PLUGIN_OPTIONS, callContext);
             fail();
         } catch (PaymentApiException e) {
             assertEquals(e.getCode(), ErrorCode.PAYMENT_PLUGIN_TIMEOUT.getCode());

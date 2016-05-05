@@ -112,6 +112,9 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                 null,
                                                                                                 null);
         paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
+        if (e.getCause() instanceof OperationException) {
+            return (OperationException) e.getCause();
+        }
         if (e instanceof OperationException) {
             return (OperationException) e;
         }
