@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -34,7 +34,6 @@ import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.util.jackson.ObjectMapper;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Lists;
@@ -826,8 +825,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void verifyJson() {
-
+    public void verifyJson() throws IOException {
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         final UUID id1 = UUID.fromString("e8ba6ce7-9bd4-417d-af53-70951ecaa99f");
         final InvoiceItem yearly1 = new RecurringInvoiceItem(id1, new DateTime(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, new LocalDate("2014-01-01"), new LocalDate("2015-01-01"), BigDecimal.TEN, BigDecimal.TEN, currency);
@@ -842,17 +840,12 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.addItem(repair);
 
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            tree.getRoot().jsonSerializeTree(new ObjectMapper(), outputStream);
+        tree.getRoot().jsonSerializeTree(new ObjectMapper(), outputStream);
 
-            final String json = outputStream.toString("UTF-8");
-            final String expectedJson = "[{\"start\":\"2014-01-01\",\"end\":\"2015-01-01\",\"items\":[{\"id\":\"e8ba6ce7-9bd4-417d-af53-70951ecaa99f\",\"startDate\":\"2014-01-01\",\"endDate\":\"2015-01-01\",\"amount\":10,\"currency\":\"USD\",\"linkedId\":null,\"action\":\"ADD\"}]},[{\"start\":\"2014-08-01\",\"end\":\"2015-01-01\",\"items\":[{\"id\":\"48db1317-9a6e-4666-bcc5-fc7d3d0defc8\",\"startDate\":\"2014-08-01\",\"endDate\":\"2015-01-01\",\"amount\":1,\"currency\":\"USD\",\"linkedId\":null,\"action\":\"ADD\"},{\"id\":\"02ec57f5-2723-478b-86ba-ebeaedacb9db\",\"startDate\":\"2014-08-01\",\"endDate\":\"2015-01-01\",\"amount\":10,\"currency\":\"USD\",\"linkedId\":\"e8ba6ce7-9bd4-417d-af53-70951ecaa99f\",\"action\":\"CANCEL\"}]}]]";
+        final String json = outputStream.toString("UTF-8");
+        final String expectedJson = "[{\"start\":\"2014-01-01\",\"end\":\"2015-01-01\",\"items\":[{\"id\":\"e8ba6ce7-9bd4-417d-af53-70951ecaa99f\",\"startDate\":\"2014-01-01\",\"endDate\":\"2015-01-01\",\"amount\":10.00,\"currency\":\"USD\",\"linkedId\":null,\"action\":\"ADD\"}]},[{\"start\":\"2014-08-01\",\"end\":\"2015-01-01\",\"items\":[{\"id\":\"48db1317-9a6e-4666-bcc5-fc7d3d0defc8\",\"startDate\":\"2014-08-01\",\"endDate\":\"2015-01-01\",\"amount\":1.00,\"currency\":\"USD\",\"linkedId\":null,\"action\":\"ADD\"},{\"id\":\"02ec57f5-2723-478b-86ba-ebeaedacb9db\",\"startDate\":\"2014-08-01\",\"endDate\":\"2015-01-01\",\"amount\":10.00,\"currency\":\"USD\",\"linkedId\":\"e8ba6ce7-9bd4-417d-af53-70951ecaa99f\",\"action\":\"CANCEL\"}]}]]";
 
-            assertEquals(json, expectedJson);
-
-        } catch (final IOException e) {
-            Assert.fail(e.getMessage());
-        }
+        assertEquals(json, expectedJson);
     }
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/286")

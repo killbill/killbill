@@ -59,6 +59,8 @@ import com.google.common.collect.Collections2;
 
 public abstract class ProcessorBase {
 
+    private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
+
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final AccountInternalApi accountInternalApi;
     protected final GlobalLocker locker;
@@ -66,8 +68,6 @@ public abstract class ProcessorBase {
     protected final InternalCallContextFactory internalCallContextFactory;
     protected final TagInternalApi tagInternalApi;
     protected final Clock clock;
-
-    protected static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
     protected final InvoiceInternalApi invoiceApi;
 
     public ProcessorBase(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,

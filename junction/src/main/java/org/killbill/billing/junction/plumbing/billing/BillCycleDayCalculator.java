@@ -145,9 +145,8 @@ public class BillCycleDayCalculator {
 
         final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate(), initialPhaseType);
         final int bcdLocal = ClockUtil.toDateTime(date, account.getTimeZone()).getDayOfMonth();
-        log.info("Calculated BCD: subscription id {}, subscription start {}, timezone {}, bcd {}",
+        log.info("Calculated BCD: subscriptionId='{}', subscriptionStartDate='{}', accountTimeZone='{}', bcd='{}'",
                  subscription.getId(), date.toDateTimeISO(), account.getTimeZone(), bcdLocal);
-
         return bcdLocal;
     }
 }

@@ -56,7 +56,7 @@ public class DefaultInvoiceService implements InvoiceService {
             eventBus.register(invoiceListener);
             eventBus.register(tagHandler);
         } catch (PersistentBus.EventBusException e) {
-            throw new RuntimeException("Unable to register to the EventBus!", e);
+            throw new RuntimeException("Failed to register bus handlers", e);
         }
         dateNotifier.initialize();
     }
@@ -72,7 +72,7 @@ public class DefaultInvoiceService implements InvoiceService {
             eventBus.unregister(invoiceListener);
             eventBus.unregister(tagHandler);
         } catch (PersistentBus.EventBusException e) {
-            throw new RuntimeException("Unable to unregister to the EventBus!", e);
+            throw new RuntimeException("Failed to unregister bus handlers", e);
         }
         dateNotifier.stop();
     }

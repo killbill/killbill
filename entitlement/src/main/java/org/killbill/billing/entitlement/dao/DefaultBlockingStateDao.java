@@ -353,7 +353,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
         try {
             eventBus.postFromTransaction(event, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
-            log.warn("Failed to post event {}", e);
+            log.warn("Failed to post event {}", event, e);
         }
     }
 

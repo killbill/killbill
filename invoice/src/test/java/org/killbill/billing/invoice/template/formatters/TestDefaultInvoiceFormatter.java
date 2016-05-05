@@ -136,9 +136,9 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem2);
         invoice.addInvoiceItem(refundAdjInvoiceItem);
         invoice.addPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice.getId(), clock.getUTCNow(), BigDecimal.TEN,
-                                                     Currency.USD, Currency.USD, true));
+                                                     Currency.USD, Currency.USD, null, true));
         invoice.addPayment(new DefaultInvoicePayment(InvoicePaymentType.REFUND, UUID.randomUUID(), invoice.getId(), clock.getUTCNow(), BigDecimal.ONE.negate(),
-                                                     Currency.USD, Currency.USD, true));
+                                                     Currency.USD, Currency.USD, null, true));
         // Check the scenario
         Assert.assertEquals(invoice.getBalance().doubleValue(), 0.00);
         Assert.assertEquals(invoice.getCreditedAmount().doubleValue(), 11.00);

@@ -91,7 +91,7 @@ public class DefaultBroadcastService implements BroadcastService {
             broadcastExecutor.shutdown();
             boolean success = broadcastExecutor.awaitTermination(TERMINATION_TIMEOUT_SEC, TimeUnit.SECONDS);
             if (!success) {
-                logger.warn("BroadcastExecutor failed to complete termination within " + TERMINATION_TIMEOUT_SEC + "sec");
+                logger.warn("BroadcastExecutor failed to complete termination within {} sec", TERMINATION_TIMEOUT_SEC);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -137,11 +137,11 @@ public class DefaultBroadcastService implements BroadcastService {
                     return;
                 }
 
+                final BroadcastInternalEvent event = new DefaultBroadcastInternalEvent(cur.getServiceName(), cur.getType(), cur.getEvent());
                 try {
-                    final BroadcastInternalEvent event = new DefaultBroadcastInternalEvent(cur.getServiceName(), cur.getType(), cur.getEvent());
                     eventBus.post(event);
                 } catch (final EventBusException e) {
-                    logger.error("Failed to send event BroadcastInternalEvent: ", e);
+                    logger.warn("Failed to post event {}", event, e);
                 } finally {
                     parent.setLatestRecordIdProcessed(cur.getRecordId());
                 }

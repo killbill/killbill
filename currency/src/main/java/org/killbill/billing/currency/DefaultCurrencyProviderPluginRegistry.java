@@ -41,13 +41,13 @@ public class DefaultCurrencyProviderPluginRegistry implements OSGIServiceRegistr
 
     @Override
     public void registerService(final OSGIServiceDescriptor desc, final CurrencyPluginApi service) {
-        log.info("DefaultCurrencyProviderPluginRegistry registering service " + desc.getRegistrationName());
+        log.info("Registering service='{}'", desc.getRegistrationName());
         pluginsByName.put(desc.getRegistrationName(), service);
     }
 
     @Override
     public void unregisterService(final String serviceName) {
-        log.info("DefaultCurrencyProviderPluginRegistry unregistering service " + serviceName);
+        log.info("Unregistering service='{}'", serviceName);
         pluginsByName.remove(serviceName);
     }
 

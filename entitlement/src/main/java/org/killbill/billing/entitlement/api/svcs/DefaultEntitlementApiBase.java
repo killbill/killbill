@@ -177,7 +177,6 @@ public class DefaultEntitlementApiBase {
                     }
 
                     blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, true, true, true, baseSubscription, internalCallContext);
-
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 } catch (AccountApiException e) {
@@ -218,7 +217,6 @@ public class DefaultEntitlementApiBase {
                     }
 
                     blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, false, false, false, baseSubscription, internalCallContext);
-
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 } catch (AccountApiException e) {

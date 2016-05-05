@@ -51,11 +51,15 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 public class PluginControlPaymentProcessor extends ProcessorBase {
+
+    private static final Logger log = LoggerFactory.getLogger(PluginControlPaymentProcessor.class);
 
     private static final Joiner JOINER = Joiner.on(", ");
 
@@ -225,20 +229,20 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                                        internalCallContext);
 
         } catch (final AccountApiException e) {
-            log.warn("Failed to retry attempt " + attemptId + toPluginNamesOnError(" for plugins ", paymentControlPluginNames), e);
+            log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final PaymentApiException e) {
-            log.warn("Failed to retry attempt " + attemptId + toPluginNamesOnError(" for plugins ", paymentControlPluginNames), e);
+            log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final PluginPropertySerializerException e) {
-            log.warn("Failed to retry attempt " + attemptId + toPluginNamesOnError(" for plugins ", paymentControlPluginNames), e);
+            log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final MissingEntryException e) {
-            log.warn("Failed to retry attempt " + attemptId + toPluginNamesOnError(" for plugins ", paymentControlPluginNames), e);
+            log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         }
     }
 
-    private String toPluginNamesOnError(final String prefixMessage, final Collection<String> paymentControlPluginNames) {
+    private String toPluginNamesOnError(final Collection<String> paymentControlPluginNames) {
         if (paymentControlPluginNames == null || paymentControlPluginNames.isEmpty()) {
             return "";
         }
-        return prefixMessage + "(" + JOINER.join(paymentControlPluginNames) + ")";
+        return JOINER.join(paymentControlPluginNames);
     }
 }

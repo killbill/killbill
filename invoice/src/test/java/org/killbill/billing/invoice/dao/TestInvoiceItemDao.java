@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -193,9 +195,8 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testExternalChargeForVariousCurrenciesInvoiceSqlDao() throws Exception {
-        // 1 decimal place
+        // 0 decimal place
         createAndVerifyExternalCharge(new BigDecimal("10"), Currency.VND);
-        createAndVerifyExternalCharge(new BigDecimal("10.1"), Currency.VND);
         // 2 decimal places
         createAndVerifyExternalCharge(new BigDecimal("10"), Currency.USD);
         createAndVerifyExternalCharge(new BigDecimal("10.1"), Currency.USD);
@@ -215,6 +216,8 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
         createAndVerifyExternalCharge(new BigDecimal("10.000001"), Currency.BTC);
         createAndVerifyExternalCharge(new BigDecimal("10.0000001"), Currency.BTC);
         createAndVerifyExternalCharge(new BigDecimal("10.00000001"), Currency.BTC);
+        // Malagasy ariary is subdivided into 5 iraimbilanja
+        createAndVerifyExternalCharge(new BigDecimal("10.2"), Currency.MGA);
     }
 
     private void createAndVerifyExternalCharge(final BigDecimal amount, final Currency currency) throws EntityPersistenceException {

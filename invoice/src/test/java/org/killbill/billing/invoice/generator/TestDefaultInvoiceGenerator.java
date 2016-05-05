@@ -963,7 +963,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // pay the invoice
         invoice1.addPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), april25.toDateTimeAtCurrentTime(), TEN,
-                                                      Currency.USD, Currency.USD, true));
+                                                      Currency.USD, Currency.USD, null, true));
         assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
 
         // change the plan (i.e. repair) on start date

@@ -105,10 +105,11 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         }
 
         // Pretty-print the generated invoice items from the junction events
-        final StringBuilder logStringBuilder = new StringBuilder("Proposed Invoice items for invoiceId ")
+        final StringBuilder logStringBuilder = new StringBuilder("Proposed Invoice items for invoiceId='")
                 .append(invoiceId)
-                .append(" and accountId ")
-                .append(accountId);
+                .append("', accountId='")
+                .append(accountId)
+                .append("'");
 
         final Iterator<BillingEvent> eventIt = events.iterator();
         BillingEvent nextEvent = eventIt.next();
@@ -196,7 +197,6 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                     } catch (InvalidDateSequenceException e) {
                         throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                     }
-
                     for (final RecurringInvoiceItemData itemDatum : itemDataWithNextBillingCycleDate.getItemData()) {
 
                         // Stop if there a maxEndDate and we have reached it

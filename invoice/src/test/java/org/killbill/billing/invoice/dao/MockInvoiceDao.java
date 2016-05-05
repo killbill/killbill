@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -213,7 +212,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoicePaymentModelDao> getInvoicePayments(final UUID paymentId, final InternalTenantContext context) {
+    public List<InvoicePaymentModelDao> getInvoicePaymentsByPaymentId(final UUID paymentId, final InternalTenantContext context) {
         final List<InvoicePaymentModelDao> result = new LinkedList<InvoicePaymentModelDao>();
         synchronized (monitor) {
             for (final InvoicePaymentModelDao payment : payments.values()) {
@@ -243,7 +242,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public void notifyOfPayment(final InvoicePaymentModelDao invoicePayment, final InternalCallContext context) {
+    public void notifyOfPaymentCompletion(final InvoicePaymentModelDao invoicePayment, final InternalCallContext context) {
         synchronized (monitor) {
             payments.put(invoicePayment.getId(), invoicePayment);
         }
@@ -361,5 +360,12 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     @Override
     public void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final InternalCallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void notifyOfPaymentInit(final InvoicePaymentModelDao invoicePayment, final InternalCallContext context) {
+        synchronized (monitor) {
+            payments.put(invoicePayment.getId(), invoicePayment);
+        }
     }
 }

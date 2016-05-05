@@ -27,6 +27,7 @@ import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.config.DefaultKillbillConfigSource;
+import org.killbill.billing.server.filters.KillbillMDCInsertingServletFilter;
 import org.killbill.billing.server.filters.ProfilingContainerResponseFilter;
 import org.killbill.billing.server.filters.RequestDataFilter;
 import org.killbill.billing.server.filters.ResponseCorsFilter;
@@ -34,11 +35,10 @@ import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.security.TenantFilter;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.skeleton.modules.BaseServerModuleBuilder;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
@@ -63,10 +63,14 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
                                                                              // Swagger integration
                                                                              .addJaxrsResource("com.wordnik.swagger.jersey.listing");
 
-        //
-        // Add jersey filters which are executed prior jersey write the output stream
-        //
-        builder.addJerseyFilter("com.sun.jersey.api.container.filter.LoggingFilter");
+        // Set the per-thread RequestData first
+        builder.addJerseyFilter(RequestDataFilter.class.getName());
+
+        // Logback default MDC
+        builder.addFilter("/*", MDCInsertingServletFilter.class);
+
+        // Kill Bill specific MDC
+        builder.addJerseyFilter(KillbillMDCInsertingServletFilter.class.getName());
 
         // Disable WADL - it generates noisy log messages, such as:
         // c.s.j.s.w.g.AbstractWadlGeneratorGrammarGenerator - Couldn't find grammar element for class javax.ws.rs.core.Response
@@ -79,16 +83,19 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
             builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());
         }
         builder.addJerseyFilter(ProfilingContainerResponseFilter.class.getName());
-        builder.addJerseyFilter(RequestDataFilter.class.getName());
 
         // Broader, to support the "Try it out!" feature
         //builder.addFilter("/" + SWAGGER_PATH + "*", ResponseCorsFilter.class);
         builder.addFilter("/*", ResponseCorsFilter.class);
 
-        // Add TenantFilter right after is multi-tenancy has been configured.
+        // Add TenantFilter right after if multi-tenancy has been configured.
         if (config.isMultiTenancyEnabled()) {
             builder.addFilter("/*", TenantFilter.class);
         }
+
+        // Finally, just before the request starts, enable the LoggingFilter
+        builder.addJerseyFilter("com.sun.jersey.api.container.filter.LoggingFilter");
+
         return builder.build();
     }
 
@@ -102,18 +109,6 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         final ImmutableMap<String, String> defaultProperties = ImmutableMap.<String, String>of("org.killbill.server.updateCheck.url",
                                                                                                "https://raw.github.com/killbill/killbill/master/profiles/killbill/src/main/resources/update-checker/killbill-server-update-list.properties");
         return new DefaultKillbillConfigSource(defaultProperties);
-    }
-
-    @Override
-    protected void startLifecycleStage1() {
-        super.startLifecycleStage1();
-
-        // Work-around for http://jira.qos.ch/browse/LOGBACK-730
-        final ILoggerFactory iLoggerFactory = LoggerFactory.getILoggerFactory();
-        if (iLoggerFactory instanceof LoggerContext) {
-            final LoggerContext lc = (LoggerContext) iLoggerFactory;
-            lc.setPackagingDataEnabled(false);
-        }
     }
 
     @Override

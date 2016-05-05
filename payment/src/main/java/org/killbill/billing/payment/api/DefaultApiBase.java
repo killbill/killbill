@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -35,11 +35,13 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 public class DefaultApiBase {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultApiBase.class);
+    private static final Joiner JOINER = Joiner.on(",");
 
     protected final PaymentConfig paymentConfig;
     protected final InternalCallContextFactory internalCallContextFactory;
@@ -49,40 +51,68 @@ public class DefaultApiBase {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    protected void logAPICall(final String transactionType, final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, @Nullable final UUID transactionId, @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey) {
+    protected void logAPICall(final String transactionType,
+                              final Account account,
+                              final UUID paymentMethodId,
+                              @Nullable final UUID paymentId,
+                              @Nullable final UUID transactionId,
+                              @Nullable final BigDecimal amount,
+                              @Nullable final Currency currency,
+                              @Nullable final String paymentExternalKey,
+                              @Nullable final String paymentTransactionExternalKey,
+                              @Nullable final TransactionStatus transactionStatus,
+                              @Nullable final List<String> paymentControlPluginNames) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder();
-            logLine.append("PaymentApi : ")
+            logLine.append("PaymentApi: transactionType='")
                    .append(transactionType)
-                   .append(", account = ")
-                   .append(account.getId());
+                   .append("', accountId='")
+                   .append(account.getId())
+                   .append("'");
             if (paymentMethodId != null) {
-                logLine.append(", paymentMethodId = ")
-                       .append(paymentMethodId);
+                logLine.append(", paymentMethodId='")
+                       .append(paymentMethodId)
+                       .append("'");
             }
             if (paymentExternalKey != null) {
-                logLine.append(", paymentExternalKey = ")
-                       .append(paymentExternalKey);
+                logLine.append(", paymentExternalKey='")
+                       .append(paymentExternalKey)
+                       .append("'");
             }
             if (paymentTransactionExternalKey != null) {
-                logLine.append(", paymentTransactionExternalKey = ")
-                       .append(paymentTransactionExternalKey);
+                logLine.append(", paymentTransactionExternalKey='")
+                       .append(paymentTransactionExternalKey)
+                       .append("'");
             }
             if (paymentId != null) {
-                logLine.append(", paymentId = ")
-                       .append(paymentId);
+                logLine.append(", paymentId='")
+                       .append(paymentId)
+                       .append("'");
             }
             if (transactionId != null) {
-                logLine.append(", transactionId = ")
-                       .append(transactionId);
+                logLine.append(", transactionId='")
+                       .append(transactionId)
+                       .append("'");
             }
             if (amount != null) {
-                logLine.append(", amount = ")
-                       .append(amount);
+                logLine.append(", amount='")
+                       .append(amount)
+                       .append("'");
             }
             if (currency != null) {
-                logLine.append(", currency = ")
-                       .append(currency);
+                logLine.append(", currency='")
+                       .append(currency)
+                       .append("'");
+            }
+            if (transactionStatus != null) {
+                logLine.append(", transactionStatus='")
+                       .append(transactionStatus)
+                       .append("'");
+            }
+            if (paymentControlPluginNames != null) {
+                logLine.append(", paymentControlPluginNames='")
+                       .append(JOINER.join(paymentControlPluginNames))
+                       .append("'");
             }
             log.info(logLine.toString());
         }
@@ -115,11 +145,4 @@ public class DefaultApiBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, parameterName, "should not be null");
         }
     }
-
-    protected void checkPositiveAmount(final BigDecimal amount) throws PaymentApiException {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, "amount", "should be greater than 0");
-        }
-    }
-
 }

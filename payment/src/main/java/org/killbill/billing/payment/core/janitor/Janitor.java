@@ -135,7 +135,7 @@ public class Janitor {
                                                                             @Override
                                                                             public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                                                                                 if (!(notificationKey instanceof JanitorNotificationKey)) {
-                                                                                    log.error("Janitor service received an unexpected event type {}" + notificationKey.getClass().getName());
+                                                                                    log.error("Janitor service received an unexpected event className='{}", notificationKey.getClass());
                                                                                     return;
 
                                                                                 }

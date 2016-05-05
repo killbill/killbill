@@ -179,7 +179,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                                                 account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
                                                                 accounts.put(paymentMethod.getAccountId(), account);
                                                             } catch (final AccountApiException e) {
-                                                                log.warn("Unable to retrieve account", e);
+                                                                log.warn("Error retrieving accountId='{}'", paymentMethod.getAccountId(), e);
                                                                 return null;
                                                             }
                                                         }
@@ -238,7 +238,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                                                 account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
                                                                 accounts.put(paymentMethod.getAccountId(), account);
                                                             } catch (final AccountApiException e) {
-                                                                log.warn("Unable to retrieve account", e);
+                                                                log.warn("Error retrieving accountId='{}'", paymentMethod.getAccountId(), e);
                                                                 return null;
                                                             }
                                                         }

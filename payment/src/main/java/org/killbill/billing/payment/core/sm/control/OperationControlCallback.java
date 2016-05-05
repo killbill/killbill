@@ -150,31 +150,32 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                 } catch (final RuntimeException e) {
                     // Attempts to set the retry date in context if needed.
                     executePluginOnFailureCallsAndSetRetryDate(paymentControlContext);
-                    throw e;
+                    throw new OperationException(e, OperationResult.EXCEPTION);
                 }
             }
         });
     }
 
     @Override
-    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e) {
-
+    protected OperationException unwrapExceptionFromDispatchedTask(final Exception e) {
         // If this is an ExecutionException we attempt to extract the cause first
-        final Throwable originalExceptionOrCause = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
+        final Throwable originalExceptionOrCausePossiblyOperationException = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
+
+        // Unwrap OperationException too (doOperationCallback wraps exceptions in OperationException)
+        final Throwable originalExceptionOrCause = originalExceptionOrCausePossiblyOperationException instanceof OperationException ? MoreObjects.firstNonNull(originalExceptionOrCausePossiblyOperationException.getCause(), originalExceptionOrCausePossiblyOperationException) : originalExceptionOrCausePossiblyOperationException;
 
         if (originalExceptionOrCause instanceof OperationException) {
             return (OperationException) originalExceptionOrCause;
         } else if (originalExceptionOrCause instanceof LockFailedException) {
-            final String format = String.format("Failed to lock account %s", paymentStateContext.getAccount().getExternalKey());
-            logger.error(String.format(format));
+            logger.warn("Failed to lock accountId='{}'", paymentStateContext.getAccount().getId());
         } else if (originalExceptionOrCause instanceof TimeoutException) {
-            logger.warn("RetryOperationCallback call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
+            logger.warn("Call TIMEOUT for accountId='{}'", paymentStateContext.getAccount().getId());
         } else if (originalExceptionOrCause instanceof InterruptedException) {
-            logger.error("RetryOperationCallback call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
-        } else /* most probably RuntimeException */ {
-            logger.warn("RetryOperationCallback failed for account {}", paymentStateContext.getAccount().getExternalKey(), e);
+            logger.warn("Call was interrupted for accountId='{}'", paymentStateContext.getAccount().getId());
+        } else {
+            logger.warn("Operation failed for accountId='{}'", paymentStateContext.getAccount().getId(), e);
         }
-        return new OperationException(e, getOperationResultOnException(paymentStateContext));
+        return new OperationException(originalExceptionOrCause, getOperationResultOnException(paymentStateContext));
     }
 
     private OperationResult getOperationResultOnException(final PaymentStateContext paymentStateContext) {

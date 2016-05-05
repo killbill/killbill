@@ -155,7 +155,7 @@ public class EhCacheCatalogCache implements CatalogCache {
             this.defaultCatalog = loader.loadDefaultCatalog("EmptyCatalog.xml");
         } catch (final CatalogApiException e) {
             this.defaultCatalog = new VersionedCatalog();
-            logger.warn("Exception loading EmptyCatalog - should never happen!", e);
+            logger.error("Exception loading EmptyCatalog - should never happen!", e);
         }
     }
 }

@@ -225,7 +225,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         fixedAndRecurringInvoiceItemGenerator.processFixedBillingEvents(invoiceId, account.getId(), events, targetDate, Currency.USD, proposedItems, internalCallContext);
         assertEquals(proposedItems.size(), 1);
         assertEquals(proposedItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
-        assertEquals(proposedItems.get(0).getAmount(), fixedPriceAmount);
+        assertEquals(proposedItems.get(0).getAmount().compareTo(fixedPriceAmount), 0);
     }
 
 
@@ -280,7 +280,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         fixedAndRecurringInvoiceItemGenerator.processFixedBillingEvents(invoiceId, account.getId(), events, targetDate, Currency.USD, proposedItems, internalCallContext);
         assertEquals(proposedItems.size(), 1);
         assertEquals(proposedItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
-        assertEquals(proposedItems.get(0).getAmount(), fixedPriceAmount3);
+        assertEquals(proposedItems.get(0).getAmount().compareTo(fixedPriceAmount3), 0);
     }
 
 }

@@ -132,7 +132,8 @@ public class InvoiceTestUtils {
         Mockito.when(payment.getProcessedCurrency()).thenReturn(currency);
         Mockito.when(payment.isSuccess()).thenReturn(true);
 
-        invoicePaymentApi.notifyOfPayment(payment, callContext);
+        invoicePaymentApi.recordPaymentAttemptCompletion(payment.getInvoiceId(), payment.getAmount(), payment.getCurrency(), payment.getProcessedCurrency(), payment.getPaymentId(), payment.getPaymentCookieId(),
+                                                         payment.getPaymentDate(), payment.isSuccess(), callContext);
 
         return payment;
     }

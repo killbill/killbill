@@ -456,9 +456,16 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final PluginProperty invoiceProperty = new PluginProperty("IPCD_INVOICE_ID" /* InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID (contract with plugin)  */,
                                                                   invoiceId.toString(), false);
         properties.add(invoiceProperty);
-
-        return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
-                                                           properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
+        try {
+            return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
+                                                               properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
+        } catch (final PaymentApiException e) {
+            if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_EXCEPTION.getCode() &&
+                e.getMessage().contains("Aborted Payment for invoice")) {
+                return null;
+            }
+            throw e;
+        }
     }
 
     protected PaymentOptions createInvoicePaymentControlPluginApiPaymentOptions(final boolean isExternalPayment) {
@@ -502,7 +509,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final InvoicePayment invoicePayment = Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
             @Override
             public boolean apply(final InvoicePayment input) {
-                return input.getPaymentId().equals(payment.getId()) && input.getType() == InvoicePaymentType.ATTEMPT;
+                return input.isSuccess() && input.getPaymentId().equals(payment.getId()) && input.getType() == InvoicePaymentType.ATTEMPT;
             }
         }).orNull();
         return invoicePayment != null ? invoicePayment.getInvoiceId() : null;

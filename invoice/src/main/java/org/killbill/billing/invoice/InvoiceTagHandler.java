@@ -63,7 +63,7 @@ public class InvoiceTagHandler {
         try {
             dispatcher.processAccount(accountId, null, null, context);
         } catch (final InvoiceApiException e) {
-            log.warn(String.format("Failed to process process removal AUTO_INVOICING_OFF for account %s", accountId), e);
+            log.warn("Failed to process tag removal AUTO_INVOICING_OFF for accountId='{}'", accountId, e);
         }
     }
 }
