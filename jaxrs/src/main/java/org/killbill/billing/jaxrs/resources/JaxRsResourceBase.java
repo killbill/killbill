@@ -92,7 +92,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
@@ -570,7 +569,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
         if (transactionExternalKey != null) {
             for (final PaymentTransaction transaction : matchingTransactions) {
-                if (Objects.equal(transaction.getExternalKey(), transactionExternalKey)) {
+                if (transactionExternalKey.equals(transaction.getExternalKey())) {
                     return transaction;
                 }
             }
