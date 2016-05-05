@@ -80,8 +80,7 @@ public class PaymentBusEventHandler {
     @AllowConcurrentEvents
     @Subscribe
     public void processInvoiceEvent(final InvoiceCreationInternalEvent event) {
-        log.info("Received invoice creation notification for account {} and invoice {}",
-                 event.getAccountId(), event.getInvoiceId());
+        log.info("Received invoice creation notification for accountId='{}', invoiceId='{}'", event.getAccountId(), event.getInvoiceId());
 
         final Account account;
         try {
@@ -100,7 +99,7 @@ public class PaymentBusEventHandler {
             pluginControlPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(),
                                                          properties, paymentControlPluginNames, callContext, internalContext);
         } catch (final AccountApiException e) {
-            log.error("Failed to process invoice payment", e);
+            log.warn("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {
             // Log as error unless:
             if (e.getCode() != ErrorCode.PAYMENT_NULL_INVOICE.getCode() /* Nothing left to be paid */ &&

@@ -41,7 +41,6 @@ import org.killbill.billing.events.NullInvoiceInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
-import org.killbill.billing.events.RepairSubscriptionInternalEvent;
 import org.killbill.billing.events.TagDefinitionInternalEvent;
 import org.killbill.billing.events.TagInternalEvent;
 import org.skife.jdbi.v2.Handle;
@@ -137,13 +136,6 @@ public class TestApiListener {
         notifyIfStackEmpty();
     }
 
-
-    @Subscribe
-    public void handleRepairSubscriptionEvents(final RepairSubscriptionInternalEvent event) {
-        log.info(String.format("Got RepairSubscriptionEvent event %s", event.toString()));
-        assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
-        notifyIfStackEmpty();
-    }
 
     @Subscribe
     public void handleEntitlementEvents(final EffectiveEntitlementInternalEvent eventEffective) {

@@ -611,9 +611,11 @@ public class InvoiceResource extends JaxRsResourceBase {
                                      (payment.getPaymentMethodId() != null ? UUID.fromString(payment.getPaymentMethodId()) : account.getPaymentMethodId());
 
         final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
+
         final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment, pluginProperties, callContext);
-        // STEPH should that live in InvoicePayment instead?
-        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
+        return result != null ?
+               uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId()) :
+               Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource

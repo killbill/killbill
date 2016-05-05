@@ -37,6 +37,7 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.realm.Realm;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
+import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.server.listeners.KillbillGuiceListener;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
@@ -54,6 +55,8 @@ public class TenantFilter implements Filter {
 
     private static final Logger log = LoggerFactory.getLogger(TenantFilter.class);
 
+    @Inject
+    protected Context context;
     @Inject
     protected TenantUserApi tenantUserApi;
     @Inject
@@ -101,10 +104,13 @@ public class TenantFilter implements Filter {
             final Tenant tenant = tenantUserApi.getTenantByApiKey(apiKey);
             request.setAttribute(TENANT, tenant);
 
+            // Create a dummy context, to set the MDC very early for LoggingFilter
+            context.createContext(request);
+
             chain.doFilter(request, response);
         } catch (final TenantApiException e) {
             // Should never happen since Shiro validated the credentials?
-            log.warn("Couldn't find the tenant?", e);
+            log.error("Couldn't find the tenant? - should never happen!", e);
         }
     }
 

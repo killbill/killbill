@@ -19,23 +19,21 @@ package org.killbill.billing.invoice;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.clock.Clock;
-import org.killbill.billing.events.BlockingTransitionInternalEvent;
-import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.EffectiveEntitlementInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
-import org.killbill.billing.events.RepairSubscriptionInternalEvent;
+import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.InvoiceConfig;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
@@ -63,18 +61,6 @@ public class InvoiceListener {
 
     @AllowConcurrentEvents
     @Subscribe
-    public void handleRepairSubscriptionEvent(final RepairSubscriptionInternalEvent event) {
-
-        try {
-            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-            dispatcher.processAccount(event.getAccountId(), event.getEffectiveDate(), null, context);
-        } catch (InvoiceApiException e) {
-            log.error(e.getMessage());
-        }
-    }
-
-    @AllowConcurrentEvents
-    @Subscribe
     public void handleSubscriptionTransition(final EffectiveSubscriptionInternalEvent event) {
 
         try {
@@ -88,7 +74,7 @@ public class InvoiceListener {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             dispatcher.processSubscriptionForInvoiceGeneration(event, context);
         } catch (InvoiceApiException e) {
-            log.error(e.getMessage());
+            log.warn("Unable to process event {}", event, e);
         }
     }
 
@@ -100,7 +86,7 @@ public class InvoiceListener {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             dispatcher.processAccount(event.getAccountId(), event.getEffectiveTransitionTime(), null, context);
         } catch (InvoiceApiException e) {
-            log.error(e.getMessage());
+            log.warn("Unable to process event {}", event, e);
         }
     }
 
@@ -118,9 +104,9 @@ public class InvoiceListener {
             final UUID accountId = accountApi.getByRecordId(event.getSearchKey1(), context);
             dispatcher.processAccount(accountId, clock.getUTCNow(), null, context);
         } catch (InvoiceApiException e) {
-            log.error(e.getMessage());
+            log.warn("Unable to process event {}", event, e);
         } catch (AccountApiException e) {
-            log.error(e.getMessage());
+            log.warn("Unable to process event {}", event, e);
         }
     }
 
@@ -129,7 +115,7 @@ public class InvoiceListener {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
             dispatcher.processSubscriptionForInvoiceGeneration(subscriptionId, eventDateTime, context);
         } catch (InvoiceApiException e) {
-            log.error(e.getMessage());
+            log.warn("Unable to process subscriptionId='{}', eventDateTime='{}'", subscriptionId, eventDateTime, e);
         }
     }
 
@@ -138,7 +124,7 @@ public class InvoiceListener {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
             dispatcher.processSubscriptionForInvoiceNotification(subscriptionId, eventDateTime, context);
         } catch (InvoiceApiException e) {
-            log.error(e.getMessage());
+            log.warn("Unable to process subscriptionId='{}', eventDateTime='{}'", subscriptionId, eventDateTime, e);
         }
     }
 }

@@ -65,6 +65,7 @@ import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -298,6 +299,56 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
+    protected PaymentTransaction lookupPendingTransaction(final Payment initialPayment, @Nullable final String transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
+        final Collection<PaymentTransaction> pendingTransaction  =  Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {
+            @Override
+            public boolean apply(final PaymentTransaction input) {
+                if (input.getTransactionStatus() != TransactionStatus.PENDING) {
+                    return false;
+                }
+                if (transactionId != null && !transactionId.equals(input.getId().toString())) {
+                    return false;
+                }
+                if (transactionExternalKey != null && !transactionExternalKey.equals(input.getExternalKey())) {
+                    return false;
+                }
+                if (transactionType != null && !transactionType.equals(input.getTransactionType().name())) {
+                    return false;
+                }
+                //
+                // If we were given a transactionId or a transactionExternalKey or a transactionType we checked there was a match;
+                // In the worst case, if we were given nothing, we return the PENDING transaction for that payment
+                //
+                return true;
+            }
+        });
+        switch (pendingTransaction.size()) {
+            // Nothing: invalid input...
+            case 0:
+                final String parameterType;
+                final String parameterValue;
+                if (transactionId != null) {
+                    parameterType = "transactionId";
+                    parameterValue = transactionId;
+                } else if (transactionExternalKey != null) {
+                    parameterType = "transactionExternalKey";
+                    parameterValue = transactionExternalKey;
+                } else if (transactionType != null) {
+                    parameterType = "transactionType";
+                    parameterValue = transactionType;
+                } else {
+                    parameterType = "paymentId";
+                    parameterValue = initialPayment.getId().toString();
+                }
+                throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, parameterType, parameterValue);
+            case 1:
+                return pendingTransaction.iterator().next();
+            default:
+                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, String.format("Illegal payment state: Found multiple PENDING payment transactions for paymentId='%s'", initialPayment.getId()));
+
+        }
+    }
+
     protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) throws AccountApiException {
         final LocalDate maybeResult = extractLocalDate(inputDate);
         if (maybeResult != null) {
@@ -399,9 +450,16 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final PluginProperty invoiceProperty = new PluginProperty("IPCD_INVOICE_ID" /* InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID (contract with plugin)  */,
                                                                   invoiceId.toString(), false);
         properties.add(invoiceProperty);
-
-        return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
-                                                           properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
+        try {
+            return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
+                                                               properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
+        } catch (final PaymentApiException e) {
+            if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_EXCEPTION.getCode() &&
+                e.getMessage().contains("Aborted Payment for invoice")) {
+                return null;
+            }
+            throw e;
+        }
     }
 
     protected PaymentOptions createInvoicePaymentControlPluginApiPaymentOptions(final boolean isExternalPayment) {
@@ -445,7 +503,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final InvoicePayment invoicePayment = Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
             @Override
             public boolean apply(final InvoicePayment input) {
-                return input.getPaymentId().equals(payment.getId()) && input.getType() == InvoicePaymentType.ATTEMPT;
+                return input.isSuccess() && input.getPaymentId().equals(payment.getId()) && input.getType() == InvoicePaymentType.ATTEMPT;
             }
         }).orNull();
         return invoicePayment != null ? invoicePayment.getInvoiceId() : null;

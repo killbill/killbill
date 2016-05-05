@@ -72,7 +72,7 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
                 // In multi-tenant mode, the property is not required
                 if (config.getCatalogURI() != null && !config.getCatalogURI().isEmpty()) {
                     catalogCache.loadDefaultCatalog(config.getCatalogURI());
-                    log.info("Successfully loaded the default catalog " + config.getCatalogURI());
+                    log.info("Successfully loaded the default catalog {}", config.getCatalogURI());
                 }
                 isInitialized = true;
             } catch (Exception e) {

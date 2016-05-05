@@ -164,7 +164,7 @@ public class TestInvoice extends TestJaxrsBase {
                                   "                <td>shotgun-monthly-trial</td>\n" +
                                   "                <td>Monthly shotgun plan</td>\n" +
                                   "                <td>25 avr. 2012</td>\n" +
-                                  "                <td>USD 0E-9</td>\n" +
+                                  "                <td>USD 0.00</td>\n" +
                                   "            </tr>\n" +
                                   "            \n" +
                                   "            <tr>\n" +
@@ -178,7 +178,7 @@ public class TestInvoice extends TestJaxrsBase {
                                   "            <tr>\n" +
                                   "                <td colspan=2 />\n" +
                                   "                <td align=right><strong>invoiceAmountPaid</strong></td>\n" +
-                                  "                <td align=right><strong>0</strong></td>\n" +
+                                  "                <td align=right><strong>0.00</strong></td>\n" +
                                   "            </tr>\n" +
                                   "            <tr>\n" +
                                   "                <td colspan=2 />\n" +
@@ -410,7 +410,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceItem.getAmount().compareTo(BigDecimal.ZERO), 1);
 
         // Adjust partially the item
-        final BigDecimal adjustedAmount = invoiceItem.getAmount().divide(BigDecimal.TEN);
+        final BigDecimal adjustedAmount = invoiceItem.getAmount().divide(BigDecimal.TEN, BigDecimal.ROUND_HALF_UP);
         final InvoiceItem adjustmentInvoiceItem = new InvoiceItem();
         adjustmentInvoiceItem.setAccountId(accountJson.getAccountId());
         adjustmentInvoiceItem.setInvoiceId(invoice.getInvoiceId());

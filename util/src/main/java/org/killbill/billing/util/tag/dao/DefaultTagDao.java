@@ -142,7 +142,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
         try {
             bus.postFromTransaction(tagEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final PersistentBus.EventBusException e) {
-            log.warn("Failed to post tag event for tag " + tag.getId().toString(), e);
+            log.warn("Failed to post tag event for tagId='{}'", tag.getId().toString(), e);
         }
     }
 

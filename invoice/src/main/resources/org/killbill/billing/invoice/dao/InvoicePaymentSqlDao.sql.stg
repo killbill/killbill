@@ -109,10 +109,14 @@ getChargebacksByPaymentId() ::= <<
 
 updateAttempt() ::= <<
     UPDATE <tableName()>
-    SET success = true,
+    SET payment_id := :paymentId,
     payment_date = :paymentDate,
     amount = :amount,
-    processed_currency = :processedCurrency
+    currency = :currency,
+    processed_currency = :processedCurrency,
+    payment_cookie_id = :paymentCookieId,
+    linked_invoice_payment_id := :linkedInvoicePaymentId,
+    success = true
     WHERE record_id = :recordId
     <AND_CHECK_TENANT("")>
     ;

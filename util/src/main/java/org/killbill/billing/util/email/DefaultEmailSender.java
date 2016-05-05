@@ -89,7 +89,7 @@ public class DefaultEmailSender implements EmailSender {
 
             email.setSSL(config.useSSL());
 
-            log.info("Sending email to {}, cc {}, subject {}", new Object[]{to, cc, subject});
+            log.info("Sending email to='{}', cc='{}', subject='{}'", to, cc, subject);
             email.send();
         } catch (EmailException ee) {
             throw new EmailApiException(ee, ErrorCode.EMAIL_SENDING_FAILED);

@@ -91,8 +91,7 @@ public class DefaultOverdueService implements OverdueService {
                 overdueConfigCache.loadDefaultOverdueConfig(properties.getConfigURI());
                 isConfigLoaded = true;
             } catch (OverdueApiException e) {
-                log.warn("Overdue system disabled: unable to loadDefaultCatalog the overdue config from " + properties.getConfigURI(), e);
-                e.printStackTrace();
+                log.warn("Overdue system disabled: unable to load the overdue config from uri='{}'", properties.getConfigURI(), e);
             }
         }
     }
@@ -109,7 +108,7 @@ public class DefaultOverdueService implements OverdueService {
         try {
             busService.getBus().register(listener);
         } catch (final EventBusException e) {
-            log.error("Problem encountered registering OverdueListener on the Event Bus", e);
+            log.error("Failed to register OverdueListener", e);
         }
     }
 
@@ -124,7 +123,7 @@ public class DefaultOverdueService implements OverdueService {
         try {
             busService.getBus().unregister(listener);
         } catch (final EventBusException e) {
-            log.error("Problem encountered registering OverdueListener on the Event Bus", e);
+            log.error("Failed to unregister OverdueListener", e);
         }
         checkNotifier.stop();
         asyncNotifier.stop();

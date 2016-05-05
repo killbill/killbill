@@ -18,6 +18,9 @@
 package org.killbill.billing.payment.core.sm.payments;
 
 import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
@@ -25,6 +28,7 @@ import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -58,29 +62,38 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
                 throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, paymentStateContext.getAccount().getId());
             }
 
+            // If we were given a paymentId (or existing paymentExternalId -> effectivePaymentId) we first fetch existing transactions (required for sanity and handling PENDING transactions)
+            final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = paymentStateContext.getPaymentId() != null ?
+                                                                                          daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext()) :
+                                                                                          ImmutableList.<PaymentTransactionModelDao>of();
+
             //
             // Extract existing transaction matching the transactionId if specified (for e.g notifyPendingTransactionOfStateChanged), or based on transactionExternalKey
             //
-            final List<PaymentTransactionModelDao> existingPaymentTransactions;
-            if (paymentStateContext.getTransactionId() != null) {
-                final PaymentTransactionModelDao transactionModelDao = daoHelper.getPaymentDao().getPaymentTransaction(paymentStateContext.getTransactionId(), paymentStateContext.getInternalCallContext());
-                existingPaymentTransactions = ImmutableList.of(transactionModelDao);
-            } else if (paymentStateContext.getPaymentTransactionExternalKey() != null) {
-                existingPaymentTransactions = daoHelper.getPaymentDao().getPaymentTransactionsByExternalKey(paymentStateContext.getPaymentTransactionExternalKey(), paymentStateContext.getInternalCallContext());
-            } else {
-                existingPaymentTransactions = ImmutableList.of();
-            }
+            final Iterable<PaymentTransactionModelDao> existingPaymentTransactionsForTransactionIdOrKey = filterExistingPaymentTransactionsForTransactionIdOrKey(paymentTransactionsForCurrentPayment, paymentStateContext.getTransactionId(), paymentStateContext.getPaymentTransactionExternalKey());
 
             // Validate the payment transactions belong to the right payment
-            validatePaymentId(existingPaymentTransactions);
+            validatePaymentIdAndTransactionType(existingPaymentTransactionsForTransactionIdOrKey);
 
             // Validate some constraints on the unicity of that paymentTransactionExternalKey
-            validateUniqueTransactionExternalKey(existingPaymentTransactions);
+            validateUniqueTransactionExternalKey(existingPaymentTransactionsForTransactionIdOrKey);
 
-            // Handle PENDING cases, where we want to re-use the same transaction
-            final PaymentTransactionModelDao pendingPaymentTransaction = getPendingPaymentTransaction(existingPaymentTransactions);
+            //
+            // Handle PENDING case:
+            // a) If we have a PENDING transaction for the same (payment transaction) key, this is a completion and we want to re-use the same transaction
+            // b) If we have a PENDING transaction for a different (payment transaction) key, and for an initial request (AUTH, PURCHASE, CREDIT), we FAIL the request
+            //   (unfortunately this cannot be caught by the state machine because the transition XXX_PENDING -> _SUCCESS needs to be allowed and this is irrespective of the keys)
+            // c) If we have a PENDING transaction for a different (payment transaction) key, and for other follow-up request  (CAPTURE, REFUND, ..), we ignore it and create a new transaction
+            //
+            final Iterable<PaymentTransactionModelDao> pendingTransactionsForPaymentAndTransactionType = filterPendingTransactionsForPaymentAndTransactionType(paymentTransactionsForCurrentPayment, paymentStateContext.getTransactionType());
+
+            // Case b)
+            validateUniqueInitialPendingTransaction(pendingTransactionsForPaymentAndTransactionType, paymentStateContext.getTransactionType(), paymentStateContext.getPaymentTransactionExternalKey());
+
+
+            final PaymentTransactionModelDao pendingPaymentTransaction = filterPendingTransactionsForTransactionKey(pendingTransactionsForPaymentAndTransactionType, paymentStateContext.getPaymentTransactionExternalKey());
             if (pendingPaymentTransaction != null) {
-                // Set the current paymentTransaction in the context (needed for the state machine logic)
+                // Case a) Set the current paymentTransaction in the context (needed for the state machine logic)
                 paymentStateContext.setPaymentTransactionModelDao(pendingPaymentTransaction);
                 return;
             }
@@ -93,25 +106,61 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
         }
     }
 
-    protected PaymentTransactionModelDao getUnknownPaymentTransaction(final List<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
-        return Iterables.tryFind(existingPaymentTransactions, new Predicate<PaymentTransactionModelDao>() {
+    private void validateUniqueInitialPendingTransaction(final Iterable<PaymentTransactionModelDao> pendingTransactionsForPaymentAndTransactionType, final TransactionType transactionType, final String paymentTransactionExternalKey) {
+        if (transactionType != TransactionType.AUTHORIZE &&
+            transactionType != TransactionType.PURCHASE &&
+            transactionType != TransactionType.CREDIT) {
+            return;
+        }
+
+        final PaymentTransactionModelDao existingPendingTransactionForDifferentKey = Iterables.tryFind(pendingTransactionsForPaymentAndTransactionType, new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {
-                return input.getTransactionStatus() == TransactionStatus.UNKNOWN;
+                return !input.getTransactionExternalKey().equals(paymentTransactionExternalKey);
+            }
+        }).orNull();
+        if (existingPendingTransactionForDifferentKey !=  null) {
+            // We are missing ErrorCode PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS (should be fixed in 0.17.0. See #525)
+            throw new RuntimeException(String.format("Failed to create another initial transaction for paymentId='%s' : Existing PENDING transactionId='%s'",
+                                                          existingPendingTransactionForDifferentKey.getPaymentId(), existingPendingTransactionForDifferentKey.getId()));
+        }
+    }
+
+    protected Iterable<PaymentTransactionModelDao> filterExistingPaymentTransactionsForTransactionIdOrKey(final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment, @Nullable final UUID paymentTransactionId, @Nullable final String paymentTransactionExternalKey) throws PaymentApiException {
+        return Iterables.filter(paymentTransactionsForCurrentPayment, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                if (paymentTransactionId != null && input.getId().equals(paymentTransactionId)) {
+                    return true;
+                }
+                if (paymentTransactionExternalKey != null && input.getTransactionExternalKey().equals(paymentTransactionExternalKey)) {
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
+    protected Iterable<PaymentTransactionModelDao> filterPendingTransactionsForPaymentAndTransactionType(final Iterable<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment, final TransactionType transactionType) throws PaymentApiException {
+        return Iterables.filter(paymentTransactionsForCurrentPayment, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionStatus() == TransactionStatus.PENDING &&
+                       input.getTransactionType() == transactionType;
+            }
+        });
+    }
+
+    protected PaymentTransactionModelDao filterPendingTransactionsForTransactionKey(final Iterable<PaymentTransactionModelDao> existingPendingPaymentTransactions, final String paymentTransactionExternalKey) throws PaymentApiException {
+        return Iterables.tryFind(existingPendingPaymentTransactions, new Predicate<PaymentTransactionModelDao>() {
+            @Override
+            public boolean apply(final PaymentTransactionModelDao input) {
+                return input.getTransactionExternalKey().equals(paymentTransactionExternalKey);
             }
         }).orNull();
     }
 
-    protected PaymentTransactionModelDao getPendingPaymentTransaction(final List<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
-        return Iterables.tryFind(existingPaymentTransactions, new Predicate<PaymentTransactionModelDao>() {
-            @Override
-            public boolean apply(final PaymentTransactionModelDao input) {
-                return input.getTransactionStatus() == TransactionStatus.PENDING;
-            }
-        }).orNull();
-    }
-
-    protected void validateUniqueTransactionExternalKey(final List<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
+    protected void validateUniqueTransactionExternalKey(final Iterable<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
         // If no key specified, system will allocate a unique one later, there is nothing to check
         if (paymentStateContext.getPaymentTransactionExternalKey() == null) {
             return;
@@ -134,10 +183,14 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
     }
 
     // At this point, the payment id should have been populated for follow-up transactions (see PaymentAutomationRunner#run)
-    protected void validatePaymentId(final List<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
+    protected void validatePaymentIdAndTransactionType(final Iterable<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
         for (final PaymentTransactionModelDao paymentTransactionModelDao : existingPaymentTransactions) {
             if (!paymentTransactionModelDao.getPaymentId().equals(paymentStateContext.getPaymentId())) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, paymentTransactionModelDao.getId(), "does not belong to payment " + paymentStateContext.getPaymentId());
+            }
+            if (paymentStateContext.getTransactionType() != null && paymentTransactionModelDao.getTransactionType() != paymentStateContext.getTransactionType()) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, paymentTransactionModelDao.getId(), "has a transaction type of " + paymentTransactionModelDao.getTransactionType() +
+                                                                                                                       " instead of requested " + paymentStateContext.getTransactionType());
             }
         }
     }

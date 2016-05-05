@@ -137,7 +137,7 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
             systemLdapCtx = ldapContextFactory.getSystemLdapContext();
             return findLDAPGroupsForUser(username, systemLdapCtx);
         } catch (AuthenticationException ex) {
-            log.info("LDAP authentication exception: " + ex.getLocalizedMessage());
+            log.info("LDAP authentication exception='{}'", ex.getLocalizedMessage());
             return ImmutableSet.<String>of();
         } finally {
             LdapUtils.closeContext(systemLdapCtx);

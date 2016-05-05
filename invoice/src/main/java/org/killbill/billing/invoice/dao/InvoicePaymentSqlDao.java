@@ -69,12 +69,14 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
                                                            @BindBean final InternalTenantContext context);
 
 
-
     @SqlUpdate
     void updateAttempt(@Bind("recordId") Long recordId,
+                       @Bind("paymentId") final String paymentId,
                        @Bind("paymentDate") final Date paymentDate,
                        @Bind("amount") final BigDecimal amount,
                        @Bind("currency") final Currency currency,
                        @Bind("processedCurrency") final Currency processedCurrency,
+                       @Bind("paymentCookieId") final String paymentCookieId,
+                       @Bind("linkedInvoicePaymentId") final String linkedInvoicePaymentId,
                        @BindBean final InternalTenantContext context);
 }

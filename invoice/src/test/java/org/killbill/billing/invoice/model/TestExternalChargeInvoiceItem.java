@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -41,7 +43,7 @@ public class TestExternalChargeInvoiceItem extends InvoiceTestSuiteNoDB {
         final ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(id, invoiceId, accountId, bundleId, description,
                                                                              effectiveDate, amount, currency);
         Assert.assertEquals(item.getAccountId(), accountId);
-        Assert.assertEquals(item.getAmount(), amount);
+        Assert.assertEquals(item.getAmount().compareTo(amount), 0);
         Assert.assertEquals(item.getBundleId(), bundleId);
         Assert.assertEquals(item.getCurrency(), currency);
         Assert.assertEquals(item.getInvoiceItemType(), InvoiceItemType.EXTERNAL_CHARGE);

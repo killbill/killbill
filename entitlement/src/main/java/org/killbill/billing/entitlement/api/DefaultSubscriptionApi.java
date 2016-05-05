@@ -204,7 +204,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                       try {
                                                           return getSubscriptionBundle(subscriptionBaseBundle.getId(), context);
                                                       } catch (final SubscriptionApiException e) {
-                                                          log.warn("Error retrieving subscription", e);
+                                                          log.warn("Error retrieving bundleId='{}'", subscriptionBaseBundle.getId(), e);
                                                           return null;
                                                       }
                                                   }
@@ -228,7 +228,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                       try {
                                                           return getSubscriptionBundle(subscriptionBaseBundle.getId(), context);
                                                       } catch (final SubscriptionApiException e) {
-                                                          log.warn("Error retrieving subscription", e);
+                                                          log.warn("Error retrieving bundleId='{}'", subscriptionBaseBundle.getId(), e);
                                                           return null;
                                                       }
                                                   }

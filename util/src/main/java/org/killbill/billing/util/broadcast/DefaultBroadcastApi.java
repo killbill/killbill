@@ -51,7 +51,7 @@ public class DefaultBroadcastApi implements BroadcastApi {
             try {
                 eventBus.post(busEvent);
             } catch (final EventBusException e) {
-                logger.warn("Failed to deliver bus event ", e);
+                logger.warn("Failed to post event {}", event, e);
             }
         } else {
             final BroadcastModelDao modelDao = new BroadcastModelDao(serviceName, type, event, createdDate, createdBy);

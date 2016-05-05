@@ -229,7 +229,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(accountBalance, invoiceBalance);
 
         // Adjust the invoice for a fraction of the balance
-        final BigDecimal creditAmount = invoiceBalance.divide(BigDecimal.TEN);
+        final BigDecimal creditAmount = invoiceBalance.divide(BigDecimal.TEN, BigDecimal.ROUND_HALF_UP);
         final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, creditAmount,
                                                                                     clock.getUTCToday(), accountCurrency, callContext);
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), invoiceId);
@@ -306,7 +306,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(accountBalance, invoiceBalance);
 
         // Adjust the invoice for a fraction of the balance
-        final BigDecimal adjAmount = invoiceItem.getAmount().divide(BigDecimal.TEN);
+        final BigDecimal adjAmount = invoiceItem.getAmount().divide(BigDecimal.TEN, BigDecimal.ROUND_HALF_UP);
         final InvoiceItem adjInvoiceItem = invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(),
                                                                                       clock.getUTCToday(), adjAmount, accountCurrency,
                                                                                       callContext);
