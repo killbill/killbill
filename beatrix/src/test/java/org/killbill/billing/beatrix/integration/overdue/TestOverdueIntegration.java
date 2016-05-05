@@ -273,7 +273,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
 
         // 2012-07-31 => No NEW INVOICE because OD2 -> still blocked
-        addDaysAndCheckForCompletion(5, NextEvent.NULL_INVOICE);
+        addDaysAndCheckForCompletion(5);
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Make sure the 'invoice-service:next-billing-date-queue' gets processed before we continue and since we are in AUTO_INVOICING_OFF
