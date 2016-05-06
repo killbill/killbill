@@ -31,12 +31,16 @@ import org.killbill.billing.jaxrs.resources.JaxrsResource;
 public class JaxrsUriBuilder {
 
     public Response buildResponse(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId) {
+        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId);
+        return Response.created(location).build();
+    }
+
+    public URI buildLocation(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId) {
         final UriBuilder uriBuilder = getUriBuilder(theClass, getMethodName).scheme(uriInfo.getAbsolutePath().getScheme())
                                                                             .host(uriInfo.getAbsolutePath().getHost())
                                                                             .port(uriInfo.getAbsolutePath().getPort());
 
-        final URI location = objectId != null ? uriBuilder.build(objectId) : uriBuilder.build();
-        return Response.created(location).build();
+        return objectId != null ? uriBuilder.build(objectId) : uriBuilder.build();
     }
 
     public URI nextPage(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Long nextOffset, final Long limit, final Map<String, String> params) {

@@ -65,6 +65,8 @@ public class MockRetryAuthorizeOperationCallback extends AuthorizeControlOperati
         if (exception != null) {
             if (exception instanceof PaymentApiException) {
                 throw (PaymentApiException) exception;
+            } else if (exception instanceof RuntimeException) {
+                throw (RuntimeException) exception;
             } else {
                 throw new RuntimeException(exception);
             }

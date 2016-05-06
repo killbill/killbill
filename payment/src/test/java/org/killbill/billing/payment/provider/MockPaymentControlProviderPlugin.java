@@ -35,6 +35,7 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
 
     private boolean isAborted;
     private DateTime nextRetryDate;
+    private Exception exception;
 
     public MockPaymentControlProviderPlugin setAborted(final boolean isAborted) {
         this.isAborted = isAborted;
@@ -46,8 +47,23 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
         return this;
     }
 
+    public MockPaymentControlProviderPlugin throwsException(PaymentControlApiException exception) {
+        this.exception = exception;
+        return this;
+    }
+
+    public MockPaymentControlProviderPlugin throwsException(RuntimeException exception) {
+        this.exception = exception;
+        return this;
+    }
+
     @Override
     public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+        if (exception instanceof PaymentControlApiException) {
+            throw (PaymentControlApiException) exception;
+        } else if (exception instanceof RuntimeException) {
+            throw (RuntimeException) exception;
+        }
         return new DefaultPriorPaymentControlResult(isAborted);
     }
 
