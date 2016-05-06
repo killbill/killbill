@@ -74,7 +74,11 @@ public class DefaultEventsStream implements EventsStream {
     private BlockingAggregator blockingAggregator;
     private List<BlockingState> subscriptionEntitlementStates;
     private LocalDate entitlementEffectiveStartDate;
+    private DateTime entitlementEffectiveStartDateTime;
+
     private LocalDate entitlementEffectiveEndDate;
+    private DateTime entitlementEffectiveEndDateTime;
+
     private BlockingState entitlementStartEvent;
     private BlockingState entitlementCancelEvent;
     private EntitlementState entitlementState;
@@ -139,6 +143,16 @@ public class DefaultEventsStream implements EventsStream {
     @Override
     public LocalDate getEntitlementEffectiveEndDate() {
         return entitlementEffectiveEndDate;
+    }
+
+    @Override
+    public DateTime getEntitlementEffectiveStartDateTime() {
+        return entitlementEffectiveStartDateTime;
+    }
+
+    @Override
+    public DateTime getEntitlementEffectiveEndDateTime() {
+        return entitlementEffectiveEndDateTime;
     }
 
     @Override
@@ -410,9 +424,11 @@ public class DefaultEventsStream implements EventsStream {
                                                                   }).orNull();
 
         // Note that we still default to subscriptionBase.startDate (for compatibility issue where ENT_STATE_START does not exist)
-        entitlementEffectiveStartDate = entitlementStartEvent != null ?
-                                        internalTenantContext.toLocalDate(entitlementStartEvent.getEffectiveDate()) :
-                                        internalTenantContext.toLocalDate(getSubscriptionBase().getStartDate());
+        entitlementEffectiveStartDateTime = entitlementStartEvent != null ?
+                                            entitlementStartEvent.getEffectiveDate() :
+                                            getSubscriptionBase().getStartDate();
+        entitlementEffectiveStartDate = internalTenantContext.toLocalDate(entitlementEffectiveStartDateTime);
+
     }
 
     private void computeEntitlementCancelEvent() {
@@ -423,7 +439,8 @@ public class DefaultEventsStream implements EventsStream {
                                                                           return DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
                                                                       }
                                                                   }).orNull();
-        entitlementEffectiveEndDate = entitlementCancelEvent != null ? internalTenantContext.toLocalDate(entitlementCancelEvent.getEffectiveDate()) : null;
+        entitlementEffectiveEndDateTime =  entitlementCancelEvent != null ? entitlementCancelEvent.getEffectiveDate() : null;
+        entitlementEffectiveEndDate = entitlementEffectiveEndDateTime != null ? internalTenantContext.toLocalDate(entitlementEffectiveEndDateTime) : null;
     }
 
     private void computeStateForEntitlement() {
