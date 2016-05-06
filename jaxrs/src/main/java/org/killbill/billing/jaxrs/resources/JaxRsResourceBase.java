@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -34,7 +35,9 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
@@ -52,6 +55,8 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.jaxrs.json.BillingExceptionJson;
+import org.killbill.billing.jaxrs.json.BillingExceptionJson.StackTraceElementJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.JsonBase;
 import org.killbill.billing.jaxrs.json.PluginPropertyJson;
@@ -90,6 +95,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -538,23 +544,58 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final PaymentTransaction createdTransaction = findCreatedTransaction(payment, transactionType, transactionExternalKey);
         Preconditions.checkNotNull(createdTransaction, "No transaction of type '%s' found", transactionType);
 
+        final ResponseBuilder responseBuilder;
+        final BillingExceptionJson exception;
         switch (createdTransaction.getTransactionStatus()) {
             case PENDING:
             case SUCCESS:
                 return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
             case PAYMENT_FAILURE:
                 // 402 - Payment Required
-                return Response.status(402).build();
+                responseBuilder = Response.status(402);
+                exception = createBillingException(String.format("Payment decline by gateway. Error message: %s", createdTransaction.getGatewayErrorMsg()));
+                break;
             case PAYMENT_SYSTEM_OFF:
+                // 503 - Service Unavailable
+                responseBuilder = Response.status(Status.SERVICE_UNAVAILABLE);
+                exception = createBillingException("Payment system is off.");
+                break;
             case UNKNOWN:
                 // 503 - Service Unavailable
-                return Response.status(Status.SERVICE_UNAVAILABLE).build();
+                responseBuilder = Response.status(Status.SERVICE_UNAVAILABLE);
+                exception = createBillingException("Payment in unknown status, failed to receive gateway response.");
+                break;
             case PLUGIN_FAILURE:
                 // 502 - Bad Gateway
-                return Response.status(502).build();
+                responseBuilder = Response.status(502);
+                exception = createBillingException("Failed to submit payment transaction");
+                break;
+            default:
+                // Should never happen
+                responseBuilder = Response.serverError();
+                exception = createBillingException("This should never have happened!!!");
         }
-        // Should never happen
-        return Response.serverError().build();
+        addExceptionToResponse(responseBuilder, exception);
+        return responseBuilder.location(getPaymentLocation(uriInfo, payment)).build();
+    }
+
+    private void addExceptionToResponse(final ResponseBuilder responseBuilder, final BillingExceptionJson exception) {
+        try {
+            responseBuilder.entity(mapper.writeValueAsString(exception)).type(MediaType.APPLICATION_JSON);
+        } catch (JsonProcessingException e) {
+            log.warn("Unable to serialize exception", exception);
+            responseBuilder.entity(e.toString()).type(MediaType.TEXT_PLAIN_TYPE);
+        }
+    }
+
+    private BillingExceptionJson createBillingException(final String message) {
+        final BillingExceptionJson exception;
+        exception = new BillingExceptionJson(PaymentApiException.class.getName(), null, message, null, null, Collections.<StackTraceElementJson>emptyList());
+        return exception;
+    }
+
+    private URI getPaymentLocation(final UriInfo uriInfo, final Payment payment) {
+        return uriBuilder.buildLocation(uriInfo, PaymentResource.class, "getPayment", payment.getId());
     }
 
     private PaymentTransaction findCreatedTransaction(final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey) {

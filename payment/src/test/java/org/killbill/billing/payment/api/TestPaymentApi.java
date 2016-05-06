@@ -106,7 +106,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         mockPaymentProviderPlugin.clear();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
 
-        mockPaymentControlProviderPlugin = new MockPaymentControlProviderPlugin();;
+        mockPaymentControlProviderPlugin = new MockPaymentControlProviderPlugin();
         controlPluginRegistry.registerService(new OSGIServiceDescriptor() {
             @Override
             public String getPluginSymbolicName() {
