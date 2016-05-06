@@ -45,15 +45,15 @@ public class PaymentPluginDispatcher {
         try {
             log.debug("Calling plugin(s) {}", pluginNames);
             final ReturnType result = pluginDispatcher.dispatchWithTimeout(callable);
-            log.debug("Successful plugin(s) call of {} for account {} with result {}", pluginNames, accountId, result);
+            log.debug("Successful plugin(s) call of {} for account {} with result {}", pluginNames, accountExternalKey, result);
             return result;
         } catch (final TimeoutException e) {
-            final String errorMessage = String.format("TimeoutException while executing plugin='%s'", pluginNames);
+            final String errorMessage = String.format("Call TIMEOUT for accountId='%s' accountExternalKey='%s' plugin='%s'", accountId, accountExternalKey, pluginNames);
             log.warn(errorMessage);
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, errorMessage);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            final String errorMessage = String.format("InterruptedException while executing plugin='%s'", pluginNames);
+            final String errorMessage = String.format("Call was interrupted for accountId='%s' accountExternalKey='%s' plugin='%s'", accountId, accountExternalKey, pluginNames);
             log.warn(errorMessage, e);
             throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), errorMessage));
         } catch (final ExecutionException e) {
@@ -64,7 +64,8 @@ public class PaymentPluginDispatcher {
                 log.warn(format);
                 throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
             } else {
-                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+                // Unwraps the ExecutionException (e.getCause()), since it's a dispatch implementation detail
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
             }
         }
     }
