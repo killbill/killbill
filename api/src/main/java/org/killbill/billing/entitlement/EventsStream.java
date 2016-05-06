@@ -46,6 +46,11 @@ public interface EventsStream {
 
     LocalDate getEntitlementEffectiveEndDate();
 
+    DateTime getEntitlementEffectiveStartDateTime();
+
+    DateTime getEntitlementEffectiveEndDateTime();
+
+
     SubscriptionBase getSubscriptionBase();
 
     SubscriptionBase getBasePlanSubscriptionBase();
