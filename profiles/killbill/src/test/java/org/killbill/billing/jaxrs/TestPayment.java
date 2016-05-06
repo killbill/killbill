@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.fail;
 
 public class TestPayment extends TestJaxrsBase {
@@ -439,6 +440,24 @@ public class TestPayment extends TestJaxrsBase {
         final Payment voidPayment = killBillClient.voidPayment(null, paymentExternalKey, voidTransactionExternalKey, null, ImmutableMap.<String, String>of(), createdBy, reason, comment);
         verifyPaymentTransaction(accountJson, voidPayment.getPaymentId(), paymentExternalKey, voidPayment.getTransactions().get(1),
                                  voidTransactionExternalKey, null, "VOID", "SUCCESS");
+    }
+
+    @Test(groups = "slow")
+    public void testComboAuthorizationAbortedPayment() throws Exception {
+        final Account accountJson = getAccount();
+        accountJson.setAccountId(null);
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final ComboPaymentTransaction comboPaymentTransaction = createComboPaymentTransaction(accountJson, paymentExternalKey);
+
+        mockPaymentControlProviderPlugin.setAborted(true);
+        try {
+            killBillClient.createPayment(comboPaymentTransaction, Arrays.asList(MockPaymentControlProviderPlugin.PLUGIN_NAME), ImmutableMap.<String, String>of(), createdBy, reason, comment);
+            fail();
+        } catch (KillBillClientException e) {
+            assertEquals(e.getResponse().getStatusCode(), 422);
+        }
+        assertFalse(mockPaymentControlProviderPlugin.isOnFailureCallExecuted());
+        assertFalse(mockPaymentControlProviderPlugin.isOnSuccessCallExecuted());
     }
 
     @Test(groups = "slow")

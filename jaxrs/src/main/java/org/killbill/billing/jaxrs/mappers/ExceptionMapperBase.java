@@ -151,7 +151,7 @@ public abstract class ExceptionMapperBase {
         return new LoggingResponse(e, responseBuilder.build());
     }
 
-    private void serializeException(final Exception e, final UriInfo uriInfo, final Response.ResponseBuilder responseBuilder) {
+    protected void serializeException(final Exception e, final UriInfo uriInfo, final Response.ResponseBuilder responseBuilder) {
         final boolean withStackTrace = uriInfo.getQueryParameters() != null && "true".equals(uriInfo.getQueryParameters().getFirst(QUERY_WITH_STACK_TRACE));
         final BillingExceptionJson billingExceptionJson = new BillingExceptionJson(e, withStackTrace);
 
