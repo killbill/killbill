@@ -245,9 +245,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     protected RecordIdApi recordIdApi;
 
     @Inject
-    protected IDBI idbi;
-
-    @Inject
     protected NonEntityDao nonEntityDao;
 
     @Inject
