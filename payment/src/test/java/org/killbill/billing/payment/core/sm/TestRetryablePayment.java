@@ -73,7 +73,9 @@ import com.google.inject.Inject;
 
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.fail;
 
 public class TestRetryablePayment extends PaymentTestSuiteNoDB {
 
@@ -227,19 +229,26 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         runner.setOperationCallback(mockRetryAuthorizeOperationCallback)
               .setContext(paymentStateContext);
 
-        runner.run(true,
-                   TransactionType.AUTHORIZE,
-                   account,
-                   paymentMethodId,
-                   null,
-                   paymentExternalKey,
-                   paymentTransactionExternalKey,
-                   amount,
-                   currency,
-                   emptyProperties,
-                   null,
-                   callContext,
-                   internalCallContext);
+        try {
+            runner.run(true,
+                       TransactionType.AUTHORIZE,
+                       account,
+                       paymentMethodId,
+                       null,
+                       paymentExternalKey,
+                       paymentTransactionExternalKey,
+                       amount,
+                       currency,
+                       emptyProperties,
+                       null,
+                       callContext,
+                       internalCallContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertEquals(e.getCode(), ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode());
+        }
+        assertFalse(mockRetryProviderPlugin.isOnSuccessCallExecuted(), "OnSuccessCall method should not be called when payment is aborted");
+        assertFalse(mockRetryProviderPlugin.isOnFailureCallExecuted(), "onFailureCall method should not be called when payment is aborted");
 
         final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext).get(0);
         assertEquals(pa.getTransactionExternalKey(), paymentTransactionExternalKey);
@@ -342,7 +351,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                        null,
                        callContext, internalCallContext);
 
-            Assert.fail("Expected PaymentApiException...");
+            fail("Expected PaymentApiException...");
 
         } catch (final PaymentApiException e) {
             final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext).get(0);
@@ -380,7 +389,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                        null,
                        callContext, internalCallContext);
 
-            Assert.fail("Expected PaymentApiException...");
+            fail("Expected PaymentApiException...");
         } catch (final PaymentApiException e) {
             final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext).get(0);
             assertEquals(pa.getTransactionExternalKey(), paymentTransactionExternalKey);
@@ -417,7 +426,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                        null,
                        callContext, internalCallContext);
 
-            Assert.fail("Expected Exception...");
+            fail("Expected Exception...");
         } catch (final PaymentApiException e) {
             final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext).get(0);
             assertEquals(pa.getTransactionExternalKey(), paymentTransactionExternalKey);
@@ -454,7 +463,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                        null,
                        callContext, internalCallContext);
 
-            Assert.fail("Expected Exception...");
+            fail("Expected Exception...");
         } catch (final PaymentApiException e) {
             final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext).get(0);
             assertEquals(pa.getTransactionExternalKey(), paymentTransactionExternalKey);
@@ -549,7 +558,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                        callContext,
                        internalCallContext);
 
-            Assert.fail("Expecting paymentApiException...");
+            fail("Expecting paymentApiException...");
         } catch (final PaymentApiException e) {
             final PaymentAttemptModelDao pa = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext).get(0);
             assertEquals(pa.getTransactionExternalKey(), paymentTransactionExternalKey);
@@ -596,7 +605,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                        callContext,
                        internalCallContext);
 
-            Assert.fail("Expecting paymentApiException...");
+            fail("Expecting paymentApiException...");
         } catch (final PaymentApiException e) {
 
             final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);

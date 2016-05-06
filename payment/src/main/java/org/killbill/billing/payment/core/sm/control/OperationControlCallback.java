@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
@@ -102,13 +103,12 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                 final PriorPaymentControlResult pluginResult;
                 try {
                     pluginResult = executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
-                    if (pluginResult != null && pluginResult.isAborted()) {
-                        // Transition to ABORTED
-                        return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.EXCEPTION);
-                    }
                 } catch (final PaymentControlApiException e) {
                     // Transition to ABORTED and throw PaymentControlApiException to caller.
                     throw new OperationException(e, OperationResult.EXCEPTION);
+                } catch (final PaymentApiException paymentAbortedException) {
+                    // Transition to ABORTED
+                    throw new OperationException(paymentAbortedException, OperationResult.EXCEPTION);
                 }
 
                 final boolean success;
@@ -166,7 +166,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         return operationResult;
     }
 
-    private PriorPaymentControlResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContextArg) throws PaymentControlApiException {
+    private PriorPaymentControlResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContextArg) throws PaymentControlApiException, PaymentApiException {
 
         final PriorPaymentControlResult result = controlPluginRunner.executePluginPriorCalls(paymentStateContext.getAccount(),
                                                                                              paymentControlContextArg.getPaymentMethodId(),

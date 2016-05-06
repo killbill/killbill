@@ -37,6 +37,10 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
     private DateTime nextRetryDate;
     private Exception exception;
 
+    private boolean priorCallExecuted;
+    private boolean onSuccessCallExecuted;
+    private boolean onFailureCallExecuted;
+
     public MockPaymentControlProviderPlugin setAborted(final boolean isAborted) {
         this.isAborted = isAborted;
         return this;
@@ -59,6 +63,7 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
 
     @Override
     public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+        priorCallExecuted = true;
         if (exception instanceof PaymentControlApiException) {
             throw (PaymentControlApiException) exception;
         } else if (exception instanceof RuntimeException) {
@@ -69,11 +74,25 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
 
     @Override
     public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+        onSuccessCallExecuted = true;
         return new DefaultOnSuccessPaymentControlResult();
     }
 
     @Override
     public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+        onFailureCallExecuted = true;
         return new DefaultFailureCallResult(nextRetryDate);
+    }
+
+    public boolean isPriorCallExecuted() {
+        return priorCallExecuted;
+    }
+
+    public boolean isOnSuccessCallExecuted() {
+        return onSuccessCallExecuted;
+    }
+
+    public boolean isOnFailureCallExecuted() {
+        return onFailureCallExecuted;
     }
 }
