@@ -100,9 +100,8 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                      paymentStateControlContext.isApiPayment(),
                                                                                                      paymentStateContext.getCallContext());
 
-                final PriorPaymentControlResult pluginResult;
                 try {
-                    pluginResult = executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
+                    executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
                 } catch (final PaymentControlApiException e) {
                     // Transition to ABORTED and throw PaymentControlApiException to caller.
                     throw new OperationException(e, OperationResult.EXCEPTION);
