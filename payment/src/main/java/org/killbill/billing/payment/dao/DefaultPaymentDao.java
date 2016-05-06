@@ -444,11 +444,11 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId, final InternalTenantContext context) {
+    public List<PaymentMethodModelDao> getPaymentMethods(final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentMethodModelDao>>() {
             @Override
             public List<PaymentMethodModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class).getByAccountId(accountId.toString(), context);
+                return entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class).getForAccount(context);
             }
         });
     }
@@ -513,8 +513,7 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final String pluginName,
-                                                             final List<PaymentMethodModelDao> newPaymentMethods, final InternalCallContext context) {
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final String pluginName, final List<PaymentMethodModelDao> newPaymentMethods, final InternalCallContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentMethodModelDao>>() {
 
             @Override
@@ -523,7 +522,7 @@ public class DefaultPaymentDao implements PaymentDao {
                 // Look at all payment methods, including deleted ones. We assume that newPaymentMethods (payment methods returned by the plugin)
                 // is the full set of non-deleted payment methods in the plugin. If a payment method was marked as deleted on our side,
                 // but is still existing in the plugin, we will un-delete it.
-                final List<PaymentMethodModelDao> allPaymentMethodsForAccount = transactional.getByAccountIdIncludedDelete(accountId.toString(), context);
+                final List<PaymentMethodModelDao> allPaymentMethodsForAccount = transactional.getForAccountIncludedDelete(context);
 
                 // Consider only the payment methods for the plugin we are refreshing
                 final Collection<PaymentMethodModelDao> existingPaymentMethods = Collections2.filter(allPaymentMethodsForAccount,
@@ -567,7 +566,7 @@ public class DefaultPaymentDao implements PaymentDao {
                         deletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
                     }
                 }
-                return transactional.getByAccountId(accountId.toString(), context);
+                return transactional.getForAccount(context);
             }
         });
     }

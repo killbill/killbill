@@ -22,7 +22,7 @@ import javax.sql.DataSource;
 
 import org.apache.shiro.cache.CacheManager;
 import org.killbill.billing.server.security.KillbillJdbcTenantRealm;
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.glue.ShiroEhCacheInstrumentor;
 
 import com.google.inject.Inject;

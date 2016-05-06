@@ -59,7 +59,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     UUID getInvoiceIdByPaymentId(UUID paymentId, InternalTenantContext context);
 
-    List<InvoicePaymentModelDao> getInvoicePayments(UUID paymentId, InternalTenantContext context);
+    List<InvoicePaymentModelDao> getInvoicePaymentsByPaymentId(UUID paymentId, InternalTenantContext context);
 
     List<InvoicePaymentModelDao> getInvoicePaymentsByAccount(InternalTenantContext context);
 
@@ -132,7 +132,9 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      */
     void deleteCBA(UUID accountId, UUID invoiceId, UUID invoiceItemId, InternalCallContext context) throws InvoiceApiException;
 
-    void notifyOfPayment(InvoicePaymentModelDao invoicePayment, InternalCallContext context);
+    void notifyOfPaymentInit(InvoicePaymentModelDao invoicePayment, InternalCallContext context);
+
+    void notifyOfPaymentCompletion(InvoicePaymentModelDao invoicePayment, InternalCallContext context);
 
     /**
      * @param accountId the account for which we need to rebalance the CBA

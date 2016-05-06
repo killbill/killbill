@@ -28,14 +28,14 @@ import org.killbill.billing.payment.core.ProcessorBase.CallableWithAccountLock;
 import org.killbill.billing.payment.core.ProcessorBase.DispatcherCallback;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOperationException extends Exception> {
 
-    protected final Logger logger = LoggerFactory.getLogger(OperationCallbackBase.class);
+    private final Logger logger = LoggerFactory.getLogger(OperationCallbackBase.class);
 
     private final GlobalLocker locker;
     private final PluginDispatcher<OperationResult> paymentPluginDispatcher;
@@ -72,14 +72,14 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
             logger.debug("Successful plugin(s) call of {} for account {} with result {}", pluginNames, account.getExternalKey(), operationResult);
             return operationResult;
         } catch (final ExecutionException e) {
-            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
+            throw unwrapExceptionFromDispatchedTask(e);
         } catch (final TimeoutException e) {
             logger.warn("TimeoutException while executing the plugin(s) {}", pluginNames);
-            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
+            throw unwrapExceptionFromDispatchedTask(e);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.warn("InterruptedException while executing the following plugin(s): {}", pluginNames);
-            throw unwrapExceptionFromDispatchedTask(paymentStateContext, e);
+            throw unwrapExceptionFromDispatchedTask(e);
         }
     }
 
@@ -91,5 +91,5 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
     //
     protected abstract CallbackOperationResult doCallSpecificOperationCallback() throws CallbackOperationException;
 
-    protected abstract OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e);
+    protected abstract OperationException unwrapExceptionFromDispatchedTask(final Exception e);
 }

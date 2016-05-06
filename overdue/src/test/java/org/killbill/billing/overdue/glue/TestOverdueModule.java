@@ -46,6 +46,7 @@ import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
+import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
 import org.killbill.clock.Clock;
@@ -65,6 +66,7 @@ public class TestOverdueModule extends DefaultOverdueModule {
 
         install(new AuditModule(configSource));
         install(new CacheModule(configSource));
+        install(new ConfigModule(configSource));
         install(new CallContextModule(configSource));
         install(new CustomFieldModule(configSource));
         install(new EmailModule(configSource));

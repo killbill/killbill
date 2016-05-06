@@ -732,4 +732,117 @@ public class TestIntegration extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 14, callContext, expectedInvoices);
         expectedInvoices.clear();
     }
+
+    @Test(groups = "slow")
+    public void testThirtyDaysPlanWithFixedTermMonthlyAddOn() throws Exception {
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2015, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+
+        // First invoice
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.THIRTY_DAYS, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        // Second invoice -> first recurring for Refurbish-Maintenance
+        addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Refurbish-Maintenance", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("599.95")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 4, 1), new LocalDate(2015, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("199.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        // 2015-5-1
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 5, 1), new LocalDate(2015, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 5, 1), new LocalDate(2015, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("199.95")));
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30); // Also = 1 month because or initial date 2015, 4, 1
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        // Next 20 invoices, including last recurring for Refurbish-Maintenance
+        LocalDate startDateBase = new LocalDate(2015, 5, 31);
+        LocalDate startDateAddOn = new LocalDate(2015, 6, 1);
+        for (int i = 0; i < 10; i++) {
+            final LocalDate endDateBase = startDateBase.plusDays(30);
+            expectedInvoices.add(new ExpectedInvoiceItemCheck(startDateBase, endDateBase, InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+            clock.setDay(startDateBase);
+            assertListenerStatus();
+            invoiceChecker.checkInvoice(account.getId(), 4 + 2 * i, callContext, expectedInvoices);
+            expectedInvoices.clear();
+
+            final LocalDate endDateAddOn = startDateAddOn.plusMonths(1);
+            expectedInvoices.add(new ExpectedInvoiceItemCheck(startDateAddOn, endDateAddOn, InvoiceItemType.RECURRING, new BigDecimal("199.95")));
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+            clock.setDay(startDateAddOn);
+            assertListenerStatus();
+            invoiceChecker.checkInvoice(account.getId(), 5 + 2 * i, callContext, expectedInvoices);
+            expectedInvoices.clear();
+
+            startDateBase = endDateBase;
+            startDateAddOn = endDateAddOn;
+        }
+        // clock at 2016-03-01
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 3, 26), new LocalDate(2016, 4, 25), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.setDay(new LocalDate(2016, 3, 26));
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 24, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        // We check there is no more recurring for Refurbish-Maintenance
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.setDay(new LocalDate(2016, 4, 1));
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow")
+    public void testWeeklyPlan() throws Exception {
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2015, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+
+        // First invoice
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.WEEKLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        // 2015-5-1
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 5, 1), new LocalDate(2015, 5, 8), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30); // Also = 1 month because or initial date 2015, 4, 1
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        LocalDate startDateBase = new LocalDate(2015, 5, 8);
+        for (int i = 0; i < 10; i++) {
+            final LocalDate endDateBase = startDateBase.plusDays(7);
+            expectedInvoices.add(new ExpectedInvoiceItemCheck(startDateBase, endDateBase, InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+            clock.setDay(startDateBase);
+            assertListenerStatus();
+            invoiceChecker.checkInvoice(account.getId(), 3 + i, callContext, expectedInvoices);
+            expectedInvoices.clear();
+
+            startDateBase = endDateBase;
+        }
+    }
 }

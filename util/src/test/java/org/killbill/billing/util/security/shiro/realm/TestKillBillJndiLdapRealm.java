@@ -31,7 +31,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.util.UtilTestSuiteNoDB;
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 
 import com.google.common.collect.Sets;
 

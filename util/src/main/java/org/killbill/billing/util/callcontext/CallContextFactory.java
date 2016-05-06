@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,18 +22,10 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
-
 public interface CallContextFactory {
 
     TenantContext createTenantContext(@Nullable UUID tenantId);
 
-    CallContext createCallContext(@Nullable UUID tenantId, String userName, CallOrigin callOrigin, UserType userType, UUID userToken);
-
     CallContext createCallContext(@Nullable UUID tenantId, String userName, CallOrigin callOrigin, UserType userType,
                                   String reasonCode, String comment, UUID userToken);
-
-    CallContext createCallContext(@Nullable UUID tenantId, String userName, CallOrigin callOrigin, UserType userType);
-
-    CallContext toMigrationCallContext(@Nullable CallContext callContext, DateTime createdDate, DateTime updatedDate);
 }

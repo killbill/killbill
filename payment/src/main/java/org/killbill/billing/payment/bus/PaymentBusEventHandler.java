@@ -40,7 +40,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,8 +80,7 @@ public class PaymentBusEventHandler {
     @AllowConcurrentEvents
     @Subscribe
     public void processInvoiceEvent(final InvoiceCreationInternalEvent event) {
-        log.info("Received invoice creation notification for account {} and invoice {}",
-                 event.getAccountId(), event.getInvoiceId());
+        log.info("Received invoice creation notification for accountId='{}', invoiceId='{}'", event.getAccountId(), event.getInvoiceId());
 
         final Account account;
         try {
@@ -95,12 +94,12 @@ public class PaymentBusEventHandler {
             final CallContext callContext = internalCallContextFactory.createCallContext(internalContext);
 
             final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
-            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames() != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames()) : new LinkedList<String>();
+            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames(internalContext) != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames(internalContext)) : new LinkedList<String>();
             paymentControlPluginNames.add(InvoicePaymentControlPluginApi.PLUGIN_NAME);
             pluginControlPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(),
                                                          properties, paymentControlPluginNames, callContext, internalContext);
         } catch (final AccountApiException e) {
-            log.error("Failed to process invoice payment", e);
+            log.warn("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {
             // Log as error unless:
             if (e.getCode() != ErrorCode.PAYMENT_NULL_INVOICE.getCode() /* Nothing left to be paid */ &&

@@ -21,11 +21,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.concurrent.Executors;
 import org.killbill.commons.concurrent.WithProfilingThreadPoolExecutor;
 
@@ -43,7 +44,7 @@ public class PaymentExecutors {
 
     private final PaymentConfig paymentConfig;
 
-    private volatile ExecutorService pluginExecutorService;
+    private volatile ThreadPoolExecutor pluginExecutorService;
     private volatile ScheduledExecutorService janitorExecutorService;
 
     @Inject
@@ -54,6 +55,7 @@ public class PaymentExecutors {
 
     public void initialize() {
         this.pluginExecutorService = createPluginExecutorService();
+        this.pluginExecutorService.prestartAllCoreThreads();
         this.janitorExecutorService = createJanitorExecutorService();
     }
 
@@ -77,7 +79,7 @@ public class PaymentExecutors {
         return janitorExecutorService;
     }
 
-    private ExecutorService createPluginExecutorService() {
+    private ThreadPoolExecutor createPluginExecutorService() {
         final int minThreadNb = DEFAULT_MIN_PLUGIN_THREADS < paymentConfig.getPaymentPluginThreadNb() ? DEFAULT_MIN_PLUGIN_THREADS : paymentConfig.getPaymentPluginThreadNb();
         return new WithProfilingThreadPoolExecutor(minThreadNb,
                                                    paymentConfig.getPaymentPluginThreadNb(),

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,23 +15,18 @@
  * under the License.
  */
 
-package org.killbill.billing.util.config;
+package org.killbill.billing.util.config.definition;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.Description;
 import org.skife.config.TimeSpan;
 
-public interface JaxrsConfig extends KillbillConfig {
+public interface BroadcastConfig extends KillbillConfig {
 
-    @Config("org.killbill.jaxrs.threads.pool.nb")
-    @Default("30")
-    @Description("Number of threads for jaxrs executor")
-    int getJaxrsThreadNb();
-
-    @Config("org.killbill.jaxrs.timeout")
-    @Default("30s")
-    @Description("Total timeout for all callables associated to a given api call (parallel mode)")
-    TimeSpan getJaxrsTimeout();
+    @Config("org.killbill.billing.util.broadcast.rate")
+    @Default("5s")
+    @Description("Rate at which broadcast service task is scheduled")
+    public TimeSpan getBroadcastServiceRunningRate();
 
 }

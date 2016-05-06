@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -48,12 +48,14 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.skife.config.TimeSpan;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -63,6 +65,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class IncompletePaymentTransactionTask extends CompletionTaskBase<PaymentTransactionModelDao> {
+
+    private static final Logger log = LoggerFactory.getLogger(IncompletePaymentTransactionTask.class);
 
     private static final ImmutableList<TransactionStatus> TRANSACTION_STATUSES_TO_CONSIDER = ImmutableList.<TransactionStatus>builder()
                                                                                                           .add(TransactionStatus.PENDING)
@@ -192,7 +196,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             case UNKNOWN:
             default:
                 if (transactionStatus != paymentTransaction.getTransactionStatus()) {
-                    log.info("Janitor IncompletePaymentTransactionTask unable to repair payment {}, transaction {}: {} -> {}",
+                    log.info("Unable to repair paymentId='{}', paymentTransactionId='{}', currentTransactionStatus='{}', newTransactionStatus='{}'",
                              payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
                 }
                 // We can't get anything interesting from the plugin...
@@ -233,8 +237,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         final String gatewayErrorCode = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin.getGatewayErrorCode() : paymentTransaction.getGatewayErrorCode();
         final String gatewayError = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin.getGatewayError() : paymentTransaction.getGatewayErrorMsg();
 
-
-        log.info("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, transitioning transactionStatus from {} -> {}",
+        log.info("Repairing paymentId='{}', paymentTransactionId='{}', currentTransactionStatus='{}', newTransactionStatus='{}'",
                  payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(payment.getAccountId(), callContext);
@@ -258,9 +261,9 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     }
 
     @VisibleForTesting
-    DateTime getNextNotificationTime(final Integer attemptNumber) {
+    DateTime getNextNotificationTime(final Integer attemptNumber, final InternalTenantContext tenantContext) {
 
-        final List<TimeSpan> retries = paymentConfig.getIncompleteTransactionsRetries();
+        final List<TimeSpan> retries = paymentConfig.getIncompleteTransactionsRetries(tenantContext);
         if (attemptNumber > retries.size()) {
             return null;
         }
@@ -274,10 +277,12 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             return;
         }
 
+        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
+
         // Increment value before we insert
         final Integer newAttemptNumber = attemptNumber.intValue() + 1;
         final NotificationEvent key = new JanitorNotificationKey(paymentTransactionId, IncompletePaymentTransactionTask.class.toString(), newAttemptNumber);
-        final DateTime notificationTime = getNextNotificationTime(newAttemptNumber);
+        final DateTime notificationTime = getNextNotificationTime(newAttemptNumber, tenantContext);
         // Will be null in the GET path or when we run out opf attempts..
         if (notificationTime != null) {
             try {

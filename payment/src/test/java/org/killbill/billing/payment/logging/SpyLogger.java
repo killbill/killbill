@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,12 +14,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.killbill.billing.payment.logging;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
+import org.slf4j.event.SubstituteLoggingEvent;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 import org.slf4j.helpers.SubstituteLogger;
@@ -28,10 +31,10 @@ import com.google.common.base.Optional;
 
 public class SpyLogger extends SubstituteLogger {
 
-    private List<LogMessage> logMessageList = new ArrayList<LogMessage>();
+    private final List<LogMessage> logMessageList = new ArrayList<LogMessage>();
 
     public SpyLogger(String loggerName) {
-        super(loggerName);
+        super(loggerName, new LinkedBlockingQueue<SubstituteLoggingEvent>(), false);
     }
 
     public static final String LOG_LEVEL_TRACE = "TRACE";

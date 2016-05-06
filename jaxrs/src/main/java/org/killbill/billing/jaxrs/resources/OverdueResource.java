@@ -73,7 +73,7 @@ public class OverdueResource extends JaxRsResourceBase {
                            final OverdueApi overdueApi,
                            final Clock clock,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.overdueApi = overdueApi;
     }
 

@@ -34,6 +34,7 @@ import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import org.killbill.billing.invoice.api.svcs.DefaultInvoiceInternalApi;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceUserApi;
+import org.killbill.billing.invoice.config.MultiTenantInvoiceConfig;
 import org.killbill.billing.invoice.dao.CBADao;
 import org.killbill.billing.invoice.dao.DefaultInvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -53,16 +54,18 @@ import org.killbill.billing.invoice.template.bundles.DefaultResourceBundleFactor
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.config.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 
 public class DefaultInvoiceModule extends KillBillModule implements InvoiceModule {
 
-    InvoiceConfig config;
+
+    InvoiceConfig staticInvoiceConfig;
 
     public DefaultInvoiceModule(final KillbillConfigSource configSource) {
         super(configSource);
@@ -90,8 +93,9 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
     }
 
     protected void installConfig() {
-        config = new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class);
-        bind(InvoiceConfig.class).toInstance(config);
+        staticInvoiceConfig = new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class);
+        bind(InvoiceConfig.class).annotatedWith(Names.named(STATIC_CONFIG)).toInstance(staticInvoiceConfig);
+        bind(InvoiceConfig.class).to(MultiTenantInvoiceConfig.class).asEagerSingleton();
     }
 
     protected void installInvoiceService() {
@@ -112,7 +116,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
     }
 
     protected void installInvoiceNotifier() {
-        if (config.isEmailNotificationsEnabled()) {
+        if (staticInvoiceConfig.isEmailNotificationsEnabled()) {
             bind(InvoiceNotifier.class).to(EmailInvoiceNotifier.class).asEagerSingleton();
         } else {
             bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();

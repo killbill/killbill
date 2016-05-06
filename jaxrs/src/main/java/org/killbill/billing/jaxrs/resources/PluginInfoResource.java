@@ -63,7 +63,7 @@ public class PluginInfoResource extends JaxRsResourceBase {
                               final PluginsInfoApi pluginsInfoApi,
                               final Clock clock,
                               final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.pluginsInfoApi = pluginsInfoApi;
     }
 

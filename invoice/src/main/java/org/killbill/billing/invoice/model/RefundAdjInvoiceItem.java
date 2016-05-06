@@ -31,6 +31,9 @@ import org.killbill.billing.util.UUIDs;
 
 import com.google.common.base.Objects;
 
+// See killbill/killbill#30
+// At some point we want to remove all code related to invoice adjustment
+@Deprecated()
 public class RefundAdjInvoiceItem extends AdjInvoiceItem {
 
     public RefundAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate date,

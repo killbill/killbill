@@ -41,7 +41,7 @@ import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
@@ -54,7 +54,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class InvoiceApiHelper {
@@ -103,7 +102,7 @@ public class InvoiceApiHelper {
             final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, internalCallContext);
             return fromInvoiceItemModelDao(createdInvoiceItems);
         } catch (final LockFailedException e) {
-            log.error(String.format("Failed to process invoice items for account %s", accountId.toString()), e);
+            log.warn("Failed to process invoice items for accountId='{}'", accountId.toString(), e);
             return ImmutableList.<InvoiceItem>of();
         } finally {
             if (lock != null) {

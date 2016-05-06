@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,7 +36,7 @@ import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 
 abstract class CompletionTaskBase<T> implements Runnable {
 
-    protected Logger log = LoggerFactory.getLogger(CompletionTaskBase.class);
+    private static final Logger log = LoggerFactory.getLogger(CompletionTaskBase.class);
 
     protected final PaymentConfig paymentConfig;
     protected final Clock clock;
@@ -125,9 +125,9 @@ abstract class CompletionTaskBase<T> implements Runnable {
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getExternalKey(), paymentConfig.getMaxGlobalLockRetries());
             return callback.doIteration();
         } catch (AccountApiException e) {
-            log.warn(String.format("Janitor failed to retrieve account with recordId %s", internalTenantContext.getAccountRecordId()), e);
+            log.warn("Error retrieving accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
         } catch (LockFailedException e) {
-            log.warn(String.format("Janitor failed to lock account with recordId %s", internalTenantContext.getAccountRecordId()), e);
+            log.warn("Error locking accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
         } finally {
             if (lock != null) {
                 lock.release();

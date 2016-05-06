@@ -21,6 +21,7 @@ package org.killbill.billing.tenant.glue;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
+import org.killbill.billing.util.glue.ConfigModule;
 
 public class TestTenantModule extends DefaultTenantModule {
 
@@ -33,6 +34,7 @@ public class TestTenantModule extends DefaultTenantModule {
         super.configure();
 
         install(new CacheModule(configSource));
+        install(new ConfigModule(configSource));
         install(new CallContextModule(configSource));
     }
 }

@@ -42,6 +42,7 @@ public class TestUtilModule extends KillBillModule {
     protected void configure() {
         //install(new CallContextModule());
         install(new CacheModule(configSource));
+        install(new ConfigModule(configSource));
         install(new MockTenantModule(configSource));
         installHacks();
     }

@@ -56,9 +56,9 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlID
     private String name;
 
-    //TODO MDW Validation - effectiveDateForExistingSubscriptons > catalog effectiveDate
+    //TODO MDW Validation - effectiveDateForExistingSubscriptions > catalog effectiveDate
     @XmlElement(required = false)
-    private Date effectiveDateForExistingSubscriptons;
+    private Date effectiveDateForExistingSubscriptions;
 
     @XmlElement(required = true)
     @XmlIDREF
@@ -86,7 +86,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     public DefaultPlan(final String planName, final DefaultPlan in, final PlanPhasePriceOverride[] overrides) {
         this.name = planName;
-        this.effectiveDateForExistingSubscriptons = in.getEffectiveDateForExistingSubscriptons();
+        this.effectiveDateForExistingSubscriptions = in.getEffectiveDateForExistingSubscriptions();
         this.product = (DefaultProduct) in.getProduct();
         this.initialPhases = new DefaultPlanPhase[in.getInitialPhases().length];
         for (int i = 0; i < overrides.length - 1; i++) {
@@ -98,8 +98,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     }
 
     @Override
-    public Date getEffectiveDateForExistingSubscriptons() {
-        return effectiveDateForExistingSubscriptons;
+    public Date getEffectiveDateForExistingSubscriptions() {
+        return effectiveDateForExistingSubscriptions;
     }
 
     @Override
@@ -190,10 +190,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        if (effectiveDateForExistingSubscriptons != null &&
-            catalog.getEffectiveDate().getTime() > effectiveDateForExistingSubscriptons.getTime()) {
+        if (effectiveDateForExistingSubscriptions != null &&
+            catalog.getEffectiveDate().getTime() > effectiveDateForExistingSubscriptions.getTime()) {
             errors.add(new ValidationError(String.format("Price effective date %s is before catalog effective date '%s'",
-                                                         effectiveDateForExistingSubscriptons,
+                                                         effectiveDateForExistingSubscriptions,
                                                          catalog.getEffectiveDate().getTime()),
                                            catalog.getCatalogURI(), DefaultInternationalPrice.class, ""));
         }
@@ -203,9 +203,9 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return errors;
     }
 
-    public void setEffectiveDateForExistingSubscriptons(
-            final Date effectiveDateForExistingSubscriptons) {
-        this.effectiveDateForExistingSubscriptons = effectiveDateForExistingSubscriptons;
+    public void setEffectiveDateForExistingSubscriptions(
+            final Date effectiveDateForExistingSubscriptions) {
+        this.effectiveDateForExistingSubscriptions = effectiveDateForExistingSubscriptions;
     }
 
     public DefaultPlan setName(final String name) {
@@ -252,7 +252,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             }
             final Recurring recurring = phase.getRecurring();
             if (recurring == null || recurring.getRecurringPrice() == null || recurring.getRecurringPrice().isZero()) {
-                result = phase.getDuration().addToDateTime(result);
+                try {
+                    result = phase.getDuration().addToDateTime(result);
+                } catch (final CatalogApiException ignored) {
+                }
             } else {
                 break;
             }
@@ -271,7 +274,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
         final DefaultPlan that = (DefaultPlan) o;
 
-        if (effectiveDateForExistingSubscriptons != null ? !effectiveDateForExistingSubscriptons.equals(that.effectiveDateForExistingSubscriptons) : that.effectiveDateForExistingSubscriptons != null) {
+        if (effectiveDateForExistingSubscriptions != null ? !effectiveDateForExistingSubscriptions.equals(that.effectiveDateForExistingSubscriptions) : that.effectiveDateForExistingSubscriptions != null) {
             return false;
         }
         if (finalPhase != null ? !finalPhase.equals(that.finalPhase) : that.finalPhase != null) {
@@ -295,7 +298,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (effectiveDateForExistingSubscriptons != null ? effectiveDateForExistingSubscriptons.hashCode() : 0);
+        result = 31 * result + (effectiveDateForExistingSubscriptions != null ? effectiveDateForExistingSubscriptions.hashCode() : 0);
         result = 31 * result + (initialPhases != null ? Arrays.hashCode(initialPhases) : 0);
         result = 31 * result + (finalPhase != null ? finalPhase.hashCode() : 0);
         result = 31 * result + (plansAllowedInBundle != null ? plansAllowedInBundle.hashCode() : 0);
@@ -304,8 +307,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     @Override
     public String toString() {
-        return "DefaultPlan [name=" + name + ", effectiveDateForExistingSubscriptons="
-               + effectiveDateForExistingSubscriptons + ", product=" + product + ", initialPhases="
+        return "DefaultPlan [name=" + name + ", effectiveDateForExistingSubscriptions="
+               + effectiveDateForExistingSubscriptions + ", product=" + product + ", initialPhases="
                + Arrays.toString(initialPhases) + ", finalPhase=" + finalPhase + ", plansAllowedInBundle="
                + plansAllowedInBundle + "]";
     }

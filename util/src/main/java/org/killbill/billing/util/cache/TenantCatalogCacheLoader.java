@@ -72,11 +72,10 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader {
             return null;
         }
         try {
-            log.info("Loading catalog cache for tenant " + internalTenantContext.getTenantRecordId());
+            log.info("Loading catalog cache for tenantRecordId='{}'", internalTenantContext.getTenantRecordId());
             return callback.loadCatalog(catalogXMLs, tenantRecordId);
         } catch (final CatalogApiException e) {
-            throw new IllegalStateException(String.format("Failed to de-serialize catalog for tenant %s : %s",
-                                                          internalTenantContext.getTenantRecordId(), e.getMessage()), e);
+            throw new IllegalStateException(String.format("Failed to de-serialize catalog for tenantRecordId='%s'", internalTenantContext.getTenantRecordId()), e);
         }
     }
 

@@ -34,7 +34,7 @@ import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.dao.DefaultSubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
-import org.killbill.billing.util.config.SubscriptionConfig;
+import org.killbill.billing.util.config.definition.SubscriptionConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 

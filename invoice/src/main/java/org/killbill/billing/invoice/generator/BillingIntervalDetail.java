@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -45,7 +47,11 @@ public class BillingIntervalDetail {
         this.startDate = startDate;
         this.endDate = endDate;
         this.targetDate = targetDate;
-        this.billingCycleDay = billingCycleDay;
+        if (billingPeriod.getPeriod().getMonths() != 0 || billingPeriod.getPeriod().getYears() != 0) {
+            this.billingCycleDay = billingCycleDay;
+        } else {
+            this.billingCycleDay = startDate.getDayOfMonth();
+        }
         this.billingPeriod = billingPeriod;
         this.billingMode = billingMode;
         computeAll();
@@ -59,9 +65,8 @@ public class BillingIntervalDetail {
         return effectiveEndDate;
     }
 
-    public LocalDate getFutureBillingDateFor(int nbPeriod) {
-        final int numberOfMonthsPerBillingPeriod = billingPeriod.getNumberOfMonths();
-        LocalDate proposedDate = firstBillingCycleDate.plusMonths((nbPeriod) * numberOfMonthsPerBillingPeriod);
+    public LocalDate getFutureBillingDateFor(final int nbPeriod) {
+        final LocalDate proposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, nbPeriod);
         return alignProposedBillCycleDate(proposedDate, billingCycleDay);
     }
 
@@ -70,8 +75,7 @@ public class BillingIntervalDetail {
     }
 
     public LocalDate getNextBillingCycleDate() {
-        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
-        final LocalDate proposedDate = lastBillingCycleDate != null ? lastBillingCycleDate.plusMonths(numberOfMonthsInPeriod) : firstBillingCycleDate;
+        final LocalDate proposedDate = lastBillingCycleDate != null ? lastBillingCycleDate.plus(billingPeriod.getPeriod()) : firstBillingCycleDate;
         final LocalDate nextBillingCycleDate = alignProposedBillCycleDate(proposedDate, billingCycleDay);
         return nextBillingCycleDate;
     }
@@ -88,8 +92,7 @@ public class BillingIntervalDetail {
         calculateLastBillingCycleDate();
     }
 
-    @VisibleForTesting
-    void calculateFirstBillingCycleDate() {
+    private void calculateFirstBillingCycleDate() {
 
         final int lastDayOfMonth = startDate.dayOfMonth().getMaximumValue();
         final LocalDate billingCycleDate;
@@ -99,10 +102,9 @@ public class BillingIntervalDetail {
             billingCycleDate = new LocalDate(startDate.getYear(), startDate.getMonthOfYear(), billingCycleDay, startDate.getChronology());
         }
 
-        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
         LocalDate proposedDate = billingCycleDate;
         while (proposedDate.isBefore(startDate)) {
-            proposedDate = proposedDate.plusMonths(numberOfMonthsInPeriod);
+            proposedDate = proposedDate.plus(billingPeriod.getPeriod());
         }
         firstBillingCycleDate = alignProposedBillCycleDate(proposedDate, billingCycleDay);
     }
@@ -127,15 +129,13 @@ public class BillingIntervalDetail {
             return;
         }
 
-        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
         int numberOfPeriods = 0;
         LocalDate proposedDate = firstBillingCycleDate;
-        LocalDate nextProposedDate = proposedDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
-
+        LocalDate nextProposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, numberOfPeriods);
 
         while (!nextProposedDate.isAfter(targetDate)) {
             proposedDate = nextProposedDate;
-            nextProposedDate = firstBillingCycleDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
+            nextProposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, numberOfPeriods);
             numberOfPeriods += 1;
         }
         proposedDate = alignProposedBillCycleDate(proposedDate, billingCycleDay);
@@ -161,12 +161,11 @@ public class BillingIntervalDetail {
             return;
         }
 
-        final int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
         int numberOfPeriods = 0;
         LocalDate proposedDate = firstBillingCycleDate;
 
         while (!proposedDate.isAfter(targetDate)) {
-            proposedDate = firstBillingCycleDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
+            proposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, numberOfPeriods);
             numberOfPeriods += 1;
         }
         proposedDate = alignProposedBillCycleDate(proposedDate, billingCycleDay);
@@ -191,12 +190,12 @@ public class BillingIntervalDetail {
         LocalDate proposedDate = firstBillingCycleDate;
         int numberOfPeriods = 0;
         while (!proposedDate.isAfter(effectiveEndDate)) {
-            proposedDate = firstBillingCycleDate.plusMonths(numberOfPeriods * billingPeriod.getNumberOfMonths());
+            proposedDate = InvoiceDateUtils.advanceByNPeriods(firstBillingCycleDate, billingPeriod, numberOfPeriods);
             numberOfPeriods += 1;
         }
 
         // Our proposed date is billingCycleDate prior to the effectiveEndDate
-        proposedDate = proposedDate.plusMonths(-billingPeriod.getNumberOfMonths());
+        proposedDate = proposedDate.minus(billingPeriod.getPeriod());
         proposedDate = alignProposedBillCycleDate(proposedDate, billingCycleDay);
 
         if (proposedDate.isBefore(firstBillingCycleDate)) {

@@ -280,55 +280,6 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         assertEquals(subscription.getBillingEndDate(), new LocalDate(2013, 8, 7));
     }
 
-    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/452")
-    public void testBlockedEntitlementChange() throws AccountApiException, EntitlementApiException {
-        final LocalDate initialDate = new LocalDate(2013, 8, 7);
-        clock.setDay(initialDate);
-
-        final Account account = createAccount(getAccountData(7));
-
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-
-        // Create entitlement and check each field
-        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
-        assertListenerStatus();
-
-        clock.addDays(1);
-        assertListenerStatus();
-
-        testListener.pushExpectedEvent(NextEvent.BLOCK);
-        entitlementApi.setBlockingState(entitlement.getBundleId(), "MY_BLOCK", "test", null, false, false, true, ImmutableList.<PluginProperty>of(), callContext);
-        assertListenerStatus();
-
-        try {
-            entitlement.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, ImmutableList.<PluginProperty>of(), callContext);
-            fail();
-        } catch (final EntitlementApiException e) {
-            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
-            final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-            assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
-        }
-
-        try {
-            entitlement.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
-            fail();
-        } catch (final EntitlementApiException e) {
-            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
-            final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-            assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
-        }
-
-        try {
-            entitlement.changePlanOverrideBillingPolicy("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
-            fail();
-        } catch (final EntitlementApiException e) {
-            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
-            final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-            assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
-        }
-    }
-
     @Test(groups = "slow")
     public void testEntitlementStartedInFuture() throws AccountApiException, EntitlementApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);

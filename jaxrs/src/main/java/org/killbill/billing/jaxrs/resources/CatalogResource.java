@@ -89,7 +89,7 @@ public class CatalogResource extends JaxRsResourceBase {
                            final CatalogUserApi catalogUserApi,
                            final Clock clock,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.catalogUserApi = catalogUserApi;
     }
 

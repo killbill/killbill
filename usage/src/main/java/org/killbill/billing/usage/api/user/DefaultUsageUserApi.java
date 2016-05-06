@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -32,6 +33,7 @@ import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UnitUsageRecord;
+import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
@@ -39,6 +41,8 @@ import org.killbill.billing.usage.dao.RolledUpUsageModelDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+
+import com.google.common.base.Strings;
 
 public class DefaultUsageUserApi implements UsageUserApi {
 
@@ -53,13 +57,21 @@ public class DefaultUsageUserApi implements UsageUserApi {
     }
 
     @Override
-    public void recordRolledUpUsage(final SubscriptionUsageRecord record, final CallContext callContext) {
+    public void recordRolledUpUsage(final SubscriptionUsageRecord record, final CallContext callContext) throws UsageApiException {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(record.getSubscriptionId(), ObjectType.SUBSCRIPTION, callContext);
-        for (UnitUsageRecord unitUsageRecord : record.getUnitUsageRecord()) {
-            for (UsageRecord usageRecord : unitUsageRecord.getDailyAmount()) {
-                rolledUpUsageDao.record(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), usageRecord.getAmount(), internalCallContext);
+
+        // check if we have (at least) one row with the supplied tracking id
+        if(!Strings.isNullOrEmpty(record.getTrackingId()) && recordsWithTrackingIdExist(record, internalCallContext)){
+            throw new UsageApiException(ErrorCode.USAGE_RECORD_TRACKING_ID_ALREADY_EXISTS, record.getTrackingId());
+        }
+
+        final List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
+        for (final UnitUsageRecord unitUsageRecord : record.getUnitUsageRecord()) {
+            for (final UsageRecord usageRecord : unitUsageRecord.getDailyAmount()) {
+                usages.add(new RolledUpUsageModelDao(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), usageRecord.getAmount(), record.getTrackingId()));
             }
         }
+        rolledUpUsageDao.record(usages, internalCallContext);
     }
 
     @Override
@@ -97,5 +109,9 @@ public class DefaultUsageUserApi implements UsageUserApi {
             result.add(new DefaultRolledUpUnit(unitType, tmp.get(unitType)));
         }
         return result;
+    }
+
+    private boolean recordsWithTrackingIdExist(SubscriptionUsageRecord record, InternalCallContext context){
+        return rolledUpUsageDao.recordsWithTrackingIdExist(record.getSubscriptionId(), record.getTrackingId(), context);
     }
 }

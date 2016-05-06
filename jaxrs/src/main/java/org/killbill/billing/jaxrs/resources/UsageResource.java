@@ -42,11 +42,14 @@ import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.jaxrs.json.RolledUpUsageJson;
 import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson;
+import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson.UnitUsageRecordJson;
+import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson.UsageRecordJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
+import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -58,6 +61,7 @@ import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Singleton;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -85,7 +89,7 @@ public class UsageResource extends JaxRsResourceBase {
                          final EntitlementApi entitlementApi,
                          final Clock clock,
                          final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.usageUserApi = usageUserApi;
         this.entitlementApi = entitlementApi;
     }
@@ -101,12 +105,22 @@ public class UsageResource extends JaxRsResourceBase {
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final HttpServletRequest request,
-                                @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException {
+                                @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException,
+                                                                                        AccountApiException,
+                                                                                        UsageApiException {
         verifyNonNullOrEmpty(json, "SubscriptionUsageRecordJson body should be specified");
         verifyNonNullOrEmpty(json.getSubscriptionId(), "SubscriptionUsageRecordJson subscriptionId needs to be set",
                              json.getUnitUsageRecords(), "SubscriptionUsageRecordJson unitUsageRecords needs to be set");
         Preconditions.checkArgument(!json.getUnitUsageRecords().isEmpty());
-
+        for (final UnitUsageRecordJson unitUsageRecordJson : json.getUnitUsageRecords()) {
+            verifyNonNullOrEmpty(unitUsageRecordJson.getUnitType(), "UnitUsageRecordJson unitType need to be set");
+            Preconditions.checkArgument(Iterables.size(unitUsageRecordJson.getUsageRecords()) > 0,
+                                        "UnitUsageRecordJson usageRecords must have at least one element.");
+            for (final UsageRecordJson usageRecordJson : unitUsageRecordJson.getUsageRecords()) {
+                verifyNonNull(usageRecordJson.getAmount(), "UsageRecordJson amount needs to be set");
+                verifyNonNull(usageRecordJson.getRecordDate(), "UsageRecordJson recordDate needs to be set");
+            }
+        }
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         // Verify subscription exists..
         final Entitlement entitlement = entitlementApi.getEntitlementForId(UUID.fromString(json.getSubscriptionId()), callContext);

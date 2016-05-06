@@ -34,7 +34,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.dao.MockPaymentDao;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
@@ -70,7 +69,6 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         setDefaultPollInterval(Duration.ONE_HUNDRED_MILLISECONDS);
         Awaitility.setDefaultPollDelay(Duration.SAME_AS_POLL_INTERVAL);
 
-        ((MockPaymentDao) paymentDao).reset();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
         mockPaymentProviderPlugin.clear();
         retryService.initialize();
@@ -249,7 +247,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(payment.getId(), internalCallContext);
         assertEquals(transactions.size(), 1);
 
-        int maxTries = paymentConfig.getPaymentFailureRetryDays().size();
+        int maxTries = paymentConfig.getPaymentFailureRetryDays(internalCallContext).size();
         for (int curFailure = 0; curFailure < maxTries; curFailure++) {
 
             // Set plugin to fail with specific type unless this is the last attempt and we want a success
@@ -336,7 +334,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(payment.getId(), internalCallContext);
         assertEquals(transactions.size(), 1);
 
-        int maxTries = paymentConfig.getPaymentFailureRetryDays().size();
+        int maxTries = paymentConfig.getPaymentFailureRetryDays(internalCallContext).size();
         for (int curFailure = 0; curFailure < maxTries; curFailure++) {
 
             // Set plugin to fail with specific type unless this is the last attempt and we want a success
@@ -396,7 +394,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
     private void moveClockForFailureType(final FailureType failureType, final int curFailure) throws InterruptedException {
         final int nbDays;
         if (failureType == FailureType.PAYMENT_FAILURE) {
-            nbDays = paymentConfig.getPaymentFailureRetryDays().get(curFailure) + 1;
+            nbDays = paymentConfig.getPaymentFailureRetryDays(internalCallContext).get(curFailure) + 1;
         } else {
             nbDays = 1;
         }
@@ -405,7 +403,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
     private int getMaxRetrySizeForFailureType(final FailureType failureType) {
         if (failureType == FailureType.PAYMENT_FAILURE) {
-            return paymentConfig.getPaymentFailureRetryDays().size();
+            return paymentConfig.getPaymentFailureRetryDays(internalCallContext).size();
         } else {
             return 0;
         }

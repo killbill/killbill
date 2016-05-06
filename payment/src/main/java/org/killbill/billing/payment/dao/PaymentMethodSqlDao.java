@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -57,10 +59,10 @@ public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao,
                                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentMethodModelDao> getByAccountId(@Bind("accountId") final String accountId, @BindBean final InternalTenantContext context);
+    List<PaymentMethodModelDao> getForAccount(@BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentMethodModelDao> getByAccountIdIncludedDelete(@Bind("accountId") final String accountId, @BindBean final InternalTenantContext context);
+    List<PaymentMethodModelDao> getForAccountIncludedDelete(@BindBean final InternalTenantContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)

@@ -50,7 +50,7 @@ public class OverdueDispatcher {
         try {
             factory.createOverdueWrapperFor(accountId, context).refresh(context);
         } catch (BillingExceptionBase e) {
-            log.error(String.format("Error processing Overdue for blockable %s", accountId), e);
+            log.warn("Error processing Overdue for accountId='{}'", accountId, e);
         }
     }
 
@@ -58,7 +58,7 @@ public class OverdueDispatcher {
         try {
             factory.createOverdueWrapperFor(accountId, context).clear(context);
         } catch (BillingExceptionBase e) {
-            log.error(String.format("Error processing Overdue for blockable %s (type %s)", accountId), e);
+            log.warn("Error processing Overdue for accountId='{}'", accountId, e);
         }
     }
 }

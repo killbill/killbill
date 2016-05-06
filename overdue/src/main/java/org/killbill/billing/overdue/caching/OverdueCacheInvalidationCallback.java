@@ -38,7 +38,7 @@ public class OverdueCacheInvalidationCallback implements CacheInvalidationCallba
 
     @Override
     public void invalidateCache(TenantKey key, final Object cookie, final InternalTenantContext tenantContext) {
-        log.info("Invalidate overdue cache for tenant {} ", tenantContext.getTenantRecordId());
+        log.info("Invalidate overdue cache for tenantRecordId='{}'", tenantContext.getTenantRecordId());
         overdueConfigCache.clearOverdueConfig(tenantContext);
     }
 }

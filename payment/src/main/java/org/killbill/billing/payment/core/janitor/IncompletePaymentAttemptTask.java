@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -43,11 +43,13 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertyS
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -60,6 +62,8 @@ import com.google.common.collect.Iterables;
  * we rerun the retry state machine to complete the call and transition the attempt into a terminal state.
  */
 public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttemptModelDao> {
+
+    private static final Logger log = LoggerFactory.getLogger(IncompletePaymentAttemptTask.class);
 
     //
     // Each paymentAttempt *should* transition to a new state, so fetching a limited size will still allow us to progress (as opposed to fetching the same entries over and over)
@@ -124,7 +128,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         if (transaction == null ||
             transaction.getTransactionStatus() == TransactionStatus.PLUGIN_FAILURE ||
             transaction.getTransactionStatus() == TransactionStatus.PAYMENT_FAILURE) {
-            log.info("Janitor AttemptCompletionTask moving attempt " + attempt.getId() + " -> ABORTED");
+            log.info("Moving attemptId='{}' to ABORTED", attempt.getId());
             paymentDao.updatePaymentAttempt(attempt.getId(), attempt.getTransactionId(), "ABORTED", internalCallContext);
             return;
         }
@@ -140,7 +144,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
             transaction.getTransactionStatus() == TransactionStatus.PENDING) {
 
             try {
-                log.info("Janitor AttemptCompletionTask completing attempt " + attempt.getId() + " -> SUCCESS");
+                log.info("Moving attemptId='{}' to SUCCESS", attempt.getId());
 
                 final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
                 final boolean isApiPayment = true; // unclear
@@ -166,11 +170,11 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
                 //
                 pluginControlledPaymentAutomatonRunner.completeRun(paymentStateContext);
             } catch (final AccountApiException e) {
-                log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
+                log.warn("Error completing paymentAttemptId='{}'", attempt.getId(), e);
             } catch (final PluginPropertySerializerException e) {
-                log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
+                log.warn("Error completing paymentAttemptId='{}'", attempt.getId(), e);
             } catch (final PaymentApiException e) {
-                log.warn("Janitor AttemptCompletionTask failed to complete payment attempt " + attempt.getId(), e);
+                log.warn("Error completing paymentAttemptId='{}'", attempt.getId(), e);
             }
         }
     }

@@ -72,6 +72,7 @@ import org.killbill.billing.util.glue.BroadcastModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ClockModule;
+import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
@@ -90,6 +91,7 @@ import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.ResultSetMapperFactory;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
 import com.google.inject.multibindings.Multibinder;
 
 public class KillbillServerModule extends KillbillPlatformModule {
@@ -144,6 +146,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new BroadcastModule(configSource));
         install(new BeatrixModule(configSource));
         install(new CacheModule(configSource));
+        install(new ConfigModule(configSource));
         install(new CallContextModule(configSource));
         install(new CatalogModule(configSource));
         install(new CurrencyModule(configSource));
@@ -200,6 +203,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
 
     protected void configureFilters() {
         bind(ResponseCorsFilter.class).asEagerSingleton();
+        bind(MDCInsertingServletFilter.class).asEagerSingleton();
     }
 
     protected void configurePushNotification() {

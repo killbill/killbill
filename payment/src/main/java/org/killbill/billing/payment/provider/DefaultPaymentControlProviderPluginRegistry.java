@@ -23,7 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
-import org.killbill.billing.util.config.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +40,13 @@ public class DefaultPaymentControlProviderPluginRegistry implements OSGIServiceR
 
     @Override
     public void registerService(final OSGIServiceDescriptor desc, final PaymentControlPluginApi service) {
-        log.info("DefaultPaymentControlProviderPluginRegistry registering service " + desc.getRegistrationName());
+        log.info("Registering service='{}'", desc.getRegistrationName());
         pluginsByName.put(desc.getRegistrationName(), service);
     }
 
     @Override
     public void unregisterService(final String serviceName) {
-        log.info("DefaultPaymentControlProviderPluginRegistry unregistering service " + serviceName);
+        log.info("Unregistering service='{}'", serviceName);
         pluginsByName.remove(serviceName);
     }
 

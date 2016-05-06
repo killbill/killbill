@@ -90,7 +90,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -186,8 +186,8 @@ public class InvoiceDispatcher {
                                                                                                        context.toUTCDateTime(targetDate), context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
             try {
                 eventBus.post(event);
-            } catch (final EventBusException e) {
-                log.error("Failed to post event " + event, e);
+            } catch (EventBusException e) {
+                log.warn("Failed to post event {}", event, e);
             }
         }
     }
@@ -195,7 +195,7 @@ public class InvoiceDispatcher {
     private Invoice processSubscriptionInternal(final UUID subscriptionId, final LocalDate targetDate, final boolean dryRunForNotification, final InternalCallContext context) throws InvoiceApiException {
         try {
             if (subscriptionId == null) {
-                log.error("Failed handling SubscriptionBase change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
+                log.warn("Failed handling SubscriptionBase change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
                 return null;
             }
             final UUID accountId = subscriptionApi.getAccountIdFromSubscriptionId(subscriptionId, context);
@@ -203,7 +203,7 @@ public class InvoiceDispatcher {
 
             return processAccount(accountId, targetDate, dryRunArguments, context);
         } catch (final SubscriptionBaseApiException e) {
-            log.error("Failed handling SubscriptionBase change.",
+            log.warn("Failed handling SubscriptionBase change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
             return null;
         }
@@ -217,9 +217,7 @@ public class InvoiceDispatcher {
 
             return processAccountWithLock(accountId, targetDate, dryRunArguments, context);
         } catch (final LockFailedException e) {
-            // Not good!
-            log.error(String.format("Failed to process invoice for account %s, targetDate %s",
-                                    accountId.toString(), targetDate), e);
+            log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId.toString(), targetDate, e);
         } finally {
             if (lock != null) {
                 lock.release();
@@ -333,15 +331,15 @@ public class InvoiceDispatcher {
             //
             if (invoice == null) {
                 if (isDryRun) {
-                    log.info("Generated null dryRun invoice for accountId {} and targetDate {}", accountId, targetDate);
+                    log.info("Generated null dryRun invoice for accountId='{}', targetDate='{}'", accountId, targetDate);
                 } else {
-                    log.info("Generated null invoice for accountId {} and targetDate {}", accountId, targetDate);
+                    log.info("Generated null invoice for accountId='{}', targetDate='{}'", accountId, targetDate);
 
                     final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
                                                                                context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
 
                     commitInvoiceAndSetFutureNotifications(account, null, ImmutableList.<InvoiceItemModelDao>of(), futureAccountNotifications, false, context);
-                    postEvent(event, accountId, context);
+                    postEvent(event);
                 }
                 return null;
             }
@@ -420,7 +418,7 @@ public class InvoiceDispatcher {
         }
 
         // If dryRunNotification is enabled we also need to fetch the upcoming PHASE dates (we add SubscriptionNotification with isForInvoiceNotificationTrigger = false)
-        final boolean isInvoiceNotificationEnabled = invoiceConfig.getDryRunNotificationSchedule().getMillis() > 0;
+        final boolean isInvoiceNotificationEnabled = invoiceConfig.getDryRunNotificationSchedule(context).getMillis() > 0;
         if (isInvoiceNotificationEnabled) {
             final Map<UUID, DateTime> upcomingPhasesForSubscriptions = subscriptionApi.getNextFutureEventForSubscriptions(SubscriptionBaseTransitionType.PHASE, context);
             for (final UUID cur : upcomingPhasesForSubscriptions.keySet()) {
@@ -461,10 +459,10 @@ public class InvoiceDispatcher {
     private void logInvoiceWithItems(final ImmutableAccountData account, final Invoice invoice, final LocalDate targetDate, final Set<UUID> adjustedUniqueOtherInvoiceId, final boolean isRealInvoiceWithItems) {
         final StringBuilder tmp = new StringBuilder();
         if (isRealInvoiceWithItems) {
-            tmp.append(String.format("Generated invoice %s with %d items for accountId %s and targetDate %s:\n", invoice.getId(), invoice.getNumberOfItems(), account.getId(), targetDate));
+            tmp.append(String.format("Generated invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':\n", invoice.getId(), invoice.getNumberOfItems(), account.getId(), targetDate));
         } else {
             final String adjustedInvoices = JOINER_COMMA.join(adjustedUniqueOtherInvoiceId.toArray(new UUID[adjustedUniqueOtherInvoiceId.size()]));
-            tmp.append(String.format("Adjusting existing invoices %s with %d items for accountId %s and targetDate %s:\n",
+            tmp.append(String.format("Adjusting existing invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':\n",
                                      adjustedInvoices, invoice.getNumberOfItems(), account.getId(), targetDate));
         }
         for (final InvoiceItem item : invoice.getInvoiceItems()) {
@@ -509,7 +507,7 @@ public class InvoiceDispatcher {
             events.add(event);
         }
         for (final InvoiceInternalEvent event : events) {
-            postEvent(event, account.getId(), context);
+            postEvent(event);
         }
     }
 
@@ -563,11 +561,11 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void postEvent(final BusInternalEvent event, final UUID accountId, final InternalCallContext context) {
+    private void postEvent(final BusInternalEvent event) {
         try {
             eventBus.post(event);
         } catch (final EventBusException e) {
-            log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
+            log.warn("Failed to post event {}", event, e);
         }
     }
 

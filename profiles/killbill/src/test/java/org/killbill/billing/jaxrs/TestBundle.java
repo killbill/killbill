@@ -25,16 +25,21 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.BlockingState;
+import org.killbill.billing.client.model.BlockingStates;
 import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Bundles;
+import org.killbill.billing.client.model.PluginProperty;
 import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
@@ -134,19 +139,30 @@ public class TestBundle extends TestJaxrsBase {
         assertEquals(bundle.getAccountId(), accountJson.getAccountId());
         assertEquals(bundle.getExternalKey(), bundleExternalKey);
 
-        final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "block", "service", false, true, true, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        killBillClient.setBlockingState(bundle.getBundleId(), blockingState, createdBy, reason, comment);
+        final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "block", "service", false, true, true, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
+        killBillClient.setBlockingState(bundle.getBundleId(), blockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), createdBy, reason, comment);
 
         final Subscription subscription = killBillClient.getSubscription(entitlement.getSubscriptionId());
         assertEquals(subscription.getState(), EntitlementState.BLOCKED);
 
         clock.addDays(1);
 
-        final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "unblock", "service", false, false, false, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        killBillClient.setBlockingState(bundle.getBundleId(), unblockingState, createdBy, reason, comment);
+        final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "unblock", "service", false, false, false, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
+        killBillClient.setBlockingState(bundle.getBundleId(), unblockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), createdBy, reason, comment);
 
         final Subscription subscription2 = killBillClient.getSubscription(entitlement.getSubscriptionId());
         assertEquals(subscription2.getState(), EntitlementState.ACTIVE);
+
+        final BlockingStates blockingStates = killBillClient.getBlockingStates(accountJson.getAccountId(), null, ImmutableList.<String>of("service"), AuditLevel.FULL);
+        Assert.assertEquals(blockingStates.size(), 2);
+
+
+        final BlockingStates blockingStates2 = killBillClient.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, AuditLevel.FULL);
+        Assert.assertEquals(blockingStates2.size(), 2);
+
+
+        final BlockingStates blockingStates3 = killBillClient.getBlockingStates(accountJson.getAccountId(), null, null, AuditLevel.FULL);
+        Assert.assertEquals(blockingStates3.size(), 3);
     }
 
 

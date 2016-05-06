@@ -456,12 +456,6 @@
         <linkStateMachine>
             <initialStateMachine>AUTHORIZE</initialStateMachine>
             <initialState>AUTH_SUCCESS</initialState>
-            <finalStateMachine>AUTHORIZE</finalStateMachine>
-            <finalState>AUTH_INIT</finalState>
-        </linkStateMachine>
-        <linkStateMachine>
-            <initialStateMachine>AUTHORIZE</initialStateMachine>
-            <initialState>AUTH_SUCCESS</initialState>
             <finalStateMachine>CAPTURE</finalStateMachine>
             <finalState>CAPTURE_INIT</finalState>
         </linkStateMachine>
@@ -472,6 +466,30 @@
             <finalState>VOID_INIT</finalState>
         </linkStateMachine>
         <linkStateMachine>
+            <initialStateMachine>VOID</initialStateMachine>
+            <initialState>VOID_SUCCESS</initialState>
+            <finalStateMachine>VOID</finalStateMachine>
+            <finalState>VOID_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>VOID</initialStateMachine>
+            <initialState>VOID_SUCCESS</initialState>
+            <finalStateMachine>CAPTURE</finalStateMachine>
+            <finalState>CAPTURE_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>VOID</initialStateMachine>
+            <initialState>VOID_SUCCESS</initialState>
+            <finalStateMachine>REFUND</finalStateMachine>
+            <finalState>REFUND_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>VOID</initialStateMachine>
+            <initialState>VOID_SUCCESS</initialState>
+            <finalStateMachine>CREDIT</finalStateMachine>
+            <finalState>CREDIT_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
             <initialStateMachine>CAPTURE</initialStateMachine>
             <initialState>CAPTURE_SUCCESS</initialState>
             <finalStateMachine>REFUND</finalStateMachine>
@@ -490,6 +508,12 @@
             <finalState>CHARGEBACK_INIT</finalState>
         </linkStateMachine>
         <linkStateMachine>
+            <initialStateMachine>CAPTURE</initialStateMachine>
+            <initialState>CAPTURE_SUCCESS</initialState>
+            <finalStateMachine>VOID</finalStateMachine>
+            <finalState>VOID_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
             <initialStateMachine>REFUND</initialStateMachine>
             <initialState>REFUND_SUCCESS</initialState>
             <finalStateMachine>REFUND</finalStateMachine>
@@ -502,6 +526,12 @@
             <finalState>CHARGEBACK_INIT</finalState>
         </linkStateMachine>
         <linkStateMachine>
+            <initialStateMachine>REFUND</initialStateMachine>
+            <initialState>REFUND_SUCCESS</initialState>
+            <finalStateMachine>VOID</finalStateMachine>
+            <finalState>VOID_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
             <initialStateMachine>PURCHASE</initialStateMachine>
             <initialState>PURCHASE_SUCCESS</initialState>
             <finalStateMachine>REFUND</finalStateMachine>
@@ -512,6 +542,12 @@
             <initialState>PURCHASE_SUCCESS</initialState>
             <finalStateMachine>CHARGEBACK</finalStateMachine>
             <finalState>CHARGEBACK_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>CREDIT</initialStateMachine>
+            <initialState>CREDIT_SUCCESS</initialState>
+            <finalStateMachine>VOID</finalStateMachine>
+            <finalState>VOID_INIT</finalState>
         </linkStateMachine>
         <linkStateMachine>
             <initialStateMachine>CHARGEBACK</initialStateMachine>

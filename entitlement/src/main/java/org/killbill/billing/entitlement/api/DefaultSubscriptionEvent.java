@@ -29,6 +29,7 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 
+
 public class DefaultSubscriptionEvent implements SubscriptionEvent {
 
     private final UUID id;

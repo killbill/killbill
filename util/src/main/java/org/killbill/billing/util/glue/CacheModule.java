@@ -22,7 +22,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheControllerDispatcherProvider;
 import org.killbill.billing.util.cache.EhCacheCacheManagerProvider;
-import org.killbill.billing.util.config.CacheConfig;
+import org.killbill.billing.util.config.definition.EhCacheConfig;
 import org.skife.config.ConfigurationObjectFactory;
 
 import net.sf.ehcache.CacheManager;
@@ -35,8 +35,8 @@ public class CacheModule extends KillBillModule {
 
     @Override
     protected void configure() {
-        final CacheConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(CacheConfig.class);
-        bind(CacheConfig.class).toInstance(config);
+        final EhCacheConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(EhCacheConfig.class);
+        bind(EhCacheConfig.class).toInstance(config);
 
         // EhCache specifics
         bind(CacheManager.class).toProvider(EhCacheCacheManagerProvider.class).asEagerSingleton();

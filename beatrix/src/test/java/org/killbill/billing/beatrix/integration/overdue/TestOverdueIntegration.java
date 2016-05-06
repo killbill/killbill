@@ -281,6 +281,10 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(5);
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
 
+        // Make sure the 'invoice-service:next-billing-date-queue' gets processed before we continue and since we are in AUTO_INVOICING_OFF
+        // no event (NULL_INVOICE) will be generated and so we can't synchronize on any event, and we need to add a small amount of sleep
+        Thread.sleep(1000);
+
         allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(true);
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -942,6 +946,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     }
 
     private void allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(final boolean extraPayment) {
+
         // Reset plugin so payments should now succeed
         paymentPlugin.makeAllInvoicesFailWithError(false);
 

@@ -177,7 +177,6 @@ public class DefaultEntitlementApiBase {
                     }
 
                     blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, true, true, true, baseSubscription, internalCallContext);
-
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 } catch (AccountApiException e) {
@@ -218,7 +217,6 @@ public class DefaultEntitlementApiBase {
                     }
 
                     blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, false, false, false, baseSubscription, internalCallContext);
-
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 } catch (AccountApiException e) {
@@ -228,11 +226,6 @@ public class DefaultEntitlementApiBase {
             }
         };
         pluginExecution.executeWithPlugin(resumeWithPlugin, pluginContext);
-    }
-
-    public void setBlockingState(final UUID bundleId, final String stateName, final String serviceName, final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext)
-            throws EntitlementApiException {
-        blockUnblockBundle(bundleId, stateName, serviceName, localEffectiveDate, blockBilling, blockEntitlement, blockChange, null, internalCallContext);
     }
 
     private UUID blockUnblockBundle(final UUID bundleId, final String stateName, final String serviceName, @Nullable final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, @Nullable final SubscriptionBase inputBaseSubscription, final InternalCallContext internalCallContext)

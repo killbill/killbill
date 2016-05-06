@@ -64,7 +64,7 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
         private static final class JaxRsResourceBaseTest extends JaxRsResourceBase {
 
         public JaxRsResourceBaseTest() {
-            super(null, null, null, null, null, null, null, null);
+            super(null, null, null, null, null, null, null, null, null);
         }
     }
 }

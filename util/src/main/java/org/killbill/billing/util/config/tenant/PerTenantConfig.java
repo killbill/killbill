@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -14,7 +15,13 @@
  * under the License.
  */
 
-package org.killbill.billing.util.config;
+package org.killbill.billing.util.config.tenant;
 
-public interface SubscriptionConfig extends KillbillConfig {
+import java.util.HashMap;
+
+public class PerTenantConfig extends HashMap<String, String> {
+
+    public PerTenantConfig() {
+    }
+
 }

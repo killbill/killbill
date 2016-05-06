@@ -29,6 +29,7 @@ public interface JaxrsResource {
     public static final String TIMELINE = "timeline";
     public static final String REGISTER_NOTIFICATION_CALLBACK = "registerNotificationCallback";
     public static final String UPLOAD_PLUGIN_CONFIG = "uploadPluginConfig";
+    public static final String UPLOAD_PER_TENANT_CONFIG = "uploadPerTenantConfig";
     public static final String USER_KEY_VALUE = "userKeyValue";
     public static final String SEARCH = "search";
 
@@ -83,6 +84,10 @@ public interface JaxrsResource {
     public static final String QUERY_ACCOUNT_WITH_BALANCE_AND_CBA = "accountWithBalanceAndCBA";
 
     public static final String QUERY_ACCOUNT_ID = "accountId";
+
+    public static final String QUERY_BLOCKING_STATE_TYPES = "blockingStateTypes";
+    public static final String QUERY_BLOCKING_STATE_SVCS = "blockingStateSvcs";
+
 
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
     public static final String QUERY_WITH_MIGRATION_INVOICES = "withMigrationInvoices";

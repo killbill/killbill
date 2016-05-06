@@ -63,7 +63,7 @@ public class ProfilingContainerResponseFilter implements ContainerRequestFilter,
                     profilingData.addStart(ProfilingFeatureType.JAXRS, request.getPath());
                 }
             } catch (IllegalArgumentException e) {
-                log.info("Profiling data output " + profilingHeaderRequest + " is not supported, profiling NOT enabled");
+                log.info("Profiling data output {} is not supported, profiling NOT enabled", profilingHeaderRequest);
             }
         }
         return request;

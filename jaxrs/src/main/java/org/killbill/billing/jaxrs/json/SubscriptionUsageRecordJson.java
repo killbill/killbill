@@ -28,6 +28,7 @@ import org.killbill.billing.usage.api.UsageRecord;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.wordnik.swagger.annotations.ApiModelProperty;
@@ -38,11 +39,15 @@ public class SubscriptionUsageRecordJson {
     private final String subscriptionId;
     @ApiModelProperty(required = true)
     private final List<UnitUsageRecordJson> unitUsageRecords;
+    @ApiModelProperty(required = false)
+    private final String trackingId;
 
     @JsonCreator
     public SubscriptionUsageRecordJson(@JsonProperty("subscriptionId") final String subscriptionId,
+                                       @JsonProperty("trackingId") final String trackingId,
                                        @JsonProperty("unitUsageRecords") final List<UnitUsageRecordJson> unitUsageRecords) {
         this.subscriptionId = subscriptionId;
+        this.trackingId = trackingId;
         this.unitUsageRecords = unitUsageRecords;
     }
 
@@ -52,6 +57,10 @@ public class SubscriptionUsageRecordJson {
 
     public List<UnitUsageRecordJson> getUnitUsageRecords() {
         return unitUsageRecords;
+    }
+
+    public String getTrackingId() {
+        return trackingId;
     }
 
     public static class UnitUsageRecordJson {
@@ -117,7 +126,7 @@ public class SubscriptionUsageRecordJson {
                 return input.toUnitUsageRecord();
             }
         }));
-        final SubscriptionUsageRecord result = new SubscriptionUsageRecord(UUID.fromString(subscriptionId), tmp);
+        final SubscriptionUsageRecord result = new SubscriptionUsageRecord(UUID.fromString(subscriptionId), trackingId, tmp);
         return result;
     }
 }

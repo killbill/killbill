@@ -123,7 +123,6 @@ public class TestChargeback extends TestJaxrsBase {
 
         final InvoicePaymentTransaction input = new InvoicePaymentTransaction();
         input.setPaymentId(payment.getPaymentId());
-        input.setAmount(BigDecimal.TEN.negate());
 
         try {
             killBillClient.createInvoicePaymentChargeback(input, createdBy, reason, comment);
