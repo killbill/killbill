@@ -501,13 +501,8 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
-<<<<<<< HEAD
-        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
-        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), true, true, createdBy, reason, comment);
-=======
         externalCharge.setCurrency(accountJson.getCurrency());
-        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), true, createdBy, reason, comment);
->>>>>>> work-for-release-0.17.0
+        final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), true, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
