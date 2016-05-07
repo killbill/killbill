@@ -232,8 +232,14 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Complete an existing transaction")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
-                           @ApiResponse(code = 404, message = "Account or payment not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response completeTransaction(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                         @PathParam("paymentId") final String paymentIdStr,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
@@ -251,7 +257,13 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Complete an existing transaction")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account or payment not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response completeTransactionByExternalKey(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                                      @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -329,8 +341,14 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Capture an existing authorization")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
-                           @ApiResponse(code = 404, message = "Account or payment not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response captureAuthorization(final PaymentTransactionJson json,
                                          @PathParam("paymentId") final String paymentIdStr,
                                          @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
@@ -348,7 +366,13 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Capture an existing authorization")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account or payment not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response captureAuthorizationByExternalKey(final PaymentTransactionJson json,
                                                       @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -393,8 +417,14 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Refund an existing payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
-                           @ApiResponse(code = 404, message = "Account or payment not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response refundPayment(final PaymentTransactionJson json,
                                   @PathParam("paymentId") final String paymentIdStr,
                                   @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
@@ -413,7 +443,13 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Refund an existing payment")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account or payment not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response refundPaymentByExternalKey(final PaymentTransactionJson json,
                                                @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -460,8 +496,14 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Void an existing payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
-                           @ApiResponse(code = 404, message = "Account or payment not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response voidPayment(final PaymentTransactionJson json,
                                 @PathParam("paymentId") final String paymentIdStr,
                                 @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
@@ -479,7 +521,13 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Void an existing payment")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account or payment not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response voidPaymentByExternalKey(final PaymentTransactionJson json,
                                              @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -520,8 +568,14 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Record a chargeback")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response chargebackPayment(final PaymentTransactionJson json,
                                       @PathParam("paymentId") final String paymentIdStr,
                                       @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
@@ -540,7 +594,13 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Record a chargeback")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response chargebackPaymentByExternalKey(final PaymentTransactionJson json,
                                                    @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -584,7 +644,13 @@ public class PaymentResource extends ComboPaymentResource {
     @Produces(APPLICATION_JSON)
     @Path("/" + COMBO)
     @ApiOperation(value = "Combo api to create a new payment transaction on a existing (or not) account ")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response createComboPayment(@MetricTag(tag = "type", property = "transactionType") final ComboPaymentTransactionJson json,
                                        @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
