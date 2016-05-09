@@ -102,12 +102,13 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
                 try {
                     executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
+                } catch (final PaymentControlApiAbortException e) {
+                    // Transition to ABORTED
+                    final PaymentApiException paymentAbortedException = new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_API_ABORTED, e.getPluginName());
+                    throw new OperationException(paymentAbortedException, OperationResult.EXCEPTION);
                 } catch (final PaymentControlApiException e) {
                     // Transition to ABORTED and throw PaymentControlApiException to caller.
                     throw new OperationException(e, OperationResult.EXCEPTION);
-                } catch (final PaymentApiException paymentAbortedException) {
-                    // Transition to ABORTED
-                    throw new OperationException(paymentAbortedException, OperationResult.EXCEPTION);
                 }
 
                 final boolean success;
@@ -165,7 +166,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         return operationResult;
     }
 
-    private PriorPaymentControlResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContextArg) throws PaymentControlApiException, PaymentApiException {
+    private PriorPaymentControlResult executePluginPriorCalls(final List<String> paymentControlPluginNames, final PaymentControlContext paymentControlContextArg) throws PaymentControlApiException {
 
         final PriorPaymentControlResult result = controlPluginRunner.executePluginPriorCalls(paymentStateContext.getAccount(),
                                                                                              paymentControlContextArg.getPaymentMethodId(),

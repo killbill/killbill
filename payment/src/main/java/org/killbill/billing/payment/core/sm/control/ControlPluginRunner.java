@@ -73,7 +73,7 @@ public class ControlPluginRunner {
                                                              final boolean isApiPayment,
                                                              final List<String> paymentControlPluginNames,
                                                              final Iterable<PluginProperty> pluginProperties,
-                                                             final CallContext callContext) throws PaymentControlApiException, PaymentApiException {
+                                                             final CallContext callContext) throws PaymentControlApiException {
         // Return as soon as the first plugin aborts, or the last result for the last plugin
         PriorPaymentControlResult prevResult = new DefaultPriorPaymentControlResult(false, amount, currency, paymentMethodId, pluginProperties);
 
@@ -119,7 +119,7 @@ public class ControlPluginRunner {
                 inputPluginProperties = prevResult.getAdjustedPluginProperties();
             }
             if (prevResult.isAborted()) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_API_ABORTED, pluginName);
+                throw new PaymentControlApiAbortException(pluginName);
             }
             inputPaymentControlContext = new DefaultPaymentControlContext(account,
                                                                           inputPaymentMethodId,
