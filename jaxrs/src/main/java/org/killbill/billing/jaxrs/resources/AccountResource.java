@@ -862,8 +862,14 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Trigger a payment using the account external key (authorization, purchase or credit)")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account external key supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account external key supplied"),
+                           @ApiResponse(code = 404, message = "Account not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response processPaymentByExternalKey(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                                 @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                                 @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
@@ -886,8 +892,14 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Trigger a payment (authorization, purchase or credit)")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response processPayment(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                    @PathParam(QUERY_ACCOUNT_ID) final String accountIdStr,
                                    @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
@@ -961,11 +973,7 @@ public class AccountResource extends JaxRsResourceBase {
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
         }
-        // Aborted payment?
-        if (result == null) {
-            return Response.noContent().build();
-        }
-        return uriBuilder.buildResponse(PaymentResource.class, "getPayment", result.getId(), uriInfo.getBaseUri().toString());
+        return createPaymentResponse(uriInfo, result, transactionType, json.getTransactionExternalKey());
     }
 
     /*

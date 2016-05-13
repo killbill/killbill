@@ -35,6 +35,11 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
 
     private boolean isAborted;
     private DateTime nextRetryDate;
+    private Exception exception;
+
+    private boolean priorCallExecuted;
+    private boolean onSuccessCallExecuted;
+    private boolean onFailureCallExecuted;
 
     public MockPaymentControlProviderPlugin setAborted(final boolean isAborted) {
         this.isAborted = isAborted;
@@ -46,18 +51,48 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
         return this;
     }
 
+    public MockPaymentControlProviderPlugin throwsException(PaymentControlApiException exception) {
+        this.exception = exception;
+        return this;
+    }
+
+    public MockPaymentControlProviderPlugin throwsException(RuntimeException exception) {
+        this.exception = exception;
+        return this;
+    }
+
     @Override
     public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+        priorCallExecuted = true;
+        if (exception instanceof PaymentControlApiException) {
+            throw (PaymentControlApiException) exception;
+        } else if (exception instanceof RuntimeException) {
+            throw (RuntimeException) exception;
+        }
         return new DefaultPriorPaymentControlResult(isAborted);
     }
 
     @Override
     public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+        onSuccessCallExecuted = true;
         return new DefaultOnSuccessPaymentControlResult();
     }
 
     @Override
     public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+        onFailureCallExecuted = true;
         return new DefaultFailureCallResult(nextRetryDate);
+    }
+
+    public boolean isPriorCallExecuted() {
+        return priorCallExecuted;
+    }
+
+    public boolean isOnSuccessCallExecuted() {
+        return onSuccessCallExecuted;
+    }
+
+    public boolean isOnFailureCallExecuted() {
+        return onFailureCallExecuted;
     }
 }

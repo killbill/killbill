@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -37,6 +38,7 @@ import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
@@ -117,7 +119,7 @@ public class ControlPluginRunner {
                 inputPluginProperties = prevResult.getAdjustedPluginProperties();
             }
             if (prevResult.isAborted()) {
-                break;
+                throw new PaymentControlApiAbortException(pluginName);
             }
             inputPaymentControlContext = new DefaultPaymentControlContext(account,
                                                                           inputPaymentMethodId,

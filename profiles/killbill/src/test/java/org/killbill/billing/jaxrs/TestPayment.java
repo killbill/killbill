@@ -18,6 +18,7 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,11 +33,14 @@ import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.client.model.PluginProperty;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -48,20 +52,42 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.fail;
 
 public class TestPayment extends TestJaxrsBase {
 
     @Inject
     protected OSGIServiceRegistration<PaymentPluginApi> registry;
+    @Inject
+    private OSGIServiceRegistration<PaymentControlPluginApi> controlPluginRegistry;
 
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
+    private MockPaymentControlProviderPlugin mockPaymentControlProviderPlugin;
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
         mockPaymentProviderPlugin.clear();
+
+        mockPaymentControlProviderPlugin = new MockPaymentControlProviderPlugin();
+        controlPluginRegistry.registerService(new OSGIServiceDescriptor() {
+            @Override
+            public String getPluginSymbolicName() {
+                return null;
+            }
+
+            @Override
+            public String getPluginName() {
+                return MockPaymentControlProviderPlugin.PLUGIN_NAME;
+            }
+
+            @Override
+            public String getRegistrationName() {
+                return MockPaymentControlProviderPlugin.PLUGIN_NAME;
+            }
+        }, mockPaymentControlProviderPlugin);
     }
 
     @Test(groups = "slow")
@@ -74,9 +100,48 @@ public class TestPayment extends TestJaxrsBase {
         authTransaction.setAmount(BigDecimal.ONE);
         authTransaction.setCurrency(account.getCurrency());
         authTransaction.setTransactionType(TransactionType.AUTHORIZE.name());
-        final Payment payment = killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction, ImmutableMap.<String, String>of(), createdBy, reason, comment);
-        assertEquals(payment.getTransactions().get(0).getGatewayErrorCode(), MockPaymentProviderPlugin.GATEWAY_ERROR_CODE);
-        assertEquals(payment.getTransactions().get(0).getGatewayErrorMsg(), MockPaymentProviderPlugin.GATEWAY_ERROR);
+        try {
+            killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction, ImmutableMap.<String, String>of(), createdBy, reason, comment);
+            fail();
+        } catch (KillBillClientException e) {
+            assertEquals(402, e.getResponse().getStatusCode());
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testWithCanceledPayment() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+
+        mockPaymentProviderPlugin.makeNextPaymentFailWithCancellation();
+
+        final PaymentTransaction authTransaction = new PaymentTransaction();
+        authTransaction.setAmount(BigDecimal.ONE);
+        authTransaction.setCurrency(account.getCurrency());
+        authTransaction.setTransactionType(TransactionType.AUTHORIZE.name());
+        try {
+            killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction, ImmutableMap.<String, String>of(), createdBy, reason, comment);
+            fail();
+        } catch (KillBillClientException e) {
+            assertEquals(502, e.getResponse().getStatusCode());
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testWithTimeoutPayment() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+
+        mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds(10000);
+
+        final PaymentTransaction authTransaction = new PaymentTransaction();
+        authTransaction.setAmount(BigDecimal.ONE);
+        authTransaction.setCurrency(account.getCurrency());
+        authTransaction.setTransactionType(TransactionType.AUTHORIZE.name());
+        try {
+            killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction, ImmutableMap.<String, String>of(), createdBy, reason, comment);
+            fail();
+        } catch (KillBillClientException e) {
+            assertEquals(504, e.getResponse().getStatusCode());
+        }
     }
 
     @Test(groups = "slow")
@@ -363,23 +428,9 @@ public class TestPayment extends TestJaxrsBase {
     public void testComboAuthorization() throws Exception {
         final Account accountJson = getAccount();
         accountJson.setAccountId(null);
-
-        final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
-        info.setProperties(null);
-
-        final String paymentMethodExternalKey = UUID.randomUUID().toString();
-        final PaymentMethod paymentMethodJson = new PaymentMethod(null, paymentMethodExternalKey, null, true, PLUGIN_NAME, info);
-
         final String paymentExternalKey = UUID.randomUUID().toString();
-        final String authTransactionExternalKey = UUID.randomUUID().toString();
-        final PaymentTransaction authTransactionJson = new PaymentTransaction();
-        authTransactionJson.setAmount(BigDecimal.TEN);
-        authTransactionJson.setCurrency(accountJson.getCurrency());
-        authTransactionJson.setPaymentExternalKey(paymentExternalKey);
-        authTransactionJson.setTransactionExternalKey(authTransactionExternalKey);
-        authTransactionJson.setTransactionType("AUTHORIZE");
 
-        final ComboPaymentTransaction comboPaymentTransaction = new ComboPaymentTransaction(accountJson, paymentMethodJson, authTransactionJson, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of());
+        final ComboPaymentTransaction comboPaymentTransaction = createComboPaymentTransaction(accountJson, paymentExternalKey);
 
         final Payment payment = killBillClient.createPayment(comboPaymentTransaction, ImmutableMap.<String, String>of(), createdBy, reason, comment);
         verifyComboPayment(payment, paymentExternalKey, BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, 1, 1);
@@ -389,6 +440,58 @@ public class TestPayment extends TestJaxrsBase {
         final Payment voidPayment = killBillClient.voidPayment(null, paymentExternalKey, voidTransactionExternalKey, null, ImmutableMap.<String, String>of(), createdBy, reason, comment);
         verifyPaymentTransaction(accountJson, voidPayment.getPaymentId(), paymentExternalKey, voidPayment.getTransactions().get(1),
                                  voidTransactionExternalKey, null, "VOID", "SUCCESS");
+    }
+
+    @Test(groups = "slow")
+    public void testComboAuthorizationAbortedPayment() throws Exception {
+        final Account accountJson = getAccount();
+        accountJson.setAccountId(null);
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final ComboPaymentTransaction comboPaymentTransaction = createComboPaymentTransaction(accountJson, paymentExternalKey);
+
+        mockPaymentControlProviderPlugin.setAborted(true);
+        try {
+            killBillClient.createPayment(comboPaymentTransaction, Arrays.asList(MockPaymentControlProviderPlugin.PLUGIN_NAME), ImmutableMap.<String, String>of(), createdBy, reason, comment);
+            fail();
+        } catch (KillBillClientException e) {
+            assertEquals(e.getResponse().getStatusCode(), 422);
+        }
+        assertFalse(mockPaymentControlProviderPlugin.isOnFailureCallExecuted());
+        assertFalse(mockPaymentControlProviderPlugin.isOnSuccessCallExecuted());
+    }
+
+    @Test(groups = "slow")
+    public void testComboAuthorizationControlPluginException() throws Exception {
+        final Account accountJson = getAccount();
+        accountJson.setAccountId(null);
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final ComboPaymentTransaction comboPaymentTransaction = createComboPaymentTransaction(accountJson, paymentExternalKey);
+
+        mockPaymentControlProviderPlugin.throwsException(new IllegalStateException());
+        try {
+            killBillClient.createPayment(comboPaymentTransaction, Arrays.asList(MockPaymentControlProviderPlugin.PLUGIN_NAME), ImmutableMap.<String, String>of(), createdBy, reason, comment);
+            fail();
+        } catch (KillBillClientException e) {
+            assertEquals(e.getResponse().getStatusCode(), 500);
+        }
+    }
+
+    private ComboPaymentTransaction createComboPaymentTransaction(final Account accountJson, final String paymentExternalKey) {
+        final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
+        info.setProperties(null);
+
+        final String paymentMethodExternalKey = UUID.randomUUID().toString();
+        final PaymentMethod paymentMethodJson = new PaymentMethod(null, paymentMethodExternalKey, null, true, PLUGIN_NAME, info);
+
+        final String authTransactionExternalKey = UUID.randomUUID().toString();
+        final PaymentTransaction authTransactionJson = new PaymentTransaction();
+        authTransactionJson.setAmount(BigDecimal.TEN);
+        authTransactionJson.setCurrency(accountJson.getCurrency());
+        authTransactionJson.setPaymentExternalKey(paymentExternalKey);
+        authTransactionJson.setTransactionExternalKey(authTransactionExternalKey);
+        authTransactionJson.setTransactionType("AUTHORIZE");
+
+        return new ComboPaymentTransaction(accountJson, paymentMethodJson, authTransactionJson, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of());
     }
 
     @Test(groups = "slow")

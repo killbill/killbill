@@ -18,8 +18,6 @@
 package org.killbill.billing.payment.core.sm.control;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
@@ -27,6 +25,7 @@ import org.joda.time.DateTime;
 import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
@@ -47,12 +46,10 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
-import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
 
 public abstract class OperationControlCallback extends OperationCallbackBase<Payment, PaymentApiException> implements OperationCallback {
 
@@ -103,13 +100,12 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                      paymentStateControlContext.isApiPayment(),
                                                                                                      paymentStateContext.getCallContext());
 
-                final PriorPaymentControlResult pluginResult;
                 try {
-                    pluginResult = executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
-                    if (pluginResult != null && pluginResult.isAborted()) {
-                        // Transition to ABORTED
-                        return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.EXCEPTION);
-                    }
+                    executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
+                } catch (final PaymentControlApiAbortException e) {
+                    // Transition to ABORTED
+                    final PaymentApiException paymentAbortedException = new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_API_ABORTED, e.getPluginName());
+                    throw new OperationException(paymentAbortedException, OperationResult.EXCEPTION);
                 } catch (final PaymentControlApiException e) {
                     // Transition to ABORTED and throw PaymentControlApiException to caller.
                     throw new OperationException(e, OperationResult.EXCEPTION);
@@ -149,33 +145,19 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                     throw new OperationException(e, executePluginOnFailureCallsAndSetRetryDate(paymentControlContext));
                 } catch (final RuntimeException e) {
                     // Attempts to set the retry date in context if needed.
-                    executePluginOnFailureCallsAndSetRetryDate(paymentControlContext);
-                    throw new OperationException(e, OperationResult.EXCEPTION);
+                    throw new OperationException(e, executePluginOnFailureCallsAndSetRetryDate(paymentControlContext));
                 }
             }
         });
     }
 
     @Override
-    protected OperationException unwrapExceptionFromDispatchedTask(final Exception e) {
-        // If this is an ExecutionException we attempt to extract the cause first
-        final Throwable originalExceptionOrCausePossiblyOperationException = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
-
-        // Unwrap OperationException too (doOperationCallback wraps exceptions in OperationException)
-        final Throwable originalExceptionOrCause = originalExceptionOrCausePossiblyOperationException instanceof OperationException ? MoreObjects.firstNonNull(originalExceptionOrCausePossiblyOperationException.getCause(), originalExceptionOrCausePossiblyOperationException) : originalExceptionOrCausePossiblyOperationException;
-
-        if (originalExceptionOrCause instanceof OperationException) {
-            return (OperationException) originalExceptionOrCause;
-        } else if (originalExceptionOrCause instanceof LockFailedException) {
-            logger.warn("Failed to lock accountId='{}'", paymentStateContext.getAccount().getId());
-        } else if (originalExceptionOrCause instanceof TimeoutException) {
-            logger.warn("Call TIMEOUT for accountId='{}'", paymentStateContext.getAccount().getId());
-        } else if (originalExceptionOrCause instanceof InterruptedException) {
-            logger.warn("Call was interrupted for accountId='{}'", paymentStateContext.getAccount().getId());
-        } else {
-            logger.warn("Operation failed for accountId='{}'", paymentStateContext.getAccount().getId(), e);
+    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentApiException e) {
+        if (e.getCause() instanceof OperationException) {
+            return (OperationException) e.getCause();
         }
-        return new OperationException(originalExceptionOrCause, getOperationResultOnException(paymentStateContext));
+        logger.warn("Operation failed for accountId='{}' accountExternalKey='{}' error='{}'", paymentStateContext.getAccount().getExternalKey(), e.getMessage());
+        return new OperationException(e, getOperationResultOnException(paymentStateContext));
     }
 
     private OperationResult getOperationResultOnException(final PaymentStateContext paymentStateContext) {
