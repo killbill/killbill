@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,8 +25,6 @@ import javax.inject.Inject;
 
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -46,10 +44,7 @@ public class JDBCSessionDao extends CachingSessionDAO {
 
     @Override
     protected void doUpdate(final Session session) {
-        // Assume only the last access time attribute was updated (see https://github.com/killbill/killbill/issues/326)
-        final DateTime lastAccessTime = new DateTime(session.getLastAccessTime(), DateTimeZone.UTC);
-        final Long sessionId = Long.valueOf(session.getId().toString());
-        jdbcSessionSqlDao.updateLastAccessTime(lastAccessTime, sessionId);
+        jdbcSessionSqlDao.update(new SessionModelDao(session));
     }
 
     @Override
