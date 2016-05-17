@@ -61,7 +61,7 @@ public abstract class ExceptionMapperBase {
     }
 
     private Response doFallback(final Exception exception, final UriInfo uriInfo) {
-        if (exception.getCause() == null || !(exception.getCause() instanceof BillingExceptionBase)) {
+        if (!(exception.getCause() instanceof BillingExceptionBase)) {
             return buildBadRequestResponse(exception, uriInfo);
         }
 
