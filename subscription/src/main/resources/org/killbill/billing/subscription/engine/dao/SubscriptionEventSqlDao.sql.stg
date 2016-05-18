@@ -53,7 +53,7 @@ update <tableName()>
 set
 current_version = :currentVersion
 , updated_by = :createdBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where
 id = :id
 <AND_CHECK_TENANT()>
@@ -65,7 +65,7 @@ update <tableName()>
 set
 is_active = false
 , updated_by = :createdBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where
 id = :id
 <AND_CHECK_TENANT()>
@@ -77,7 +77,7 @@ update <tableName()>
 set
 is_active = true
 , updated_by = :createdBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where
 event_id = :eventId
 <AND_CHECK_TENANT()>
