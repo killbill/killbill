@@ -17,100 +17,21 @@
 
 package org.killbill.billing.payment.api;
 
-import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.util.config.PaymentConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 public class DefaultApiBase {
-
-    private static final Logger log = LoggerFactory.getLogger(DefaultApiBase.class);
-    private static final Joiner JOINER = Joiner.on(",");
 
     private final PaymentConfig paymentConfig;
 
     public DefaultApiBase(final PaymentConfig paymentConfig) {
         this.paymentConfig = paymentConfig;
-    }
-
-    protected void logAPICall(final String transactionType,
-                              final Account account,
-                              final UUID paymentMethodId,
-                              @Nullable final UUID paymentId,
-                              @Nullable final UUID transactionId,
-                              @Nullable final BigDecimal amount,
-                              @Nullable final Currency currency,
-                              @Nullable final String paymentExternalKey,
-                              @Nullable final String paymentTransactionExternalKey,
-                              @Nullable final TransactionStatus transactionStatus,
-                              @Nullable final List<String> paymentControlPluginNames) {
-        if (log.isInfoEnabled()) {
-            final StringBuilder logLine = new StringBuilder();
-            logLine.append("PaymentApi: transactionType='")
-                   .append(transactionType)
-                   .append("', accountId='")
-                   .append(account.getId())
-                   .append("'");
-            if (paymentMethodId != null) {
-                logLine.append(", paymentMethodId='")
-                       .append(paymentMethodId)
-                       .append("'");
-            }
-            if (paymentExternalKey != null) {
-                logLine.append(", paymentExternalKey='")
-                       .append(paymentExternalKey)
-                       .append("'");
-            }
-            if (paymentTransactionExternalKey != null) {
-                logLine.append(", paymentTransactionExternalKey='")
-                       .append(paymentTransactionExternalKey)
-                       .append("'");
-            }
-            if (paymentId != null) {
-                logLine.append(", paymentId='")
-                       .append(paymentId)
-                       .append("'");
-            }
-            if (transactionId != null) {
-                logLine.append(", transactionId='")
-                       .append(transactionId)
-                       .append("'");
-            }
-            if (amount != null) {
-                logLine.append(", amount='")
-                       .append(amount)
-                       .append("'");
-            }
-            if (currency != null) {
-                logLine.append(", currency='")
-                       .append(currency)
-                       .append("'");
-            }
-            if (transactionStatus != null) {
-                logLine.append(", transactionStatus='")
-                       .append(transactionStatus)
-                       .append("'");
-            }
-            if (paymentControlPluginNames != null) {
-                logLine.append(", paymentControlPluginNames='")
-                       .append(JOINER.join(paymentControlPluginNames))
-                       .append("'");
-            }
-            log.info(logLine.toString());
-        }
     }
 
     protected List<String> toPaymentControlPluginNames(final PaymentOptions paymentOptions) {
