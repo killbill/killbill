@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.SimpleSession;
-import org.joda.time.DateTime;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -57,11 +56,11 @@ public class TestJDBCSessionDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(retrievedSession, session);
 
         // Update
-        final Date lastAccessTime = DateTime.now().withTimeAtStartOfDay().toDate(); // Milliseconds will be truncated
-        Assert.assertNotEquals(retrievedSession.getLastAccessTime(), lastAccessTime);
-        session.setLastAccessTime(lastAccessTime);
+        final String newHost = UUID.randomUUID().toString();
+        Assert.assertNotEquals(retrievedSession.getHost(), newHost);
+        session.setHost(newHost);
         jdbcSessionDao.doUpdate(session);
-        Assert.assertEquals(jdbcSessionDao.doReadSession(sessionId).getLastAccessTime().compareTo(lastAccessTime), 0);
+        Assert.assertEquals(jdbcSessionDao.doReadSession(sessionId).getHost(), newHost);
 
         // Delete
         jdbcSessionDao.doDelete(session);

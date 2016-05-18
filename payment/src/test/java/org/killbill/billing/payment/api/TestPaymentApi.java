@@ -320,6 +320,23 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCreatePurchaseWithControlPluginException() throws Exception {
+        mockPaymentControlProviderPlugin.throwsException(new PaymentControlApiException());
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "pay controle external key";;
+        final String transactionExternalKey = "txn control external key";
+        try {
+            paymentApi.createPurchaseWithPaymentControl(
+                    account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED,
+                    paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), CONTROL_PLUGIN_OPTIONS, callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertTrue(e.getCause() instanceof PaymentControlApiException);
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testCreatePurchaseWithControlPluginRuntimeException() throws Exception {
         mockPaymentControlProviderPlugin.throwsException(new IllegalStateException());
 
         final BigDecimal requestedAmount = BigDecimal.TEN;

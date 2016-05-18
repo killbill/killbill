@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
@@ -99,13 +100,12 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                      paymentStateControlContext.isApiPayment(),
                                                                                                      paymentStateContext.getCallContext());
 
-                final PriorPaymentControlResult pluginResult;
                 try {
-                    pluginResult = executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
-                    if (pluginResult != null && pluginResult.isAborted()) {
-                        // Transition to ABORTED
-                        return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.EXCEPTION);
-                    }
+                    executePluginPriorCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
+                } catch (final PaymentControlApiAbortException e) {
+                    // Transition to ABORTED
+                    final PaymentApiException paymentAbortedException = new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_API_ABORTED, e.getPluginName());
+                    throw new OperationException(paymentAbortedException, OperationResult.EXCEPTION);
                 } catch (final PaymentControlApiException e) {
                     // Transition to ABORTED and throw PaymentControlApiException to caller.
                     throw new OperationException(e, OperationResult.EXCEPTION);
