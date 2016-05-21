@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
@@ -152,6 +153,20 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
     }
 
+    @Test(groups = "fast")
+    public void testBuildFormDescriptorWithPaymentControlAbortedPayment() throws PaymentApiException {
+        plugin.setAborted(true);
+
+        // Set a random UUID to verify the plugin will successfully override it
+        try {
+            paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, UUID.randomUUID(), ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of(), paymentOptions, callContext);
+            Assert.fail();
+        } catch (PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode());
+        }
+
+    }
+
     public static class TestPaymentGatewayApiValidationPlugin implements PaymentControlPluginApi {
 
         public static final String VALIDATION_PLUGIN_NAME = "TestPaymentGatewayApiValidationPlugin";
@@ -216,11 +231,18 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
         private Iterable<PluginProperty> newOnResultProperties;
         private Iterable<PluginProperty> removedOnResultProperties;
 
+        private boolean aborted;
+
         public TestPaymentGatewayApiControlPlugin() {
+            this.aborted = false;
             this.newPriorCallProperties = ImmutableList.of();
             this.removedPriorCallProperties = ImmutableList.of();
             this.newOnResultProperties = ImmutableList.of();
             this.removedOnResultProperties = ImmutableList.of();
+        }
+
+        public void setAborted(final boolean aborted) {
+            this.aborted = aborted;
         }
 
         public void setPriorCallProperties(final Iterable<PluginProperty> newPriorCallProperties, final Iterable<PluginProperty> removedPriorCallProperties) {
@@ -235,7 +257,7 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
         @Override
         public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
-            return new DefaultPriorPaymentControlResult(false, account.getPaymentMethodId(), null, null, getAdjustedProperties(properties, newPriorCallProperties, removedPriorCallProperties));
+            return new DefaultPriorPaymentControlResult(aborted, account.getPaymentMethodId(), null, null, getAdjustedProperties(properties, newPriorCallProperties, removedPriorCallProperties));
         }
 
         @Override
