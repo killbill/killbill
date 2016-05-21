@@ -44,6 +44,10 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 /**
  * PlanAligner offers specific APIs to return the correct {@code TimedPhase} when creating, changing Plan or to compute
  * next Phase on current Plan.
@@ -173,6 +177,7 @@ public class PlanAligner extends BaseAligner {
                                                  lastPlanTransition.getNextPriceList().getName(),
                                                  effectiveDate,
                                                  lastPlanTransition.getEffectiveTransitionTime(),
+                                                 subscription.getAllTransitions().get(0).getNextPhase().getPhaseType(),
                                                  WhichPhase.NEXT,
                                                  context);
                 default:
@@ -231,6 +236,7 @@ public class PlanAligner extends BaseAligner {
                                      effectiveDate,
                                      // This method is only called while doing the change, hence we want to pass the change effective date
                                      effectiveDate,
+                                     subscription.getAllTransitions().get(0).getNextPhase().getPhaseType(),
                                      which,
                                      context);
     }
@@ -244,6 +250,7 @@ public class PlanAligner extends BaseAligner {
                                              final String priceList,
                                              final DateTime effectiveDate,
                                              final DateTime lastOrCurrentChangeEffectiveDate,
+                                             final PhaseType originalInitialPhase,
                                              final WhichPhase which,
                                              final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
         final Catalog catalog = catalogService.getFullCatalog(context);
@@ -259,17 +266,21 @@ public class PlanAligner extends BaseAligner {
                                                                 nextPlan.getRecurringBillingPeriod(),
                                                                 priceList);
 
+        final PhaseType initialPhase;
         final DateTime planStartDate;
         final PlanAlignmentChange alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier, effectiveDate);
         switch (alignment) {
             case START_OF_SUBSCRIPTION:
                 planStartDate = subscriptionStartDate;
+                initialPhase = isPlanContainPhaseType(nextPlan, originalInitialPhase) ? originalInitialPhase : null;
                 break;
             case START_OF_BUNDLE:
                 planStartDate = bundleStartDate;
+                initialPhase = isPlanContainPhaseType(nextPlan, originalInitialPhase) ? originalInitialPhase : null;
                 break;
             case CHANGE_OF_PLAN:
                 planStartDate = lastOrCurrentChangeEffectiveDate;
+                initialPhase = null;
                 break;
             case CHANGE_OF_PRICELIST:
                 throw new SubscriptionBaseError(String.format("Not implemented yet %s", alignment));
@@ -277,9 +288,10 @@ public class PlanAligner extends BaseAligner {
                 throw new SubscriptionBaseError(String.format("Unknown PlanAlignmentChange %s", alignment));
         }
 
-        final List<TimedPhase> timedPhases = getPhaseAlignments(nextPlan, null, planStartDate);
+        final List<TimedPhase> timedPhases = getPhaseAlignments(nextPlan, initialPhase, planStartDate);
         return getTimedPhase(timedPhases, effectiveDate, which);
     }
+
 
     private List<TimedPhase> getPhaseAlignments(final Plan plan, @Nullable final PhaseType initialPhase, final DateTime initialPhaseStartDate) throws SubscriptionBaseApiException {
         if (plan == null) {
@@ -341,6 +353,12 @@ public class PlanAligner extends BaseAligner {
         }
     }
 
-
-
+    private boolean isPlanContainPhaseType(final Plan plan, @Nullable final PhaseType phaseType) {
+        return Iterables.any(ImmutableList.copyOf(plan.getAllPhases()), new Predicate<PlanPhase>() {
+            @Override
+            public boolean apply(final PlanPhase input) {
+                return input.getPhaseType() == phaseType;
+            }
+        });
+    }
 }
