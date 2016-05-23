@@ -379,7 +379,6 @@
         <stateMachine name="CHARGEBACK">
             <states>
                 <state name="CHARGEBACK_INIT"/>
-                <state name="CHARGEBACK_PENDING"/>
                 <state name="CHARGEBACK_SUCCESS"/>
                 <state name="CHARGEBACK_FAILED"/>
                 <state name="CHARGEBACK_ERRORED"/>
@@ -396,30 +395,6 @@
                     <operation>OP_CHARGEBACK</operation>
                     <operationResult>FAILURE</operationResult>
                     <finalState>CHARGEBACK_FAILED</finalState>
-                </transition>
-                <transition>
-                    <initialState>CHARGEBACK_INIT</initialState>
-                    <operation>OP_CHARGEBACK</operation>
-                    <operationResult>PENDING</operationResult>
-                    <finalState>CHARGEBACK_PENDING</finalState>
-                </transition>
-                <transition>
-                    <initialState>CHARGEBACK_PENDING</initialState>
-                    <operation>OP_CHARGEBACK</operation>
-                    <operationResult>SUCCESS</operationResult>
-                    <finalState>CHARGEBACK_SUCCESS</finalState>
-                </transition>
-                <transition>
-                    <initialState>CHARGEBACK_PENDING</initialState>
-                    <operation>OP_CHARGEBACK</operation>
-                    <operationResult>FAILURE</operationResult>
-                    <finalState>CHARGEBACK_FAILED</finalState>
-                </transition>
-                <transition>
-                    <initialState>CHARGEBACK_PENDING</initialState>
-                    <operation>OP_CHARGEBACK</operation>
-                    <operationResult>EXCEPTION</operationResult>
-                    <finalState>CHARGEBACK_ERRORED</finalState>
                 </transition>
                 <transition>
                     <initialState>CHARGEBACK_INIT</initialState>
@@ -554,6 +529,12 @@
             <initialState>CHARGEBACK_SUCCESS</initialState>
             <finalStateMachine>CHARGEBACK</finalStateMachine>
             <finalState>CHARGEBACK_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>CHARGEBACK</initialStateMachine>
+            <initialState>CHARGEBACK_FAILED</initialState>
+            <finalStateMachine>REFUND</finalStateMachine>
+            <finalState>REFUND_INIT</finalState>
         </linkStateMachine>
     </linkStateMachines>
 </stateMachineConfig>

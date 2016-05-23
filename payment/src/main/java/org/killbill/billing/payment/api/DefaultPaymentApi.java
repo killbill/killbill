@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
@@ -660,6 +661,46 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
                            paymentTransaction != null ? paymentTransaction.getExternalKey() : null,
                            paymentTransaction != null ? paymentTransaction.getTransactionStatus() : null,
                            paymentControlPluginNames);
+        }
+    }
+
+    //@Override TODO 0.17
+    public Payment createChargebackReversal(final Account account, final UUID paymentId, final String paymentTransactionExternalKey, final CallContext callContext) throws PaymentApiException {
+        checkNotNullParameter(account, "account");
+        checkNotNullParameter(paymentId, "paymentId");
+        checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
+
+        final String transactionType = TransactionType.CHARGEBACK.name();
+        Payment payment = null;
+        PaymentTransaction paymentTransaction = null;
+        try {
+            logEnterAPICall(transactionType, account, null, paymentId, null, null, null, null, paymentTransactionExternalKey, null, null);
+
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+            payment = paymentProcessor.createChargebackReversal(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, paymentTransactionExternalKey, null, null, true, callContext, internalCallContext);
+
+            // See https://github.com/killbill/killbill/issues/552
+            paymentTransaction = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
+                                                                    new Predicate<PaymentTransaction>() {
+                                                                        @Override
+                                                                        public boolean apply(final PaymentTransaction input) {
+                                                                            return paymentTransactionExternalKey.equals(input.getExternalKey());
+                                                                        }
+                                                                    });
+
+            return payment;
+        } finally {
+            logExitAPICall(transactionType,
+                           account,
+                           payment != null ? payment.getPaymentMethodId() : null,
+                           payment != null ? payment.getId() : null,
+                           paymentTransaction != null ? paymentTransaction.getId() : null,
+                           paymentTransaction != null ? paymentTransaction.getProcessedAmount() : null,
+                           paymentTransaction != null ? paymentTransaction.getProcessedCurrency() : null,
+                           payment != null ? payment.getExternalKey() : null,
+                           paymentTransaction != null ? paymentTransaction.getExternalKey() : null,
+                           paymentTransaction != null ? paymentTransaction.getTransactionStatus() : null,
+                           null);
         }
     }
 
