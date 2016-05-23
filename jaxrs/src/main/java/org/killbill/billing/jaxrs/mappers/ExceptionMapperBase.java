@@ -61,7 +61,7 @@ public abstract class ExceptionMapperBase {
     }
 
     private Response doFallback(final Exception exception, final UriInfo uriInfo) {
-        if (exception.getCause() == null || !(exception.getCause() instanceof BillingExceptionBase)) {
+        if (!(exception.getCause() instanceof BillingExceptionBase)) {
             return buildBadRequestResponse(exception, uriInfo);
         }
 
@@ -145,12 +145,13 @@ public abstract class ExceptionMapperBase {
     }
 
     protected Response buildPluginTimeoutResponse(final Exception e, final UriInfo uriInfo) {
-        final Response.ResponseBuilder responseBuilder = Response.status(Status.ACCEPTED);
+        // 504 - Gateway Timeout
+        final Response.ResponseBuilder responseBuilder = Response.status(504);
         serializeException(e, uriInfo, responseBuilder);
         return new LoggingResponse(e, responseBuilder.build());
     }
 
-    private void serializeException(final Exception e, final UriInfo uriInfo, final Response.ResponseBuilder responseBuilder) {
+    protected void serializeException(final Exception e, final UriInfo uriInfo, final Response.ResponseBuilder responseBuilder) {
         final boolean withStackTrace = uriInfo.getQueryParameters() != null && "true".equals(uriInfo.getQueryParameters().getFirst(QUERY_WITH_STACK_TRACE));
         final BillingExceptionJson billingExceptionJson = new BillingExceptionJson(e, withStackTrace);
 

@@ -34,6 +34,7 @@ import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
+import org.killbill.billing.payment.core.sm.control.PaymentControlApiAbortException;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
@@ -145,6 +146,8 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                                                                                                        PaymentApiType.HPP, null, HPPType.BUILD_FORM_DESCRIPTOR,
                                                                                                                        null, null, true, paymentControlPluginNames, properties, callContext);
 
+                                                     } catch (final PaymentControlApiAbortException e) {
+                                                         throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_API_ABORTED, e.getPluginName());
                                                      } catch (final PaymentControlApiException e) {
                                                          throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e);
                                                      }

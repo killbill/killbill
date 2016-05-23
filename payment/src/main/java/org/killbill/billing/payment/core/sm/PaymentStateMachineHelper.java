@@ -214,7 +214,7 @@ public class PaymentStateMachineHelper {
 
     // A better way would be to change the xml to add attributes to the state (e.g isTerminal, isSuccess, isInit,...)
     public boolean isSuccessState(final String stateName) {
-        return stateName.endsWith("SUCCESS");
+        return stateName.endsWith("SUCCESS") || stateName.startsWith("CHARGEBACK");
     }
 
     public final State fetchNextState(final String prevStateName, final boolean isSuccess) throws MissingEntryException {

@@ -44,9 +44,8 @@ update <tableName()>
 set
 charged_through_date = :chargedThroughDate
 , updated_by = :createdBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;
 >>
-

@@ -19,8 +19,6 @@ package org.killbill.billing.payment.core.sm.payments;
 
 import java.math.BigDecimal;
 import java.util.Iterator;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationException;
@@ -44,11 +42,9 @@ import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
-import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -86,35 +82,15 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
         } else {
             try {
                 return doSimpleOperationCallback();
-            } catch (final Exception e) {
-                // We need to unwrap OperationException (see doSimpleOperationCallback below)
-                throw unwrapExceptionFromDispatchedTask(e);
+            } catch (final OperationException e) {
+                throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
             }
         }
     }
 
     @Override
-    protected OperationException unwrapExceptionFromDispatchedTask(final Exception e) {
-        // If this is an ExecutionException we attempt to extract the cause first
-        final Throwable originalExceptionOrCausePossiblyOperationException = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
-
-        // Unwrap OperationException too (doOperationCallback wraps exceptions in OperationException)
-        final Throwable originalExceptionOrCause = originalExceptionOrCausePossiblyOperationException instanceof OperationException ? MoreObjects.firstNonNull(originalExceptionOrCausePossiblyOperationException.getCause(), originalExceptionOrCausePossiblyOperationException) : originalExceptionOrCausePossiblyOperationException;
-
-        //
-        // Any case of exception (checked or runtime) should lead to a TransactionStatus.UNKNOWN (and a XXX_ERRORED payment state).
-        // In order to reach that state we create PaymentTransactionInfoPlugin with an PaymentPluginStatus.UNDEFINED status (and an OperationResult.EXCEPTION).
-        //
-        if (originalExceptionOrCause instanceof LockFailedException) {
-            logger.warn("Failed to lock accountExternalKey='{}'", paymentStateContext.getAccount().getExternalKey());
-        } else if (originalExceptionOrCause instanceof TimeoutException) {
-            logger.warn("Plugin call TIMEOUT for accountExternalKey='{}'", paymentStateContext.getAccount().getExternalKey());
-        } else if (originalExceptionOrCause instanceof InterruptedException) {
-            logger.warn("Plugin call was interrupted for accountExternalKey='{}'", paymentStateContext.getAccount().getExternalKey());
-        } else {
-            logger.warn("Payment plugin call threw an exception for accountExternalKey='{}'", paymentStateContext.getAccount().getExternalKey(), originalExceptionOrCause);
-        }
-        return convertToUnknownTransactionStatusAndErroredPaymentState(originalExceptionOrCause);
+    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentApiException e) {
+        return convertToUnknownTransactionStatusAndErroredPaymentState(e);
     }
 
     //
@@ -123,7 +99,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     // - Construct a PaymentTransactionInfoPlugin whose PaymentPluginStatus = UNDEFINED to end up with a paymentTransactionStatus = UNKNOWN and have a chance to
     //   be fixed by Janitor.
     //
-    private OperationException convertToUnknownTransactionStatusAndErroredPaymentState(final Throwable e) {
+    private OperationException convertToUnknownTransactionStatusAndErroredPaymentState(final Exception e) {
 
         final PaymentTransactionInfoPlugin paymentInfoPlugin = new DefaultNoOpPaymentInfoPlugin(paymentStateContext.getPaymentId(),
                                                                                                 paymentStateContext.getTransactionId(),
@@ -136,6 +112,12 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                 null,
                                                                                                 null);
         paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
+        if (e.getCause() instanceof OperationException) {
+            return (OperationException) e.getCause();
+        }
+        if (e instanceof OperationException) {
+            return (OperationException) e;
+        }
         return new OperationException(e, OperationResult.EXCEPTION);
     }
 

@@ -30,7 +30,7 @@ update <tableName()>
 set
 last_sys_update_date = :lastSysUpdateDate
 , updated_by = :createdBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;
@@ -41,7 +41,7 @@ update <tableName()>
 set
 external_key = :externalKey
 , updated_by = :createdBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;

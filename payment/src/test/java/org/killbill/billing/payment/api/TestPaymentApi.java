@@ -20,16 +20,14 @@ package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
-import org.killbill.automaton.OperationException;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -37,15 +35,16 @@ import org.killbill.billing.control.plugin.api.PaymentControlApiException;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.core.sm.OperationCallbackBase;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
-import org.killbill.billing.payment.logging.SpyLogger;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
+import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -54,19 +53,20 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import static org.killbill.billing.payment.logging.TestLoggingHelper.withSpyLogger;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
+
+    private MockPaymentControlProviderPlugin mockPaymentControlProviderPlugin;
 
     final PaymentOptions INVOICE_PAYMENT = new PaymentOptions() {
         @Override
@@ -77,6 +77,18 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         @Override
         public List<String> getPaymentControlPluginNames() {
             return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        }
+    };
+
+    final PaymentOptions CONTROL_PLUGIN_OPTIONS = new PaymentOptions() {
+        @Override
+        public boolean isExternalPayment() {
+            return true;
+        }
+
+        @Override
+        public List<String> getPaymentControlPluginNames() {
+            return Arrays.asList(MockPaymentControlProviderPlugin.PLUGIN_NAME);
         }
     };
 
@@ -93,6 +105,24 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         super.beforeMethod();
         mockPaymentProviderPlugin.clear();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
+
+        mockPaymentControlProviderPlugin = new MockPaymentControlProviderPlugin();
+        controlPluginRegistry.registerService(new OSGIServiceDescriptor() {
+            @Override
+            public String getPluginSymbolicName() {
+                return null;
+            }
+
+            @Override
+            public String getPluginName() {
+                return MockPaymentControlProviderPlugin.PLUGIN_NAME;
+            }
+
+            @Override
+            public String getRegistrationName() {
+                return MockPaymentControlProviderPlugin.PLUGIN_NAME;
+            }
+        }, mockPaymentControlProviderPlugin);
     }
 
     @Test(groups = "slow")
@@ -255,6 +285,72 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     }
 
+    @Test(groups = "slow")
+    public void testCreatePurchasePaymentPluginException() {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithException();
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "pay external key";
+        final String transactionExternalKey = "txn external key";
+        try {
+            paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED,
+                                      paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertTrue(e.getCause() instanceof PaymentPluginApiException);
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testCreatePurchaseWithControlPaymentPluginException() throws Exception {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithException();
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "pay controle external key";;
+        final String transactionExternalKey = "txn control external key";
+        try {
+            paymentApi.createPurchaseWithPaymentControl(
+                    account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED,
+                    paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), CONTROL_PLUGIN_OPTIONS, callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertTrue(e.getCause() instanceof PaymentPluginApiException);
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testCreatePurchaseWithControlPluginException() throws Exception {
+        mockPaymentControlProviderPlugin.throwsException(new PaymentControlApiException());
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "pay controle external key";;
+        final String transactionExternalKey = "txn control external key";
+        try {
+            paymentApi.createPurchaseWithPaymentControl(
+                    account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED,
+                    paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), CONTROL_PLUGIN_OPTIONS, callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertTrue(e.getCause() instanceof PaymentControlApiException);
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testCreatePurchaseWithControlPluginRuntimeException() throws Exception {
+        mockPaymentControlProviderPlugin.throwsException(new IllegalStateException());
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "pay controle external key";;
+        final String transactionExternalKey = "txn control external key";
+        try {
+            paymentApi.createPurchaseWithPaymentControl(
+                    account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED,
+                    paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), CONTROL_PLUGIN_OPTIONS, callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertTrue(e.getCause() instanceof IllegalStateException);
+        }
+    }
 
     @Test(groups = "slow")
     public void testCreateSuccessAuthVoid() throws PaymentApiException {
@@ -950,51 +1046,242 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment2.getCurrency(), Currency.USD);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/477")
     public void testCreateChargeback() throws PaymentApiException {
+        // API change in 0.17
+        final DefaultPaymentApi paymentApi = (DefaultPaymentApi) this.paymentApi;
+
         final BigDecimal requestedAmount = BigDecimal.TEN;
+        final Currency currency = Currency.AED;
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String purchaseTransactionExternalKey = UUID.randomUUID().toString();
+        final String chargebackTransactionExternalKey = UUID.randomUUID().toString();
+        final ImmutableList<PluginProperty> properties = ImmutableList.<PluginProperty>of();
 
-        final String paymentExternalKey = "couic";
-        final String transactionExternalKey = "couac";
-        final String transactionExternalKey2 = "couyc";
+        final Payment payment = paymentApi.createPurchase(account,
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          requestedAmount,
+                                                          currency,
+                                                          paymentExternalKey,
+                                                          purchaseTransactionExternalKey,
+                                                          properties,
+                                                          callContext);
 
-        final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
-                                                          ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(payment.getExternalKey(), paymentExternalKey);
+        assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment.getAccountId(), account.getId());
+        assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getPurchasedAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCurrency(), currency);
 
-        paymentApi.createChargeback(account, payment.getId(), requestedAmount, Currency.AED, transactionExternalKey2, callContext);
-        final Payment payment2 = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(payment.getTransactions().size(), 1);
+        assertEquals(payment.getTransactions().get(0).getExternalKey(), purchaseTransactionExternalKey);
+        assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
+        assertEquals(payment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getCurrency(), currency);
+        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), currency);
+        assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
+        assertEquals(payment.getTransactions().get(0).getGatewayErrorMsg(), "");
+        assertEquals(payment.getTransactions().get(0).getGatewayErrorCode(), "");
+
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getStateName(), "PURCHASE_SUCCESS");
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getLastSuccessStateName(), "PURCHASE_SUCCESS");
+
+        // First chargeback
+        final Payment payment2 = paymentApi.createChargeback(account,
+                                                             payment.getId(),
+                                                             requestedAmount,
+                                                             currency,
+                                                             chargebackTransactionExternalKey,
+                                                             callContext);
 
         assertEquals(payment2.getExternalKey(), paymentExternalKey);
         assertEquals(payment2.getPaymentMethodId(), account.getPaymentMethodId());
         assertEquals(payment2.getAccountId(), account.getId());
         assertEquals(payment2.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(payment2.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
-        assertEquals(payment2.getPurchasedAmount().compareTo(requestedAmount), 0);
+        // Purchase amount zero-ed out
+        assertEquals(payment2.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(payment2.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
-        assertEquals(payment2.getCurrency(), Currency.AED);
+        assertEquals(payment2.getCurrency(), currency);
 
         assertEquals(payment2.getTransactions().size(), 2);
-        assertEquals(payment2.getTransactions().get(1).getExternalKey(), transactionExternalKey2);
+        assertEquals(payment2.getTransactions().get(1).getExternalKey(), chargebackTransactionExternalKey);
         assertEquals(payment2.getTransactions().get(1).getPaymentId(), payment.getId());
         assertEquals(payment2.getTransactions().get(1).getAmount().compareTo(requestedAmount), 0);
-        assertEquals(payment2.getTransactions().get(1).getCurrency(), Currency.AED);
-
+        assertEquals(payment2.getTransactions().get(1).getCurrency(), currency);
         assertEquals(payment2.getTransactions().get(1).getProcessedAmount().compareTo(requestedAmount), 0);
-        assertEquals(payment2.getTransactions().get(1).getProcessedCurrency(), Currency.AED);
-
+        assertEquals(payment2.getTransactions().get(1).getProcessedCurrency(), currency);
         assertEquals(payment2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment2.getTransactions().get(1).getTransactionType(), TransactionType.CHARGEBACK);
         assertNull(payment2.getTransactions().get(1).getGatewayErrorMsg());
         assertNull(payment2.getTransactions().get(1).getGatewayErrorCode());
 
-        // Attempt to any other operation afterwards, that should fail
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getStateName(), "CHARGEBACK_SUCCESS");
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getLastSuccessStateName(), "CHARGEBACK_SUCCESS");
+
         try {
-            paymentApi.createPurchase(account, account.getPaymentMethodId(), payment.getId(), requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
-                                      ImmutableList.<PluginProperty>of(), callContext);
-            Assert.fail("Purchase not succeed after a chargeback");
+            paymentApi.createRefund(account,
+                                    payment.getId(),
+                                    requestedAmount,
+                                    currency,
+                                    UUID.randomUUID().toString(),
+                                    properties,
+                                    callContext);
+            Assert.fail("Refunds are no longer permitted after a chargeback");
         } catch (final PaymentApiException e) {
-            Assert.assertTrue(true);
+            assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
         }
+
+        // First reversal
+        final Payment payment3 = paymentApi.createChargebackReversal(account,
+                                                                     payment.getId(),
+                                                                     chargebackTransactionExternalKey,
+                                                                     callContext);
+
+        assertEquals(payment3.getExternalKey(), paymentExternalKey);
+        assertEquals(payment3.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment3.getAccountId(), account.getId());
+        assertEquals(payment3.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment3.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        // Actual purchase amount
+        assertEquals(payment3.getPurchasedAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment3.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment3.getCurrency(), currency);
+
+        assertEquals(payment3.getTransactions().size(), 3);
+        assertEquals(payment3.getTransactions().get(2).getExternalKey(), chargebackTransactionExternalKey);
+        assertEquals(payment3.getTransactions().get(2).getPaymentId(), payment.getId());
+        assertNull(payment3.getTransactions().get(2).getAmount());
+        assertNull(payment3.getTransactions().get(2).getCurrency());
+        assertEquals(payment3.getTransactions().get(2).getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertNull(payment3.getTransactions().get(2).getProcessedCurrency());
+        assertEquals(payment3.getTransactions().get(2).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        assertEquals(payment3.getTransactions().get(2).getTransactionType(), TransactionType.CHARGEBACK);
+        assertNull(payment3.getTransactions().get(2).getGatewayErrorMsg());
+        assertNull(payment3.getTransactions().get(2).getGatewayErrorCode());
+
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getStateName(), "CHARGEBACK_FAILED");
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getLastSuccessStateName(), "CHARGEBACK_FAILED");
+
+        // Attempt a refund
+        final BigDecimal refundAmount = BigDecimal.ONE;
+        final String refundTransactionExternalKey = UUID.randomUUID().toString();
+        final Payment payment4 = paymentApi.createRefund(account,
+                                                         payment.getId(),
+                                                         refundAmount,
+                                                         currency,
+                                                         refundTransactionExternalKey,
+                                                         properties,
+                                                         callContext);
+
+        assertEquals(payment4.getExternalKey(), paymentExternalKey);
+        assertEquals(payment4.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment4.getAccountId(), account.getId());
+        assertEquals(payment4.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment4.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        // Actual purchase amount
+        assertEquals(payment4.getPurchasedAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment4.getRefundedAmount().compareTo(refundAmount), 0);
+        assertEquals(payment4.getCurrency(), currency);
+
+        assertEquals(payment4.getTransactions().size(), 4);
+        assertEquals(payment4.getTransactions().get(3).getExternalKey(), refundTransactionExternalKey);
+        assertEquals(payment4.getTransactions().get(3).getPaymentId(), payment.getId());
+        assertEquals(payment4.getTransactions().get(3).getAmount().compareTo(refundAmount), 0);
+        assertEquals(payment4.getTransactions().get(3).getCurrency(), currency);
+        assertEquals(payment4.getTransactions().get(3).getProcessedAmount().compareTo(refundAmount), 0);
+        assertEquals(payment4.getTransactions().get(3).getProcessedCurrency(), currency);
+        assertEquals(payment4.getTransactions().get(3).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payment4.getTransactions().get(3).getTransactionType(), TransactionType.REFUND);
+        assertEquals(payment4.getTransactions().get(3).getGatewayErrorMsg(), "");
+        assertEquals(payment4.getTransactions().get(3).getGatewayErrorCode(), "");
+
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getStateName(), "REFUND_SUCCESS");
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getLastSuccessStateName(), "REFUND_SUCCESS");
+
+        // Second chargeback
+        final BigDecimal secondChargebackAmount = requestedAmount.add(refundAmount.negate());
+        final Payment payment5 = paymentApi.createChargeback(account,
+                                                             payment.getId(),
+                                                             secondChargebackAmount,
+                                                             currency,
+                                                             chargebackTransactionExternalKey,
+                                                             callContext);
+
+        assertEquals(payment5.getExternalKey(), paymentExternalKey);
+        assertEquals(payment5.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment5.getAccountId(), account.getId());
+        assertEquals(payment5.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment5.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        // Purchase amount zero-ed out
+        assertEquals(payment5.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment5.getRefundedAmount().compareTo(refundAmount), 0);
+        assertEquals(payment5.getCurrency(), currency);
+
+        assertEquals(payment5.getTransactions().size(), 5);
+        assertEquals(payment5.getTransactions().get(4).getExternalKey(), chargebackTransactionExternalKey);
+        assertEquals(payment5.getTransactions().get(4).getPaymentId(), payment.getId());
+        assertEquals(payment5.getTransactions().get(4).getAmount().compareTo(secondChargebackAmount), 0);
+        assertEquals(payment5.getTransactions().get(4).getCurrency(), currency);
+        assertEquals(payment5.getTransactions().get(4).getProcessedAmount().compareTo(secondChargebackAmount), 0);
+        assertEquals(payment5.getTransactions().get(4).getProcessedCurrency(), currency);
+        assertEquals(payment5.getTransactions().get(4).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payment5.getTransactions().get(4).getTransactionType(), TransactionType.CHARGEBACK);
+        assertNull(payment5.getTransactions().get(4).getGatewayErrorMsg());
+        assertNull(payment5.getTransactions().get(4).getGatewayErrorCode());
+
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getStateName(), "CHARGEBACK_SUCCESS");
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getLastSuccessStateName(), "CHARGEBACK_SUCCESS");
+
+        try {
+            paymentApi.createRefund(account,
+                                    payment.getId(),
+                                    refundAmount,
+                                    currency,
+                                    UUID.randomUUID().toString(),
+                                    properties,
+                                    callContext);
+            Assert.fail("Refunds are no longer permitted after a chargeback");
+        } catch (final PaymentApiException e) {
+            assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+
+        // Second reversal
+        final Payment payment6 = paymentApi.createChargebackReversal(account,
+                                                                     payment.getId(),
+                                                                     chargebackTransactionExternalKey,
+                                                                     callContext);
+
+        assertEquals(payment6.getExternalKey(), paymentExternalKey);
+        assertEquals(payment6.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment6.getAccountId(), account.getId());
+        assertEquals(payment6.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment6.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        // Actual purchase amount
+        assertEquals(payment6.getPurchasedAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment6.getRefundedAmount().compareTo(refundAmount), 0);
+        assertEquals(payment6.getCurrency(), currency);
+
+        assertEquals(payment6.getTransactions().size(), 6);
+        assertEquals(payment6.getTransactions().get(5).getExternalKey(), chargebackTransactionExternalKey);
+        assertEquals(payment6.getTransactions().get(5).getPaymentId(), payment.getId());
+        assertNull(payment6.getTransactions().get(5).getAmount());
+        assertNull(payment6.getTransactions().get(5).getCurrency());
+        assertEquals(payment6.getTransactions().get(5).getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertNull(payment6.getTransactions().get(5).getProcessedCurrency());
+        assertEquals(payment6.getTransactions().get(5).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        assertEquals(payment6.getTransactions().get(5).getTransactionType(), TransactionType.CHARGEBACK);
+        assertNull(payment6.getTransactions().get(5).getGatewayErrorMsg());
+        assertNull(payment6.getTransactions().get(5).getGatewayErrorCode());
+
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getStateName(), "CHARGEBACK_FAILED");
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getLastSuccessStateName(), "CHARGEBACK_FAILED");
     }
 
     @Test(groups = "slow")
@@ -1183,37 +1470,32 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String paymentExternalKey = "ohhhh";
         final String transactionExternalKey = "naaahhh";
 
-        final String pluginName = mockPaymentProviderPlugin.PLUGIN_NAME;
-
         mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds((int) (paymentConfig.getPaymentPluginTimeout().getMillis() + 100));
-
-        SpyLogger spyLogger = withSpyLogger(OperationCallbackBase.class, new Callable<Void>() {
-
-            @Override
-            public Void call() throws Exception {
-                PaymentApiException thrownException = null;
-
-                try {
-                    final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
-                                                                      ImmutableList.<PluginProperty>of(), callContext);
-                } catch (PaymentApiException e) {
-                    thrownException = e;
-                }
-
-                assertNotNull(thrownException);
-
-                Throwable timeoutException = thrownException.getCause();
-                assertNotNull(timeoutException);
-                assertTrue(timeoutException instanceof TimeoutException);
-
-                return null;
-            }
-        });
-
-        assertTrue(spyLogger.contains("Calling plugin.*" + pluginName, Optional.of(SpyLogger.LOG_LEVEL_DEBUG)));
-        assertTrue(spyLogger.contains("TimeoutException.*" + pluginName, Optional.of(SpyLogger.LOG_LEVEL_WARN)));
+        try {
+            paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED,
+                                      paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertEquals(e.getCode(), ErrorCode.PAYMENT_PLUGIN_TIMEOUT.getCode());
+        }
     }
 
+    @Test(groups = "slow")
+    public void testCreatePurchaseWithControlTimeout() throws Exception {
+        final BigDecimal requestedAmount = BigDecimal.ONE;
+        final String paymentExternalKey = "111111";
+        final String transactionExternalKey = "11111";
+
+        mockPaymentProviderPlugin.makePluginWaitSomeMilliseconds((int) (paymentConfig.getPaymentPluginTimeout().getMillis() + 100));
+        try {
+            paymentApi.createPurchaseWithPaymentControl(
+                    account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey,
+                    transactionExternalKey, ImmutableList.<PluginProperty>of(), CONTROL_PLUGIN_OPTIONS, callContext);
+            fail();
+        } catch (PaymentApiException e) {
+            assertEquals(e.getCode(), ErrorCode.PAYMENT_PLUGIN_TIMEOUT.getCode());
+        }
+    }
 
     @Test(groups = "slow")
     public void testSanityAcrossTransactionTypes() throws PaymentApiException {

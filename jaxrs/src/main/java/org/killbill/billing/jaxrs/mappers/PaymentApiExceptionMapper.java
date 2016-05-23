@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.mappers;
 import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -64,14 +65,24 @@ public class PaymentApiExceptionMapper extends ExceptionMapperBase implements Ex
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_PLUGIN_TIMEOUT.getCode()) {
             return buildPluginTimeoutResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.PAYMENT_PLUGIN_GET_PAYMENT_INFO.getCode()) {
+            return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_UPD_PAYMENT_METHOD.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_INVALID_PARAMETER.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode()) {
+            return buildPaymentAbortedResponse(exception, uriInfo);
         } else {
             return fallback(exception, uriInfo);
         }
+    }
+
+    private Response buildPaymentAbortedResponse(final PaymentApiException exception, final UriInfo uriInfo) {
+        final Response.ResponseBuilder responseBuilder = Response.status(422);
+        serializeException(exception, uriInfo, responseBuilder);
+        return new LoggingResponse(exception, responseBuilder.build());
     }
 }

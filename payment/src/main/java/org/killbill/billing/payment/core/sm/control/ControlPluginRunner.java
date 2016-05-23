@@ -117,7 +117,7 @@ public class ControlPluginRunner {
                 inputPluginProperties = prevResult.getAdjustedPluginProperties();
             }
             if (prevResult.isAborted()) {
-                break;
+                throw new PaymentControlApiAbortException(pluginName);
             }
             inputPaymentControlContext = new DefaultPaymentControlContext(account,
                                                                           inputPaymentMethodId,

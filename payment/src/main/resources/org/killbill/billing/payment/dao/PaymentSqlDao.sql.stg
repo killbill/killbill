@@ -39,7 +39,7 @@ tableValues() ::= <<
 updatePaymentForNewTransaction() ::= <<
 update <tableName()>
 set updated_by = :updatedBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;
@@ -49,7 +49,7 @@ updatePaymentStateName() ::= <<
 update <tableName()>
 set state_name = :stateName
 , updated_by = :updatedBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;
@@ -60,7 +60,7 @@ update <tableName()>
 set state_name = :stateName
 , last_success_state_name = :lastSuccessStateName
 , updated_by = :updatedBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;
