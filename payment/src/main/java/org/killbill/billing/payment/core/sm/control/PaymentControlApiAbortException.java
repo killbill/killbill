@@ -22,7 +22,7 @@ import org.killbill.billing.control.plugin.api.PaymentControlApiException;
 /**
  * Created by arodrigues on 5/6/16.
  */
-class PaymentControlApiAbortException extends PaymentControlApiException {
+public class PaymentControlApiAbortException extends PaymentControlApiException {
     private final String pluginName;
 
     public PaymentControlApiAbortException(final String pluginName) {
