@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.sm.payments;
 
+import org.killbill.automaton.OperationResult;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
@@ -30,6 +31,15 @@ public class ChargebackInitiated extends PaymentLeavingStateCallback {
 
     public ChargebackInitiated(final PaymentAutomatonDAOHelper daoHelper, final PaymentStateContext paymentStateContext) throws PaymentApiException {
         super(daoHelper, paymentStateContext);
+    }
+
+    @Override
+    protected void validatePaymentIdAndTransactionType(final Iterable<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
+        if (OperationResult.FAILURE.equals(paymentStateContext.getOverridePluginOperationResult()) && !existingPaymentTransactions.iterator().hasNext()) {
+            // Chargeback reversals can only happen after a successful chargeback
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, paymentStateContext.getPaymentId());
+        }
+        super.validatePaymentIdAndTransactionType(existingPaymentTransactions);
     }
 
     @Override
