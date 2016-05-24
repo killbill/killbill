@@ -41,9 +41,11 @@ import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
@@ -113,10 +115,13 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response getBundle(@PathParam("bundleId") final String bundleId,
-                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
         final UUID id = UUID.fromString(bundleId);
-        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, context.createContext(request));
-        final BundleJson json = new BundleJson(bundle, null);
+
+        final TenantContext tenantContext = this.context.createContext(request);
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, tenantContext);
+        final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
+        final BundleJson json = new BundleJson(bundle, account.getCurrency(), null);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -126,9 +131,13 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a bundle by external key", response = BundleJson.class)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Bundle not found")})
     public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
-        final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, context.createContext(request));
-        final BundleJson json = new BundleJson(bundle, null);
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
+
+        final TenantContext tenantContext = this.context.createContext(request);
+
+        final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, tenantContext);
+        final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
+        final BundleJson json = new BundleJson(bundle, account.getCurrency(), null);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -154,7 +163,13 @@ public class BundleResource extends JaxRsResourceBase {
                                                         if (accountsAuditLogs.get().get(bundle.getAccountId()) == null) {
                                                             accountsAuditLogs.get().put(bundle.getAccountId(), auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext));
                                                         }
-                                                        return new BundleJson(bundle, accountsAuditLogs.get().get(bundle.getAccountId()));
+
+                                                        try {
+                                                            return new BundleJson(bundle, null, accountsAuditLogs.get().get(bundle.getAccountId()));
+                                                        } catch (final CatalogApiException unused) {
+                                                            // Does not happen because we pass a null Currency
+                                                            throw new RuntimeException(unused);
+                                                        }
                                                     }
                                                 },
                                                 nextPageUri);
@@ -184,7 +199,12 @@ public class BundleResource extends JaxRsResourceBase {
                                                         if (accountsAuditLogs.get().get(bundle.getAccountId()) == null) {
                                                             accountsAuditLogs.get().put(bundle.getAccountId(), auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext));
                                                         }
-                                                        return new BundleJson(bundle, accountsAuditLogs.get().get(bundle.getAccountId()));
+                                                        try {
+                                                            return new BundleJson(bundle, null, accountsAuditLogs.get().get(bundle.getAccountId()));
+                                                        } catch (final CatalogApiException unused) {
+                                                            // Does not happen because we pass a null Currency
+                                                            throw new RuntimeException(unused);
+                                                        }
                                                     }
                                                 },
                                                 nextPageUri);

@@ -66,6 +66,16 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // Retrieves with GET
         Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        Assert.assertEquals(objFromJson.getPriceOverrides().size(), 2);
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(objFromJson.getPriceOverrides().get(0).getRecurringPrice());
+
+        Assert.assertNull(objFromJson.getPriceOverrides().get(1).getFixedPrice());
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(1).getRecurringPrice(), new BigDecimal("249.95"));
+
+        // Equality in java client is not correctly implemented so manually check PriceOverrides section and then reset before equality
+        objFromJson.setPriceOverrides(null);
+        entitlementJson.setPriceOverrides(null);
         Assert.assertTrue(objFromJson.equals(entitlementJson));
 
         // Change plan IMM

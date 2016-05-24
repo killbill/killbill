@@ -58,6 +58,7 @@ import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.MutableAccountData;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
@@ -265,7 +266,7 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID uuid = UUID.fromString(accountId);
-        accountUserApi.getAccountById(uuid, tenantContext);
+       final Account account = accountUserApi.getAccountById(uuid, tenantContext);
 
         final List<SubscriptionBundle> bundles = (externalKey != null) ?
                                                  subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext) :
@@ -274,7 +275,12 @@ public class AccountResource extends JaxRsResourceBase {
         final Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
             @Override
             public BundleJson apply(final SubscriptionBundle input) {
-                return new BundleJson(input, null);
+                try {
+                    return new BundleJson(input, account.getCurrency(), null);
+                } catch (final CatalogApiException e) {
+                    // Not the cleanest thing, but guava Api don't allow throw..
+                    throw new RuntimeException(e);
+                }
             }
         });
         return Response.status(Status.OK).entity(result).build();
@@ -383,7 +389,7 @@ public class AccountResource extends JaxRsResourceBase {
     public Response getAccountTimeline(@PathParam("accountId") final String accountIdString,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @QueryParam(QUERY_PARALLEL) @DefaultValue("false") final Boolean parallel,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionApiException, InvoiceApiException {
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionApiException, InvoiceApiException, CatalogApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID accountId = UUID.fromString(accountIdString);

@@ -23,6 +23,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.util.audit.AccountAuditLogs;
@@ -56,17 +58,19 @@ public class BundleJson extends JsonBase {
         this.timeline = timeline;
     }
 
-    public BundleJson(final SubscriptionBundle bundle, @Nullable final AccountAuditLogs accountAuditLogs) {
+    public BundleJson(final SubscriptionBundle bundle, @Nullable final Currency currency, @Nullable final AccountAuditLogs accountAuditLogs) throws CatalogApiException {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForBundle(bundle.getId())));
         this.accountId = bundle.getAccountId().toString();
         this.bundleId = bundle.getId().toString();
         this.externalKey = bundle.getExternalKey();
         this.subscriptions = new LinkedList<SubscriptionJson>();
         for (final Subscription subscription : bundle.getSubscriptions()) {
-            this.subscriptions.add(new SubscriptionJson(subscription, accountAuditLogs));
+            this.subscriptions.add(new SubscriptionJson(subscription, currency, accountAuditLogs));
         }
         this.timeline = new BundleTimelineJson(bundle.getTimeline(), accountAuditLogs);
     }
+
+
 
     public List<SubscriptionJson> getSubscriptions() {
         return subscriptions;

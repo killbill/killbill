@@ -76,9 +76,6 @@ public class CatalogResource extends JaxRsResourceBase {
 
     private final CatalogUserApi catalogUserApi;
 
-    // Catalog API don't quite support multiple catalogs per tenant
-    private static final String catalogName = "unused";
-
     @Inject
     public CatalogResource(final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,

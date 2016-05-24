@@ -110,6 +110,10 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     static final Logger log = LoggerFactory.getLogger(JaxRsResourceBase.class);
 
+    // Catalog API don't quite support multiple catalogs per tenant
+    protected static final String catalogName = "unused";
+
+
     protected static final ObjectMapper mapper = new ObjectMapper();
 
     protected final JaxrsUriBuilder uriBuilder;

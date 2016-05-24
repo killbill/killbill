@@ -47,6 +47,8 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
@@ -138,10 +140,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Subscription not found")})
     public Response getEntitlement(@PathParam("subscriptionId") final String subscriptionId,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(uuid, context.createContext(request));
-        final SubscriptionJson json = new SubscriptionJson(subscription, null);
+        final TenantContext tenantContext = this.context.createContext(request);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(uuid, tenantContext);
+
+        final Account account = accountUserApi.getAccountById(subscription.getAccountId(), tenantContext);
+        final SubscriptionJson json = new SubscriptionJson(subscription, account.getCurrency(), null);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -420,7 +425,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
 
             @Override
-            public Response doResponseOk(final Response operationResponse) throws SubscriptionApiException {
+            public Response doResponseOk(final Response operationResponse) throws SubscriptionApiException, AccountApiException, CatalogApiException {
                 if (operationResponse.getStatus() != Status.OK.getStatusCode()) {
                     return operationResponse;
                 }
@@ -557,7 +562,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         public boolean isImmOperation();
 
-        public Response doResponseOk(final T operationResponse) throws SubscriptionApiException;
+        public Response doResponseOk(final T operationResponse) throws SubscriptionApiException, AccountApiException, CatalogApiException;
     }
 
     private class EntitlementCallCompletion<T> {
@@ -565,7 +570,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         public Response withSynchronization(final EntitlementCallCompletionCallback<T> callback,
                                             final long timeoutSec,
                                             final boolean callCompletion,
-                                            final CallContext callContext) throws SubscriptionApiException, AccountApiException, EntitlementApiException {
+                                            final CallContext callContext) throws SubscriptionApiException, AccountApiException, EntitlementApiException{
             final CompletionUserRequestEntitlement waiter = callCompletion ? new CompletionUserRequestEntitlement(callContext.getUserToken()) : null;
             try {
                 if (waiter != null) {
@@ -578,6 +583,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 return callback.doResponseOk(operationValue);
             } catch (final InterruptedException e) {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            } catch (final CatalogApiException e) {
+                throw new EntitlementApiException(e);
             } catch (final TimeoutException e) {
                 return Response.status(408).build();
             } finally {
