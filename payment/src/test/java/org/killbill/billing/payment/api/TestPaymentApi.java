@@ -1285,6 +1285,68 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testCreateChargebackReversalBeforeChargeback() throws PaymentApiException {
+        // API change in 0.17
+        final DefaultPaymentApi paymentApi = (DefaultPaymentApi) this.paymentApi;
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final Currency currency = Currency.AED;
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String purchaseTransactionExternalKey = UUID.randomUUID().toString();
+        final String chargebackTransactionExternalKey = UUID.randomUUID().toString();
+        final ImmutableList<PluginProperty> properties = ImmutableList.<PluginProperty>of();
+
+        final Payment payment = paymentApi.createPurchase(account,
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          requestedAmount,
+                                                          currency,
+                                                          paymentExternalKey,
+                                                          purchaseTransactionExternalKey,
+                                                          properties,
+                                                          callContext);
+
+        assertEquals(payment.getExternalKey(), paymentExternalKey);
+        assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment.getAccountId(), account.getId());
+        assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getPurchasedAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCurrency(), currency);
+
+        assertEquals(payment.getTransactions().size(), 1);
+        assertEquals(payment.getTransactions().get(0).getExternalKey(), purchaseTransactionExternalKey);
+        assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
+        assertEquals(payment.getTransactions().get(0).getAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getCurrency(), currency);
+        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(requestedAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), currency);
+        assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
+        assertEquals(payment.getTransactions().get(0).getGatewayErrorMsg(), "");
+        assertEquals(payment.getTransactions().get(0).getGatewayErrorCode(), "");
+
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getStateName(), "PURCHASE_SUCCESS");
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getLastSuccessStateName(), "PURCHASE_SUCCESS");
+
+        try {
+            paymentApi.createChargebackReversal(account,
+                                                payment.getId(),
+                                                chargebackTransactionExternalKey,
+                                                callContext);
+            Assert.fail("Chargeback reversals are not permitted before a chargeback");
+        } catch (final PaymentApiException e) {
+            assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT.getCode());
+        }
+
+        assertEquals(paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext).getTransactions().size(), 1);
+
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getStateName(), "PURCHASE_SUCCESS");
+        assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getLastSuccessStateName(), "PURCHASE_SUCCESS");
+    }
+
+    @Test(groups = "slow")
     public void testNotifyPendingTransactionOfStateChanged() throws PaymentApiException {
 
         final BigDecimal authAmount = BigDecimal.TEN;
