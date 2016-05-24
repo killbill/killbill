@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -65,9 +65,9 @@ public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAut
     }
 
     @Override
-    OperationCallback createOperationCallback(final TransactionType transactionType, final PaymentStateControlContext paymentStateContext) {
+    OperationCallback createOperationCallback(final ControlOperation controlOperation, final PaymentStateControlContext paymentStateContext) {
         if (operationCallback == null) {
-            return super.createOperationCallback(transactionType, paymentStateContext);
+            return super.createOperationCallback(controlOperation, paymentStateContext);
         } else {
             return operationCallback;
         }

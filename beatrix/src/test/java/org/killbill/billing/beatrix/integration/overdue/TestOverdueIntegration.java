@@ -804,11 +804,15 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
         final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
-        final Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, ImmutableList.<PluginProperty>of(), callContext);
-        createChargeBackAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
+        Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        payment = createChargeBackAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         // We should now be in OD1
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
+
+        // Reverse the chargeback
+        createChargeBackReversalAndCheckForCompletion(account, payment, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR, NextEvent.BLOCK);
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
     }
 
     @Test(groups = "slow", description = "Test overdue clear after external payment")

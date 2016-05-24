@@ -662,7 +662,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
     }
 
-    //@Override TODO 0.17
+    @Override
     public Payment createChargebackReversal(final Account account, final UUID paymentId, final String paymentTransactionExternalKey, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
@@ -699,6 +699,51 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
                            paymentTransaction != null ? paymentTransaction.getExternalKey() : null,
                            paymentTransaction != null ? paymentTransaction.getTransactionStatus() : null,
                            null);
+        }
+    }
+
+    @Override
+    public Payment createChargebackReversalWithPaymentControl(final Account account, final UUID paymentId, final String paymentTransactionExternalKey, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
+        if (paymentControlPluginNames.isEmpty()) {
+            return createChargebackReversal(account, paymentId, paymentTransactionExternalKey, callContext);
+        }
+
+        checkNotNullParameter(account, "account");
+        checkNotNullParameter(paymentId, "paymentId");
+        checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
+
+        final String transactionType = TransactionType.CHARGEBACK.name();
+        Payment payment = null;
+        PaymentTransaction paymentTransaction = null;
+        try {
+            logEnterAPICall(transactionType, account, null, paymentId, null, null, null, null, paymentTransactionExternalKey, null, paymentControlPluginNames);
+
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+            payment = pluginControlPaymentProcessor.createChargebackReversal(IS_API_PAYMENT, account, paymentId, paymentTransactionExternalKey, paymentControlPluginNames, callContext, internalCallContext);
+
+            // See https://github.com/killbill/killbill/issues/552
+            paymentTransaction = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
+                                                                    new Predicate<PaymentTransaction>() {
+                                                                        @Override
+                                                                        public boolean apply(final PaymentTransaction input) {
+                                                                            return paymentTransactionExternalKey.equals(input.getExternalKey());
+                                                                        }
+                                                                    });
+
+            return payment;
+        } finally {
+            logExitAPICall(transactionType,
+                           account,
+                           payment != null ? payment.getPaymentMethodId() : null,
+                           payment != null ? payment.getId() : null,
+                           paymentTransaction != null ? paymentTransaction.getId() : null,
+                           paymentTransaction != null ? paymentTransaction.getProcessedAmount() : null,
+                           paymentTransaction != null ? paymentTransaction.getProcessedCurrency() : null,
+                           payment != null ? payment.getExternalKey() : null,
+                           paymentTransaction != null ? paymentTransaction.getExternalKey() : null,
+                           paymentTransaction != null ? paymentTransaction.getTransactionStatus() : null,
+                           paymentControlPluginNames);
         }
     }
 

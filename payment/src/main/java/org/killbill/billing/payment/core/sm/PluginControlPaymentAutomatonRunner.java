@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -47,6 +47,7 @@ import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.sm.control.AuthorizeControlOperation;
 import org.killbill.billing.payment.core.sm.control.CaptureControlOperation;
 import org.killbill.billing.payment.core.sm.control.ChargebackControlOperation;
+import org.killbill.billing.payment.core.sm.control.ChargebackReversalControlOperation;
 import org.killbill.billing.payment.core.sm.control.CompletionControlOperation;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
 import org.killbill.billing.payment.core.sm.control.CreditControlOperation;
@@ -74,6 +75,17 @@ import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 
 public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner {
 
+    public enum ControlOperation {
+        AUTHORIZE,
+        CAPTURE,
+        CHARGEBACK,
+        CHARGEBACK_REVERSAL,
+        CREDIT,
+        PURCHASE,
+        REFUND,
+        VOID
+    }
+
     protected final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry;
     private final PaymentProcessor paymentProcessor;
     private final RetryServiceScheduler retryServiceScheduler;
@@ -95,16 +107,16 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
         this.paymentConfig = paymentConfig;
     }
 
-    public Payment run(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
+    public Payment run(final boolean isApiPayment, final TransactionType transactionType, final ControlOperation controlOperation, final Account account, @Nullable final UUID paymentMethodId,
                        @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
                        @Nullable final BigDecimal amount, @Nullable final Currency currency,
                        final Iterable<PluginProperty> properties, @Nullable final List<String> paymentControlPluginNames,
                        final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        return run(paymentControlStateMachineHelper.getInitialState(), isApiPayment, transactionType, account, paymentMethodId, paymentId, paymentExternalKey, paymentTransactionExternalKey,
+        return run(paymentControlStateMachineHelper.getInitialState(), isApiPayment, transactionType, controlOperation, account, paymentMethodId, paymentId, paymentExternalKey, paymentTransactionExternalKey,
                    amount, currency, properties, paymentControlPluginNames, callContext, internalCallContext);
     }
 
-    public Payment run(final State state, final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
+    public Payment run(final State state, final boolean isApiPayment, final TransactionType transactionType, final ControlOperation controlOperation, final Account account, @Nullable final UUID paymentMethodId,
                        @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
                        @Nullable final BigDecimal amount, @Nullable final Currency currency,
                        final Iterable<PluginProperty> properties, @Nullable final List<String> paymentControlPluginNames,
@@ -115,7 +127,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
                                                                              amount, currency,
                                                                              properties, paymentControlPluginNames, callContext, internalCallContext);
         try {
-            final OperationCallback callback = createOperationCallback(transactionType, paymentStateContext);
+            final OperationCallback callback = createOperationCallback(controlOperation, paymentStateContext);
             final LeavingStateCallback leavingStateCallback = new DefaultControlInitiated(this, paymentStateContext, paymentDao, paymentControlStateMachineHelper.getInitialState(), paymentControlStateMachineHelper.getRetriedState(), transactionType);
             final EnteringStateCallback enteringStateCallback = new DefaultControlCompleted(this, paymentStateContext, paymentControlStateMachineHelper.getRetriedState(), retryServiceScheduler);
 
@@ -168,9 +180,9 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
     }
 
     @VisibleForTesting
-    OperationCallback createOperationCallback(final TransactionType transactionType, final PaymentStateControlContext paymentStateContext) {
+    OperationCallback createOperationCallback(final ControlOperation controlOperation, final PaymentStateControlContext paymentStateContext) {
         final OperationCallback callback;
-        switch (transactionType) {
+        switch (controlOperation) {
             case AUTHORIZE:
                 callback = new AuthorizeControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
@@ -192,8 +204,11 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
             case CHARGEBACK:
                 callback = new ChargebackControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
+            case CHARGEBACK_REVERSAL:
+                callback = new ChargebackReversalControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
+                break;
             default:
-                throw new IllegalStateException("Unsupported transaction type " + transactionType);
+                throw new IllegalStateException("Unsupported control operation " + controlOperation);
         }
         return callback;
     }

@@ -84,8 +84,11 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PaymentOptions;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
+import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -105,7 +108,6 @@ import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
-import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -114,7 +116,10 @@ import org.testng.annotations.BeforeMethod;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -532,6 +537,32 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 try {
                     return paymentApi.createChargebackWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
                                                                          PAYMENT_OPTIONS, callContext);
+                } catch (final PaymentApiException e) {
+                    fail(e.toString());
+                    return null;
+                }
+            }
+        }, events);
+    }
+
+    protected Payment createChargeBackReversalAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+        final PaymentTransaction chargeback = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
+                                                                                 new Predicate<PaymentTransaction>() {
+                                                                                     @Override
+                                                                                     public boolean apply(final PaymentTransaction input) {
+                                                                                         return TransactionType.CHARGEBACK.equals(input.getTransactionType()) &&
+                                                                                                TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
+                                                                                     }
+                                                                                 });
+        return createChargeBackReversalAndCheckForCompletion(account, payment, chargeback.getExternalKey(), events);
+    }
+
+    protected Payment createChargeBackReversalAndCheckForCompletion(final Account account, final Payment payment, final String chargebackTransactionExternalKey, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
+            @Override
+            public Payment apply(@Nullable final Void input) {
+                try {
+                    return paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), chargebackTransactionExternalKey, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;

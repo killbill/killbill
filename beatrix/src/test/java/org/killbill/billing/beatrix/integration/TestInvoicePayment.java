@@ -195,7 +195,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testPartialPaymentByPaymentPluginThenChargeback() throws Exception {
+    public void testPartialPaymentByPaymentPluginThenChargebackThenChargebackReversal() throws Exception {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -234,6 +234,20 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertEquals(payment1.getTransactions().get(1).getProcessedAmount().compareTo(BigDecimal.TEN), 0);
         invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
         Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+
+        // Trigger chargeback reversal
+        payment1 = createChargeBackReversalAndCheckForCompletion(account, payment1, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().size(), 3);
+        Assert.assertEquals(payment1.getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(0).getProcessedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().get(1).getAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(payment1.getTransactions().get(1).getProcessedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertNull(payment1.getTransactions().get(2).getAmount());
+        Assert.assertEquals(payment1.getTransactions().get(2).getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
+        invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
+        Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("239.95")), 0);
         Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
     }
 
@@ -334,6 +348,26 @@ public class TestInvoicePayment extends TestIntegrationBase {
         invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
         Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("249.95")), 0);
         Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+
+        // Reverse the chargeback
+        payment1 = createChargeBackReversalAndCheckForCompletion(account, payment1, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getTransactions().size(), 3);
+        Assert.assertEquals(payment1.getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(0).getCurrency(), Currency.USD);
+        Assert.assertEquals(payment1.getTransactions().get(0).getProcessedAmount().compareTo(new BigDecimal("225.44")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(0).getProcessedCurrency(), Currency.EUR);
+        Assert.assertEquals(payment1.getTransactions().get(1).getAmount().compareTo(new BigDecimal("225.44")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(1).getCurrency(), Currency.EUR);
+        Assert.assertEquals(payment1.getTransactions().get(1).getProcessedAmount().compareTo(new BigDecimal("225.44")), 0);
+        Assert.assertEquals(payment1.getTransactions().get(1).getProcessedCurrency(), Currency.EUR);
+        Assert.assertNull(payment1.getTransactions().get(2).getAmount());
+        Assert.assertNull(payment1.getTransactions().get(2).getCurrency());
+        Assert.assertEquals(payment1.getTransactions().get(2).getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertNull(payment1.getTransactions().get(2).getProcessedCurrency());
+        invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
+        Assert.assertEquals(invoice2.getBalance().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
     }
 
     @Test(groups = "slow")

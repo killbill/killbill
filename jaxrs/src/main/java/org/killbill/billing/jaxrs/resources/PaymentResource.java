@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -635,6 +635,80 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createChargebackWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
                                                             json.getTransactionExternalKey(), paymentOptions, callContext);
+        return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey());
+    }
+
+    @TimedResource(name = "chargebackReversalPayment")
+    @POST
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACK_REVERSALS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Record a chargeback reversal")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
+    public Response chargebackReversalPayment(final PaymentTransactionJson json,
+                                              @PathParam("paymentId") final String paymentIdStr,
+                                              @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
+                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                              @HeaderParam(HDR_REASON) final String reason,
+                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                              @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        return chargebackReversalPaymentInternal(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+    }
+
+    @TimedResource(name = "chargebackReversalPayment")
+    @POST
+    @Path("/" + CHARGEBACK_REVERSALS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Record a chargeback reversal")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
+    public Response chargebackReversalPaymentByExternalKey(final PaymentTransactionJson json,
+                                                           @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
+                                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                           @HeaderParam(HDR_REASON) final String reason,
+                                                           @HeaderParam(HDR_COMMENT) final String comment,
+                                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        return chargebackReversalPaymentInternal(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+    }
+
+    private Response chargebackReversalPaymentInternal(final PaymentTransactionJson json,
+                                                       @Nullable final String paymentIdStr,
+                                                       final List<String> paymentControlPluginNames,
+                                                       final List<String> pluginPropertiesString,
+                                                       final String createdBy,
+                                                       final String reason,
+                                                       final String comment,
+                                                       final UriInfo uriInfo,
+                                                       final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
+        verifyNonNullOrEmpty(json.getTransactionExternalKey(), "PaymentTransactionJson transactionExternalKey needs to be set");
+
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
+
+        final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
+
+        final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
+
+        final Payment payment = paymentApi.createChargebackReversalWithPaymentControl(account, initialPayment.getId(), json.getTransactionExternalKey(), paymentOptions, callContext);
         return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey());
     }
 

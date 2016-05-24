@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -188,6 +188,9 @@ public interface JaxrsResource {
 
     public static final String CHARGEBACKS = "chargebacks";
     public static final String CHARGEBACKS_PATH = PREFIX + "/" + CHARGEBACKS;
+
+    public static final String CHARGEBACK_REVERSALS = "chargebackReversals";
+    public static final String CHARGEBACK_REVERSALS_PATH = PREFIX + "/" + CHARGEBACK_REVERSALS;
 
     public static final String ALL_TAGS = "allTags";
     public static final String TAGS = "tags";

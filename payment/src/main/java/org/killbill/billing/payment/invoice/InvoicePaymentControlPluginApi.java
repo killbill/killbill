@@ -205,7 +205,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                             currency = linkedInvoicePayment.getCurrency();
                         }
 
-                        invoiceApi.recordChargeback(paymentControlContext.getPaymentId(), amount, currency, internalContext);
+                        invoiceApi.recordChargeback(paymentControlContext.getPaymentId(), paymentControlContext.getTransactionExternalKey(), amount, currency, internalContext);
                     }
                     break;
 
@@ -247,8 +247,14 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
                 break;
             case REFUND:
+                // We don't retry REFUND
+                break;
             case CHARGEBACK:
-                // We don't retry REFUND, CHARGEBACK
+                try {
+                    invoiceApi.recordChargebackReversal(paymentControlContext.getPaymentId(), paymentControlContext.getTransactionExternalKey(), internalContext);
+                } catch (final InvoiceApiException e) {
+                    log.warn("onFailureCall failed for attemptId='{}', transactionType='{}'", paymentControlContext.getAttemptPaymentId(), transactionType, e);
+                }
                 break;
             default:
                 throw new IllegalStateException("Unexpected transactionType " + transactionType);

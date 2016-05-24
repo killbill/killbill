@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -207,6 +207,33 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
 
         final Payment result = paymentApi.createChargebackWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(),
                                                                                    transactionExternalKey, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
+        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
+    }
+
+    @TimedResource
+    @POST
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACK_REVERSALS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Record a chargebackReversal")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found")})
+    public Response createChargebackReversal(final InvoicePaymentTransactionJson json,
+                                             @PathParam("paymentId") final String paymentId,
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "InvoicePaymentTransactionJson body should be specified");
+        verifyNonNullOrEmpty(json.getTransactionExternalKey(), "transactionExternalKey amount needs to be set");
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID paymentUuid = UUID.fromString(paymentId);
+        final Payment payment = paymentApi.getPayment(paymentUuid, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
+
+        final Payment result = paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), json.getTransactionExternalKey(), createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
         return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
     }
 

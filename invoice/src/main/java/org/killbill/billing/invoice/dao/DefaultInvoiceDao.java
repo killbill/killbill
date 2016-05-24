@@ -469,7 +469,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Before we go further, check if that refund already got inserted -- the payment system keeps a state machine
                 // and so this call may be called several time for the same  paymentCookieId (which is really the refundId)
-                final InvoicePaymentModelDao existingRefund = transactional.getPaymentsForCookieId(transactionExternalKey, context);
+                final InvoicePaymentModelDao existingRefund = transactional.getPaymentForCookieId(transactionExternalKey, context);
                 if (existingRefund != null) {
                     return existingRefund;
                 }
@@ -517,7 +517,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public InvoicePaymentModelDao postChargeback(final UUID paymentId, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
+    public InvoicePaymentModelDao postChargeback(final UUID paymentId, final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
         return transactionalSqlDao.execute(InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<InvoicePaymentModelDao>() {
             @Override
             public InvoicePaymentModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -554,7 +554,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final InvoicePaymentModelDao chargeBack = new InvoicePaymentModelDao(UUIDs.randomUUID(), context.getCreatedDate(), InvoicePaymentType.CHARGED_BACK,
                                                                                      payment.getInvoiceId(), payment.getPaymentId(), context.getCreatedDate(),
                                                                                      requestedChargedBackAmount.negate(), payment.getCurrency(), payment.getProcessedCurrency(),
-                                                                                     null, payment.getId(), true);
+                                                                                     chargebackTransactionExternalKey, payment.getId(), true);
                 transactional.create(chargeBack, context);
 
                 // Notify the bus since the balance of the invoice changed
@@ -565,6 +565,42 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, chargeBack, accountId, context.getUserToken(), context);
 
                 return chargeBack;
+            }
+        });
+    }
+
+    @Override
+    public InvoicePaymentModelDao postChargebackReversal(final UUID paymentId, final String chargebackTransactionExternalKey, final InternalCallContext context) throws InvoiceApiException {
+        return transactionalSqlDao.execute(InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<InvoicePaymentModelDao>() {
+            @Override
+            public InvoicePaymentModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
+
+                final InvoicePaymentModelDao invoicePayment = transactional.getPaymentForCookieId(chargebackTransactionExternalKey, context);
+                if (invoicePayment == null) {
+                    throw new InvoiceApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
+                }
+
+                transactional.updateAttempt(invoicePayment.getRecordId(),
+                                            invoicePayment.getPaymentId().toString(),
+                                            invoicePayment.getPaymentDate().toDate(),
+                                            invoicePayment.getAmount(),
+                                            invoicePayment.getCurrency(),
+                                            invoicePayment.getProcessedCurrency(),
+                                            invoicePayment.getPaymentCookieId(),
+                                            invoicePayment.getLinkedInvoicePaymentId() == null ? null : invoicePayment.getLinkedInvoicePaymentId().toString(),
+                                            false,
+                                            context);
+                final InvoicePaymentModelDao chargebackReversed = transactional.getByRecordId(invoicePayment.getRecordId(), context);
+
+                // Notify the bus since the balance of the invoice changed
+                final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargebackReversed.getId().toString(), context);
+
+                cbaDao.addCBAComplexityFromTransaction(chargebackReversed.getInvoiceId(), entitySqlDaoWrapperFactory, context);
+
+                notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, chargebackReversed, accountId, context.getUserToken(), context);
+
+                return chargebackReversed;
             }
         });
     }
@@ -712,6 +748,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                     invoicePayment.getProcessedCurrency(),
                                                     invoicePayment.getPaymentCookieId(),
                                                     null,
+                                                    true,
                                                     context);
                     }
                 }

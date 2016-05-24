@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,7 +32,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDao;
 
@@ -72,7 +71,9 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     // Include migrated invoices
     List<InvoiceModelDao> getAllInvoicesByAccount(InternalTenantContext context);
 
-    InvoicePaymentModelDao postChargeback(UUID paymentId, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+    InvoicePaymentModelDao postChargeback(UUID paymentId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+
+    InvoicePaymentModelDao postChargebackReversal(UUID paymentId, String chargebackTransactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
     InvoiceItemModelDao doCBAComplexity(InvoiceModelDao invoice, InternalCallContext context) throws InvoiceApiException;
 

@@ -1048,9 +1048,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/477")
     public void testCreateChargeback() throws PaymentApiException {
-        // API change in 0.17
-        final DefaultPaymentApi paymentApi = (DefaultPaymentApi) this.paymentApi;
-
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final Currency currency = Currency.AED;
         final String paymentExternalKey = UUID.randomUUID().toString();
@@ -1286,9 +1283,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCreateChargebackReversalBeforeChargeback() throws PaymentApiException {
-        // API change in 0.17
-        final DefaultPaymentApi paymentApi = (DefaultPaymentApi) this.paymentApi;
-
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final Currency currency = Currency.AED;
         final String paymentExternalKey = UUID.randomUUID().toString();
