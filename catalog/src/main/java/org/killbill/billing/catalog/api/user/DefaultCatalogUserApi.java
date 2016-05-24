@@ -16,10 +16,14 @@
 
 package org.killbill.billing.catalog.api.user;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.net.URI;
+
 import javax.inject.Inject;
 
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
@@ -32,6 +36,7 @@ import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.xmlloader.XMLLoader;
 
 public class DefaultCatalogUserApi implements CatalogUserApi {
 
@@ -66,11 +71,17 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     @Override
     public void uploadCatalog(final String catalogXML, final CallContext callContext) throws CatalogApiException {
         try {
+            // Validation purpose:  Will throw if bad XML or catalog validation fails
+            final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
+            XMLLoader.getObjectFromStream(new URI("dummy"), stream, StandaloneCatalog.class);
+
             final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
             catalogCache.clearCatalog(internalTenantContext);
             tenantApi.addTenantKeyValue(TenantKey.CATALOG.toString(), catalogXML, callContext);
         } catch (TenantApiException e) {
             throw new CatalogApiException(e);
+        } catch (final Exception e) {
+            throw new IllegalStateException(e);
         }
     }
 

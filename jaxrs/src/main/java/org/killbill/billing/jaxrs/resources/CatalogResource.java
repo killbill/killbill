@@ -16,9 +16,6 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +35,6 @@ import javax.ws.rs.core.UriInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -57,7 +53,6 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
-import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
 
 import com.google.inject.Inject;
@@ -111,10 +106,6 @@ public class CatalogResource extends JaxRsResourceBase {
                                      @HeaderParam(HDR_COMMENT) final String comment,
                                      @javax.ws.rs.core.Context final HttpServletRequest request,
                                      @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
-        // Validation purpose:  Will throw if bad XML or catalog validation fails
-        final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
-        XMLLoader.getObjectFromStream(new URI(JaxrsResource.CATALOG_PATH), stream, StandaloneCatalog.class);
-
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         catalogUserApi.uploadCatalog(catalogXML, callContext);
         return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null);
