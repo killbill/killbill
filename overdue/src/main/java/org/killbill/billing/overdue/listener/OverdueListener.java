@@ -20,14 +20,26 @@ package org.killbill.billing.overdue.listener;
 
 import java.util.UUID;
 
+import javax.inject.Named;
+
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
 import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
-import org.killbill.billing.overdue.OverdueInternalApi;
+import org.killbill.billing.overdue.api.OverdueApiException;
+import org.killbill.billing.overdue.api.OverdueConfig;
+import org.killbill.billing.overdue.caching.OverdueConfigCache;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
+import org.killbill.billing.overdue.config.DefaultOverdueState;
+import org.killbill.billing.overdue.glue.DefaultOverdueModule;
+import org.killbill.billing.overdue.notification.OverdueAsyncBusNotificationKey;
+import org.killbill.billing.overdue.notification.OverdueAsyncBusNotificationKey.OverdueAsyncBusNotificationAction;
+import org.killbill.billing.overdue.notification.OverdueAsyncBusNotifier;
+import org.killbill.billing.overdue.notification.OverduePoster;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -36,6 +48,7 @@ import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.bus.api.BusEvent;
+import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,38 +60,39 @@ public class OverdueListener {
 
     private static final Logger log = LoggerFactory.getLogger(OverdueListener.class);
 
-    private final OverdueInternalApi overdueInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
     private final CacheControllerDispatcher cacheControllerDispatcher;
-
+    private final Clock clock;
+    private final OverduePoster asyncPoster;
+    private final OverdueConfigCache overdueConfigCache;
     private final NonEntityDao nonEntityDao;
 
     @Inject
-    public OverdueListener(final OverdueInternalApi overdueInternalApi,
-                           final NonEntityDao nonEntityDao,
+    public OverdueListener(final NonEntityDao nonEntityDao,
                            final CacheControllerDispatcher cacheControllerDispatcher,
+                           final Clock clock,
+                           @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED)  final OverduePoster asyncPoster,
+                           final OverdueConfigCache overdueConfigCache,
                            final InternalCallContextFactory internalCallContextFactory) {
-        this.overdueInternalApi = overdueInternalApi;
         this.nonEntityDao = nonEntityDao;
+        this.clock = clock;
+        this.asyncPoster = asyncPoster;
+        this.overdueConfigCache = overdueConfigCache;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
     }
-
-
-
 
     @AllowConcurrentEvents
     @Subscribe
     public void handleTagInsert(final ControlTagCreationInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
-            final InternalCallContext callContext = createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2());
-            overdueInternalApi.scheduleOverdueClear(event.getObjectId(), callContext);
+            final InternalCallContext internalCallContext = createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2());
+            insertBusEventIntoNotificationQueue(event.getObjectId(), OverdueAsyncBusNotificationAction.CLEAR, internalCallContext);
         } else if (event.getTagDefinition().getName().equals(ControlTagType.WRITTEN_OFF.toString()) && event.getObjectType() == ObjectType.INVOICE) {
             final UUID accountId = nonEntityDao.retrieveIdFromObject(event.getSearchKey1(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
             insertBusEventIntoNotificationQueue(accountId, event);
         }
     }
-
 
     @AllowConcurrentEvents
     @Subscribe
@@ -113,11 +127,42 @@ public class OverdueListener {
     }
 
     private void insertBusEventIntoNotificationQueue(final UUID accountId, final BusEvent event) {
-        final InternalCallContext callContext = createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2());
-        overdueInternalApi.scheduleOverdueRefresh(accountId, callContext);
+        final InternalCallContext internalCallContext = createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2());
+        insertBusEventIntoNotificationQueue(accountId, OverdueAsyncBusNotificationAction.REFRESH, internalCallContext);
     }
 
     private InternalCallContext createCallContext(final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         return internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "OverdueService", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
     }
+
+    private void insertBusEventIntoNotificationQueue(final UUID accountId, final OverdueAsyncBusNotificationAction action, final InternalCallContext callContext) {
+        final boolean shouldInsertNotification = shouldInsertNotification(callContext);
+
+        if (shouldInsertNotification) {
+            final OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(accountId, action);
+            asyncPoster.insertOverdueNotification(accountId, clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, callContext);
+        }
+    }
+
+    // Optimization: don't bother running the Overdue machinery if it's disabled
+    private boolean shouldInsertNotification(final InternalTenantContext internalTenantContext) {
+        OverdueConfig overdueConfig;
+        try {
+            overdueConfig = overdueConfigCache.getOverdueConfig(internalTenantContext);
+        } catch (final OverdueApiException e) {
+            log.warn("Failed to extract overdue config for tenant " + internalTenantContext.getTenantRecordId());
+            overdueConfig = null;
+        }
+        if (overdueConfig == null || overdueConfig.getOverdueStatesAccount() == null || overdueConfig.getOverdueStatesAccount().getStates() == null) {
+            return false;
+        }
+
+        for (final DefaultOverdueState state : ((DefaultOverdueConfig) overdueConfig).getOverdueStatesAccount().getStates()) {
+            if (state.getConditionEvaluation() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

@@ -19,8 +19,6 @@ package org.killbill.billing.payment.core.sm.payments;
 
 import java.math.BigDecimal;
 import java.util.Iterator;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationException;
@@ -42,17 +40,19 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
-import org.killbill.commons.locker.LockFailedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 // Encapsulates the payment specific logic
 public abstract class PaymentOperation extends OperationCallbackBase<PaymentTransactionInfoPlugin, PaymentPluginApiException> implements OperationCallback {
+
+    private final Logger logger = LoggerFactory.getLogger(PaymentOperation.class);
 
     protected final PaymentAutomatonDAOHelper daoHelper;
     protected PaymentPluginApi plugin;
@@ -68,41 +68,29 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
+        final String pluginName;
         try {
-            final String pluginName = daoHelper.getPaymentProviderPluginName();
+            pluginName = daoHelper.getPaymentProviderPluginName();
             this.plugin = daoHelper.getPaymentPluginApi(pluginName);
-
-            if (paymentStateContext.shouldLockAccountAndDispatch()) {
-                return doOperationCallbackWithDispatchAndAccountLock(pluginName);
-            } else {
-                return doSimpleOperationCallback();
-            }
-        } catch (final Exception e) {
+        } catch (final PaymentApiException e) {
             throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
+        }
+
+        if (paymentStateContext.shouldLockAccountAndDispatch()) {
+            // This will already call unwrapExceptionFromDispatchedTask
+            return doOperationCallbackWithDispatchAndAccountLock(pluginName);
+        } else {
+            try {
+                return doSimpleOperationCallback();
+            } catch (final OperationException e) {
+                throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
+            }
         }
     }
 
     @Override
-    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentStateContext paymentStateContext, final Exception e) {
-
-        // If this is an ExecutionException we attempt to extract the cause first
-        final Throwable originalExceptionOrCause = e instanceof ExecutionException ? MoreObjects.firstNonNull(e.getCause(), e) : e;
-
-        //
-        // Any case of exception (checked or runtime) should lead to a TransactionStatus.UNKNOWN (and a XXX_ERRORED payment state).
-        // In order to reach that state we create PaymentTransactionInfoPlugin with an PaymentPluginStatus.UNDEFINED status (and an OperationResult.EXCEPTION).
-        //
-        if (originalExceptionOrCause instanceof LockFailedException) {
-            logger.warn("Failed to lock account {}", paymentStateContext.getAccount().getExternalKey());
-        } else if (originalExceptionOrCause instanceof TimeoutException) {
-            logger.error("Plugin call TIMEOUT for account {}", paymentStateContext.getAccount().getExternalKey());
-        } else if (originalExceptionOrCause instanceof InterruptedException) {
-            logger.error("Plugin call was interrupted for account {}", paymentStateContext.getAccount().getExternalKey());
-        } else {
-            logger.warn("Payment plugin call threw an exception for account {}", paymentStateContext.getAccount().getExternalKey(), originalExceptionOrCause);
-        }
-        return convertToUnknownTransactionStatusAndErroredPaymentState(originalExceptionOrCause);
-
+    protected OperationException unwrapExceptionFromDispatchedTask(final PaymentApiException e) {
+        return convertToUnknownTransactionStatusAndErroredPaymentState(e);
     }
 
     //
@@ -111,7 +99,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     // - Construct a PaymentTransactionInfoPlugin whose PaymentPluginStatus = UNDEFINED to end up with a paymentTransactionStatus = UNKNOWN and have a chance to
     //   be fixed by Janitor.
     //
-    private OperationException convertToUnknownTransactionStatusAndErroredPaymentState(final Throwable e) {
+    private OperationException convertToUnknownTransactionStatusAndErroredPaymentState(final Exception e) {
 
         final PaymentTransactionInfoPlugin paymentInfoPlugin = new DefaultNoOpPaymentInfoPlugin(paymentStateContext.getPaymentId(),
                                                                                                 paymentStateContext.getTransactionId(),
@@ -124,6 +112,12 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                 null,
                                                                                                 null);
         paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
+        if (e.getCause() instanceof OperationException) {
+            return (OperationException) e.getCause();
+        }
+        if (e instanceof OperationException) {
+            return (OperationException) e;
+        }
         return new OperationException(e, OperationResult.EXCEPTION);
     }
 

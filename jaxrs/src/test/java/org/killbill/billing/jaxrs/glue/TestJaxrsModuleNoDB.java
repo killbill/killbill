@@ -25,6 +25,7 @@ import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.glue.CacheModule;
+import org.killbill.billing.util.glue.ConfigModule;
 import org.mockito.Mockito;
 
 public class TestJaxrsModuleNoDB extends TestJaxrsModule {
@@ -41,6 +42,7 @@ public class TestJaxrsModuleNoDB extends TestJaxrsModule {
         install(new MockNonEntityDaoModule(configSource));
         install(new MockAccountModule(configSource));
         install(new CacheModule(configSource));
+        install(new ConfigModule(configSource));
         bind(TenantInternalApi.class).toInstance(Mockito.mock(TenantInternalApi.class));
         bind(SecurityManager.class).toInstance(Mockito.mock(SecurityManager.class));
     }

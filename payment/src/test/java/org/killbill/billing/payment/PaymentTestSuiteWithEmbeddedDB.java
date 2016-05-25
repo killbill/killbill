@@ -20,6 +20,7 @@ package org.killbill.billing.payment;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApi;
@@ -33,7 +34,7 @@ import org.killbill.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.profiling.Profiling;
@@ -58,6 +59,8 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected InvoiceInternalApi invoiceApi;
     @Inject
     protected OSGIServiceRegistration<PaymentPluginApi> registry;
+    @Inject
+    protected OSGIServiceRegistration<PaymentControlPluginApi> controlPluginRegistry;
     @Inject
     protected PersistentBus eventBus;
     @Inject

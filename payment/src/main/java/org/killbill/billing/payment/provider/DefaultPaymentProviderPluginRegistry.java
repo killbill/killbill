@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 
 import com.google.inject.Inject;
 
@@ -45,13 +45,13 @@ public class DefaultPaymentProviderPluginRegistry implements OSGIServiceRegistra
 
     @Override
     public void registerService(final OSGIServiceDescriptor desc, final PaymentPluginApi service) {
-        log.info("DefaultPaymentProviderPluginRegistry registering service " + desc.getRegistrationName());
+        log.info("Registering service='{}'", desc.getRegistrationName());
         pluginsByName.put(desc.getRegistrationName(), service);
     }
 
     @Override
     public void unregisterService(final String serviceName) {
-        log.info("DefaultPaymentProviderPluginRegistry unregistering service " + serviceName);
+        log.info("Unregistering service='{}'", serviceName);
         pluginsByName.remove(serviceName);
     }
 

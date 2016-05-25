@@ -21,12 +21,14 @@ package org.killbill.billing;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.killbill.billing.platform.test.PlatformDBTestingHelper;
 import org.killbill.billing.util.dao.AuditLogModelDaoMapper;
 import org.killbill.billing.util.dao.RecordIdIdMappingsMapper;
 import org.killbill.billing.util.io.IOUtils;
 import org.killbill.billing.util.security.shiro.dao.SessionModelDao;
+import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
@@ -37,6 +39,8 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
 
     private static DBTestingHelper dbTestingHelper = null;
 
+    private AtomicBoolean initialized;
+
     public static synchronized DBTestingHelper get() {
         if (dbTestingHelper == null) {
             dbTestingHelper = new DBTestingHelper();
@@ -44,20 +48,26 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         return dbTestingHelper;
     }
 
-    protected DBTestingHelper() {
+    private DBTestingHelper() {
         super();
+        initialized = new AtomicBoolean(false);
     }
 
     @Override
-    public synchronized IDBI getDBI() throws IOException {
+    public IDBI getDBI() {
         final DBI dbi = (DBI) super.getDBI();
-        dbi.registerMapper(new AuditLogModelDaoMapper());
-        dbi.registerMapper(new RecordIdIdMappingsMapper());
-        dbi.registerMapper(new LowerToCamelBeanMapperFactory(SessionModelDao.class));
+        // Register KB specific mappers
+        if (initialized.compareAndSet(false, true)) {
+            dbi.registerMapper(new AuditLogModelDaoMapper());
+            dbi.registerMapper(new RecordIdIdMappingsMapper());
+            dbi.registerMapper(new LowerToCamelBeanMapperFactory(SessionModelDao.class));
+        }
         return dbi;
     }
 
     protected synchronized void executePostStartupScripts() throws IOException {
+
+        final EmbeddedDB instance = getInstance();
         final String databaseSpecificDDL = "org/killbill/billing/util/" + "ddl-" + instance.getDBEngine().name().toLowerCase() + ".sql";
         installDDLSilently(databaseSpecificDDL);
 
@@ -181,7 +191,7 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
             final String ddl;
             try {
                 ddl = IOUtils.toString(inputStream.openStream());
-                instance.executeScript(ddl);
+                getInstance().executeScript(ddl);
             } catch (final Exception ignored) {
                 // The test doesn't have this module ddl in the classpath - that's fine
             }

@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -14,17 +15,23 @@
  * under the License.
  */
 
-package org.killbill.billing.util.config;
+package org.killbill.billing.util.config.definition;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.Description;
 import org.skife.config.TimeSpan;
 
-public interface RbacConfig extends KillbillConfig {
+public interface JaxrsConfig extends KillbillConfig {
 
-    @Config("org.killbill.rbac.globalSessionTimeout")
-    @Default("1h")
-    @Description("System-wide default time that any session may remain idle before expiring")
-    public TimeSpan getGlobalSessionTimeout();
+    @Config("org.killbill.jaxrs.threads.pool.nb")
+    @Default("30")
+    @Description("Number of threads for jaxrs executor")
+    int getJaxrsThreadNb();
+
+    @Config("org.killbill.jaxrs.timeout")
+    @Default("30s")
+    @Description("Total timeout for all callables associated to a given api call (parallel mode)")
+    TimeSpan getJaxrsTimeout();
+
 }

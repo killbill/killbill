@@ -28,7 +28,7 @@ import org.apache.shiro.util.ByteSource;
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.security.SecurityApiException;
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 import org.killbill.clock.Clock;
 import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;

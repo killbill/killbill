@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,6 +17,8 @@
 
 package org.killbill.billing.server.filters;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -30,6 +32,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import com.sun.jersey.spi.container.ContainerResponse;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
+import com.sun.jersey.spi.container.ContainerResponseWriter;
 
 @Singleton
 public class RequestDataFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -48,7 +51,7 @@ public class RequestDataFilter implements ContainerRequestFilter, ContainerRespo
 
     @Override
     public ContainerResponse filter(final ContainerRequest request, final ContainerResponse response) {
-        Request.resetPerThreadRequestData();
+        response.setContainerResponseWriter(new Adapter(response.getContainerResponseWriter()));
         return response;
     }
 
@@ -58,5 +61,27 @@ public class RequestDataFilter implements ContainerRequestFilter, ContainerRespo
             requestIds = requestHeaders.getRequestHeader(LEGACY_REQUEST_ID_HEADER);
         }
         return requestIds;
+    }
+
+    private static final class Adapter implements ContainerResponseWriter {
+
+        private final ContainerResponseWriter crw;
+
+        Adapter(final ContainerResponseWriter containerResponseWriter) {
+            this.crw = containerResponseWriter;
+        }
+
+        @Override
+        public OutputStream writeStatusAndHeaders(final long contentLength, final ContainerResponse response) throws IOException {
+            return crw.writeStatusAndHeaders(contentLength, response);
+        }
+
+        @Override
+        public void finish() throws IOException {
+            crw.finish();
+
+            // Reset the per-thread RequestData last
+            Request.resetPerThreadRequestData();
+        }
     }
 }

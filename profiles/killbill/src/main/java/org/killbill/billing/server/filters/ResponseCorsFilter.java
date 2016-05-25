@@ -63,6 +63,7 @@ public class ResponseCorsFilter implements Filter {
         res.addHeader("Access-Control-Allow-Origin", "*");
         res.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
         res.addHeader("Access-Control-Allow-Headers", allowedHeaders);
+        res.addHeader("Access-Control-Expose-Headers", allowedHeaders);
         chain.doFilter(request, response);
     }
 

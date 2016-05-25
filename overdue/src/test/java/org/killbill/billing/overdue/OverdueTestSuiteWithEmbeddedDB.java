@@ -25,6 +25,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
+import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.applicator.OverdueBusListenerTester;
 import org.killbill.billing.overdue.applicator.OverdueStateApplicator;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
@@ -87,7 +88,7 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected OverdueStateApplicator applicator;
     @Inject
-    protected OverdueInternalApi overdueApi;
+    protected OverdueApi overdueApi;
     @Inject
     protected OverdueProperties overdueProperties;
     @Inject

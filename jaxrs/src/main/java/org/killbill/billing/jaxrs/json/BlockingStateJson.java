@@ -22,8 +22,11 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,7 +41,7 @@ public class BlockingStateJson extends JsonBase {
     private final Boolean blockChange;
     private final Boolean blockEntitlement;
     private final Boolean blockBilling;
-    private final LocalDate effectiveDate;
+    private final DateTime effectiveDate;
     private final BlockingStateType type;
 
     @JsonCreator
@@ -48,7 +51,7 @@ public class BlockingStateJson extends JsonBase {
                              @JsonProperty("blockChange") final Boolean blockChange,
                              @JsonProperty("blockEntitlement") final Boolean blockEntitlement,
                              @JsonProperty("blockBilling") final Boolean blockBilling,
-                             @JsonProperty("effectiveDate") final LocalDate effectiveDate,
+                             @JsonProperty("effectiveDate") final DateTime effectiveDate,
                              @JsonProperty("type") final BlockingStateType type,
                              @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
@@ -61,6 +64,19 @@ public class BlockingStateJson extends JsonBase {
         this.effectiveDate = effectiveDate;
         this.type = type;
     }
+
+    public BlockingStateJson(final BlockingState input, final AccountAuditLogs accountAuditLogs) {
+        this(input.getBlockedId().toString(),
+             input.getStateName(),
+             input.getService(),
+             input.isBlockChange(),
+             input.isBlockEntitlement(),
+             input.isBlockBilling(),
+             input.getEffectiveDate(),
+             input.getType(),
+             toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForBlockingState(input.getId())));
+    }
+
 
     public String getBlockedId() {
         return blockedId;
@@ -86,7 +102,7 @@ public class BlockingStateJson extends JsonBase {
         return blockBilling;
     }
 
-    public LocalDate getEffectiveDate() {
+    public DateTime getEffectiveDate() {
         return effectiveDate;
     }
 

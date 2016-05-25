@@ -182,6 +182,11 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
      * but until we have a strong need for it, this is in the TODO list...
      */
     protected void crappyWaitForLackOfProperSynchonization() throws Exception {
-        Thread.sleep(5000);
+        crappyWaitForLackOfProperSynchonization(5000);
+    }
+
+
+    protected void crappyWaitForLackOfProperSynchonization(int sleepValueMSec) throws Exception {
+        Thread.sleep(sleepValueMSec);
     }
 }

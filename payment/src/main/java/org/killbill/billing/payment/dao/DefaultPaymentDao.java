@@ -115,7 +115,7 @@ public class DefaultPaymentDao implements PaymentDao {
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final String transactionIdStr = transactionId != null ? transactionId.toString() : null;
                 final PaymentAttemptSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class);
-                transactional.updateAttempt(paymentAttemptId.toString(), transactionIdStr, state, context);
+                transactional.updateAttempt(paymentAttemptId.toString(), transactionIdStr, state, contextWithUpdatedDate(context));
                 return null;
             }
         });
@@ -129,7 +129,7 @@ public class DefaultPaymentDao implements PaymentDao {
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final String transactionIdStr = transactionId != null ? transactionId.toString() : null;
                 final PaymentAttemptSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class);
-                transactional.updateAttemptWithProperties(paymentAttemptId.toString(), transactionIdStr, state, pluginProperties, context);
+                transactional.updateAttemptWithProperties(paymentAttemptId.toString(), transactionIdStr, state, pluginProperties, contextWithUpdatedDate(context));
                 return null;
             }
         });
@@ -289,7 +289,7 @@ public class DefaultPaymentDao implements PaymentDao {
                 transactional.create(paymentTransaction, context);
                 final PaymentTransactionModelDao paymentTransactionModelDao = transactional.getById(paymentTransaction.getId().toString(), context);
 
-                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentForNewTransaction(paymentId.toString(), context);
+                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentForNewTransaction(paymentId.toString(), contextWithUpdatedDate(context));
 
                 return paymentTransactionModelDao;
             }
@@ -307,14 +307,15 @@ public class DefaultPaymentDao implements PaymentDao {
 
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InternalCallContext contextWithUpdatedDate = contextWithUpdatedDate(context);
                 entitySqlDaoWrapperFactory.become(TransactionSqlDao.class).updateTransactionStatus(transactionId.toString(),
                                                                                                    processedAmount, processedCurrency == null ? null : processedCurrency.toString(),
                                                                                                    transactionStatus == null ? null : transactionStatus.toString(),
-                                                                                                   gatewayErrorCode, gatewayErrorMsg, context);
+                                                                                                   gatewayErrorCode, gatewayErrorMsg, contextWithUpdatedDate);
                 if (lastPaymentSuccessStateName != null) {
-                    entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updateLastSuccessPaymentStateName(paymentId.toString(), currentPaymentStateName, lastPaymentSuccessStateName, context);
+                    entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updateLastSuccessPaymentStateName(paymentId.toString(), currentPaymentStateName, lastPaymentSuccessStateName, contextWithUpdatedDate);
                 } else {
-                    entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStateName(paymentId.toString(), currentPaymentStateName, context);
+                    entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStateName(paymentId.toString(), currentPaymentStateName, contextWithUpdatedDate);
                 }
                 postPaymentEventFromTransaction(accountId, transactionStatus, transactionType, paymentId, transactionId, processedAmount, processedCurrency, clock.getUTCNow(), gatewayErrorCode, entitySqlDaoWrapperFactory, context);
                 return null;
@@ -444,11 +445,11 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId, final InternalTenantContext context) {
+    public List<PaymentMethodModelDao> getPaymentMethods(final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentMethodModelDao>>() {
             @Override
             public List<PaymentMethodModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class).getByAccountId(accountId.toString(), context);
+                return entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class).getForAccount(context);
             }
         });
     }
@@ -504,26 +505,28 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     private void deletedPaymentMethodInTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID paymentMethodId, final InternalCallContext context) {
-        entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class).markPaymentMethodAsDeleted(paymentMethodId.toString(), context);
+        entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class).markPaymentMethodAsDeleted(paymentMethodId.toString(), contextWithUpdatedDate(context));
     }
 
     private void undeletedPaymentMethodInTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID paymentMethodId, final InternalCallContext context) {
         final PaymentMethodSqlDao paymentMethodSqlDao = entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class);
-        paymentMethodSqlDao.unmarkPaymentMethodAsDeleted(paymentMethodId.toString(), context);
+        paymentMethodSqlDao.unmarkPaymentMethodAsDeleted(paymentMethodId.toString(), contextWithUpdatedDate(context));
     }
 
     @Override
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final String pluginName,
-                                                             final List<PaymentMethodModelDao> newPaymentMethods, final InternalCallContext context) {
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final String pluginName, final List<PaymentMethodModelDao> newPaymentMethods, final InternalCallContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentMethodModelDao>>() {
 
             @Override
             public List<PaymentMethodModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+
+                final InternalCallContext contextWithUpdatedDate = contextWithUpdatedDate(context);
+
                 final PaymentMethodSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class);
                 // Look at all payment methods, including deleted ones. We assume that newPaymentMethods (payment methods returned by the plugin)
                 // is the full set of non-deleted payment methods in the plugin. If a payment method was marked as deleted on our side,
                 // but is still existing in the plugin, we will un-delete it.
-                final List<PaymentMethodModelDao> allPaymentMethodsForAccount = transactional.getByAccountIdIncludedDelete(accountId.toString(), context);
+                final List<PaymentMethodModelDao> allPaymentMethodsForAccount = transactional.getForAccountIncludedDelete(contextWithUpdatedDate);
 
                 // Consider only the payment methods for the plugin we are refreshing
                 final Collection<PaymentMethodModelDao> existingPaymentMethods = Collections2.filter(allPaymentMethodsForAccount,
@@ -544,7 +547,7 @@ public class DefaultPaymentDao implements PaymentDao {
                             break;
                         } else if (existingPaymentMethod.equalsButActive(finalPaymentMethod)) {
                             // We already have it but its status has changed - update it accordingly
-                            undeletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
+                            undeletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), contextWithUpdatedDate);
                             foundExistingPaymentMethod = existingPaymentMethod;
                             break;
                         }
@@ -552,7 +555,7 @@ public class DefaultPaymentDao implements PaymentDao {
                     }
 
                     if (foundExistingPaymentMethod == null) {
-                        insertPaymentMethodInTransaction(entitySqlDaoWrapperFactory, finalPaymentMethod, context);
+                        insertPaymentMethodInTransaction(entitySqlDaoWrapperFactory, finalPaymentMethod, contextWithUpdatedDate);
                     } else {
                         existingPaymentMethods.remove(foundExistingPaymentMethod);
                     }
@@ -564,10 +567,10 @@ public class DefaultPaymentDao implements PaymentDao {
                     // the logic around audit/history will use getById to retrieve the entity and that method would not return
                     // a marked as deleted object
                     if (existingPaymentMethod.isActive()) {
-                        deletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
+                        deletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), contextWithUpdatedDate);
                     }
                 }
-                return transactional.getByAccountId(accountId.toString(), context);
+                return transactional.getForAccount(contextWithUpdatedDate);
             }
         });
     }
@@ -637,5 +640,9 @@ public class DefaultPaymentDao implements PaymentDao {
         } catch (EventBusException e) {
             log.error("Failed to post Payment event event for account {} ", accountId, e);
         }
+    }
+
+    private InternalCallContext contextWithUpdatedDate(final InternalCallContext input) {
+        return new InternalCallContext(input, clock.getUTCNow());
     }
 }

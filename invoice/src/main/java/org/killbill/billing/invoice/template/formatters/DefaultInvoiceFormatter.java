@@ -285,10 +285,10 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
                 }
             }
         } catch (final CurrencyConversionException e) {
-            logger.warn("Failed to retrieve currency conversion rates for currency = " + currency + " and date = " + latestPaymentDate, e);
+            logger.warn("Failed to retrieve currency conversion rates for currency='{}', dateConversion='{}'", currency, latestPaymentDate, e);
             return null;
         }
-        logger.warn("Failed to retrieve currency conversion rates for currency = " + currency + " and date = " + latestPaymentDate);
+        logger.warn("Failed to retrieve currency conversion rates for currency='{}', dateConversion='{}'", currency, latestPaymentDate);
         return null;
     }
 

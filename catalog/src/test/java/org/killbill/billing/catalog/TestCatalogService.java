@@ -19,10 +19,8 @@
 package org.killbill.billing.catalog;
 
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.platform.api.KillbillService.ServiceException;
-import org.killbill.billing.util.config.CatalogConfig;
-import org.killbill.clock.DefaultClock;
+import org.killbill.billing.util.config.definition.CatalogConfig;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -33,7 +31,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
             public String getCatalogURI() {
-                return "file:src/test/resources/versionedCatalog";
+                return "versionedCatalog";
             }
 
         }, tenantInternalApi, catalogCache, cacheInvalidationCallback);
@@ -47,7 +45,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
             public String getCatalogURI() {
-                return "file:src/test/resources/WeaponsHire.xml";
+                return "WeaponsHire.xml";
             }
 
         },  tenantInternalApi, catalogCache, cacheInvalidationCallback);

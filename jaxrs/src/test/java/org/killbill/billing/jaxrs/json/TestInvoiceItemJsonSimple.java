@@ -55,7 +55,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final InvoiceItemJson invoiceItemJson = new InvoiceItemJson(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, childAccountId,
                                                                                       bundleId, subscriptionId, planName, phaseName, usageName, type, description,
-                                                                                      startDate, endDate, amount, currency, auditLogs);
+                                                                                      startDate, endDate, amount, currency.name(), auditLogs);
         Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItemId);
         Assert.assertEquals(invoiceItemJson.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceItemJson.getLinkedInvoiceItemId(), linkedInvoiceItemId);
@@ -71,7 +71,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceItemJson.getStartDate(), startDate);
         Assert.assertEquals(invoiceItemJson.getEndDate(), endDate);
         Assert.assertEquals(invoiceItemJson.getAmount(), amount);
-        Assert.assertEquals(invoiceItemJson.getCurrency(), currency);
+        Assert.assertEquals(invoiceItemJson.getCurrency(), currency.name());
         Assert.assertEquals(invoiceItemJson.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(invoiceItemJson);
@@ -112,6 +112,6 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceItemJson.getStartDate(), invoiceItem.getStartDate());
         Assert.assertEquals(invoiceItemJson.getEndDate(), invoiceItem.getEndDate());
         Assert.assertEquals(invoiceItemJson.getAmount(), invoiceItem.getAmount());
-        Assert.assertEquals(invoiceItemJson.getCurrency(), invoiceItem.getCurrency());
+        Assert.assertEquals(invoiceItemJson.getCurrency(), invoiceItem.getCurrency().name());
     }
 }

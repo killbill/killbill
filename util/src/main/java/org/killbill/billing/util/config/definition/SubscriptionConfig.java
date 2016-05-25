@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -13,11 +14,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package org.killbill.billing.util.config;
 
-/*
- * Marker interface for killbill config files
- */
-public interface KillbillConfig {
+package org.killbill.billing.util.config.definition;
 
+public interface SubscriptionConfig extends KillbillConfig {
 }

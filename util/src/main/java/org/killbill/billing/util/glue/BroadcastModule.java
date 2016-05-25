@@ -24,7 +24,7 @@ import org.killbill.billing.util.broadcast.DefaultBroadcastApi;
 import org.killbill.billing.util.broadcast.DefaultBroadcastService;
 import org.killbill.billing.util.broadcast.dao.BroadcastDao;
 import org.killbill.billing.util.broadcast.dao.DefaultBroadcastDao;
-import org.killbill.billing.util.config.BroadcastConfig;
+import org.killbill.billing.util.config.definition.BroadcastConfig;
 import org.skife.config.ConfigurationObjectFactory;
 
 public class BroadcastModule extends KillBillModule {

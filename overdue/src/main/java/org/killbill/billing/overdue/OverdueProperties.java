@@ -20,7 +20,7 @@ import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.Description;
 
-import org.killbill.billing.util.config.KillbillConfig;
+import org.killbill.billing.util.config.definition.KillbillConfig;
 
 public interface OverdueProperties extends KillbillConfig {
 

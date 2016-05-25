@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -59,7 +59,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     UUID getInvoiceIdByPaymentId(UUID paymentId, InternalTenantContext context);
 
-    List<InvoicePaymentModelDao> getInvoicePayments(UUID paymentId, InternalTenantContext context);
+    List<InvoicePaymentModelDao> getInvoicePaymentsByPaymentId(UUID paymentId, InternalTenantContext context);
 
     List<InvoicePaymentModelDao> getInvoicePaymentsByAccount(InternalTenantContext context);
 
@@ -72,7 +72,9 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     // Include migrated invoices
     List<InvoiceModelDao> getAllInvoicesByAccount(InternalTenantContext context);
 
-    InvoicePaymentModelDao postChargeback(UUID paymentId, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+    InvoicePaymentModelDao postChargeback(UUID paymentId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+
+    InvoicePaymentModelDao postChargebackReversal(UUID paymentId, String chargebackTransactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
     InvoiceItemModelDao doCBAComplexity(InvoiceModelDao invoice, InternalCallContext context) throws InvoiceApiException;
 
@@ -132,7 +134,9 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      */
     void deleteCBA(UUID accountId, UUID invoiceId, UUID invoiceItemId, InternalCallContext context) throws InvoiceApiException;
 
-    void notifyOfPayment(InvoicePaymentModelDao invoicePayment, InternalCallContext context);
+    void notifyOfPaymentInit(InvoicePaymentModelDao invoicePayment, InternalCallContext context);
+
+    void notifyOfPaymentCompletion(InvoicePaymentModelDao invoicePayment, InternalCallContext context);
 
     /**
      * @param accountId the account for which we need to rebalance the CBA

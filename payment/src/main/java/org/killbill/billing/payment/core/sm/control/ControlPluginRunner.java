@@ -117,7 +117,7 @@ public class ControlPluginRunner {
                 inputPluginProperties = prevResult.getAdjustedPluginProperties();
             }
             if (prevResult.isAborted()) {
-                break;
+                throw new PaymentControlApiAbortException(pluginName);
             }
             inputPaymentControlContext = new DefaultPaymentControlContext(account,
                                                                           inputPaymentMethodId,
@@ -187,9 +187,9 @@ public class ControlPluginRunner {
                     }
                     // Exceptions from the control plugins are ignored (and logged) because the semantics on what to do are undefined.
                 } catch (final PaymentControlApiException e) {
-                    log.warn("Plugin " + pluginName + " failed to complete executePluginOnSuccessCalls call for " + inputPaymentControlContext.getPaymentExternalKey(), e);
+                    log.warn("Error during onSuccessCall for plugin='{}', paymentExternalKey='{}'", pluginName, inputPaymentControlContext.getPaymentExternalKey(), e);
                 } catch (final RuntimeException e) {
-                    log.warn("Plugin " + pluginName + " failed to complete executePluginOnSuccessCalls call for " + inputPaymentControlContext.getPaymentExternalKey(), e);
+                    log.warn("Error during onSuccessCall for plugin='{}', paymentExternalKey='{}'", pluginName, inputPaymentControlContext.getPaymentExternalKey(), e);
                 }
             }
         }
@@ -247,7 +247,7 @@ public class ControlPluginRunner {
                     }
 
                 } catch (final PaymentControlApiException e) {
-                    log.warn("Plugin " + pluginName + " failed to return next retryDate for payment " + inputPaymentControlContext.getPaymentExternalKey(), e);
+                    log.warn("Error during onFailureCall for plugin='{}', paymentExternalKey='{}'", pluginName, inputPaymentControlContext.getPaymentExternalKey(), e);
                     return new DefaultFailureCallResult(candidate, inputPluginProperties);
                 }
             }

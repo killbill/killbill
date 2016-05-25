@@ -18,13 +18,16 @@ package org.killbill.billing.junction;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -80,7 +83,7 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the recurring price for the phase
      */
-    BigDecimal getRecurringPrice();
+    BigDecimal getRecurringPrice(DateTime effectiveDate) throws CatalogApiException;
 
     /**
      * @return the currency for the account being invoiced
@@ -107,4 +110,5 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      * @return the list of {@code Usage} section
      */
     List<Usage> getUsages();
+
 }

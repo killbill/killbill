@@ -43,21 +43,17 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
-
 unactiveEvent() ::= <<
 update <tableName()>
 set
 is_active = false
 , updated_by = :createdBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where
 id = :id
 <AND_CHECK_TENANT()>
 ;
 >>
-
-
-
 
 getFutureActiveEventForSubscription() ::= <<
 select <allTableFields()>
@@ -70,7 +66,7 @@ and effective_date > :now
 <AND_CHECK_TENANT()>
 <defaultOrderBy()>
 ;
->> 
+>>
 
 getEventsForSubscription() ::= <<
 select <allTableFields()>

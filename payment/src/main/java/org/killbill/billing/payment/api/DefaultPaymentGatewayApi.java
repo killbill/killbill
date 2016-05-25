@@ -34,6 +34,7 @@ import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
+import org.killbill.billing.payment.core.sm.control.PaymentControlApiAbortException;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
@@ -41,7 +42,7 @@ import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.util.PluginProperties;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 
 import com.google.common.base.Joiner;
 
@@ -55,7 +56,6 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
     private final ControlPluginRunner controlPluginRunner;
     private final PluginDispatcher<HostedPaymentPageFormDescriptor> paymentPluginFormDispatcher;
     private final PluginDispatcher<GatewayNotification> paymentPluginNotificationDispatcher;
-    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultPaymentGatewayApi(final PaymentConfig paymentConfig,
@@ -63,13 +63,12 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                     final ControlPluginRunner controlPluginRunner,
                                     final PaymentExecutors executors,
                                     final InternalCallContextFactory internalCallContextFactory) {
-        super(paymentConfig);
+        super(paymentConfig, internalCallContextFactory);
         this.paymentGatewayProcessor = paymentGatewayProcessor;
         this.controlPluginRunner = controlPluginRunner;
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentPluginFormDispatcher = new PluginDispatcher<HostedPaymentPageFormDescriptor>(paymentPluginTimeoutSec, executors);
         this.paymentPluginNotificationDispatcher = new PluginDispatcher<GatewayNotification>(paymentPluginTimeoutSec, executors);
-        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -128,7 +127,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                             final CallContext callContext,
                                             final PluginDispatcher<T> pluginDispatcher,
                                             final WithPaymentControlCallback<T> callback) throws PaymentApiException {
-        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
         if (paymentControlPluginNames.isEmpty()) {
             return callback.doPaymentGatewayApiOperation(paymentMethodId, properties);
         }
@@ -147,6 +146,8 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                                                                                                        PaymentApiType.HPP, null, HPPType.BUILD_FORM_DESCRIPTOR,
                                                                                                                        null, null, true, paymentControlPluginNames, properties, callContext);
 
+                                                     } catch (final PaymentControlApiAbortException e) {
+                                                         throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_API_ABORTED, e.getPluginName());
                                                      } catch (final PaymentControlApiException e) {
                                                          throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e);
                                                      }

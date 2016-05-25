@@ -34,7 +34,7 @@ markPaymentMethodAsDeleted(id) ::= <<
 update <tableName()>
 set is_active = false
 , updated_by = :updatedBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where  id = :id
 <AND_CHECK_TENANT()>
 ;
@@ -44,7 +44,7 @@ unmarkPaymentMethodAsDeleted(id) ::= <<
 update <tableName()>
 set is_active = true
 , updated_by = :updatedBy
-, updated_date = :createdDate
+, updated_date = :updatedDate
 where  id = :id
 <AND_CHECK_TENANT()>
 ;
@@ -75,21 +75,21 @@ where id = :id
 ;
 >>
 
-getByAccountId(accountId) ::= <<
+getForAccount() ::= <<
 select
 <allTableFields()>
 from <tableName()>
-where account_id = :accountId
+where <accountRecordIdField()> = :accountRecordId
 <andCheckSoftDeletionWithComma()>
 <AND_CHECK_TENANT()>
 ;
 >>
 
-getByAccountIdIncludedDelete(accountId) ::= <<
+getForAccountIncludedDelete() ::= <<
 select
 <allTableFields()>
 from <tableName()>
-where account_id = :accountId
+where <accountRecordIdField()> = :accountRecordId
 <AND_CHECK_TENANT()>
 ;
 >>

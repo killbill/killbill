@@ -38,7 +38,7 @@ public class CatalogCacheInvalidationCallback implements CacheInvalidationCallba
 
     @Override
     public void invalidateCache(TenantKey key, final Object cookie, final InternalTenantContext tenantContext) {
-        log.info("Invalidate catalog cache for tenant {} ", tenantContext.getTenantRecordId());
+        log.info("Invalidate catalog cache for tenantRecordId='{}'", tenantContext.getTenantRecordId());
         catalogCache.clearCatalog(tenantContext);
     }
 }

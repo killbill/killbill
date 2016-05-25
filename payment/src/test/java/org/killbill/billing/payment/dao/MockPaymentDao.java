@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -50,6 +50,7 @@ public class MockPaymentDao implements PaymentDao {
     private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<UUID, PaymentAttemptModelDao>();
 
     private final MockNonEntityDao mockNonEntityDao;
+    private final List<PaymentMethodModelDao> paymentMethods = new LinkedList<PaymentMethodModelDao>();
 
     @Inject
     public MockPaymentDao(final MockNonEntityDao mockNonEntityDao) {
@@ -59,6 +60,7 @@ public class MockPaymentDao implements PaymentDao {
     public void reset() {
         synchronized (this) {
             payments.clear();
+            paymentMethods.clear();
             transactions.clear();
             attempts.clear();
         }
@@ -66,7 +68,7 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public Pagination<PaymentTransactionModelDao> getByTransactionStatusAcrossTenants(final Iterable<TransactionStatus> transactionStatuses, DateTime createdBeforeDate, DateTime createdAfterDate, Long offset, Long limit) {
-        final List<PaymentTransactionModelDao> result=  ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<PaymentTransactionModelDao>() {
+        final List<PaymentTransactionModelDao> result = ImmutableList.copyOf(Iterables.filter(transactions.values(), new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {
                 return Iterables.any(transactionStatuses, new Predicate<TransactionStatus>() {
@@ -311,11 +313,11 @@ public class MockPaymentDao implements PaymentDao {
         }
     }
 
-    private final List<PaymentMethodModelDao> paymentMethods = new LinkedList<PaymentMethodModelDao>();
-
     @Override
     public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final InternalCallContext context) {
         synchronized (this) {
+            paymentMethod.setAccountRecordId(context.getAccountRecordId());
+            paymentMethod.setTenantRecordId(context.getTenantRecordId());
             paymentMethods.add(paymentMethod);
             return paymentMethod;
         }
@@ -346,11 +348,11 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId, final InternalTenantContext context) {
+    public List<PaymentMethodModelDao> getPaymentMethods(final InternalTenantContext context) {
         synchronized (this) {
             final List<PaymentMethodModelDao> result = new ArrayList<PaymentMethodModelDao>();
             for (final PaymentMethodModelDao cur : paymentMethods) {
-                if (cur.getAccountId().equals(accountId)) {
+                if (cur.getAccountRecordId().equals(context.getAccountRecordId())) {
                     result.add(cur);
                 }
             }
@@ -383,7 +385,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final String pluginName, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final String pluginName, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
         return ImmutableList.<PaymentMethodModelDao>of();
     }
 

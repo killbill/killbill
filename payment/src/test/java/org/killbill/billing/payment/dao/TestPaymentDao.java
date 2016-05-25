@@ -228,7 +228,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedMethod.getPluginName(), pluginName);
         assertEquals(savedMethod.isActive(), isActive);
 
-        final List<PaymentMethodModelDao> result = paymentDao.getPaymentMethods(accountId, internalCallContext);
+        final List<PaymentMethodModelDao> result = paymentDao.getPaymentMethods(internalCallContext);
         assertEquals(result.size(), 1);
         savedMethod = result.get(0);
         assertEquals(savedMethod.getId(), paymentMethodId);

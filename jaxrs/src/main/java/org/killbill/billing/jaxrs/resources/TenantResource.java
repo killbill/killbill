@@ -81,7 +81,7 @@ public class TenantResource extends JaxRsResourceBase {
                           final PaymentApi paymentApi,
                           final Clock clock,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.tenantApi = tenantApi;
     }
 
@@ -183,6 +183,8 @@ public class TenantResource extends JaxRsResourceBase {
         return insertTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, pluginConfig, uriInfo, "getPluginConfiguration", createdBy, reason, comment, request);
     }
 
+
+
     @TimedResource
     @GET
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
@@ -205,6 +207,45 @@ public class TenantResource extends JaxRsResourceBase {
                                               @HeaderParam(HDR_COMMENT) final String comment,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return deleteTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, createdBy, reason, comment, request);
+    }
+
+    @TimedResource
+    @POST
+    @Path("/" + UPLOAD_PER_TENANT_CONFIG)
+    @Consumes(TEXT_PLAIN)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add a per tenant configuration (system properties)")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response uploadPerTenantConfiguration(final String perTenantConfig,
+                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                 @HeaderParam(HDR_REASON) final String reason,
+                                                 @HeaderParam(HDR_COMMENT) final String comment,
+                                                 @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+        return insertTenantKey(TenantKey.PER_TENANT_CONFIG, null, perTenantConfig, uriInfo, "getPerTenantConfiguration", createdBy, reason, comment, request);
+    }
+
+
+    @TimedResource
+    @GET
+    @Path("/" + UPLOAD_PER_TENANT_CONFIG)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a per tenant configuration (system properties)", response = TenantKeyJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response getPerTenantConfiguration(@javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        return getTenantKey(TenantKey.PER_TENANT_CONFIG, null, request);
+    }
+
+    @TimedResource
+    @DELETE
+    @Path("/" + UPLOAD_PER_TENANT_CONFIG)
+    @ApiOperation(value = "Delete a per tenant configuration (system properties)")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response deletePerTenantConfiguration(@HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                              @HeaderParam(HDR_REASON) final String reason,
+                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        return deleteTenantKey(TenantKey.PER_TENANT_CONFIG, null, createdBy, reason, comment, request);
     }
 
 

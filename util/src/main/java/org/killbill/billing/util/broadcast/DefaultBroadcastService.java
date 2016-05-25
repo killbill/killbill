@@ -29,14 +29,12 @@ import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.billing.util.broadcast.dao.BroadcastDao;
 import org.killbill.billing.util.broadcast.dao.BroadcastModelDao;
-import org.killbill.billing.util.config.BroadcastConfig;
+import org.killbill.billing.util.config.definition.BroadcastConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.commons.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.EventBus;
 
 public class DefaultBroadcastService implements BroadcastService {
 
@@ -93,7 +91,7 @@ public class DefaultBroadcastService implements BroadcastService {
             broadcastExecutor.shutdown();
             boolean success = broadcastExecutor.awaitTermination(TERMINATION_TIMEOUT_SEC, TimeUnit.SECONDS);
             if (!success) {
-                logger.warn("BroadcastExecutor failed to complete termination within " + TERMINATION_TIMEOUT_SEC + "sec");
+                logger.warn("BroadcastExecutor failed to complete termination within {} sec", TERMINATION_TIMEOUT_SEC);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -139,11 +137,11 @@ public class DefaultBroadcastService implements BroadcastService {
                     return;
                 }
 
+                final BroadcastInternalEvent event = new DefaultBroadcastInternalEvent(cur.getServiceName(), cur.getType(), cur.getEvent());
                 try {
-                    final BroadcastInternalEvent event = new DefaultBroadcastInternalEvent(cur.getServiceName(), cur.getType(), cur.getEvent());
                     eventBus.post(event);
                 } catch (final EventBusException e) {
-                    logger.error("Failed to send event BroadcastInternalEvent: ", e);
+                    logger.warn("Failed to post event {}", event, e);
                 } finally {
                     parent.setLatestRecordIdProcessed(cur.getRecordId());
                 }

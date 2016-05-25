@@ -158,7 +158,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final TenantUserApi tenantApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.invoiceApi = invoiceApi;
         this.invoiceNotifier = invoiceNotifier;
         this.tenantApi = tenantApi;
@@ -300,7 +300,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final HttpServletRequest request,
                                         @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final LocalDate inputDate = toLocalDate(targetDate, callContext);
+        final LocalDate inputDate = toLocalDate(targetDate);
 
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, null,
@@ -362,10 +362,10 @@ public class InvoiceResource extends JaxRsResourceBase {
             } else if (DryRunType.SUBSCRIPTION_ACTION.name().equals(dryRunSubscriptionSpec.getDryRunType()) && dryRunSubscriptionSpec.getEffectiveDate() != null) {
                 inputDate = dryRunSubscriptionSpec.getEffectiveDate();
             } else {
-                inputDate = toLocalDate(targetDate, callContext);
+                inputDate = toLocalDate(targetDate);
             }
         } else {
-            inputDate = toLocalDate(targetDate, callContext);
+            inputDate = toLocalDate(targetDate);
         }
 
         // Passing a null or empty body means we are trying to generate an invoice with a (future) targetDate
@@ -464,7 +464,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     UUID.fromString(json.getInvoiceItemId()),
                                                                     requestedDate,
                                                                     json.getAmount(),
-                                                                    json.getCurrency(),
+                                                                    Currency.valueOf(json.getCurrency()),
                                                                     json.getDescription(),
                                                                     callContext);
         }
@@ -529,7 +529,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                 @Override
                 public InvoiceItemJson apply(final InvoiceItemJson input) {
                     if (input.getCurrency() != null) {
-                        if (!input.getCurrency().equals(accountCurrency)) {
+                        if (!input.getCurrency().equals(accountCurrency.name())) {
                             throw new IllegalArgumentException(input.getCurrency().toString());
                         }
                         return input;
@@ -549,7 +549,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                    input.getStartDate(),
                                                    input.getEndDate(),
                                                    input.getAmount(),
-                                                   accountCurrency,
+                                                   accountCurrency.name(),
                                                    null);
                     }
                 }
@@ -637,9 +637,11 @@ public class InvoiceResource extends JaxRsResourceBase {
                                      (payment.getPaymentMethodId() != null ? UUID.fromString(payment.getPaymentMethodId()) : account.getPaymentMethodId());
 
         final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
+
         final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment, pluginProperties, callContext);
-        // STEPH should that live in InvoicePayment instead?
-        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
+        return result != null ?
+               uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId()) :
+               Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource

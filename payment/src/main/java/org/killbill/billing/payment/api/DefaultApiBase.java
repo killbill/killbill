@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,85 +17,44 @@
 
 package org.killbill.billing.payment.api;
 
-import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
-import org.killbill.billing.util.config.PaymentConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 
 import com.google.common.collect.ImmutableList;
 
 public class DefaultApiBase {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultApiBase.class);
-
     private final PaymentConfig paymentConfig;
+    protected final InternalCallContextFactory internalCallContextFactory;
 
-    public DefaultApiBase(final PaymentConfig paymentConfig) {
+    public DefaultApiBase(final PaymentConfig paymentConfig, final InternalCallContextFactory internalCallContextFactory) {
         this.paymentConfig = paymentConfig;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    protected void logAPICall(final String transactionType, final Account account, final UUID paymentMethodId, @Nullable final UUID paymentId, @Nullable final UUID transactionId, @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey) {
-        if (log.isInfoEnabled()) {
-            final StringBuilder logLine = new StringBuilder();
-            logLine.append("PaymentApi : ")
-                   .append(transactionType)
-                   .append(", account = ")
-                   .append(account.getId());
-            if (paymentMethodId != null) {
-                logLine.append(", paymentMethodId = ")
-                       .append(paymentMethodId);
-            }
-            if (paymentExternalKey != null) {
-                logLine.append(", paymentExternalKey = ")
-                       .append(paymentExternalKey);
-            }
-            if (paymentTransactionExternalKey != null) {
-                logLine.append(", paymentTransactionExternalKey = ")
-                       .append(paymentTransactionExternalKey);
-            }
-            if (paymentId != null) {
-                logLine.append(", paymentId = ")
-                       .append(paymentId);
-            }
-            if (transactionId != null) {
-                logLine.append(", transactionId = ")
-                       .append(transactionId);
-            }
-            if (amount != null) {
-                logLine.append(", amount = ")
-                       .append(amount);
-            }
-            if (currency != null) {
-                logLine.append(", currency = ")
-                       .append(currency);
-            }
-            log.info(logLine.toString());
-        }
-    }
+    protected List<String> toPaymentControlPluginNames(final PaymentOptions paymentOptions, final CallContext callContext) {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
 
-    protected List<String> toPaymentControlPluginNames(final PaymentOptions paymentOptions) {
         // Special path for JAX-RS InvoicePayment endpoints (see JaxRsResourceBase)
-        if (paymentConfig.getPaymentControlPluginNames() != null &&
+        final List<String> controlPluginNames = paymentConfig.getPaymentControlPluginNames(internalTenantContext);
+        if (controlPluginNames != null &&
             paymentOptions.getPaymentControlPluginNames() != null &&
             paymentOptions.getPaymentControlPluginNames().size() == 1 &&
             InvoicePaymentControlPluginApi.PLUGIN_NAME.equals(paymentOptions.getPaymentControlPluginNames().get(0))) {
             final List<String> paymentControlPluginNames = new LinkedList<String>(paymentOptions.getPaymentControlPluginNames());
-            paymentControlPluginNames.addAll(paymentConfig.getPaymentControlPluginNames());
+            paymentControlPluginNames.addAll(controlPluginNames);
             return paymentControlPluginNames;
         } else if (paymentOptions.getPaymentControlPluginNames() != null && !paymentOptions.getPaymentControlPluginNames().isEmpty()) {
             return paymentOptions.getPaymentControlPluginNames();
-        } else if (paymentConfig.getPaymentControlPluginNames() != null && !paymentConfig.getPaymentControlPluginNames().isEmpty()) {
-            return paymentConfig.getPaymentControlPluginNames();
+        } else if (controlPluginNames != null && !controlPluginNames.isEmpty()) {
+            return controlPluginNames;
         } else {
             return ImmutableList.<String>of();
         }
@@ -106,11 +65,4 @@ public class DefaultApiBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, parameterName, "should not be null");
         }
     }
-
-    protected void checkPositiveAmount(final BigDecimal amount) throws PaymentApiException {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, "amount", "should be greater than 0");
-        }
-    }
-
 }

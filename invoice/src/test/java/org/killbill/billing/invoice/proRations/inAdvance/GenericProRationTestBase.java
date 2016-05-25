@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -53,7 +55,7 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
     @Test(groups = "fast")
     public void testSinglePlan_OnePeriodLessADayAfterStart() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2011, 2, 15);
-        final LocalDate targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths()).plusDays(-1);
+        final LocalDate targetDate = startDate.plus(getBillingPeriod().getPeriod()).plusDays(-1);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, ONE);
     }
@@ -61,7 +63,7 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
     @Test(groups = "fast")
     public void testSinglePlan_ExactlyOnePeriodAfterStart() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2011, 2, 15);
-        final LocalDate targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
+        final LocalDate targetDate = startDate.plus(getBillingPeriod().getPeriod());
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, TWO);
     }
@@ -69,7 +71,7 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
     @Test(groups = "fast")
     public void testSinglePlan_SlightlyMoreThanOnePeriodAfterStart() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2011, 2, 15);
-        final LocalDate targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths()).plusDays(1);
+        final LocalDate targetDate = startDate.plus(getBillingPeriod().getPeriod()).plusDays(1);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, TWO);
     }
@@ -77,7 +79,7 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
     @Test(groups = "fast")
     public void testSinglePlan_CrossingYearBoundary() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2011, 12, 15);
-        final LocalDate oneCycleLater = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
+        final LocalDate oneCycleLater = startDate.plus(getBillingPeriod().getPeriod());
 
         // test just before the billing cycle day
         testCalculateNumberOfBillingCycles(startDate, oneCycleLater.plusDays(-1), 15, ONE);
@@ -92,7 +94,7 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
     @Test(groups = "fast")
     public void testSinglePlan_StartingMidFebruary() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2011, 2, 15);
-        final LocalDate targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
+        final LocalDate targetDate = startDate.plus(getBillingPeriod().getPeriod());
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, TWO);
     }
@@ -100,7 +102,7 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
     @Test(groups = "fast")
     public void testSinglePlan_StartingMidFebruaryOfLeapYear() throws InvalidDateSequenceException {
         final LocalDate startDate = invoiceUtil.buildDate(2012, 2, 15);
-        final LocalDate targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
+        final LocalDate targetDate = startDate.plus(getBillingPeriod().getPeriod());
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, TWO);
     }
@@ -111,7 +113,10 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
         BigDecimal expectedValue = ONE;
 
         for (int i = 1; i <= 12; i++) {
-            final LocalDate oneCycleLater = startDate.plusMonths(i * getBillingPeriod().getNumberOfMonths());
+            LocalDate oneCycleLater = startDate;
+            for (int j = 0; j < i; j++) {
+                oneCycleLater = oneCycleLater.plus(getBillingPeriod().getPeriod());
+            }
             // test just before the billing cycle day
             testCalculateNumberOfBillingCycles(startDate, oneCycleLater.plusDays(-1), 31, expectedValue);
 

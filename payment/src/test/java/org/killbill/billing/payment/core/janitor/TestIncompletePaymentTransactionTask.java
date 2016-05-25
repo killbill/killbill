@@ -19,7 +19,6 @@ package org.killbill.billing.payment.core.janitor;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
@@ -39,7 +38,7 @@ public class TestIncompletePaymentTransactionTask extends PaymentTestSuiteNoDB {
 
         // Based on config "15s,1m,3m,1h,1d,1d,1d,1d,1d"
         for (int i = 1; i < 10; i++) {
-            final DateTime nextTime = incompletePaymentTransactionTask.getNextNotificationTime(i);
+            final DateTime nextTime = incompletePaymentTransactionTask.getNextNotificationTime(i, internalCallContext);
             assertNotNull(nextTime);
             assertTrue(nextTime.compareTo(initTime) > 0);
             if (i == 0) {
@@ -62,6 +61,6 @@ public class TestIncompletePaymentTransactionTask extends PaymentTestSuiteNoDB {
                 assertTrue(nextTime.compareTo(initTime.plusDays(1).plusSeconds(1)) < 0);
             }
         }
-        assertNull(incompletePaymentTransactionTask.getNextNotificationTime(10));
+        assertNull(incompletePaymentTransactionTask.getNextNotificationTime(10, internalCallContext));
     }
 }

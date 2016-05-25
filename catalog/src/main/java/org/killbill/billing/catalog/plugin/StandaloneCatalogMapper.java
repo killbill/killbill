@@ -427,7 +427,7 @@ public class StandaloneCatalogMapper {
         }
         final DefaultPlan result = new DefaultPlan();
         result.setName(input.getName());
-        result.setEffectiveDateForExistingSubscriptons(input.getEffectiveDateForExistingSubscriptons());
+        result.setEffectiveDateForExistingSubscriptions(input.getEffectiveDateForExistingSubscriptions());
         result.setFinalPhase(toDefaultPlanPhase(input.getFinalPhase()));
         result.setInitialPhases(toDefaultPlanPhases(ImmutableList.copyOf(input.getInitialPhases())));
         result.setPlansAllowedInBundle(input.getPlansAllowedInBundle());

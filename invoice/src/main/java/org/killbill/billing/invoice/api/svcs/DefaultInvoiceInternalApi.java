@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -95,14 +95,16 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public void notifyOfPayment(final UUID invoiceId, final BigDecimal amount, final Currency currency, final Currency processedCurrency, final UUID paymentId, final DateTime paymentDate, final boolean success, final InternalCallContext context) throws InvoiceApiException {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, success);
-        notifyOfPayment(invoicePayment, context);
+    public void recordPaymentAttemptInit(final UUID invoiceId, final BigDecimal amount, final Currency currency, final Currency processedCurrency, final UUID paymentId, final String transactionExternalKey, final DateTime paymentDate, final InternalCallContext context) throws InvoiceApiException {
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, transactionExternalKey, false);
+        dao.notifyOfPaymentInit(new InvoicePaymentModelDao(invoicePayment), context);
     }
 
+
     @Override
-    public void notifyOfPayment(final InvoicePayment invoicePayment, final InternalCallContext context) throws InvoiceApiException {
-        dao.notifyOfPayment(new InvoicePaymentModelDao(invoicePayment), context);
+    public void recordPaymentAttemptCompletion(final UUID invoiceId, final BigDecimal amount, final Currency currency, final Currency processedCurrency, final UUID paymentId, final String transactionExternalKey, final DateTime paymentDate, final boolean success, final InternalCallContext context) throws InvoiceApiException {
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, transactionExternalKey, success);
+        dao.notifyOfPaymentCompletion(new InvoicePaymentModelDao(invoicePayment), context);
     }
 
     @Override
@@ -122,7 +124,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final String transactionExternalKey, final InternalCallContext context) throws InvoiceApiException {
+    public InvoicePayment recordRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final String transactionExternalKey, final InternalCallContext context) throws InvoiceApiException {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL, paymentId, amount);
         }
@@ -145,8 +147,13 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public InvoicePayment createChargeback(final UUID paymentId, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
-        return new DefaultInvoicePayment(dao.postChargeback(paymentId, amount, currency, context));
+    public InvoicePayment recordChargeback(final UUID paymentId, final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
+        return new DefaultInvoicePayment(dao.postChargeback(paymentId, chargebackTransactionExternalKey, amount, currency, context));
+    }
+
+    @Override
+    public InvoicePayment recordChargebackReversal(final UUID paymentId, final String chargebackTransactionExternalKey, final InternalCallContext context) throws InvoiceApiException {
+        return new DefaultInvoicePayment(dao.postChargebackReversal(paymentId, chargebackTransactionExternalKey, context));
     }
 
     @Override
@@ -156,26 +163,25 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public Map<UUID, BigDecimal> validateInvoiceItemAdjustments(final UUID paymentId, final Map<UUID, BigDecimal> idWithAmount, final InternalTenantContext context) throws InvoiceApiException {
+        // We want to validate that only refund with invoice *item* adjustments are allowed (as opposed to refund with invoice adjustment)
+        if (idWithAmount.size() == 0) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_ITEMS_ADJUSTMENT_MISSING);
+        }
         final InvoicePayment invoicePayment = getInvoicePayment(paymentId, InvoicePaymentType.ATTEMPT, context);
         return dao.computeItemAdjustments(invoicePayment.getInvoiceId().toString(), idWithAmount, context);
     }
 
     private InvoicePayment getInvoicePayment(final UUID paymentId, final InvoicePaymentType type, final InternalTenantContext context) throws InvoiceApiException {
-        final Collection<InvoicePayment> invoicePayments = Collections2.transform(dao.getInvoicePayments(paymentId, context), new Function<InvoicePaymentModelDao, InvoicePayment>() {
+
+        final List<InvoicePaymentModelDao> invoicePayments = dao.getInvoicePaymentsByPaymentId(paymentId, context);
+        final InvoicePaymentModelDao resultOrNull = Iterables.tryFind(invoicePayments, new Predicate<InvoicePaymentModelDao>() {
             @Override
-            public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                return new DefaultInvoicePayment(input);
-            }
-        });
-        if (invoicePayments.isEmpty()) {
-            return null;
-        }
-        return Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
-            @Override
-            public boolean apply(final InvoicePayment input) {
-                return input.getType() == type;
+            public boolean apply(final InvoicePaymentModelDao input) {
+                return input.getType() == type &&
+                        input.getSuccess();
             }
         }).orNull();
+        return resultOrNull != null ? new DefaultInvoicePayment(resultOrNull) : null;
     }
 
     @Override

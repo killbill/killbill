@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,11 +20,10 @@ package org.killbill.billing.invoice.generator;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestInAdvanceBillingIntervalDetail extends InvoiceTestSuiteNoDB {
 
@@ -35,10 +36,18 @@ public class TestInAdvanceBillingIntervalDetail extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCalculateFirstBillingCycleDate1() throws Exception {
         final LocalDate from = new LocalDate("2012-01-16");
+        final LocalDate to = null;
+        final LocalDate targetDate = new LocalDate();
         final int bcd = 17;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(from, null, new LocalDate(), bcd, BillingPeriod.ANNUAL, BillingMode.IN_ADVANCE);
-        billingIntervalDetail.calculateFirstBillingCycleDate();
-        Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-17"));
+
+        final BillingIntervalDetail annualBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.ANNUAL, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(annualBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-17"));
+
+        final BillingIntervalDetail monthlyBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(monthlyBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-17"));
+
+        final BillingIntervalDetail thirtyDaysBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.THIRTY_DAYS, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(thirtyDaysBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-16"));
     }
 
     /*
@@ -50,16 +59,22 @@ public class TestInAdvanceBillingIntervalDetail extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCalculateFirstBillingCycleDate2() throws Exception {
         final LocalDate from = new LocalDate("2012-02-16");
+        final LocalDate to = null;
+        final LocalDate targetDate = new LocalDate();
         final int bcd = 30;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(from, null, new LocalDate(), bcd, BillingPeriod.ANNUAL, BillingMode.IN_ADVANCE);
-        billingIntervalDetail.calculateFirstBillingCycleDate();
-        Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-02-29"));
+
+        final BillingIntervalDetail annualBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.ANNUAL, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(annualBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-02-29"));
+
+        final BillingIntervalDetail monthlyBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(monthlyBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-02-29"));
+
+        final BillingIntervalDetail thirtyDaysBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.THIRTY_DAYS, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(thirtyDaysBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-02-16"));
     }
 
     /*
-     * Here the interesting part is that BCD is prior start and
-     *  i) we use MONTHLY billing period
-     * ii) on the next month, there is no such date (2012-02-30 does not exist)
+     * Here the interesting part is that BCD is prior start
      *
      *                                      Start
      *                              BCD     END_MONTH
@@ -67,12 +82,20 @@ public class TestInAdvanceBillingIntervalDetail extends InvoiceTestSuiteNoDB {
      *
      */
     @Test(groups = "fast")
-    public void testCalculateFirstBillingCycleDate4() throws Exception {
+    public void testCalculateFirstBillingCycleDate3() throws Exception {
         final LocalDate from = new LocalDate("2012-01-31");
+        final LocalDate to = null;
+        final LocalDate targetDate = new LocalDate();
         final int bcd = 30;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(from, null, new LocalDate(), bcd, BillingPeriod.MONTHLY, BillingMode.IN_ADVANCE);
-        billingIntervalDetail.calculateFirstBillingCycleDate();
-        Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-02-29"));
+
+        final BillingIntervalDetail annualBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.ANNUAL, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(annualBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2013-01-30"));
+
+        final BillingIntervalDetail monthlyBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(monthlyBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-02-29"));
+
+        final BillingIntervalDetail thirtyDaysBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.THIRTY_DAYS, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(thirtyDaysBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-31"));
     }
 
     /*
@@ -82,12 +105,20 @@ public class TestInAdvanceBillingIntervalDetail extends InvoiceTestSuiteNoDB {
      *
      */
     @Test(groups = "fast")
-    public void testCalculateFirstBillingCycleDate3() throws Exception {
+    public void testCalculateFirstBillingCycleDate4() throws Exception {
         final LocalDate from = new LocalDate("2012-02-16");
+        final LocalDate to = null;
+        final LocalDate targetDate = new LocalDate();
         final int bcd = 14;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(from, null, new LocalDate(), bcd, BillingPeriod.ANNUAL, BillingMode.IN_ADVANCE);
-        billingIntervalDetail.calculateFirstBillingCycleDate();
-        Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2013-02-14"));
+
+        final BillingIntervalDetail annualBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.ANNUAL, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(annualBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2013-02-14"));
+
+        final BillingIntervalDetail monthlyBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(monthlyBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-03-14"));
+
+        final BillingIntervalDetail thirtyDaysBillingIntervalDetail = new BillingIntervalDetail(from, to, targetDate, bcd, BillingPeriod.THIRTY_DAYS, BillingMode.IN_ADVANCE);
+        Assert.assertEquals(thirtyDaysBillingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-02-16"));
     }
 
     @Test(groups = "fast")
@@ -165,5 +196,4 @@ public class TestInAdvanceBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate effectiveEndDate = billingIntervalDetail.getEffectiveEndDate();
         Assert.assertEquals(effectiveEndDate, new LocalDate("2012-05-31"));
     }
-
 }

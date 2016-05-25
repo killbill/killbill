@@ -42,13 +42,14 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.BroadcastModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
+import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
@@ -59,8 +60,6 @@ import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
-import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
-import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 
 public class BeatrixIntegrationModule extends KillBillModule {
 
@@ -78,6 +77,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
         install(new GuicyKillbillTestWithEmbeddedDBModule(true, configSource));
         install(new GlobalLockerModule(configSource));
         install(new CacheModule(configSource));
+        install(new ConfigModule(configSource));
         install(new EmailModule(configSource));
         install(new CallContextModule(configSource));
         install(new TagStoreModule(configSource));

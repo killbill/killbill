@@ -16,7 +16,6 @@
 
 package org.killbill.billing.usage.dao;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,9 +36,13 @@ public class DefaultRolledUpUsageDao implements RolledUpUsageDao {
     }
 
     @Override
-    public void record(final UUID subscriptionId, final String unitType, final LocalDate date, final Long amount, final InternalCallContext context) {
-        final RolledUpUsageModelDao rolledUpUsageModelDao = new RolledUpUsageModelDao(subscriptionId, unitType, date, amount);
-        rolledUpUsageSqlDao.create(rolledUpUsageModelDao, context);
+    public void record(final Iterable<RolledUpUsageModelDao> usages, final InternalCallContext context){
+        rolledUpUsageSqlDao.create(usages, context);
+    }
+
+    @Override
+    public Boolean recordsWithTrackingIdExist(final UUID subscriptionId, final String trackingId, final InternalTenantContext context){
+        return rolledUpUsageSqlDao.recordsWithTrackingIdExist(subscriptionId, trackingId, context) != null ;
     }
 
     @Override

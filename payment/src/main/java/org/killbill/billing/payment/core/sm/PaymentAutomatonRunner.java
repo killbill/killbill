@@ -71,7 +71,7 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
@@ -222,8 +222,6 @@ public class PaymentAutomatonRunner {
                 throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
             } else if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
-            } else if (e.getCause() instanceof TimeoutException) {
-                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_PLUGIN_TIMEOUT, accountId, Objects.firstNonNull(e.getMessage(), ""));
             } else {
                 throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
             }

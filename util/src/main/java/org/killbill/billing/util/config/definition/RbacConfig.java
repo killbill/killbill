@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,18 +15,17 @@
  * under the License.
  */
 
-package org.killbill.billing.util.config;
+package org.killbill.billing.util.config.definition;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.Description;
 import org.skife.config.TimeSpan;
 
-public interface BroadcastConfig extends KillbillConfig {
+public interface RbacConfig extends KillbillConfig {
 
-    @Config("org.killbill.billing.util.broadcast.rate")
-    @Default("5s")
-    @Description("Rate at which broadcast service task is scheduled")
-    public TimeSpan getBroadcastServiceRunningRate();
-
+    @Config("org.killbill.rbac.globalSessionTimeout")
+    @Default("1h")
+    @Description("System-wide default time that any session may remain idle before expiring")
+    public TimeSpan getGlobalSessionTimeout();
 }

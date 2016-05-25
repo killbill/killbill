@@ -42,7 +42,7 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.mockito.Mockito;
@@ -57,7 +57,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
     private static final String PLUGIN_NAME_PLACEHOLDER = "pluginName";
 
-    private static final int TIMEOUT = 5;
+    private static final int TIMEOUT = 10;
 
     private final GlobalLocker locker = new MemoryGlobalLocker();
     private final Account account = Mockito.mock(Account.class);
@@ -97,7 +97,8 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
             Assert.fail();
         } catch (final OperationException e) {
             Assert.assertEquals(e.getOperationResult(), OperationResult.EXCEPTION);
-            Assert.assertTrue(e.getCause() instanceof NullPointerException);
+            Assert.assertTrue(e.getCause() instanceof PaymentApiException);
+            Assert.assertTrue(e.getCause().getCause() instanceof NullPointerException);
         }
     }
 

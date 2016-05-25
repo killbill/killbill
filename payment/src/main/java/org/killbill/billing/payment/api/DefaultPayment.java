@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,6 +18,9 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +32,7 @@ import org.killbill.billing.entity.EntityBase;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class DefaultPayment extends EntityBase implements Payment {
 
@@ -40,7 +45,7 @@ public class DefaultPayment extends EntityBase implements Payment {
     private final BigDecimal purchasedAmount;
     private final BigDecimal creditAmount;
     private final BigDecimal refundAmount;
-    private final Boolean isVoided;
+    private final Boolean isAuthVoided;
 
     private final Currency currency;
     private final List<PaymentTransaction> transactions;
@@ -56,18 +61,63 @@ public class DefaultPayment extends EntityBase implements Payment {
         this.paymentNumber = paymentNumber;
         this.externalKey = externalKey;
         this.transactions = transactions;
-        this.authAmount = getAmountForType(transactions, TransactionType.AUTHORIZE);
-        this.captureAmount = getAmountForType(transactions, TransactionType.CAPTURE);
-        this.purchasedAmount = getAmountForType(transactions, TransactionType.PURCHASE);
-        this.creditAmount = getAmountForType(transactions, TransactionType.CREDIT);
-        this.refundAmount = getAmountForType(transactions, TransactionType.REFUND);
-        this.isVoided = Iterables.filter(transactions, new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                return input.getTransactionType() == TransactionType.VOID && TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
+
+        final Collection<PaymentTransaction> voidedTransactions = new LinkedList<PaymentTransaction>();
+        final Collection<PaymentTransaction> nonVoidedTransactions = new LinkedList<PaymentTransaction>();
+        int nvTxToVoid = 0;
+        for (final PaymentTransaction paymentTransaction : Lists.<PaymentTransaction>reverse(transactions)) {
+            if (TransactionStatus.SUCCESS.equals(paymentTransaction.getTransactionStatus())) {
+                if (paymentTransaction.getTransactionType() == TransactionType.VOID) {
+                    nvTxToVoid++;
+                } else {
+                    if (nvTxToVoid > 0) {
+                        nvTxToVoid--;
+                        voidedTransactions.add(paymentTransaction);
+                    } else {
+                        nonVoidedTransactions.add(paymentTransaction);
+                    }
+                }
             }
-        }).iterator().hasNext();
-        this.currency = (transactions != null && !transactions.isEmpty()) ? transactions.get(0).getCurrency() : null;
+        }
+
+        final BigDecimal chargebackAmount = getChargebackAmount(transactions);
+
+        this.authAmount = getAmountForType(nonVoidedTransactions, TransactionType.AUTHORIZE);
+        this.captureAmount = getAmountForType(nonVoidedTransactions, TransactionType.CAPTURE).add(chargebackAmount.negate()).max(BigDecimal.ZERO);
+        this.purchasedAmount = getAmountForType(nonVoidedTransactions, TransactionType.PURCHASE).add(chargebackAmount.negate()).max(BigDecimal.ZERO);
+        this.creditAmount = getAmountForType(nonVoidedTransactions, TransactionType.CREDIT);
+        this.refundAmount = getAmountForType(nonVoidedTransactions, TransactionType.REFUND);
+
+        this.isAuthVoided = Iterables.<PaymentTransaction>tryFind(voidedTransactions,
+                                                                  new Predicate<PaymentTransaction>() {
+                                                                      @Override
+                                                                      public boolean apply(final PaymentTransaction input) {
+                                                                          return input.getTransactionType() == TransactionType.AUTHORIZE && TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
+                                                                      }
+                                                                  }).isPresent();
+
+        this.currency = !transactions.isEmpty() ? transactions.get(0).getCurrency() : null;
+    }
+
+    private static BigDecimal getChargebackAmount(final Iterable<PaymentTransaction> transactions) {
+        final Collection<String> successfulChargebackExternalKeys = new HashSet<String>();
+
+        for (final PaymentTransaction transaction : transactions) {
+            // We are looking for the last chargeback in state SUCCESS for a given external key
+            if (TransactionType.CHARGEBACK.equals(transaction.getTransactionType()) && TransactionStatus.SUCCESS.equals(transaction.getTransactionStatus())) {
+                successfulChargebackExternalKeys.add(transaction.getExternalKey());
+            } else if (TransactionType.CHARGEBACK.equals(transaction.getTransactionType()) && TransactionStatus.PAYMENT_FAILURE.equals(transaction.getTransactionStatus())) {
+                successfulChargebackExternalKeys.remove(transaction.getExternalKey());
+            }
+        }
+
+        return getAmountForType(Iterables.<PaymentTransaction>filter(transactions, new Predicate<PaymentTransaction>() {
+                                    @Override
+                                    public boolean apply(final PaymentTransaction input) {
+                                        return successfulChargebackExternalKeys.contains(input.getExternalKey());
+                                    }
+                                }),
+                                TransactionType.CHARGEBACK);
     }
 
     private static BigDecimal getAmountForType(final Iterable<PaymentTransaction> transactions, final TransactionType transactiontype) {
@@ -141,7 +191,7 @@ public class DefaultPayment extends EntityBase implements Payment {
 
     @Override
     public Boolean isAuthVoided() {
-        return isVoided;
+        return isAuthVoided;
     }
 
     @Override

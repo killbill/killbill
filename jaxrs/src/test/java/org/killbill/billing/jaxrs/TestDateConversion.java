@@ -38,7 +38,7 @@ import org.killbill.billing.util.UUIDs;
 public class TestDateConversion extends JaxRsResourceBase {
 
     public TestDateConversion() throws AccountApiException {
-        super(null, null, null, null, Mockito.mock(AccountUserApi.class), null, new ClockMock(), null);
+        super(null, null, null, null, Mockito.mock(AccountUserApi.class), null, null, new ClockMock(), null);
     }
 
     public UUID setupAccount(DateTimeZone accountTimeZone) throws AccountApiException {
@@ -62,7 +62,7 @@ public class TestDateConversion extends JaxRsResourceBase {
     public void testNullConversion() throws AccountApiException {
         final String input = null;
 
-        final LocalDate result = toLocalDate(input, null);
+        final LocalDate result = toLocalDate(input);
         Assert.assertNull(result);
 
         final UUID accountId = setupAccount(DateTimeZone.forOffsetHours(-8));
@@ -76,7 +76,7 @@ public class TestDateConversion extends JaxRsResourceBase {
     public void testLocalDateConversion() throws AccountApiException {
         final UUID accountId = setupAccount(DateTimeZone.forOffsetHours(-8));
         final String input = "2013-08-25";
-        final LocalDate result = toLocalDate(input, null);
+        final LocalDate result = toLocalDate(input);
         Assert.assertTrue(result.compareTo(new LocalDate(2013, 8, 25)) == 0);
     }
 

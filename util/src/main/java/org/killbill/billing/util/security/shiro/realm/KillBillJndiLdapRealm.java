@@ -42,7 +42,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -137,7 +137,7 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
             systemLdapCtx = ldapContextFactory.getSystemLdapContext();
             return findLDAPGroupsForUser(username, systemLdapCtx);
         } catch (AuthenticationException ex) {
-            log.info("LDAP authentication exception: " + ex.getLocalizedMessage());
+            log.info("LDAP authentication exception='{}'", ex.getLocalizedMessage());
             return ImmutableSet.<String>of();
         } finally {
             LdapUtils.closeContext(systemLdapCtx);

@@ -51,15 +51,6 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         verifyRefund(THIRTY, BigDecimal.TEN, BigDecimal.TEN, false, ImmutableMap.<UUID, BigDecimal>of());
     }
 
-    @Test(groups = "slow")
-    public void testFullRefundWithInvoiceAdjustment() throws Exception {
-        verifyRefund(THIRTY, THIRTY, BigDecimal.ZERO, true, ImmutableMap.<UUID, BigDecimal>of());
-    }
-
-    @Test(groups = "slow")
-    public void testPartialRefundWithInvoiceAdjustment() throws Exception {
-        verifyRefund(THIRTY, BigDecimal.TEN, BigDecimal.ZERO, true, ImmutableMap.<UUID, BigDecimal>of());
-    }
 
     @Test(groups = "slow")
     public void testFullRefundWithBothInvoiceItemAdjustments() throws Exception {
@@ -114,7 +105,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         Assert.assertEquals(initialInvoiceBalance.compareTo(BigDecimal.ZERO), 0);
 
         // Create a full refund with no adjustment
-        final InvoicePayment refund = invoiceInternalApi.createRefund(payment.getPaymentId(), refundAmount, adjusted, invoiceItemIdsWithAmounts,
+        final InvoicePayment refund = invoiceInternalApi.recordRefund(payment.getPaymentId(), refundAmount, adjusted, invoiceItemIdsWithAmounts,
                                                                       UUID.randomUUID().toString(), internalCallContext);
         Assert.assertEquals(refund.getAmount().compareTo(refundAmount.negate()), 0);
         Assert.assertEquals(refund.getCurrency(), CURRENCY);

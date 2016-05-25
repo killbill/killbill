@@ -281,6 +281,10 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(5);
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
 
+        // Make sure the 'invoice-service:next-billing-date-queue' gets processed before we continue and since we are in AUTO_INVOICING_OFF
+        // no event (NULL_INVOICE) will be generated and so we can't synchronize on any event, and we need to add a small amount of sleep
+        Thread.sleep(1000);
+
         allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(true);
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -796,11 +800,15 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
         final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
-        final Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, ImmutableList.<PluginProperty>of(), callContext);
-        createChargeBackAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
+        Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        payment = createChargeBackAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         // We should now be in OD1
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
+
+        // Reverse the chargeback
+        createChargeBackReversalAndCheckForCompletion(account, payment, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR, NextEvent.BLOCK);
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
     }
 
     @Test(groups = "slow", description = "Test overdue clear after external payment")
@@ -942,6 +950,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     }
 
     private void allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(final boolean extraPayment) {
+
         // Reset plugin so payments should now succeed
         paymentPlugin.makeAllInvoicesFailWithError(false);
 

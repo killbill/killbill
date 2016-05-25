@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,6 +29,7 @@ public interface JaxrsResource {
     public static final String TIMELINE = "timeline";
     public static final String REGISTER_NOTIFICATION_CALLBACK = "registerNotificationCallback";
     public static final String UPLOAD_PLUGIN_CONFIG = "uploadPluginConfig";
+    public static final String UPLOAD_PER_TENANT_CONFIG = "uploadPerTenantConfig";
     public static final String USER_KEY_VALUE = "userKeyValue";
     public static final String SEARCH = "search";
 
@@ -83,6 +84,10 @@ public interface JaxrsResource {
     public static final String QUERY_ACCOUNT_WITH_BALANCE_AND_CBA = "accountWithBalanceAndCBA";
 
     public static final String QUERY_ACCOUNT_ID = "accountId";
+
+    public static final String QUERY_BLOCKING_STATE_TYPES = "blockingStateTypes";
+    public static final String QUERY_BLOCKING_STATE_SVCS = "blockingStateSvcs";
+
 
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
     public static final String QUERY_WITH_MIGRATION_INVOICES = "withMigrationInvoices";
@@ -185,6 +190,9 @@ public interface JaxrsResource {
 
     public static final String CHARGEBACKS = "chargebacks";
     public static final String CHARGEBACKS_PATH = PREFIX + "/" + CHARGEBACKS;
+
+    public static final String CHARGEBACK_REVERSALS = "chargebackReversals";
+    public static final String CHARGEBACK_REVERSALS_PATH = PREFIX + "/" + CHARGEBACK_REVERSALS;
 
     public static final String ALL_TAGS = "allTags";
     public static final String TAGS = "tags";

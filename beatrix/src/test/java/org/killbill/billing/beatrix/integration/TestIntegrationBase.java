@@ -75,7 +75,7 @@ import org.killbill.billing.lifecycle.api.Lifecycle;
 import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.osgi.config.OSGIConfig;
-import org.killbill.billing.overdue.OverdueInternalApi;
+import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.listener.OverdueListener;
@@ -85,8 +85,11 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PaymentOptions;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
+import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -106,7 +109,6 @@ import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
-import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -115,7 +117,10 @@ import org.testng.annotations.BeforeMethod;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -179,7 +184,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     protected SubscriptionBaseTimelineApi repairApi;
 
     @Inject
-    protected OverdueInternalApi overdueUserApi;
+    protected OverdueApi overdueUserApi;
 
     @Inject
     protected InvoiceUserApi invoiceUserApi;
@@ -245,9 +250,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     @Inject
     protected RecordIdApi recordIdApi;
-
-    @Inject
-    protected IDBI idbi;
 
     @Inject
     protected NonEntityDao nonEntityDao;
@@ -517,24 +519,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected Payment refundPaymentWithAdjustmentAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
-            @Override
-            public Payment apply(@Nullable final Void input) {
-
-                final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
-                properties.add(prop1);
-                try {
-                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
-                                                                     properties, PAYMENT_OPTIONS, callContext);
-                } catch (final PaymentApiException e) {
-                    fail(e.toString());
-                    return null;
-                }
-            }
-        }, events);
-    }
 
     protected Payment refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final Payment payment, final Map<UUID, BigDecimal> iias, final NextEvent... events) {
         return refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment, payment.getPurchasedAmount(), payment.getCurrency(), iias, events);
@@ -580,6 +564,32 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
+    protected Payment createChargeBackReversalAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+        final PaymentTransaction chargeback = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
+                                                                                 new Predicate<PaymentTransaction>() {
+                                                                                     @Override
+                                                                                     public boolean apply(final PaymentTransaction input) {
+                                                                                         return TransactionType.CHARGEBACK.equals(input.getTransactionType()) &&
+                                                                                                TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
+                                                                                     }
+                                                                                 });
+        return createChargeBackReversalAndCheckForCompletion(account, payment, chargeback.getExternalKey(), events);
+    }
+
+    protected Payment createChargeBackReversalAndCheckForCompletion(final Account account, final Payment payment, final String chargebackTransactionExternalKey, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
+            @Override
+            public Payment apply(@Nullable final Void input) {
+                try {
+                    return paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), chargebackTransactionExternalKey, PAYMENT_OPTIONS, callContext);
+                } catch (final PaymentApiException e) {
+                    fail(e.toString());
+                    return null;
+                }
+            }
+        }, events);
+    }
+
     protected DefaultEntitlement createBaseEntitlementWithPriceOverrideAndCheckForCompletion(final UUID accountId,
                                                                                              final String bundleExternalKey,
                                                                                              final String productName,
@@ -600,7 +610,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
-                    fail(e.toString());
+                    fail("Unable to create entitlement", e);
                     return null;
                 }
             }

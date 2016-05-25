@@ -19,11 +19,9 @@
 package org.killbill.billing.overdue.glue;
 
 import org.killbill.billing.glue.OverdueModule;
-import org.killbill.billing.overdue.OverdueInternalApi;
 import org.killbill.billing.overdue.OverdueProperties;
 import org.killbill.billing.overdue.OverdueService;
 import org.killbill.billing.overdue.api.DefaultOverdueApi;
-import org.killbill.billing.overdue.api.DefaultOverdueInternalApi;
 import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.applicator.OverdueEmailGenerator;
 import org.killbill.billing.overdue.applicator.formatters.DefaultOverdueEmailFormatterFactory;
@@ -95,7 +93,6 @@ public class DefaultOverdueModule extends KillBillModule implements OverdueModul
 
     @Override
     public void installOverdueUserApi() {
-        bind(OverdueInternalApi.class).to(DefaultOverdueInternalApi.class).asEagerSingleton();
         bind(OverdueApi.class).to(DefaultOverdueApi.class).asEagerSingleton();
     }
 

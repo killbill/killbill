@@ -58,7 +58,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PAYMENT_TRANSACTIONS_PATH)
-@Api(value = JaxrsResource.PAYMENT_TRANSACTIONS, description = "Operations on payment transactions")
+@Api(value = JaxrsResource.PAYMENT_TRANSACTIONS_PATH, description = "Operations on payment transactions")
 public class TransactionResource extends JaxRsResourceBase {
 
     @Inject
@@ -70,7 +70,7 @@ public class TransactionResource extends JaxRsResourceBase {
                                final PaymentApi paymentApi,
                                final Clock clock,
                                final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
     }
 
     @TimedResource

@@ -51,14 +51,17 @@ import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.OrderingType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountEmail;
-import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
@@ -71,6 +74,7 @@ import org.killbill.billing.jaxrs.JaxrsExecutors;
 import org.killbill.billing.jaxrs.json.AccountEmailJson;
 import org.killbill.billing.jaxrs.json.AccountJson;
 import org.killbill.billing.jaxrs.json.AccountTimelineJson;
+import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.InvoiceEmailJson;
@@ -83,7 +87,7 @@ import org.killbill.billing.jaxrs.json.PaymentTransactionJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.overdue.OverdueInternalApi;
+import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.api.OverdueException;
@@ -92,6 +96,7 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentOptions;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.UUIDs;
@@ -105,8 +110,8 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.JaxrsConfig;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.JaxrsConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -115,6 +120,7 @@ import org.killbill.commons.metrics.MetricTag;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -139,7 +145,7 @@ public class AccountResource extends JaxRsResourceBase {
     private final SubscriptionApi subscriptionApi;
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
-    private final OverdueInternalApi overdueApi;
+    private final OverdueApi overdueApi;
     private final PaymentConfig paymentConfig;
     private final JaxrsExecutors jaxrsExecutors;
     private final JaxrsConfig jaxrsConfig;
@@ -154,14 +160,13 @@ public class AccountResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final SubscriptionApi subscriptionApi,
-                           final AccountInternalApi accountInternalApi,
-                           final OverdueInternalApi overdueApi,
+                           final OverdueApi overdueApi,
                            final Clock clock,
                            final PaymentConfig paymentConfig,
                            final JaxrsExecutors jaxrsExecutors,
                            final JaxrsConfig jaxrsConfig,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, paymentApi, subscriptionApi, clock, context);
         this.subscriptionApi = subscriptionApi;
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;
@@ -369,7 +374,6 @@ public class AccountResource extends JaxRsResourceBase {
        */
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     }
-
 
     @TimedResource
     @GET
@@ -794,7 +798,6 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-
     @TimedResource
     @PUT
     @Consumes(APPLICATION_JSON)
@@ -861,8 +864,14 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Trigger a payment using the account external key (authorization, purchase or credit)")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account external key supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account external key supplied"),
+                           @ApiResponse(code = 404, message = "Account not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response processPaymentByExternalKey(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                                 @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                                 @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
@@ -885,8 +894,14 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Trigger a payment (authorization, purchase or credit)")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
     public Response processPayment(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                    @PathParam(QUERY_ACCOUNT_ID) final String accountIdStr,
                                    @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
@@ -916,11 +931,27 @@ public class AccountResource extends JaxRsResourceBase {
                              json.getAmount(), "PaymentTransactionJson amount needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final UUID paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
         final UUID paymentId = json.getPaymentId() == null ? null : UUID.fromString(json.getPaymentId());
 
+        //
+        // If paymentId was specified, it means we are attempting a payment completion. The preferred way is to use the PaymentResource
+        // (PUT /1.0/kb/payments/{paymentId}/completeTransaction), but for backward compatibility we still allow the call to proceed
+        // as long as the request/existing state is healthy (i.e there is a matching PENDING transaction)
+        //
+        final UUID paymentMethodId;
+        if (paymentId != null) {
+            final Payment initialPayment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
+            final PaymentTransaction pendingTransaction = lookupPendingTransaction(initialPayment,
+                                                                                   json != null ? json.getTransactionId() : null,
+                                                                                   json != null ? json.getTransactionExternalKey() : null,
+                                                                                   json != null ? json.getTransactionType() : null);
+            paymentMethodId = initialPayment.getPaymentMethodId();
+        } else {
+            paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
+        }
         validatePaymentMethodForAccount(account.getId(), paymentMethodId, callContext);
+
 
         final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
@@ -944,11 +975,7 @@ public class AccountResource extends JaxRsResourceBase {
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
         }
-        // Aborted payment?
-        if (result == null) {
-            return Response.noContent().build();
-        }
-        return uriBuilder.buildResponse(PaymentResource.class, "getPayment", result.getId(), uriInfo.getBaseUri().toString());
+        return createPaymentResponse(uriInfo, result, transactionType, json.getTransactionExternalKey());
     }
 
     /*
@@ -966,10 +993,61 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
-        final OverdueState overdueState = overdueApi.getOverdueStateFor(account, tenantContext);
+        final OverdueState overdueState = overdueApi.getOverdueStateFor(account.getId(), tenantContext);
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState, paymentConfig)).build();
     }
+
+
+    /*
+     * *************************      BLOCKING STATE     *****************************
+     */
+
+    @TimedResource
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + BLOCK)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve blocking states for account", response = BlockingStateJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
+    public Response getBlockingStates(@PathParam(ID_PARAM_NAME) final String id,
+                                      @QueryParam(QUERY_BLOCKING_STATE_TYPES) final List<BlockingStateType> typeFilter,
+                                      @QueryParam(QUERY_BLOCKING_STATE_SVCS) final List<String> svcsFilter,
+                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
+
+        final TenantContext tenantContext = this.context.createContext(request);
+        final UUID accountId = UUID.fromString(id);
+        final Iterable<BlockingState> blockingStates = subscriptionApi.getBlockingStates(accountId, typeFilter, svcsFilter, OrderingType.ASCENDING, SubscriptionApi.ALL_EVENTS, tenantContext);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
+
+        final List<BlockingStateJson> result = ImmutableList.copyOf(Iterables.transform(blockingStates, new Function<BlockingState, BlockingStateJson>() {
+            @Override
+            public BlockingStateJson apply(final BlockingState input) {
+                return new BlockingStateJson(input, accountAuditLogs);
+            }
+        }));
+
+        return Response.status(Status.OK).entity(result).build();
+    }
+
+    @TimedResource
+    @PUT
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + BLOCK)
+    @Consumes(APPLICATION_JSON)
+    @ApiOperation(value = "Block an account")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response addAccountBlockingState(final BlockingStateJson json,
+                                           @PathParam(ID_PARAM_NAME) final String id,
+                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                           @HeaderParam(HDR_REASON) final String reason,
+                                           @HeaderParam(HDR_COMMENT) final String comment,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+        return addBlockingState(json, id, BlockingStateType.ACCOUNT, requestedDate, pluginPropertiesString, createdBy, reason, comment, request);
+    }
+
 
     /*
      * *************************      CUSTOM FIELDS     *****************************
@@ -1060,7 +1138,6 @@ public class AccountResource extends JaxRsResourceBase {
                                tagUserApi.getTagsForAccount(accountId, includedDeleted, tenantContext);
         return createTagResponse(accountId, tags, auditMode, tenantContext);
     }
-
 
     @TimedResource
     @POST
@@ -1171,7 +1248,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                                                }
                                                                            }
                                                                           )
-                                                    .orNull();
+                .orNull();
         if (existingEmail == null) {
             accountUserApi.addEmail(accountId, json.toAccountEmail(UUIDs.randomUUID()), callContext);
         }

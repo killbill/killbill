@@ -87,8 +87,7 @@ public class OverdueWrapper {
 
             return refreshWithLock(context);
         } catch (final LockFailedException e) {
-            // Not good!
-            log.error(String.format("Failed to process overdue for account %s", overdueable.getId()), e);
+            log.warn("Failed to process overdue for accountId='{}'", overdueable.getId(), e);
         } finally {
             if (lock != null) {
                 lock.release();
@@ -116,8 +115,7 @@ public class OverdueWrapper {
 
             clearWithLock(context);
         } catch (final LockFailedException e) {
-            // Not good!
-            log.error(String.format("Failed to clear overdue for account %s", overdueable.getId()), e);
+            log.warn("Failed to clear overdue for accountId='{}'", overdueable.getId(), e);
         } finally {
             if (lock != null) {
                 lock.release();

@@ -38,6 +38,12 @@ public class EntitlementDateHelper {
         return requestedDate == null ? clock.getUTCNow() : callContext.toUTCDateTime(requestedDate);
     }
 
+
+    public DateTime fromLocalDateAndReferenceTimeWithMinimum(@Nullable final LocalDate requestedDate, final DateTime min, final InternalTenantContext callContext) throws EntitlementApiException {
+        final DateTime candidate = fromLocalDateAndReferenceTime(requestedDate, callContext);
+        return candidate.compareTo(min) < 0 ? min : candidate;
+    }
+
     /**
      * Check if the date portion of a date/time is before or equals at now (as returned by the clock).
      *

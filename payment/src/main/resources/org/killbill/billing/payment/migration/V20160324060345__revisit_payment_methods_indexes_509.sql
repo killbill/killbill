@@ -1,0 +1,1 @@
+drop index payment_methods_active_accnt on payment_methods;

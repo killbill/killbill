@@ -30,6 +30,7 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcher
 import org.killbill.billing.util.UUIDs;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
+import org.slf4j.MDC;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -140,6 +141,7 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
                                                                                                                                                      UUIDs.getRandom(),
                                                                                                                                                      null,
                                                                                                                                                      null,
+                                                                                                                                                     MDC.getCopyOfContextMap(),
                                                                                                                                                      delegate);
 
         final String actualRequestId = stringPluginDispatcher.dispatchWithTimeout(callable, 100, TimeUnit.MILLISECONDS);

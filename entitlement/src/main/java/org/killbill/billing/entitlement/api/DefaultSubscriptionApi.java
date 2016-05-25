@@ -29,6 +29,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -46,6 +47,7 @@ import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
+import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -226,7 +228,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                       try {
                                                           return getSubscriptionBundle(subscriptionBaseBundle.getId(), context);
                                                       } catch (final SubscriptionApiException e) {
-                                                          log.warn("Error retrieving subscription", e);
+                                                          log.warn("Error retrieving bundleId='{}'", subscriptionBaseBundle.getId(), e);
                                                           return null;
                                                       }
                                                   }
@@ -250,7 +252,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                       try {
                                                           return getSubscriptionBundle(subscriptionBaseBundle.getId(), context);
                                                       } catch (final SubscriptionApiException e) {
-                                                          log.warn("Error retrieving subscription", e);
+                                                          log.warn("Error retrieving bundleId='{}'", subscriptionBaseBundle.getId(), e);
                                                           return null;
                                                       }
                                                   }
@@ -300,17 +302,17 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
-    public void addBlockingState(final BlockingState blockingState, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public void addBlockingState(final BlockingState inputBlockingState, @Nullable final LocalDate inputEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         // This is in no way an exhaustive arg validation, but to to ensure plugin would not hijack private entitlement state or service name
-        if (blockingState.getService() == null || blockingState.getService().equals(EntitlementService.ENTITLEMENT_SERVICE_NAME)) {
+        if (inputBlockingState.getService() == null || inputBlockingState.getService().equals(EntitlementService.ENTITLEMENT_SERVICE_NAME)) {
             throw new EntitlementApiException(ErrorCode.SUB_BLOCKING_STATE_INVALID_ARG, "Need to specify a valid serviceName");
         }
 
-        if (blockingState.getStateName() == null ||
-            blockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED) ||
-            blockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_BLOCKED) ||
-            blockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CLEAR)) {
+        if (inputBlockingState.getStateName() == null ||
+            inputBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED) ||
+            inputBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_BLOCKED) ||
+            inputBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CLEAR)) {
             throw new EntitlementApiException(ErrorCode.SUB_BLOCKING_STATE_INVALID_ARG, "Need to specify a valid stateName");
         }
 
@@ -320,35 +322,33 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         final UUID bundleId;
         final String externalKey;
         try {
-            switch (blockingState.getType()) {
+            switch (inputBlockingState.getType()) {
                 case ACCOUNT:
-                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(blockingState.getBlockedId(), ObjectType.ACCOUNT, callContext);
-                    account = accountApi.getImmutableAccountDataById(blockingState.getBlockedId(), internalCallContextWithValidAccountId);
+                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), ObjectType.ACCOUNT, callContext);
+                    account = accountApi.getImmutableAccountDataById(inputBlockingState.getBlockedId(), internalCallContextWithValidAccountId);
                     externalKey = account.getExternalKey();
                     accountId = account.getId();
                     bundleId = null;
                     break;
 
                 case SUBSCRIPTION_BUNDLE:
-                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(blockingState.getBlockedId(), ObjectType.BUNDLE, callContext);
-                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(blockingState.getBlockedId(), internalCallContextWithValidAccountId);
+                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), ObjectType.BUNDLE, callContext);
+                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(inputBlockingState.getBlockedId(), internalCallContextWithValidAccountId);
                     externalKey = bundle.getExternalKey();
                     bundleId = bundle.getId();
                     accountId = bundle.getAccountId();
-                    account = accountApi.getImmutableAccountDataById(accountId, internalCallContextWithValidAccountId);
                     break;
 
                 case SUBSCRIPTION:
-                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(blockingState.getBlockedId(), ObjectType.SUBSCRIPTION, callContext);
-                    final Entitlement entitlement = entitlementInternalApi.getEntitlementForId(blockingState.getBlockedId(), internalCallContextWithValidAccountId);
+                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), ObjectType.SUBSCRIPTION, callContext);
+                    final Entitlement entitlement = entitlementInternalApi.getEntitlementForId(inputBlockingState.getBlockedId(), internalCallContextWithValidAccountId);
                     bundleId = entitlement.getBundleId();
                     accountId = entitlement.getAccountId();
-                    account = accountApi.getImmutableAccountDataById(accountId, internalCallContextWithValidAccountId);
                     externalKey = null;
                     break;
 
                 default:
-                    throw new IllegalStateException("Invalid blockingStateType " + blockingState.getType());
+                    throw new IllegalStateException("Invalid blockingStateType " + inputBlockingState.getType());
             }
         } catch (final AccountApiException e) {
             throw new EntitlementApiException(e);
@@ -356,7 +356,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
-
+        final DateTime effectiveDate = inputEffectiveDate == null ? clock.getUTCNow() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
+        final DefaultBlockingState blockingState = new DefaultBlockingState(inputBlockingState, effectiveDate);
 
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.ADD_BLOCKING_STATE,
                                                                                accountId,
@@ -364,12 +365,11 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                                                bundleId,
                                                                                externalKey,
                                                                                new ArrayList<EntitlementSpecifier>(),
-                                                                               new LocalDate(blockingState.getEffectiveDate(), account.getTimeZone()),
+                                                                               internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
                                                                                null,
                                                                                null,
                                                                                properties,
                                                                                callContext);
-
 
         final WithEntitlementPlugin<Void> addBlockingStateWithPlugin = new WithEntitlementPlugin<Void>() {
 

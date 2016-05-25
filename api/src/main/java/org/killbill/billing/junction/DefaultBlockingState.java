@@ -25,7 +25,6 @@ import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.clock.Clock;
 
 public class DefaultBlockingState extends EntityBase implements BlockingState {
 
@@ -85,6 +84,18 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
              null,
              null,
              0L);
+    }
+
+    public DefaultBlockingState(final BlockingState input,
+                                final DateTime effectiveDate) {
+        this(input.getBlockedId(),
+             input.getType(),
+             input.getStateName(),
+             input.getService(),
+             input.isBlockChange(),
+             input.isBlockEntitlement(),
+             input.isBlockBilling(),
+             effectiveDate);
     }
 
     @Override

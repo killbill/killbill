@@ -120,7 +120,7 @@ public class TestInvoice extends TestJaxrsBase {
                                   "            <tr>\n" +
                                   "                <td />\n" +
                                   "                <td align=right>invoiceNumber</td>\n" +
-                                  "                <td>1</td>\n" +
+                                  "                <td>" + invoiceJson.getInvoiceNumber() + "</td>\n" +
                                   "            </tr>\n" +
                                   "            <tr>\n" +
                                   "                <td>companyName</td>\n" +
@@ -168,7 +168,7 @@ public class TestInvoice extends TestJaxrsBase {
                                   "                <td>shotgun-monthly-trial</td>\n" +
                                   "                <td>Monthly shotgun plan</td>\n" +
                                   "                <td>25 avr. 2012</td>\n" +
-                                  "                <td>USD 0E-9</td>\n" +
+                                  "                <td>USD 0.00</td>\n" +
                                   "            </tr>\n" +
                                   "            \n" +
                                   "            <tr>\n" +
@@ -182,7 +182,7 @@ public class TestInvoice extends TestJaxrsBase {
                                   "            <tr>\n" +
                                   "                <td colspan=2 />\n" +
                                   "                <td align=right><strong>invoiceAmountPaid</strong></td>\n" +
-                                  "                <td align=right><strong>0</strong></td>\n" +
+                                  "                <td align=right><strong>0.00</strong></td>\n" +
                                   "            </tr>\n" +
                                   "            <tr>\n" +
                                   "                <td colspan=2 />\n" +
@@ -414,13 +414,13 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceItem.getAmount().compareTo(BigDecimal.ZERO), 1);
 
         // Adjust partially the item
-        final BigDecimal adjustedAmount = invoiceItem.getAmount().divide(BigDecimal.TEN);
+        final BigDecimal adjustedAmount = invoiceItem.getAmount().divide(BigDecimal.TEN, BigDecimal.ROUND_HALF_UP);
         final InvoiceItem adjustmentInvoiceItem = new InvoiceItem();
         adjustmentInvoiceItem.setAccountId(accountJson.getAccountId());
         adjustmentInvoiceItem.setInvoiceId(invoice.getInvoiceId());
         adjustmentInvoiceItem.setInvoiceItemId(invoiceItem.getInvoiceItemId());
         adjustmentInvoiceItem.setAmount(adjustedAmount);
-        adjustmentInvoiceItem.setCurrency(invoice.getCurrency());
+        adjustmentInvoiceItem.setCurrency(invoice.getCurrency().name());
         killBillClient.adjustInvoiceItem(adjustmentInvoiceItem, createdBy, reason, comment);
 
         // Verify the new invoice balance
@@ -441,7 +441,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        externalCharge.setCurrency(accountJson.getCurrency());
         externalCharge.setDescription(UUID.randomUUID().toString());
         final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), false, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
@@ -476,7 +476,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge2 = new InvoiceItem();
         externalCharge2.setAccountId(accountJson.getAccountId());
         externalCharge2.setAmount(chargeAmount);
-        externalCharge2.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        externalCharge2.setCurrency(accountJson.getCurrency());
         externalCharge2.setDescription(UUID.randomUUID().toString());
         externalCharges.add(externalCharge2);
 
@@ -501,7 +501,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        externalCharge.setCurrency(accountJson.getCurrency());
         final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), true, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
         assertEquals(invoiceWithItems.getBalance().compareTo(BigDecimal.ZERO), 0);
@@ -525,7 +525,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        externalCharge.setCurrency(accountJson.getCurrency());
         externalCharge.setBundleId(bundleId);
         final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), false, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
@@ -554,7 +554,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        externalCharge.setCurrency(accountJson.getCurrency());
         externalCharge.setInvoiceId(invoiceId);
         final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), false, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
@@ -584,7 +584,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        externalCharge.setCurrency(accountJson.getCurrency());
         externalCharge.setInvoiceId(invoiceId);
         final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), true, true, createdBy, reason, comment);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharge.getInvoiceId(), true);
@@ -614,7 +614,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem externalCharge = new InvoiceItem();
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        externalCharge.setCurrency(accountJson.getCurrency());
         externalCharge.setInvoiceId(invoiceId);
         externalCharge.setBundleId(bundleId);
         final InvoiceItem createdExternalCharge = killBillClient.createExternalCharge(externalCharge, clock.getUTCToday(), false, true, createdBy, reason, comment);
@@ -693,7 +693,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
         externalCharge.setItemType(InvoiceItemType.EXTERNAL_CHARGE.toString());
-        externalCharge.setCurrency(Currency.valueOf(accountJson.getCurrency()));
+        externalCharge.setCurrency(accountJson.getCurrency());
 
         final Account accountWithBalance = killBillClient.getAccount(accountJson.getAccountId(), true, true);
 
@@ -701,7 +701,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(migrationInvoice.getBalance(), BigDecimal.ZERO);
         assertEquals(migrationInvoice.getItems().size(), 1);
         assertEquals(migrationInvoice.getItems().get(0).getAmount().compareTo(chargeAmount), 0);
-        assertEquals(migrationInvoice.getItems().get(0).getCurrency(), Currency.valueOf(accountJson.getCurrency()));
+        assertEquals(migrationInvoice.getItems().get(0).getCurrency(), accountJson.getCurrency());
 
 
         final List<Invoice> invoicesWithMigration = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, true);

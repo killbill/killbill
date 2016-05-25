@@ -26,7 +26,6 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.caching.CatalogCache;
-import org.killbill.billing.catalog.caching.CatalogCacheInvalidationCallback;
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.platform.api.KillbillService;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
@@ -34,7 +33,7 @@ import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
-import org.killbill.billing.util.config.CatalogConfig;
+import org.killbill.billing.util.config.definition.CatalogConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +71,7 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
                 // In multi-tenant mode, the property is not required
                 if (config.getCatalogURI() != null && !config.getCatalogURI().isEmpty()) {
                     catalogCache.loadDefaultCatalog(config.getCatalogURI());
-                    log.info("Successfully loaded the default catalog " + config.getCatalogURI());
+                    log.info("Successfully loaded the default catalog {}", config.getCatalogURI());
                 }
                 isInitialized = true;
             } catch (Exception e) {
@@ -86,7 +85,7 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
         tenantInternalApi.initializeCacheInvalidationCallback(TenantKey.CATALOG, cacheInvalidationCallback);
     }
 
-        @Override
+    @Override
     public String getName() {
         return CATALOG_SERVICE_NAME;
     }

@@ -28,10 +28,12 @@ import org.killbill.clock.ClockUtil;
 public class TimeAwareContext {
 
     private final DateTimeZone fixedOffsetTimeZone;
+    private final DateTime referenceDateTime;
     private final LocalTime referenceTime;
 
     public TimeAwareContext(@Nullable final DateTimeZone fixedOffsetTimeZone, @Nullable final DateTime referenceDateTime) {
         this.fixedOffsetTimeZone = fixedOffsetTimeZone;
+        this.referenceDateTime = referenceDateTime;
         this.referenceTime = computeReferenceTime(referenceDateTime);
     }
 
@@ -51,6 +53,10 @@ public class TimeAwareContext {
         if (getFixedOffsetTimeZone() == null || getReferenceTime() == null) {
             throw new IllegalArgumentException(String.format("Context mis-configured: fixedOffsetTimeZone=%s, referenceTime=%s", getFixedOffsetTimeZone(), getReferenceTime()));
         }
+    }
+
+    DateTime getReferenceDateTime() {
+        return referenceDateTime;
     }
 
     // For convenience (used in tests)
