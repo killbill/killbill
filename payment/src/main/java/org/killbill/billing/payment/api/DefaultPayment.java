@@ -19,6 +19,7 @@ package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -79,9 +80,11 @@ public class DefaultPayment extends EntityBase implements Payment {
             }
         }
 
+        final BigDecimal chargebackAmount = getChargebackAmount(transactions);
+
         this.authAmount = getAmountForType(nonVoidedTransactions, TransactionType.AUTHORIZE);
-        this.captureAmount = getAmountForType(nonVoidedTransactions, TransactionType.CAPTURE);
-        this.purchasedAmount = getAmountForType(nonVoidedTransactions, TransactionType.PURCHASE);
+        this.captureAmount = getAmountForType(nonVoidedTransactions, TransactionType.CAPTURE).add(chargebackAmount.negate()).max(BigDecimal.ZERO);
+        this.purchasedAmount = getAmountForType(nonVoidedTransactions, TransactionType.PURCHASE).add(chargebackAmount.negate()).max(BigDecimal.ZERO);
         this.creditAmount = getAmountForType(nonVoidedTransactions, TransactionType.CREDIT);
         this.refundAmount = getAmountForType(nonVoidedTransactions, TransactionType.REFUND);
 
@@ -94,6 +97,27 @@ public class DefaultPayment extends EntityBase implements Payment {
                                                                   }).isPresent();
 
         this.currency = !transactions.isEmpty() ? transactions.get(0).getCurrency() : null;
+    }
+
+    private static BigDecimal getChargebackAmount(final Iterable<PaymentTransaction> transactions) {
+        final Collection<String> successfulChargebackExternalKeys = new HashSet<String>();
+
+        for (final PaymentTransaction transaction : transactions) {
+            // We are looking for the last chargeback in state SUCCESS for a given external key
+            if (TransactionType.CHARGEBACK.equals(transaction.getTransactionType()) && TransactionStatus.SUCCESS.equals(transaction.getTransactionStatus())) {
+                successfulChargebackExternalKeys.add(transaction.getExternalKey());
+            } else if (TransactionType.CHARGEBACK.equals(transaction.getTransactionType()) && TransactionStatus.PAYMENT_FAILURE.equals(transaction.getTransactionStatus())) {
+                successfulChargebackExternalKeys.remove(transaction.getExternalKey());
+            }
+        }
+
+        return getAmountForType(Iterables.<PaymentTransaction>filter(transactions, new Predicate<PaymentTransaction>() {
+                                    @Override
+                                    public boolean apply(final PaymentTransaction input) {
+                                        return successfulChargebackExternalKeys.contains(input.getExternalKey());
+                                    }
+                                }),
+                                TransactionType.CHARGEBACK);
     }
 
     private static BigDecimal getAmountForType(final Iterable<PaymentTransaction> transactions, final TransactionType transactiontype) {
