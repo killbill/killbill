@@ -168,7 +168,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                         if (paymentControlContext.getCurrency() == paymentControlContext.getProcessedCurrency()) {
                             invoicePaymentAmount = paymentControlContext.getProcessedAmount();
                         } else {
-                            log.warn("processedCurrency='{}' of invoice paymentId='{}' doesn't match invoice currency='{}', assuming it is a full payment" , paymentControlContext.getProcessedCurrency(), paymentControlContext.getPaymentId(), paymentControlContext.getCurrency());
+                            log.warn("processedCurrency='{}' of invoice paymentId='{}' doesn't match invoice currency='{}', assuming it is a full payment", paymentControlContext.getProcessedCurrency(), paymentControlContext.getPaymentId(), paymentControlContext.getCurrency());
                             invoicePaymentAmount = paymentControlContext.getAmount();
                         }
                         log.debug("Notifying invoice of successful paymentId='{}', amount='{}', currency='{}', invoiceId='{}'", paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
@@ -312,10 +312,10 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
             if (paymentControlPluginContext.isApiPayment() && isAborted) {
                 throw new PaymentControlApiException("Abort purchase call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
-                                                                                                     String.format("Aborted Payment for invoice %s : invoice balance is = %s, requested payment amount is = %s",
-                                                                                                                   invoice.getId(),
-                                                                                                                   invoice.getBalance(),
-                                                                                                                   paymentControlPluginContext.getAmount())));
+                                                                                                      String.format("Aborted Payment for invoice %s : invoice balance is = %s, requested payment amount is = %s",
+                                                                                                                    invoice.getId(),
+                                                                                                                    invoice.getBalance(),
+                                                                                                                    paymentControlPluginContext.getAmount())));
             } else {
 
                 //
@@ -349,9 +349,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         if ((paymentControlPluginContext.getAmount() == null || paymentControlPluginContext.getAmount().compareTo(BigDecimal.ZERO) == 0) &&
             idWithAmount.size() == 0) {
             throw new PaymentControlApiException("Abort refund call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
-                                                                                                  String.format("Refund for payment, key = %s, aborted: requested refund amount is = %s",
-                                                                                                                paymentControlPluginContext.getPaymentExternalKey(),
-                                                                                                                paymentControlPluginContext.getAmount())));
+                                                                                                String.format("Refund for payment, key = %s, aborted: requested refund amount is = %s",
+                                                                                                              paymentControlPluginContext.getPaymentExternalKey(),
+                                                                                                              paymentControlPluginContext.getAmount())));
         }
 
         final PaymentModelDao payment = paymentDao.getPayment(paymentControlPluginContext.getPaymentId(), internalContext);
