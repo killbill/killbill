@@ -169,30 +169,33 @@ public class PaymentProcessor extends ProcessorBase {
 
         final Map<UUID, PaymentPluginApi> paymentPluginByPaymentMethodId = new HashMap<UUID, PaymentPluginApi>();
         final Collection<UUID> absentPlugins = new HashSet<UUID>();
-        return Lists.<PaymentModelDao, Payment>transform(paymentsModelDao,
-                                                         new Function<PaymentModelDao, Payment>() {
-                                                             @Override
-                                                             public Payment apply(final PaymentModelDao paymentModelDao) {
-                                                                 List<PaymentTransactionInfoPlugin> pluginInfo = null;
+        final List<Payment> transformedPayments = Lists.<PaymentModelDao, Payment>transform(paymentsModelDao,
+                                                                                            new Function<PaymentModelDao, Payment>() {
+                                                                                                @Override
+                                                                                                public Payment apply(final PaymentModelDao paymentModelDao) {
+                                                                                                    List<PaymentTransactionInfoPlugin> pluginInfo = null;
 
-                                                                 if (withPluginInfo) {
-                                                                     PaymentPluginApi pluginApi = paymentPluginByPaymentMethodId.get(paymentModelDao.getPaymentMethodId());
-                                                                     if (pluginApi == null && !absentPlugins.contains(paymentModelDao.getPaymentMethodId())) {
-                                                                         try {
-                                                                             pluginApi = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), tenantContext);
-                                                                             paymentPluginByPaymentMethodId.put(paymentModelDao.getPaymentMethodId(), pluginApi);
-                                                                         } catch (final PaymentApiException e) {
-                                                                             log.warn("Unable to retrieve pluginApi for payment method " + paymentModelDao.getPaymentMethodId());
-                                                                             absentPlugins.add(paymentModelDao.getPaymentMethodId());
-                                                                         }
-                                                                     }
+                                                                                                    if (withPluginInfo) {
+                                                                                                        PaymentPluginApi pluginApi = paymentPluginByPaymentMethodId.get(paymentModelDao.getPaymentMethodId());
+                                                                                                        if (pluginApi == null && !absentPlugins.contains(paymentModelDao.getPaymentMethodId())) {
+                                                                                                            try {
+                                                                                                                pluginApi = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), tenantContext);
+                                                                                                                paymentPluginByPaymentMethodId.put(paymentModelDao.getPaymentMethodId(), pluginApi);
+                                                                                                            } catch (final PaymentApiException e) {
+                                                                                                                log.warn("Unable to retrieve pluginApi for payment method " + paymentModelDao.getPaymentMethodId());
+                                                                                                                absentPlugins.add(paymentModelDao.getPaymentMethodId());
+                                                                                                            }
+                                                                                                        }
 
-                                                                     pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, context);
-                                                                 }
+                                                                                                        pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, context);
+                                                                                                    }
 
-                                                                 return toPayment(paymentModelDao, transactionsModelDao, pluginInfo, tenantContext);
-                                                             }
-                                                         });
+                                                                                                    return toPayment(paymentModelDao, transactionsModelDao, pluginInfo, tenantContext);
+                                                                                                }
+                                                                                            });
+
+        // Copy the transformed list, so the transformation function is applied once (otherwise, the Janitor could be invoked multiple times)
+        return ImmutableList.<Payment>copyOf(transformedPayments);
     }
 
     public Payment getPayment(final UUID paymentId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {

@@ -18,7 +18,6 @@
 package org.killbill.billing.payment.core;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -28,9 +27,9 @@ import javax.annotation.Nullable;
 
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
+import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.Payment;
@@ -58,11 +57,14 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
     private static final BigDecimal TEN = new BigDecimal("10");
     private static final Currency CURRENCY = Currency.BTC;
 
+    private MockPaymentProviderPlugin mockPaymentProviderPlugin;
     private PaymentBusListener paymentBusListener;
     private Account account;
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
+
         account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
 
         paymentBusListener = new PaymentBusListener();
@@ -70,9 +72,31 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testClassicFlow() throws Exception {
+    public void testGetAccountPaymentsWithJanitor() throws Exception {
         final String paymentExternalKey = UUID.randomUUID().toString();
 
+        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToUnknown = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+
+        final String authorizationKey = UUID.randomUUID().toString();
+        final Payment authorization = paymentProcessor.createAuthorization(true, null, account, null, null, TEN, CURRENCY, paymentExternalKey, authorizationKey,
+                                                                           SHOULD_LOCK_ACCOUNT, pluginPropertiesToDriveTransationToUnknown, callContext, internalCallContext);
+        verifyPayment(authorization, paymentExternalKey, ZERO, ZERO, ZERO, 1);
+        final UUID paymentId = authorization.getId();
+        verifyPaymentTransaction(authorization.getTransactions().get(0), authorizationKey, TransactionType.AUTHORIZE, TEN, paymentId);
+        paymentBusListener.verify(0, 0, 1, account.getId(), paymentId, ZERO, TransactionStatus.UNKNOWN);
+
+        mockPaymentProviderPlugin.overridePaymentPluginStatus(paymentId, authorization.getTransactions().get(0).getId(), PaymentPluginStatus.PROCESSED);
+
+        final List<Payment> payments = paymentProcessor.getAccountPayments(account.getId(), true, callContext, internalCallContext);
+        Assert.assertEquals(payments.size(), 1);
+        verifyPayment(payments.get(0), paymentExternalKey, TEN, ZERO, ZERO, 1);
+        verifyPaymentTransaction(payments.get(0).getTransactions().get(0), authorizationKey, TransactionType.AUTHORIZE, TEN, paymentId);
+        paymentBusListener.verify(1, 0, 1, account.getId(), paymentId, TEN, TransactionStatus.SUCCESS);
+    }
+
+    @Test(groups = "slow")
+    public void testClassicFlow() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
 
         final Iterable<PluginProperty> pluginPropertiesToDriveTransationToPending = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
@@ -209,8 +233,8 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
     private static final class PaymentBusListener {
 
         private final List<PaymentInfoInternalEvent> paymentInfoEvents = new LinkedList<PaymentInfoInternalEvent>();
-        private final Collection<BusInternalEvent> paymentErrorEvents = new LinkedList<BusInternalEvent>();
-        private final Collection<BusInternalEvent> paymentPluginErrorEvents = new LinkedList<BusInternalEvent>();
+        private final List<PaymentInternalEvent> paymentErrorEvents = new LinkedList<PaymentInternalEvent>();
+        private final List<PaymentInternalEvent> paymentPluginErrorEvents = new LinkedList<PaymentInternalEvent>();
 
         @Subscribe
         public void paymentInfo(final PaymentInfoInternalEvent event) {
@@ -228,20 +252,28 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
         }
 
         private void verify(final int eventNb, final UUID accountId, final UUID paymentId, final BigDecimal amount, final TransactionStatus transactionStatus) throws Exception {
+            verify(eventNb, 0, 0, accountId, paymentId, amount, transactionStatus);
+        }
+
+        private void verify(final int nbInfoEvents, final int nbErrorEvents, final int nbPluginErrorEvents, final UUID accountId, final UUID paymentId, final BigDecimal amount, final TransactionStatus transactionStatus) throws Exception {
             Awaitility.await()
                       .until(new Callable<Boolean>() {
                           @Override
                           public Boolean call() throws Exception {
-                              return paymentInfoEvents.size() == eventNb;
+                              return paymentInfoEvents.size() == nbInfoEvents && paymentErrorEvents.size() == nbErrorEvents && paymentPluginErrorEvents.size() == nbPluginErrorEvents;
                           }
                       });
-            Assert.assertEquals(paymentErrorEvents.size(), 0);
-            Assert.assertEquals(paymentPluginErrorEvents.size(), 0);
 
-            verify(paymentInfoEvents.get(eventNb - 1), accountId, paymentId, amount, transactionStatus);
+            if (transactionStatus == TransactionStatus.SUCCESS || transactionStatus == TransactionStatus.PENDING) {
+                verify(paymentInfoEvents.get(paymentInfoEvents.size() - 1), accountId, paymentId, amount, transactionStatus);
+            } else if (transactionStatus == TransactionStatus.PAYMENT_FAILURE) {
+                verify(paymentErrorEvents.get(paymentErrorEvents.size() - 1), accountId, paymentId, amount, transactionStatus);
+            } else {
+                verify(paymentPluginErrorEvents.get(paymentPluginErrorEvents.size() - 1), accountId, paymentId, amount, transactionStatus);
+            }
         }
 
-        private void verify(final PaymentInfoInternalEvent event, final UUID accountId, final UUID paymentId, @Nullable final BigDecimal amount, final TransactionStatus transactionStatus) {
+        private void verify(final PaymentInternalEvent event, final UUID accountId, final UUID paymentId, @Nullable final BigDecimal amount, final TransactionStatus transactionStatus) {
             Assert.assertEquals(event.getPaymentId(), paymentId);
             Assert.assertEquals(event.getAccountId(), accountId);
             if (amount == null) {
