@@ -31,7 +31,8 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.JaxrsResource;
+import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Invoice;
@@ -41,6 +42,11 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.ning.http.client.Response;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -296,5 +302,29 @@ public class TestEntitlement extends TestJaxrsBase {
         // Retrieves with GET
         final Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         Assert.assertTrue(objFromJson.equals(entitlementJson));
+    }
+
+    @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
+    public void testMoveEntitlementBCD() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final Subscription entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName,
+                                                               ProductCategory.BASE, term, true);
+
+        // Until we have a proper java client API (depends on our branching strategy)
+        final Multimap options = HashMultimap.create();
+        options.put(KillBillHttpClient.AUDIT_OPTION_CREATED_BY, createdBy);
+        options.put(KillBillHttpClient.AUDIT_OPTION_REASON, reason);
+        options.put(KillBillHttpClient.AUDIT_OPTION_COMMENT, comment);
+
+        final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + entitlementJson.getSubscriptionId() + "/bcd/" + 9;
+        final Response response = killBillHttpClient.doPut(uri, null, options);
+        Assert.assertEquals(response.getStatusCode(), 200);
     }
 }
