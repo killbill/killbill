@@ -39,10 +39,12 @@ public class MockEffectiveSubscriptionEvent extends BusEventBase implements Effe
     private final DateTime effectiveTransitionTime;
     private final EntitlementState previousState;
     private final String previousPriceList;
+    private final Integer previousBillCycleDayLocal;
     private final String previousPlan;
     private final String previousPhase;
     private final EntitlementState nextState;
     private final String nextPriceList;
+    private final Integer nextBillCycleDayLocal;
     private final String nextPlan;
     private final String nextPhase;
     private final Integer remainingEventsForUserOperation;
@@ -61,10 +63,12 @@ public class MockEffectiveSubscriptionEvent extends BusEventBase implements Effe
                                           @JsonProperty("previousPlan") final String previousPlan,
                                           @JsonProperty("previousPhase") final String previousPhase,
                                           @JsonProperty("previousPriceList") final String previousPriceList,
+                                          @JsonProperty("previousBillCycleDayLocal") final Integer previousBillCycleDayLocal,
                                           @JsonProperty("nextState") final EntitlementState nextState,
                                           @JsonProperty("nextPlan") final String nextPlan,
                                           @JsonProperty("nextPhase") final String nextPhase,
                                           @JsonProperty("nextPriceList") final String nextPriceList,
+                                          @JsonProperty("nextBillCycleDayLocal") final Integer nextBillCycleDayLocal,
                                           @JsonProperty("totalOrdering") final Long totalOrdering,
                                           @JsonProperty("transitionType") final SubscriptionBaseTransitionType transitionType,
                                           @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
@@ -80,11 +84,13 @@ public class MockEffectiveSubscriptionEvent extends BusEventBase implements Effe
         this.effectiveTransitionTime = effectiveTransitionTime;
         this.previousState = previousState;
         this.previousPriceList = previousPriceList;
+        this.previousBillCycleDayLocal = previousBillCycleDayLocal;
         this.previousPlan = previousPlan;
         this.previousPhase = previousPhase;
         this.nextState = nextState;
         this.nextPlan = nextPlan;
         this.nextPriceList = nextPriceList;
+        this.nextBillCycleDayLocal = nextBillCycleDayLocal;
         this.nextPhase = nextPhase;
         this.totalOrdering = totalOrdering;
         this.userToken = userToken;
@@ -132,6 +138,11 @@ public class MockEffectiveSubscriptionEvent extends BusEventBase implements Effe
     }
 
     @Override
+    public Integer getPreviousBillCycleDayLocal() {
+        return previousBillCycleDayLocal;
+    }
+
+    @Override
     public String getNextPlan() {
         return nextPlan;
     }
@@ -155,6 +166,11 @@ public class MockEffectiveSubscriptionEvent extends BusEventBase implements Effe
     @Override
     public String getNextPriceList() {
         return nextPriceList;
+    }
+
+    @Override
+    public Integer getNextBillCycleDayLocal() {
+        return nextBillCycleDayLocal;
     }
 
     @Override

@@ -64,7 +64,7 @@ public class TestApiListener {
 
     private static final Joiner SPACE_JOINER = Joiner.on(" ");
 
-    private static final long DELAY = 25000;
+    private static final long DELAY = 25000 * 1000;
 
     private final List<NextEvent> nextExpectedEvent;
     private final IDBI idbi;
@@ -129,6 +129,7 @@ public class TestApiListener {
         TAG,
         TAG_DEFINITION,
         CUSTOM_FIELD,
+        BCD_CHANGE
     }
 
 
@@ -200,6 +201,10 @@ public class TestApiListener {
                 break;
             case PHASE:
                 assertEqualsNicely(NextEvent.PHASE);
+                notifyIfStackEmpty();
+                break;
+            case BCD_CHANGE:
+                assertEqualsNicely(NextEvent.BCD_CHANGE);
                 notifyIfStackEmpty();
                 break;
             default:

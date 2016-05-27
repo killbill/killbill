@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS subscription_events;
 CREATE TABLE subscription_events (
     record_id serial unique,
     id varchar(36) NOT NULL,
-    event_type varchar(9) NOT NULL,
+    event_type varchar(15) NOT NULL,
     user_type varchar(25) DEFAULT NULL,
     requested_date datetime NOT NULL,
     effective_date datetime NOT NULL,
@@ -13,6 +13,7 @@ CREATE TABLE subscription_events (
     phase_name varchar(128) DEFAULT NULL,
     price_list_name varchar(64) DEFAULT NULL,
     current_version int DEFAULT 1,
+    billing_cycle_day_local int DEFAULT NULL,
     is_active boolean default true,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,

@@ -96,4 +96,7 @@ public interface SubscriptionBaseInternalApi {
     public Iterable<DateTime> getFutureNotificationsForAccount(InternalCallContext context);
 
     public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final SubscriptionBaseTransitionType eventType, final InternalCallContext internalCallContext);
+
+
+    public void updateBCD(final UUID subscriptionId, final int bcd, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
 }

@@ -67,6 +67,8 @@ import org.killbill.billing.subscription.engine.dao.model.SubscriptionModelDao;
 import org.killbill.billing.subscription.events.EventBaseBuilder;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
+import org.killbill.billing.subscription.events.bcd.BCDEvent;
+import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEvent;
@@ -696,6 +698,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         String curPlan = null;
         String curPhase = null;
         String curPriceList = null;
+
         for (SubscriptionBaseEvent cur : changeEvents) {
             switch (cur.getType()) {
                 case API_USER:
@@ -708,6 +711,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 case PHASE:
                     final PhaseEvent phaseEvent = (PhaseEvent) cur;
                     curPhase = phaseEvent.getPhase();
+                    break;
+
+                case BCD_UPDATE:
                     break;
 
                 default:
@@ -983,9 +989,20 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 // Set total ordering value of the fake dryRun event to make sure billing events are correctly ordered
                 final SubscriptionBaseEvent curAdjustedDryRun;
                 if (!events.isEmpty()) {
-                    final EventBaseBuilder eventBuilder = (curDryRun.getType() == EventType.API_USER) ?
-                                                          new ApiEventBuilder((ApiEvent) curDryRun) :
-                                                          new PhaseEventBuilder((PhaseEvent) curDryRun);
+
+                    final EventBaseBuilder eventBuilder;
+                    switch(curDryRun.getType()) {
+                        case PHASE:
+                            eventBuilder = new PhaseEventBuilder((PhaseEvent) curDryRun);
+                            break;
+                        case BCD_UPDATE:
+                            eventBuilder = new BCDEventBuilder((BCDEvent) curDryRun);
+                            break;
+                        case API_USER:
+                        default:
+                            eventBuilder = new ApiEventBuilder((ApiEvent) curDryRun);
+                            break;
+                    }
                     eventBuilder.setTotalOrdering(events.get(events.size() - 1).getTotalOrdering() + 1);
 
                     curAdjustedDryRun = eventBuilder.build();
@@ -1043,6 +1060,25 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 return null;
             }
         });
+    }
+
+    @Override
+    public void createBCDChangeEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent bcdEvent, final InternalCallContext context) {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+                transactional.create(new SubscriptionEventModelDao(bcdEvent), context);
+
+                // Notify the Bus
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, bcdEvent, SubscriptionBaseTransitionType.BCD_CHANGE, context);
+                final boolean isBusEvent = bcdEvent.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0;
+                recordBusOrFutureNotificationFromTransaction(subscription, bcdEvent, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
+
+                return null;
+            }
+        });
+
     }
 
     private DefaultSubscriptionBase createSubscriptionForInternalUse(final SubscriptionBase shellSubscription, final List<SubscriptionBaseEvent> events, final InternalTenantContext context) throws CatalogApiException {

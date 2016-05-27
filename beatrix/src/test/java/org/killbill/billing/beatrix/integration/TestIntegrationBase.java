@@ -200,6 +200,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     @Inject
     protected SubscriptionApi subscriptionApi;
 
+
     @Named(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME)
     @Inject
     protected MockPaymentProviderPlugin paymentPlugin;

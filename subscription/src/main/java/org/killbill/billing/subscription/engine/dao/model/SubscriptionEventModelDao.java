@@ -19,24 +19,16 @@ package org.killbill.billing.subscription.engine.dao.model;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
+import org.killbill.billing.subscription.events.EventBaseBuilder;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
-import org.killbill.billing.subscription.events.EventBaseBuilder;
+import org.killbill.billing.subscription.events.bcd.BCDEvent;
+import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventBuilder;
-import org.killbill.billing.subscription.events.phase.PhaseEventData;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
-import org.killbill.billing.subscription.events.user.ApiEventCancel;
-import org.killbill.billing.subscription.events.user.ApiEventChange;
-import org.killbill.billing.subscription.events.user.ApiEventCreate;
-import org.killbill.billing.subscription.events.user.ApiEventMigrateBilling;
-import org.killbill.billing.subscription.events.user.ApiEventMigrateSubscription;
-import org.killbill.billing.subscription.events.user.ApiEventReCreate;
-import org.killbill.billing.subscription.events.user.ApiEventTransfer;
 import org.killbill.billing.subscription.events.user.ApiEventType;
-import org.killbill.billing.subscription.events.user.ApiEventUncancel;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -54,6 +46,9 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
     private String phaseName;
     private String priceListName;
     private long currentVersion;
+    private int billingCycleDayLocal;
+
+
     private boolean isActive;
 
     public SubscriptionEventModelDao() {
@@ -63,7 +58,7 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
     public SubscriptionEventModelDao(final UUID id, final long totalOrdering, final EventType eventType, final ApiEventType userType,
                                      final DateTime requestedDate, final DateTime effectiveDate, final UUID subscriptionId,
                                      final String planName, final String phaseName, final String priceListName, final long currentVersion,
-                                     final boolean active, final DateTime createDate, final DateTime updateDate) {
+                                     final int billingCycleDayLocal, final boolean active, final DateTime createDate, final DateTime updateDate) {
         super(id, createDate, updateDate);
         this.totalOrdering = totalOrdering;
         this.eventType = eventType;
@@ -75,6 +70,7 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         this.phaseName = phaseName;
         this.priceListName = priceListName;
         this.currentVersion = currentVersion;
+        this.billingCycleDayLocal = billingCycleDayLocal;
         this.isActive = active;
     }
 
@@ -87,9 +83,16 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         this.effectiveDate = src.getEffectiveDate();
         this.subscriptionId = src.getSubscriptionId();
         this.planName = eventType == EventType.API_USER ? ((ApiEvent) src).getEventPlan() : null;
-        this.phaseName = eventType == EventType.API_USER ? ((ApiEvent) src).getEventPlanPhase() : ((PhaseEvent) src).getPhase();
+        if (eventType == EventType.API_USER) {
+            this.phaseName = ((ApiEvent) src).getEventPlanPhase();
+        } else if (eventType == EventType.PHASE) {
+            this.phaseName = ((PhaseEvent) src).getPhase();
+        } else {
+            this.phaseName = null;
+        }
         this.priceListName = eventType == EventType.API_USER ? ((ApiEvent) src).getPriceList() : null;
         this.currentVersion = src.getActiveVersion();
+        this.billingCycleDayLocal = eventType == EventType.BCD_UPDATE ? ((BCDEvent) src).getBillCycleDayLocal() : 0;
         this.isActive = src.isActive();
     }
 
@@ -131,6 +134,10 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
 
     public long getCurrentVersion() {
         return currentVersion;
+    }
+
+    public int getBillingCycleDayLocal() {
+        return billingCycleDayLocal;
     }
 
     // TODO required for jdbi binder
@@ -182,6 +189,10 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         this.currentVersion = currentVersion;
     }
 
+    public void setBillingCycleDayLocal(final int billingCycleDayLocal) {
+        this.billingCycleDayLocal = billingCycleDayLocal;
+    }
+
     public void setIsActive(final boolean isActive) {
         this.isActive = isActive;
     }
@@ -192,17 +203,22 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
             return null;
         }
 
-        final EventBaseBuilder<?> base = ((src.getEventType() == EventType.PHASE) ?
-                                          new PhaseEventBuilder() :
-                                          new ApiEventBuilder())
-                .setTotalOrdering(src.getTotalOrdering())
-                .setUuid(src.getId())
-                .setSubscriptionId(src.getSubscriptionId())
-                .setCreatedDate(src.getCreatedDate())
-                .setUpdatedDate(src.getUpdatedDate())
-                .setEffectiveDate(src.getEffectiveDate())
-                .setActiveVersion(src.getCurrentVersion())
-                .setActive(src.isActive());
+        final EventBaseBuilder<?> base;
+        if (src.getEventType() == EventType.PHASE) {
+            base = new PhaseEventBuilder();
+        } else if (src.getEventType() == EventType.BCD_UPDATE) {
+            base = new BCDEventBuilder();
+        } else {
+            base = new ApiEventBuilder();
+        }
+        base.setTotalOrdering(src.getTotalOrdering())
+            .setUuid(src.getId())
+            .setSubscriptionId(src.getSubscriptionId())
+            .setCreatedDate(src.getCreatedDate())
+            .setUpdatedDate(src.getUpdatedDate())
+            .setEffectiveDate(src.getEffectiveDate())
+            .setActiveVersion(src.getCurrentVersion())
+            .setActive(src.isActive());
 
         SubscriptionBaseEvent result;
         if (src.getEventType() == EventType.PHASE) {
@@ -216,6 +232,8 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
                     .setApiEventType(src.getUserType())
                     .setFromDisk(true);
             result = builder.build();
+        } else if (src.getEventType() == EventType.BCD_UPDATE) {
+            result = (new BCDEventBuilder(base).setBillCycleDayLocal(src.getBillingCycleDayLocal())).build();
         } else {
             throw new SubscriptionBaseError(String.format("Can't figure out event %s", src.getEventType()));
         }
@@ -236,6 +254,7 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         sb.append(", phaseName='").append(phaseName).append('\'');
         sb.append(", priceListName='").append(priceListName).append('\'');
         sb.append(", currentVersion=").append(currentVersion);
+        sb.append(", billingCycleDayLocal=").append(billingCycleDayLocal);
         sb.append(", isActive=").append(isActive);
         sb.append('}');
         return sb.toString();
@@ -288,7 +307,9 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         if (userType != that.userType) {
             return false;
         }
-
+        if (billingCycleDayLocal != that.billingCycleDayLocal) {
+            return false;
+        }
         return true;
     }
 

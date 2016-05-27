@@ -37,7 +37,7 @@ public class TestEventJson extends SubscriptionTestSuiteNoDB {
     public void testSubscriptionEvent() throws Exception {
 
         final EffectiveSubscriptionInternalEvent e = new DefaultEffectiveSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(),
-                                                                                           EntitlementState.ACTIVE, "pro", "TRIAL", "DEFAULT", EntitlementState.CANCELLED, null, null, null, 3L,
+                                                                                           EntitlementState.ACTIVE, "pro", "TRIAL", "DEFAULT", null, EntitlementState.CANCELLED, null, null, null, null, 3L,
                                                                                            SubscriptionBaseTransitionType.CANCEL, 0, new DateTime(), 1L, 2L, null);
 
         final String json = mapper.writeValueAsString(e);
@@ -45,5 +45,18 @@ public class TestEventJson extends SubscriptionTestSuiteNoDB {
         final Class<?> claz = Class.forName(DefaultEffectiveSubscriptionEvent.class.getName());
         final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
+    }
+
+    // Verify deserialization will work when we miss fields (previousBillCycleDayLocal, nextBillCycleDayLocal)
+    @Test(groups = "fast")
+    public void testSubscriptionEventWithNoBillCycleDayLocal() throws Exception {
+
+        final String json = "{\"eventId\":\"9e901bbc-bbcb-4f0a-8511-e58029bbea91\",\"subscriptionId\":\"c373056c-bb0c-4562-ab06-f595176aa4ae\",\"bundleId\":\"f61536b1-fc76-4337-b1e8-e38383894352\",\"effectiveTransitionTime\":\"2016-05-26T23:02:20.322Z\",\"previousState\":\"ACTIVE\",\"previousPlan\":\"pro\",\"previousPhase\":\"TRIAL\",\"previousPriceList\":\"DEFAULT\",\"nextState\":\"CANCELLED\",\"nextPlan\":null,\"nextPhase\":null,\"nextPriceList\":null,\"totalOrdering\":3,\"transitionType\":\"CANCEL\",\"remainingEventsForUserOperation\":0,\"startDate\":\"2016-05-26T23:02:20.322Z\",\"searchKey1\":1,\"searchKey2\":2,\"userToken\":null,\"requestedTransitionTime\":\"2016-05-26T23:02:20.322Z\"}";
+        final Class<?> claz = Class.forName(DefaultEffectiveSubscriptionEvent.class.getName());
+        final DefaultEffectiveSubscriptionEvent obj = (DefaultEffectiveSubscriptionEvent) mapper.readValue(json, claz);
+
+        Assert.assertEquals(obj.getId(), UUID.fromString("9e901bbc-bbcb-4f0a-8511-e58029bbea91"));
+        Assert.assertNull(obj.getPreviousBillCycleDayLocal());
+        Assert.assertNull(obj.getNextBillCycleDayLocal());
     }
 }

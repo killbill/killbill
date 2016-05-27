@@ -195,9 +195,18 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             }
 
 
+            Integer overridenBCD = null;
             for (final EffectiveSubscriptionInternalEvent transition : billingTransitions) {
                 try {
-                    final int bcdLocal = bcdCalculator.calculateBcd(account, currentAccountBCD, bundleId, subscription, transition, context);
+                    //
+                    // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
+                    // occurs below (which is based on billing alignment policy). Also multiple of those BCD_CHANGE transitions could occur,
+                    // to define different intervals with different billing cycle days.
+                    //
+                    overridenBCD = transition.getNextBillCycleDayLocal() != null ? transition.getNextBillCycleDayLocal() : overridenBCD;
+                    final int bcdLocal = overridenBCD != null ?
+                                         overridenBCD :
+                                         bcdCalculator.calculateBcd(account, currentAccountBCD, bundleId, subscription, transition, context);
 
                     if (currentAccountBCD == 0 && !updatedAccountBCD) {
                         accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);

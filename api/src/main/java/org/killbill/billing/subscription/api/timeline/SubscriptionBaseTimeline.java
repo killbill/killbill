@@ -83,5 +83,11 @@ public interface SubscriptionBaseTimeline extends Entity {
          * @return the name of the phase
          */
         public String getPlanPhaseName();
+
+        /**
+         *
+         * @return the new billCycleDayLocal
+         */
+        public Integer getBillCycleDayLocal();
     }
 }

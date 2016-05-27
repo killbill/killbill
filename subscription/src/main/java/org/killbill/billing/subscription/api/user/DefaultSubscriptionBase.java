@@ -50,6 +50,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Visibility;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
+import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
@@ -556,6 +557,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         String nextPlanName = null;
         String nextPhaseName = null;
         String nextPriceListName = null;
+        Integer nextBillingCycleDayLocal = null;
 
         UUID prevEventId = null;
         DateTime prevCreatedDate = null;
@@ -563,6 +565,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         PriceList previousPriceList = null;
         Plan previousPlan = null;
         PlanPhase previousPhase = null;
+        Integer previousBillingCycleDayLocal = null;
 
         transitions = new LinkedList<SubscriptionBaseTransition>();
 
@@ -584,6 +587,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 case PHASE:
                     final PhaseEvent phaseEV = (PhaseEvent) cur;
                     nextPhaseName = phaseEV.getPhase();
+                    break;
+
+                case BCD_UPDATE:
+                    final BCDEvent bcdEvent = (BCDEvent) cur;
+                    nextBillingCycleDayLocal = bcdEvent.getBillCycleDayLocal();
                     break;
 
                 case API_USER:
@@ -641,15 +649,18 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             final DateTime catalogEffectiveDateForPriceList = transitions.isEmpty() ? cur.getEffectiveDate() : transitions.get(0).getEffectiveTransitionTime();
             nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, catalogEffectiveDateForPriceList) : null;
 
-            final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
+            final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData (
                     cur.getId(), id, bundleId, cur.getType(), apiEventType,
                     cur.getEffectiveDate(),
                     prevEventId, prevCreatedDate,
                     previousState, previousPlan, previousPhase,
                     previousPriceList,
+                    previousBillingCycleDayLocal,
                     nextEventId, nextCreatedDate,
                     nextState, nextPlan, nextPhase,
-                    nextPriceList, cur.getTotalOrdering(),
+                    nextPriceList,
+                    nextBillingCycleDayLocal,
+                    cur.getTotalOrdering(),
                     cur.getCreatedDate(),
                     nextUserToken,
                     isFromDisk);
@@ -662,6 +673,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             previousPriceList = nextPriceList;
             prevEventId = nextEventId;
             prevCreatedDate = nextCreatedDate;
+            previousBillingCycleDayLocal = nextBillingCycleDayLocal;
 
         }
     }

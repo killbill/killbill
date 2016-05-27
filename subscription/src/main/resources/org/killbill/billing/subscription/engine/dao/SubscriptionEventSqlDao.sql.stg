@@ -23,6 +23,7 @@ tableFields(prefix) ::= <<
 , <prefix> phase_name
 , <prefix> price_list_name
 , <prefix> current_version
+, <prefix> billing_cycle_day_local
 , <prefix> is_active
 , <prefix> created_by
 , <prefix> created_date
@@ -40,6 +41,7 @@ tableValues() ::= <<
 , :phaseName
 , :priceListName
 , :currentVersion
+, :billingCycleDayLocal
 , :isActive
 , :createdBy
 , :createdDate
@@ -59,6 +61,7 @@ id = :id
 <AND_CHECK_TENANT()>
 ;
 >>
+
 
 unactiveEvent() ::= <<
 update <tableName()>
