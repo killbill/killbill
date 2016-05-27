@@ -164,8 +164,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 final CallContext callContext = internalCallContextFactory.createCallContext(context);
                 eventSent = onBasePlanEvent(subscription, event, callContext);
             } else if (event.getType() == EventType.BCD_UPDATE) {
-                // TODO STEPH do we want to populate more info in the event ?
-                eventSent = true;
+                eventSent = false;
             }
 
             if (!eventSent) {

@@ -653,7 +653,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                                                                                                                    changeEvents,
                                                                                                                                                    entitySqlDaoWrapperFactory,
                                                                                                                                                    context);
-                cancelFutureEventsFromTransaction(subscriptionId, changeEvents.get(0).getEffectiveDate(), entitySqlDaoWrapperFactory, context);
+                cancelFutureEventsFromTransaction(subscriptionId, changeEvents.get(0).getEffectiveDate(), entitySqlDaoWrapperFactory, false, context);
 
                 for (final SubscriptionBaseEvent cur : changeEventsTweakedWithMigrateBilling) {
                     transactional.create(new SubscriptionEventModelDao(cur), context);
@@ -793,7 +793,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     private void cancelSubscriptionFromTransaction(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent cancelEvent, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context, final int seqId)
             throws EntityPersistenceException {
         final UUID subscriptionId = subscription.getId();
-        cancelFutureEventsFromTransaction(subscriptionId, cancelEvent.getEffectiveDate(), entitySqlDaoWrapperFactory, context);
+        cancelFutureEventsFromTransaction(subscriptionId, cancelEvent.getEffectiveDate(), entitySqlDaoWrapperFactory, true, context);
         entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).create(new SubscriptionEventModelDao(cancelEvent), context);
 
         final boolean isBusEvent = cancelEvent.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0;
@@ -807,10 +807,12 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         cancelFutureEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, EventType.PHASE, null, context);
     }
 
-    private void cancelFutureEventsFromTransaction(final UUID subscriptionId, final DateTime effectiveDate, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
+    private void cancelFutureEventsFromTransaction(final UUID subscriptionId, final DateTime effectiveDate, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final boolean includingBCDChange, final InternalCallContext context) {
         final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), effectiveDate.toDate(), context);
         for (final SubscriptionEventModelDao cur : eventModels) {
-            unactivateEventFromTransaction(cur, entitySqlDaoWrapperFactory, context);
+            if (includingBCDChange || cur.getEventType() != EventType.BCD_UPDATE) {
+                unactivateEventFromTransaction(cur, entitySqlDaoWrapperFactory, context);
+            }
         }
     }
 

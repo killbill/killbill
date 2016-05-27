@@ -76,7 +76,7 @@ public class DefaultBillingEvent implements BillingEvent {
         final String prevPhaseName = transition.getPreviousPhase();
         final PlanPhase prevPhase = (prevPhaseName != null) ? catalog.findPhase(prevPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
-        this.fixedPrice = getFixedPrice(nextPhase, currency);
+        this.fixedPrice = transition.getTransitionType() != SubscriptionBaseTransitionType.BCD_CHANGE ? getFixedPrice(nextPhase, currency) : null;
         this.recurringPrice = getRecurringPrice(nextPhase, currency);
 
         this.currency = currency;
