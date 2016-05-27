@@ -33,8 +33,11 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -383,5 +386,76 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         checkNoMoreInvoiceToGenerate(account);
     }
+
+    @Test(groups = "slow")
+    public void testBlockPastUnpaidPeriodAndRealignBCD() throws Exception {
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        List<Invoice> invoices = null;
+
+        final DateTime initialDate = new DateTime(2016, 4, 1, 0, 13, 42, 0, testTimeZone);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        assertNotNull(account);
+
+        // BP creation : Will set Account BCD to the first (2016-4-1 + 30 days = 2016-5-1)
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+
+
+        paymentPlugin.makeNextPaymentFailWithError();
+
+        // 2016-5-1 : BP out of TRIAL
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        clock.addDays(30);
+        assertListenerStatus();
+
+
+        //
+        // Let's assume 15 days later, the customer comes back and wants to continue using the service (after he updated his payment method)
+        //
+        // The company 'a.b.c' decides to block both the billing and entitlement for the past 15 days and also move his BCD to
+        // the 16 so he gets to pay right away and for a full period (MONTHLY)
+        //
+        // 2016-5-16
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
+        paymentPlugin.makeNextPaymentFailWithError();
+        clock.addDays(15);
+        assertListenerStatus();
+
+
+        // First BLOCK subscription starting from the 2016-5-1
+        // This will generate the credit for the full period, bringing by account balance to 0
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
+        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), "COURTESY_BLOCK", "company.a.b.c", new LocalDate(2016, 5, 1), true, true, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 16), new LocalDate(2016, 5, 16), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        // Second, move the BCD to the 16
+        // Because we did not unblock yet, we don't have a new invoice but we see the NULL_INVOICE event
+        busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.NULL_INVOICE);
+        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 16, internalCallContext);
+        assertListenerStatus();
+
+        // Third, unblock starting at the 16, will generate a full period invoice
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE,  NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        entitlementApi.setBlockingState(baseEntitlement.getBundleId(), "END_OF_COURTESY_BLOCK", "company.a.b.c", new LocalDate(2016, 5, 16), false, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 16), new LocalDate(2016, 6, 16), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+    }
+
 
 }
