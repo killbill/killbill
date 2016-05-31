@@ -128,6 +128,8 @@ public interface JaxrsResource {
 
     public static final String QUERY_AUDIT = "audit";
 
+    public static final String QUERY_BCD = "bcd";
+
     public static final String QUERY_PARALLEL = "parallel";
 
     public static final String QUERY_NOTIFICATION_CALLBACK = "cb";
@@ -251,5 +253,7 @@ public interface JaxrsResource {
 
     public static final String COMBO = "combo";
     public static final String MIGRATION = "migration";
+
+    public static final String BCD = "bcd";
 
 }

@@ -124,6 +124,7 @@ public class TestApiListener {
         TAG,
         TAG_DEFINITION,
         CUSTOM_FIELD,
+        BCD_CHANGE
     }
 
     @Subscribe
@@ -166,6 +167,10 @@ public class TestApiListener {
                 break;
             case PHASE:
                 assertEqualsNicely(NextEvent.PHASE);
+                notifyIfStackEmpty();
+                break;
+            case BCD_CHANGE:
+                assertEqualsNicely(NextEvent.BCD_CHANGE);
                 notifyIfStackEmpty();
                 break;
             default:

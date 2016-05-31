@@ -28,6 +28,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -70,7 +71,8 @@ import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseServ
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
-import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
+import org.killbill.billing.subscription.events.bcd.BCDEvent;
+import org.killbill.billing.subscription.events.bcd.BCDEventData;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -609,7 +611,15 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         final Iterable<SubscriptionBaseEvent> filteredEvents = Iterables.filter(events, new Predicate<SubscriptionBaseEvent>() {
             @Override
             public boolean apply(final SubscriptionBaseEvent input) {
-                return (eventType == SubscriptionBaseTransitionType.PHASE && input.getType() == EventType.PHASE) || input.getType() != EventType.PHASE;
+                switch (input.getType()) {
+                    case PHASE:
+                        return eventType == SubscriptionBaseTransitionType.PHASE;
+                    case BCD_UPDATE:
+                        return eventType == SubscriptionBaseTransitionType.BCD_CHANGE;
+                    case API_USER:
+                    default:
+                        return true;
+                }
             }
         });
         final Map<UUID, DateTime> result = filteredEvents.iterator().hasNext() ? new HashMap<UUID, DateTime>() : ImmutableMap.<UUID, DateTime>of();
@@ -621,6 +631,47 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
         return result;
     }
+
+    @Override
+    public void updateBCD(final UUID subscriptionId, final int bcd, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException {
+        final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) getSubscriptionFromId(subscriptionId, internalCallContext);
+        final DateTime effectiveDate = getEffectiveDateForNewBCD(bcd, internalCallContext);
+        final BCDEvent bcdEvent = BCDEventData.createBCDEvent(subscription, effectiveDate, bcd);
+        dao.createBCDChangeEvent(subscription, bcdEvent, internalCallContext);
+    }
+
+
+    private DateTime getEffectiveDateForNewBCD(final int bcd, final InternalCallContext internalCallContext) {
+        if (internalCallContext.getAccountRecordId() == null) {
+            throw new IllegalStateException("Need to have a valid context with accountRecordId");
+        }
+
+        // Today as seen by this account
+        final LocalDate startDate = internalCallContext.toLocalDate(clock.getUTCNow());
+
+        // We want to compute a LocalDate in account TZ which maps to the provided 'bcd' and then compute an effectiveDate for when that BCD_CHANGE event needs to be triggered
+        //
+        // There is a bit of complexity to make sure the date we chose exists (e.g: a BCD of 31 in a february month would not make sense).
+        final int currentDay = startDate.getDayOfMonth();
+        final int lastDayOfMonth = startDate.dayOfMonth().getMaximumValue();
+
+        final LocalDate requestedDate;
+        if (bcd < currentDay) {
+            final LocalDate startDatePlusOneMonth = startDate.plusMonths(1);
+            final int lastDayOfNextMonth = startDatePlusOneMonth.dayOfMonth().getMaximumValue();
+            final int originalBCDORLastDayOfMonth = bcd <= lastDayOfNextMonth ? bcd : lastDayOfNextMonth;
+            requestedDate = new LocalDate(startDatePlusOneMonth.getYear(), startDatePlusOneMonth.getMonthOfYear(), originalBCDORLastDayOfMonth);
+        } else if (bcd == currentDay) {
+            // will default to immediate event
+            requestedDate = null;
+        } else if (bcd <= lastDayOfMonth) {
+            requestedDate = new LocalDate(startDate.getYear(), startDate.getMonthOfYear(), bcd);
+        } else /* bcd > lastDayOfMonth && bcd > currentDay */{
+            requestedDate = new LocalDate(startDate.getYear(), startDate.getMonthOfYear(), lastDayOfMonth);
+        }
+        return requestedDate == null ? clock.getUTCNow() : internalCallContext.toUTCDateTime(requestedDate);
+    }
+
 
     private DateTime getBundleStartDateWithSanity(final UUID bundleId, @Nullable final DefaultSubscriptionBase baseSubscription, final Plan plan,
                                                   final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {

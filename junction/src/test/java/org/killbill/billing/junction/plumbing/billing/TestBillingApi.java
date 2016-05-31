@@ -281,9 +281,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final PriceList nextPriceList = catalog.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 
         final EffectiveSubscriptionInternalEvent t = new MockEffectiveSubscriptionEvent(
-                eventId, subId, bunId, then, now, null, null, null, null, EntitlementState.ACTIVE,
+                eventId, subId, bunId, then, now, null, null, null, null, null, EntitlementState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
-                nextPriceList.getName(), 1L,
+                nextPriceList.getName(), null, 1L,
                 SubscriptionBaseTransitionType.CREATE, 1, null, 1L, 2L, null);
 
         effectiveSubscriptionTransitions.add(t);

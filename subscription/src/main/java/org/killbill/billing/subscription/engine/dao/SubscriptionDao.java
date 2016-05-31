@@ -95,5 +95,6 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     public void updateBundleExternalKey(UUID bundleId, String externalKey, InternalCallContext context);
 
+    public void createBCDChangeEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent bcdEvent, InternalCallContext context);
 }
 

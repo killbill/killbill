@@ -42,10 +42,12 @@ public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent 
                                              @JsonProperty("previousPlan") final String previousPlan,
                                              @JsonProperty("previousPhase") final String previousPhase,
                                              @JsonProperty("previousPriceList") final String previousPriceList,
+                                             @JsonProperty("previousBillCycleDayLocal") final Integer previousBillCycleDayLocal,
                                              @JsonProperty("nextState") final EntitlementState nextState,
                                              @JsonProperty("nextPlan") final String nextPlan,
                                              @JsonProperty("nextPhase") final String nextPhase,
                                              @JsonProperty("nextPriceList") final String nextPriceList,
+                                             @JsonProperty("nextBillCycleDayLocal") final Integer nextBillCycleDayLocal,
                                              @JsonProperty("totalOrdering") final Long totalOrdering,
                                              @JsonProperty("transitionType") final SubscriptionBaseTransitionType transitionType,
                                              @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
@@ -54,7 +56,7 @@ public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent 
                                              @JsonProperty("searchKey2") final Long searchKey2,
                                              @JsonProperty("userToken") final UUID userToken) {
         super(eventId, subscriptionId, bundleId, effectiveTransitionTime, effectiveTransitionTime, previousState, previousPlan,
-              previousPhase, previousPriceList, nextState, nextPlan, nextPhase, nextPriceList, totalOrdering,
+              previousPhase, previousPriceList, previousBillCycleDayLocal, nextState, nextPlan, nextPhase, nextPriceList, nextBillCycleDayLocal, totalOrdering,
               transitionType, remainingEventsForUserOperation, startDate, searchKey1, searchKey2, userToken);
     }
 }

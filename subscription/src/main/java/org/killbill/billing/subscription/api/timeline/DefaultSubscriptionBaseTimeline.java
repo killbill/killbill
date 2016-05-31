@@ -37,6 +37,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
@@ -85,6 +86,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
             PhaseType phaseType = null;
             String planName = null;
             String planPhaseName = null;
+            Integer billCycleDayLocal = null;
 
             ApiEventType apiType = null;
             switch (cur.getType()) {
@@ -97,6 +99,11 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                     productName = prevProductName;
                     billingPeriod = getBillingPeriod(catalog, phaseEV.getPhase(), cur.getEffectiveDate(), startDate);
                     priceListName = prevPriceListName;
+                    break;
+
+                case BCD_UPDATE:
+                    final BCDEvent bcdEvent = (BCDEvent) cur;
+                    billCycleDayLocal = bcdEvent.getBillCycleDayLocal();
                     break;
 
                 case API_USER:
@@ -116,6 +123,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
             final String planNameWithClosure = planName;
             final String planPhaseNameWithClosure = planPhaseName;
+            final Integer billCycleDayLocalWithClosure = billCycleDayLocal;
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
             result.add(new ExistingEvent() {
                 @Override
@@ -146,6 +154,11 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                 @Override
                 public String getPlanPhaseName() {
                     return planPhaseNameWithClosure;
+                }
+
+                @Override
+                public Integer getBillCycleDayLocal() {
+                    return billCycleDayLocalWithClosure;
                 }
             });
 

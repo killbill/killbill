@@ -18,7 +18,10 @@ package org.killbill.billing.subscription.engine.dao;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.killbill.billing.entity.EntityPersistenceException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -43,15 +46,13 @@ public interface SubscriptionEventSqlDao extends EntitySqlDao<SubscriptionEventM
 
     @SqlQuery
     public List<SubscriptionEventModelDao> getFutureActiveEventForSubscription(@Bind("subscriptionId") String subscriptionId,
-                                                                              @Bind("now") Date now,
-                                                                              @BindBean final InternalTenantContext context);
+                                                                               @Bind("now") Date now,
+                                                                               @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<SubscriptionEventModelDao> getEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
                                                                     @BindBean final InternalTenantContext context);
 
-
     @SqlQuery
     public List<SubscriptionEventModelDao> getFutureActiveEventsForAccount(@Bind("now") Date now, @BindBean final InternalTenantContext context);
-
 }

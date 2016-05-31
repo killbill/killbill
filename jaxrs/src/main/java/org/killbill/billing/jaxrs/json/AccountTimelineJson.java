@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -62,11 +63,11 @@ public class AccountTimelineJson {
                                final List<Payment> payments,
                                final List<InvoicePayment> invoicePayments,
                                final List<SubscriptionBundle> bundles,
-                               final AccountAuditLogs accountAuditLogs) {
+                               final AccountAuditLogs accountAuditLogs) throws CatalogApiException {
         this.account = new AccountJson(account, null, null, accountAuditLogs);
         this.bundles = new LinkedList<BundleJson>();
         for (final SubscriptionBundle bundle : bundles) {
-            final BundleJson jsonWithSubscriptions = new BundleJson(bundle, accountAuditLogs);
+            final BundleJson jsonWithSubscriptions = new BundleJson(bundle, account.getCurrency(), accountAuditLogs);
             this.bundles.add(jsonWithSubscriptions);
         }
 

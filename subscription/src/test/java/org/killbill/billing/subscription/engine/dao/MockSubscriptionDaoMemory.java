@@ -501,4 +501,10 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     @Override
     public void updateBundleExternalKey(final UUID bundleId, final String externalKey, final InternalCallContext context) {
     }
+
+    @Override
+    public void createBCDChangeEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent bcdEvent, final InternalCallContext context) {
+
+    }
+
 }

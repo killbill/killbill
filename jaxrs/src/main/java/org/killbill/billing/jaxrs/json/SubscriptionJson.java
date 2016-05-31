@@ -18,6 +18,8 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,6 +28,9 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
@@ -68,7 +73,6 @@ public class SubscriptionJson extends JsonBase {
     private final LocalDate billingEndDate;
     private final List<EventSubscriptionJson> events;
     private final List<PhasePriceOverrideJson> priceOverrides;
-
 
     public static class EventSubscriptionJson extends JsonBase {
 
@@ -314,7 +318,7 @@ public class SubscriptionJson extends JsonBase {
         this.priceOverrides = priceOverrides;
     }
 
-    public SubscriptionJson(final Subscription subscription, @Nullable final AccountAuditLogs accountAuditLogs) {
+    public SubscriptionJson(final Subscription subscription, @Nullable final Currency currency, @Nullable final AccountAuditLogs accountAuditLogs) throws CatalogApiException {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscription(subscription.getId())));
         this.startDate = subscription.getEffectiveStartDate();
 
@@ -360,8 +364,20 @@ public class SubscriptionJson extends JsonBase {
         for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
             this.events.add(new EventSubscriptionJson(subscriptionEvent, accountAuditLogs));
         }
-        // It may be nice to recreate the override that were applied on the plans associated with that subscription
-        this.priceOverrides = new LinkedList<PhasePriceOverrideJson>();
+
+        // We fill the catalog info every time we get the currency from the account (even if this is not overridden Plan)
+        this.priceOverrides = new ArrayList<PhasePriceOverrideJson>();
+        if (currency != null) {
+            final Plan plan = subscription.getLastActivePlan();
+            if (plan != null) {
+                for (final PlanPhase cur : plan.getAllPhases()) {
+                    final BigDecimal fixedPrice = cur.getFixed() != null ? cur.getFixed().getPrice().getPrice(currency) : null;
+                    final BigDecimal recurringPrice = cur.getRecurring() != null ? cur.getRecurring().getRecurringPrice().getPrice(currency) : null;
+                    final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(cur.getName(), cur.getPhaseType().toString(), fixedPrice, recurringPrice);
+                    priceOverrides.add(phase);
+                }
+            }
+        }
     }
 
     public String getAccountId() {
