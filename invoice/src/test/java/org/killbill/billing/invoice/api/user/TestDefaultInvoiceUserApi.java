@@ -305,8 +305,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(accountBalance, invoiceBalance);
 
-        // Adjust the invoice for a fraction of the balance
-        final BigDecimal adjAmount = invoiceItem.getAmount().divide(BigDecimal.TEN, BigDecimal.ROUND_HALF_UP);
+        // Adjust the invoice with most of the amount (-1 cent)
+        final BigDecimal adjAmount = invoiceItem.getAmount().subtract(new BigDecimal("0.01"));
         final InvoiceItem adjInvoiceItem = invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(),
                                                                                       clock.getUTCToday(), adjAmount, accountCurrency,
                                                                                       callContext);
