@@ -187,6 +187,7 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-client-java</artifactId>
+            <version>0.24-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
