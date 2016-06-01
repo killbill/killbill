@@ -281,7 +281,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Integer getBillCycleDayLocal() {
-        return null;
+        return getSubscriptionBase().getBillCycleDayLocal();
     }
 
     @Override
@@ -699,8 +699,13 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public void updateBCD(final int i, final CallContext callContext) throws EntitlementApiException {
-
+    public void updateBCD(final int newBCD, final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+        try {
+            subscriptionInternalApi.updateBCD(getId(), newBCD, context);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
     }
 
     private void refresh(final TenantContext context) throws EntitlementApiException {

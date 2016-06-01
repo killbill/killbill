@@ -177,6 +177,11 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
+    public Integer getBillCycleDayLocal() {
+        return null;
+    }
+
+    @Override
     public DateTime getFutureEndDate() {
         return sub.getFutureEndDate();
     }

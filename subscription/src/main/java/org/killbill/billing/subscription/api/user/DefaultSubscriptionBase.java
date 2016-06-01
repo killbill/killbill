@@ -351,6 +351,21 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return category;
     }
 
+    @Override
+    public Integer getBillCycleDayLocal() {
+
+        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
+                clock, transitions, Order.DESC_FROM_FUTURE, Kind.SUBSCRIPTION,
+                Visibility.FROM_DISK_ONLY, TimeLimit.PAST_OR_PRESENT_ONLY);
+        while (it.hasNext()) {
+            final SubscriptionBaseTransition cur = it.next();
+            if (cur.getTransitionType() == SubscriptionBaseTransitionType.BCD_CHANGE) {
+                return cur.getNextBillingCycleDayLocal();
+            }
+        }
+        return null;
+    }
+
     public DateTime getBundleStartDate() {
         return bundleStartDate;
     }

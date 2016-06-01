@@ -216,10 +216,12 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         return nextPriceList;
     }
 
+    @Override
     public Integer getPreviousBillingCycleDayLocal() {
         return previousBillingCycleDayLocal;
     }
 
+    @Override
     public Integer getNextBillingCycleDayLocal() {
         return nextBillingCycleDayLocal;
     }

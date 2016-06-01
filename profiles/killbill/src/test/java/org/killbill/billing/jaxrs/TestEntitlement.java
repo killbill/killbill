@@ -41,6 +41,8 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.http.client.Response;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
@@ -296,5 +298,30 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         Assert.assertTrue(objFromJson.equals(entitlementJson));
     }
+
+    @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
+    public void testMoveEntitlementBCD() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final Subscription entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName,
+                                                               ProductCategory.BASE, term, true);
+
+        final Subscription updatedSubscription = new Subscription();
+        updatedSubscription.setSubscriptionId(entitlementJson.getSubscriptionId());
+        updatedSubscription.setBillCycleDayLocal(9);
+        killBillClient.updateSubscriptionBCD(updatedSubscription, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+
+
+        final Subscription result = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        // TODO depends on semantics for pending BCD change
+        //Assert.assertEquals(result.getBillCycleDayLocal(), new Integer(9));
+    }
+
 
 }
