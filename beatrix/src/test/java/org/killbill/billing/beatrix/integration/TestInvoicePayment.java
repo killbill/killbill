@@ -335,7 +335,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         // Trigger chargeback in the original currency
         payment1 = createChargeBackAndCheckForCompletion(account, payment1, new BigDecimal("225.44"), Currency.EUR, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(new BigDecimal("24.51")), 0);
+        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment1.getTransactions().size(), 2);
         Assert.assertEquals(payment1.getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         Assert.assertEquals(payment1.getTransactions().get(0).getCurrency(), Currency.USD);

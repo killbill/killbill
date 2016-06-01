@@ -21,6 +21,7 @@ package org.killbill.billing.payment.provider;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,7 +50,6 @@ import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -238,6 +238,30 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     public void updatePaymentTransactions(final UUID paymentId, final List<PaymentTransactionInfoPlugin> newTransactions) {
         if (paymentTransactions.containsKey(paymentId.toString())) {
             paymentTransactions.put (paymentId.toString(), newTransactions);
+        }
+    }
+
+    public void overridePaymentPluginStatus(final UUID kbPaymentId, final UUID kbTransactionId, final PaymentPluginStatus status) {
+        final List<PaymentTransactionInfoPlugin> existingTransactions = paymentTransactions.remove(kbPaymentId.toString());
+        final List<PaymentTransactionInfoPlugin> newTransactions = new LinkedList<PaymentTransactionInfoPlugin>();
+        paymentTransactions.put(kbPaymentId.toString(), newTransactions);
+
+        for (final PaymentTransactionInfoPlugin existingTransaction : existingTransactions) {
+            if (existingTransaction.getKbTransactionPaymentId().equals(kbTransactionId)) {
+                final PaymentTransactionInfoPlugin newTransaction = new DefaultNoOpPaymentInfoPlugin(existingTransaction.getKbPaymentId(),
+                                                                                                     existingTransaction.getKbTransactionPaymentId(),
+                                                                                                     existingTransaction.getTransactionType(),
+                                                                                                     existingTransaction.getAmount(),
+                                                                                                     existingTransaction.getCurrency(),
+                                                                                                     existingTransaction.getEffectiveDate(),
+                                                                                                     existingTransaction.getCreatedDate(),
+                                                                                                     status,
+                                                                                                     existingTransaction.getGatewayErrorCode(),
+                                                                                                     existingTransaction.getGatewayError());
+                newTransactions.add(newTransaction);
+            } else {
+                newTransactions.add(existingTransaction);
+            }
         }
     }
 
