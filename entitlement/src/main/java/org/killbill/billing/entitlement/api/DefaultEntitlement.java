@@ -279,6 +279,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         return getSubscriptionBase().getLastActiveCategory();
     }
 
+    @Override
+    public Integer getBillCycleDayLocal() {
+        return null;
+    }
 
     @Override
     public Entitlement cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
@@ -692,6 +696,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             }
         };
         return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);
+    }
+
+    @Override
+    public void updateBCD(final int i, final CallContext callContext) throws EntitlementApiException {
+
     }
 
     private void refresh(final TenantContext context) throws EntitlementApiException {

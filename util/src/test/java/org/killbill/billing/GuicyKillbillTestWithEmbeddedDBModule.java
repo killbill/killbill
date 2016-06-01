@@ -49,9 +49,9 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
             super(configSource, withOSGI, (TestKillbillConfigSource) configSource);
         }
 
-        protected void configureEmbeddedDB() {
-            final DBTestingHelper dbTestingHelper = DBTestingHelper.get();
-            configureEmbeddedDB(dbTestingHelper);
+        @Override
+        protected PlatformDBTestingHelper getPlatformDBTestingHelper() {
+            return DBTestingHelper.get();
         }
 
         protected void configureKillbillNodesApi() {}
