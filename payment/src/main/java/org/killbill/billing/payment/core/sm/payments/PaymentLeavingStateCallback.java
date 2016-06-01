@@ -106,7 +106,7 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
         }
     }
 
-    private void validateUniqueInitialPendingTransaction(final Iterable<PaymentTransactionModelDao> pendingTransactionsForPaymentAndTransactionType, final TransactionType transactionType, final String paymentTransactionExternalKey) {
+    private void validateUniqueInitialPendingTransaction(final Iterable<PaymentTransactionModelDao> pendingTransactionsForPaymentAndTransactionType, final TransactionType transactionType, final String paymentTransactionExternalKey) throws PaymentApiException {
         if (transactionType != TransactionType.AUTHORIZE &&
             transactionType != TransactionType.PURCHASE &&
             transactionType != TransactionType.CREDIT) {
@@ -120,9 +120,7 @@ public abstract class PaymentLeavingStateCallback implements LeavingStateCallbac
             }
         }).orNull();
         if (existingPendingTransactionForDifferentKey !=  null) {
-            // We are missing ErrorCode PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS (should be fixed in 0.17.0. See #525)
-            throw new RuntimeException(String.format("Failed to create another initial transaction for paymentId='%s' : Existing PENDING transactionId='%s'",
-                                                          existingPendingTransactionForDifferentKey.getPaymentId(), existingPendingTransactionForDifferentKey.getId()));
+            throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
         }
     }
 
