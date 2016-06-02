@@ -315,7 +315,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription updatedSubscription = new Subscription();
         updatedSubscription.setSubscriptionId(entitlementJson.getSubscriptionId());
         updatedSubscription.setBillCycleDayLocal(9);
-        killBillClient.updateSubscriptionBCD(updatedSubscription, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+        killBillClient.updateSubscriptionBCD(updatedSubscription, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
 
 
         final Subscription result = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
