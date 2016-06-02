@@ -633,21 +633,21 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public void updateBCD(final UUID subscriptionId, final int bcd, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException {
+    public void updateBCD(final UUID subscriptionId, final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException {
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) getSubscriptionFromId(subscriptionId, internalCallContext);
-        final DateTime effectiveDate = getEffectiveDateForNewBCD(bcd, internalCallContext);
+        final DateTime effectiveDate = getEffectiveDateForNewBCD(bcd, effectiveFromDate, internalCallContext);
         final BCDEvent bcdEvent = BCDEventData.createBCDEvent(subscription, effectiveDate, bcd);
         dao.createBCDChangeEvent(subscription, bcdEvent, internalCallContext);
     }
 
 
-    private DateTime getEffectiveDateForNewBCD(final int bcd, final InternalCallContext internalCallContext) {
+    private DateTime getEffectiveDateForNewBCD(final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) {
         if (internalCallContext.getAccountRecordId() == null) {
             throw new IllegalStateException("Need to have a valid context with accountRecordId");
         }
 
         // Today as seen by this account
-        final LocalDate startDate = internalCallContext.toLocalDate(clock.getUTCNow());
+        final LocalDate startDate = effectiveFromDate != null ? effectiveFromDate : internalCallContext.toLocalDate(clock.getUTCNow());
 
         // We want to compute a LocalDate in account TZ which maps to the provided 'bcd' and then compute an effectiveDate for when that BCD_CHANGE event needs to be triggered
         //

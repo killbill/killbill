@@ -68,7 +68,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         clock.addDays(3);
 
         // Set next BCD to be the 15
-        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 15, internalCallContext);
+        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 15, null, internalCallContext);
         Thread.sleep(1000);
         assertListenerStatus();
 
@@ -122,7 +122,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
         // Set next BCD to be the 15
-        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 15, internalCallContext);
+        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 15,  null, internalCallContext);
         Thread.sleep(1000);
         assertListenerStatus();
 
@@ -155,7 +155,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         expectedInvoices.clear();
 
         // Set next BCD to be the 10
-        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 10, internalCallContext);
+        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 10,  null, internalCallContext);
         Thread.sleep(1000);
         assertListenerStatus();
 
@@ -191,7 +191,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 10, internalCallContext);
+        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 10,  null, internalCallContext);
 
         // 2016-5-5
         clock.addDays(4);
@@ -250,7 +250,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
-        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 10, internalCallContext);
+        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 10,  null, internalCallContext);
 
         // 2016-5-10
         busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -284,7 +284,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 10, internalCallContext);
+        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 10,  null, internalCallContext);
 
         busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(9);
@@ -355,7 +355,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         clock.addDays(3);
 
         busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        subscriptionBaseInternalApi.updateBCD(aoEntitlement.getId(), 4, internalCallContext);
+        subscriptionBaseInternalApi.updateBCD(aoEntitlement.getId(), 4,  null, internalCallContext);
         assertListenerStatus();
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
@@ -446,7 +446,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // Second, move the BCD to the 16
         // Because we did not unblock yet, we don't have a new invoice but we see the NULL_INVOICE event
         busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.NULL_INVOICE);
-        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 16, internalCallContext);
+        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 16,  null, internalCallContext);
         assertListenerStatus();
 
         // Third, unblock starting at the 16, will generate a full period invoice
@@ -460,7 +460,56 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
-
     }
 
+
+    @Test(groups = "slow")
+    public void testBCDChangeWithEffectiveDateFromInTheFuture() throws Exception {
+
+        final DateTime initialDate = new DateTime(2016, 4, 1, 0, 13, 42, 0, testTimeZone);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        assertNotNull(account);
+
+        // BP creation : Will set Account BCD to the first (2016-4-1 + 30 days = 2016-5-1)
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // 2016-5-1 : BP out of TRIAL
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        // Set next BCD to be the 15 but only starting from 2016-5-31
+        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 15,  new LocalDate(2016, 5, 31), internalCallContext);
+        Thread.sleep(1000);
+        assertListenerStatus();
+
+        // 2016-5-15 : We don't expect anything yet because of effectiveDateFrom = 2016-6-1
+        clock.addDays(14);
+        Thread.sleep(1000);
+        assertListenerStatus();
+
+        // 2016-6-1 : We expect a pro-ration from 2016-6-1 -> 2016-6-15
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(17);
+        assertListenerStatus();
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("116.64")));
+        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        //  2016-6-15 : Finally we get the BCD_CHANGE event and start building for full monthly period
+        busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.NULL_INVOICE,  NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(14);
+        assertListenerStatus();
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 15), new LocalDate(2016, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);
+        expectedInvoices.clear();
+    }
 }

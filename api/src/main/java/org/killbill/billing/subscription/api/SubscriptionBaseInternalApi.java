@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -98,5 +99,5 @@ public interface SubscriptionBaseInternalApi {
     public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final SubscriptionBaseTransitionType eventType, final InternalCallContext internalCallContext);
 
 
-    public void updateBCD(final UUID subscriptionId, final int bcd, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
+    public void updateBCD(final UUID subscriptionId, final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
 }

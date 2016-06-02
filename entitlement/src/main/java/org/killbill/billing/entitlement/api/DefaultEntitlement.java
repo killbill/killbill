@@ -699,10 +699,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public void updateBCD(final int newBCD, final CallContext callContext) throws EntitlementApiException {
+    public void updateBCD(final int newBCD, @Nullable final LocalDate effectiveFromDate, final CallContext callContext) throws EntitlementApiException {
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
         try {
-            subscriptionInternalApi.updateBCD(getId(), newBCD, context);
+            subscriptionInternalApi.updateBCD(getId(), newBCD, effectiveFromDate, context);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }

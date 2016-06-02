@@ -209,7 +209,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                            entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext) :
                                            entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext);
                 if (newBCD != null) {
-                    result.updateBCD(newBCD, callContext);
+                    result.updateBCD(newBCD, null, callContext);
                 }
                 return result;
             }
@@ -556,6 +556,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
     public Response updateSubscriptionBCD(final SubscriptionJson json,
                                           @PathParam(ID_PARAM_NAME) final String id,
+                                          @QueryParam(QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT) final String effectiveFromDateStr,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
@@ -565,11 +566,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "SubscriptionJson body should be specified");
         verifyNonNullOrEmpty(json.getBillCycleDayLocal(), "SubscriptionJson new BCD should be specified");
 
+        final LocalDate effectiveFromDate = toLocalDate(effectiveFromDateStr);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID subscriptionId = UUID.fromString(id);
 
         final Entitlement entitlement = entitlementApi.getEntitlementForId(subscriptionId, callContext);
-        entitlement.updateBCD(json.getBillCycleDayLocal(), callContext);
+        entitlement.updateBCD(json.getBillCycleDayLocal(), effectiveFromDate, callContext);
         return Response.status(Status.OK).build();
     }
 
