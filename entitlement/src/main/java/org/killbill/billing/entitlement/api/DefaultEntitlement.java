@@ -404,7 +404,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     }
                 } else {
                     // Entitlement is NOT cancelled (or future cancelled), there is nothing to do
-                    throw new EntitlementApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, getId());
+                    throw new EntitlementApiException(ErrorCode.ENT_UNCANCEL_BAD_STATE, getId());
                 }
 
                 // If billing was previously cancelled, reactivate

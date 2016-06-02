@@ -75,7 +75,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             entitlement.uncancelEntitlement(ImmutableList.<PluginProperty>of(), callContext);
             Assert.fail("Entitlement hasn't been cancelled yet");
         } catch (final EntitlementApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.SUB_UNCANCEL_BAD_STATE.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.ENT_UNCANCEL_BAD_STATE.getCode());
         }
 
         clock.addDays(3);
