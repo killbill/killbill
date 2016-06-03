@@ -19,6 +19,7 @@
 package org.killbill.billing;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.platform.test.PlatformDBTestingHelper;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.platform.test.glue.TestPlatformModuleWithEmbeddedDB;
 
@@ -48,10 +49,11 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
             super(configSource, withOSGI, (TestKillbillConfigSource) configSource);
         }
 
-        protected void configureEmbeddedDB() {
-            final DBTestingHelper dbTestingHelper = DBTestingHelper.get();
-            configureEmbeddedDB(dbTestingHelper);
+        @Override
+        protected PlatformDBTestingHelper getPlatformDBTestingHelper() {
+            return DBTestingHelper.get();
         }
+
         protected void configureKillbillNodesApi() {
 
         }
