@@ -34,4 +34,9 @@ public interface JaxrsConfig extends KillbillConfig {
     @Description("Total timeout for all callables associated to a given api call (parallel mode)")
     TimeSpan getJaxrsTimeout();
 
+    @Config("org.killbill.jaxrs.return.path.like.url")
+    @Default("false")
+    @Description("Type of return for the jaxrs response location")
+    boolean getJaxrsReturnPathLikeUrl();
+
 }

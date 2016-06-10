@@ -43,6 +43,7 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 import org.killbill.xmlloader.XMLLoader;
@@ -62,6 +63,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 public class OverdueResource extends JaxRsResourceBase {
 
     private final OverdueApi overdueApi;
+    private final JaxrsConfig jaxrsConfig;
 
     @Inject
     public OverdueResource(final JaxrsUriBuilder uriBuilder,
@@ -72,9 +74,11 @@ public class OverdueResource extends JaxRsResourceBase {
                            final PaymentApi paymentApi,
                            final OverdueApi overdueApi,
                            final Clock clock,
+                           final JaxrsConfig jaxrsConfig,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.overdueApi = overdueApi;
+        this.jaxrsConfig = jaxrsConfig;
     }
 
     @TimedResource
@@ -104,6 +108,6 @@ public class OverdueResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         overdueApi.uploadOverdueConfig(overdueXML, callContext);
-        return uriBuilder.buildResponse(uriInfo, OverdueResource.class, null, null);
+        return uriBuilder.buildResponse(uriInfo, OverdueResource.class, null, null, jaxrsConfig.getJaxrsReturnPathLikeUrl());
     }
 }

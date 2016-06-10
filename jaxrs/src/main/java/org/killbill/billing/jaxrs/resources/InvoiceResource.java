@@ -103,6 +103,7 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockUtil;
@@ -140,6 +141,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     private final InvoiceNotifier invoiceNotifier;
     private final TenantUserApi tenantApi;
     private final Locale defaultLocale;
+    private final JaxrsConfig jaxrsConfig;
 
     private static final Ordering<InvoicePaymentJson> INVOICE_PAYMENT_ORDERING = Ordering.from(new Comparator<InvoicePaymentJson>() {
         @Override
@@ -159,12 +161,14 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final CustomFieldUserApi customFieldUserApi,
                            final AuditUserApi auditUserApi,
                            final TenantUserApi tenantApi,
+                           final JaxrsConfig jaxrsConfig,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.invoiceApi = invoiceApi;
         this.invoiceNotifier = invoiceNotifier;
         this.tenantApi = tenantApi;
         this.defaultLocale = Locale.getDefault();
+        this.jaxrsConfig = jaxrsConfig;
     }
 
     @TimedResource
@@ -307,7 +311,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, null,
                                                                                  callContext);
-            return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", generatedInvoice.getId());
+            return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", generatedInvoice.getId(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -444,7 +448,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     callContext);
         }
 
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId());
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
     }
 
     @TimedResource
@@ -614,7 +618,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment, pluginProperties, callContext);
         return result != null ?
-               uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId()) :
+               uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), jaxrsConfig.getJaxrsReturnPathLikeUrl()) :
                Response.status(Status.NO_CONTENT).build();
     }
 
@@ -829,7 +833,7 @@ public class InvoiceResource extends JaxRsResourceBase {
             }
         }
         tenantApi.addTenantKeyValue(tenantKeyStr, templateResource, callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, localeStr);
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, localeStr, jaxrsConfig.getJaxrsReturnPathLikeUrl());
     }
 
     private Response getTemplateResource(@Nullable final String localeStr,
@@ -870,7 +874,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+                                        context.createContext(createdBy, reason, comment, request), uriInfo, jaxrsConfig.getJaxrsReturnPathLikeUrl());
     }
 
     @TimedResource

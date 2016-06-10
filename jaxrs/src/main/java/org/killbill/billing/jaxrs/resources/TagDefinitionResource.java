@@ -48,6 +48,7 @@ import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
@@ -66,6 +67,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Api(value = JaxrsResource.TAG_DEFINITIONS_PATH, description = "Operations on tag definitions")
 public class TagDefinitionResource extends JaxRsResourceBase {
 
+    private final JaxrsConfig jaxrsConfig;
+
     @Inject
     public TagDefinitionResource(final JaxrsUriBuilder uriBuilder,
                                  final TagUserApi tagUserApi,
@@ -74,8 +77,10 @@ public class TagDefinitionResource extends JaxRsResourceBase {
                                  final AccountUserApi accountUserApi,
                                  final PaymentApi paymentApi,
                                  final Clock clock,
+                                 final JaxrsConfig jaxrsConfig,
                                  final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        this.jaxrsConfig = jaxrsConfig;
     }
 
     @TimedResource
@@ -131,7 +136,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
                              json.getDescription(), "TagDefinition description needs to be set");
 
         final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment, request));
-        return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId());
+        return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
     }
 
     @TimedResource

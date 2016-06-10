@@ -333,7 +333,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final AccountData data = json.toAccountData();
         final Account account = accountUserApi.createAccount(data, context.createContext(createdBy, reason, comment, request));
-        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId());
+        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
     }
 
     @TimedResource
@@ -979,7 +979,7 @@ public class AccountResource extends JaxRsResourceBase {
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
         }
-        return createPaymentResponse(uriInfo, result, transactionType, json.getTransactionExternalKey());
+        return createPaymentResponse(uriInfo, result, transactionType, json.getTransactionExternalKey(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
     }
 
     /*
@@ -1032,8 +1032,8 @@ public class AccountResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
-        return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+        return super.createCustomFields(UUID.fromString(id), customFields, context.createContext(createdBy, reason,
+                                             comment, request), uriInfo, jaxrsConfig.getJaxrsReturnPathLikeUrl());
     }
 
     @TimedResource
@@ -1207,7 +1207,7 @@ public class AccountResource extends JaxRsResourceBase {
             accountUserApi.addEmail(accountId, json.toAccountEmail(UUIDs.randomUUID()), callContext);
         }
 
-        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getEmails", json.getAccountId());
+        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getEmails", json.getAccountId(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
     }
 
     @TimedResource

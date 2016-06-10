@@ -51,6 +51,7 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 import org.killbill.xmlloader.XMLWriter;
@@ -70,6 +71,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 public class CatalogResource extends JaxRsResourceBase {
 
     private final CatalogUserApi catalogUserApi;
+    private final JaxrsConfig jaxrsConfig;
 
     @Inject
     public CatalogResource(final JaxrsUriBuilder uriBuilder,
@@ -80,9 +82,11 @@ public class CatalogResource extends JaxRsResourceBase {
                            final PaymentApi paymentApi,
                            final CatalogUserApi catalogUserApi,
                            final Clock clock,
+                           final JaxrsConfig jaxrsConfig,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.catalogUserApi = catalogUserApi;
+        this.jaxrsConfig = jaxrsConfig;
     }
 
     @TimedResource
@@ -108,7 +112,7 @@ public class CatalogResource extends JaxRsResourceBase {
                                      @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         catalogUserApi.uploadCatalog(catalogXML, callContext);
-        return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null);
+        return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null, jaxrsConfig.getJaxrsReturnPathLikeUrl());
     }
 
     @TimedResource
