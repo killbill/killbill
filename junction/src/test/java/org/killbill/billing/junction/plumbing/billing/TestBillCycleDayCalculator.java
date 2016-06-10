@@ -55,15 +55,15 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
 
         // Create a the base plan associated with that subscription
         final Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(bpStartDateUTC, null)).thenReturn(bpStartDateUTC);
         final Catalog catalog = Mockito.mock(Catalog.class);
         Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
         Mockito.when(subscription.getLastActivePlan()).thenReturn(plan);
+        Mockito.when(subscription.getDateOfFirstRecurringNonZeroCharge()).thenReturn(bpStartDateUTC);
 
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
         final Integer billCycleDayLocal = billCycleDayCalculator.calculateBcdForAlignment(account, 0, subscription, BillingAlignment.BUNDLE, bundle.getId(),
-                                                                                          catalog, null, internalCallContext);
+                                                                                          internalCallContext);
 
         Assert.assertEquals(billCycleDayLocal, (Integer) expectedBCDUTC);
     }
@@ -128,14 +128,12 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
 
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getStartDate()).thenReturn(startDateUTC);
-
-        final Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(startDateUTC, null)).thenReturn(startDateUTC);
+        Mockito.when(subscription.getDateOfFirstRecurringNonZeroCharge()).thenReturn(startDateUTC);
 
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
 
-        final Integer bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, plan, account, Mockito.mock(Catalog.class), internalCallContext);
+        final Integer bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, account);
         Assert.assertEquals(bcd, (Integer) bcdLocal);
     }
 }

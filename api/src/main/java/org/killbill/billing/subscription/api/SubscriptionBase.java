@@ -107,4 +107,6 @@ public interface SubscriptionBase extends Entity, Blockable {
     public SubscriptionBaseTransition getPreviousTransition();
 
     public List<SubscriptionBaseTransition> getAllTransitions();
+
+    public DateTime getDateOfFirstRecurringNonZeroCharge();
 }

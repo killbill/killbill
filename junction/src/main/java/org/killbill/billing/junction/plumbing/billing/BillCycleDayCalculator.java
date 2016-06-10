@@ -18,11 +18,9 @@
 
 package org.killbill.billing.junction.plumbing.billing;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.ImmutableAccountData;
@@ -32,10 +30,10 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
-import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -87,28 +85,23 @@ public class BillCycleDayCalculator {
                                        phase.getPhaseType()),
                 transition.getRequestedTransitionTime());
 
-        return calculateBcdForAlignment(account, accountBillCycleDayLocal, subscription, alignment, bundleId, catalog, plan, context);
+        return calculateBcdForAlignment(account, accountBillCycleDayLocal, subscription, alignment, bundleId, context);
     }
 
     @VisibleForTesting
     int calculateBcdForAlignment(final ImmutableAccountData account, final int accountBillCycleDayLocal, final SubscriptionBase subscription, final BillingAlignment alignment, final UUID bundleId,
-                                 final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, SubscriptionBaseApiException, CatalogApiException {
+                                 final InternalCallContext context) throws AccountApiException, SubscriptionBaseApiException, CatalogApiException {
         int result = 0;
         switch (alignment) {
             case ACCOUNT:
-                result = accountBillCycleDayLocal != 0 ? accountBillCycleDayLocal : calculateBcdFromSubscription(subscription, plan, account, catalog, context);
+                result = accountBillCycleDayLocal != 0 ? accountBillCycleDayLocal : calculateBcdFromSubscription(subscription, account);
                 break;
             case BUNDLE:
                 final SubscriptionBase baseSub = subscriptionApi.getBaseSubscription(bundleId, context);
-                Plan basePlan = baseSub.getCurrentPlan();
-                if (basePlan == null) {
-                    // The BP has been cancelled
-                    basePlan = baseSub.getLastActivePlan();
-                }
-                result = calculateBcdFromSubscription(baseSub, basePlan, account, catalog, context);
+                result = calculateBcdFromSubscription(baseSub, account);
                 break;
             case SUBSCRIPTION:
-                result = calculateBcdFromSubscription(subscription, plan, account, catalog, context);
+                result = calculateBcdFromSubscription(subscription, account);
                 break;
         }
 
@@ -120,30 +113,10 @@ public class BillCycleDayCalculator {
     }
 
     @VisibleForTesting
-    int calculateBcdFromSubscription(final SubscriptionBase subscription, final Plan plan, final ImmutableAccountData account, final Catalog catalog, final InternalCallContext context)
+    int calculateBcdFromSubscription(final SubscriptionBase subscription, final ImmutableAccountData account)
             throws AccountApiException, CatalogApiException {
-        // Retrieve the initial phase type for that subscription
-        // TODO - this should be extracted somewhere, along with this code above
-        final PhaseType initialPhaseType;
-        final List<EffectiveSubscriptionInternalEvent> transitions = subscriptionApi.getAllTransitions(subscription, context);
-        if (transitions.isEmpty()) {
-            initialPhaseType = null;
-        } else {
-            final DateTime requestedDate = subscription.getStartDate();
-            final String initialPhaseString = transitions.get(0).getNextPhase();
-            if (initialPhaseString == null) {
-                initialPhaseType = null;
-            } else {
-                final PlanPhase initialPhase = catalog.findPhase(initialPhaseString, requestedDate, subscription.getStartDate());
-                if (initialPhase == null) {
-                    initialPhaseType = null;
-                } else {
-                    initialPhaseType = initialPhase.getPhaseType();
-                }
-            }
-        }
 
-        final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate(), initialPhaseType);
+        final DateTime date = subscription.getDateOfFirstRecurringNonZeroCharge();
         final int bcdLocal = ClockUtil.toDateTime(date, account.getTimeZone()).getDayOfMonth();
         log.info("Calculated BCD: subscriptionId='{}', subscriptionStartDate='{}', accountTimeZone='{}', bcd='{}'",
                  subscription.getId(), date.toDateTimeISO(), account.getTimeZone(), bcdLocal);
