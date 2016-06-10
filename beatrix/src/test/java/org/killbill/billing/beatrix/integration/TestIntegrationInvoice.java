@@ -142,7 +142,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         DryRunArguments dryRun = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE);
         Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, dryRun, callContext);
-        //invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // 2014-2-1
