@@ -20,22 +20,19 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.killbill.billing.account.api.ImmutableAccountData;
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.junction.JunctionTestSuiteNoDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
-import org.killbill.billing.junction.JunctionTestSuiteNoDB;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
 
@@ -62,8 +59,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
 
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
-        final Integer billCycleDayLocal = billCycleDayCalculator.calculateBcdForAlignment(account, 0, subscription, BillingAlignment.BUNDLE, bundle.getId(),
-                                                                                          internalCallContext);
+        final Integer billCycleDayLocal = BillCycleDayCalculator.calculateBcdForAlignment(subscription, subscription, BillingAlignment.BUNDLE, account.getTimeZone(), 0);
 
         Assert.assertEquals(billCycleDayLocal, (Integer) expectedBCDUTC);
     }
@@ -124,8 +120,6 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
     }
 
     private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdLocal) throws AccountApiException, CatalogApiException {
-        final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(Mockito.mock(CatalogService.class), Mockito.mock(SubscriptionBaseInternalApi.class));
-
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getStartDate()).thenReturn(startDateUTC);
         Mockito.when(subscription.getDateOfFirstRecurringNonZeroCharge()).thenReturn(startDateUTC);
@@ -133,7 +127,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
 
-        final Integer bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, account);
+        final Integer bcd = BillCycleDayCalculator.calculateBcdForAlignment(subscription, subscription, BillingAlignment.SUBSCRIPTION, account.getTimeZone(), 0);
         Assert.assertEquals(bcd, (Integer) bcdLocal);
     }
 }
