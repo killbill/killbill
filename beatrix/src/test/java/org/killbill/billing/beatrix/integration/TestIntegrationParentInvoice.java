@@ -1,0 +1,551 @@
+/*
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
+ *
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.killbill.billing.beatrix.integration;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.joda.time.DateTime;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
+import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.payment.api.Payment;
+import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
+public class TestIntegrationParentInvoice extends TestIntegrationBase {
+
+    @Test(groups = "slow")
+    public void testParentInvoiceGeneration() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        log.info("Beginning test with BCD of " + billingDay);
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account child1Account = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+        final Account child2Account = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        // CREATE SUBSCRIPTIONS AND EXPECT BOTH EVENTS EACH: NextEvent.CREATE NextEvent.INVOICE
+        createBaseEntitlementAndCheckForCompletion(child1Account.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        createBaseEntitlementAndCheckForCompletion(child2Account.getId(), "bundleKey2", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // First Parent invoice over TRIAL period
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 1);
+
+        Invoice parentInvoice = parentInvoices.get(0);
+        assertEquals(parentInvoice.getNumberOfItems(), 2);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().toString(), "0.00");
+
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // reload parent invoice
+        parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+
+        // Move through time and verify new parent Invoice. No payments are expected yet.
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE,
+                                      NextEvent.INVOICE, NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // Second Parent invoice over Recurring period
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 2);
+
+        parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 2);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().toString(), "279.90");
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
+        assertEquals(parentInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
+
+        // Check Child Balance. It should be > 0 here because Parent invoice is unpaid yet.
+        List<Invoice> child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), false, callContext);
+        assertEquals(child1Invoices.size(), 2);
+        assertTrue(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO) > 0);
+
+        // Moving a day the NotificationQ calls the commitInvoice. Payment is expected.
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+
+        // Check Child Balance. It should be = 0 because parent invoice had already paid.
+        child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), false, callContext);
+        assertEquals(child1Invoices.size(), 2);
+        assertTrue(parentInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
+        assertTrue(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO) == 0);
+
+    }
+
+    @Test(groups = "slow")
+    public void testParentInvoiceGenerationMultipleActionsSameDay() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+
+        log.info("Beginning test with BCD of " + billingDay);
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        DefaultEntitlement baseEntitlementChild = createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected.
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // Move through time and verify new parent Invoice. No payments are expected yet.
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // check parent Invoice with child plan amount
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 2);
+
+        Invoice parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().toString(), "29.95");
+
+        // upgrade plan
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
+        final Entitlement newChildEntitlement = baseEntitlementChild.changePlanOverrideBillingPolicy("Shotgun", BillingPeriod.MONTHLY, baseEntitlementChild.getLastActivePriceList().getName(), null, clock.getToday(childAccount.getTimeZone()), BillingActionPolicy.IMMEDIATE, null, callContext);
+        assertListenerStatus();
+
+        // check parent invoice. Expected to have the same invoice item with the amount updated
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        BigDecimal totalAmount = childInvoices.get(1).getBalance().add(childInvoices.get(2).getBalance());
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 2);
+
+        parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance(), totalAmount);
+
+        // Moving a day the NotificationQ calls the commitInvoice. Now payment is expected
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+
+    }
+
+    @Test(groups = "slow")
+    public void testParentInvoiceGenerationIgnoreChildCredit() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        log.info("Beginning test with BCD of " + billingDay);
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        DefaultEntitlement baseEntitlementChild = createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected.
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // Move through time and verify new parent Invoice. No payments are expected yet.
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // add credit to child account when invoice is still unpaid
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        invoiceUserApi.insertCredit(childAccount.getId(), BigDecimal.TEN, clock.getUTCToday(), Currency.USD, true, "test", callContext);
+        assertListenerStatus();
+
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 3);
+
+        // invoice monthly with credit
+        Invoice childInvoice = childInvoices.get(1);
+        assertEquals(childInvoice.getNumberOfItems(), 2);
+        assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().toString(), "29.95");
+        assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().toString(), "-10.00");
+        assertEquals(childInvoice.getBalance().toString(), "19.95");
+
+        // check parent Invoice with child plan amount
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 2);
+
+        Invoice parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().toString(), "29.95");
+
+        // Moving a day the NotificationQ calls the commitInvoice.
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 2);
+
+        parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getChargedAmount().toString(), "29.95");
+        assertEquals(parentInvoice.getCreditedAmount().toString(), "0.00");
+
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(parentAccount.getId(), false, null, callContext);
+        assertEquals(accountPayments.size(), 1);
+        assertEquals(accountPayments.get(0).getPurchasedAmount().setScale(2).toString(), "29.95");
+        assertEquals(accountPayments.get(0).getCreditedAmount().toString(), "0");
+
+    }
+
+    // Scenario 1: Follow up Invoice Item Adjustment on unpaid invoice
+    @Test(groups = "slow")
+    public void testParentInvoiceItemAdjustmentUnpaidInvoice() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // ---- trial period ----
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected because balance is 0
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // ---- recurring period ----
+        // Move through time and verify new parent Invoice. No payments are expected.
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        // get last child invoice
+        Invoice childInvoice = childInvoices.get(1);
+        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+
+        // Second Parent invoice over Recurring period
+        assertEquals(parentInvoices.size(), 2);
+
+        Invoice parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().toString(), "249.95");
+
+        // issue a $10 adj when invoice is unpaid
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.insertInvoiceItemAdjustment(childAccount.getId(), childInvoice.getId(),
+                                                   childInvoice.getInvoiceItems().get(0).getId(),
+                                                   clock.getToday(childAccount.getTimeZone()), BigDecimal.TEN,
+                                                   childAccount.getCurrency(), "test adjustment", callContext);
+        assertListenerStatus();
+
+        // expected child invoice
+        // RECURRING : $ 249.95
+        // ITEM_ADJ : $ -10
+
+        childInvoice = invoiceUserApi.getInvoice(childInvoice.getId(), callContext);
+        assertEquals(childInvoice.getInvoiceItems().size(), 2);
+        assertEquals(childInvoice.getBalance().toString(), "239.95");
+        assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+
+        // TODO get parent invoice again
+        // TODO check parent invoice is updated and still in DRAFT status
+
+    }
+
+    // Scenario 2: Follow up Invoice Item Adjustment on PAID invoice
+    @Test(groups = "slow")
+    public void testParentInvoiceItemAdjustmentPaidInvoice() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // ---- trial period ----
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected because balance is 0
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // ---- recurring period ----
+        // Move through time and verify new parent Invoice. No payments are expected.
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // move one day to have parent invoice paid
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(7);
+        assertListenerStatus();
+
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        // get last child invoice
+        Invoice childInvoice = childInvoices.get(1);
+        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+
+        // Second Parent invoice over Recurring period
+        assertEquals(parentInvoices.size(), 2);
+
+        Invoice parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().toString(), "0.00");
+        assertEquals(parentInvoice.getChargedAmount().toString(), "249.95");
+
+        // issue a $10 adj in a paid invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.insertInvoiceItemAdjustment(childAccount.getId(), childInvoice.getId(),
+                                                   childInvoice.getInvoiceItems().get(0).getId(),
+                                                   clock.getToday(childAccount.getTimeZone()), BigDecimal.TEN,
+                                                   childAccount.getCurrency(), "test adjustment", callContext);
+        assertListenerStatus();
+
+        // expected child invoice
+        // RECURRING : $ 20
+        // ITEM_ADJ : $ -10
+        // CBA_ADJ : $ +10
+
+        childInvoice = invoiceUserApi.getInvoice(childInvoice.getId(), callContext);
+        assertEquals(childInvoice.getInvoiceItems().size(), 3);
+        assertEquals(childInvoice.getChargedAmount().toString(), "249.95");
+        assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+
+        // TODO check child account has $10 credit
+
+    }
+
+    // Scenario 3: Repair (early cancellation, plan downgrade) on unpaid invoice
+    @Test(groups = "slow")
+    public void testParentInvoiceEarlyCancellationUnpaidInvoice() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        DefaultEntitlement baseEntitlementChild = createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // ---- trial period ----
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected because balance is 0
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // ---- recurring period ----
+        // Move through time and verify new parent Invoice. No payments are expected.
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        // get last child invoice
+        Invoice childInvoice = childInvoices.get(1);
+        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+
+        // Second Parent invoice over Recurring period
+        assertEquals(parentInvoices.size(), 2);
+
+        Invoice parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().toString(), "249.95");
+
+        // cancel subscription
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
+        baseEntitlementChild.cancelEntitlementWithDateOverrideBillingPolicy(clock.getToday(childAccount.getTimeZone()), BillingActionPolicy.IMMEDIATE, null, callContext);
+        assertListenerStatus();
+
+        // expected invoices
+
+        // invoice 2:
+        // REPAIR_ADJ $ -15
+        // CBA_ADJ $ 15
+
+        // Invoice 1:
+        // RECURRING : $ 20
+        // CBA_ADJ $ -15
+
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        // invoice 1
+        childInvoice = childInvoices.get(1);
+        assertEquals(childInvoice.getInvoiceItems().size(), 2);
+        assertEquals(childInvoice.getBalance().toString(), "16.66");
+        assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+
+        // invoice 2
+        childInvoice = childInvoices.get(2);
+        assertEquals(childInvoice.getInvoiceItems().size(), 2);
+        assertEquals(childInvoice.getBalance().toString(), "0.00");
+        assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+
+        // TODO check if parent invoice was updated
+
+    }
+
+    // Scenario 4: Repair (early cancellation, plan downgrade) on PAID invoice
+    @Test(groups = "slow")
+    public void testParentInvoiceEarlyCancellationPaidInvoice() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        DefaultEntitlement baseEntitlementChild = createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // ---- trial period ----
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected because balance is 0
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // ---- recurring period ----
+        // Move through time and verify new parent Invoice. No payments are expected.
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // move one day to have parent invoice paid
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(2);
+        assertListenerStatus();
+
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        // get last child invoice
+        Invoice childInvoice = childInvoices.get(1);
+        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+
+        // Second Parent invoice over Recurring period
+        assertEquals(parentInvoices.size(), 2);
+
+        Invoice parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        //assertEquals(parentInvoice.getBalance().toString(), "249.95");
+
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
+        baseEntitlementChild.cancelEntitlementWithDateOverrideBillingPolicy(clock.getToday(childAccount.getTimeZone()), BillingActionPolicy.IMMEDIATE, null, callContext);
+        assertListenerStatus();
+
+        // expected invoices
+
+        // Invoice 2:
+        // REPAIR_ADJ $ -15
+        // CBA_ADJ $ 15
+
+        // Invoice 1: # unchanged
+        // RECURRING : $ 20
+
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        // invoice 1
+        childInvoice = childInvoices.get(1);
+        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+        assertEquals(childInvoice.getChargedAmount().toString(), "249.95");
+        assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+
+        // invoice 2
+        childInvoice = childInvoices.get(2);
+        assertEquals(childInvoice.getInvoiceItems().size(), 2);
+        //assertEquals(childInvoice.getBalance().toString(), "16.66");
+        assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+
+        // TODO check equal parent invoice
+        // TODO check child account has credit
+
+    }
+
+    // Scenario 5: Use of credit
+
+}
