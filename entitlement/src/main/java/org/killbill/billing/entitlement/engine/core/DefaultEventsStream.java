@@ -70,6 +70,7 @@ public class DefaultEventsStream implements EventsStream {
     private final List<SubscriptionBase> allSubscriptionsForBundle;
     private final InternalTenantContext internalTenantContext;
     private final DateTime utcNow;
+    private final int defaultBillCycleDayLocal;
 
     private BlockingAggregator blockingAggregator;
     private List<BlockingState> subscriptionEntitlementStates;
@@ -86,7 +87,9 @@ public class DefaultEventsStream implements EventsStream {
     public DefaultEventsStream(final ImmutableAccountData account, final SubscriptionBaseBundle bundle,
                                final List<BlockingState> blockingStates, final BlockingChecker blockingChecker,
                                @Nullable final SubscriptionBase baseSubscription, final SubscriptionBase subscription,
-                               final List<SubscriptionBase> allSubscriptionsForBundle, final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
+                               final List<SubscriptionBase> allSubscriptionsForBundle,
+                               final int defaultBillCycleDayLocal,
+                               final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
         this.account = account;
         this.bundle = bundle;
         this.blockingStates = blockingStates;
@@ -94,6 +97,7 @@ public class DefaultEventsStream implements EventsStream {
         this.baseSubscription = baseSubscription;
         this.subscription = subscription;
         this.allSubscriptionsForBundle = allSubscriptionsForBundle;
+        this.defaultBillCycleDayLocal = defaultBillCycleDayLocal;
         this.internalTenantContext = contextWithValidAccountRecordId;
         this.utcNow = utcNow;
 
@@ -191,6 +195,11 @@ public class DefaultEventsStream implements EventsStream {
     @Override
     public boolean isSubscriptionCancelled() {
         return subscription.getState() == EntitlementState.CANCELLED;
+    }
+
+    @Override
+    public int getDefaultBillCycleDayLocal() {
+        return defaultBillCycleDayLocal;
     }
 
     @Override

@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -14,27 +15,24 @@
  * under the License.
  */
 
-package org.killbill.billing.junction.plumbing.billing;
-
-import java.util.UUID;
+package org.killbill.billing.util.bcd;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.ImmutableAccountData;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.junction.JunctionTestSuiteNoDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
+public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testCalculateBCDForAOWithBPCancelledBundleAligned() throws Exception {
@@ -46,9 +44,6 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
         final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getStartDate()).thenReturn(bpStartDateUTC);
-
-        // subscription.getCurrentPlan() will return null as expected (cancelled BP)
-        Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         // Create a the base plan associated with that subscription
         final Plan plan = Mockito.mock(Plan.class);

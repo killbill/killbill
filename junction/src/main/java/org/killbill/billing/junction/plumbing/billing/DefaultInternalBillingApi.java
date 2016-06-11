@@ -26,7 +26,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -56,6 +55,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
@@ -167,7 +167,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                     result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
                 }
             } else { // billing is not off
-                addBillingEventsForSubscription(account, subscriptions, subscriptions.get(0), dryRunMode, context, result, skipSubscriptionsSet);
+                final SubscriptionBase baseSubscription = !subscriptions.isEmpty() ? subscriptions.get(0) : null;
+                addBillingEventsForSubscription(account, subscriptions, baseSubscription, dryRunMode, context, result, skipSubscriptionsSet);
             }
         }
     }
@@ -214,7 +215,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                     overridenBCD = transition.getNextBillCycleDayLocal() != null ? transition.getNextBillCycleDayLocal() : overridenBCD;
                     final int bcdLocal = overridenBCD != null ?
                                          overridenBCD :
-                                         calculateBcd(account, currentAccountBCD, baseSubscription, subscription, transition, context);
+                                         calculateBcdForTransition(baseSubscription, subscription, account, currentAccountBCD, transition, context);
 
                     if (currentAccountBCD == 0 && !updatedAccountBCD) {
                         accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);
@@ -236,7 +237,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
     }
 
-    protected int calculateBcd(final ImmutableAccountData account, final int accountBillCycleDayLocal, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final EffectiveSubscriptionInternalEvent transition, final InternalCallContext context)
+
+    protected int calculateBcdForTransition(final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final ImmutableAccountData account, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition, final InternalCallContext context)
             throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
         final Catalog catalog = catalogService.getFullCatalog(context);
         final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(transition, context), transition.getEffectiveTransitionTime());

@@ -93,7 +93,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     // Refresh-able
     protected EventsStream eventsStream;
 
-
     public DefaultEntitlement(final UUID accountId, final UUID entitlementId, final EventsStreamBuilder eventsStreamBuilder,
                               final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution, final BlockingStateDao blockingStateDao,
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
@@ -281,7 +280,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Integer getBillCycleDayLocal() {
-        return getSubscriptionBase().getBillCycleDayLocal();
+        final Integer perSubscriptionBillCycleDayLocal = getSubscriptionBase().getBillCycleDayLocal();
+        return perSubscriptionBillCycleDayLocal != null ? perSubscriptionBillCycleDayLocal : eventsStream.getDefaultBillCycleDayLocal();
     }
 
     @Override
@@ -318,7 +318,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                null,
                                                                                properties,
                                                                                callContext);
-
 
         final WithEntitlementPlugin<Entitlement> cancelEntitlementWithPlugin = new WithEntitlementPlugin<Entitlement>() {
 
@@ -357,7 +356,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         return pluginExecution.executeWithPlugin(cancelEntitlementWithPlugin, pluginContext);
     }
-
 
     @Override
     public void uncancelEntitlement(final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
@@ -430,7 +428,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final LocalDate cancellationDate = getLocalDateFromEntitlementPolicy(entitlementPolicy);
         return cancelEntitlementWithDateOverrideBillingPolicy(cancellationDate, billingPolicy, properties, callContext);
     }
-
 
     // See also EntitlementInternalApi#cancel for the bulk API
     @Override
@@ -510,7 +507,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
-
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
 

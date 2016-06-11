@@ -312,6 +312,8 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName,
                                                                ProductCategory.BASE, term, true);
 
+        Assert.assertEquals(entitlementJson.getBillCycleDayLocal(), new Integer(25));
+
         final Subscription updatedSubscription = new Subscription();
         updatedSubscription.setSubscriptionId(entitlementJson.getSubscriptionId());
         updatedSubscription.setBillCycleDayLocal(9);
@@ -319,8 +321,16 @@ public class TestEntitlement extends TestJaxrsBase {
 
 
         final Subscription result = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
-        // TODO depends on semantics for pending BCD change
-        //Assert.assertEquals(result.getBillCycleDayLocal(), new Integer(9));
+        // Still shows as the 4 (BCD did not take effect)
+        Assert.assertEquals(result.getBillCycleDayLocal(), new Integer(25));
+
+        // 2012, 5, 9
+        clock.addDays(14);
+        crappyWaitForLackOfProperSynchonization();
+
+        final Subscription result2 = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        // Still shows as the 4 (BCD did not take effect)
+        Assert.assertEquals(result2.getBillCycleDayLocal(), new Integer(9));
     }
 
 

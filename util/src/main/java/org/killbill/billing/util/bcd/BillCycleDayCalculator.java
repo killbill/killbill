@@ -1,5 +1,4 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
  * Copyright 2014-2016 Groupon, Inc
  * Copyright 2014-2016 The Billing Project, LLC
  *
@@ -16,7 +15,7 @@
  * under the License.
  */
 
-package org.killbill.billing.junction.plumbing.billing;
+package org.killbill.billing.util.bcd;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
