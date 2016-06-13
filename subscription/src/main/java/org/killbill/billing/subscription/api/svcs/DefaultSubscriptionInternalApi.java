@@ -19,6 +19,8 @@
 package org.killbill.billing.subscription.api.svcs;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -111,6 +113,20 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     private final InternalCallContextFactory internalCallContextFactory;
 
     private final NotificationQueueService notificationQueueService;
+
+    public static final Comparator<SubscriptionBase> SUBSCRIPTIONS_COMPARATOR = new Comparator<SubscriptionBase>() {
+
+        @Override
+        public int compare(final SubscriptionBase o1, final SubscriptionBase o2) {
+            if (o1.getCategory() == ProductCategory.BASE) {
+                return -1;
+            } else if (o2.getCategory() == ProductCategory.BASE) {
+                return 1;
+            } else {
+                return ((DefaultSubscriptionBase) o1).getAlignStartDate().compareTo(((DefaultSubscriptionBase) o2).getAlignStartDate());
+            }
+        }
+    };
 
     @Inject
     public DefaultSubscriptionInternalApi(final SubscriptionDao dao,
@@ -350,6 +366,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             if (result != null && !result.isEmpty()) {
                 outputSubscriptions.addAll(result);
             }
+            Collections.sort(outputSubscriptions, DefaultSubscriptionInternalApi.SUBSCRIPTIONS_COMPARATOR);
+
             return createSubscriptionsForApiUse(outputSubscriptions);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);

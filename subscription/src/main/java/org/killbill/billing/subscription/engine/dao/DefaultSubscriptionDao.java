@@ -47,6 +47,7 @@ import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
 import org.killbill.billing.subscription.api.transfer.BundleTransferData;
 import org.killbill.billing.subscription.api.transfer.SubscriptionTransferData;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
@@ -645,8 +646,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         });
     }
 
-
-
     private List<SubscriptionBaseEvent> filterSubscriptionBaseEvents(final List<SubscriptionEventModelDao> models) {
         final Collection<SubscriptionEventModelDao> filteredModels = Collections2.filter(models, new Predicate<SubscriptionEventModelDao>() {
             @Override
@@ -767,18 +766,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }
 
         // Make sure BasePlan -- if exists-- is first
-        Collections.sort(input, new Comparator<SubscriptionBase>() {
-            @Override
-            public int compare(final SubscriptionBase o1, final SubscriptionBase o2) {
-                if (o1.getCategory() == ProductCategory.BASE) {
-                    return -1;
-                } else if (o2.getCategory() == ProductCategory.BASE) {
-                    return 1;
-                } else {
-                    return ((DefaultSubscriptionBase) o1).getAlignStartDate().compareTo(((DefaultSubscriptionBase) o2).getAlignStartDate());
-                }
-            }
-        });
+        Collections.sort(input, DefaultSubscriptionInternalApi.SUBSCRIPTIONS_COMPARATOR);
 
         final List<ApiEventChange> baseChangeEvents = new LinkedList<ApiEventChange>();
         ApiEventCancel baseCancellationEvent = null;
@@ -874,7 +862,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 if (!events.isEmpty()) {
 
                     final EventBaseBuilder eventBuilder;
-                    switch(curDryRun.getType()) {
+                    switch (curDryRun.getType()) {
                         case PHASE:
                             eventBuilder = new PhaseEventBuilder((PhaseEvent) curDryRun);
                             break;
