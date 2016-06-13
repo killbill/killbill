@@ -38,11 +38,13 @@ public class JaxrsUriBuilder {
 
     public URI buildLocation(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
                              final String getMethodName, final Object objectId, final boolean pathLikeUrl) {
-        final UriBuilder uriBuilder =
-                pathLikeUrl ? getUriBuilder(uriInfo.getBaseUri().getPath(), theClass, getMethodName) :
-                getUriBuilder(theClass, getMethodName).scheme(uriInfo.getAbsolutePath().getScheme())
-                                                      .host(uriInfo.getAbsolutePath().getHost())
-                                                      .port(uriInfo.getAbsolutePath().getPort());
+        final UriBuilder uriBuilder = getUriBuilder(uriInfo.getBaseUri().getPath(), theClass, getMethodName);
+
+        if (!pathLikeUrl) {
+            uriBuilder.scheme(uriInfo.getAbsolutePath().getScheme())
+              .host(uriInfo.getAbsolutePath().getHost())
+              .port(uriInfo.getAbsolutePath().getPort());
+        }
         return objectId != null ? uriBuilder.build(objectId) : uriBuilder.build();
     }
 
