@@ -484,10 +484,8 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertTrue(invoice1.getBalance().compareTo(new BigDecimal("249.95")) == 0);
         assertTrue(invoice1.getPaidAmount().compareTo(BigDecimal.ZERO) == 0);
         assertTrue(invoice1.getChargedAmount().compareTo(new BigDecimal("249.95")) == 0);
-        assertEquals(invoice1.getPayments().size(), 1);
-        assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
-        assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).isSuccess());
+        // Payment is not seen in invoice_payment table
+        assertEquals(invoice1.getPayments().size(), 0);
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
