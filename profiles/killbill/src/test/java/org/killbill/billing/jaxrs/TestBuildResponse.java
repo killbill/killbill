@@ -27,9 +27,12 @@ import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.UUID;
 
+import com.sun.jersey.api.client.ClientResponse.Status;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertEqualsNoOrder;
 
 public class TestBuildResponse extends ServerTestSuiteNoDB {
 
@@ -46,6 +49,7 @@ public class TestBuildResponse extends ServerTestSuiteNoDB {
         JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
         Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId);
 
+        assertEquals(response.getStatus(), Status.CREATED.getStatusCode());
         assertEquals(response.getMetadata().get("Location").get(0), "/1.0/kb/accounts/" + objectId.toString());
     }
 
@@ -62,6 +66,7 @@ public class TestBuildResponse extends ServerTestSuiteNoDB {
         JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
         Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId);
 
+        assertEquals(response.getStatus(), Status.CREATED.getStatusCode());
         assertEquals(response.getMetadata().get("Location").get(0), "/killbill/1.0/kb/accounts/" + objectId.toString());
     }
 
@@ -79,6 +84,7 @@ public class TestBuildResponse extends ServerTestSuiteNoDB {
         JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
         Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId);
 
+        assertEquals(response.getStatus(), Status.CREATED.getStatusCode());
         assertEquals(response.getMetadata().get("Location").get(0).toString(), uri.toString() + "/1.0/kb/accounts/" + objectId.toString());
     }
 
@@ -96,6 +102,7 @@ public class TestBuildResponse extends ServerTestSuiteNoDB {
         JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
         Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId);
 
+        assertEquals(response.getStatus(), Status.CREATED.getStatusCode());
         assertEquals(response.getMetadata().get("Location").get(0).toString(), uri.toString() + "/1.0/kb/accounts/" + objectId.toString());
     }
 }
