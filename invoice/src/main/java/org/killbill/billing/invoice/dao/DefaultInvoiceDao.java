@@ -710,7 +710,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                     if (existingAttempt == null) {
                         transactional.create(invoicePayment, context);
-                    } else if (!existingAttempt.getSuccess() && invoicePayment.getSuccess()) {
+                    } else if (!existingAttempt.getSuccess()) {
                         transactional.updateAttempt(existingAttempt.getRecordId(),
                                                     invoicePayment.getPaymentId().toString(),
                                                     invoicePayment.getPaymentDate().toDate(),
@@ -719,6 +719,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                     invoicePayment.getProcessedCurrency(),
                                                     invoicePayment.getPaymentCookieId(),
                                                     null,
+                                                    invoicePayment.getSuccess(),
                                                     context);
                     }
                 }

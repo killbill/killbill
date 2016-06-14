@@ -116,7 +116,7 @@ updateAttempt() ::= <<
     processed_currency = :processedCurrency,
     payment_cookie_id = :paymentCookieId,
     linked_invoice_payment_id := :linkedInvoicePaymentId,
-    success = true
+    success := :success
     WHERE record_id = :recordId
     <AND_CHECK_TENANT("")>
     ;
