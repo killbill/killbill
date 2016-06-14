@@ -32,7 +32,7 @@ tableValues() ::= <<
 , :createdDate
 >>
 
-getByAccountRecordIdWithExistingPaymentId(accountRecordId) ::= <<
+getByAccountRecordId(accountRecordId) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t

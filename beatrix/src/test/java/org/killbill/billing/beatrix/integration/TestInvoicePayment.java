@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestInvoicePayment extends TestIntegrationBase {
@@ -453,6 +454,8 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
         assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertNotNull(invoice1.getPayments().get(0).getPaymentId());
+
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
 
