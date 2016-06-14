@@ -51,7 +51,6 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
@@ -71,7 +70,6 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 public class TenantResource extends JaxRsResourceBase {
 
     private final TenantUserApi tenantApi;
-    private final JaxrsConfig jaxrsConfig;
 
     @Inject
     public TenantResource(final TenantUserApi tenantApi,
@@ -82,11 +80,9 @@ public class TenantResource extends JaxRsResourceBase {
                           final AccountUserApi accountUserApi,
                           final PaymentApi paymentApi,
                           final Clock clock,
-                          final JaxrsConfig jaxrsConfig,
                           final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.tenantApi = tenantApi;
-        this.jaxrsConfig = jaxrsConfig;
     }
 
     @TimedResource
@@ -129,7 +125,7 @@ public class TenantResource extends JaxRsResourceBase {
 
         final TenantData data = json.toTenantData();
         final Tenant tenant = tenantApi.createTenant(data, context.createContext(createdBy, reason, comment, request));
-        return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());
     }
 
     @TimedResource
@@ -228,7 +224,7 @@ public class TenantResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context  final UriInfo uriInfo) throws TenantApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         tenantApi.addTenantKeyValue(key, value, callContext);
-        return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getUserKeyValue", key, jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getUserKeyValue", key);
     }
 
     @TimedResource
@@ -276,7 +272,7 @@ public class TenantResource extends JaxRsResourceBase {
         final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
         tenantApi.addTenantKeyValue(tenantKey, value, callContext);
 
-        return uriBuilder.buildResponse(uriInfo, TenantResource.class, getMethodStr, keyPostfix, jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return uriBuilder.buildResponse(uriInfo, TenantResource.class, getMethodStr, keyPostfix);
     }
 
 

@@ -48,7 +48,6 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
@@ -86,7 +85,6 @@ import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
@@ -114,7 +112,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
     private final KillbillEventHandler killbillHandler;
     private final EntitlementApi entitlementApi;
     private final SubscriptionApi subscriptionApi;
-    private final JaxrsConfig jaxrsConfig;
 
     @Inject
     public SubscriptionResource(final KillbillEventHandler killbillHandler,
@@ -127,13 +124,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                 final AccountUserApi accountUserApi,
                                 final PaymentApi paymentApi,
                                 final Clock clock,
-                                final JaxrsConfig jaxrsConfig,
                                 final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.killbillHandler = killbillHandler;
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;
-        this.jaxrsConfig = jaxrsConfig;
     }
 
     @TimedResource
@@ -223,7 +218,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
             @Override
             public Response doResponseOk(final Entitlement createdEntitlement) {
-                return uriBuilder.buildResponse(uriInfo, SubscriptionResource.class, "getEntitlement", createdEntitlement.getId(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+                return uriBuilder.buildResponse(uriInfo, SubscriptionResource.class, "getEntitlement", createdEntitlement.getId());
             }
         };
 
@@ -334,7 +329,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
             @Override
             public Response doResponseOk(final Entitlement entitlement) {
-                return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", entitlement.getBundleId(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+                return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", entitlement.getBundleId());
             }
 
         };
@@ -624,7 +619,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo, jaxrsConfig.getJaxrsReturnPathLikeUrl());
+                                        context.createContext(createdBy, reason, comment, request), uriInfo);
     }
 
     @DELETE

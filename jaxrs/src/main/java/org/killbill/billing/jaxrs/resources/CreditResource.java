@@ -47,7 +47,6 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.clock.Clock;
 
 import com.google.inject.Inject;
@@ -66,7 +65,6 @@ public class CreditResource extends JaxRsResourceBase {
 
     private final InvoiceUserApi invoiceUserApi;
     private final AccountUserApi accountUserApi;
-    private final JaxrsConfig jaxrsConfig;
 
     @Inject
     public CreditResource(final InvoiceUserApi invoiceUserApi,
@@ -77,12 +75,10 @@ public class CreditResource extends JaxRsResourceBase {
                           final AuditUserApi auditUserApi,
                           final PaymentApi paymentApi,
                           final Clock clock,
-                          final JaxrsConfig jaxrsConfig,
                           final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.invoiceUserApi = invoiceUserApi;
         this.accountUserApi = accountUserApi;
-        this.jaxrsConfig = jaxrsConfig;
     }
 
     @GET
@@ -132,7 +128,7 @@ public class CreditResource extends JaxRsResourceBase {
                                                  account.getCurrency(), callContext);
         }
 
-        return uriBuilder.buildResponse(uriInfo, CreditResource.class, "getCredit", credit.getId(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return uriBuilder.buildResponse(uriInfo, CreditResource.class, "getCredit", credit.getId());
     }
 
     @Override

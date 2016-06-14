@@ -66,7 +66,6 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.MetricTag;
@@ -86,8 +85,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Api(value = JaxrsResource.PAYMENTS_PATH, description = "Operations on payments")
 public class PaymentResource extends ComboPaymentResource {
 
-    private final JaxrsConfig jaxrsConfig;
-
     @Inject
     public PaymentResource(final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
@@ -96,10 +93,8 @@ public class PaymentResource extends ComboPaymentResource {
                            final AccountUserApi accountUserApi,
                            final PaymentApi paymentApi,
                            final Clock clock,
-                           final JaxrsConfig jaxrsConfig,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
-        this.jaxrsConfig = jaxrsConfig;
     }
 
     @TimedResource(name = "getPayment")
@@ -337,7 +332,7 @@ public class PaymentResource extends ComboPaymentResource {
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + pendingTransaction.getTransactionType() + " cannot be completed").build();
         }
-        return createPaymentResponse(uriInfo, result, pendingTransaction.getTransactionType(), pendingTransaction.getExternalKey(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return createPaymentResponse(uriInfo, result, pendingTransaction.getTransactionType(), pendingTransaction.getExternalKey());
     }
 
     @TimedResource(name = "captureAuthorization")
@@ -413,7 +408,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
                                                          json.getTransactionExternalKey(), pluginProperties, paymentOptions, callContext);
-        return createPaymentResponse(uriInfo, payment, TransactionType.CAPTURE, json.getTransactionExternalKey(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return createPaymentResponse(uriInfo, payment, TransactionType.CAPTURE, json.getTransactionExternalKey());
     }
 
     @TimedResource(name = "refundPayment")
@@ -492,7 +487,7 @@ public class PaymentResource extends ComboPaymentResource {
         final Payment payment = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
                                                         json.getTransactionExternalKey(), pluginProperties, paymentOptions, callContext);
 
-        return createPaymentResponse(uriInfo, payment, TransactionType.REFUND, json.getTransactionExternalKey(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return createPaymentResponse(uriInfo, payment, TransactionType.REFUND, json.getTransactionExternalKey());
     }
 
     @TimedResource(name = "voidPayment")
@@ -564,7 +559,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createVoidWithPaymentControl(account, initialPayment.getId(), transactionExternalKey,
                                                                         pluginProperties, paymentOptions, callContext);
-        return createPaymentResponse(uriInfo, payment, TransactionType.VOID, json.getTransactionExternalKey(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return createPaymentResponse(uriInfo, payment, TransactionType.VOID, json.getTransactionExternalKey());
     }
 
     @TimedResource(name = "chargebackPayment")
@@ -640,7 +635,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createChargebackWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
                                                             json.getTransactionExternalKey(), paymentOptions, callContext);
-        return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey());
     }
 
     @TimedResource
@@ -700,7 +695,7 @@ public class PaymentResource extends ComboPaymentResource {
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
         }
-        return createPaymentResponse(uriInfo, result, transactionType, paymentTransactionJson.getTransactionExternalKey(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return createPaymentResponse(uriInfo, result, transactionType, paymentTransactionJson.getTransactionExternalKey());
     }
 
     @Override

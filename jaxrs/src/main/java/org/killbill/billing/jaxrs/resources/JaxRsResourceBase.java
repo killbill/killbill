@@ -83,7 +83,6 @@ import org.killbill.billing.util.audit.AccountAuditLogsForObjectType;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.customfield.StringCustomField;
 import org.killbill.billing.util.entity.Entity;
@@ -219,8 +218,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected Response createCustomFields(final UUID id,
                                           final List<CustomFieldJson> customFields,
                                           final CallContext context,
-                                          final UriInfo uriInfo,
-                                          final boolean jaxrsPathLikeUrl) throws CustomFieldApiException {
+                                          final UriInfo uriInfo) throws CustomFieldApiException {
         final LinkedList<CustomField> input = new LinkedList<CustomField>();
         for (final CustomFieldJson cur : customFields) {
             verifyNonNullOrEmpty(cur.getName(), "CustomFieldJson name needs to be set");
@@ -229,7 +227,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
 
         customFieldUserApi.addCustomFields(input, context);
-        return uriBuilder.buildResponse(uriInfo, this.getClass(), "getCustomFields", id, jaxrsPathLikeUrl);
+        return uriBuilder.buildResponse(uriInfo, this.getClass(), "getCustomFields", id);
     }
 
     /**
@@ -547,7 +545,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response createPaymentResponse(final UriInfo uriInfo, final Payment payment, final TransactionType transactionType,
-                                             @Nullable final String transactionExternalKey, final boolean jaxrsPathLikeUrl) {
+                                             @Nullable final String transactionExternalKey) {
         final PaymentTransaction createdTransaction = findCreatedTransaction(payment, transactionType, transactionExternalKey);
         Preconditions.checkNotNull(createdTransaction, "No transaction of type '%s' found", transactionType);
 
@@ -556,7 +554,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         switch (createdTransaction.getTransactionStatus()) {
             case PENDING:
             case SUCCESS:
-                return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId(), jaxrsPathLikeUrl);
+                return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
             case PAYMENT_FAILURE:
                 // 402 - Payment Required
                 responseBuilder = Response.status(402);
@@ -583,7 +581,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                 exception = createBillingException("This should never have happened!!!");
         }
         addExceptionToResponse(responseBuilder, exception);
-        return responseBuilder.location(getPaymentLocation(uriInfo, payment, jaxrsPathLikeUrl)).build();
+        return responseBuilder.location(getPaymentLocation(uriInfo, payment)).build();
     }
 
     private void addExceptionToResponse(final ResponseBuilder responseBuilder, final BillingExceptionJson exception) {
@@ -601,8 +599,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return exception;
     }
 
-    private URI getPaymentLocation(final UriInfo uriInfo, final Payment payment, final boolean jaxrsPathLikeUrl) {
-        return uriBuilder.buildLocation(uriInfo, PaymentResource.class, "getPayment", payment.getId(), jaxrsPathLikeUrl);
+    private URI getPaymentLocation(final UriInfo uriInfo, final Payment payment) {
+        return uriBuilder.buildLocation(uriInfo, PaymentResource.class, "getPayment", payment.getId());
     }
 
     private PaymentTransaction findCreatedTransaction(final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey) {

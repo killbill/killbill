@@ -1,7 +1,5 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,6 +18,8 @@ package org.killbill.billing.jaxrs;
 
 import org.killbill.billing.jaxrs.resources.AccountResource;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.server.log.ServerTestSuiteNoDB;
+import org.killbill.billing.util.config.JaxrsConfig;
 import org.testng.annotations.Test;
 
 import javax.ws.rs.core.Response;
@@ -31,8 +31,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
-public class TestBuildResponse {
-    @Test(groups = "fast", description = "Tests Uri Builder with Path Like URL and Root location")
+public class TestBuildResponse extends ServerTestSuiteNoDB {
+
+    @Test(groups = "fast", description = "Tests Uri Builder with Path Like URL and root Location")
     public void testUriBuilderWithPathLikeUrlAndRoot() throws Exception {
         UUID objectId = UUID.randomUUID();
 
@@ -40,8 +41,10 @@ public class TestBuildResponse {
         URI uri = URI.create("http://localhost:8080");
         when(uriInfo.getBaseUri()).thenReturn(uri);
 
-        JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder();
-        Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId, true);
+        JaxrsConfig jaxrsConfig = mock(JaxrsConfig.class);
+        when(jaxrsConfig.isJaxrsLocationFullUrl()).thenReturn(false);
+        JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
+        Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId);
 
         assertEquals(response.getMetadata().get("Location").get(0), "/1.0/kb/accounts/" + objectId.toString());
     }
@@ -54,13 +57,15 @@ public class TestBuildResponse {
         URI uri = URI.create("http://localhost:8080/killbill");
         when(uriInfo.getBaseUri()).thenReturn(uri);
 
-        JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder();
-        Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId, true);
+        JaxrsConfig jaxrsConfig = mock(JaxrsConfig.class);
+        when(jaxrsConfig.isJaxrsLocationFullUrl()).thenReturn(false);
+        JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
+        Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId);
 
         assertEquals(response.getMetadata().get("Location").get(0), "/killbill/1.0/kb/accounts/" + objectId.toString());
     }
 
-    @Test(groups = "fast", description = "Tests Uri Builder without Path Like URL and root Location")
+    @Test(groups = "fast", description = "Tests Uri Builder with Full URL and root Location")
     public void testUriBuilderWithoutPathLikeUrlAndRoot() throws Exception {
         UUID objectId = UUID.randomUUID();
 
@@ -69,13 +74,15 @@ public class TestBuildResponse {
         when(uriInfo.getBaseUri()).thenReturn(uri);
         when(uriInfo.getAbsolutePath()).thenReturn(uri);
 
-        JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder();
-        Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId, false);
+        JaxrsConfig jaxrsConfig = mock(JaxrsConfig.class);
+        when(jaxrsConfig.isJaxrsLocationFullUrl()).thenReturn(true);
+        JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
+        Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId);
 
         assertEquals(response.getMetadata().get("Location").get(0).toString(), uri.toString() + "/1.0/kb/accounts/" + objectId.toString());
     }
 
-    @Test(groups = "fast", description = "Tests Uri Builder without Path Like URL and root Location")
+    @Test(groups = "fast", description = "Tests Uri Builder with Full URL and non root Location")
     public void testUriBuilderWithoutPathLikeUrlAndNonRoot() throws Exception {
         UUID objectId = UUID.randomUUID();
 
@@ -84,8 +91,10 @@ public class TestBuildResponse {
         when(uriInfo.getBaseUri()).thenReturn(uri);
         when(uriInfo.getAbsolutePath()).thenReturn(uri);
 
-        JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder();
-        Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId, false);
+        JaxrsConfig jaxrsConfig = mock(JaxrsConfig.class);
+        when(jaxrsConfig.isJaxrsLocationFullUrl()).thenReturn(true);
+        JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
+        Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId);
 
         assertEquals(response.getMetadata().get("Location").get(0).toString(), uri.toString() + "/1.0/kb/accounts/" + objectId.toString());
     }

@@ -59,7 +59,6 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
@@ -81,8 +80,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Api(value = JaxrsResource.PAYMENT_METHODS_PATH, description = "Operations on payment methods")
 public class PaymentMethodResource extends JaxRsResourceBase {
 
-    private final JaxrsConfig jaxrsConfig;
-
     @Inject
     public PaymentMethodResource(final AccountUserApi accountUserApi,
                                  final JaxrsUriBuilder uriBuilder,
@@ -91,10 +88,8 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                  final AuditUserApi auditUserApi,
                                  final PaymentApi paymentApi,
                                  final Clock clock,
-                                 final JaxrsConfig jaxrsConfig,
                                  final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
-        this.jaxrsConfig = jaxrsConfig;
     }
 
     @TimedResource(name = "getPaymentMethod")
@@ -307,7 +302,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(paymentMethodId), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo, jaxrsConfig.getJaxrsReturnPathLikeUrl());
+                                        context.createContext(createdBy, reason, comment, request), uriInfo);
     }
 
     @TimedResource

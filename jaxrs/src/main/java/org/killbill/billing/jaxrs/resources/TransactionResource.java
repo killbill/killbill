@@ -46,7 +46,6 @@ import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
@@ -62,8 +61,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Api(value = JaxrsResource.PAYMENT_TRANSACTIONS_PATH, description = "Operations on payment transactions")
 public class TransactionResource extends JaxRsResourceBase {
 
-    private final JaxrsConfig jaxrsConfig;
-
     @Inject
     public TransactionResource(final JaxrsUriBuilder uriBuilder,
                                final TagUserApi tagUserApi,
@@ -72,10 +69,8 @@ public class TransactionResource extends JaxRsResourceBase {
                                final AccountUserApi accountUserApi,
                                final PaymentApi paymentApi,
                                final Clock clock,
-                               final JaxrsConfig jaxrsConfig,
                                final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
-        this.jaxrsConfig = jaxrsConfig;
     }
 
     @TimedResource
@@ -105,7 +100,7 @@ public class TransactionResource extends JaxRsResourceBase {
 
         final boolean success = TransactionStatus.SUCCESS.name().equals(json.getStatus());
         final Payment result = paymentApi.notifyPendingTransactionOfStateChanged(account, UUID.fromString(transactionIdStr), success, callContext);
-        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", result.getId(), jaxrsConfig.getJaxrsReturnPathLikeUrl());
+        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", result.getId());
     }
 
     @Override

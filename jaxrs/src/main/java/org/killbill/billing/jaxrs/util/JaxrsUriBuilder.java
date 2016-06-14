@@ -20,6 +20,7 @@ import java.net.URI;
 import java.util.Map;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -27,20 +28,28 @@ import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
+import org.killbill.billing.util.config.JaxrsConfig;
 
 public class JaxrsUriBuilder {
 
+    private final JaxrsConfig jaxrsConfig;
+
+    @Inject
+    public JaxrsUriBuilder(JaxrsConfig jaxrsConfig) {
+        this.jaxrsConfig = jaxrsConfig;
+    }
+
     public Response buildResponse(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
-                                  final String getMethodName, final Object objectId, final boolean pathLikeUrl) {
-        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId, pathLikeUrl);
-        return pathLikeUrl ? Response.ok().header("Location", location.getPath()).build() : Response.created(location).build();
+                                  final String getMethodName, final Object objectId) {
+        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId);
+        return !jaxrsConfig.isJaxrsLocationFullUrl() ? Response.ok().header("Location", location.getPath()).build() : Response.created(location).build();
     }
 
     public URI buildLocation(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
-                             final String getMethodName, final Object objectId, final boolean pathLikeUrl) {
+                             final String getMethodName, final Object objectId) {
         final UriBuilder uriBuilder = getUriBuilder(uriInfo.getBaseUri().getPath(), theClass, getMethodName);
 
-        if (!pathLikeUrl) {
+        if (jaxrsConfig.isJaxrsLocationFullUrl()) {
             uriBuilder.scheme(uriInfo.getAbsolutePath().getScheme())
               .host(uriInfo.getAbsolutePath().getHost())
               .port(uriInfo.getAbsolutePath().getPort());

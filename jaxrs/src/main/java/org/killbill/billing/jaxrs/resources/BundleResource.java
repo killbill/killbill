@@ -68,7 +68,6 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.JaxrsConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
@@ -91,7 +90,6 @@ public class BundleResource extends JaxRsResourceBase {
 
     private final SubscriptionApi subscriptionApi;
     private final EntitlementApi entitlementApi;
-    private final JaxrsConfig jaxrsConfig;
 
     @Inject
     public BundleResource(final JaxrsUriBuilder uriBuilder,
@@ -103,12 +101,10 @@ public class BundleResource extends JaxRsResourceBase {
                           final EntitlementApi entitlementApi,
                           final PaymentApi paymentApi,
                           final Clock clock,
-                          final JaxrsConfig jaxrsConfig,
                           final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;
-        this.jaxrsConfig = jaxrsConfig;
     }
 
     @TimedResource
@@ -321,7 +317,7 @@ public class BundleResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo, jaxrsConfig.getJaxrsReturnPathLikeUrl());
+                                        context.createContext(createdBy, reason, comment, request), uriInfo);
     }
 
     @TimedResource
