@@ -42,7 +42,9 @@ public class JaxrsUriBuilder {
     public Response buildResponse(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
                                   final String getMethodName, final Object objectId) {
         final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId);
-        return !jaxrsConfig.isJaxrsLocationFullUrl() ? Response.ok().header("Location", location.getPath()).build() : Response.created(location).build();
+        return !jaxrsConfig.isJaxrsLocationFullUrl() ?
+               Response.status(Response.Status.CREATED).header("Location", location.getPath()).build() :
+               Response.created(location).build();
     }
 
     public URI buildLocation(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
