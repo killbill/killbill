@@ -266,7 +266,14 @@ public class InvoiceDaoHelper {
 
     private void getInvoicePaymentsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
-        final List<InvoicePaymentModelDao> invoicePaymentsForAccount = invoicePaymentSqlDao.getByAccountRecordId(context);
+        final List<InvoicePaymentModelDao> invoicePaymentsForAccountRaw = invoicePaymentSqlDao.getByAccountRecordId(context);;
+        // Remove entries where payment_id is NULL (we don't know if the payment happened, we never got the second phase from the 2-phase commit protocol)
+        final List<InvoicePaymentModelDao> invoicePaymentsForAccount = ImmutableList.copyOf(Iterables.filter(invoicePaymentsForAccountRaw, new Predicate<InvoicePaymentModelDao>() {
+            @Override
+            public boolean apply(final InvoicePaymentModelDao input) {
+                return input.getPaymentId() != null;
+            }
+        }));
 
         final Map<UUID, List<InvoicePaymentModelDao>> invoicePaymentsPerInvoiceId = new HashMap<UUID, List<InvoicePaymentModelDao>>();
         for (final InvoicePaymentModelDao invoicePayment : invoicePaymentsForAccount) {
