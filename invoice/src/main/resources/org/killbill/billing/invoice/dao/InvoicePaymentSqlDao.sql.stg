@@ -32,6 +32,18 @@ tableValues() ::= <<
 , :createdDate
 >>
 
+getByAccountRecordIdWithExistingPaymentId(accountRecordId) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where (<accountRecordIdField("t.")> = :accountRecordId or (<accountRecordIdField("t.")> is null and :accountRecordId is null))
+<andCheckSoftDeletionWithComma("t.")>
+AND payment_id IS NOT NULL
+<AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
+;
+>>
+
 getByPaymentId() ::= <<
   SELECT <allTableFields()>
   FROM <tableName()>
@@ -50,7 +62,7 @@ getPaymentsForCookieId() ::= <<
   ;
 >>
 
-getPaymentsForInvoice() ::= <<
+getAllPaymentsForInvoiceIncludedInit() ::= <<
   SELECT <allTableFields()>
   FROM <tableName()>
   WHERE invoice_id = :invoiceId
@@ -58,6 +70,8 @@ getPaymentsForInvoice() ::= <<
   <defaultOrderBy()>
   ;
 >>
+
+
 
 getInvoicePayments() ::= <<
     SELECT <allTableFields()>
