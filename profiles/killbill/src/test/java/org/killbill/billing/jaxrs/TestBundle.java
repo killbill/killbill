@@ -30,7 +30,6 @@ import org.killbill.billing.client.model.BlockingState;
 import org.killbill.billing.client.model.BlockingStates;
 import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Bundles;
-import org.killbill.billing.client.model.PluginProperty;
 import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -120,7 +119,6 @@ public class TestBundle extends TestJaxrsBase {
         assertEquals(newBundle.getAccountId(), newAccount.getAccountId());
     }
 
-
     @Test(groups = "slow", description = "Block a bundle")
     public void testBlockBundle() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
@@ -133,7 +131,7 @@ public class TestBundle extends TestJaxrsBase {
         final String bundleExternalKey = "93199";
 
         final Subscription entitlement = createEntitlement(accountJson.getAccountId(), bundleExternalKey, productName,
-                                                                       ProductCategory.BASE, term, true);
+                                                           ProductCategory.BASE, term, true);
 
         final Bundle bundle = killBillClient.getBundle(bundleExternalKey);
         assertEquals(bundle.getAccountId(), accountJson.getAccountId());
@@ -153,19 +151,15 @@ public class TestBundle extends TestJaxrsBase {
         final Subscription subscription2 = killBillClient.getSubscription(entitlement.getSubscriptionId());
         assertEquals(subscription2.getState(), EntitlementState.ACTIVE);
 
-        final BlockingStates blockingStates = killBillClient.getBlockingStates(accountJson.getAccountId(), null, ImmutableList.<String>of("service"), AuditLevel.FULL);
+        final BlockingStates blockingStates = killBillClient.getBlockingStates(accountJson.getAccountId(), null, ImmutableList.<String>of("service"), AuditLevel.FULL, basicRequestOptions());
         Assert.assertEquals(blockingStates.size(), 2);
 
-
-        final BlockingStates blockingStates2 = killBillClient.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, AuditLevel.FULL);
+        final BlockingStates blockingStates2 = killBillClient.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, AuditLevel.FULL, basicRequestOptions());
         Assert.assertEquals(blockingStates2.size(), 2);
 
-
-        final BlockingStates blockingStates3 = killBillClient.getBlockingStates(accountJson.getAccountId(), null, null, AuditLevel.FULL);
+        final BlockingStates blockingStates3 = killBillClient.getBlockingStates(accountJson.getAccountId(), null, null, AuditLevel.FULL, basicRequestOptions());
         Assert.assertEquals(blockingStates3.size(), 3);
     }
-
-
 
     @Test(groups = "slow", description = "Can paginate and search through all bundles")
     public void testBundlesPagination() throws Exception {

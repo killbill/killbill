@@ -28,7 +28,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.AuditLog;
@@ -674,12 +673,11 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Account accountWithBalance = killBillClient.getAccount(accountJson.getAccountId(), true, true);
 
-        final Invoice migrationInvoice = killBillClient.createMigrationInvoice(accountJson.getAccountId(), null, ImmutableList.<InvoiceItem>of(externalCharge), createdBy, reason, comment);
+        final Invoice migrationInvoice = killBillClient.createMigrationInvoice(accountJson.getAccountId(), null, ImmutableList.<InvoiceItem>of(externalCharge), basicRequestOptions());
         assertEquals(migrationInvoice.getBalance(), BigDecimal.ZERO);
         assertEquals(migrationInvoice.getItems().size(), 1);
         assertEquals(migrationInvoice.getItems().get(0).getAmount().compareTo(chargeAmount), 0);
         assertEquals(migrationInvoice.getItems().get(0).getCurrency(), accountJson.getCurrency());
-
 
         final List<Invoice> invoicesWithMigration = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, true);
         assertEquals(invoicesWithMigration.size(), 3);

@@ -37,6 +37,7 @@ import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillHttpClient;
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Tenant;
@@ -246,6 +247,7 @@ public class TestJaxrsBase extends KillbillClient {
         server.configure(config, getListeners(), getFilters());
         server.start();
     }
+
 
     protected Iterable<EventListener> getListeners() {
         return new Iterable<EventListener>() {
