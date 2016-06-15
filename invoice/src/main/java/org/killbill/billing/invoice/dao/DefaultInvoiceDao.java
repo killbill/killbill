@@ -728,7 +728,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     // extract entries by invoiceId (which is always set, as opposed to paymentId) and then filter based on type and
                     // paymentCookieId = transactionExternalKey
                     //
-                    final List<InvoicePaymentModelDao> invoicePayments = transactional.getPaymentsForInvoice(invoicePayment.getInvoiceId().toString(), context);
+                    final List<InvoicePaymentModelDao> invoicePayments = transactional.getAllPaymentsForInvoiceIncludedInit(invoicePayment.getInvoiceId().toString(), context);
                     final InvoicePaymentModelDao existingAttempt = Iterables.tryFind(invoicePayments, new Predicate<InvoicePaymentModelDao>() {
                         @Override
                         public boolean apply(final InvoicePaymentModelDao input) {

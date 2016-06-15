@@ -20,7 +20,11 @@
     <parent>
         <artifactId>killbill-profiles</artifactId>
         <groupId>org.kill-bill.billing</groupId>
+<<<<<<< HEAD
         <version>0.17.0.seventeen-SNAPSHOT</version>
+=======
+        <version>0.16.7-SNAPSHOT</version>
+>>>>>>> origin
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-profiles-killpay</artifactId>
