@@ -544,7 +544,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         Preconditions.checkArgument(actual == expected, errorMessage);
     }
 
-    protected Response createPaymentResponse(final UriInfo uriInfo, final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey) {
+    protected Response createPaymentResponse(final UriInfo uriInfo, final Payment payment, final TransactionType transactionType,
+                                             @Nullable final String transactionExternalKey) {
         final PaymentTransaction createdTransaction = findCreatedTransaction(payment, transactionType, transactionExternalKey);
         Preconditions.checkNotNull(createdTransaction, "No transaction of type '%s' found", transactionType);
 

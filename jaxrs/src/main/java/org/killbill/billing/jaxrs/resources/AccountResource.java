@@ -1032,8 +1032,8 @@ public class AccountResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
-        return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+        return super.createCustomFields(UUID.fromString(id), customFields, context.createContext(createdBy, reason,
+                                             comment, request), uriInfo);
     }
 
     @TimedResource
