@@ -49,7 +49,7 @@ public class TestAdmin extends TestJaxrsBase {
         authTransaction.setPaymentExternalKey(paymentExternalKey);
         authTransaction.setTransactionExternalKey(authTransactionExternalKey);
         authTransaction.setTransactionType("AUTHORIZE");
-        final Payment authPayment = killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction, createdBy, reason, comment);
+        final Payment authPayment = killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction, basicRequestOptions());
 
         // First fix transactionStatus and paymentSstate (but not lastSuccessPaymentState
         // Note that state is not consistent between TransactionStatus and lastSuccessPaymentState but we don't care.
@@ -88,7 +88,7 @@ public class TestAdmin extends TestJaxrsBase {
         captureTransaction.setPaymentExternalKey(payment.getPaymentExternalKey());
         captureTransaction.setTransactionExternalKey(capture1TransactionExternalKey);
         try {
-            killBillClient.captureAuthorization(captureTransaction, createdBy, reason, comment);
+            killBillClient.captureAuthorization(captureTransaction, basicRequestOptions());
             if (expectException) {
                 Assert.fail("Capture should not succeed, after auth was moved to a PAYMENT_FAILURE");
             }
