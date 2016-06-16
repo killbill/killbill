@@ -96,7 +96,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                                                        InvoiceItemType.FIXED,
                                                                                                                        InvoiceItemType.RECURRING,
                                                                                                                        InvoiceItemType.TAX,
-                                                                                                                       InvoiceItemType.USAGE);
+                                                                                                                       InvoiceItemType.USAGE,
+                                                                                                                       InvoiceItemType.PARENT_SUMMARY);
 
     private final NextBillingDatePoster nextBillingDatePoster;
     private final PersistentBus eventBus;

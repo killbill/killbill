@@ -60,4 +60,14 @@ public class InvoiceModelDaoHelper {
                                                                        }
                                                                    }));
     }
+
+    public static BigDecimal getAmountCharged(final InvoiceModelDao invoiceModelDao) {
+        return InvoiceCalculatorUtils.computeInvoiceAmountCharged(invoiceModelDao.getCurrency(),
+                                                            Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
+                                                                @Override
+                                                                public InvoiceItem apply(final InvoiceItemModelDao input) {
+                                                                    return InvoiceItemFactory.fromModelDao(input);
+                                                                }
+                                                            }));
+    }
 }

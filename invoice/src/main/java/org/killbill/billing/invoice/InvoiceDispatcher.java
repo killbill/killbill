@@ -20,6 +20,7 @@ package org.killbill.billing.invoice;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -66,6 +67,7 @@ import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceNotificationInternalEvent;
 import org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent;
+import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -77,6 +79,7 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFu
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
+import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
@@ -87,6 +90,7 @@ import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -712,14 +716,14 @@ public class InvoiceDispatcher {
         final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(account.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));
         final InternalCallContext parentContext = internalCallContextFactory.createInternalCallContext(parentAccountRecordId, context);
 
-        BigDecimal childInvoiceAmount = childInvoice.getChargedAmount();
-        InvoiceModelDao parentInvoice = invoiceDao.getParentDraftInvoice(account.getParentAccountId(), parentContext);
+        BigDecimal childInvoiceAmount = InvoiceCalculatorUtils.computeChildInvoiceAmount(childInvoice.getCurrency(), childInvoice.getInvoiceItems());
+        InvoiceModelDao draftParentInvoice = invoiceDao.getParentDraftInvoice(account.getParentAccountId(), parentContext);
 
         final DateTime today = clock.getNow(account.getTimeZone());
         final String description = account.getExternalKey().concat(" summary");
-        if (parentInvoice != null) {
+        if (draftParentInvoice != null) {
 
-            for (InvoiceItemModelDao item : parentInvoice.getInvoiceItems()) {
+            for (InvoiceItemModelDao item : draftParentInvoice.getInvoiceItems()) {
                 if ((item.getChildAccountId() != null) && item.getChildAccountId().equals(childInvoice.getAccountId())) {
                     // update child item amount for existing parent invoice item
                     BigDecimal newChildInvoiceAmount = childInvoiceAmount.add(item.getAmount());
@@ -729,26 +733,81 @@ public class InvoiceDispatcher {
             }
 
             // new item when the parent invoices does not have this child item yet
-            final ParentInvoiceItem newParentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
-            parentInvoice.addInvoiceItem(new InvoiceItemModelDao(newParentInvoiceItem));
+            final ParentInvoiceItem newParentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
+            draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(newParentInvoiceItem));
 
             List<InvoiceModelDao> invoices = new ArrayList<InvoiceModelDao>();
-            invoices.add(parentInvoice);
+            invoices.add(draftParentInvoice);
             invoiceDao.createInvoices(invoices, parentContext);
         } else {
-            parentInvoice = new InvoiceModelDao(account.getParentAccountId(), today.toLocalDate(), account.getCurrency(), InvoiceStatus.DRAFT, true);
-            InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
-            parentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
+            // do nothing if child invoice has negative amount because it's a credit and it will be use in next invoice
+            if (childInvoiceAmount.compareTo(BigDecimal.ZERO) < 0) return;
+
+            draftParentInvoice = new InvoiceModelDao(account.getParentAccountId(), today.toLocalDate(), account.getCurrency(), InvoiceStatus.DRAFT, true);
+            InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
+            draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
 
             // build account date time zone
             final FutureAccountNotifications futureAccountNotifications = new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of());
 
-            invoiceDao.createInvoice(parentInvoice, parentInvoice.getInvoiceItems(), true, futureAccountNotifications, parentContext);
+            invoiceDao.createInvoice(draftParentInvoice, draftParentInvoice.getInvoiceItems(), true, futureAccountNotifications, parentContext);
         }
 
         // save parent child invoice relation
-        final InvoiceParentChildModelDao invoiceRelation = new InvoiceParentChildModelDao(parentInvoice.getId(), childInvoiceId, account.getId());
+        final InvoiceParentChildModelDao invoiceRelation = new InvoiceParentChildModelDao(draftParentInvoice.getId(), childInvoiceId, account.getId());
         invoiceDao.createParentChildInvoiceRelation(invoiceRelation, parentContext);
+
+    }
+
+    public void processParentInvoiceForAdjustments(final ImmutableAccountData account, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
+
+        final InvoiceModelDao childInvoiceModelDao = invoiceDao.getById(childInvoiceId, context);
+        final Invoice childInvoice = new DefaultInvoice(childInvoiceModelDao);
+        final InvoiceModelDao parentInvoice = childInvoiceModelDao.getParentInvoice();
+
+        if (parentInvoice == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_MISSING_PARENT_INVOICE, childInvoiceModelDao.getId());
+        }
+
+        final InvoiceItemModelDao childInvoiceItemAdjustment = Iterables.find(childInvoiceModelDao.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
+            @Override
+            public boolean apply(@Nullable final InvoiceItemModelDao input) {
+                return input.getType().equals(InvoiceItemType.ITEM_ADJ) || input.getType().equals(InvoiceItemType.REPAIR_ADJ);
+            }
+        });
+        // TODO should I add a NPE check?
+        final BigDecimal childInvoiceAdjustmentAmount = childInvoiceItemAdjustment.getAmount();
+
+        final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(account.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));
+        final InternalCallContext parentContext = internalCallContextFactory.createInternalCallContext(parentAccountRecordId, context);
+        final DateTime today = clock.getNow(account.getTimeZone());
+        final String description = "Adjustment for account ".concat(account.getExternalKey());
+
+        final InvoiceItemModelDao parentInvoiceItemForChild = Iterables.find(parentInvoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
+            @Override
+            public boolean apply(@Nullable final InvoiceItemModelDao input) {
+                return childInvoice.getAccountId().equals(input.getChildAccountId());
+            }
+        });
+
+        if (parentInvoice.getStatus().equals(InvoiceStatus.DRAFT)) {
+            // update item amount
+            BigDecimal newParentInvoiceItemAmount = childInvoiceAdjustmentAmount.add(parentInvoiceItemForChild.getAmount());
+            invoiceDao.updateInvoiceItemAmount(parentInvoiceItemForChild.getId(), newParentInvoiceItemAmount, parentContext);
+        } else {
+            // add an item adjustment
+            final ItemAdjInvoiceItem parentInvoiceItemAdjustment = new ItemAdjInvoiceItem(UUIDs.randomUUID(),
+                                                                                          context.getCreatedDate(),
+                                                                                          parentInvoiceItemForChild.getInvoiceId(),
+                                                                                          parentInvoiceItemForChild.getAccountId(),
+                                                                                          context.getCreatedDate().toLocalDate(),
+                                                                                          description,
+                                                                                          childInvoiceAdjustmentAmount,
+                                                                                          account.getCurrency(),
+                                                                                          parentInvoiceItemForChild.getId());
+            parentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItemAdjustment));
+            invoiceDao.createInvoices(Arrays.asList(parentInvoice), parentContext);
+        }
 
     }
 

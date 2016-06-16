@@ -89,6 +89,27 @@ public abstract class InvoiceCalculatorUtils {
         return KillBillMoney.of(invoiceBalance, currency);
     }
 
+    public static BigDecimal computeChildInvoiceAmount(final Currency currency,
+                                                       @Nullable final Iterable<InvoiceItem> invoiceItems) {
+
+        final Iterable<InvoiceItem> chargeItems = Iterables.filter(invoiceItems, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(@Nullable final InvoiceItem input) {
+                return isCharge(input);
+            }
+        });
+
+        if (Iterables.isEmpty(chargeItems)) {
+            // return only credit amount to be subtracted to parent item amount
+            return computeInvoiceAmountCredited(currency, invoiceItems).negate();
+        }
+
+        final BigDecimal chargedAmount = computeInvoiceAmountCharged(currency, invoiceItems)
+                .add(computeInvoiceAmountCredited(currency, invoiceItems))
+                .add(computeInvoiceAmountAdjustedForAccountCredit(currency, invoiceItems));
+        return KillBillMoney.of(chargedAmount, currency);
+    }
+
     // Snowflake for the CREDIT_ADJ on its own invoice
     private static BigDecimal computeInvoiceAmountAdjustedForAccountCredit(final Currency currency, final Iterable<InvoiceItem> invoiceItems) {
         BigDecimal amountAdjusted = BigDecimal.ZERO;
