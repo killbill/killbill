@@ -32,11 +32,15 @@ import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
+import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
+import org.killbill.commons.request.Request;
+import org.killbill.commons.request.RequestData;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -86,6 +90,14 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                                                   }
                                               },
                                               testPaymentControlPluginApi);
+
+        // Required for re-entrant locks to work
+        Request.setPerThreadRequestData(new RequestData(UUID.randomUUID().toString()));
+    }
+
+    @AfterMethod(groups = "slow")
+    public void tearDown() throws Exception {
+        Request.resetPerThreadRequestData();
     }
 
     // Verify Payment control API can be used to change the paymentMethodId on the fly and this is reflected in the created Payment.
@@ -98,6 +110,66 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.TEN, Currency.USD, UUID.randomUUID().toString(),
                                                                                  UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getPaymentMethodId(), newPaymentMethodId);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateAuthPendingWithControlCompleteWithControl() throws PaymentApiException {
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+
+        Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, UUID.randomUUID().toString(),
+                                                                           UUID.randomUUID().toString(), pendingPluginProperties, PAYMENT_OPTIONS, callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+
+        payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
+                                                                   payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+    }
+
+    @Test(groups = "slow")
+    public void testCreateAuthPendingWithControlCompleteNoControl() throws PaymentApiException {
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+
+        Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, UUID.randomUUID().toString(),
+                                                                           UUID.randomUUID().toString(), pendingPluginProperties, PAYMENT_OPTIONS, callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+
+        payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
+                                                 payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+    }
+
+    @Test(groups = "slow")
+    public void testCreateAuthPendingNoControlCompleteWithControl() throws PaymentApiException {
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+
+        Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, UUID.randomUUID().toString(),
+                                                         UUID.randomUUID().toString(), pendingPluginProperties, callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+
+        payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
+                                                                   payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
     }
 
     @Test(groups = "slow")
@@ -174,7 +246,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
                 @Override
                 public Iterable<PluginProperty> getAdjustedPluginProperties() {
-                    return ImmutableList.of();
+                    return null;
                 }
             };
         }

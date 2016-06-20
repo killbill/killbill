@@ -17,8 +17,6 @@
 
 package org.killbill.billing.payment.api;
 
-import java.util.UUID;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
@@ -51,9 +49,9 @@ public class DefaultAdminPaymentApi implements AdminPaymentApi {
             throws PaymentApiException {
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(payment.getAccountId(), callContext);
-        paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), payment.getId(), paymentTransaction.getTransactionType(),
-                                                       currentPaymentStateName, lastSuccessPaymentState, paymentTransaction.getId(),
-                                                       transactionStatus, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
-                                                       paymentTransaction.getGatewayErrorCode(), paymentTransaction.getGatewayErrorMsg(), internalCallContext);
+        paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), null, payment.getId(), paymentTransaction.getTransactionType(),
+                                                           currentPaymentStateName, lastSuccessPaymentState, paymentTransaction.getId(),
+                                                           transactionStatus, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
+                                                           paymentTransaction.getGatewayErrorCode(), paymentTransaction.getGatewayErrorMsg(), internalCallContext);
     }
 }

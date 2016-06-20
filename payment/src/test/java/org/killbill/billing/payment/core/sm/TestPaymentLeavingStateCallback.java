@@ -98,7 +98,7 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         Assert.assertEquals(transactions.size(), 1);
 
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.CAPTURE).toString();
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), paymentId, TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), transactions.get(0).getAttemptId(), paymentId, TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            transactions.get(0).getId(), TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.BRL,
                                                            "foo", "bar", internalCallContext);
 
@@ -117,7 +117,7 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         Assert.assertEquals(transactions.size(), 1);
 
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.CAPTURE).toString();
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), paymentId, TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), transactions.get(0).getAttemptId(), paymentId, TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            transactions.get(0).getId(), TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.BRL,
                                                            "foo", "bar", internalCallContext);
 

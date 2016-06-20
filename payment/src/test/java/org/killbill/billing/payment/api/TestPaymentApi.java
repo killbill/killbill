@@ -1359,7 +1359,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         // Update the payment/transaction by hand to simulate a PENDING state.
         final PaymentTransaction paymentTransaction = initialPayment.getTransactions().get(0);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), initialPayment.getId(), TransactionType.AUTHORIZE, "AUTH_PENDING", "AUTH_PENDING",
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, initialPayment.getId(), TransactionType.AUTHORIZE, "AUTH_PENDING", "AUTH_PENDING",
                                                            paymentTransaction.getId(), TransactionStatus.PENDING, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
                                                            null, null, internalCallContext);
 
@@ -1435,7 +1435,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                ImmutableList.<PluginProperty>of(), callContext);
 
         // Hack the Database to make it look like it was a failure
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, "AUTH_ERRORED", null,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, "AUTH_ERRORED", null,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.PLUGIN_FAILURE, null, null, null, null, internalCallContext);
         final PaymentSqlDao paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
         paymentSqlDao.updateLastSuccessPaymentStateName(payment.getId().toString(), "AUTH_ERRORED", null, internalCallContext);

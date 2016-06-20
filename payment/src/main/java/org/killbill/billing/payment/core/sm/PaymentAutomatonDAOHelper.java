@@ -128,6 +128,7 @@ public class PaymentAutomatonDAOHelper {
 
         final String lastSuccessPaymentState = paymentSMHelper.isSuccessState(currentPaymentStateName) ? currentPaymentStateName : null;
         paymentDao.updatePaymentAndTransactionOnCompletion(paymentStateContext.getAccount().getId(),
+                                                           paymentStateContext.getAttemptId(),
                                                            paymentStateContext.getPaymentId(),
                                                            paymentStateContext.getTransactionType(),
                                                            currentPaymentStateName,
