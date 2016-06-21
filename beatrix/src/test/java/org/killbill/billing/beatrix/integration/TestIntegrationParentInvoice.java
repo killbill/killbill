@@ -28,7 +28,6 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
-import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
@@ -345,7 +344,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
-        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+        assertEquals(childInvoice.getNumberOfItems(), 1);
 
         // Second Parent invoice over Recurring period
         assertEquals(parentInvoices.size(), 2);
@@ -369,7 +368,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // ITEM_ADJ : $ -10
 
         childInvoice = invoiceUserApi.getInvoice(childInvoice.getId(), callContext);
-        assertEquals(childInvoice.getInvoiceItems().size(), 2);
+        assertEquals(childInvoice.getNumberOfItems(), 2);
         assertEquals(childInvoice.getBalance().compareTo(BigDecimal.valueOf(239.95)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
@@ -421,7 +420,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
-        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+        assertEquals(childInvoice.getNumberOfItems(), 1);
 
         // Second Parent invoice over Recurring period
         assertEquals(parentInvoices.size(), 2);
@@ -434,7 +433,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getChargedAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
 
         // issue a $10 adj in a paid invoice
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_ADJUSTMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.insertInvoiceItemAdjustment(childAccount.getId(),
                                                    childInvoice.getId(),
                                                    childInvoice.getInvoiceItems().get(0).getId(),
@@ -444,12 +443,12 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // expected child invoice
-        // RECURRING : $ 20
+        // RECURRING : $ 249.95
         // ITEM_ADJ : $ -10
         // CBA_ADJ : $ +10
 
         childInvoice = invoiceUserApi.getInvoice(childInvoice.getId(), callContext);
-        assertEquals(childInvoice.getInvoiceItems().size(), 3);
+        assertEquals(childInvoice.getNumberOfItems(), 3);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
@@ -459,11 +458,9 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         // check parent invoices
         parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);
-        assertEquals(parentInvoice.getInvoiceItems().size(), 3);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
         assertEquals(parentInvoice.getPaidAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(parentInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
-        assertEquals(parentInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
-        assertEquals(parentInvoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
 
     }
 
@@ -499,7 +496,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
-        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+        assertEquals(childInvoice.getNumberOfItems(), 1);
 
         // Second Parent invoice over Recurring period
         assertEquals(parentInvoices.size(), 2);
@@ -528,7 +525,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
         // invoice 1
         childInvoice = childInvoices.get(1);
-        assertEquals(childInvoice.getInvoiceItems().size(), 2);
+        assertEquals(childInvoice.getNumberOfItems(), 2);
         assertEquals(childInvoice.getBalance().compareTo(BigDecimal.valueOf(16.66)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
@@ -537,7 +534,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         // invoice 2
         childInvoice = childInvoices.get(2);
-        assertEquals(childInvoice.getInvoiceItems().size(), 2);
+        assertEquals(childInvoice.getNumberOfItems(), 2);
         assertEquals(childInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
         assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(-233.29)), 0);
@@ -594,7 +591,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
-        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+        assertEquals(childInvoice.getNumberOfItems(), 1);
 
         // Second Parent invoice over Recurring period
         assertEquals(parentInvoices.size(), 2);
@@ -621,13 +618,13 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
         // invoice 1
         childInvoice = childInvoices.get(1);
-        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+        assertEquals(childInvoice.getNumberOfItems(), 1);
         assertEquals(childInvoice.getChargedAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
 
         // invoice 2
         childInvoice = childInvoices.get(2);
-        assertEquals(childInvoice.getInvoiceItems().size(), 2);
+        assertEquals(childInvoice.getNumberOfItems(), 2);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
         assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(-241.62)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
@@ -681,7 +678,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
-        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+        assertEquals(childInvoice.getNumberOfItems(), 1);
 
         // Second Parent invoice over Recurring period
         assertEquals(parentInvoices.size(), 2);
@@ -708,13 +705,13 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
         // invoice 1
         childInvoice = childInvoices.get(1);
-        assertEquals(childInvoice.getInvoiceItems().size(), 1);
+        assertEquals(childInvoice.getNumberOfItems(), 1);
         assertEquals(childInvoice.getChargedAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
 
         // invoice 2
         childInvoice = childInvoices.get(2);
-        assertEquals(childInvoice.getInvoiceItems().size(), 2);
+        assertEquals(childInvoice.getNumberOfItems(), 2);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
         assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(-241.62)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
@@ -748,7 +745,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoices.size(), 5);
 
         childInvoice = childInvoices.get(4);
-        assertEquals(childInvoice.getInvoiceItems().size(), 2);
+        assertEquals(childInvoice.getNumberOfItems(), 2);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
