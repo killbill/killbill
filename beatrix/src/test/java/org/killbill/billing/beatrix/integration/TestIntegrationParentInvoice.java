@@ -283,7 +283,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.addDays(1);
         assertListenerStatus();
 
-        // add credit to child account when invoice is still unpaid
+        // add credit to child account after invoice has been paid
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         invoiceUserApi.insertCredit(childAccount.getId(), BigDecimal.TEN, clock.getUTCToday(), Currency.USD, true, "test", callContext);
         assertListenerStatus();
@@ -518,12 +518,12 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // expected invoices
 
         // invoice 2:
-        // REPAIR_ADJ $ -15
-        // CBA_ADJ $ 15
+        // REPAIR_ADJ $ -233.29
+        // CBA_ADJ $ 233.29
 
         // Invoice 1:
-        // RECURRING : $ 20
-        // CBA_ADJ $ -15
+        // RECURRING : $ 249.95
+        // CBA_ADJ $ -233.29
 
         childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
         // invoice 1
@@ -531,24 +531,30 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().size(), 2);
         assertEquals(childInvoice.getBalance().compareTo(BigDecimal.valueOf(16.66)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-233.29)), 0);
 
         // invoice 2
         childInvoice = childInvoices.get(2);
         assertEquals(childInvoice.getInvoiceItems().size(), 2);
         assertEquals(childInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(-233.29)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(233.29)), 0);
 
         // check if parent invoice was updated
         parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
-        assertEquals(parentInvoice.getNumberOfItems(), 1);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
         assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(16.66)), 0);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(16.66)), 0);
 
     }
 
@@ -606,11 +612,11 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // expected child invoices
 
         // Invoice 2:
-        // REPAIR_ADJ $ -15
-        // CBA_ADJ $ 15
+        // REPAIR_ADJ $ -241.62
+        // CBA_ADJ $ 241.62
 
         // Invoice 1: # unchanged
-        // RECURRING : $ 20
+        // RECURRING : $ 249.95
 
         childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
         // invoice 1
@@ -693,11 +699,11 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // expected child invoices
 
         // Invoice 2:
-        // REPAIR_ADJ $ -15
-        // CBA_ADJ $ 15
+        // REPAIR_ADJ $ -241.62
+        // CBA_ADJ $ 241.62
 
         // Invoice 1: # unchanged
-        // RECURRING : $ 20
+        // RECURRING : $ 249.95
 
         childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
         // invoice 1
