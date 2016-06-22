@@ -76,18 +76,6 @@ public class DefaultControlInitiated implements LeavingStateCallback {
             if (!paymentTransactionModelDaos.isEmpty()) {
                 paymentTransactionModelDaoCandidate = paymentTransactionModelDaos.get(paymentTransactionModelDaos.size() - 1);
             }
-        } else if (stateContext.getPaymentId() != null) {
-            final List<PaymentTransactionModelDao> paymentTransactionModelDaos = paymentDao.getTransactionsForPayment(stateContext.getPaymentId(), stateContext.getInternalCallContext());
-            Preconditions.checkArgument(!paymentTransactionModelDaos.isEmpty(), "paymentTransactions cannot be empty for id " + stateContext.getPaymentId());
-            paymentTransactionModelDaoCandidate = paymentTransactionModelDaos.get(paymentTransactionModelDaos.size() - 1);
-        } else if (stateContext.getPaymentExternalKey() != null) {
-            final PaymentModelDao payment = paymentDao.getPaymentByExternalKey(stateContext.getPaymentExternalKey(), stateContext.getInternalCallContext());
-            if (payment != null) {
-                final List<PaymentTransactionModelDao> paymentTransactionModelDaos = paymentDao.getTransactionsForPayment(payment.getId(), stateContext.getInternalCallContext());
-                if (!paymentTransactionModelDaos.isEmpty()) {
-                    paymentTransactionModelDaoCandidate = paymentTransactionModelDaos.get(paymentTransactionModelDaos.size() - 1);
-                }
-            }
         }
         final PaymentTransactionModelDao paymentTransactionModelDao = paymentTransactionModelDaoCandidate != null && TRANSIENT_TRANSACTION_STATUSES.contains(paymentTransactionModelDaoCandidate.getTransactionStatus()) ? paymentTransactionModelDaoCandidate : null;
 
