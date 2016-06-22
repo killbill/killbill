@@ -20,7 +20,6 @@ package org.killbill.billing.payment.core.sm;
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -190,7 +189,7 @@ public class PaymentAutomatonRunner {
                 throw new IllegalStateException("Unsupported transaction type " + transactionType);
         }
 
-        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback, account.getId(), getInvoiceId(properties));
+        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback);
 
         return paymentStateContext.getPaymentId();
     }
@@ -207,8 +206,7 @@ public class PaymentAutomatonRunner {
     }
 
     protected void runStateMachineOperation(final String initialStateName, final TransactionType transactionType,
-                                            final LeavingStateCallback leavingStateCallback, final OperationCallback operationCallback, final EnteringStateCallback enteringStateCallback,
-                                            final UUID accountId, final String invoiceId) throws PaymentApiException {
+                                            final LeavingStateCallback leavingStateCallback, final OperationCallback operationCallback, final EnteringStateCallback enteringStateCallback) throws PaymentApiException {
         try {
             final StateMachine initialStateMachine = paymentSMHelper.getStateMachineForStateName(initialStateName);
             final State initialState = initialStateMachine.getState(initialStateName);
@@ -226,17 +224,6 @@ public class PaymentAutomatonRunner {
                 throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
             }
         }
-    }
-
-    private String getInvoiceId(final Iterable<PluginProperty> properties) {
-        final PluginProperty invoiceProperty = Iterables.tryFind(properties, new Predicate<PluginProperty>() {
-            @Override
-            public boolean apply(final PluginProperty input) {
-                return InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID.equals(input.getKey());
-            }
-        }).orNull();
-
-        return invoiceProperty == null || invoiceProperty.getValue() == null ? null : invoiceProperty.getValue().toString();
     }
 
     private UUID retrievePaymentId(@Nullable final String paymentExternalKey, final InternalCallContext internalCallContext) {
