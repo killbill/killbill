@@ -114,11 +114,12 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCreateAuthPendingWithControlCompleteWithControl() throws PaymentApiException {
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, UUID.randomUUID().toString(),
-                                                                           UUID.randomUUID().toString(), pendingPluginProperties, PAYMENT_OPTIONS, callContext);
+                                                                           paymentTransactionExternalKey, pendingPluginProperties, PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
@@ -130,15 +131,44 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateAuthUnknownWithControlCompleteWithControl() throws PaymentApiException {
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+
+        Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, UUID.randomUUID().toString(),
+                                                                           paymentTransactionExternalKey, pendingPluginProperties, PAYMENT_OPTIONS, callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+
+        payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
+                                                                   payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        // TODO A second transaction is created - seems like a bug
+        Assert.assertEquals(payment.getTransactions().size(), 2);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+        Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.UNKNOWN);
+        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
+        Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
     }
 
     @Test(groups = "slow")
     public void testCreateAuthPendingWithControlCompleteNoControl() throws PaymentApiException {
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, UUID.randomUUID().toString(),
-                                                                           UUID.randomUUID().toString(), pendingPluginProperties, PAYMENT_OPTIONS, callContext);
+                                                                           paymentTransactionExternalKey, pendingPluginProperties, PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
@@ -150,15 +180,44 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateAuthUnknownWithControlCompleteNoControl() throws PaymentApiException {
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+
+        Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, UUID.randomUUID().toString(),
+                                                                           paymentTransactionExternalKey, pendingPluginProperties, PAYMENT_OPTIONS, callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+
+        payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
+                                                 payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        // TODO A second transaction is created - seems like a bug
+        Assert.assertEquals(payment.getTransactions().size(), 2);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+        Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.UNKNOWN);
+        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+        Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
+        Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
     }
 
     @Test(groups = "slow")
     public void testCreateAuthPendingNoControlCompleteWithControl() throws PaymentApiException {
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, UUID.randomUUID().toString(),
-                                                         UUID.randomUUID().toString(), pendingPluginProperties, callContext);
+                                                         paymentTransactionExternalKey, pendingPluginProperties, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
@@ -170,6 +229,34 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateAuthUnknownNoControlCompleteWithControl() throws PaymentApiException {
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+
+        Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, UUID.randomUUID().toString(),
+                                                         paymentTransactionExternalKey, pendingPluginProperties, callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
+        Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+
+        payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
+                                                                   payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+        Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
+        Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        // TODO A second transaction is created - seems like a bug
+        Assert.assertEquals(payment.getTransactions().size(), 2);
+        Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+        Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.UNKNOWN);
+        Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
+        Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
     }
 
     @Test(groups = "slow")
