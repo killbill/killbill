@@ -216,22 +216,4 @@ public class PaymentStateMachineHelper {
     public boolean isSuccessState(final String stateName) {
         return stateName.endsWith("SUCCESS") || stateName.startsWith("CHARGEBACK");
     }
-
-    public final State fetchNextState(final String prevStateName, final boolean isSuccess) throws MissingEntryException {
-        final StateMachine stateMachine = getStateMachineForStateName(prevStateName);
-        final Transition transition = Iterables.tryFind(ImmutableList.copyOf(stateMachine.getTransitions()), new Predicate<Transition>() {
-            @Override
-            public boolean apply(final Transition input) {
-                // This works because there is only one operation defined for a given state machine, which is our model for PaymentStates.xml
-                return input.getInitialState().getName().equals(prevStateName) &&
-                       input.getOperationResult().equals(isSuccess ? OperationResult.SUCCESS : OperationResult.FAILURE);
-            }
-        }).orNull();
-        return transition != null ? transition.getFinalState() : null;
-    }
-
-    public String[] getErroredStateNames() {
-        return errorStateNames;
-    }
-
 }
