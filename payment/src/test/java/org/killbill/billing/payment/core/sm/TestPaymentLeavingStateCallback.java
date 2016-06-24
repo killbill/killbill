@@ -88,61 +88,6 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
         Assert.assertEquals(paymentDao.getTransactionsForPayment(paymentId, internalCallContext).size(), 2);
     }
 
-    @Test(groups = "slow", expectedExceptions = OperationException.class)
-    public void testLeaveStateForConflictingPaymentTransactionExternalKey() throws Exception {
-        final UUID paymentId = UUID.randomUUID();
-        setUp(paymentId);
-
-        // Verify the payment has only one transaction
-        final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(paymentId, internalCallContext);
-        Assert.assertEquals(transactions.size(), 1);
-
-        final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.CAPTURE).toString();
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), transactions.get(0).getAttemptId(), paymentId, TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
-                                                           transactions.get(0).getId(), TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.BRL,
-                                                           "foo", "bar", internalCallContext);
-
-        // Will validate the validateUniqueTransactionExternalKey logic for when we reuse the same payment transactionExternalKey
-        callback.leavingState(state);
-
-    }
-
-    @Test(groups = "slow", expectedExceptions = OperationException.class)
-    public void testLeaveStateForConflictingPaymentTransactionExternalKeyAcrossAccounts() throws Exception {
-        final UUID paymentId = UUID.randomUUID();
-        setUp(paymentId);
-
-        // Verify the payment has only one transaction
-        final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(paymentId, internalCallContext);
-        Assert.assertEquals(transactions.size(), 1);
-
-        final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.CAPTURE).toString();
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), transactions.get(0).getAttemptId(), paymentId, TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
-                                                           transactions.get(0).getId(), TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.BRL,
-                                                           "foo", "bar", internalCallContext);
-
-        internalCallContext.setAccountRecordId(123L);
-
-        paymentStateContext = new PaymentStateContext(true,
-                                                      paymentId,
-                                                      null,
-                                                      null,
-                                                      paymentStateContext.getPaymentExternalKey(),
-                                                      paymentStateContext.getPaymentTransactionExternalKey(),
-                                                      paymentStateContext.getTransactionType(),
-                                                      paymentStateContext.getAccount(),
-                                                      paymentStateContext.getPaymentMethodId(),
-                                                      paymentStateContext.getAmount(),
-                                                      paymentStateContext.getCurrency(),
-                                                      paymentStateContext.shouldLockAccountAndDispatch(),
-                                                      paymentStateContext.getOverridePluginOperationResult(),
-                                                      paymentStateContext.getProperties(),
-                                                      internalCallContext,
-                                                      callContext);
-
-        callback.leavingState(state);
-    }
-
     private void verifyPaymentTransaction() {
         Assert.assertNotNull(paymentStateContext.getPaymentTransactionModelDao().getPaymentId());
         Assert.assertEquals(paymentStateContext.getPaymentTransactionModelDao().getTransactionExternalKey(), paymentStateContext.getPaymentTransactionExternalKey());

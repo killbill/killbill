@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
@@ -147,18 +148,19 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
-        payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
-                                                                   payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
-        Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
+        try {
+            payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
+                                                                       payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+        Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
-        // TODO A second transaction is created - seems like a bug
-        Assert.assertEquals(payment.getTransactions().size(), 2);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.UNKNOWN);
         Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
-        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
-        Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
-        Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
     }
 
     @Test(groups = "slow")
@@ -196,18 +198,19 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
-        payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
-                                                 payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), callContext);
-        Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
+        try {
+            payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
+                                                     payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+        Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
-        // TODO A second transaction is created - seems like a bug
-        Assert.assertEquals(payment.getTransactions().size(), 2);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.UNKNOWN);
         Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
-        Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
-        Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
-        Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
     }
 
     @Test(groups = "slow")
@@ -245,18 +248,19 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
-        payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
-                                                                   payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
-        Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
+        try {
+            payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
+                                                                       payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+        Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
-        // TODO A second transaction is created - seems like a bug
-        Assert.assertEquals(payment.getTransactions().size(), 2);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.UNKNOWN);
         Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
-        Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
-        Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
-        Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
     }
 
     @Test(groups = "slow")

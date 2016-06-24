@@ -49,7 +49,9 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
+import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -70,6 +72,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -327,31 +330,115 @@ public class PaymentProcessor extends ProcessorBase {
                                   );
     }
 
-    private Payment performOperation(final boolean isApiPayment, @Nullable final UUID attemptId,
-                                     final TransactionType transactionType, final Account account,
-                                     @Nullable final UUID paymentMethodId, @Nullable final UUID paymentId, @Nullable final UUID transactionId,
-                                     @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                                     @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey,
-                                     final boolean shouldLockAccountAndDispatch, @Nullable final OperationResult overridePluginOperationResult,
+    private Payment performOperation(final boolean isApiPayment,
+                                     @Nullable final UUID attemptId,
+                                     final TransactionType transactionType,
+                                     final Account account,
+                                     @Nullable final UUID paymentMethodId,
+                                     @Nullable final UUID paymentId,
+                                     @Nullable final UUID transactionId,
+                                     @Nullable final BigDecimal amount,
+                                     @Nullable final Currency currency,
+                                     @Nullable final String paymentExternalKey,
+                                     @Nullable final String paymentTransactionExternalKey,
+                                     final boolean shouldLockAccountAndDispatch,
+                                     @Nullable final OperationResult overridePluginOperationResult,
                                      final Iterable<PluginProperty> properties,
-                                     final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        final UUID nonNullPaymentId = paymentAutomatonRunner.run(isApiPayment,
-                                                                 transactionType,
-                                                                 account,
-                                                                 attemptId,
-                                                                 paymentMethodId,
-                                                                 paymentId,
-                                                                 transactionId,
-                                                                 paymentExternalKey,
-                                                                 paymentTransactionExternalKey,
-                                                                 amount,
-                                                                 currency,
-                                                                 shouldLockAccountAndDispatch,
-                                                                 overridePluginOperationResult,
-                                                                 properties,
-                                                                 callContext,
-                                                                 internalCallContext);
+                                     final CallContext callContext,
+                                     final InternalCallContext internalCallContext) throws PaymentApiException {
+        final PaymentStateContext paymentStateContext = paymentAutomatonRunner.buildPaymentStateContext(isApiPayment,
+                                                                                                        transactionType,
+                                                                                                        account,
+                                                                                                        attemptId,
+                                                                                                        paymentMethodId != null ? paymentMethodId : account.getPaymentMethodId(),
+                                                                                                        paymentId,
+                                                                                                        transactionId,
+                                                                                                        paymentExternalKey,
+                                                                                                        paymentTransactionExternalKey,
+                                                                                                        amount,
+                                                                                                        currency,
+                                                                                                        shouldLockAccountAndDispatch,
+                                                                                                        overridePluginOperationResult,
+                                                                                                        properties,
+                                                                                                        callContext,
+                                                                                                        internalCallContext);
+        final PaymentAutomatonDAOHelper daoHelper = paymentAutomatonRunner.buildDaoHelper(paymentStateContext, internalCallContext);
+
+        String currentStateName = null;
+        if (paymentStateContext.getPaymentId() != null) {
+            if (paymentStateContext.getTransactionId() != null || paymentStateContext.getPaymentTransactionExternalKey() != null) {
+                // If a transaction id or key is passed, we are maybe completing an existing transaction (unless a new key was provided)
+                PaymentTransactionModelDao transactionToComplete = findTransactionToComplete(paymentStateContext, daoHelper);
+
+                if (transactionToComplete != null) {
+                    // For completion calls, always invoke the Janitor first to get the latest state. The state machine will then
+                    // prevent disallowed transitions in case the state couldn't be fixed (or if it's already in a final state).
+                    getPayment(paymentStateContext.getPaymentId(), true, properties, callContext, internalCallContext);
+
+                    // Get the latest state (TODO refactor Janitor code below to avoid extra DAO query)
+                    transactionToComplete = daoHelper.getPaymentDao().getPaymentTransaction(transactionToComplete.getId(), paymentStateContext.getInternalCallContext());
+
+                    // We can't tell where we should be in the state machine - bail (cannot be enforced by the state machine unfortunately because UNKNOWN and PLUGIN_FAILURE are both treated as EXCEPTION)
+                    if (transactionToComplete.getTransactionStatus() == TransactionStatus.UNKNOWN) {
+                        throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_OPERATION, paymentStateContext.getTransactionType(), transactionToComplete.getTransactionStatus());
+                    }
+
+                    paymentStateContext.setPaymentTransactionModelDao(transactionToComplete);
+                }
+            }
+
+            // Get the latest state of the payment (this will also throw a proper exception is a bogus paymentId was passed)
+            final PaymentModelDao paymentModelDao = daoHelper.getPayment();
+            // Use the original payment method id of the payment being completed
+            paymentStateContext.setPaymentMethodId(paymentModelDao.getPaymentMethodId());
+            // We always take the last successful state name to permit retries on failures
+            currentStateName = paymentModelDao.getLastSuccessStateName();
+        }
+
+        // Sanity: no paymentMethodId was passed through API and account does not have a default paymentMethodId
+        if (paymentStateContext.getPaymentMethodId() == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, paymentStateContext.getAccount().getId());
+        }
+
+        final UUID nonNullPaymentId = paymentAutomatonRunner.run(paymentStateContext, daoHelper, currentStateName, transactionType);
+
         return getPayment(nonNullPaymentId, true, properties, callContext, internalCallContext);
+    }
+
+    private PaymentTransactionModelDao findTransactionToComplete(final PaymentStateContext paymentStateContext, final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
+        final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext());
+
+        final Collection<PaymentTransactionModelDao> completionCandidates = new LinkedList<PaymentTransactionModelDao>();
+        for (final PaymentTransactionModelDao paymentTransactionModelDao : paymentTransactionsForCurrentPayment) {
+            // Check if we already have a transaction for that id or key
+            if (!(paymentStateContext.getTransactionId() != null && paymentTransactionModelDao.getId().equals(paymentStateContext.getTransactionId())) &&
+                !(paymentStateContext.getPaymentTransactionExternalKey() != null && paymentTransactionModelDao.getTransactionExternalKey().equals(paymentStateContext.getPaymentTransactionExternalKey()))) {
+                // Sanity: if not, prevent multiple PENDING transactions for initial calls (cannot be enforced by the state machine unfortunately)
+                if ((paymentTransactionModelDao.getTransactionType() == TransactionType.AUTHORIZE ||
+                     paymentTransactionModelDao.getTransactionType() == TransactionType.PURCHASE ||
+                     paymentTransactionModelDao.getTransactionType() == TransactionType.CREDIT) &&
+                    paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.PENDING) {
+                    final PaymentModelDao paymentModelDao = daoHelper.getPayment();
+                    throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_OPERATION, paymentTransactionModelDao.getTransactionType(), paymentModelDao.getStateName());
+                } else {
+                    continue;
+                }
+            }
+
+            // Sanity: if we already have a transaction for that id or key, the transaction type must match
+            if (paymentTransactionModelDao.getTransactionType() != paymentStateContext.getTransactionType()) {
+                final PaymentModelDao paymentModelDao = daoHelper.getPayment();
+                throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_OPERATION, paymentStateContext.getTransactionType(), paymentModelDao.getStateName());
+            }
+
+            // UNKNOWN transactions are potential candidates, we'll invoke the Janitor first though
+            if (paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.PENDING || paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.UNKNOWN) {
+                completionCandidates.add(paymentTransactionModelDao);
+            }
+        }
+
+        Preconditions.checkState(Iterables.<PaymentTransactionModelDao>size(completionCandidates) <= 1, "There should be at most one completion candidate");
+        return Iterables.<PaymentTransactionModelDao>getLast(completionCandidates, null);
     }
 
     // Used in bulk get API (getAccountPayments / getPayments)

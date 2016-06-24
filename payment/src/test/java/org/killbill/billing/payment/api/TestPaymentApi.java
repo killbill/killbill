@@ -1354,16 +1354,9 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String paymentExternalKey = "rouge";
         final String transactionExternalKey = "vert";
 
-        final Payment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, authAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
-                                                                      ImmutableList.<PluginProperty>of(), callContext);
+        final Payment initialPayment = createPayment(TransactionType.AUTHORIZE, null, paymentExternalKey, transactionExternalKey, authAmount, PaymentPluginStatus.PENDING);
 
-        // Update the payment/transaction by hand to simulate a PENDING state.
-        final PaymentTransaction paymentTransaction = initialPayment.getTransactions().get(0);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, initialPayment.getId(), TransactionType.AUTHORIZE, "AUTH_PENDING", "AUTH_PENDING",
-                                                           paymentTransaction.getId(), TransactionStatus.PENDING, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
-                                                           null, null, internalCallContext);
-
-        final Payment payment = paymentApi.notifyPendingTransactionOfStateChanged(account, paymentTransaction.getId(), true, callContext);
+        final Payment payment = paymentApi.notifyPendingTransactionOfStateChanged(account, initialPayment.getTransactions().get(0).getId(), true, callContext);
 
         assertEquals(payment.getExternalKey(), paymentExternalKey);
         assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
@@ -1372,15 +1365,15 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(payment.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(payment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
-        assertEquals(payment.getCurrency(), Currency.AED);
+        assertEquals(payment.getCurrency(), Currency.USD);
 
         assertEquals(payment.getTransactions().size(), 1);
         assertEquals(payment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
         assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
         assertEquals(payment.getTransactions().get(0).getAmount().compareTo(authAmount), 0);
-        assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.AED);
+        assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.USD);
         assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(authAmount), 0);
-        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.AED);
+        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.USD);
 
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.AUTHORIZE);
@@ -1581,7 +1574,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(TransactionType.PURCHASE, null, paymentExternalKey, transactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
             Assert.fail("PURCHASE transaction with same key should have failed");
         } catch (final PaymentApiException expected) {
-            Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+            Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
         }
     }
 
