@@ -368,7 +368,7 @@ public class PaymentProcessor extends ProcessorBase {
         if (paymentStateContext.getPaymentId() != null) {
             if (paymentStateContext.getTransactionId() != null || paymentStateContext.getPaymentTransactionExternalKey() != null) {
                 // If a transaction id or key is passed, we are maybe completing an existing transaction (unless a new key was provided)
-                PaymentTransactionModelDao transactionToComplete = findTransactionToComplete(paymentStateContext, daoHelper);
+                PaymentTransactionModelDao transactionToComplete = findTransactionToCompleteAndRunSanityChecks(paymentStateContext, daoHelper);
 
                 if (transactionToComplete != null) {
                     // For completion calls, always invoke the Janitor first to get the latest state. The state machine will then
@@ -405,7 +405,7 @@ public class PaymentProcessor extends ProcessorBase {
         return getPayment(nonNullPaymentId, true, properties, callContext, internalCallContext);
     }
 
-    private PaymentTransactionModelDao findTransactionToComplete(final PaymentStateContext paymentStateContext, final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
+    private PaymentTransactionModelDao findTransactionToCompleteAndRunSanityChecks(final PaymentStateContext paymentStateContext, final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
         final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext());
 
         final Collection<PaymentTransactionModelDao> completionCandidates = new LinkedList<PaymentTransactionModelDao>();
