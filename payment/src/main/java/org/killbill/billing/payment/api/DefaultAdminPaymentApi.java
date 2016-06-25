@@ -21,17 +21,20 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.PaymentConfig;
 
-public class DefaultAdminPaymentApi implements AdminPaymentApi {
+public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPaymentApi {
 
     private final PaymentDao paymentDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultAdminPaymentApi(final PaymentDao paymentDao, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultAdminPaymentApi(final PaymentConfig paymentConfig, final PaymentDao paymentDao, final InternalCallContextFactory internalCallContextFactory) {
+        super(paymentConfig);
         this.paymentDao = paymentDao;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -39,12 +42,21 @@ public class DefaultAdminPaymentApi implements AdminPaymentApi {
     @Override
     public void fixPaymentTransactionState(final Payment payment,
                                            final PaymentTransaction paymentTransaction,
-                                           final TransactionStatus transactionStatus,
+                                           @Nullable final TransactionStatus transactionStatusMaybeNull,
                                            @Nullable final String lastSuccessPaymentState,
                                            final String currentPaymentStateName,
                                            final Iterable<PluginProperty> properties,
                                            final CallContext callContext) throws PaymentApiException {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(payment.getAccountId(), callContext);
+
+        final TransactionStatus transactionStatus;
+        if (transactionStatusMaybeNull == null) {
+            checkNotNullParameter(paymentTransaction.getPaymentInfoPlugin(), "PaymentTransactionInfoPlugin");
+            transactionStatus = PaymentTransactionInfoPluginConverter.toTransactionStatus(paymentTransaction.getPaymentInfoPlugin());
+        } else {
+            transactionStatus = transactionStatusMaybeNull;
+        }
+
         paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(),
                                                            null,
                                                            payment.getId(),
