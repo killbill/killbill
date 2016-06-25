@@ -366,17 +366,27 @@ public class PaymentProcessor extends ProcessorBase {
 
         String currentStateName = null;
         if (paymentStateContext.getPaymentId() != null) {
+            PaymentModelDao paymentModelDao = daoHelper.getPayment();
             if (paymentStateContext.getTransactionId() != null || paymentStateContext.getPaymentTransactionExternalKey() != null) {
                 // If a transaction id or key is passed, we are maybe completing an existing transaction (unless a new key was provided)
-                PaymentTransactionModelDao transactionToComplete = findTransactionToCompleteAndRunSanityChecks(paymentStateContext, daoHelper);
+                final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext());
+                PaymentTransactionModelDao transactionToComplete = findTransactionToCompleteAndRunSanityChecks(paymentModelDao, paymentTransactionsForCurrentPayment, paymentStateContext);
 
                 if (transactionToComplete != null) {
                     // For completion calls, always invoke the Janitor first to get the latest state. The state machine will then
                     // prevent disallowed transitions in case the state couldn't be fixed (or if it's already in a final state).
-                    getPayment(paymentStateContext.getPaymentId(), true, properties, callContext, internalCallContext);
+                    final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), internalCallContext);
+                    final List<PaymentTransactionInfoPlugin> pluginTransactions = getPaymentTransactionInfoPlugins(plugin, paymentModelDao, properties, callContext);
+                    paymentModelDao = invokeJanitor(paymentModelDao, paymentTransactionsForCurrentPayment, pluginTransactions, internalCallContext);
 
-                    // Get the latest state (TODO refactor Janitor code below to avoid extra DAO query)
-                    transactionToComplete = daoHelper.getPaymentDao().getPaymentTransaction(transactionToComplete.getId(), paymentStateContext.getInternalCallContext());
+                    final UUID transactionToCompleteId = transactionToComplete.getId();
+                    transactionToComplete = Iterables.<PaymentTransactionModelDao>find(paymentTransactionsForCurrentPayment,
+                                                                                       new Predicate<PaymentTransactionModelDao>() {
+                                                                                           @Override
+                                                                                           public boolean apply(final PaymentTransactionModelDao input) {
+                                                                                               return transactionToCompleteId.equals(input.getId());
+                                                                                           }
+                                                                                       });
 
                     // We can't tell where we should be in the state machine - bail (cannot be enforced by the state machine unfortunately because UNKNOWN and PLUGIN_FAILURE are both treated as EXCEPTION)
                     if (transactionToComplete.getTransactionStatus() == TransactionStatus.UNKNOWN) {
@@ -387,8 +397,6 @@ public class PaymentProcessor extends ProcessorBase {
                 }
             }
 
-            // Get the latest state of the payment (this will also throw a proper exception is a bogus paymentId was passed)
-            final PaymentModelDao paymentModelDao = daoHelper.getPayment();
             // Use the original payment method id of the payment being completed
             paymentStateContext.setPaymentMethodId(paymentModelDao.getPaymentMethodId());
             // We always take the last successful state name to permit retries on failures
@@ -405,9 +413,9 @@ public class PaymentProcessor extends ProcessorBase {
         return getPayment(nonNullPaymentId, true, properties, callContext, internalCallContext);
     }
 
-    private PaymentTransactionModelDao findTransactionToCompleteAndRunSanityChecks(final PaymentStateContext paymentStateContext, final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
-        final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext());
-
+    private PaymentTransactionModelDao findTransactionToCompleteAndRunSanityChecks(final PaymentModelDao paymentModelDao,
+                                                                                   final Iterable<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment,
+                                                                                   final PaymentStateContext paymentStateContext) throws PaymentApiException {
         final Collection<PaymentTransactionModelDao> completionCandidates = new LinkedList<PaymentTransactionModelDao>();
         for (final PaymentTransactionModelDao paymentTransactionModelDao : paymentTransactionsForCurrentPayment) {
             // Check if we already have a transaction for that id or key
@@ -418,7 +426,6 @@ public class PaymentProcessor extends ProcessorBase {
                      paymentTransactionModelDao.getTransactionType() == TransactionType.PURCHASE ||
                      paymentTransactionModelDao.getTransactionType() == TransactionType.CREDIT) &&
                     paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.PENDING) {
-                    final PaymentModelDao paymentModelDao = daoHelper.getPayment();
                     throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_OPERATION, paymentTransactionModelDao.getTransactionType(), paymentModelDao.getStateName());
                 } else {
                     continue;
@@ -427,7 +434,6 @@ public class PaymentProcessor extends ProcessorBase {
 
             // Sanity: if we already have a transaction for that id or key, the transaction type must match
             if (paymentTransactionModelDao.getTransactionType() != paymentStateContext.getTransactionType()) {
-                final PaymentModelDao paymentModelDao = daoHelper.getPayment();
                 throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_OPERATION, paymentStateContext.getTransactionType(), paymentModelDao.getStateName());
             }
 
@@ -489,15 +495,7 @@ public class PaymentProcessor extends ProcessorBase {
         return toPayment(paymentModelDao, transactionsForPayment, pluginTransactions, tenantContextWithAccountRecordId);
     }
 
-    // Used in bulk get API (getAccountPayments)
-    private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Iterable<PaymentTransactionModelDao> curTransactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final InternalTenantContext internalTenantContext) {
-        final Ordering<PaymentTransaction> perPaymentTransactionOrdering = Ordering.<PaymentTransaction>from(new Comparator<PaymentTransaction>() {
-            @Override
-            public int compare(final PaymentTransaction o1, final PaymentTransaction o2) {
-                return o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-            }
-        });
-
+    private PaymentModelDao invokeJanitor(final PaymentModelDao curPaymentModelDao, final Collection<PaymentTransactionModelDao> curTransactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final InternalTenantContext internalTenantContext) {
         // Need to filter for optimized codepaths looking up by account_record_id
         final Iterable<PaymentTransactionModelDao> filteredTransactions = Iterables.filter(curTransactionsModelDao, new Predicate<PaymentTransactionModelDao>() {
             @Override
@@ -507,7 +505,7 @@ public class PaymentProcessor extends ProcessorBase {
         });
 
         PaymentModelDao newPaymentModelDao = curPaymentModelDao;
-        final Collection<PaymentTransaction> transactions = new LinkedList<PaymentTransaction>();
+        final Collection<PaymentTransactionModelDao> transactionsModelDao = new LinkedList<PaymentTransactionModelDao>();
         for (final PaymentTransactionModelDao curPaymentTransactionModelDao : filteredTransactions) {
             PaymentTransactionModelDao newPaymentTransactionModelDao = curPaymentTransactionModelDao;
 
@@ -522,6 +520,23 @@ public class PaymentProcessor extends ProcessorBase {
                 }
             }
 
+            transactionsModelDao.add(newPaymentTransactionModelDao);
+        }
+
+        curTransactionsModelDao.clear();
+        curTransactionsModelDao.addAll(transactionsModelDao);
+
+        return newPaymentModelDao;
+    }
+
+    // Used in bulk get API (getAccountPayments)
+    private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Collection<PaymentTransactionModelDao> curTransactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final InternalTenantContext internalTenantContext) {
+        final Collection<PaymentTransactionModelDao> transactionsModelDao = new LinkedList<PaymentTransactionModelDao>(curTransactionsModelDao);
+        final PaymentModelDao newPaymentModelDao = invokeJanitor(curPaymentModelDao, transactionsModelDao, pluginTransactions, internalTenantContext);
+
+        final Collection<PaymentTransaction> transactions = new LinkedList<PaymentTransaction>();
+        for (final PaymentTransactionModelDao newPaymentTransactionModelDao : transactionsModelDao) {
+            final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin = findPaymentTransactionInfoPlugin(newPaymentTransactionModelDao, pluginTransactions);
             final PaymentTransaction transaction = new DefaultPaymentTransaction(newPaymentTransactionModelDao.getId(),
                                                                                  newPaymentTransactionModelDao.getAttemptId(),
                                                                                  newPaymentTransactionModelDao.getTransactionExternalKey(),
@@ -541,14 +556,21 @@ public class PaymentProcessor extends ProcessorBase {
             transactions.add(transaction);
         }
 
+        final Ordering<PaymentTransaction> perPaymentTransactionOrdering = Ordering.<PaymentTransaction>from(new Comparator<PaymentTransaction>() {
+            @Override
+            public int compare(final PaymentTransaction o1, final PaymentTransaction o2) {
+                return o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
+            }
+        });
         final List<PaymentTransaction> sortedTransactions = perPaymentTransactionOrdering.immutableSortedCopy(transactions);
-        return new DefaultPayment(curPaymentModelDao.getId(),
-                                  curPaymentModelDao.getCreatedDate(),
-                                  curPaymentModelDao.getUpdatedDate(),
-                                  curPaymentModelDao.getAccountId(),
-                                  curPaymentModelDao.getPaymentMethodId(),
-                                  curPaymentModelDao.getPaymentNumber(),
-                                  curPaymentModelDao.getExternalKey(),
+
+        return new DefaultPayment(newPaymentModelDao.getId(),
+                                  newPaymentModelDao.getCreatedDate(),
+                                  newPaymentModelDao.getUpdatedDate(),
+                                  newPaymentModelDao.getAccountId(),
+                                  newPaymentModelDao.getPaymentMethodId(),
+                                  newPaymentModelDao.getPaymentNumber(),
+                                  newPaymentModelDao.getExternalKey(),
                                   sortedTransactions);
     }
 

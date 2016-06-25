@@ -50,6 +50,7 @@ import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -386,6 +387,21 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
                                                                   refundAmount, kbPaymentId.toString(), maxAmountRefundable, PLUGIN_NAME));
         }
         return getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.REFUND, refundAmount, currency, properties);
+    }
+
+    public void overridePaymentTransactionPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final PaymentPluginStatus paymentPluginStatus) throws PaymentPluginApiException {
+        final List<PaymentTransactionInfoPlugin> existingTransactions = paymentTransactions.get(kbPaymentId.toString());
+        PaymentTransactionInfoPlugin paymentTransactionInfoPlugin = null;
+        for (final PaymentTransactionInfoPlugin existingTransaction : existingTransactions) {
+            if (existingTransaction.getKbTransactionPaymentId().equals(kbTransactionId)) {
+                paymentTransactionInfoPlugin = existingTransaction;
+                break;
+            }
+        }
+        Preconditions.checkNotNull(paymentTransactionInfoPlugin);
+
+        final Iterable<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, paymentPluginStatus.toString(), false));
+        getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.AUTHORIZE, paymentTransactionInfoPlugin.getAmount(), paymentTransactionInfoPlugin.getCurrency(), pluginProperties);
     }
 
     private PaymentTransactionInfoPlugin getPaymentTransactionInfoPluginResult(final UUID kbPaymentId, final UUID kbTransactionId, final TransactionType type, @Nullable final BigDecimal amount, @Nullable final Currency currency, final Iterable<PluginProperty> pluginProperties) throws PaymentPluginApiException {
