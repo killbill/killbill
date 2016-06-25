@@ -91,7 +91,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = paymentProcessor.createAuthorization(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                          SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -135,7 +137,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = pluginControlPaymentProcessor.createAuthorization(IS_API_PAYMENT, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                                       properties, paymentControlPluginNames, callContext, internalCallContext);
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -172,7 +176,8 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             payment = paymentProcessor.createCapture(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, amount, currency, paymentTransactionExternalKey,
                                                                    SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -212,7 +217,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = pluginControlPaymentProcessor.createCapture(IS_API_PAYMENT, account, paymentId, amount, currency, paymentTransactionExternalKey,
                                                                                 properties, paymentControlPluginNames, callContext, internalCallContext);
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -251,7 +258,8 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             payment = paymentProcessor.createPurchase(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                     SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -301,7 +309,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
             payment = pluginControlPaymentProcessor.createPurchase(IS_API_PAYMENT, account, nonNulPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                                  properties, paymentControlPluginNames, callContext, internalCallContext);
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -335,7 +345,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = paymentProcessor.createVoid(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, paymentTransactionExternalKey,
                                                                 SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -373,7 +385,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = pluginControlPaymentProcessor.createVoid(IS_API_PAYMENT, account, paymentId, paymentTransactionExternalKey,
                                                                              properties, paymentControlPluginNames, callContext, internalCallContext);
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -409,7 +423,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = paymentProcessor.createRefund(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, amount, currency, paymentTransactionExternalKey,
                                                                   SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -451,7 +467,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = pluginControlPaymentProcessor.createRefund(IS_API_PAYMENT, account, paymentId, amount, currency, paymentTransactionExternalKey,
                                                                                properties, paymentControlPluginNames, callContext, internalCallContext);
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -490,7 +508,8 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             payment = paymentProcessor.createCredit(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                   SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -533,7 +552,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = pluginControlPaymentProcessor.createCredit(IS_API_PAYMENT, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                                properties, paymentControlPluginNames, callContext, internalCallContext);
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -608,7 +629,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = paymentProcessor.createChargeback(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, paymentTransactionExternalKey, amount, currency, true,
                                                                       callContext, internalCallContext);
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -647,7 +670,8 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             payment = pluginControlPaymentProcessor.createChargeback(IS_API_PAYMENT, account, paymentId, paymentTransactionExternalKey, amount, currency,
                                                                                    paymentControlPluginNames, callContext, internalCallContext);
 
-            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
+
             return payment;
         } finally {
             logExitAPICall(transactionType,
@@ -679,14 +703,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = paymentProcessor.createChargebackReversal(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, paymentTransactionExternalKey, null, null, true, callContext, internalCallContext);
 
-            // See https://github.com/killbill/killbill/issues/552
-            paymentTransaction = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
-                                                                    new Predicate<PaymentTransaction>() {
-                                                                        @Override
-                                                                        public boolean apply(final PaymentTransaction input) {
-                                                                            return paymentTransactionExternalKey.equals(input.getExternalKey());
-                                                                        }
-                                                                    });
+            paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
 
             return payment;
         } finally {
@@ -826,6 +843,21 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         return paymentMethods;
     }
 
+    private PaymentTransaction findPaymentTransaction(final Payment payment, @Nullable final String paymentTransactionExternalKey) {
+        // By design, the payment transactions are already correctly sorted (by effective date asc)
+        if (paymentTransactionExternalKey == null) {
+            return Iterables.getLast(payment.getTransactions());
+        } else {
+            return Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
+                                                      new Predicate<PaymentTransaction>() {
+                                                          @Override
+                                                          public boolean apply(final PaymentTransaction input) {
+                                                              return paymentTransactionExternalKey.equals(input.getExternalKey());
+                                                          }
+                                                      });
+        }
+    }
+
     private void logEnterAPICall(final String transactionType,
                                    final Account account,
                                    @Nullable final UUID paymentMethodId,
@@ -875,8 +907,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
                            transactionStatus,
                            paymentControlPluginNames);
     }
-
-
 
     private void logAPICallInternal(final String prefixMsg,
                                     final String transactionType,
