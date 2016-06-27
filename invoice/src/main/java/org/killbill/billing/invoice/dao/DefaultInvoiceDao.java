@@ -29,10 +29,10 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -43,17 +43,21 @@ import org.killbill.billing.invoice.api.DefaultInvoicePaymentErrorEvent;
 import org.killbill.billing.invoice.api.DefaultInvoicePaymentInfoEvent;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
+import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
+import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentPoster;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -1096,6 +1100,75 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }
 
                 transactional.updateAmount(invoiceItemId.toString(), amount, context);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void transferChildCreditToParent(final Account childAccount, final CallContext context) throws InvoiceApiException {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+
+                final InternalCallContext childInternalCallContext = internalCallContextFactory.createInternalCallContext(childAccount.getId(), context);
+                final InternalCallContext parentInternalCallContext = internalCallContextFactory.createInternalCallContext(childAccount.getParentAccountId(), context);
+
+                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+
+                // create child and parent invoices
+
+                final DateTime effectiveDate = context.getCreatedDate();
+                final BigDecimal accountCBA = getAccountCBA(childAccount.getId(), childInternalCallContext);
+
+                // create external charge to child account
+                final Invoice invoiceForExternalCharge = new DefaultInvoice(childAccount.getId(), effectiveDate.toLocalDate(),
+                                                                            effectiveDate.toLocalDate(),
+                                                                            childAccount.getCurrency(), InvoiceStatus.COMMITTED);
+                final String chargeDescription = "Charge to move credit from child to parent account";
+                final InvoiceItem externalChargeItem = new ExternalChargeInvoiceItem(UUIDs.randomUUID(),
+                                                                                 effectiveDate,
+                                                                                 invoiceForExternalCharge.getId(),
+                                                                                 childAccount.getId(),
+                                                                                 null,
+                                                                                 chargeDescription,
+                                                                                 effectiveDate.toLocalDate(),
+                                                                                 accountCBA,
+                                                                                 childAccount.getCurrency());
+                invoiceForExternalCharge.addInvoiceItem(externalChargeItem);
+
+                // create credit to parent account
+                final Invoice invoiceForCredit = new DefaultInvoice(childAccount.getParentAccountId(), effectiveDate.toLocalDate(), effectiveDate.toLocalDate(),
+                                                                    childAccount.getCurrency(), InvoiceStatus.DRAFT);
+                final String creditDescription = "Credit migrated from child account " + childAccount.getId();
+                final InvoiceItem creditItem = new CreditAdjInvoiceItem(UUIDs.randomUUID(),
+                                                                        effectiveDate,
+                                                                        invoiceForCredit.getId(),
+                                                                        childAccount.getParentAccountId(),
+                                                                        effectiveDate.toLocalDate(),
+                                                                        creditDescription,
+                                                                        // Note! The amount is negated here!
+                                                                        accountCBA.negate(),
+                                                                        childAccount.getCurrency());
+                invoiceForCredit.addInvoiceItem(creditItem);
+
+
+                // save invoices and invoice items
+                InvoiceModelDao childInvoice = new InvoiceModelDao(invoiceForExternalCharge);
+                invoiceSqlDao.create(childInvoice, childInternalCallContext);
+                createInvoiceItemFromTransaction(transInvoiceItemSqlDao, new InvoiceItemModelDao(externalChargeItem), childInternalCallContext);
+
+                InvoiceModelDao parentInvoice = new InvoiceModelDao(invoiceForCredit);
+                invoiceSqlDao.create(parentInvoice, parentInternalCallContext);
+                createInvoiceItemFromTransaction(transInvoiceItemSqlDao, new InvoiceItemModelDao(creditItem), parentInternalCallContext);
+
+                // add CBA complexity and notify bus on child invoice creation
+                cbaDao.addCBAComplexityFromTransaction(childInvoice.getId(), entitySqlDaoWrapperFactory, childInternalCallContext);
+                notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, childInvoice, childInternalCallContext);
+
+                cbaDao.addCBAComplexityFromTransaction(parentInvoice.getId(), entitySqlDaoWrapperFactory, parentInternalCallContext);
+
                 return null;
             }
         });

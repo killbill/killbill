@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -29,6 +30,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.api.Payment;
@@ -631,7 +633,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(241.62)), 0);
 
         // check equal parent invoice
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentInvoice.getId(), false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
@@ -718,7 +720,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(241.62)), 0);
 
         // check equal parent invoice
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentInvoice.getId(), false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
         assertEquals(parentInvoices.size(), 2);
 
         parentInvoice = parentInvoices.get(1);
@@ -752,7 +754,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-241.62)), 0);
 
         // check equal parent invoice
-        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentInvoice.getId(), false, callContext);
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
         assertEquals(parentInvoices.size(), 4);
 
         parentInvoice = parentInvoices.get(3);
@@ -760,6 +762,104 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
         assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(8.33)), 0);
+
+    }
+
+    // Scenario 6: Transfer credit
+    @Test(groups = "slow")
+    public void testParentInvoiceTransferCredit() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        invoiceUserApi.insertCredit(childAccount.getId(), new BigDecimal("250"), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), childAccount.getCurrency(), true, null, callContext);
+        assertListenerStatus();
+
+        BigDecimal childAccountCBA = invoiceUserApi.getAccountCBA(childAccount.getId(), callContext);
+        assertEquals(childAccountCBA.compareTo(BigDecimal.valueOf(250)), 0);
+
+        BigDecimal parentAccountCBA = invoiceUserApi.getAccountCBA(parentAccount.getId(), callContext);
+        assertEquals(parentAccountCBA.compareTo(BigDecimal.ZERO), 0);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        invoiceUserApi.transferChildCreditToParent(childAccount.getId(), callContext);
+        assertListenerStatus();
+
+        childAccountCBA = invoiceUserApi.getAccountCBA(childAccount.getId(), callContext);
+        assertEquals(childAccountCBA.compareTo(BigDecimal.ZERO), 0);
+
+        parentAccountCBA = invoiceUserApi.getAccountCBA(parentAccount.getId(), callContext);
+        assertEquals(parentAccountCBA.compareTo(BigDecimal.valueOf(250)), 0);
+
+        final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 2);
+
+        final Invoice childInvoice = childInvoices.get(1);
+        assertEquals(childInvoice.getNumberOfItems(), 2);
+        assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.EXTERNAL_CHARGE);
+        assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(250)), 0);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-250)), 0);
+
+        // check equal parent invoice
+        final List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 1);
+
+        final Invoice parentInvoice = parentInvoices.get(0);
+        assertEquals(parentInvoice.getNumberOfItems(), 3);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(-250)), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(250)), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
+        assertEquals(parentInvoice.getInvoiceItems().get(2).getAmount().compareTo(BigDecimal.ZERO), 0);
+    }
+
+    // Scenario 6-b: Transfer credit
+    @Test(groups = "slow", expectedExceptions = InvoiceApiException.class,
+        expectedExceptionsMessageRegExp = ".* does not have credit")
+    public void testParentInvoiceTransferCreditAccountWithoutCredit() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        BigDecimal childAccountCBA = invoiceUserApi.getAccountCBA(childAccount.getId(), callContext);
+        assertEquals(childAccountCBA.compareTo(BigDecimal.ZERO), 0);
+
+        BigDecimal parentAccountCBA = invoiceUserApi.getAccountCBA(parentAccount.getId(), callContext);
+        assertEquals(parentAccountCBA.compareTo(BigDecimal.ZERO), 0);
+
+        invoiceUserApi.transferChildCreditToParent(childAccount.getId(), callContext);
+
+    }
+
+    // Scenario 6-c: Transfer credit
+    @Test(groups = "slow", expectedExceptions = InvoiceApiException.class,
+            expectedExceptionsMessageRegExp = ".* does not have a Parent Account associated")
+    public void testParentInvoiceTransferCreditAccountNoParent() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, null, true));
+
+        BigDecimal childAccountCBA = invoiceUserApi.getAccountCBA(account.getId(), callContext);
+        assertEquals(childAccountCBA.compareTo(BigDecimal.ZERO), 0);
+
+        invoiceUserApi.transferChildCreditToParent(account.getId(), callContext);
 
     }
 

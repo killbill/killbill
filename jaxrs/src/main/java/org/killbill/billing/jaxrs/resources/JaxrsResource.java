@@ -256,6 +256,6 @@ public interface JaxrsResource {
     public static final String MIGRATION = "migration";
 
     public static final String CHILDREN = "children";
-    public static final String CHILDREN_PATH = PREFIX + "/" + CHILDREN;
+    public static final String TRANSFER_CREDIT = "transferCredit";
 
 }
