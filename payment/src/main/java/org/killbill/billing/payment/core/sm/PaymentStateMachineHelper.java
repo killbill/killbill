@@ -21,17 +21,10 @@ import javax.inject.Inject;
 
 import org.killbill.automaton.MissingEntryException;
 import org.killbill.automaton.Operation;
-import org.killbill.automaton.OperationResult;
-import org.killbill.automaton.State;
 import org.killbill.automaton.StateMachine;
 import org.killbill.automaton.StateMachineConfig;
-import org.killbill.automaton.Transition;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.glue.PaymentModule;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 /**
  * This class needs to know about the payment state machine xml file. All the knowledge about the xml file is encapsulated here.
@@ -81,16 +74,10 @@ public class PaymentStateMachineHelper {
     private static final String VOID_ERRORED = "VOID_ERRORED";
     private static final String CHARGEBACK_ERRORED = "CHARGEBACK_ERRORED";
     private final StateMachineConfig stateMachineConfig;
-    private final String[] errorStateNames = {AUTH_ERRORED, CAPTURE_ERRORED, PURCHASE_ERRORED, REFUND_ERRORED, CREDIT_ERRORED, VOID_ERRORED, CHARGEBACK_ERRORED};
 
     @Inject
     public PaymentStateMachineHelper(@javax.inject.Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig) {
         this.stateMachineConfig = stateMachineConfig;
-    }
-
-    public State getState(final String stateName) throws MissingEntryException {
-        final StateMachine stateMachine = stateMachineConfig.getStateMachineForState(stateName);
-        return stateMachine.getState(stateName);
     }
 
     public String getInitStateNameForTransaction() {
