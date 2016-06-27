@@ -105,7 +105,11 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected Account createAccount() throws Exception {
-        final Account input = getAccount();
+        return createAccount(null);
+    }
+
+    protected Account createAccount(final UUID parentAccountId) throws Exception {
+        final Account input = getAccount(parentAccountId);
         return killBillClient.createAccount(input, createdBy, reason, comment);
     }
 
@@ -154,10 +158,18 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected Account getAccount() {
-        return getAccount(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString().substring(0, 5) + '@' + UUID.randomUUID().toString().substring(0, 5));
+        return getAccount(null);
+    }
+
+    protected Account getAccount(final UUID parentAccountId) {
+        return getAccount(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString().substring(0, 5) + '@' + UUID.randomUUID().toString().substring(0, 5), parentAccountId);
     }
 
     public Account getAccount(final String name, final String externalKey, final String email) {
+        return getAccount(name, externalKey, email, null);
+    }
+
+    public Account getAccount(final String name, final String externalKey, final String email, final UUID parentAccountId) {
         final UUID accountId = UUID.randomUUID();
         final int length = 4;
         final String currency = DEFAULT_CURRENCY;
@@ -171,9 +183,10 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final String country = "France";
         final String locale = "fr";
         final String phone = "81 53 26 56";
+        final boolean isPaymentDelegatedToParent = parentAccountId != null;
 
         // Note: the accountId payload is ignored on account creation
-        return new Account(accountId, name, length, externalKey, email, null, currency, null, false, null, timeZone,
+        return new Account(accountId, name, length, externalKey, email, null, currency, parentAccountId, isPaymentDelegatedToParent, null, timeZone,
                            address1, address2, postalCode, company, city, state, country, locale, phone, false, false, null, null);
     }
 
