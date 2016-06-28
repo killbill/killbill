@@ -101,10 +101,9 @@ public class PaymentBusEventHandler {
         } catch (final AccountApiException e) {
             log.warn("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {
-            // Log as error unless:
-            if (e.getCode() != ErrorCode.PAYMENT_NULL_INVOICE.getCode() /* Nothing left to be paid */ &&
-                e.getCode() != ErrorCode.PAYMENT_CREATE_PAYMENT.getCode() /* User payment error */) {
-                log.error("Failed to process invoice payment {}", e.toString());
+            // Log as warn unless nothing left to be paid
+            if (e.getCode() != ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode()) {
+                log.warn("Failed to process invoice payment {}", e.toString());
             }
         }
     }
