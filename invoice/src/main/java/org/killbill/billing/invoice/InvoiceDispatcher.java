@@ -737,7 +737,9 @@ public class InvoiceDispatcher {
             invoices.add(draftParentInvoice);
             invoiceDao.createInvoices(invoices, parentContext);
         } else {
-            if (shouldIgnoreChildInvoice(childInvoice, childInvoiceAmount)) return;
+            if (shouldIgnoreChildInvoice(childInvoice, childInvoiceAmount)) {
+                return;
+            }
 
             draftParentInvoice = new InvoiceModelDao(account.getParentAccountId(), today.toLocalDate(), account.getCurrency(), InvoiceStatus.DRAFT, true);
             InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
@@ -758,17 +760,15 @@ public class InvoiceDispatcher {
     private boolean shouldIgnoreChildInvoice(final Invoice childInvoice, final BigDecimal childInvoiceAmount) {
 
         switch (childInvoiceAmount.compareTo(BigDecimal.ZERO)) {
-            case -1 : {
+            case -1 :
                 // do nothing if child invoice has negative amount because it's a credit and it will be use in next invoice
                 return true;
-            }
             case 1 : return false;
-            case 0 : {
+            case 0 :
                 // only ignore if amount == 0 and any item is not FIXED or RECURRING
                 for (InvoiceItem item : childInvoice.getInvoiceItems()) {
                     if (item.getInvoiceItemType().equals(InvoiceItemType.FIXED) || item.getInvoiceItemType().equals(InvoiceItemType.RECURRING)) return false;
                 }
-            }
         }
 
         return true;
