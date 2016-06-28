@@ -1,7 +1,7 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,11 +19,13 @@
 package org.killbill.billing.payment.glue;
 
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.PaymentBusEventHandler;
+import org.killbill.billing.payment.caching.StateMachineConfigCache;
 import org.killbill.billing.payment.core.PaymentExecutors;
-import org.killbill.billing.payment.invoice.PaymentTagHandler;
 import org.killbill.billing.payment.core.janitor.Janitor;
+import org.killbill.billing.payment.invoice.PaymentTagHandler;
 import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
@@ -48,6 +50,7 @@ public class DefaultPaymentService implements PaymentService {
     private final DefaultRetryService retryService;
     private final Janitor janitor;
     private final PaymentExecutors paymentExecutors;
+    private final StateMachineConfigCache stateMachineConfigCache;
 
     @Inject
     public DefaultPaymentService(final PaymentBusEventHandler paymentBusEventHandler,
@@ -56,7 +59,8 @@ public class DefaultPaymentService implements PaymentService {
                                  final DefaultRetryService retryService,
                                  final PersistentBus eventBus,
                                  final Janitor janitor,
-                                 final PaymentExecutors paymentExecutors) {
+                                 final PaymentExecutors paymentExecutors,
+                                 final StateMachineConfigCache stateMachineConfigCache) {
         this.paymentBusEventHandler = paymentBusEventHandler;
         this.tagHandler = tagHandler;
         this.eventBus = eventBus;
@@ -64,6 +68,7 @@ public class DefaultPaymentService implements PaymentService {
         this.retryService = retryService;
         this.janitor = janitor;
         this.paymentExecutors = paymentExecutors;
+        this.stateMachineConfigCache = stateMachineConfigCache;
     }
 
     @Override
@@ -73,6 +78,12 @@ public class DefaultPaymentService implements PaymentService {
 
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void initialize() throws NotificationQueueAlreadyExists {
+        try {
+            stateMachineConfigCache.loadDefaultPaymentStateMachineConfig(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML);
+        } catch (final PaymentApiException e) {
+            log.error("Unable to load default payment state machine");
+        }
+
         try {
             eventBus.register(paymentBusEventHandler);
             eventBus.register(tagHandler);

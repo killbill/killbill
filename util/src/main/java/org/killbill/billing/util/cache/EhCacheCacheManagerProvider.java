@@ -63,7 +63,8 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
                                        final TenantOverdueConfigCacheLoader tenantOverdueConfigCacheLoader,
                                        final TenantKVCacheLoader tenantKVCacheLoader,
                                        final TenantCacheLoader tenantCacheLoader,
-                                       final OverriddenPlanCacheLoader overriddenPlanCacheLoader) {
+                                       final OverriddenPlanCacheLoader overriddenPlanCacheLoader,
+                                       final TenantStateMachineConfigCacheLoader tenantStateMachineConfigCacheLoader) {
         this.metricRegistry = metricRegistry;
         this.cacheConfig = cacheConfig;
         cacheLoaders.add(accountCacheLoader);
@@ -79,6 +80,7 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
         cacheLoaders.add(tenantKVCacheLoader);
         cacheLoaders.add(tenantCacheLoader);
         cacheLoaders.add(overriddenPlanCacheLoader);
+        cacheLoaders.add(tenantStateMachineConfigCacheLoader);
     }
 
     @Override
@@ -97,6 +99,11 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
             cacheLoader.init();
 
             final Ehcache cache = cacheManager.getEhcache(cacheLoader.getCacheType().getCacheName());
+
+            if (cache == null) {
+                logger.warn("Cache for cacheName='{}' not configured - check your ehcache.xml", cacheLoader.getCacheType().getCacheName());
+                continue;
+            }
 
             // Make sure we start from a clean state - this is mainly useful for tests
             for (final CacheLoader existingCacheLoader : cache.getRegisteredCacheLoaders()) {

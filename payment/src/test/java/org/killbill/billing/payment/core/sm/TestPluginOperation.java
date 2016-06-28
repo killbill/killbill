@@ -209,7 +209,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                                                                                 callContext);
 
         final PaymentAutomatonDAOHelper daoHelper = Mockito.mock(PaymentAutomatonDAOHelper.class);
-        Mockito.when(daoHelper.getPaymentProviderPlugin()).thenReturn(null);
+        Mockito.when(daoHelper.getPaymentPluginApi()).thenReturn(null);
         return new PluginOperationTest(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
     }
 

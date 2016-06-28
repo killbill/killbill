@@ -26,11 +26,13 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.AdminPaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
+import org.killbill.billing.payment.caching.StateMachineConfigCache;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
@@ -82,6 +84,8 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected PaymentExecutors paymentExecutors;
     @Inject
     protected NonEntityDao nonEntityDao;
+    @Inject
+    protected StateMachineConfigCache stateMachineConfigCache;
 
     @Override
     protected KillbillConfigSource getConfigSource() {
@@ -94,6 +98,8 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(configSource, getClock()));
         injector.injectMembers(this);
+
+        stateMachineConfigCache.loadDefaultPaymentStateMachineConfig(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML);
     }
 
     @BeforeMethod(groups = "slow")

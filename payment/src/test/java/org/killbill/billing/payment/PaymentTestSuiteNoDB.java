@@ -18,12 +18,15 @@
 
 package org.killbill.billing.payment;
 
+import javax.inject.Named;
+
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
+import org.killbill.billing.payment.caching.StateMachineConfigCache;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
@@ -32,11 +35,14 @@ import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.MockPaymentDao;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.glue.TestPaymentModuleNoDB;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.tenant.api.TenantInternalApi;
+import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
@@ -86,6 +92,13 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected CacheControllerDispatcher cacheControllerDispatcher;
     @Inject
     protected PaymentExecutors paymentExecutors;
+    @Inject
+    protected StateMachineConfigCache stateMachineConfigCache;
+    @Inject
+    @Named(PaymentModule.STATE_MACHINE_CONFIG_INVALIDATION_CALLBACK)
+    protected CacheInvalidationCallback cacheInvalidationCallback;
+    @Inject
+    protected TenantInternalApi tenantInternalApi;
 
     @Override
     protected KillbillConfigSource getConfigSource() {
@@ -99,6 +112,8 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestPaymentModuleNoDB(configSource, getClock()));
         injector.injectMembers(this);
+
+        stateMachineConfigCache.loadDefaultPaymentStateMachineConfig(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML);
     }
 
     @BeforeMethod(groups = "fast")

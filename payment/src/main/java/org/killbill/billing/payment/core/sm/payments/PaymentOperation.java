@@ -71,7 +71,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
         final String pluginName;
         try {
             pluginName = daoHelper.getPaymentProviderPluginName();
-            this.plugin = daoHelper.getPaymentPluginApi(pluginName);
+            this.plugin = daoHelper.getPaymentPluginApi();
         } catch (final PaymentApiException e) {
             throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
         }

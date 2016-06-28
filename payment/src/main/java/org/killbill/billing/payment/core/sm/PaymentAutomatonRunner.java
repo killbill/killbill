@@ -34,6 +34,7 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.automaton.StateMachine;
+import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -201,7 +202,7 @@ public class PaymentAutomatonRunner {
                 throw new IllegalStateException("Unsupported transaction type " + transactionType);
         }
 
-        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback);
+        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback, paymentStateContext, daoHelper);
 
         return paymentStateContext.getPaymentId();
     }
@@ -221,11 +222,14 @@ public class PaymentAutomatonRunner {
                                           final TransactionType transactionType,
                                           final LeavingStateCallback leavingStateCallback,
                                           final OperationCallback operationCallback,
-                                          final EnteringStateCallback enteringStateCallback) throws PaymentApiException {
+                                          final EnteringStateCallback enteringStateCallback,
+                                          final PaymentStateContext paymentStateContext,
+                                          final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
         try {
-            final StateMachine initialStateMachine = paymentSMHelper.getStateMachineForStateName(initialStateName);
+            final StateMachineConfig stateMachineConfig = paymentSMHelper.getStateMachineConfig(daoHelper.getPaymentProviderPluginName(), paymentStateContext.getInternalCallContext());
+            final StateMachine initialStateMachine = stateMachineConfig.getStateMachineForState(initialStateName);
             final State initialState = initialStateMachine.getState(initialStateName);
-            final Operation operation = paymentSMHelper.getOperationForTransaction(transactionType);
+            final Operation operation = paymentSMHelper.getOperationForTransaction(stateMachineConfig, transactionType);
 
             initialState.runOperation(operation, operationCallback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {
