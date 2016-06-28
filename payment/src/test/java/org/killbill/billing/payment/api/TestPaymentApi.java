@@ -412,6 +412,14 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment2.getTransactions().get(1).getTransactionType(), TransactionType.VOID);
         assertNotNull(payment2.getTransactions().get(1).getGatewayErrorMsg());
         assertNotNull(payment2.getTransactions().get(1).getGatewayErrorCode());
+
+        try {
+            // Verify further VOIDs are prohibited (see https://github.com/killbill/killbill/issues/514)
+            paymentApi.createVoid(account, payment.getId(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
     }
 
     @Test(groups = "slow")
