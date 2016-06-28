@@ -737,8 +737,7 @@ public class InvoiceDispatcher {
             invoices.add(draftParentInvoice);
             invoiceDao.createInvoices(invoices, parentContext);
         } else {
-            // do nothing if child invoice has negative amount because it's a credit and it will be use in next invoice
-            if (childInvoiceAmount.compareTo(BigDecimal.ZERO) < 0) return;
+            if (shouldIgnoreChildInvoice(childInvoice, childInvoiceAmount)) return;
 
             draftParentInvoice = new InvoiceModelDao(account.getParentAccountId(), today.toLocalDate(), account.getCurrency(), InvoiceStatus.DRAFT, true);
             InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
@@ -754,6 +753,25 @@ public class InvoiceDispatcher {
         final InvoiceParentChildModelDao invoiceRelation = new InvoiceParentChildModelDao(draftParentInvoice.getId(), childInvoiceId, account.getId());
         invoiceDao.createParentChildInvoiceRelation(invoiceRelation, parentContext);
 
+    }
+
+    private boolean shouldIgnoreChildInvoice(final Invoice childInvoice, final BigDecimal childInvoiceAmount) {
+
+        switch (childInvoiceAmount.compareTo(BigDecimal.ZERO)) {
+            case -1 : {
+                // do nothing if child invoice has negative amount because it's a credit and it will be use in next invoice
+                return true;
+            }
+            case 1 : return false;
+            case 0 : {
+                // only ignore if amount == 0 and any item is not FIXED or RECURRING
+                for (InvoiceItem item : childInvoice.getInvoiceItems()) {
+                    if (item.getInvoiceItemType().equals(InvoiceItemType.FIXED) || item.getInvoiceItemType().equals(InvoiceItemType.RECURRING)) return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     public void processParentInvoiceForAdjustments(final ImmutableAccountData account, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
@@ -775,7 +793,8 @@ public class InvoiceDispatcher {
                 return input.getType().equals(InvoiceItemType.ITEM_ADJ) || input.getType().equals(InvoiceItemType.REPAIR_ADJ);
             }
         });
-        // TODO should I add a NPE check?
+        if (childInvoiceItemAdjustment == null) return;
+
         final BigDecimal childInvoiceAdjustmentAmount = childInvoiceItemAdjustment.getAmount();
 
         final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(account.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));

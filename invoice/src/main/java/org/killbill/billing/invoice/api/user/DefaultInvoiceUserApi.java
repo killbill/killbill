@@ -534,12 +534,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void transferChildCreditToParent(final UUID childAccountId, final CallContext callContext) throws InvoiceApiException {
+    public void transferChildCreditToParent(final UUID childAccountId, final CallContext context) throws InvoiceApiException {
 
         final Account childAccount;
-        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(childAccountId, ObjectType.INVOICE, callContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(childAccountId, ObjectType.ACCOUNT, context);
         try {
-            childAccount = accountUserApi.getAccountById(childAccountId, internalContext);
+            childAccount = accountUserApi.getAccountById(childAccountId, internalCallContext);
         } catch (AccountApiException e) {
             throw new InvoiceApiException(e);
         }
@@ -548,12 +548,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.ACCOUNT_DOES_NOT_HAVE_PARENT_ACCOUNT, childAccountId);
         }
 
-        final BigDecimal accountCBA = getAccountCBA(childAccountId, callContext);
+        final BigDecimal accountCBA = getAccountCBA(childAccountId, context);
         if (accountCBA.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.CHILD_ACCOUNT_MISSING_CREDIT, childAccountId);
         }
 
-        dao.transferChildCreditToParent(childAccount, callContext);
+        dao.transferChildCreditToParent(childAccount, internalCallContext);
 
     }
 }

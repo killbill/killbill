@@ -37,7 +37,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
@@ -403,7 +402,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public void transferChildCreditToParent(final Account childAccount, final CallContext context) throws InvoiceApiException {
+    public void transferChildCreditToParent(final Account childAccount, final InternalCallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 }

@@ -57,7 +57,6 @@ import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentPoster;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -1106,21 +1105,23 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public void transferChildCreditToParent(final Account childAccount, final CallContext context) throws InvoiceApiException {
+    public void transferChildCreditToParent(final Account childAccount, final InternalCallContext childAccountContext) throws InvoiceApiException {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
 
-                final InternalCallContext childInternalCallContext = internalCallContextFactory.createInternalCallContext(childAccount.getId(), context);
-                final InternalCallContext parentInternalCallContext = internalCallContextFactory.createInternalCallContext(childAccount.getParentAccountId(), context);
+                // Need to create an internalCallContext for parent account because it's needed to save the correct accountRecordId in Invoice tables.
+                // Then it's used to load invoices by account.
+                final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(childAccount.getParentAccountId(), childAccountContext);
+                final InternalCallContext parentAccountContext = internalCallContextFactory.createInternalCallContext(internalTenantContext.getAccountRecordId(), childAccountContext);
 
                 final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
                 final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
 
                 // create child and parent invoices
 
-                final DateTime effectiveDate = context.getCreatedDate();
-                final BigDecimal accountCBA = getAccountCBA(childAccount.getId(), childInternalCallContext);
+                final DateTime effectiveDate = childAccountContext.getCreatedDate();
+                final BigDecimal accountCBA = getAccountCBA(childAccount.getId(), childAccountContext);
 
                 // create external charge to child account
                 final Invoice invoiceForExternalCharge = new DefaultInvoice(childAccount.getId(), effectiveDate.toLocalDate(),
@@ -1140,7 +1141,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // create credit to parent account
                 final Invoice invoiceForCredit = new DefaultInvoice(childAccount.getParentAccountId(), effectiveDate.toLocalDate(), effectiveDate.toLocalDate(),
-                                                                    childAccount.getCurrency(), InvoiceStatus.DRAFT);
+                                                                    childAccount.getCurrency(), InvoiceStatus.COMMITTED);
                 final String creditDescription = "Credit migrated from child account " + childAccount.getId();
                 final InvoiceItem creditItem = new CreditAdjInvoiceItem(UUIDs.randomUUID(),
                                                                         effectiveDate,
@@ -1156,18 +1157,19 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // save invoices and invoice items
                 InvoiceModelDao childInvoice = new InvoiceModelDao(invoiceForExternalCharge);
-                invoiceSqlDao.create(childInvoice, childInternalCallContext);
-                createInvoiceItemFromTransaction(transInvoiceItemSqlDao, new InvoiceItemModelDao(externalChargeItem), childInternalCallContext);
+                invoiceSqlDao.create(childInvoice, childAccountContext);
+                createInvoiceItemFromTransaction(transInvoiceItemSqlDao, new InvoiceItemModelDao(externalChargeItem), childAccountContext);
 
                 InvoiceModelDao parentInvoice = new InvoiceModelDao(invoiceForCredit);
-                invoiceSqlDao.create(parentInvoice, parentInternalCallContext);
-                createInvoiceItemFromTransaction(transInvoiceItemSqlDao, new InvoiceItemModelDao(creditItem), parentInternalCallContext);
+                invoiceSqlDao.create(parentInvoice, parentAccountContext);
+                createInvoiceItemFromTransaction(transInvoiceItemSqlDao, new InvoiceItemModelDao(creditItem), parentAccountContext);
 
                 // add CBA complexity and notify bus on child invoice creation
-                cbaDao.addCBAComplexityFromTransaction(childInvoice.getId(), entitySqlDaoWrapperFactory, childInternalCallContext);
-                notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, childInvoice, childInternalCallContext);
+                cbaDao.addCBAComplexityFromTransaction(childInvoice.getId(), entitySqlDaoWrapperFactory, childAccountContext);
+                notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, childInvoice, childAccountContext);
 
-                cbaDao.addCBAComplexityFromTransaction(parentInvoice.getId(), entitySqlDaoWrapperFactory, parentInternalCallContext);
+                cbaDao.addCBAComplexityFromTransaction(parentInvoice.getId(), entitySqlDaoWrapperFactory, parentAccountContext);
+                notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, parentInvoice, parentAccountContext);
 
                 return null;
             }

@@ -34,7 +34,6 @@ import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceStatus;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDao;
 
@@ -200,8 +199,8 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * Move a given child credit to the parent level
      *
      * @param childAccount the child account
-     * @param context the tenant context
+     * @param childAccountContext the tenant context for the child account id
      * @throws InvoiceApiException if any unexpected error occurs
      */
-    void transferChildCreditToParent(Account childAccount, CallContext context) throws InvoiceApiException;
+    void transferChildCreditToParent(Account childAccount, InternalCallContext childAccountContext) throws InvoiceApiException;
 }

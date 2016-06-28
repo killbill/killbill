@@ -787,7 +787,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         BigDecimal parentAccountCBA = invoiceUserApi.getAccountCBA(parentAccount.getId(), callContext);
         assertEquals(parentAccountCBA.compareTo(BigDecimal.ZERO), 0);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE);
         invoiceUserApi.transferChildCreditToParent(childAccount.getId(), callContext);
         assertListenerStatus();
 
@@ -812,13 +812,11 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoices.size(), 1);
 
         final Invoice parentInvoice = parentInvoices.get(0);
-        assertEquals(parentInvoice.getNumberOfItems(), 3);
+        assertEquals(parentInvoice.getNumberOfItems(), 2);
         assertEquals(parentInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
         assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(-250)), 0);
         assertEquals(parentInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
         assertEquals(parentInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(250)), 0);
-        assertEquals(parentInvoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
-        assertEquals(parentInvoice.getInvoiceItems().get(2).getAmount().compareTo(BigDecimal.ZERO), 0);
     }
 
     // Scenario 6-b: Transfer credit
