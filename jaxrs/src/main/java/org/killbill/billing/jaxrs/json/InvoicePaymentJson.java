@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentAttempt;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -51,8 +52,9 @@ public class InvoicePaymentJson extends PaymentJson {
                               @JsonProperty("currency") final String currency,
                               @JsonProperty("paymentMethodId") final String paymentMethodId,
                               @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
+                              @JsonProperty("nextScheduledPaymentAttempt") final PaymentAttempt nextScheduledPaymentAttempt,
                               @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(accountId, paymentId, paymentNumber, paymentExternalKey, authAmount, capturedAmount, purchasedAmount, refundedAmount, creditedAmount, currency, paymentMethodId, transactions, auditLogs);
+        super(accountId, paymentId, paymentNumber, paymentExternalKey, authAmount, capturedAmount, purchasedAmount, refundedAmount, creditedAmount, currency, paymentMethodId, transactions, nextScheduledPaymentAttempt, auditLogs);
         this.targetInvoiceId = targetInvoiceId;
     }
 

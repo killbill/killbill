@@ -112,7 +112,7 @@ public class PaymentResource extends ComboPaymentResource {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID paymentIdId = UUID.fromString(paymentIdStr);
         final TenantContext tenantContext = context.createContext(request);
-        final Payment payment = paymentApi.getPayment(paymentIdId, withPluginInfo, pluginProperties, tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentIdId, withPluginInfo, false, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
         final PaymentJson result = new PaymentJson(payment, accountAuditLogs);
         return Response.status(Response.Status.OK).entity(result).build();

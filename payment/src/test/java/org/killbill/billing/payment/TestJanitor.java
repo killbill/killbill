@@ -301,7 +301,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         assertNotificationsCompleted(internalCallContext, 5);
         testListener.assertListenerStatus();
 
-        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
@@ -341,7 +341,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(paymentTransactionHistoryAfterJanitor.size(), 4);
         Assert.assertEquals(paymentTransactionHistoryAfterJanitor.get(3).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
 
-        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         // Janitor should have moved us to PAYMENT_FAILURE
         assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
     }
@@ -411,7 +411,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         assertNotificationsCompleted(internalCallContext, 5);
         testListener.assertListenerStatus();
-        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
@@ -458,7 +458,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
             Thread.sleep(1000);
             assertNotificationsCompleted(internalCallContext, 5);
 
-            final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
             Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
         }
 

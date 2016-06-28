@@ -121,7 +121,7 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
         Preconditions.checkArgument(paymentIdStr != null || externalKey != null, "Need to set either paymentId or payment externalKey");
         if (paymentIdStr != null) {
             final UUID paymentId = UUID.fromString(paymentIdStr);
-            return paymentApi.getPayment(paymentId, false, pluginProperties, tenantContext);
+            return paymentApi.getPayment(paymentId, false, false, pluginProperties, tenantContext);
         } else {
             return paymentApi.getPaymentByExternalKey(externalKey, false, pluginProperties, tenantContext);
         }

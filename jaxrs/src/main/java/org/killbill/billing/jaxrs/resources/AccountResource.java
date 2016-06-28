@@ -945,7 +945,7 @@ public class AccountResource extends JaxRsResourceBase {
         //
         final UUID paymentMethodId;
         if (paymentId != null) {
-            final Payment initialPayment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
+            final Payment initialPayment = paymentApi.getPayment(paymentId, false, false, pluginProperties, callContext);
             final PaymentTransaction pendingTransaction = lookupPendingTransaction(initialPayment,
                                                                                    json != null ? json.getTransactionId() : null,
                                                                                    json != null ? json.getTransactionExternalKey() : null,

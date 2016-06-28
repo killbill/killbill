@@ -88,7 +88,7 @@ public class AdminResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Payment payment = paymentApi.getPayment(UUID.fromString(paymentIdStr), false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment payment = paymentApi.getPayment(UUID.fromString(paymentIdStr), false, false, ImmutableList.<PluginProperty>of(), callContext);
 
         final UUID paymentTransactionId = UUID.fromString(paymentTransactionIdStr);
 
