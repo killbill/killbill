@@ -136,7 +136,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final ImmutableAccountData account, final DryRunArguments dryRunArguments, final InternalCallContext context,
-                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet) throws SubscriptionBaseApiException, AccountApiException {
+                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
 
         final boolean dryRunMode = dryRunArguments != null;
 
@@ -180,7 +180,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                                  final boolean dryRunMode,
                                                  final InternalCallContext context,
                                                  final DefaultBillingEventSet result,
-                                                 final Set<UUID> skipSubscriptionsSet) throws AccountApiException {
+                                                 final Set<UUID> skipSubscriptionsSet) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
 
         // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
         boolean updatedAccountBCD = dryRunMode;
@@ -203,52 +203,38 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 return;
             }
 
+            final Catalog catalog = catalogService.getFullCatalog(context);
 
             Integer overridenBCD = null;
             for (final EffectiveSubscriptionInternalEvent transition : billingTransitions) {
-                try {
-                    //
-                    // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
-                    // occurs below (which is based on billing alignment policy). Also multiple of those BCD_CHANGE transitions could occur,
-                    // to define different intervals with different billing cycle days.
-                    //
-                    overridenBCD = transition.getNextBillCycleDayLocal() != null ? transition.getNextBillCycleDayLocal() : overridenBCD;
-                    final int bcdLocal = overridenBCD != null ?
-                                         overridenBCD :
-                                         calculateBcdForTransition(baseSubscription, subscription, account, currentAccountBCD, transition, context);
+                //
+                // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
+                // occurs below (which is based on billing alignment policy). Also multiple of those BCD_CHANGE transitions could occur,
+                // to define different intervals with different billing cycle days.
+                //
+                overridenBCD = transition.getNextBillCycleDayLocal() != null ? transition.getNextBillCycleDayLocal() : overridenBCD;
+                final int bcdLocal = overridenBCD != null ?
+                                     overridenBCD :
+                                     calculateBcdForTransition(catalog, baseSubscription, subscription, account, currentAccountBCD, transition);
 
-                    if (currentAccountBCD == 0 && !updatedAccountBCD) {
-                        accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);
-                        updatedAccountBCD = true;
-                    }
-
-                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcdLocal, account.getCurrency(), catalogService.getFullCatalog(context));
-                    result.add(event);
-                } catch (CatalogApiException e) {
-                    log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
-                              transition.getId().toString(), e);
-                } catch (AccountApiException e) {
-                    // This is unexpected  (failed to update BCD) but if this happens we don't want to ignore..
-                    throw e;
-                } catch (Exception e) {
-                    log.warn("Failed while getting BillingEvent", e);
+                if (currentAccountBCD == 0 && !updatedAccountBCD) {
+                    accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);
+                    updatedAccountBCD = true;
                 }
+
+                final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcdLocal, account.getCurrency(), catalog);
+                result.add(event);
             }
         }
     }
 
-
-    protected int calculateBcdForTransition(final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final ImmutableAccountData account, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition, final InternalCallContext context)
+    private int calculateBcdForTransition(final Catalog catalog, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final ImmutableAccountData account, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition)
             throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Catalog catalog = catalogService.getFullCatalog(context);
-        final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(transition, context), transition.getEffectiveTransitionTime());
+        final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveTransitionTime());
         return bcdCalculator.calculateBcdForAlignment(subscription, baseSubscription, alignment, account.getTimeZone(), accountBillCycleDayLocal);
     }
 
-
-    private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final EffectiveSubscriptionInternalEvent transition, final InternalCallContext context) throws CatalogApiException {
-
-        final Catalog catalog = catalogService.getFullCatalog(context);
+    private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final Catalog catalog, final EffectiveSubscriptionInternalEvent transition) throws CatalogApiException {
         final Plan prevPlan = (transition.getPreviousPlan() != null) ? catalog.findPlan(transition.getPreviousPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
         final Plan nextPlan = (transition.getNextPlan() != null) ? catalog.findPlan(transition.getNextPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
