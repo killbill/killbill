@@ -416,6 +416,9 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCreateSuccessAuthCaptureVoidCapture() throws PaymentApiException {
+        // Overwrite the default state machine to allow void on captures
+        stateMachineConfigCache.loadDefaultPaymentStateMachineConfig("org/killbill/billing/payment/PermissivePaymentStates.xml");
+
         final BigDecimal authAmount = BigDecimal.TEN;
         final BigDecimal captureAmount = BigDecimal.ONE;
 
@@ -533,7 +536,82 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testCreateSuccessAuthCaptureVoidFailed() throws PaymentApiException {
+        final BigDecimal authAmount = BigDecimal.TEN;
+        final BigDecimal captureAmount = BigDecimal.ONE;
+
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey2 = UUID.randomUUID().toString();
+        final String transactionExternalKey3 = UUID.randomUUID().toString();
+
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, authAmount, Currency.AED,
+                                                               paymentExternalKey, transactionExternalKey,
+                                                               ImmutableList.<PluginProperty>of(), callContext);
+
+        assertEquals(payment.getExternalKey(), paymentExternalKey);
+        assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment.getAccountId(), account.getId());
+        assertEquals(payment.getAuthAmount().compareTo(authAmount), 0);
+        assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCurrency(), Currency.AED);
+        assertFalse(payment.isAuthVoided());
+
+        assertEquals(payment.getTransactions().size(), 1);
+        assertEquals(payment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
+        assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
+        assertEquals(payment.getTransactions().get(0).getAmount().compareTo(authAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.AED);
+        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(authAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.AED);
+
+        assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.AUTHORIZE);
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorMsg());
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorCode());
+
+        final Payment payment2 = paymentApi.createCapture(account, payment.getId(), captureAmount, Currency.AED, transactionExternalKey2,
+                                                          ImmutableList.<PluginProperty>of(), callContext);
+
+        assertEquals(payment2.getExternalKey(), paymentExternalKey);
+        assertEquals(payment2.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment2.getAccountId(), account.getId());
+        assertEquals(payment2.getAuthAmount().compareTo(authAmount), 0);
+        assertEquals(payment2.getCapturedAmount().compareTo(captureAmount), 0);
+        assertEquals(payment2.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment2.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment2.getCurrency(), Currency.AED);
+        assertFalse(payment2.isAuthVoided());
+
+        assertEquals(payment2.getTransactions().size(), 2);
+        assertEquals(payment2.getTransactions().get(1).getExternalKey(), transactionExternalKey2);
+        assertEquals(payment2.getTransactions().get(1).getPaymentId(), payment.getId());
+        assertEquals(payment2.getTransactions().get(1).getAmount().compareTo(captureAmount), 0);
+        assertEquals(payment2.getTransactions().get(1).getCurrency(), Currency.AED);
+        assertEquals(payment2.getTransactions().get(1).getProcessedAmount().compareTo(captureAmount), 0);
+        assertEquals(payment2.getTransactions().get(1).getProcessedCurrency(), Currency.AED);
+
+        assertEquals(payment2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payment2.getTransactions().get(1).getTransactionType(), TransactionType.CAPTURE);
+        assertNotNull(payment2.getTransactions().get(1).getGatewayErrorMsg());
+        assertNotNull(payment2.getTransactions().get(1).getGatewayErrorCode());
+
+        try {
+            // Voiding a capture is prohibited by default
+            paymentApi.createVoid(account, payment.getId(), transactionExternalKey3, ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
     public void testCreateSuccessAuthCaptureVoidVoid() throws PaymentApiException {
+        // Overwrite the default state machine to allow void on captures
+        stateMachineConfigCache.loadDefaultPaymentStateMachineConfig("org/killbill/billing/payment/PermissivePaymentStates.xml");
+
         final BigDecimal authAmount = BigDecimal.TEN;
         final BigDecimal captureAmount = BigDecimal.ONE;
 

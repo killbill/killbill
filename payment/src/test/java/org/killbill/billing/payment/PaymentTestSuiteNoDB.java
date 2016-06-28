@@ -56,6 +56,8 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import static org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin.PLUGIN_NAME;
+
 public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @Inject
@@ -112,12 +114,13 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestPaymentModuleNoDB(configSource, getClock()));
         injector.injectMembers(this);
-
-        stateMachineConfigCache.loadDefaultPaymentStateMachineConfig(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        stateMachineConfigCache.clearPaymentStateMachineConfig(PLUGIN_NAME, internalCallContext);
+        stateMachineConfigCache.loadDefaultPaymentStateMachineConfig(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML);
+
         eventBus.start();
         paymentExecutors.initialize();
         ((MockPaymentDao) paymentDao).reset();

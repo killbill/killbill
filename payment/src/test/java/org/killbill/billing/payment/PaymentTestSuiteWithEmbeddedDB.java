@@ -28,8 +28,8 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
 import org.killbill.billing.payment.caching.StateMachineConfigCache;
 import org.killbill.billing.payment.core.PaymentExecutors;
-import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
+import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
@@ -49,6 +49,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+
+import static org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin.PLUGIN_NAME;
 
 public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
@@ -98,18 +100,19 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(configSource, getClock()));
         injector.injectMembers(this);
-
-        stateMachineConfigCache.loadDefaultPaymentStateMachineConfig(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML);
     }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+
+        stateMachineConfigCache.clearPaymentStateMachineConfig(PLUGIN_NAME, internalCallContext);
+        stateMachineConfigCache.loadDefaultPaymentStateMachineConfig(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML);
+
         paymentExecutors.initialize();
         eventBus.start();
         Profiling.resetPerThreadProfilingData();
         clock.resetDeltaFromReality();
-
     }
 
     @AfterMethod(groups = "slow")
