@@ -161,7 +161,7 @@ public class PaymentJson extends JsonBase {
         return transactions;
     }
 
-    public PaymentAttempt getNextScheduledPaymentRetry() { return nextScheduledPaymentAttempt; }
+    public PaymentAttempt getNextScheduledPaymentAttempt() { return nextScheduledPaymentAttempt; }
 
     @Override
     public String toString() {
