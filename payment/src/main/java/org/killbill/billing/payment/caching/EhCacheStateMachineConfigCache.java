@@ -53,20 +53,7 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
     private final TenantInternalApi tenantInternalApi;
     private final CacheController cacheController;
     private final CacheInvalidationCallback cacheInvalidationCallback;
-
-    private final LoaderCallback loaderCallback = new LoaderCallback() {
-        public Object loadStateMachineConfig(final String stateMachineConfigXML) throws PaymentApiException {
-            tenantInternalApi.initializeCacheInvalidationCallback(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, cacheInvalidationCallback);
-
-            try {
-                final InputStream stream = new ByteArrayInputStream(stateMachineConfigXML.getBytes());
-                return XMLLoader.getObjectFromStream(new URI("dummy"), stream, DefaultStateMachineConfig.class);
-            } catch (final Exception e) {
-                // TODO 0.17 proper error code
-                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, "Invalid payment state machine config");
-            }
-        }
-    };
+    private final LoaderCallback loaderCallback;
 
     private StateMachineConfig defaultPaymentStateMachineConfig;
 
@@ -78,6 +65,19 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
         // Can be null if mis-configured (e.g. missing in ehcache.xml)
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG);
         this.cacheInvalidationCallback = cacheInvalidationCallback;
+        this.loaderCallback = new LoaderCallback() {
+            public Object loadStateMachineConfig(final String stateMachineConfigXML) throws PaymentApiException {
+                tenantInternalApi.initializeCacheInvalidationCallback(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, cacheInvalidationCallback);
+
+                try {
+                    final InputStream stream = new ByteArrayInputStream(stateMachineConfigXML.getBytes());
+                    return XMLLoader.getObjectFromStream(new URI("dummy"), stream, DefaultStateMachineConfig.class);
+                } catch (final Exception e) {
+                    // TODO 0.17 proper error code
+                    throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, "Invalid payment state machine config");
+                }
+            }
+        };
     }
 
     @Override
