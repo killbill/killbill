@@ -43,6 +43,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -69,7 +70,6 @@ public class TestPayment extends TestJaxrsBase {
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
-        mockPaymentProviderPlugin.clear();
 
         mockPaymentControlProviderPlugin = new MockPaymentControlProviderPlugin();
         controlPluginRegistry.registerService(new OSGIServiceDescriptor() {
@@ -88,6 +88,11 @@ public class TestPayment extends TestJaxrsBase {
                 return MockPaymentControlProviderPlugin.PLUGIN_NAME;
             }
         }, mockPaymentControlProviderPlugin);
+    }
+
+    @AfterMethod(groups = "slow")
+    public void tearDown() throws Exception {
+        mockPaymentProviderPlugin.clear();
     }
 
     @Test(groups = "slow")
