@@ -52,21 +52,21 @@ public class DefaultPayment extends EntityBase implements Payment {
 
     private final Currency currency;
     private final List<PaymentTransaction> transactions;
-    private final PaymentAttempt nextScheduledPaymentAttempt;
+    private final List<PaymentAttempt> paymentAttempts;
 
     public DefaultPayment(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
                           final UUID paymentMethodId,
                           final Integer paymentNumber,
                           final String externalKey,
                           final List<PaymentTransaction> transactions,
-                          @Nullable final PaymentAttempt nextScheduledPaymentAttempt) {
+                          final List<PaymentAttempt> paymentAttempts) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.paymentMethodId = paymentMethodId;
         this.paymentNumber = paymentNumber;
         this.externalKey = externalKey;
         this.transactions = transactions;
-        this.nextScheduledPaymentAttempt = nextScheduledPaymentAttempt;
+        this.paymentAttempts = paymentAttempts;
 
         final Collection<PaymentTransaction> voidedTransactions = new LinkedList<PaymentTransaction>();
         final Collection<PaymentTransaction> nonVoidedTransactions = new LinkedList<PaymentTransaction>();
@@ -348,7 +348,7 @@ public class DefaultPayment extends EntityBase implements Payment {
     }
 
     @Override
-    public PaymentAttempt getNextScheduledPaymentAttempt() { return nextScheduledPaymentAttempt; }
+    public List<PaymentAttempt> getPaymentAttempts() { return paymentAttempts; }
 
     @Override
     public String toString() {
@@ -363,7 +363,7 @@ public class DefaultPayment extends EntityBase implements Payment {
         sb.append(", refundAmount=").append(refundAmount);
         sb.append(", currency=").append(currency);
         sb.append(", transactions=").append(transactions);
-        sb.append(", nextScheduledPaymentAttempt=").append(nextScheduledPaymentAttempt);
+        sb.append(", paymentAttempts=").append(paymentAttempts);
         sb.append('}');
         return sb.toString();
     }
@@ -412,7 +412,7 @@ public class DefaultPayment extends EntityBase implements Payment {
         if (transactions != null ? !transactions.equals(that.transactions) : that.transactions != null) {
             return false;
         }
-        if (nextScheduledPaymentAttempt != null ? !nextScheduledPaymentAttempt.equals(that.nextScheduledPaymentAttempt) : that.nextScheduledPaymentAttempt!= null) {
+        if (paymentAttempts != null ? !paymentAttempts.equals(that.paymentAttempts) : that.paymentAttempts != null) {
             return false;
         }
 
@@ -432,7 +432,7 @@ public class DefaultPayment extends EntityBase implements Payment {
         result = 31 * result + (refundAmount != null ? refundAmount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (transactions != null ? transactions.hashCode() : 0);
-        result = 31 * result + (nextScheduledPaymentAttempt != null ? nextScheduledPaymentAttempt.hashCode() : 0);
+        result = 31 * result + (paymentAttempts != null ? paymentAttempts.hashCode() : 0);
         return result;
     }
 }

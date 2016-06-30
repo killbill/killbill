@@ -51,7 +51,7 @@ public class PaymentJson extends JsonBase {
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String paymentMethodId;
     private final List<? extends PaymentTransactionJson> transactions;
-    private final PaymentAttempt nextScheduledPaymentAttempt;
+    private final List<PaymentAttempt> paymentAttempts;
 
     @JsonCreator
     public PaymentJson(@JsonProperty("accountId") final String accountId,
@@ -66,7 +66,7 @@ public class PaymentJson extends JsonBase {
                        @JsonProperty("currency") final String currency,
                        @JsonProperty("paymentMethodId") final String paymentMethodId,
                        @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
-                       @JsonProperty("nextScheduledPaymentAttempt") final PaymentAttempt nextScheduledPaymentAttempt,
+                       @JsonProperty("paymentAttempts") final List<PaymentAttempt> paymentAttempts,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.accountId = accountId;
@@ -81,7 +81,7 @@ public class PaymentJson extends JsonBase {
         this.currency = currency;
         this.paymentMethodId = paymentMethodId;
         this.transactions = transactions;
-        this.nextScheduledPaymentAttempt = nextScheduledPaymentAttempt;
+        this.paymentAttempts = paymentAttempts;
     }
 
     public PaymentJson(final Payment dp, @Nullable final AccountAuditLogs accountAuditLogs) {
@@ -97,7 +97,7 @@ public class PaymentJson extends JsonBase {
              dp.getCurrency() != null ? dp.getCurrency().toString() : null,
              dp.getPaymentMethodId() != null ? dp.getPaymentMethodId().toString() : null,
              getTransactions(dp.getTransactions(), dp.getExternalKey(), accountAuditLogs),
-             dp.getNextScheduledPaymentAttempt(),
+             dp.getPaymentAttempts(),
              toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPayment(dp.getId())));
     }
 
@@ -161,7 +161,7 @@ public class PaymentJson extends JsonBase {
         return transactions;
     }
 
-    public PaymentAttempt getNextScheduledPaymentAttempt() { return nextScheduledPaymentAttempt; }
+    public List<PaymentAttempt> getPaymentAttempts() { return paymentAttempts; }
 
     @Override
     public String toString() {
@@ -178,7 +178,7 @@ public class PaymentJson extends JsonBase {
         sb.append(", currency='").append(currency).append('\'');
         sb.append(", paymentMethodId='").append(paymentMethodId).append('\'');
         sb.append(", transactions=").append(transactions);
-        sb.append(", nextScheduledPaymentAttempt=").append(nextScheduledPaymentAttempt);
+        sb.append(", paymentAttempts=").append(paymentAttempts);
         sb.append('}');
         return sb.toString();
     }
@@ -230,7 +230,7 @@ public class PaymentJson extends JsonBase {
         if (transactions != null ? !transactions.equals(that.transactions) : that.transactions != null) {
             return false;
         }
-        if (nextScheduledPaymentAttempt != null ? !nextScheduledPaymentAttempt.equals(that.nextScheduledPaymentAttempt) : that.nextScheduledPaymentAttempt!= null) {
+        if (paymentAttempts != null ? !paymentAttempts.equals(that.paymentAttempts) : that.paymentAttempts!= null) {
             return false;
         }
 
@@ -251,7 +251,7 @@ public class PaymentJson extends JsonBase {
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (transactions != null ? transactions.hashCode() : 0);
-        result = 31 * result + (nextScheduledPaymentAttempt != null ? nextScheduledPaymentAttempt.hashCode() : 0);
+        result = 31 * result + (paymentAttempts != null ? paymentAttempts.hashCode() : 0);
         return result;
     }
 }

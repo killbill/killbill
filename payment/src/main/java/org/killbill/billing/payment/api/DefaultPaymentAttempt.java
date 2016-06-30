@@ -17,46 +17,91 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 
 public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt {
 
-    private final UUID paymentId;
+    private final UUID accountId;
+    private final UUID paymentMethodId;
+    private final String paymentExternalKey;
+    private final UUID transactionId;
+    private final String transactionExternalKey;
     private final TransactionType transactionType;
-    private final DateTime effectiveDate;
-    private final TransactionStatus status;
+    private final String stateName;
     private final BigDecimal amount;
     private final Currency currency;
+    private final String pluginName;
+    private final byte[] pluginProperties;
 
-    public DefaultPaymentAttempt(final UUID id, final UUID paymentId,
-                                 final TransactionType transactionType, final DateTime effectiveDate,
-                                 final TransactionStatus status, final BigDecimal amount, final Currency currency) {
-        super(id);
-        this.paymentId = paymentId;
+    public DefaultPaymentAttempt(final UUID accountId, final UUID paymentMethodId, final UUID id, final DateTime createdDate, final DateTime updatedDate,
+                                 final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
+                                 final String stateName, final BigDecimal amount, final Currency currency, final String pluginName, final byte[] pluginProperties) {
+        super(id, createdDate, updatedDate);
+        this.accountId = accountId;
+        this.paymentMethodId = paymentMethodId;
+        this.paymentExternalKey = paymentExternalKey;
+        this.transactionId = transactionId;
+        this.transactionExternalKey = transactionExternalKey;
         this.transactionType = transactionType;
-        this.effectiveDate = effectiveDate;
-        this.status = status;
+        this.stateName = stateName;
         this.amount = amount;
         this.currency = currency;
+        this.pluginName = pluginName;
+        this.pluginProperties = pluginProperties;
+    }
+
+    public DefaultPaymentAttempt(final PaymentAttemptModelDao paymentAttemptModelDao) {
+        this(paymentAttemptModelDao.getAccountId(),
+            paymentAttemptModelDao.getPaymentMethodId(),
+            paymentAttemptModelDao.getId(),
+            paymentAttemptModelDao.getCreatedDate(),
+            paymentAttemptModelDao.getUpdatedDate(),
+            paymentAttemptModelDao.getPaymentExternalKey(),
+            paymentAttemptModelDao.getTransactionId(),
+            paymentAttemptModelDao.getTransactionExternalKey(),
+            paymentAttemptModelDao.getTransactionType(),
+            paymentAttemptModelDao.getStateName(),
+            paymentAttemptModelDao.getAmount(),
+            paymentAttemptModelDao.getCurrency(),
+            paymentAttemptModelDao.getPluginName(),
+            paymentAttemptModelDao.getPluginProperties()
+        );
     }
 
     @Override
-    public UUID getPaymentId() {
-        return paymentId;
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    @Override
+    public UUID getPaymentMethodId() {
+        return paymentMethodId;
+    }
+
+    @Override
+    public String getPaymentExternalKey() {
+        return paymentExternalKey;
+    }
+
+    @Override
+    public UUID getTransactionId() {
+        return transactionId;
+    }
+
+    @Override
+    public String getTransactionExternalKey() {
+        return transactionExternalKey;
     }
 
     @Override
     public TransactionType getTransactionType() {
         return transactionType;
-    }
-
-    @Override
-    public DateTime getEffectiveDate() {
-        return effectiveDate;
     }
 
     @Override
@@ -70,21 +115,35 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
     }
 
     @Override
-    public TransactionStatus getTransactionStatus() {
-        return status;
+    public String getPluginName() {
+        return pluginName;
+    }
+
+    @Override
+    public byte[] getPluginProperties() {
+        return pluginProperties;
+    }
+
+    @Override
+    public String getStateName() {
+        return stateName;
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("DefaultPaymentTransaction{");
-        sb.append("paymentId=").append(paymentId);
-        sb.append(", transactionType=").append(transactionType);
-        sb.append(", effectiveDate=").append(effectiveDate);
-        sb.append(", status=").append(status);
-        sb.append(", amount=").append(amount);
-        sb.append(", currency=").append(currency);
-        sb.append('}');
-        return sb.toString();
+        return "DefaultPaymentAttempt{" +
+               "accountId=" + accountId +
+               ", paymentMethodId=" + paymentMethodId +
+               ", paymentExternalKey='" + paymentExternalKey + '\'' +
+               ", transactionId=" + transactionId +
+               ", transactionExternalKey='" + transactionExternalKey + '\'' +
+               ", transactionType=" + transactionType +
+               ", stateName=" + stateName +
+               ", amount=" + amount +
+               ", currency=" + currency +
+               ", pluginName='" + pluginName + '\'' +
+               ", pluginProperties=" + Arrays.toString(pluginProperties) +
+               '}';
     }
 
     @Override
@@ -101,37 +160,54 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
 
         final DefaultPaymentAttempt that = (DefaultPaymentAttempt) o;
 
-        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (currency != that.currency) {
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
             return false;
         }
-        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
+        if (paymentExternalKey != null ? !paymentExternalKey.equals(that.paymentExternalKey) : that.paymentExternalKey != null) {
             return false;
         }
-        if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
+        if (transactionId != null ? !transactionId.equals(that.transactionId) : that.transactionId != null) {
             return false;
         }
-        if (status != that.status) {
+        if (transactionExternalKey != null ? !transactionExternalKey.equals(that.transactionExternalKey) : that.transactionExternalKey != null) {
             return false;
         }
         if (transactionType != that.transactionType) {
             return false;
         }
+        if (stateName != that.stateName) {
+            return false;
+        }
+        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+            return false;
+        }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
+            return false;
+        }
+        return Arrays.equals(pluginProperties, that.pluginProperties);
 
-        return true;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+        result = 31 * result + (paymentExternalKey != null ? paymentExternalKey.hashCode() : 0);
+        result = 31 * result + (transactionId != null ? transactionId.hashCode() : 0);
+        result = 31 * result + (transactionExternalKey != null ? transactionExternalKey.hashCode() : 0);
         result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
-        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
-        result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (stateName != null ? stateName.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
+        result = 31 * result + Arrays.hashCode(pluginProperties);
         return result;
     }
 }

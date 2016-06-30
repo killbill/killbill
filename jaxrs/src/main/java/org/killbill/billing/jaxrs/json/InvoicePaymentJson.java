@@ -52,9 +52,9 @@ public class InvoicePaymentJson extends PaymentJson {
                               @JsonProperty("currency") final String currency,
                               @JsonProperty("paymentMethodId") final String paymentMethodId,
                               @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
-                              @JsonProperty("nextScheduledPaymentAttempt") final PaymentAttempt nextScheduledPaymentAttempt,
+                              @JsonProperty("paymentAttempts") final List<PaymentAttempt> paymentAttempts,
                               @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(accountId, paymentId, paymentNumber, paymentExternalKey, authAmount, capturedAmount, purchasedAmount, refundedAmount, creditedAmount, currency, paymentMethodId, transactions, nextScheduledPaymentAttempt, auditLogs);
+        super(accountId, paymentId, paymentNumber, paymentExternalKey, authAmount, capturedAmount, purchasedAmount, refundedAmount, creditedAmount, currency, paymentMethodId, transactions, paymentAttempts, auditLogs);
         this.targetInvoiceId = targetInvoiceId;
     }
 
