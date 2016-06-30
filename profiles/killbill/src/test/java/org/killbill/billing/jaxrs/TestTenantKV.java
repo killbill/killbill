@@ -120,7 +120,7 @@ public class TestTenantKV extends TestJaxrsBase {
 
         final AtomicReference<Payment> voidPaymentOtherTenant2Ref = new AtomicReference<Payment>();
         Awaitility.await()
-                  .atMost(6, TimeUnit.SECONDS)
+                  .atMost(8, TimeUnit.SECONDS)
                   .pollInterval(Duration.TWO_SECONDS)
                   .until(new Callable<Boolean>() {
                       @Override
