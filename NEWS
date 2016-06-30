@@ -47,6 +47,9 @@
 0.15.0
     See https://github.com/killbill/killbill/issues?q=milestone%3ARelease-0.15.0+is%3Aclosed
 
+0.14.1
+    Fix usage bug (see 8511f41cdf78bd1cb9d0c335ffa8d40ca53aeccd)
+
 0.14.0
     http://killbill.io/blog/kill-bill-0-14-0-released/
 
