@@ -1721,7 +1721,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testSanityAcrossTransactionTypes() throws PaymentApiException {
-
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final String paymentExternalKey = "ahhhhhhhh";
         final String transactionExternalKey = "okkkkkkk";
@@ -1736,7 +1735,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(pendingPayment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
         Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
 
-
         try {
             createPayment(TransactionType.PURCHASE, null, paymentExternalKey, transactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
             Assert.fail("PURCHASE transaction with same key should have failed");
@@ -1747,10 +1745,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testSuccessfulInitialTransactionToSameTransaction() throws Exception {
-
         final BigDecimal requestedAmount = BigDecimal.TEN;
         for (final TransactionType transactionType : ImmutableList.<TransactionType>of(TransactionType.AUTHORIZE, TransactionType.PURCHASE, TransactionType.CREDIT)) {
-
             final String paymentExternalKey = UUID.randomUUID().toString();
             final String keyA = UUID.randomUUID().toString();
 
@@ -1766,6 +1762,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                 createPayment(transactionType, processedPayment.getId(), paymentExternalKey, keyB, requestedAmount, PaymentPluginStatus.PROCESSED);
                 Assert.fail("Retrying initial successful transaction (AUTHORIZE, PURCHASE, CREDIT) with same different key should fail");
             } catch (final PaymentApiException e) {
+                Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
             }
 
             // Attempt to create another {AUTH, PURCHASE, CREDIT} with same key => key constraint should make the request fail
@@ -1773,17 +1770,15 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                 createPayment(transactionType, processedPayment.getId(), paymentExternalKey, keyA, requestedAmount, PaymentPluginStatus.PROCESSED);
                 Assert.fail("Retrying initial successful transaction (AUTHORIZE, PURCHASE, CREDIT) with same transaction key should fail");
             } catch (final PaymentApiException e) {
+                Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
             }
         }
     }
 
-
     @Test(groups = "slow")
     public void testPendingInitialTransactionToSameTransaction() throws Exception {
-
         final BigDecimal requestedAmount = BigDecimal.TEN;
         for (final TransactionType transactionType : ImmutableList.<TransactionType>of(TransactionType.AUTHORIZE, TransactionType.PURCHASE, TransactionType.CREDIT)) {
-
             final String paymentExternalKey = UUID.randomUUID().toString();
             final String keyA = UUID.randomUUID().toString();
 
@@ -1799,6 +1794,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                 createPayment(transactionType, pendingPayment.getId(), paymentExternalKey, keyB, requestedAmount, PaymentPluginStatus.PROCESSED);
                 Assert.fail("Retrying initial successful transaction (AUTHORIZE, PURCHASE, CREDIT) with same different key should fail");
             } catch (final PaymentApiException e) {
+                Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
             }
 
             // Attempt to create another {AUTH, PURCHASE, CREDIT} with same key => That should work because we are completing the payment
@@ -1809,13 +1805,10 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
     }
 
-
     @Test(groups = "slow")
     public void testFailedInitialTransactionToSameTransactionWithSameKey() throws Exception {
-
         final BigDecimal requestedAmount = BigDecimal.TEN;
         for (final TransactionType transactionType : ImmutableList.<TransactionType>of(TransactionType.AUTHORIZE, TransactionType.PURCHASE, TransactionType.CREDIT)) {
-
             final String paymentExternalKey = UUID.randomUUID().toString();
             final String keyA = UUID.randomUUID().toString();
 
@@ -1832,13 +1825,10 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
     }
 
-
     @Test(groups = "slow")
     public void testFailedInitialTransactionToSameTransactionWithDifferentKey() throws Exception {
-
         final BigDecimal requestedAmount = BigDecimal.TEN;
         for (final TransactionType transactionType : ImmutableList.<TransactionType>of(TransactionType.AUTHORIZE, TransactionType.PURCHASE, TransactionType.CREDIT)) {
-
             final String paymentExternalKey = UUID.randomUUID().toString();
             final String keyA = UUID.randomUUID().toString();
 
@@ -1856,8 +1846,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             Assert.assertEquals(successfulPayment.getTransactions().size(), 2);
         }
     }
-
-
 
     private void verifyRefund(final Payment refund, final String paymentExternalKey, final String paymentTransactionExternalKey, final String refundTransactionExternalKey, final BigDecimal requestedAmount, final BigDecimal refundAmount, final TransactionStatus transactionStatus) {
         Assert.assertEquals(refund.getExternalKey(), paymentExternalKey);
