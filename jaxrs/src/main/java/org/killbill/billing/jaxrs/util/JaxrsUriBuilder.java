@@ -20,6 +20,7 @@ import java.net.URI;
 import java.util.Map;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -27,19 +28,34 @@ import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
+import org.killbill.billing.util.config.definition.JaxrsConfig;
 
 public class JaxrsUriBuilder {
 
-    public Response buildResponse(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId) {
-        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId);
-        return Response.created(location).build();
+    private final JaxrsConfig jaxrsConfig;
+
+    @Inject
+    public JaxrsUriBuilder(JaxrsConfig jaxrsConfig) {
+        this.jaxrsConfig = jaxrsConfig;
     }
 
-    public URI buildLocation(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId) {
-        final UriBuilder uriBuilder = getUriBuilder(theClass, getMethodName).scheme(uriInfo.getAbsolutePath().getScheme())
-                                                                            .host(uriInfo.getAbsolutePath().getHost())
-                                                                            .port(uriInfo.getAbsolutePath().getPort());
+    public Response buildResponse(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
+                                  final String getMethodName, final Object objectId) {
+        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId);
+        return !jaxrsConfig.isJaxrsLocationFullUrl() ?
+               Response.status(Response.Status.CREATED).header("Location", location.getPath()).build() :
+               Response.created(location).build();
+    }
 
+    public URI buildLocation(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
+                             final String getMethodName, final Object objectId) {
+        final UriBuilder uriBuilder = getUriBuilder(uriInfo.getBaseUri().getPath(), theClass, getMethodName);
+
+        if (jaxrsConfig.isJaxrsLocationFullUrl()) {
+            uriBuilder.scheme(uriInfo.getAbsolutePath().getScheme())
+              .host(uriInfo.getAbsolutePath().getHost())
+              .port(uriInfo.getAbsolutePath().getPort());
+        }
         return objectId != null ? uriBuilder.build(objectId) : uriBuilder.build();
     }
 
@@ -72,6 +88,12 @@ public class JaxrsUriBuilder {
             }
         };
         return ri.entity(obj).build();
+    }
+
+    private UriBuilder getUriBuilder(final String path, final Class<? extends JaxrsResource> theClassMaybeEnhanced, @Nullable final String getMethodName) {
+        final Class theClass = getNonEnhancedClass(theClassMaybeEnhanced);
+        return getMethodName != null ? UriBuilder.fromPath(path.equals("/") ? path.substring(1) : path).path(theClass).path(theClass, getMethodName) :
+               UriBuilder.fromPath(path).path(theClass);
     }
 
     private UriBuilder getUriBuilder(final Class<? extends JaxrsResource> theClassMaybeEnhanced, @Nullable final String getMethodName) {

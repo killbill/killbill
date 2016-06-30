@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs.glue;
 import org.killbill.billing.jaxrs.DefaultJaxrsService;
 import org.killbill.billing.jaxrs.JaxrsExecutors;
 import org.killbill.billing.jaxrs.JaxrsService;
+import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.billing.util.glue.KillBillModule;
@@ -36,7 +37,7 @@ public class DefaultJaxrsModule extends KillBillModule {
         final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
         final JaxrsConfig jaxrsConfig = factory.build(JaxrsConfig.class);
         bind(JaxrsConfig.class).toInstance(jaxrsConfig);
-
+        bind(JaxrsUriBuilder.class).asEagerSingleton();
         bind(JaxrsExecutors.class).asEagerSingleton();
         bind(JaxrsService.class).to(DefaultJaxrsService.class).asEagerSingleton();
     }
