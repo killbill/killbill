@@ -325,7 +325,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, null, callContext);
         assertEquals(accountPayments.size(), 3);
-        assertEquals(accountPayments.get(2).getPurchasedAmount(), new BigDecimal("10.000000000"));
+        assertEquals(accountPayments.get(2).getPurchasedAmount(), new BigDecimal("10.00"));
 
     }
 
