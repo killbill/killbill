@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -109,10 +109,16 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
     }
 
     @Override
+    public String getPluginPaymentStateMachineConfig(final String pluginName, final InternalTenantContext tenantContext) {
+        final String pluginConfigKey = TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_ + pluginName;
+        final List<String> values = tenantDao.getTenantValueForKey(pluginConfigKey, tenantContext);
+        return getUniqueValue(values, "payment state machine for plugin " + pluginConfigKey, tenantContext);
+    }
+
+    @Override
     public List<String> getTenantValuesForKey(final String key, final InternalTenantContext tenantContext) {
         return tenantDao.getTenantValueForKey(key, tenantContext);
     }
-
 
     @Override
     public Tenant getTenantByApiKey(final String key) throws TenantApiException {
@@ -122,8 +128,6 @@ public class DefaultTenantInternalApi implements TenantInternalApi {
         }
         return new DefaultTenant(tenant);
     }
-
-
 
     private String getUniqueValue(final List<String> values, final String msg, final InternalTenantContext tenantContext) {
         if (values.isEmpty()) {

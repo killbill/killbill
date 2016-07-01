@@ -60,6 +60,11 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>com.jayway.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.palominolabs.metrics</groupId>
             <artifactId>metrics-guice</artifactId>
             <scope>runtime</scope>

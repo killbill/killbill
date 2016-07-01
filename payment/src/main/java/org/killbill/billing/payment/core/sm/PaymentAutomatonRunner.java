@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,7 +20,6 @@ package org.killbill.billing.payment.core.sm;
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -35,6 +34,7 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.automaton.StateMachine;
+import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -68,7 +68,6 @@ import org.killbill.billing.payment.core.sm.payments.VoidOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
-import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
@@ -76,10 +75,7 @@ import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import com.google.common.base.MoreObjects;
 
 public class PaymentAutomatonRunner {
 
@@ -89,6 +85,7 @@ public class PaymentAutomatonRunner {
     protected final PluginDispatcher<OperationResult> paymentPluginDispatcher;
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final Clock clock;
+
     private final PersistentBus eventBus;
     private final PaymentConfig paymentConfig;
 
@@ -110,42 +107,57 @@ public class PaymentAutomatonRunner {
         this.paymentConfig = paymentConfig;
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentPluginDispatcher = new PluginDispatcher<OperationResult>(paymentPluginTimeoutSec, executors);
-
     }
 
-    public UUID run(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID attemptId, @Nullable final UUID paymentMethodId,
-                    @Nullable final UUID paymentId, @Nullable final UUID transactionId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
-                    @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                    final boolean shouldLockAccount, final OperationResult overridePluginOperationResult, final Iterable<PluginProperty> properties,
-                    final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        final DateTime utcNow = clock.getUTCNow();
-
+    public PaymentStateContext buildPaymentStateContext(final boolean isApiPayment,
+                                                        final TransactionType transactionType,
+                                                        final Account account,
+                                                        @Nullable final UUID attemptId,
+                                                        @Nullable final UUID paymentMethodId,
+                                                        @Nullable final UUID paymentId,
+                                                        @Nullable final UUID transactionId,
+                                                        @Nullable final String paymentExternalKey,
+                                                        final String paymentTransactionExternalKey,
+                                                        @Nullable final BigDecimal amount,
+                                                        @Nullable final Currency currency,
+                                                        final boolean shouldLockAccount,
+                                                        final OperationResult overridePluginOperationResult,
+                                                        final Iterable<PluginProperty> properties,
+                                                        final CallContext callContext,
+                                                        final InternalCallContext internalCallContext) throws PaymentApiException {
         // Retrieve the payment id from the payment external key if needed
         final UUID effectivePaymentId = paymentId != null ? paymentId : retrievePaymentId(paymentExternalKey, internalCallContext);
 
-        final PaymentStateContext paymentStateContext = new PaymentStateContext(isApiPayment, effectivePaymentId, transactionId, attemptId, paymentExternalKey, paymentTransactionExternalKey, transactionType,
-                                                                                account, paymentMethodId, amount, currency, shouldLockAccount, overridePluginOperationResult, properties, internalCallContext, callContext);
+        return new PaymentStateContext(isApiPayment,
+                                       effectivePaymentId,
+                                       transactionId,
+                                       attemptId,
+                                       paymentExternalKey,
+                                       paymentTransactionExternalKey,
+                                       transactionType,
+                                       account,
+                                       paymentMethodId,
+                                       amount,
+                                       currency,
+                                       shouldLockAccount,
+                                       overridePluginOperationResult,
+                                       properties,
+                                       internalCallContext,
+                                       callContext);
+    }
 
-        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext, eventBus, paymentSMHelper);
+    public PaymentAutomatonDAOHelper buildDaoHelper(final PaymentStateContext paymentStateContext,
+                                                    final InternalCallContext internalCallContext) throws PaymentApiException {
+        final DateTime utcNow = clock.getUTCNow();
 
-        final UUID effectivePaymentMethodId;
-        final String currentStateName;
-        if (effectivePaymentId != null) {
-            final PaymentModelDao paymentModelDao = daoHelper.getPayment();
-            effectivePaymentMethodId = paymentModelDao.getPaymentMethodId();
-            currentStateName = paymentModelDao.getLastSuccessStateName() != null ? paymentModelDao.getLastSuccessStateName() : paymentSMHelper.getInitStateNameForTransaction();
+        return new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext, eventBus, paymentSMHelper);
+    }
 
-            // Check for illegal states (should never happen)
-            Preconditions.checkState(currentStateName != null, "State name cannot be null for payment " + effectivePaymentId);
-            Preconditions.checkState(paymentMethodId == null || effectivePaymentMethodId.equals(paymentMethodId), "Specified payment method id " + paymentMethodId + " doesn't match the one on the payment " + effectivePaymentMethodId);
-        } else {
-            // If the payment method is not specified, retrieve the default one on the account; it could still be null, in which case
-            //
-            effectivePaymentMethodId = paymentMethodId != null ? paymentMethodId : account.getPaymentMethodId();
-            currentStateName = paymentSMHelper.getInitStateNameForTransaction();
-        }
-
-        paymentStateContext.setPaymentMethodId(effectivePaymentMethodId);
+    public UUID run(final PaymentStateContext paymentStateContext,
+                    final PaymentAutomatonDAOHelper daoHelper,
+                    @Nullable final String currentStateNameOrNull,
+                    final TransactionType transactionType) throws PaymentApiException {
+        final String currentStateName = MoreObjects.firstNonNull(currentStateNameOrNull, paymentSMHelper.getInitStateNameForTransaction());
 
         final OperationCallback operationCallback;
         final LeavingStateCallback leavingStateCallback;
@@ -190,7 +202,7 @@ public class PaymentAutomatonRunner {
                 throw new IllegalStateException("Unsupported transaction type " + transactionType);
         }
 
-        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback, account.getId(), getInvoiceId(properties));
+        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback, paymentStateContext, daoHelper);
 
         return paymentStateContext.getPaymentId();
     }
@@ -206,37 +218,31 @@ public class PaymentAutomatonRunner {
         return clock;
     }
 
-    protected void runStateMachineOperation(final String initialStateName, final TransactionType transactionType,
-                                            final LeavingStateCallback leavingStateCallback, final OperationCallback operationCallback, final EnteringStateCallback enteringStateCallback,
-                                            final UUID accountId, final String invoiceId) throws PaymentApiException {
+    private void runStateMachineOperation(final String initialStateName,
+                                          final TransactionType transactionType,
+                                          final LeavingStateCallback leavingStateCallback,
+                                          final OperationCallback operationCallback,
+                                          final EnteringStateCallback enteringStateCallback,
+                                          final PaymentStateContext paymentStateContext,
+                                          final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
         try {
-            final StateMachine initialStateMachine = paymentSMHelper.getStateMachineForStateName(initialStateName);
+            final StateMachineConfig stateMachineConfig = paymentSMHelper.getStateMachineConfig(daoHelper.getPaymentProviderPluginName(), paymentStateContext.getInternalCallContext());
+            final StateMachine initialStateMachine = stateMachineConfig.getStateMachineForState(initialStateName);
             final State initialState = initialStateMachine.getState(initialStateName);
-            final Operation operation = paymentSMHelper.getOperationForTransaction(transactionType);
+            final Operation operation = paymentSMHelper.getOperationForTransaction(stateMachineConfig, transactionType);
 
             initialState.runOperation(operation, operationCallback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {
             throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INVALID_OPERATION, transactionType, initialStateName);
         } catch (final OperationException e) {
             if (e.getCause() == null) {
-                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
             } else if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
             } else {
-                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
             }
         }
-    }
-
-    private String getInvoiceId(final Iterable<PluginProperty> properties) {
-        final PluginProperty invoiceProperty = Iterables.tryFind(properties, new Predicate<PluginProperty>() {
-            @Override
-            public boolean apply(final PluginProperty input) {
-                return InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID.equals(input.getKey());
-            }
-        }).orNull();
-
-        return invoiceProperty == null || invoiceProperty.getValue() == null ? null : invoiceProperty.getValue().toString();
     }
 
     private UUID retrievePaymentId(@Nullable final String paymentExternalKey, final InternalCallContext internalCallContext) {

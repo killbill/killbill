@@ -412,10 +412,21 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment2.getTransactions().get(1).getTransactionType(), TransactionType.VOID);
         assertNotNull(payment2.getTransactions().get(1).getGatewayErrorMsg());
         assertNotNull(payment2.getTransactions().get(1).getGatewayErrorCode());
+
+        try {
+            // Verify further VOIDs are prohibited (see https://github.com/killbill/killbill/issues/514)
+            paymentApi.createVoid(account, payment.getId(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
     }
 
     @Test(groups = "slow")
     public void testCreateSuccessAuthCaptureVoidCapture() throws PaymentApiException {
+        // Overwrite the default state machine to allow void on captures
+        stateMachineConfigCache.loadDefaultPaymentStateMachineConfig("org/killbill/billing/payment/PermissivePaymentStates.xml");
+
         final BigDecimal authAmount = BigDecimal.TEN;
         final BigDecimal captureAmount = BigDecimal.ONE;
 
@@ -533,7 +544,82 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testCreateSuccessAuthCaptureVoidFailed() throws PaymentApiException {
+        final BigDecimal authAmount = BigDecimal.TEN;
+        final BigDecimal captureAmount = BigDecimal.ONE;
+
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey2 = UUID.randomUUID().toString();
+        final String transactionExternalKey3 = UUID.randomUUID().toString();
+
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, authAmount, Currency.AED,
+                                                               paymentExternalKey, transactionExternalKey,
+                                                               ImmutableList.<PluginProperty>of(), callContext);
+
+        assertEquals(payment.getExternalKey(), paymentExternalKey);
+        assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment.getAccountId(), account.getId());
+        assertEquals(payment.getAuthAmount().compareTo(authAmount), 0);
+        assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment.getCurrency(), Currency.AED);
+        assertFalse(payment.isAuthVoided());
+
+        assertEquals(payment.getTransactions().size(), 1);
+        assertEquals(payment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
+        assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
+        assertEquals(payment.getTransactions().get(0).getAmount().compareTo(authAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.AED);
+        assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(authAmount), 0);
+        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.AED);
+
+        assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.AUTHORIZE);
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorMsg());
+        assertNotNull(payment.getTransactions().get(0).getGatewayErrorCode());
+
+        final Payment payment2 = paymentApi.createCapture(account, payment.getId(), captureAmount, Currency.AED, transactionExternalKey2,
+                                                          ImmutableList.<PluginProperty>of(), callContext);
+
+        assertEquals(payment2.getExternalKey(), paymentExternalKey);
+        assertEquals(payment2.getPaymentMethodId(), account.getPaymentMethodId());
+        assertEquals(payment2.getAccountId(), account.getId());
+        assertEquals(payment2.getAuthAmount().compareTo(authAmount), 0);
+        assertEquals(payment2.getCapturedAmount().compareTo(captureAmount), 0);
+        assertEquals(payment2.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment2.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(payment2.getCurrency(), Currency.AED);
+        assertFalse(payment2.isAuthVoided());
+
+        assertEquals(payment2.getTransactions().size(), 2);
+        assertEquals(payment2.getTransactions().get(1).getExternalKey(), transactionExternalKey2);
+        assertEquals(payment2.getTransactions().get(1).getPaymentId(), payment.getId());
+        assertEquals(payment2.getTransactions().get(1).getAmount().compareTo(captureAmount), 0);
+        assertEquals(payment2.getTransactions().get(1).getCurrency(), Currency.AED);
+        assertEquals(payment2.getTransactions().get(1).getProcessedAmount().compareTo(captureAmount), 0);
+        assertEquals(payment2.getTransactions().get(1).getProcessedCurrency(), Currency.AED);
+
+        assertEquals(payment2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payment2.getTransactions().get(1).getTransactionType(), TransactionType.CAPTURE);
+        assertNotNull(payment2.getTransactions().get(1).getGatewayErrorMsg());
+        assertNotNull(payment2.getTransactions().get(1).getGatewayErrorCode());
+
+        try {
+            // Voiding a capture is prohibited by default
+            paymentApi.createVoid(account, payment.getId(), transactionExternalKey3, ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
     public void testCreateSuccessAuthCaptureVoidVoid() throws PaymentApiException {
+        // Overwrite the default state machine to allow void on captures
+        stateMachineConfigCache.loadDefaultPaymentStateMachineConfig("org/killbill/billing/payment/PermissivePaymentStates.xml");
+
         final BigDecimal authAmount = BigDecimal.TEN;
         final BigDecimal captureAmount = BigDecimal.ONE;
 
@@ -1341,6 +1427,42 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testVerifyJanitorFromPendingDuringCompletionFlow() throws PaymentApiException {
+        final BigDecimal authAmount = BigDecimal.TEN;
+        final String transactionExternalKey = UUID.randomUUID().toString();
+
+        final Payment initialPayment = createPayment(TransactionType.AUTHORIZE, null, UUID.randomUUID().toString(), transactionExternalKey, authAmount, PaymentPluginStatus.PENDING);
+        Assert.assertEquals(initialPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
+
+        mockPaymentProviderPlugin.overridePaymentPluginStatus(initialPayment.getId(), initialPayment.getTransactions().get(0).getId(), PaymentPluginStatus.PROCESSED);
+
+        try {
+            final Payment completedPayment = createPayment(TransactionType.AUTHORIZE, initialPayment.getId(), initialPayment.getExternalKey(), transactionExternalKey, authAmount, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testVerifyJanitorFromUnknownDuringCompletionFlow() throws PaymentApiException {
+        final BigDecimal authAmount = BigDecimal.TEN;
+        final String transactionExternalKey = UUID.randomUUID().toString();
+
+        final Payment initialPayment = createPayment(TransactionType.AUTHORIZE, null, UUID.randomUUID().toString(), transactionExternalKey, authAmount, PaymentPluginStatus.UNDEFINED);
+        Assert.assertEquals(initialPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.UNKNOWN);
+
+        mockPaymentProviderPlugin.overridePaymentPluginStatus(initialPayment.getId(), initialPayment.getTransactions().get(0).getId(), PaymentPluginStatus.PROCESSED);
+
+        try {
+            final Payment completedPayment = createPayment(TransactionType.AUTHORIZE, initialPayment.getId(), initialPayment.getExternalKey(), transactionExternalKey, authAmount, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
     public void testNotifyPendingTransactionOfStateChanged() throws PaymentApiException {
 
         final BigDecimal authAmount = BigDecimal.TEN;
@@ -1348,16 +1470,9 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String paymentExternalKey = "rouge";
         final String transactionExternalKey = "vert";
 
-        final Payment initialPayment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, authAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
-                                                                      ImmutableList.<PluginProperty>of(), callContext);
+        final Payment initialPayment = createPayment(TransactionType.AUTHORIZE, null, paymentExternalKey, transactionExternalKey, authAmount, PaymentPluginStatus.PENDING);
 
-        // Update the payment/transaction by hand to simulate a PENDING state.
-        final PaymentTransaction paymentTransaction = initialPayment.getTransactions().get(0);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), initialPayment.getId(), TransactionType.AUTHORIZE, "AUTH_PENDING", "AUTH_PENDING",
-                                                           paymentTransaction.getId(), TransactionStatus.PENDING, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
-                                                           null, null, internalCallContext);
-
-        final Payment payment = paymentApi.notifyPendingTransactionOfStateChanged(account, paymentTransaction.getId(), true, callContext);
+        final Payment payment = paymentApi.notifyPendingTransactionOfStateChanged(account, initialPayment.getTransactions().get(0).getId(), true, callContext);
 
         assertEquals(payment.getExternalKey(), paymentExternalKey);
         assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
@@ -1366,15 +1481,15 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(payment.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(payment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
-        assertEquals(payment.getCurrency(), Currency.AED);
+        assertEquals(payment.getCurrency(), Currency.USD);
 
         assertEquals(payment.getTransactions().size(), 1);
         assertEquals(payment.getTransactions().get(0).getExternalKey(), transactionExternalKey);
         assertEquals(payment.getTransactions().get(0).getPaymentId(), payment.getId());
         assertEquals(payment.getTransactions().get(0).getAmount().compareTo(authAmount), 0);
-        assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.AED);
+        assertEquals(payment.getTransactions().get(0).getCurrency(), Currency.USD);
         assertEquals(payment.getTransactions().get(0).getProcessedAmount().compareTo(authAmount), 0);
-        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.AED);
+        assertEquals(payment.getTransactions().get(0).getProcessedCurrency(), Currency.USD);
 
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.AUTHORIZE);
@@ -1429,7 +1544,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                ImmutableList.<PluginProperty>of(), callContext);
 
         // Hack the Database to make it look like it was a failure
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, "AUTH_ERRORED", null,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, "AUTH_ERRORED", null,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.PLUGIN_FAILURE, null, null, null, null, internalCallContext);
         final PaymentSqlDao paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
         paymentSqlDao.updateLastSuccessPaymentStateName(payment.getId().toString(), "AUTH_ERRORED", null, internalCallContext);
@@ -1521,6 +1636,51 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testCompletionOfUnknownAuthorization() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final Payment pendingPayment = createPayment(TransactionType.AUTHORIZE, null, paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.UNDEFINED);
+        assertNotNull(pendingPayment);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 1);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.UNKNOWN);
+
+        try {
+            // Attempt to complete the payment
+            createPayment(TransactionType.AUTHORIZE, pendingPayment.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testCompletionOfUnknownCapture() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final Payment authorization = createPayment(TransactionType.AUTHORIZE, null, paymentExternalKey, UUID.randomUUID().toString(), requestedAmount, PaymentPluginStatus.PROCESSED);
+        assertNotNull(authorization);
+        Assert.assertEquals(authorization.getTransactions().size(), 1);
+        Assert.assertEquals(authorization.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+        final Payment pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.UNDEFINED);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 2);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.UNKNOWN);
+
+        try {
+            // Attempt to complete the payment
+            createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
     public void testCreatePurchaseWithTimeout() throws Exception {
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final String paymentExternalKey = "ohhhh";
@@ -1575,7 +1735,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(TransactionType.PURCHASE, null, paymentExternalKey, transactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
             Assert.fail("PURCHASE transaction with same key should have failed");
         } catch (final PaymentApiException expected) {
-            Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+            Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
         }
     }
 
@@ -1817,6 +1977,14 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                paymentTransactionExternalKey,
                                                pluginProperties,
                                                callContext);
+            case CAPTURE:
+                return paymentApi.createCapture(account,
+                                                paymentId,
+                                                amount,
+                                                amount == null ? null : account.getCurrency(),
+                                                paymentTransactionExternalKey,
+                                                pluginProperties,
+                                                callContext);
             default:
                 Assert.fail();
                 return null;

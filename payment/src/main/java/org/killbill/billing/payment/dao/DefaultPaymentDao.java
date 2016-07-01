@@ -297,7 +297,7 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID paymentId, final TransactionType transactionType,
+    public void updatePaymentAndTransactionOnCompletion(final UUID accountId, @Nullable final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
                                                         final String currentPaymentStateName, @Nullable final String lastPaymentSuccessStateName,
                                                         final UUID transactionId, final TransactionStatus transactionStatus,
                                                         final BigDecimal processedAmount, final Currency processedCurrency,
@@ -308,10 +308,16 @@ public class DefaultPaymentDao implements PaymentDao {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InternalCallContext contextWithUpdatedDate = contextWithUpdatedDate(context);
-                entitySqlDaoWrapperFactory.become(TransactionSqlDao.class).updateTransactionStatus(transactionId.toString(),
-                                                                                                   processedAmount, processedCurrency == null ? null : processedCurrency.toString(),
-                                                                                                   transactionStatus == null ? null : transactionStatus.toString(),
-                                                                                                   gatewayErrorCode, gatewayErrorMsg, contextWithUpdatedDate);
+                final TransactionSqlDao transactional = entitySqlDaoWrapperFactory.become(TransactionSqlDao.class);
+                final PaymentTransactionModelDao paymentTransactionModelDao = transactional.getById(transactionId.toString(), context);
+                transactional.updateTransactionStatus(transactionId.toString(),
+                                                      attemptId == null ? (paymentTransactionModelDao.getAttemptId() == null ? null : paymentTransactionModelDao.getAttemptId().toString()) : attemptId.toString(),
+                                                      processedAmount,
+                                                      processedCurrency == null ? null : processedCurrency.toString(),
+                                                      transactionStatus == null ? null : transactionStatus.toString(),
+                                                      gatewayErrorCode,
+                                                      gatewayErrorMsg,
+                                                      contextWithUpdatedDate);
                 if (lastPaymentSuccessStateName != null) {
                     entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updateLastSuccessPaymentStateName(paymentId.toString(), currentPaymentStateName, lastPaymentSuccessStateName, contextWithUpdatedDate);
                 } else {
@@ -321,7 +327,6 @@ public class DefaultPaymentDao implements PaymentDao {
                 return null;
             }
         });
-
     }
 
     @Override

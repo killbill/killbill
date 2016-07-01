@@ -60,6 +60,12 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected static final String reason = "i am god";
     protected static final String comment = "no comment";
 
+    protected static RequestOptions requestOptions = RequestOptions.builder()
+                                                                   .withCreatedBy(createdBy)
+                                                                   .withReason(reason)
+                                                                   .withComment(comment)
+                                                                   .build();
+
     protected KillBillClient killBillClient;
     protected KillBillHttpClient killBillHttpClient;
 

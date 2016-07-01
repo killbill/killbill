@@ -1,7 +1,7 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,6 +33,9 @@ import org.killbill.billing.payment.api.PaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.PaymentBusEventHandler;
 import org.killbill.billing.payment.config.MultiTenantPaymentConfig;
+import org.killbill.billing.payment.caching.EhCacheStateMachineConfigCache;
+import org.killbill.billing.payment.caching.StateMachineConfigCache;
+import org.killbill.billing.payment.caching.StateMachineConfigCacheInvalidationCallback;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
@@ -54,6 +57,7 @@ import org.killbill.billing.payment.retry.DefaultRetryService.DefaultRetryServic
 import org.killbill.billing.payment.retry.RetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.PaymentConfig;
+import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.xmlloader.XMLLoader;
 import org.skife.config.ConfigurationObjectFactory;
@@ -71,12 +75,13 @@ public class PaymentModule extends KillBillModule {
     public static final String RETRYABLE_NAMED = "Retryable";
 
     public static final String STATE_MACHINE_RETRY = "RetryStateMachine";
-    public static final String STATE_MACHINE_PAYMENT = "PaymentStateMachine";
 
     @VisibleForTesting
-    static final String DEFAULT_STATE_MACHINE_RETRY_XML = "org/killbill/billing/payment/retry/RetryStates.xml";
+    public static final String DEFAULT_STATE_MACHINE_RETRY_XML = "org/killbill/billing/payment/retry/RetryStates.xml";
     @VisibleForTesting
-    static final String DEFAULT_STATE_MACHINE_PAYMENT_XML = "org/killbill/billing/payment/PaymentStates.xml";
+    public static final String DEFAULT_STATE_MACHINE_PAYMENT_XML = "org/killbill/billing/payment/PaymentStates.xml";
+
+    public static final String STATE_MACHINE_CONFIG_INVALIDATION_CALLBACK = "StateMachineConfigInvalidationCallback";
 
     public PaymentModule(final KillbillConfigSource configSource) {
         super(configSource);
@@ -104,13 +109,14 @@ public class PaymentModule extends KillBillModule {
     }
 
     protected void installStateMachines() {
-
         bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toInstance(new StateMachineProvider(DEFAULT_STATE_MACHINE_RETRY_XML));
         bind(StateMachineConfig.class).annotatedWith(Names.named(STATE_MACHINE_RETRY)).toProvider(Key.get(StateMachineProvider.class, Names.named(STATE_MACHINE_RETRY)));
+
         bind(PaymentControlStateMachineHelper.class).asEagerSingleton();
 
-        bind(StateMachineProvider.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toInstance(new StateMachineProvider(DEFAULT_STATE_MACHINE_PAYMENT_XML));
-        bind(StateMachineConfig.class).annotatedWith(Names.named(STATE_MACHINE_PAYMENT)).toProvider(Key.get(StateMachineProvider.class, Names.named(STATE_MACHINE_PAYMENT)));
+        bind(StateMachineConfigCache.class).to(EhCacheStateMachineConfigCache.class).asEagerSingleton();
+        bind(CacheInvalidationCallback.class).annotatedWith(Names.named(STATE_MACHINE_CONFIG_INVALIDATION_CALLBACK)).to(StateMachineConfigCacheInvalidationCallback.class).asEagerSingleton();
+
         bind(PaymentStateMachineHelper.class).asEagerSingleton();
 
         bind(ControlPluginRunner.class).asEagerSingleton();

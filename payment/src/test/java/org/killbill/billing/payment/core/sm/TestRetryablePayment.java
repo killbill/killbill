@@ -80,9 +80,6 @@ import static org.testng.Assert.fail;
 public class TestRetryablePayment extends PaymentTestSuiteNoDB {
 
     @Inject
-    @Named(PaymentModule.STATE_MACHINE_PAYMENT)
-    private StateMachineConfig stateMachineConfig;
-    @Inject
     @Named(PaymentModule.STATE_MACHINE_RETRY)
     private StateMachineConfig retryStateMachineConfig;
     @Inject

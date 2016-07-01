@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -53,8 +53,9 @@ public interface TenantInternalApi {
 
     public String getPluginConfig(String pluginName, InternalTenantContext tenantContext);
 
+    public String getPluginPaymentStateMachineConfig(String pluginName, InternalTenantContext tenantContext);
+
     public List<String> getTenantValuesForKey(final String key, final InternalTenantContext tenantContext);
 
     public Tenant getTenantByApiKey(final String key) throws TenantApiException;
-
 }

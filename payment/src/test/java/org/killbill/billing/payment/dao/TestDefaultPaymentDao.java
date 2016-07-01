@@ -65,6 +65,7 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final String gatewayErrorCode = UUID.randomUUID().toString().substring(0, 5);
         final String gatewayErrorMsg = UUID.randomUUID().toString();
         paymentDao.updatePaymentAndTransactionOnCompletion(accountId,
+                                                           specifiedSecondPaymentTransactionModelDao.getAttemptId(),
                                                            specifiedSecondPaymentTransactionModelDao.getPaymentId(),
                                                            specifiedFirstPaymentTransactionModelDao.getTransactionType(),
                                                            "SOME_ERRORED_STATE",
