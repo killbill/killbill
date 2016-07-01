@@ -61,12 +61,12 @@ import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.PaymentRetryNotificationKey;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.EntityPaginationBuilder;
@@ -99,10 +99,12 @@ public class PaymentProcessor extends ProcessorBase {
 
     private final PaymentAutomatonRunner paymentAutomatonRunner;
     private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
-    private final PaymentConfig paymentConfig;
     private final NotificationQueueService notificationQueueService;
 
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessor.class);
+
+    public static final String SCHEDULED = "SCHEDULED";
+
 
     @Inject
     public PaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
@@ -114,13 +116,11 @@ public class PaymentProcessor extends ProcessorBase {
                             final GlobalLocker locker,
                             final PaymentAutomatonRunner paymentAutomatonRunner,
                             final IncompletePaymentTransactionTask incompletePaymentTransactionTask,
-                            final PaymentConfig paymentConfig,
                             final NotificationQueueService notificationQueueService,
                             final Clock clock) {
         super(pluginRegistry, accountUserApi, paymentDao, tagUserApi, locker, internalCallContextFactory, invoiceApi, clock);
         this.paymentAutomatonRunner = paymentAutomatonRunner;
         this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
-        this.paymentConfig = paymentConfig;
         this.notificationQueueService = notificationQueueService;
     }
 
@@ -491,45 +491,66 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     private List<PaymentAttempt> getPaymentAttempts(final List<PaymentTransaction> purchasedTransactions,
-                                                    final List<PaymentAttemptModelDao> paymentAttempts,
+                                                    final List<PaymentAttemptModelDao> pastPaymentAttempts,
                                                     final InternalTenantContext internalTenantContext) {
 
-        List<PaymentAttempt> result = new ArrayList<PaymentAttempt>();
+        List<PaymentAttempt> paymentAttempts = new ArrayList<PaymentAttempt>();
+
+        // Last Attempt from model dao
+        PaymentAttemptModelDao lastPaymentAttemptModelDao = pastPaymentAttempts.get(pastPaymentAttempts.size() - 1);
+        // Last Attempt from Transactions
+        PaymentTransaction lastPaymentTransaction = purchasedTransactions.get(purchasedTransactions.size() - 1);
 
         // Add Past Payment Attempts
-        for (PaymentAttemptModelDao pastPaymentAttempt : paymentAttempts) {
-            DefaultPaymentAttempt paymentAttempt = new DefaultPaymentAttempt(pastPaymentAttempt);
-            result.add(paymentAttempt);
+        for (PaymentAttemptModelDao pastPaymentAttempt : pastPaymentAttempts) {
+            DefaultPaymentAttempt paymentAttempt = new DefaultPaymentAttempt(
+                    pastPaymentAttempt.getAccountId(),
+                    pastPaymentAttempt.getPaymentMethodId(),
+                    pastPaymentAttempt.getId(),
+                    pastPaymentAttempt.getCreatedDate(),
+                    pastPaymentAttempt.getUpdatedDate(),
+                    pastPaymentAttempt.getCreatedDate(),
+                    pastPaymentAttempt.getPaymentExternalKey(),
+                    pastPaymentAttempt.getTransactionId(),
+                    pastPaymentAttempt.getTransactionExternalKey(),
+                    pastPaymentAttempt.getTransactionType(),
+                    pastPaymentAttempt.getStateName(),
+                    pastPaymentAttempt.getAmount(),
+                    pastPaymentAttempt.getCurrency(),
+                    pastPaymentAttempt.getPluginName(),
+                    (lastPaymentTransaction.getPaymentInfoPlugin() != null) ? lastPaymentTransaction.getPaymentInfoPlugin().getProperties() : null);
+            paymentAttempts.add(paymentAttempt);
         }
 
         // Get Future Payment Attempts from Notification Queue and add them to the list
         try {
-            final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, "retry");
+            final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, DefaultRetryService.QUEUE_NAME);
             final List<NotificationEventWithMetadata<NotificationEvent>> notificationEventWithMetadatas =
                     retryQueue.getFutureNotificationForSearchKeys(internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
 
             for (NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationEventWithMetadatas) {
                 DefaultPaymentAttempt futurePaymentAttempt = new DefaultPaymentAttempt(
-                        null, //accountId,
-                        null, //paymentMethodId,
-                        ((PaymentRetryNotificationKey) notificationEvent.getEvent()).getAttemptId(), //id,
-                        notificationEvent.getEffectiveDate(), //createdDate,
-                        notificationEvent.getEffectiveDate(), //updatedDate,
-                        null, //paymentExternalKey,
-                        null, //transactionId,
-                        null, //transactionExternalKey,
-                        null, //transactionType,
-                        "SCHEDULED", //stateName,
-                        null, //amount,
-                        null, //currency,
-                        ((PaymentRetryNotificationKey) notificationEvent.getEvent()).getPaymentControlPluginNames().get(0), //pluginName,
-                        null);//pluginProperties
-                result.add(futurePaymentAttempt);
+                        lastPaymentAttemptModelDao.getAccountId(), // accountId
+                        lastPaymentAttemptModelDao.getPaymentMethodId(), // paymentMethodId
+                        ((PaymentRetryNotificationKey) notificationEvent.getEvent()).getAttemptId(), // id
+                        null, // createdDate
+                        null, // updatedDate
+                        notificationEvent.getEffectiveDate(), // effectiveDate
+                        lastPaymentAttemptModelDao.getPaymentExternalKey(), // paymentExternalKey
+                        null, // transactionId
+                        lastPaymentAttemptModelDao.getTransactionExternalKey(), // transactionExternalKey
+                        lastPaymentAttemptModelDao.getTransactionType(), // transactionType
+                        SCHEDULED, // stateName
+                        lastPaymentTransaction.getAmount(), // amount
+                        lastPaymentTransaction.getCurrency(), // currency
+                        ((PaymentRetryNotificationKey) notificationEvent.getEvent()).getPaymentControlPluginNames().get(0), // pluginName,
+                        (lastPaymentTransaction.getPaymentInfoPlugin() != null) ? lastPaymentTransaction.getPaymentInfoPlugin().getProperties() : null); // pluginProperties
+                paymentAttempts.add(futurePaymentAttempt);
             }
         } catch (NoSuchNotificationQueue noSuchNotificationQueue) {
             log.error("ERROR Loading Notification Queue - " + noSuchNotificationQueue.getMessage());
         }
-        return result;
+        return paymentAttempts;
     }
 
     private PaymentTransactionInfoPlugin findPaymentTransactionInfoPlugin(final PaymentTransactionModelDao paymentTransactionModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions) {

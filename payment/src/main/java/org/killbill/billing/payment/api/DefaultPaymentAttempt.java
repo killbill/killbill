@@ -17,13 +17,12 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
-import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 
 public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt {
 
@@ -33,15 +32,17 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
     private final UUID transactionId;
     private final String transactionExternalKey;
     private final TransactionType transactionType;
+    private final DateTime effectiveDate;
     private final String stateName;
     private final BigDecimal amount;
     private final Currency currency;
     private final String pluginName;
-    private final byte[] pluginProperties;
+    private final List<PluginProperty> pluginProperties;
 
     public DefaultPaymentAttempt(final UUID accountId, final UUID paymentMethodId, final UUID id, final DateTime createdDate, final DateTime updatedDate,
-                                 final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey, final TransactionType transactionType,
-                                 final String stateName, final BigDecimal amount, final Currency currency, final String pluginName, final byte[] pluginProperties) {
+                                 final DateTime effectiveDate, final String paymentExternalKey, final UUID transactionId, final String transactionExternalKey,
+                                 final TransactionType transactionType, final String stateName, final BigDecimal amount, final Currency currency,
+                                 final String pluginName, final List<PluginProperty> pluginProperties) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.paymentMethodId = paymentMethodId;
@@ -49,29 +50,12 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
         this.transactionId = transactionId;
         this.transactionExternalKey = transactionExternalKey;
         this.transactionType = transactionType;
+        this.effectiveDate = effectiveDate;
         this.stateName = stateName;
         this.amount = amount;
         this.currency = currency;
         this.pluginName = pluginName;
         this.pluginProperties = pluginProperties;
-    }
-
-    public DefaultPaymentAttempt(final PaymentAttemptModelDao paymentAttemptModelDao) {
-        this(paymentAttemptModelDao.getAccountId(),
-            paymentAttemptModelDao.getPaymentMethodId(),
-            paymentAttemptModelDao.getId(),
-            paymentAttemptModelDao.getCreatedDate(),
-            paymentAttemptModelDao.getUpdatedDate(),
-            paymentAttemptModelDao.getPaymentExternalKey(),
-            paymentAttemptModelDao.getTransactionId(),
-            paymentAttemptModelDao.getTransactionExternalKey(),
-            paymentAttemptModelDao.getTransactionType(),
-            paymentAttemptModelDao.getStateName(),
-            paymentAttemptModelDao.getAmount(),
-            paymentAttemptModelDao.getCurrency(),
-            paymentAttemptModelDao.getPluginName(),
-            paymentAttemptModelDao.getPluginProperties()
-        );
     }
 
     @Override
@@ -120,7 +104,7 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
     }
 
     @Override
-    public byte[] getPluginProperties() {
+    public List<PluginProperty> getPluginProperties() {
         return pluginProperties;
     }
 
@@ -142,7 +126,7 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
                ", amount=" + amount +
                ", currency=" + currency +
                ", pluginName='" + pluginName + '\'' +
-               ", pluginProperties=" + Arrays.toString(pluginProperties) +
+               ", pluginProperties=" + pluginProperties +
                '}';
     }
 
@@ -178,7 +162,10 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
         if (transactionType != that.transactionType) {
             return false;
         }
-        if (stateName != that.stateName) {
+        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+            return false;
+        }
+        if (stateName != null ? !stateName.equals(that.stateName) : that.stateName != null) {
             return false;
         }
         if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
@@ -190,7 +177,7 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
         if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
             return false;
         }
-        return Arrays.equals(pluginProperties, that.pluginProperties);
+        return pluginProperties != null ? pluginProperties.equals(that.pluginProperties) : that.pluginProperties == null;
 
     }
 
@@ -207,7 +194,7 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
-        result = 31 * result + Arrays.hashCode(pluginProperties);
+        result = 31 * result + (pluginProperties != null ? pluginProperties.hashCode() : 0);
         return result;
     }
 }
