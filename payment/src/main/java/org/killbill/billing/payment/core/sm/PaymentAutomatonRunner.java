@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +43,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.sm.payments.AuthorizeCompleted;
@@ -67,6 +69,7 @@ import org.killbill.billing.payment.core.sm.payments.VoidInitiated;
 import org.killbill.billing.payment.core.sm.payments.VoidOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -126,7 +129,7 @@ public class PaymentAutomatonRunner {
                                                         final CallContext callContext,
                                                         final InternalCallContext internalCallContext) throws PaymentApiException {
         // Retrieve the payment id from the payment external key if needed
-        final UUID effectivePaymentId = paymentId != null ? paymentId : retrievePaymentId(paymentExternalKey, internalCallContext);
+        final UUID effectivePaymentId = paymentId != null ? paymentId : retrievePaymentId(paymentExternalKey, paymentTransactionExternalKey, internalCallContext);
 
         return new PaymentStateContext(isApiPayment,
                                        effectivePaymentId,
@@ -245,12 +248,41 @@ public class PaymentAutomatonRunner {
         }
     }
 
-    private UUID retrievePaymentId(@Nullable final String paymentExternalKey, final InternalCallContext internalCallContext) {
-        if (paymentExternalKey == null) {
+    // TODO Could we cache these to avoid extra queries in PaymentAutomatonDAOHelper?
+    private UUID retrievePaymentId(@Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey, final InternalCallContext internalCallContext) {
+        if (paymentExternalKey != null) {
+            final PaymentModelDao payment = paymentDao.getPaymentByExternalKey(paymentExternalKey, internalCallContext);
+            if (payment != null) {
+                return payment.getId();
+            }
+        }
+
+        if (paymentTransactionExternalKey == null) {
             return null;
         }
 
-        final PaymentModelDao payment = paymentDao.getPaymentByExternalKey(paymentExternalKey, internalCallContext);
-        return payment == null ? null : payment.getId();
+        final List<PaymentTransactionModelDao> paymentTransactionModelDaos = paymentDao.getPaymentTransactionsByExternalKey(paymentTransactionExternalKey, internalCallContext);
+        for (final PaymentTransactionModelDao paymentTransactionModelDao : paymentTransactionModelDaos) {
+            if (paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.SUCCESS ||
+                paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.PENDING ||
+                paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.UNKNOWN) {
+                return paymentTransactionModelDao.getPaymentId();
+            }
+        }
+
+        UUID paymentIdCandidate = null;
+        for (final PaymentTransactionModelDao paymentTransactionModelDao : paymentTransactionModelDaos) {
+            if (paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.PAYMENT_FAILURE ||
+                paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.PLUGIN_FAILURE) {
+                if (paymentIdCandidate == null) {
+                    paymentIdCandidate = paymentTransactionModelDao.getPaymentId();
+                } else if (!paymentIdCandidate.equals(paymentTransactionModelDao.getPaymentId())) {
+                    // Multiple failed payments sharing the key
+                    return null;
+                }
+            }
+        }
+
+        return paymentIdCandidate;
     }
 }

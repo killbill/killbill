@@ -1739,7 +1739,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(TransactionType.PURCHASE, null, paymentExternalKey, transactionExternalKey, requestedAmount, PaymentPluginStatus.PENDING);
             Assert.fail("PURCHASE transaction with same key should have failed");
         } catch (final PaymentApiException expected) {
-            Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+            Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
         }
     }
 
@@ -1770,7 +1770,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                 createPayment(transactionType, processedPayment.getId(), paymentExternalKey, keyA, requestedAmount, PaymentPluginStatus.PROCESSED);
                 Assert.fail("Retrying initial successful transaction (AUTHORIZE, PURCHASE, CREDIT) with same transaction key should fail");
             } catch (final PaymentApiException e) {
-                Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+                Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
             }
         }
     }
@@ -1845,6 +1845,156 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             Assert.assertEquals(successfulPayment.getId(), errorPayment.getId());
             Assert.assertEquals(successfulPayment.getTransactions().size(), 2);
         }
+    }
+
+    @Test(groups = "slow")
+    public void testKeysSanityOnPending() throws Exception {
+        final String authKey = UUID.randomUUID().toString();
+        final Payment pendingAuthorization = createPayment(TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PENDING);
+        assertNotNull(pendingAuthorization);
+        Assert.assertEquals(pendingAuthorization.getTransactions().size(), 1);
+        Assert.assertEquals(pendingAuthorization.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
+
+        try {
+            // Capture with the same external key should fail
+            createPayment(TransactionType.CAPTURE, pendingAuthorization.getId(), null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+        }
+
+        final Account account1 = testHelper.createTestAccount("bobo2@gmail.com", true);
+        try {
+            // Different auth with the same external key on a different account should fail
+            createPayment(account1, TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+        }
+
+        // Auth with the same external key should go through (completion)
+        final Payment authorization = createPayment(TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+        assertNotNull(authorization);
+        Assert.assertEquals(authorization.getTransactions().size(), 1);
+        Assert.assertEquals(authorization.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        try {
+            // Different auth with the same external key on a different account should still fail
+            createPayment(account1, TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+        }
+
+        // Capture with a different key should go through
+        final String captureKey = UUID.randomUUID().toString();
+        final Payment pendingCapture = createPayment(TransactionType.CAPTURE, authorization.getId(), null, captureKey, BigDecimal.ONE, PaymentPluginStatus.PENDING);
+        Assert.assertEquals(pendingCapture.getTransactions().size(), 2);
+        Assert.assertEquals(pendingCapture.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingCapture.getTransactions().get(1).getTransactionStatus(), TransactionStatus.PENDING);
+
+        try {
+            // Different auth with the same external key should fail
+            createPayment(TransactionType.AUTHORIZE, null, null, captureKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+        }
+
+        try {
+            // Different auth with the same external key on a different account should fail
+            createPayment(account1, TransactionType.AUTHORIZE, null, null, captureKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+        }
+
+        // Second capture with the same external key should go through (completion)
+        final Payment capturedPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), null, captureKey, BigDecimal.ONE, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(capturedPayment.getTransactions().size(), 2);
+        Assert.assertEquals(capturedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(capturedPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        // Second capture with a different key should go through
+        final String captureKey2 = UUID.randomUUID().toString();
+        final Payment capturedPayment2 = createPayment(TransactionType.CAPTURE, authorization.getId(), null, captureKey2, BigDecimal.ONE, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(capturedPayment2.getTransactions().size(), 3);
+        Assert.assertEquals(capturedPayment2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(capturedPayment2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(capturedPayment2.getTransactions().get(2).getTransactionStatus(), TransactionStatus.SUCCESS);
+    }
+
+    @Test(groups = "slow")
+    public void testKeysSanityOnSuccess() throws Exception {
+        final String authKey = UUID.randomUUID().toString();
+        final Payment authorization = createPayment(TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+        assertNotNull(authorization);
+        Assert.assertEquals(authorization.getTransactions().size(), 1);
+        Assert.assertEquals(authorization.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        try {
+            // Capture with the same external key should fail
+            createPayment(TransactionType.CAPTURE, authorization.getId(), null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+        }
+
+        try {
+            // Different auth with the same external key should fail
+            createPayment(TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+        }
+
+        final Account account1 = testHelper.createTestAccount("bobo2@gmail.com", true);
+        try {
+            // Different auth with the same external key on a different account should fail
+            createPayment(account1, TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+        }
+
+        // Capture with a different key should go through
+        final String captureKey = UUID.randomUUID().toString();
+        final Payment capturedPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), null, captureKey, BigDecimal.ONE, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(capturedPayment.getTransactions().size(), 2);
+        Assert.assertEquals(capturedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(capturedPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        try {
+            // Second capture with the same external key should fail
+            createPayment(TransactionType.CAPTURE, authorization.getId(), null, captureKey, BigDecimal.ONE, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+        }
+
+        try {
+            // Different auth with the same external key should fail
+            createPayment(TransactionType.AUTHORIZE, null, null, captureKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+        }
+
+        try {
+            // Different auth with the same external key on a different account should fail
+            createPayment(account1, TransactionType.AUTHORIZE, null, null, captureKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+        }
+
+        // Second capture with a different key should go through
+        final String captureKey2 = UUID.randomUUID().toString();
+        final Payment capturedPayment2 = createPayment(TransactionType.CAPTURE, authorization.getId(), null, captureKey2, BigDecimal.ONE, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(capturedPayment2.getTransactions().size(), 3);
+        Assert.assertEquals(capturedPayment2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(capturedPayment2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(capturedPayment2.getTransactions().get(2).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
     private void verifyRefund(final Payment refund, final String paymentExternalKey, final String paymentTransactionExternalKey, final String refundTransactionExternalKey, final BigDecimal requestedAmount, final BigDecimal refundAmount, final TransactionStatus transactionStatus) {
@@ -1934,6 +2084,16 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     private Payment createPayment(final TransactionType transactionType,
+                                  @Nullable final UUID paymentId,
+                                  @Nullable final String paymentExternalKey,
+                                  @Nullable final String paymentTransactionExternalKey,
+                                  @Nullable final BigDecimal amount,
+                                  final PaymentPluginStatus paymentPluginStatus) throws PaymentApiException {
+        return createPayment(account, transactionType, paymentId, paymentExternalKey, paymentTransactionExternalKey, amount, paymentPluginStatus);
+    }
+
+    private Payment createPayment(final Account account,
+                                  final TransactionType transactionType,
                                   @Nullable final UUID paymentId,
                                   @Nullable final String paymentExternalKey,
                                   @Nullable final String paymentTransactionExternalKey,

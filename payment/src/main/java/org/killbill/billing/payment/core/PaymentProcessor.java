@@ -370,7 +370,7 @@ public class PaymentProcessor extends ProcessorBase {
             if (paymentStateContext.getTransactionId() != null || paymentStateContext.getPaymentTransactionExternalKey() != null) {
                 // If a transaction id or key is passed, we are maybe completing an existing transaction (unless a new key was provided)
                 final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext());
-                PaymentTransactionModelDao transactionToComplete = findTransactionToCompleteAndRunSanityChecks(paymentModelDao, paymentTransactionsForCurrentPayment, paymentStateContext);
+                PaymentTransactionModelDao transactionToComplete = findTransactionToCompleteAndRunSanityChecks(paymentModelDao, paymentTransactionsForCurrentPayment, paymentStateContext, internalCallContext);
 
                 if (transactionToComplete != null) {
                     // For completion calls, always invoke the Janitor first to get the latest state. The state machine will then
@@ -415,7 +415,8 @@ public class PaymentProcessor extends ProcessorBase {
 
     private PaymentTransactionModelDao findTransactionToCompleteAndRunSanityChecks(final PaymentModelDao paymentModelDao,
                                                                                    final Iterable<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment,
-                                                                                   final PaymentStateContext paymentStateContext) throws PaymentApiException {
+                                                                                   final PaymentStateContext paymentStateContext,
+                                                                                   final InternalCallContext internalCallContext) throws PaymentApiException {
         final Collection<PaymentTransactionModelDao> completionCandidates = new LinkedList<PaymentTransactionModelDao>();
         for (final PaymentTransactionModelDao paymentTransactionModelDao : paymentTransactionsForCurrentPayment) {
             // Check if we already have a transaction for that id or key
@@ -434,7 +435,20 @@ public class PaymentProcessor extends ProcessorBase {
 
             // Sanity: if we already have a transaction for that id or key, the transaction type must match
             if (paymentTransactionModelDao.getTransactionType() != paymentStateContext.getTransactionType()) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_OPERATION, paymentStateContext.getTransactionType(), paymentModelDao.getStateName());
+                throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, "transactionType", String.format("%s doesn't match existing transaction type %s", paymentStateContext.getTransactionType(), paymentTransactionModelDao.getTransactionType()));
+            }
+
+            // Sanity: verify we don't already have a successful transaction for that key (chargeback reversals are a bit special, it's the only transaction type we can revert)
+            if (paymentTransactionModelDao.getTransactionExternalKey().equals(paymentStateContext.getPaymentTransactionExternalKey()) &&
+                paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.SUCCESS &&
+                paymentTransactionModelDao.getTransactionType() != TransactionType.CHARGEBACK) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
+            }
+
+            // Sanity: don't share keys across accounts
+            if (paymentTransactionModelDao.getTransactionExternalKey().equals(paymentStateContext.getPaymentTransactionExternalKey()) &&
+                !paymentTransactionModelDao.getAccountRecordId().equals(internalCallContext.getAccountRecordId())) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
             }
 
             // UNKNOWN transactions are potential candidates, we'll invoke the Janitor first though
