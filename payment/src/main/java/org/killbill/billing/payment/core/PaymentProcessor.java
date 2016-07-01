@@ -370,6 +370,7 @@ public class PaymentProcessor extends ProcessorBase {
 
             // Sanity: verify the payment belongs to the right account (in case it was looked-up by payment or transaction external key)
             if (!paymentModelDao.getAccountRecordId().equals(internalCallContext.getAccountRecordId())) {
+                // TODO 0.17.x New ErrorCode (it's not necessarily the transaction external key that matches)
                 throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
             }
 
