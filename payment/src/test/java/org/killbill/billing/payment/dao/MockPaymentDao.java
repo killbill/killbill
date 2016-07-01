@@ -221,7 +221,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID paymentId, final TransactionType transactionType,
+    public void updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
                                                         final String currentPaymentStateName, final String lastSuccessPaymentStateName, final UUID transactionId,
                                                         final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency,
                                                         final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
@@ -232,6 +232,7 @@ public class MockPaymentDao implements PaymentDao {
             }
             final PaymentTransactionModelDao transaction = transactions.get(transactionId);
             if (transaction != null) {
+                transaction.setAttemptId(attemptId);
                 transaction.setTransactionStatus(paymentStatus);
                 transaction.setProcessedAmount(processedAmount);
                 transaction.setProcessedCurrency(processedCurrency);

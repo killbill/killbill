@@ -17,9 +17,8 @@
 
 package org.killbill.billing.tenant.api;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -46,8 +45,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 
 /**
  * This class manages the callbacks that have been registered when per tenant objects have been inserted into the
@@ -65,7 +66,7 @@ public class TenantCacheInvalidation {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantCacheInvalidation.class);
 
-    private final Map<TenantKey, CacheInvalidationCallback> cache;
+    private final Multimap<TenantKey, CacheInvalidationCallback> cache;
     private final TenantBroadcastDao broadcastDao;
     private final TenantConfig tenantConfig;
     private final PersistentBus eventBus;
@@ -80,7 +81,7 @@ public class TenantCacheInvalidation {
                                    @Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantDao tenantDao,
                                    final PersistentBus eventBus,
                                    final TenantConfig tenantConfig) {
-        this.cache = new HashMap<TenantKey, CacheInvalidationCallback>();
+        this.cache = HashMultimap.<TenantKey, CacheInvalidationCallback>create();
         this.broadcastDao = broadcastDao;
         this.tenantConfig = tenantConfig;
         this.tenantDao = tenantDao;
@@ -122,12 +123,11 @@ public class TenantCacheInvalidation {
     }
 
     public void registerCallback(final TenantKey key, final CacheInvalidationCallback value) {
-        if (!cache.containsKey(key)) {
-            cache.put(key, value);
-        }
+        cache.put(key, value);
+
     }
 
-    public CacheInvalidationCallback getCacheInvalidation(final TenantKey key) {
+    public Collection<CacheInvalidationCallback> getCacheInvalidations(final TenantKey key) {
         return cache.get(key);
     }
 
@@ -176,10 +176,12 @@ public class TenantCacheInvalidation {
                 try {
                     final TenantKeyAndCookie tenantKeyAndCookie = extractTenantKeyAndCookie(cur.getType());
                     if (tenantKeyAndCookie != null) {
-                        final CacheInvalidationCallback callback = parent.getCacheInvalidation(tenantKeyAndCookie.getTenantKey());
-                        if (callback != null) {
+                        final Collection<CacheInvalidationCallback> callbacks = parent.getCacheInvalidations(tenantKeyAndCookie.getTenantKey());
+                        if (!callbacks.isEmpty()) {
                             final InternalTenantContext tenantContext = new InternalTenantContext(cur.getTenantRecordId());
-                            callback.invalidateCache(tenantKeyAndCookie.getTenantKey(), tenantKeyAndCookie.getCookie(), tenantContext);
+                            for (final CacheInvalidationCallback callback : callbacks) {
+                                callback.invalidateCache(tenantKeyAndCookie.getTenantKey(), tenantKeyAndCookie.getCookie(), tenantContext);
+                            }
 
                             final Long tenantKvsTargetRecordId = cur.getTargetRecordId();
                             final BusInternalEvent event;

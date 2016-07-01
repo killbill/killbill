@@ -32,6 +32,7 @@ public @interface Cachable {
     String AUDIT_LOG_CACHE_NAME = "audit-log";
     String AUDIT_LOG_VIA_HISTORY_CACHE_NAME = "audit-log-via-history";
     String TENANT_CATALOG_CACHE_NAME = "tenant-catalog";
+    String TENANT_PAYMENT_STATE_MACHINE_CONFIG_CACHE_NAME = "tenant-payment-state-machine-config";
     String TENANT_OVERDUE_CONFIG_CACHE_NAME = "tenant-overdue-config";
     String TENANT_CONFIG_CACHE_NAME = "tenant-config";
     String TENANT_KV_CACHE_NAME = "tenant-kv";
@@ -64,6 +65,9 @@ public @interface Cachable {
 
         /* Tenant catalog cache */
         TENANT_CATALOG(TENANT_CATALOG_CACHE_NAME, false),
+
+        /* Tenant payment state machine config cache */
+        TENANT_PAYMENT_STATE_MACHINE_CONFIG(TENANT_PAYMENT_STATE_MACHINE_CONFIG_CACHE_NAME, false),
 
         /* Tenant overdue config cache */
         TENANT_OVERDUE_CONFIG(TENANT_OVERDUE_CONFIG_CACHE_NAME, false),

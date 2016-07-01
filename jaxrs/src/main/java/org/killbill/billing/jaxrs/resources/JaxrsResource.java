@@ -30,6 +30,7 @@ public interface JaxrsResource {
     public static final String REGISTER_NOTIFICATION_CALLBACK = "registerNotificationCallback";
     public static final String UPLOAD_PLUGIN_CONFIG = "uploadPluginConfig";
     public static final String UPLOAD_PER_TENANT_CONFIG = "uploadPerTenantConfig";
+    public static final String UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG = "uploadPluginPaymentStateMachineConfig";
     public static final String USER_KEY_VALUE = "userKeyValue";
     public static final String SEARCH = "search";
 
@@ -79,6 +80,7 @@ public interface JaxrsResource {
     public static final String QUERY_ENTITLEMENT_POLICY = "entitlementPolicy";
     public static final String QUERY_SEARCH_OFFSET = "offset";
     public static final String QUERY_SEARCH_LIMIT = "limit";
+    public static final String QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT = "effectiveFromDate";
 
     public static final String QUERY_ACCOUNT_WITH_BALANCE = "accountWithBalance";
     public static final String QUERY_ACCOUNT_WITH_BALANCE_AND_CBA = "accountWithBalanceAndCBA";
@@ -127,6 +129,8 @@ public interface JaxrsResource {
     public static final String QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF = "deleteDefaultPmWithAutoPayOff";
 
     public static final String QUERY_AUDIT = "audit";
+
+    public static final String QUERY_BCD = "bcd";
 
     public static final String QUERY_PARALLEL = "parallel";
 
@@ -257,5 +261,6 @@ public interface JaxrsResource {
 
     public static final String CHILDREN = "children";
     public static final String CHILDREN_PATH = PREFIX + "/" + CHILDREN;
+    public static final String BCD = "bcd";
 
 }

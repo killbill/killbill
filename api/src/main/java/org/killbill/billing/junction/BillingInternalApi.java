@@ -29,4 +29,5 @@ public interface BillingInternalApi {
      * @return an ordered list of billing event for the given accounts
      */
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, DryRunArguments dryRunArguments, InternalCallContext context) throws CatalogApiException, AccountApiException;
+
 }

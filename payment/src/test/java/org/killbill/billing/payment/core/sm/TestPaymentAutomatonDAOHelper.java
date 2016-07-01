@@ -100,7 +100,7 @@ public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedD
     public void testNoPaymentMethod() throws Exception {
         final PaymentAutomatonDAOHelper daoHelper = createDAOHelper(UUID.randomUUID(), paymentExternalKey, paymentTransactionExternalKey, amount, currency);
         try {
-            daoHelper.getPaymentProviderPlugin();
+            daoHelper.getPaymentPluginApi();
             Assert.fail();
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD.getCode());

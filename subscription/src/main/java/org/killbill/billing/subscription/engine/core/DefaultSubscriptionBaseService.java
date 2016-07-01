@@ -159,6 +159,8 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
             } else if (event.getType() == EventType.API_USER && subscription.getCategory() == ProductCategory.BASE) {
                 final CallContext callContext = internalCallContextFactory.createCallContext(context);
                 eventSent = onBasePlanEvent(subscription, event, callContext);
+            } else if (event.getType() == EventType.BCD_UPDATE) {
+                eventSent = false;
             }
 
             if (!eventSent) {

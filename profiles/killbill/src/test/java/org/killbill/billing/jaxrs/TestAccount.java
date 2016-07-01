@@ -43,6 +43,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -66,6 +67,10 @@ public class TestAccount extends TestJaxrsBase {
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
+    }
+
+    @AfterMethod(groups = "slow")
+    public void tearDown() throws Exception {
         mockPaymentProviderPlugin.clear();
     }
 
@@ -405,7 +410,7 @@ public class TestAccount extends TestJaxrsBase {
         final Account childAccount2 = killBillClient.createAccount(childInput2, createdBy, reason, comment);
 
         // Retrieves children accounts by parent account id
-        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(parentAccount.getAccountId(), true, true);
+        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(parentAccount.getAccountId(), true, true, requestOptions);
         Assert.assertEquals(childrenAccounts.size(), 2);
 
         Assert.assertTrue(childrenAccounts.get(0).equals(childAccount));
@@ -416,7 +421,7 @@ public class TestAccount extends TestJaxrsBase {
     public void testEmptyGetChildrenAccounts() throws Exception {
 
         // Retrieves children accounts by parent account id
-        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(UUID.randomUUID(), false, false);
+        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(UUID.randomUUID(), false, false, requestOptions);
         Assert.assertEquals(childrenAccounts.size(), 0);
 
     }
@@ -425,7 +430,7 @@ public class TestAccount extends TestJaxrsBase {
     public void testGetChildrenAccountsByNullId() throws Exception {
 
         // Retrieves children accounts by parent account id
-        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(null, true, true);
+        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(null, true, true, requestOptions);
         Assert.assertEquals(childrenAccounts.size(), 0);
 
     }

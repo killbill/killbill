@@ -93,7 +93,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     // Refresh-able
     protected EventsStream eventsStream;
 
-
     public DefaultEntitlement(final UUID accountId, final UUID entitlementId, final EventsStreamBuilder eventsStreamBuilder,
                               final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution, final BlockingStateDao blockingStateDao,
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
@@ -279,6 +278,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         return getSubscriptionBase().getLastActiveCategory();
     }
 
+    @Override
+    public Integer getBillCycleDayLocal() {
+        final Integer perSubscriptionBillCycleDayLocal = getSubscriptionBase().getBillCycleDayLocal();
+        return perSubscriptionBillCycleDayLocal != null ? perSubscriptionBillCycleDayLocal : eventsStream.getDefaultBillCycleDayLocal();
+    }
 
     @Override
     public Entitlement cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
@@ -314,7 +318,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                null,
                                                                                properties,
                                                                                callContext);
-
 
         final WithEntitlementPlugin<Entitlement> cancelEntitlementWithPlugin = new WithEntitlementPlugin<Entitlement>() {
 
@@ -353,7 +356,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         return pluginExecution.executeWithPlugin(cancelEntitlementWithPlugin, pluginContext);
     }
-
 
     @Override
     public void uncancelEntitlement(final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
@@ -400,7 +402,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     }
                 } else {
                     // Entitlement is NOT cancelled (or future cancelled), there is nothing to do
-                    throw new EntitlementApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, getId());
+                    throw new EntitlementApiException(ErrorCode.ENT_UNCANCEL_BAD_STATE, getId());
                 }
 
                 // If billing was previously cancelled, reactivate
@@ -426,7 +428,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final LocalDate cancellationDate = getLocalDateFromEntitlementPolicy(entitlementPolicy);
         return cancelEntitlementWithDateOverrideBillingPolicy(cancellationDate, billingPolicy, properties, callContext);
     }
-
 
     // See also EntitlementInternalApi#cancel for the bulk API
     @Override
@@ -506,7 +507,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
-
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
 
@@ -692,6 +692,16 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             }
         };
         return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);
+    }
+
+    @Override
+    public void updateBCD(final int newBCD, @Nullable final LocalDate effectiveFromDate, final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+        try {
+            subscriptionInternalApi.updateBCD(getId(), newBCD, effectiveFromDate, context);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
     }
 
     private void refresh(final TenantContext context) throws EntitlementApiException {

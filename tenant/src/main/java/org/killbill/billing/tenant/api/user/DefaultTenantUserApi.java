@@ -62,6 +62,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
                                                                              .add(TenantKey.INVOICE_TEMPLATE)
                                                                              .add(TenantKey.INVOICE_TRANSLATION_)
                                                                              .add(TenantKey.PLUGIN_CONFIG_)
+                                                                             .add(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_)
                                                                              .add(TenantKey.PUSH_NOTIFICATION_CB).build();
 
     private final TenantDao tenantDao;

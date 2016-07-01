@@ -62,5 +62,9 @@ public interface SubscriptionBaseTransition {
 
     public SubscriptionBaseTransitionType getTransitionType();
 
+    public Integer getPreviousBillingCycleDayLocal();
+
+    public Integer getNextBillingCycleDayLocal();
+
     public DateTime getCreatedDate();
 }

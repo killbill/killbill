@@ -30,6 +30,7 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillHttpClient;
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
@@ -58,6 +59,12 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected static final String createdBy = "Toto";
     protected static final String reason = "i am god";
     protected static final String comment = "no comment";
+
+    protected static RequestOptions requestOptions = RequestOptions.builder()
+                                                                   .withCreatedBy(createdBy)
+                                                                   .withReason(reason)
+                                                                   .withComment(comment)
+                                                                   .build();
 
     protected KillBillClient killBillClient;
     protected KillBillHttpClient killBillHttpClient;
@@ -119,7 +126,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         input.setBillingPeriod(billingPeriod);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        return killBillClient.createSubscription(input, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1, createdBy, reason, comment);
+        return killBillClient.createSubscription(input, null, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1, basicRequestOptions());
     }
 
     protected Account createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
@@ -188,5 +195,16 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected void crappyWaitForLackOfProperSynchonization(int sleepValueMSec) throws Exception {
         Thread.sleep(sleepValueMSec);
+    }
+
+    /**
+     * Return a RequestOptions instance with the createdBy, reason and comment fields populated
+     * @return an instance of RequestOptions
+     */
+    protected RequestOptions basicRequestOptions() {
+        return RequestOptions.builder()
+                             .withCreatedBy(createdBy)
+                             .withReason(reason)
+                             .withComment(comment).build();
     }
 }

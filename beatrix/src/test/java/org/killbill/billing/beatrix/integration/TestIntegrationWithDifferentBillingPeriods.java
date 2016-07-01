@@ -23,9 +23,6 @@ import java.util.List;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.payment.api.PluginProperty;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -36,7 +33,9 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.tag.ControlTagType;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -99,6 +98,70 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
 
         checkNoMoreInvoiceToGenerate(account);
     }
+
+
+    @Test(groups = "slow")
+    public void testChangeMonthlyToAnnualWithDifferentBCD() throws Exception {
+
+        // We take april as it has 30 days
+        final LocalDate today = new LocalDate(2016, 6, 1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(10));
+
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final String productName = "Shotgun";
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
+
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
+
+        // Move out of trials for interesting invoices adjustments
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 2);
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 1), new LocalDate(2016, 7, 10), InvoiceItemType.RECURRING, new BigDecimal("74.99")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+        // Invoice for a full month
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 3);
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 10), new LocalDate(2016, 8, 10), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
+
+        //
+        // MOVE MONTHLY TO ANNUAL: Because of different Billing Alignment the BCD now becomes the 1 (first non null recurring phase)
+        //
+        changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.ANNUAL, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE,  NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 4);
+
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2016, 8, 1), new LocalDate(2017, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2016, 8, 1), new LocalDate(2016, 8, 10), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-72.57")));
+        invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
+
+        checkNoMoreInvoiceToGenerate(account);
+    }
+
 
     @Test(groups = "slow")
     public void testChangeMonthlyToQuarterly() throws Exception {

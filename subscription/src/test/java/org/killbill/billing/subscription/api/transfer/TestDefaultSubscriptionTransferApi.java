@@ -122,6 +122,11 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             }
 
             @Override
+            public Integer getBillCycleDayLocal() {
+                return null;
+            }
+
+            @Override
             public UUID getEventId() {
                 return UUID.randomUUID();
             }
@@ -139,5 +144,4 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             }
         };
     }
-
 }

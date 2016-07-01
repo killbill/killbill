@@ -93,7 +93,7 @@ public abstract class InvoiceCalculatorUtils {
     private static BigDecimal computeInvoiceAmountAdjustedForAccountCredit(final Currency currency, final Iterable<InvoiceItem> invoiceItems) {
         BigDecimal amountAdjusted = BigDecimal.ZERO;
         if (invoiceItems == null || !invoiceItems.iterator().hasNext()) {
-            return amountAdjusted;
+            return KillBillMoney.of(amountAdjusted, currency);
         }
 
         for (final InvoiceItem invoiceItem : invoiceItems) {
@@ -119,7 +119,7 @@ public abstract class InvoiceCalculatorUtils {
     public static BigDecimal computeInvoiceAmountCharged(final Currency currency, @Nullable final Iterable<InvoiceItem> invoiceItems) {
         BigDecimal amountCharged = BigDecimal.ZERO;
         if (invoiceItems == null || !invoiceItems.iterator().hasNext()) {
-            return amountCharged;
+            return KillBillMoney.of(amountCharged, currency);
         }
 
         for (final InvoiceItem invoiceItem : invoiceItems) {
@@ -144,7 +144,7 @@ public abstract class InvoiceCalculatorUtils {
     public static BigDecimal computeInvoiceOriginalAmountCharged(final DateTime invoiceCreatedDate, final Currency currency, @Nullable final Iterable<InvoiceItem> invoiceItems) {
         BigDecimal amountCharged = BigDecimal.ZERO;
         if (invoiceItems == null || !invoiceItems.iterator().hasNext()) {
-            return amountCharged;
+            return KillBillMoney.of(amountCharged, currency);
         }
 
         for (final InvoiceItem invoiceItem : invoiceItems) {
@@ -160,7 +160,7 @@ public abstract class InvoiceCalculatorUtils {
     public static BigDecimal computeInvoiceAmountCredited(final Currency currency, @Nullable final Iterable<InvoiceItem> invoiceItems) {
         BigDecimal amountCredited = BigDecimal.ZERO;
         if (invoiceItems == null || !invoiceItems.iterator().hasNext()) {
-            return amountCredited;
+            return KillBillMoney.of(amountCredited, currency);
         }
 
         for (final InvoiceItem invoiceItem : invoiceItems) {
@@ -175,7 +175,7 @@ public abstract class InvoiceCalculatorUtils {
     public static BigDecimal computeInvoiceAmountPaid(final Currency currency, @Nullable final Iterable<InvoicePayment> invoicePayments) {
         BigDecimal amountPaid = BigDecimal.ZERO;
         if (invoicePayments == null || !invoicePayments.iterator().hasNext()) {
-            return amountPaid;
+            return KillBillMoney.of(amountPaid, currency);
         }
 
         for (final InvoicePayment invoicePayment : invoicePayments) {
@@ -193,7 +193,7 @@ public abstract class InvoiceCalculatorUtils {
     public static BigDecimal computeInvoiceAmountRefunded(final Currency currency, @Nullable final Iterable<InvoicePayment> invoicePayments) {
         BigDecimal amountRefunded = BigDecimal.ZERO;
         if (invoicePayments == null || !invoicePayments.iterator().hasNext()) {
-            return amountRefunded;
+            return KillBillMoney.of(amountRefunded, currency);
         }
 
         for (final InvoicePayment invoicePayment : invoicePayments) {

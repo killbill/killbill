@@ -50,7 +50,6 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
-import org.skife.jdbi.v2.tweak.VoidHandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -58,6 +57,7 @@ import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestInvoicePayment extends TestIntegrationBase {
@@ -335,7 +335,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         // Trigger chargeback in the original currency
         payment1 = createChargeBackAndCheckForCompletion(account, payment1, new BigDecimal("225.44"), Currency.EUR, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(new BigDecimal("24.51")), 0);
+        Assert.assertEquals(payment1.getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment1.getTransactions().size(), 2);
         Assert.assertEquals(payment1.getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         Assert.assertEquals(payment1.getTransactions().get(0).getCurrency(), Currency.USD);
@@ -488,6 +488,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
         assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);

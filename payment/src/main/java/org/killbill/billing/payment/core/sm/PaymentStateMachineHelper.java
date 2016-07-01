@@ -21,17 +21,12 @@ import javax.inject.Inject;
 
 import org.killbill.automaton.MissingEntryException;
 import org.killbill.automaton.Operation;
-import org.killbill.automaton.OperationResult;
-import org.killbill.automaton.State;
 import org.killbill.automaton.StateMachine;
 import org.killbill.automaton.StateMachineConfig;
-import org.killbill.automaton.Transition;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.glue.PaymentModule;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import org.killbill.billing.payment.caching.StateMachineConfigCache;
 
 /**
  * This class needs to know about the payment state machine xml file. All the knowledge about the xml file is encapsulated here.
@@ -80,17 +75,12 @@ public class PaymentStateMachineHelper {
     private static final String CREDIT_ERRORED = "CREDIT_ERRORED";
     private static final String VOID_ERRORED = "VOID_ERRORED";
     private static final String CHARGEBACK_ERRORED = "CHARGEBACK_ERRORED";
-    private final StateMachineConfig stateMachineConfig;
-    private final String[] errorStateNames = {AUTH_ERRORED, CAPTURE_ERRORED, PURCHASE_ERRORED, REFUND_ERRORED, CREDIT_ERRORED, VOID_ERRORED, CHARGEBACK_ERRORED};
+
+    private final StateMachineConfigCache stateMachineConfigCache;
 
     @Inject
-    public PaymentStateMachineHelper(@javax.inject.Named(PaymentModule.STATE_MACHINE_PAYMENT) final StateMachineConfig stateMachineConfig) {
-        this.stateMachineConfig = stateMachineConfig;
-    }
-
-    public State getState(final String stateName) throws MissingEntryException {
-        final StateMachine stateMachine = stateMachineConfig.getStateMachineForState(stateName);
-        return stateMachine.getState(stateName);
+    public PaymentStateMachineHelper(final StateMachineConfigCache stateMachineConfigCache) {
+        this.stateMachineConfigCache = stateMachineConfigCache;
     }
 
     public String getInitStateNameForTransaction() {
@@ -181,17 +171,17 @@ public class PaymentStateMachineHelper {
         }
     }
 
-    public StateMachine getStateMachineForStateName(final String stateName) throws MissingEntryException {
-        return stateMachineConfig.getStateMachineForState(stateName);
+    public StateMachineConfig getStateMachineConfig(final String pluginName, final InternalCallContext internalCallContext) throws PaymentApiException {
+        return stateMachineConfigCache.getPaymentStateMachineConfig(pluginName, internalCallContext);
     }
 
-    public Operation getOperationForTransaction(final TransactionType transactionType) throws MissingEntryException {
-        final StateMachine stateMachine = getStateMachineForTransaction(transactionType);
+    public Operation getOperationForTransaction(final StateMachineConfig stateMachineConfig, final TransactionType transactionType) throws MissingEntryException {
+        final StateMachine stateMachine = getStateMachineForTransaction(stateMachineConfig, transactionType);
         // Only one operation defined, this is the current PaymentStates.xml model
         return stateMachine.getOperations()[0];
     }
 
-    public StateMachine getStateMachineForTransaction(final TransactionType transactionType) throws MissingEntryException {
+    private StateMachine getStateMachineForTransaction(final StateMachineConfig stateMachineConfig, final TransactionType transactionType) throws MissingEntryException {
         switch (transactionType) {
             case AUTHORIZE:
                 return stateMachineConfig.getStateMachine(AUTHORIZE_STATE_MACHINE_NAME);
@@ -216,22 +206,4 @@ public class PaymentStateMachineHelper {
     public boolean isSuccessState(final String stateName) {
         return stateName.endsWith("SUCCESS") || stateName.startsWith("CHARGEBACK");
     }
-
-    public final State fetchNextState(final String prevStateName, final boolean isSuccess) throws MissingEntryException {
-        final StateMachine stateMachine = getStateMachineForStateName(prevStateName);
-        final Transition transition = Iterables.tryFind(ImmutableList.copyOf(stateMachine.getTransitions()), new Predicate<Transition>() {
-            @Override
-            public boolean apply(final Transition input) {
-                // This works because there is only one operation defined for a given state machine, which is our model for PaymentStates.xml
-                return input.getInitialState().getName().equals(prevStateName) &&
-                       input.getOperationResult().equals(isSuccess ? OperationResult.SUCCESS : OperationResult.FAILURE);
-            }
-        }).orNull();
-        return transition != null ? transition.getFinalState() : null;
-    }
-
-    public String[] getErroredStateNames() {
-        return errorStateNames;
-    }
-
 }

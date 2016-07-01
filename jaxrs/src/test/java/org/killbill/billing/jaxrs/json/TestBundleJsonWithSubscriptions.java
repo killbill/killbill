@@ -73,6 +73,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    new LocalDate(),
                                                                    new LocalDate(),
                                                                    new LocalDate(),
+                                                                   null,
                                                                    ImmutableList.<EventSubscriptionJson>of(event),
                                                                    ImmutableList.of(priceOverride),
                                                                    auditLogs);

@@ -95,6 +95,11 @@
             <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.jayway.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Make sure to only include this in tests (it contains mysqld for all platforms and is around 134M) -->
         <dependency>
             <groupId>mysql</groupId>

@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.mockito.Mockito;
 
@@ -37,9 +36,6 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
-
-import com.google.common.collect.ImmutableList;
 
 public class MockSubscription implements SubscriptionBase {
 
@@ -49,29 +45,19 @@ public class MockSubscription implements SubscriptionBase {
     private Plan plan;
     private final PlanPhase phase;
     private final DateTime startDate;
-    private final List<EffectiveSubscriptionInternalEvent> transitions;
+    private final DateTime firstRecurringNonZeroChargeDate;
+    private SubscriptionBase sub;
 
-    public MockSubscription(final UUID id, final UUID bundleId, final Plan plan, final DateTime startDate, final List<EffectiveSubscriptionInternalEvent> transitions) {
+    public MockSubscription(final UUID id, final UUID bundleId, final Plan plan, final DateTime startDate, final DateTime firstRecurringNonZeroChargeDate) {
         this.id = id;
         this.bundleId = bundleId;
         this.state = EntitlementState.ACTIVE;
         this.plan = plan;
         this.phase = null;
         this.startDate = startDate;
-        this.transitions = transitions;
+        this.firstRecurringNonZeroChargeDate = firstRecurringNonZeroChargeDate;
+        this.sub = Mockito.mock(SubscriptionBase.class);
     }
-
-    public MockSubscription(final EntitlementState state, final Plan plan, final PlanPhase phase) {
-        this.id = UUID.randomUUID();
-        this.bundleId = UUID.randomUUID();
-        this.state = state;
-        this.plan = plan;
-        this.phase = phase;
-        this.startDate = new DateTime(DateTimeZone.UTC);
-        this.transitions = ImmutableList.<EffectiveSubscriptionInternalEvent>of();
-    }
-
-    SubscriptionBase sub = Mockito.mock(SubscriptionBase.class);
 
     @Override
     public boolean cancel(final CallContext context) throws SubscriptionBaseApiException {
@@ -167,6 +153,11 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
+    public DateTime getDateOfFirstRecurringNonZeroCharge() {
+        return firstRecurringNonZeroChargeDate;
+    }
+
+    @Override
     public boolean isMigrated() {
         return false;
     }
@@ -174,6 +165,11 @@ public class MockSubscription implements SubscriptionBase {
     @Override
     public ProductCategory getCategory() {
         return sub.getCategory();
+    }
+
+    @Override
+    public Integer getBillCycleDayLocal() {
+        return null;
     }
 
     @Override
@@ -222,13 +218,11 @@ public class MockSubscription implements SubscriptionBase {
 
     @Override
     public SubscriptionBaseTransition getPendingTransition() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public SubscriptionBaseTransition getPreviousTransition() {
-        // TODO Auto-generated method stub
         return null;
     }
 

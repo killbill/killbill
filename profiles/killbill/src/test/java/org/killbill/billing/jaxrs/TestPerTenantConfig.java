@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.ComboPaymentTransaction;
 import org.killbill.billing.client.model.Payment;
@@ -88,7 +89,7 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         perTenantProperties.put("org.killbill.payment.retry.days", "1,1,1");
         final String perTenantConfig = mapper.writeValueAsString(perTenantProperties);
 
-        final TenantKey tenantKey = killBillClient.postConfigurationPropertiesForTenant(perTenantConfig, createdBy, reason, comment);
+        final TenantKey tenantKey = killBillClient.postConfigurationPropertiesForTenant(perTenantConfig, basicRequestOptions());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -107,7 +108,7 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         //
         // Now unregister special per tenant config and we the first retry occurs one day after (and still fails), it now sets a retry date of 8 days
         //
-        killBillClient.unregisterConfigurationForTenant(createdBy, reason, comment);
+        killBillClient.unregisterConfigurationForTenant(basicRequestOptions());
         // org.killbill.tenant.broadcast.rate has been set to 1s
         crappyWaitForLackOfProperSynchonization(2000);
 

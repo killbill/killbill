@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -14,30 +15,24 @@
  * under the License.
  */
 
-package org.killbill.billing.junction.plumbing.billing;
-
-import java.util.UUID;
+package org.killbill.billing.util.bcd;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.catalog.api.BillingAlignment;
+import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.Catalog;
-import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
-import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.subscription.api.SubscriptionBase;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
-import org.killbill.billing.junction.JunctionTestSuiteNoDB;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-
-public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
+public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testCalculateBCDForAOWithBPCancelledBundleAligned() throws Exception {
@@ -50,20 +45,16 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getStartDate()).thenReturn(bpStartDateUTC);
 
-        // subscription.getCurrentPlan() will return null as expected (cancelled BP)
-        Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
-
         // Create a the base plan associated with that subscription
         final Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(bpStartDateUTC, null)).thenReturn(bpStartDateUTC);
         final Catalog catalog = Mockito.mock(Catalog.class);
         Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
         Mockito.when(subscription.getLastActivePlan()).thenReturn(plan);
+        Mockito.when(subscription.getDateOfFirstRecurringNonZeroCharge()).thenReturn(bpStartDateUTC);
 
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
-        final Integer billCycleDayLocal = billCycleDayCalculator.calculateBcdForAlignment(account, 0, subscription, BillingAlignment.BUNDLE, bundle.getId(),
-                                                                                          catalog, null, internalCallContext);
+        final Integer billCycleDayLocal = BillCycleDayCalculator.calculateBcdForAlignment(subscription, subscription, BillingAlignment.BUNDLE, account.getTimeZone(), 0);
 
         Assert.assertEquals(billCycleDayLocal, (Integer) expectedBCDUTC);
     }
@@ -124,18 +115,14 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
     }
 
     private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdLocal) throws AccountApiException, CatalogApiException {
-        final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(Mockito.mock(CatalogService.class), Mockito.mock(SubscriptionBaseInternalApi.class));
-
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getStartDate()).thenReturn(startDateUTC);
-
-        final Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(startDateUTC, null)).thenReturn(startDateUTC);
+        Mockito.when(subscription.getDateOfFirstRecurringNonZeroCharge()).thenReturn(startDateUTC);
 
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
 
-        final Integer bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, plan, account, Mockito.mock(Catalog.class), internalCallContext);
+        final Integer bcd = BillCycleDayCalculator.calculateBcdForAlignment(subscription, subscription, BillingAlignment.SUBSCRIPTION, account.getTimeZone(), 0);
         Assert.assertEquals(bcd, (Integer) bcdLocal);
     }
 }

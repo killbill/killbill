@@ -80,6 +80,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                 new LocalDate(),
                                                                                 new LocalDate(),
                                                                                 new LocalDate(),
+                                                                                null,
                                                                                 ImmutableList.<EventSubscriptionJson>of(newEvent),
                                                                                 ImmutableList.of(priceOverride),
                                                                                 null);

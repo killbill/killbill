@@ -27,7 +27,8 @@ public interface SubscriptionBaseEvent extends Comparable<SubscriptionBaseEvent>
 
     public enum EventType {
         API_USER,
-        PHASE
+        PHASE,
+        BCD_UPDATE
     }
 
     public EventType getType();

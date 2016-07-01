@@ -31,10 +31,10 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -50,6 +50,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Visibility;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
+import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
@@ -253,7 +254,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public DateTime changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-                                         final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy,  final CallContext context) throws SubscriptionBaseApiException {
+                                         final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.changePlanWithPolicy(this, productName, term, priceList, overrides, policy, context);
     }
 
@@ -350,6 +351,21 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return category;
     }
 
+    @Override
+    public Integer getBillCycleDayLocal() {
+
+        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
+                clock, transitions, Order.DESC_FROM_FUTURE, Kind.SUBSCRIPTION,
+                Visibility.FROM_DISK_ONLY, TimeLimit.PAST_OR_PRESENT_ONLY);
+        while (it.hasNext()) {
+            final SubscriptionBaseTransition cur = it.next();
+            if (cur.getTransitionType() == SubscriptionBaseTransitionType.BCD_CHANGE) {
+                return cur.getNextBillingCycleDayLocal();
+            }
+        }
+        return null;
+    }
+
     public DateTime getBundleStartDate() {
         return bundleStartDate;
     }
@@ -406,6 +422,14 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             return false;
         }
         return true;
+    }
+
+    @Override
+    public DateTime getDateOfFirstRecurringNonZeroCharge() {
+        final Plan initialPlan = !transitions.isEmpty() ? transitions.get(0).getNextPlan() : null;
+        final PlanPhase initialPhase = !transitions.isEmpty() ? transitions.get(0).getNextPhase() : null;
+        final PhaseType initialPhaseType = initialPhase != null ? initialPhase.getPhaseType() : null;
+        return initialPlan.dateOfFirstRecurringNonZeroCharge(getStartDate(), initialPhaseType);
     }
 
     public SubscriptionBaseTransitionData getTransitionFromEvent(final SubscriptionBaseEvent event, final int seqId) {
@@ -502,7 +526,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final DateTime candidateResult;
         switch (policy) {
             case IMMEDIATE:
-                candidateResult =  clock.getUTCNow();
+                candidateResult = clock.getUTCNow();
                 break;
             case END_OF_TERM:
                 //
@@ -511,7 +535,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 // 1. account is not being invoiced, for e.g AUTO_INVOICING_OFF nis set
                 // 2. In the case if FIXED item CTD is set using startDate of the service period
                 //
-                candidateResult =  (chargedThroughDate != null && chargedThroughDate.isAfter(clock.getUTCNow())) ? chargedThroughDate : clock.getUTCNow();
+                candidateResult = (chargedThroughDate != null && chargedThroughDate.isAfter(clock.getUTCNow())) ? chargedThroughDate : clock.getUTCNow();
                 break;
             default:
                 throw new SubscriptionBaseError(String.format(
@@ -558,6 +582,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         EntitlementState nextState = null;
         String nextPlanName = null;
         String nextPhaseName = null;
+        Integer nextBillingCycleDayLocal = null;
 
         UUID prevEventId = null;
         DateTime prevCreatedDate = null;
@@ -565,6 +590,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         PriceList previousPriceList = null;
         Plan previousPlan = null;
         PlanPhase previousPhase = null;
+        Integer previousBillingCycleDayLocal = null;
 
         transitions = new LinkedList<SubscriptionBaseTransition>();
 
@@ -586,6 +612,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 case PHASE:
                     final PhaseEvent phaseEV = (PhaseEvent) cur;
                     nextPhaseName = phaseEV.getPhase();
+                    break;
+
+                case BCD_UPDATE:
+                    final BCDEvent bcdEvent = (BCDEvent) cur;
+                    nextBillingCycleDayLocal = bcdEvent.getBillCycleDayLocal();
                     break;
 
                 case API_USER:
@@ -641,9 +672,12 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     prevEventId, prevCreatedDate,
                     previousState, previousPlan, previousPhase,
                     previousPriceList,
+                    previousBillingCycleDayLocal,
                     nextEventId, nextCreatedDate,
                     nextState, nextPlan, nextPhase,
-                    nextPriceList, cur.getTotalOrdering(),
+                    nextPriceList,
+                    nextBillingCycleDayLocal,
+                    cur.getTotalOrdering(),
                     cur.getCreatedDate(),
                     nextUserToken,
                     isFromDisk);
@@ -656,7 +690,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             previousPriceList = nextPriceList;
             prevEventId = nextEventId;
             prevCreatedDate = nextCreatedDate;
-
+            previousBillingCycleDayLocal = nextBillingCycleDayLocal;
         }
     }
 }

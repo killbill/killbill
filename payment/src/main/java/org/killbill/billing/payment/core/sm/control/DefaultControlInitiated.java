@@ -17,11 +17,14 @@
 
 package org.killbill.billing.payment.core.sm.control;
 
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
@@ -37,6 +40,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class DefaultControlInitiated implements LeavingStateCallback {
+
+    private static final ImmutableList<TransactionStatus> TRANSIENT_TRANSACTION_STATUSES = ImmutableList.<TransactionStatus>builder().add(TransactionStatus.PENDING)
+                                                                                                                                     .add(TransactionStatus.UNKNOWN)
+                                                                                                                                     .build();
 
     private final PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner;
     private final PaymentStateControlContext stateContext;
@@ -59,6 +66,19 @@ public class DefaultControlInitiated implements LeavingStateCallback {
     public void leavingState(final State state) throws OperationException {
         final DateTime utcNow = pluginControlPaymentAutomatonRunner.getClock().getUTCNow();
 
+        // Retrieve the associated payment transaction, if any
+        PaymentTransactionModelDao paymentTransactionModelDaoCandidate = null;
+        if (stateContext.getTransactionId() != null) {
+            paymentTransactionModelDaoCandidate = paymentDao.getPaymentTransaction(stateContext.getTransactionId(), stateContext.getInternalCallContext());
+            Preconditions.checkNotNull(paymentTransactionModelDaoCandidate, "paymentTransaction cannot be null for id " + stateContext.getTransactionId());
+        } else if (stateContext.getPaymentTransactionExternalKey() != null) {
+            final List<PaymentTransactionModelDao> paymentTransactionModelDaos = paymentDao.getPaymentTransactionsByExternalKey(stateContext.getPaymentTransactionExternalKey(), stateContext.getInternalCallContext());
+            if (!paymentTransactionModelDaos.isEmpty()) {
+                paymentTransactionModelDaoCandidate = paymentTransactionModelDaos.get(paymentTransactionModelDaos.size() - 1);
+            }
+        }
+        final PaymentTransactionModelDao paymentTransactionModelDao = paymentTransactionModelDaoCandidate != null && TRANSIENT_TRANSACTION_STATUSES.contains(paymentTransactionModelDaoCandidate.getTransactionStatus()) ? paymentTransactionModelDaoCandidate : null;
+
         if (stateContext.getPaymentId() != null && stateContext.getPaymentExternalKey() == null) {
             final PaymentModelDao payment = paymentDao.getPayment(stateContext.getPaymentId(), stateContext.getInternalCallContext());
             Preconditions.checkNotNull(payment, "payment cannot be null for id " + stateContext.getPaymentId());
@@ -67,9 +87,8 @@ public class DefaultControlInitiated implements LeavingStateCallback {
         } else if (stateContext.getPaymentExternalKey() == null) {
             stateContext.setPaymentExternalKey(UUIDs.randomUUID().toString());
         }
-        if (stateContext.getTransactionId() != null && stateContext.getPaymentTransactionExternalKey() == null) {
-            final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(stateContext.getTransactionId(), stateContext.getInternalCallContext());
-            Preconditions.checkNotNull(paymentTransactionModelDao, "paymentTransaction cannot be null for id " + stateContext.getTransactionId());
+
+        if (paymentTransactionModelDao != null) {
             stateContext.setPaymentTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey());
         } else if (stateContext.getPaymentTransactionExternalKey() == null) {
             stateContext.setPaymentTransactionExternalKey(UUIDs.randomUUID().toString());
@@ -82,20 +101,26 @@ public class DefaultControlInitiated implements LeavingStateCallback {
 
         if (state.getName().equals(initialState.getName()) || state.getName().equals(retriedState.getName())) {
             try {
-                //
-                // We don't serialize any properties at this stage to avoid serializing sensitive information.
-                // However, if after going through the control plugins, the attempt end up in RETRIED state,
-                // the properties will be serialized in the enteringState callback (any plugin that sets a
-                // retried date is responsible to correctly remove sensitive information such as CVV, ...)
-                //
-                final byte[] serializedProperties = PluginPropertySerializer.serialize(ImmutableList.<PluginProperty>of());
-                final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
-                                                                                  utcNow, utcNow, stateContext.getPaymentExternalKey(), stateContext.getTransactionId(),
-                                                                                  stateContext.getPaymentTransactionExternalKey(), transactionType, initialState.getName(),
-                                                                                  stateContext.getAmount(), stateContext.getCurrency(),
-                                                                                  stateContext.getPaymentControlPluginNames(), serializedProperties);
+                final PaymentAttemptModelDao attempt;
+                if (paymentTransactionModelDao != null && paymentTransactionModelDao.getAttemptId() != null) {
+                    attempt = pluginControlPaymentAutomatonRunner.getPaymentDao().getPaymentAttempt(paymentTransactionModelDao.getAttemptId(), stateContext.getInternalCallContext());
+                    Preconditions.checkNotNull(attempt, "attempt cannot be null for id " + paymentTransactionModelDao.getAttemptId());
+                } else {
+                    //
+                    // We don't serialize any properties at this stage to avoid serializing sensitive information.
+                    // However, if after going through the control plugins, the attempt end up in RETRIED state,
+                    // the properties will be serialized in the enteringState callback (any plugin that sets a
+                    // retried date is responsible to correctly remove sensitive information such as CVV, ...)
+                    //
+                    final byte[] serializedProperties = PluginPropertySerializer.serialize(ImmutableList.<PluginProperty>of());
 
-                pluginControlPaymentAutomatonRunner.getPaymentDao().insertPaymentAttemptWithProperties(attempt, stateContext.getInternalCallContext());
+                    attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
+                                                         utcNow, utcNow, stateContext.getPaymentExternalKey(), stateContext.getTransactionId(),
+                                                         stateContext.getPaymentTransactionExternalKey(), transactionType, initialState.getName(),
+                                                         stateContext.getAmount(), stateContext.getCurrency(),
+                                                         stateContext.getPaymentControlPluginNames(), serializedProperties);
+                    pluginControlPaymentAutomatonRunner.getPaymentDao().insertPaymentAttemptWithProperties(attempt, stateContext.getInternalCallContext());
+                }
 
                 stateContext.setAttemptId(attempt.getId());
             } catch (final PluginPropertySerializerException e) {

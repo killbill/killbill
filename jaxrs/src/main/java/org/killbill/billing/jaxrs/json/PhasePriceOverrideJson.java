@@ -90,7 +90,8 @@ public class PhasePriceOverrideJson {
 
         final PhasePriceOverrideJson that = (PhasePriceOverrideJson) o;
 
-        if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) {
+
+        if (fixedPrice != null ? fixedPrice.compareTo(that.fixedPrice) != 0 : that.fixedPrice != null) {
             return false;
         }
         if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
@@ -99,7 +100,7 @@ public class PhasePriceOverrideJson {
         if (phaseType != null ? !phaseType.equals(that.phaseType) : that.phaseType != null) {
             return false;
         }
-        if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null) {
+        if (recurringPrice != null ? recurringPrice.compareTo(that.recurringPrice) != 0 : that.recurringPrice != null) {
             return false;
         }
         return true;

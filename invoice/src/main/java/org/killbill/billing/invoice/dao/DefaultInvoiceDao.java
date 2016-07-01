@@ -749,7 +749,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     // extract entries by invoiceId (which is always set, as opposed to paymentId) and then filter based on type and
                     // paymentCookieId = transactionExternalKey
                     //
-                    final List<InvoicePaymentModelDao> invoicePayments = transactional.getPaymentsForInvoice(invoicePayment.getInvoiceId().toString(), context);
+                    final List<InvoicePaymentModelDao> invoicePayments = transactional.getAllPaymentsForInvoiceIncludedInit(invoicePayment.getInvoiceId().toString(), context);
                     final InvoicePaymentModelDao existingAttempt = Iterables.tryFind(invoicePayments, new Predicate<InvoicePaymentModelDao>() {
                         @Override
                         public boolean apply(final InvoicePaymentModelDao input) {
@@ -760,7 +760,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                     if (existingAttempt == null) {
                         transactional.create(invoicePayment, context);
-                    } else if (!existingAttempt.getSuccess() && invoicePayment.getSuccess()) {
+                    } else if (!existingAttempt.getSuccess()) {
                         transactional.updateAttempt(existingAttempt.getRecordId(),
                                                     invoicePayment.getPaymentId().toString(),
                                                     invoicePayment.getPaymentDate().toDate(),
@@ -769,7 +769,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                     invoicePayment.getProcessedCurrency(),
                                                     invoicePayment.getPaymentCookieId(),
                                                     null,
-                                                    true,
+                                                    invoicePayment.getSuccess(),
                                                     context);
                     }
                 }

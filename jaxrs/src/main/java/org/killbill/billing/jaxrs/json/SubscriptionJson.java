@@ -18,6 +18,8 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,6 +28,9 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
@@ -66,9 +71,9 @@ public class SubscriptionJson extends JsonBase {
     private final LocalDate chargedThroughDate;
     private final LocalDate billingStartDate;
     private final LocalDate billingEndDate;
+    private final Integer billCycleDayLocal;
     private final List<EventSubscriptionJson> events;
     private final List<PhasePriceOverrideJson> priceOverrides;
-
 
     public static class EventSubscriptionJson extends JsonBase {
 
@@ -290,6 +295,7 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("chargedThroughDate") @Nullable final LocalDate chargedThroughDate,
                             @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
                             @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate,
+                            @JsonProperty("billCycleDayLocal") @Nullable final Integer billCycleDayLocal,
                             @JsonProperty("events") @Nullable final List<EventSubscriptionJson> events,
                             @JsonProperty("priceOverrides") final List<PhasePriceOverrideJson> priceOverrides,
                             @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
@@ -306,6 +312,7 @@ public class SubscriptionJson extends JsonBase {
         this.chargedThroughDate = chargedThroughDate;
         this.billingStartDate = billingStartDate;
         this.billingEndDate = billingEndDate;
+        this.billCycleDayLocal = billCycleDayLocal;
         this.accountId = accountId;
         this.bundleId = bundleId;
         this.subscriptionId = subscriptionId;
@@ -314,7 +321,7 @@ public class SubscriptionJson extends JsonBase {
         this.priceOverrides = priceOverrides;
     }
 
-    public SubscriptionJson(final Subscription subscription, @Nullable final AccountAuditLogs accountAuditLogs) {
+    public SubscriptionJson(final Subscription subscription, @Nullable final Currency currency, @Nullable final AccountAuditLogs accountAuditLogs) throws CatalogApiException {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscription(subscription.getId())));
         this.startDate = subscription.getEffectiveStartDate();
 
@@ -352,6 +359,7 @@ public class SubscriptionJson extends JsonBase {
         this.chargedThroughDate = subscription.getChargedThroughDate();
         this.billingStartDate = subscription.getBillingStartDate();
         this.billingEndDate = subscription.getBillingEndDate();
+        this.billCycleDayLocal = subscription.getBillCycleDayLocal();
         this.accountId = subscription.getAccountId().toString();
         this.bundleId = subscription.getBundleId().toString();
         this.subscriptionId = subscription.getId().toString();
@@ -360,8 +368,20 @@ public class SubscriptionJson extends JsonBase {
         for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
             this.events.add(new EventSubscriptionJson(subscriptionEvent, accountAuditLogs));
         }
-        // It may be nice to recreate the override that were applied on the plans associated with that subscription
-        this.priceOverrides = new LinkedList<PhasePriceOverrideJson>();
+
+        // We fill the catalog info every time we get the currency from the account (even if this is not overridden Plan)
+        this.priceOverrides = new ArrayList<PhasePriceOverrideJson>();
+        if (currency != null) {
+            final Plan plan = subscription.getLastActivePlan();
+            if (plan != null) {
+                for (final PlanPhase cur : plan.getAllPhases()) {
+                    final BigDecimal fixedPrice = cur.getFixed() != null ? cur.getFixed().getPrice().getPrice(currency) : null;
+                    final BigDecimal recurringPrice = cur.getRecurring() != null ? cur.getRecurring().getRecurringPrice().getPrice(currency) : null;
+                    final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(cur.getName(), cur.getPhaseType().toString(), fixedPrice, recurringPrice);
+                    priceOverrides.add(phase);
+                }
+            }
+        }
     }
 
     public String getAccountId() {
@@ -428,6 +448,10 @@ public class SubscriptionJson extends JsonBase {
         return billingEndDate;
     }
 
+    public Integer getBillCycleDayLocal() {
+        return billCycleDayLocal;
+    }
+
     public List<EventSubscriptionJson> getEvents() {
         return events;
     }
@@ -455,6 +479,7 @@ public class SubscriptionJson extends JsonBase {
         sb.append(", chargedThroughDate=").append(chargedThroughDate);
         sb.append(", billingStartDate=").append(billingStartDate);
         sb.append(", billingEndDate=").append(billingEndDate);
+        sb.append(", billCycleDayLocal=").append(billCycleDayLocal);
         sb.append(", events=").append(events);
         sb.append(", priceOverrides=").append(priceOverrides);
         sb.append('}');
@@ -526,6 +551,9 @@ public class SubscriptionJson extends JsonBase {
         if (priceOverrides != null ? !priceOverrides.equals(that.priceOverrides) : that.priceOverrides != null) {
             return false;
         }
+        if (billCycleDayLocal != null ? !billCycleDayLocal.equals(that.billCycleDayLocal) : that.billCycleDayLocal != null) {
+            return false;
+        }
         return true;
     }
 
@@ -547,6 +575,7 @@ public class SubscriptionJson extends JsonBase {
         result = 31 * result + (chargedThroughDate != null ? chargedThroughDate.hashCode() : 0);
         result = 31 * result + (billingStartDate != null ? billingStartDate.hashCode() : 0);
         result = 31 * result + (billingEndDate != null ? billingEndDate.hashCode() : 0);
+        result = 31 * result + (billCycleDayLocal != null ? billCycleDayLocal.hashCode() : 0);
         result = 31 * result + (events != null ? events.hashCode() : 0);
         result = 31 * result + (priceOverrides != null ? priceOverrides.hashCode() : 0);
         return result;

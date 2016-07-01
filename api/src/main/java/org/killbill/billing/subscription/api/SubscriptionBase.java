@@ -100,9 +100,13 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public ProductCategory getCategory();
 
+    public Integer getBillCycleDayLocal();
+
     public SubscriptionBaseTransition getPendingTransition();
 
     public SubscriptionBaseTransition getPreviousTransition();
 
     public List<SubscriptionBaseTransition> getAllTransitions();
+
+    public DateTime getDateOfFirstRecurringNonZeroCharge();
 }

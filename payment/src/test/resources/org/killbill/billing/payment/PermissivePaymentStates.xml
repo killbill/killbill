@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2014-2016 Groupon, Inc
+  ~ Copyright 2014-2016 The Billing Project, LLC
+  ~
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<stateMachineConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:noNamespaceSchemaLocation="StateMachineConfig.xsd">
+
+    <stateMachines>
+        <stateMachine name="BIG_BANG">
+            <states>
+                <state name="BIG_BANG_INIT"/>
+            </states>
+            <transitions>
+                <transition>
+                    <initialState>BIG_BANG_INIT</initialState>
+                    <operation>OP_DUMMY</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>BIG_BANG_INIT</finalState>
+                </transition>
+            </transitions>
+            <operations>
+                <operation name="OP_DUMMY"/>
+            </operations>
+        </stateMachine>
+        <stateMachine name="AUTHORIZE">
+            <states>
+                <state name="AUTH_INIT"/>
+                <state name="AUTH_PENDING"/>
+                <state name="AUTH_SUCCESS"/>
+                <state name="AUTH_FAILED"/>
+                <state name="AUTH_ERRORED"/>
+            </states>
+            <transitions>
+                <transition>
+                    <initialState>AUTH_INIT</initialState>
+                    <operation>OP_AUTHORIZE</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>AUTH_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>AUTH_INIT</initialState>
+                    <operation>OP_AUTHORIZE</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>AUTH_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>AUTH_INIT</initialState>
+                    <operation>OP_AUTHORIZE</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>AUTH_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>AUTH_PENDING</initialState>
+                    <operation>OP_AUTHORIZE</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>AUTH_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>AUTH_PENDING</initialState>
+                    <operation>OP_AUTHORIZE</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>AUTH_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>AUTH_PENDING</initialState>
+                    <operation>OP_AUTHORIZE</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>AUTH_ERRORED</finalState>
+                </transition>
+                <transition>
+                    <initialState>AUTH_INIT</initialState>
+                    <operation>OP_AUTHORIZE</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>AUTH_ERRORED</finalState>
+                </transition>
+            </transitions>
+            <operations>
+                <operation name="OP_AUTHORIZE"/>
+            </operations>
+        </stateMachine>
+
+        <stateMachine name="CAPTURE">
+            <states>
+                <state name="CAPTURE_INIT"/>
+                <state name="CAPTURE_PENDING"/>
+                <state name="CAPTURE_SUCCESS"/>
+                <state name="CAPTURE_FAILED"/>
+                <state name="CAPTURE_ERRORED"/>
+            </states>
+            <transitions>
+                <transition>
+                    <initialState>CAPTURE_INIT</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>CAPTURE_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>CAPTURE_INIT</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>CAPTURE_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CAPTURE_INIT</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>CAPTURE_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>CAPTURE_PENDING</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>CAPTURE_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>CAPTURE_PENDING</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>CAPTURE_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CAPTURE_PENDING</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>CAPTURE_ERRORED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CAPTURE_INIT</initialState>
+                    <operation>OP_CAPTURE</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>CAPTURE_ERRORED</finalState>
+                </transition>
+            </transitions>
+            <operations>
+                <operation name="OP_CAPTURE"/>
+            </operations>
+        </stateMachine>
+
+        <stateMachine name="PURCHASE">
+            <states>
+                <state name="PURCHASE_INIT"/>
+                <state name="PURCHASE_PENDING"/>
+                <state name="PURCHASE_SUCCESS"/>
+                <state name="PURCHASE_FAILED"/>
+                <state name="PURCHASE_ERRORED"/>
+            </states>
+            <transitions>
+                <transition>
+                    <initialState>PURCHASE_INIT</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>PURCHASE_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>PURCHASE_INIT</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>PURCHASE_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>PURCHASE_INIT</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>PURCHASE_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>PURCHASE_PENDING</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>PURCHASE_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>PURCHASE_PENDING</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>PURCHASE_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>PURCHASE_PENDING</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>PURCHASE_ERRORED</finalState>
+                </transition>
+                <transition>
+                    <initialState>PURCHASE_INIT</initialState>
+                    <operation>OP_PURCHASE</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>PURCHASE_ERRORED</finalState>
+                </transition>
+            </transitions>
+            <operations>
+                <operation name="OP_PURCHASE"/>
+            </operations>
+        </stateMachine>
+
+        <stateMachine name="REFUND">
+            <states>
+                <state name="REFUND_INIT"/>
+                <state name="REFUND_PENDING"/>
+                <state name="REFUND_SUCCESS"/>
+                <state name="REFUND_FAILED"/>
+                <state name="REFUND_ERRORED"/>
+            </states>
+            <transitions>
+                <transition>
+                    <initialState>REFUND_INIT</initialState>
+                    <operation>OP_REFUND</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>REFUND_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>REFUND_INIT</initialState>
+                    <operation>OP_REFUND</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>REFUND_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>REFUND_INIT</initialState>
+                    <operation>OP_REFUND</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>REFUND_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>REFUND_PENDING</initialState>
+                    <operation>OP_REFUND</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>REFUND_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>REFUND_PENDING</initialState>
+                    <operation>OP_REFUND</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>REFUND_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>REFUND_PENDING</initialState>
+                    <operation>OP_REFUND</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>REFUND_ERRORED</finalState>
+                </transition>
+                <transition>
+                    <initialState>REFUND_INIT</initialState>
+                    <operation>OP_REFUND</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>REFUND_ERRORED</finalState>
+                </transition>
+            </transitions>
+            <operations>
+                <operation name="OP_REFUND"/>
+            </operations>
+        </stateMachine>
+
+        <stateMachine name="CREDIT">
+            <states>
+                <state name="CREDIT_INIT"/>
+                <state name="CREDIT_PENDING"/>
+                <state name="CREDIT_SUCCESS"/>
+                <state name="CREDIT_FAILED"/>
+                <state name="CREDIT_ERRORED"/>
+            </states>
+            <transitions>
+                <transition>
+                    <initialState>CREDIT_INIT</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>CREDIT_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>CREDIT_INIT</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>CREDIT_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CREDIT_INIT</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>CREDIT_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>CREDIT_PENDING</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>CREDIT_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>CREDIT_PENDING</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>CREDIT_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CREDIT_PENDING</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>CREDIT_ERRORED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CREDIT_INIT</initialState>
+                    <operation>OP_CREDIT</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>CREDIT_ERRORED</finalState>
+                </transition>
+            </transitions>
+            <operations>
+                <operation name="OP_CREDIT"/>
+            </operations>
+        </stateMachine>
+
+        <stateMachine name="VOID">
+            <states>
+                <state name="VOID_INIT"/>
+                <state name="VOID_PENDING"/>
+                <state name="VOID_SUCCESS"/>
+                <state name="VOID_FAILED"/>
+                <state name="VOID_ERRORED"/>
+            </states>
+            <transitions>
+                <transition>
+                    <initialState>VOID_INIT</initialState>
+                    <operation>OP_VOID</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>VOID_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>VOID_INIT</initialState>
+                    <operation>OP_VOID</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>VOID_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>VOID_INIT</initialState>
+                    <operation>OP_VOID</operation>
+                    <operationResult>PENDING</operationResult>
+                    <finalState>VOID_PENDING</finalState>
+                </transition>
+                <transition>
+                    <initialState>VOID_PENDING</initialState>
+                    <operation>OP_VOID</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>VOID_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>VOID_PENDING</initialState>
+                    <operation>OP_VOID</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>VOID_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>VOID_PENDING</initialState>
+                    <operation>OP_VOID</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>VOID_ERRORED</finalState>
+                </transition>
+                <transition>
+                    <initialState>VOID_INIT</initialState>
+                    <operation>OP_VOID</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>VOID_ERRORED</finalState>
+                </transition>
+            </transitions>
+            <operations>
+                <operation name="OP_VOID"/>
+            </operations>
+        </stateMachine>
+        <stateMachine name="CHARGEBACK">
+            <states>
+                <state name="CHARGEBACK_INIT"/>
+                <state name="CHARGEBACK_SUCCESS"/>
+                <state name="CHARGEBACK_FAILED"/>
+                <state name="CHARGEBACK_ERRORED"/>
+            </states>
+            <transitions>
+                <transition>
+                    <initialState>CHARGEBACK_INIT</initialState>
+                    <operation>OP_CHARGEBACK</operation>
+                    <operationResult>SUCCESS</operationResult>
+                    <finalState>CHARGEBACK_SUCCESS</finalState>
+                </transition>
+                <transition>
+                    <initialState>CHARGEBACK_INIT</initialState>
+                    <operation>OP_CHARGEBACK</operation>
+                    <operationResult>FAILURE</operationResult>
+                    <finalState>CHARGEBACK_FAILED</finalState>
+                </transition>
+                <transition>
+                    <initialState>CHARGEBACK_INIT</initialState>
+                    <operation>OP_CHARGEBACK</operation>
+                    <operationResult>EXCEPTION</operationResult>
+                    <finalState>CHARGEBACK_ERRORED</finalState>
+                </transition>
+            </transitions>
+            <operations>
+                <operation name="OP_CHARGEBACK"/>
+            </operations>
+        </stateMachine>
+    </stateMachines>
+
+    <linkStateMachines>
+        <linkStateMachine>
+            <initialStateMachine>BIG_BANG</initialStateMachine>
+            <initialState>BIG_BANG_INIT</initialState>
+            <finalStateMachine>AUTHORIZE</finalStateMachine>
+            <finalState>AUTH_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>BIG_BANG</initialStateMachine>
+            <initialState>BIG_BANG_INIT</initialState>
+            <finalStateMachine>PURCHASE</finalStateMachine>
+            <finalState>PURCHASE_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>BIG_BANG</initialStateMachine>
+            <initialState>BIG_BANG_INIT</initialState>
+            <finalStateMachine>CREDIT</finalStateMachine>
+            <finalState>CREDIT_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>AUTHORIZE</initialStateMachine>
+            <initialState>AUTH_SUCCESS</initialState>
+            <finalStateMachine>CAPTURE</finalStateMachine>
+            <finalState>CAPTURE_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>AUTHORIZE</initialStateMachine>
+            <initialState>AUTH_SUCCESS</initialState>
+            <finalStateMachine>VOID</finalStateMachine>
+            <finalState>VOID_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>VOID</initialStateMachine>
+            <initialState>VOID_SUCCESS</initialState>
+            <finalStateMachine>VOID</finalStateMachine>
+            <finalState>VOID_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>VOID</initialStateMachine>
+            <initialState>VOID_SUCCESS</initialState>
+            <finalStateMachine>CAPTURE</finalStateMachine>
+            <finalState>CAPTURE_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>VOID</initialStateMachine>
+            <initialState>VOID_SUCCESS</initialState>
+            <finalStateMachine>REFUND</finalStateMachine>
+            <finalState>REFUND_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>VOID</initialStateMachine>
+            <initialState>VOID_SUCCESS</initialState>
+            <finalStateMachine>CREDIT</finalStateMachine>
+            <finalState>CREDIT_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>CAPTURE</initialStateMachine>
+            <initialState>CAPTURE_SUCCESS</initialState>
+            <finalStateMachine>REFUND</finalStateMachine>
+            <finalState>REFUND_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>CAPTURE</initialStateMachine>
+            <initialState>CAPTURE_SUCCESS</initialState>
+            <finalStateMachine>CAPTURE</finalStateMachine>
+            <finalState>CAPTURE_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>CAPTURE</initialStateMachine>
+            <initialState>CAPTURE_SUCCESS</initialState>
+            <finalStateMachine>CHARGEBACK</finalStateMachine>
+            <finalState>CHARGEBACK_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>CAPTURE</initialStateMachine>
+            <initialState>CAPTURE_SUCCESS</initialState>
+            <finalStateMachine>VOID</finalStateMachine>
+            <finalState>VOID_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>REFUND</initialStateMachine>
+            <initialState>REFUND_SUCCESS</initialState>
+            <finalStateMachine>REFUND</finalStateMachine>
+            <finalState>REFUND_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>REFUND</initialStateMachine>
+            <initialState>REFUND_SUCCESS</initialState>
+            <finalStateMachine>CHARGEBACK</finalStateMachine>
+            <finalState>CHARGEBACK_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>REFUND</initialStateMachine>
+            <initialState>REFUND_SUCCESS</initialState>
+            <finalStateMachine>VOID</finalStateMachine>
+            <finalState>VOID_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>PURCHASE</initialStateMachine>
+            <initialState>PURCHASE_SUCCESS</initialState>
+            <finalStateMachine>REFUND</finalStateMachine>
+            <finalState>REFUND_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>PURCHASE</initialStateMachine>
+            <initialState>PURCHASE_SUCCESS</initialState>
+            <finalStateMachine>CHARGEBACK</finalStateMachine>
+            <finalState>CHARGEBACK_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>CREDIT</initialStateMachine>
+            <initialState>CREDIT_SUCCESS</initialState>
+            <finalStateMachine>VOID</finalStateMachine>
+            <finalState>VOID_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>CHARGEBACK</initialStateMachine>
+            <initialState>CHARGEBACK_SUCCESS</initialState>
+            <finalStateMachine>CHARGEBACK</finalStateMachine>
+            <finalState>CHARGEBACK_INIT</finalState>
+        </linkStateMachine>
+        <linkStateMachine>
+            <initialStateMachine>CHARGEBACK</initialStateMachine>
+            <initialState>CHARGEBACK_FAILED</initialState>
+            <finalStateMachine>REFUND</finalStateMachine>
+            <finalState>REFUND_INIT</finalState>
+        </linkStateMachine>
+    </linkStateMachines>
+</stateMachineConfig>

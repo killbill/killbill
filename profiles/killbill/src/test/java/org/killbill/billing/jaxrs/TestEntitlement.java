@@ -31,7 +31,6 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Invoice;
@@ -41,6 +40,8 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.ning.http.client.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -66,6 +67,16 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // Retrieves with GET
         Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        Assert.assertEquals(objFromJson.getPriceOverrides().size(), 2);
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(objFromJson.getPriceOverrides().get(0).getRecurringPrice());
+
+        Assert.assertNull(objFromJson.getPriceOverrides().get(1).getFixedPrice());
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(1).getRecurringPrice(), new BigDecimal("249.95"));
+
+        // Equality in java client is not correctly implemented so manually check PriceOverrides section and then reset before equality
+        objFromJson.setPriceOverrides(null);
+        entitlementJson.setPriceOverrides(null);
         Assert.assertTrue(objFromJson.equals(entitlementJson));
 
         // Change plan IMM
@@ -111,6 +122,10 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // Retrieves with GET
         Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        // Equality in java client is not correctly implemented so manually check PriceOverrides section and then reset before equality
+        objFromJson.setPriceOverrides(null);
+        entitlementJson.setPriceOverrides(null);
+
         Assert.assertTrue(objFromJson.equals(entitlementJson));
 
         // MOVE AFTER TRIAL
@@ -167,6 +182,10 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // Retrieves with GET
         Subscription objFromJson = killBillClient.getSubscription(subscriptionJson.getSubscriptionId());
+        // Equality in java client is not correctly implemented so manually check PriceOverrides section and then reset before equality
+        objFromJson.setPriceOverrides(null);
+        subscriptionJson.setPriceOverrides(null);
+
         Assert.assertTrue(objFromJson.equals(subscriptionJson));
         assertEquals(objFromJson.getBillingPeriod(), BillingPeriod.ANNUAL);
 
@@ -204,7 +223,7 @@ public class TestEntitlement extends TestJaxrsBase {
         overrides.add(new PhasePriceOverride(null, PhaseType.TRIAL.toString(), BigDecimal.TEN, null));
         input.setPriceOverrides(overrides);
 
-        final Subscription subscription = killBillClient.createSubscription(input, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+        final Subscription subscription = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
 
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 1);
@@ -279,4 +298,40 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         Assert.assertTrue(objFromJson.equals(entitlementJson));
     }
+
+    @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
+    public void testMoveEntitlementBCD() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final Subscription entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName,
+                                                               ProductCategory.BASE, term, true);
+
+        Assert.assertEquals(entitlementJson.getBillCycleDayLocal(), new Integer(25));
+
+        final Subscription updatedSubscription = new Subscription();
+        updatedSubscription.setSubscriptionId(entitlementJson.getSubscriptionId());
+        updatedSubscription.setBillCycleDayLocal(9);
+        killBillClient.updateSubscriptionBCD(updatedSubscription, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+
+
+        final Subscription result = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        // Still shows as the 4 (BCD did not take effect)
+        Assert.assertEquals(result.getBillCycleDayLocal(), new Integer(25));
+
+        // 2012, 5, 9
+        clock.addDays(14);
+        crappyWaitForLackOfProperSynchonization();
+
+        final Subscription result2 = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        // Still shows as the 4 (BCD did not take effect)
+        Assert.assertEquals(result2.getBillCycleDayLocal(), new Integer(9));
+    }
+
+
 }

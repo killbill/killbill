@@ -290,7 +290,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         // Artificially move the transaction status to UNKNOWN
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
                                                            "foo", "bar", internalCallContext);
         testListener.assertListenerStatus();
@@ -322,7 +322,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         // Artificially move the transaction status to UNKNOWN
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
                                                            "foo", "bar", internalCallContext);
         testListener.assertListenerStatus();
@@ -367,7 +367,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         // Artificially move the transaction status to UNKNOWN
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
                                                            "foo", "bar", internalCallContext);
         testListener.assertListenerStatus();
@@ -400,7 +400,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         // Artificially move the transaction status to PENDING
         final String paymentStateName = paymentSMHelper.getPendingStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.PENDING, requestedAmount, account.getCurrency(),
                                                            "loup", "chat", internalCallContext);
         testListener.assertListenerStatus();
@@ -439,7 +439,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
+        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.PENDING, requestedAmount, account.getCurrency(),
                                                            "loup", "chat", internalCallContext);
         testListener.assertListenerStatus();

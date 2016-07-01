@@ -75,7 +75,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             entitlement.uncancelEntitlement(ImmutableList.<PluginProperty>of(), callContext);
             Assert.fail("Entitlement hasn't been cancelled yet");
         } catch (final EntitlementApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.SUB_UNCANCEL_BAD_STATE.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.ENT_UNCANCEL_BAD_STATE.getCode());
         }
 
         clock.addDays(3);
@@ -352,7 +352,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
     }
 
     @Test(groups = "slow", description = "Test pause / unpause in the future")
-    public void testPauseUnpauseInTheFuture() throws AccountApiException, EntitlementApiException {
+    public void testPauseUnpauseInTheFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
@@ -374,10 +374,18 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         // No event yet
         assertListenerStatus();
 
+        final Entitlement refreshedAfterFuturePause = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        assertEquals(refreshedAfterFuturePause.getState(), EntitlementState.ACTIVE);
+
+
         final LocalDate resumeDate = new LocalDate(2013, 12, 24);
         entitlementApi.resume(baseEntitlement.getBundleId(), resumeDate, ImmutableList.<PluginProperty>of(), callContext);
         // No event yet
         assertListenerStatus();
+
+        // Not worth writing another test in TestDefaultSubscriptionApi just for that subscription call. We want to check that future PAUSE/RESUME events are visible
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), callContext);
+        Assert.assertEquals(subscription.getSubscriptionEvents().size(), 7);
 
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         clock.setDay(pauseDate);
