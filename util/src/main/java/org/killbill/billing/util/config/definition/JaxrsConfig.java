@@ -35,7 +35,7 @@ public interface JaxrsConfig extends KillbillConfig {
     TimeSpan getJaxrsTimeout();
 
     @Config("org.killbill.jaxrs.location.full.url")
-    @Default("false")
+    @Default("true")
     @Description("Type of return for the jaxrs response location URL")
     boolean isJaxrsLocationFullUrl();
 
