@@ -249,7 +249,7 @@ public class PaymentAutomatonRunner {
     }
 
     // TODO Could we cache these to avoid extra queries in PaymentAutomatonDAOHelper?
-    private UUID retrievePaymentId(@Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey, final InternalCallContext internalCallContext) {
+    private UUID retrievePaymentId(@Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey, final InternalCallContext internalCallContext) throws PaymentApiException {
         if (paymentExternalKey != null) {
             final PaymentModelDao payment = paymentDao.getPaymentByExternalKey(paymentExternalKey, internalCallContext);
             if (payment != null) {
@@ -277,8 +277,7 @@ public class PaymentAutomatonRunner {
                 if (paymentIdCandidate == null) {
                     paymentIdCandidate = paymentTransactionModelDao.getPaymentId();
                 } else if (!paymentIdCandidate.equals(paymentTransactionModelDao.getPaymentId())) {
-                    // Multiple failed payments sharing the key
-                    return null;
+                    throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Multiple failed payments sharing the same transaction external key - this should never happen");
                 }
             }
         }
