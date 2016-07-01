@@ -57,6 +57,10 @@ public class PaymentAutomatonDAOHelper {
     private final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     private final PersistentBus eventBus;
 
+    // Cached
+    private String pluginName = null;
+    private PaymentPluginApi paymentPluginApi = null;
+
     // Used to build new payments and transactions
     public PaymentAutomatonDAOHelper(final PaymentStateContext paymentStateContext,
                                      final DateTime utcNow, final PaymentDao paymentDao,
@@ -128,6 +132,7 @@ public class PaymentAutomatonDAOHelper {
 
         final String lastSuccessPaymentState = paymentSMHelper.isSuccessState(currentPaymentStateName) ? currentPaymentStateName : null;
         paymentDao.updatePaymentAndTransactionOnCompletion(paymentStateContext.getAccount().getId(),
+                                                           paymentStateContext.getAttemptId(),
                                                            paymentStateContext.getPaymentId(),
                                                            paymentStateContext.getTransactionType(),
                                                            currentPaymentStateName,
@@ -145,25 +150,22 @@ public class PaymentAutomatonDAOHelper {
     }
 
     public String getPaymentProviderPluginName() throws PaymentApiException {
+        if (pluginName != null) {
+            return pluginName;
+        }
+
         final UUID paymentMethodId = paymentStateContext.getPaymentMethodId();
         final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, internalCallContext);
         if (methodDao == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
-        return methodDao.getPluginName();
+        pluginName = methodDao.getPluginName();
+        return pluginName;
     }
 
-    public PaymentPluginApi getPaymentProviderPlugin() throws PaymentApiException {
+    public PaymentPluginApi getPaymentPluginApi() throws PaymentApiException {
         final String pluginName = getPaymentProviderPluginName();
         return getPaymentPluginApi(pluginName);
-    }
-
-    public PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {
-        final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(pluginName);
-        if (pluginApi == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_PLUGIN, pluginName);
-        }
-        return pluginApi;
     }
 
     public PaymentModelDao getPayment() throws PaymentApiException {
@@ -181,6 +183,18 @@ public class PaymentAutomatonDAOHelper {
 
     public PaymentDao getPaymentDao() {
         return paymentDao;
+    }
+
+    private PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {
+        if (paymentPluginApi != null) {
+            return paymentPluginApi;
+        }
+
+        paymentPluginApi = pluginRegistry.getServiceForName(pluginName);
+        if (paymentPluginApi == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_PLUGIN, pluginName);
+        }
+        return paymentPluginApi;
     }
 
     private PaymentModelDao buildNewPaymentModelDao() {

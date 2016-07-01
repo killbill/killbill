@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.currency.KillBillMoney;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -195,6 +196,8 @@ public class DefaultPayment extends EntityBase implements Payment {
                                                        final Currency chargebackProcessedCurrency,
                                                        final BigDecimal chargebackAmount,
                                                        final Currency chargebackCurrency) {
+        BigDecimal unformattedAmountForTransactions = null;
+
         final Collection<PaymentTransaction> candidateTransactions = Collections2.<PaymentTransaction>filter(transactions,
                                                                                                              new Predicate<PaymentTransaction>() {
                                                                                                                  @Override
@@ -209,32 +212,34 @@ public class DefaultPayment extends EntityBase implements Payment {
             currencyForTransactions = getCurrencyForTransactions(candidateTransactions, false);
             if (currencyForTransactions == null) {
                 // Multiple currencies - cannot compute the total
-                return BigDecimal.ZERO;
+                unformattedAmountForTransactions = BigDecimal.ZERO;
             } else if (currencyForTransactions != paymentCurrency) {
                 // Different currency than the main payment currency
-                return BigDecimal.ZERO;
+                unformattedAmountForTransactions = BigDecimal.ZERO;
             } else {
                 final BigDecimal amountForTransactions = getAmountForTransactions(candidateTransactions, false);
-                return getAmountForTransactions(amountForTransactions,
-                                                takeChargebacksIntoAccount,
-                                                currencyForTransactions,
-                                                chargebackTransactions,
-                                                chargebackProcessedAmount,
-                                                chargebackProcessedCurrency,
-                                                chargebackAmount,
-                                                chargebackCurrency);
+                unformattedAmountForTransactions = getAmountForTransactions(amountForTransactions,
+                                                                            takeChargebacksIntoAccount,
+                                                                            currencyForTransactions,
+                                                                            chargebackTransactions,
+                                                                            chargebackProcessedAmount,
+                                                                            chargebackProcessedCurrency,
+                                                                            chargebackAmount,
+                                                                            chargebackCurrency);
             }
         } else {
             final BigDecimal amountForTransactions = getAmountForTransactions(candidateTransactions, true);
-            return getAmountForTransactions(amountForTransactions,
-                                            takeChargebacksIntoAccount,
-                                            currencyForTransactions,
-                                            chargebackTransactions,
-                                            chargebackProcessedAmount,
-                                            chargebackProcessedCurrency,
-                                            chargebackAmount,
-                                            chargebackCurrency);
+            unformattedAmountForTransactions = getAmountForTransactions(amountForTransactions,
+                                                                        takeChargebacksIntoAccount,
+                                                                        currencyForTransactions,
+                                                                        chargebackTransactions,
+                                                                        chargebackProcessedAmount,
+                                                                        chargebackProcessedCurrency,
+                                                                        chargebackAmount,
+                                                                        chargebackCurrency);
         }
+
+        return unformattedAmountForTransactions == null || currencyForTransactions == null ? unformattedAmountForTransactions : KillBillMoney.of(unformattedAmountForTransactions, currencyForTransactions);
     }
 
     private static BigDecimal getAmountForTransactions(final BigDecimal amountForTransactions,

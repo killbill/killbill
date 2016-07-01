@@ -207,6 +207,46 @@ public class TenantResource extends JaxRsResourceBase {
         return deleteTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, createdBy, reason, comment, request);
     }
 
+    @TimedResource
+    @POST
+    @Path("/" + UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
+    @Consumes(TEXT_PLAIN)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add a per tenant payment state machine for a plugin")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response uploadPluginPaymentStateMachineConfig(final String paymentStateMachineConfig,
+                                                          @PathParam("pluginName") final String pluginName,
+                                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                          @HeaderParam(HDR_REASON) final String reason,
+                                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                                          @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                          @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+        return insertTenantKey(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, pluginName, paymentStateMachineConfig, uriInfo, "getPluginPaymentStateMachineConfig", createdBy, reason, comment, request);
+    }
+
+    @TimedResource
+    @GET
+    @Path("/" + UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a per tenant payment state machine for a plugin", response = TenantKeyJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response getPluginPaymentStateMachineConfig(@PathParam("pluginName") final String pluginName,
+                                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        return getTenantKey(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, pluginName, request);
+    }
+
+    @TimedResource
+    @DELETE
+    @Path("/" + UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
+    @ApiOperation(value = "Delete a per tenant payment state machine for a plugin")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response deletePluginPaymentStateMachineConfig(@PathParam("pluginName") final String pluginName,
+                                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                          @HeaderParam(HDR_REASON) final String reason,
+                                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        return deleteTenantKey(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, pluginName, createdBy, reason, comment, request);
+    }
 
     @TimedResource
     @POST

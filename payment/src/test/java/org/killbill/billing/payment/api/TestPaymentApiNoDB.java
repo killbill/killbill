@@ -88,7 +88,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testSimpleInvoicePaymentWithInvoiceAmount() throws Exception {
-        final BigDecimal invoiceAmount = new BigDecimal("10.0011");
+        final BigDecimal invoiceAmount = BigDecimal.TEN;
         final BigDecimal requestedAmount = invoiceAmount;
         final BigDecimal expectedAmount = invoiceAmount;
 
@@ -97,8 +97,8 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testSimpleInvoicePaymentWithLowerAmount() throws Exception {
-        final BigDecimal invoiceAmount = new BigDecimal("10.0011");
-        final BigDecimal requestedAmount = new BigDecimal("8.0091");
+        final BigDecimal invoiceAmount = BigDecimal.TEN;
+        final BigDecimal requestedAmount = BigDecimal.ONE;
         final BigDecimal expectedAmount = requestedAmount;
 
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
@@ -106,8 +106,8 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testSimpleInvoicePaymentWithInvalidAmount() throws Exception {
-        final BigDecimal invoiceAmount = new BigDecimal("10.0011");
-        final BigDecimal requestedAmount = new BigDecimal("80.0091");
+        final BigDecimal invoiceAmount = BigDecimal.ONE;
+        final BigDecimal requestedAmount = BigDecimal.TEN;
         final BigDecimal expectedAmount = null;
 
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);

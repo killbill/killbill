@@ -1,5 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,6 +24,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.billing.util.currency.KillBillMoney;
 
 public class DefaultPaymentTransaction extends EntityBase implements PaymentTransaction {
 
@@ -50,9 +52,9 @@ public class DefaultPaymentTransaction extends EntityBase implements PaymentTran
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
         this.status = status;
-        this.amount = amount;
+        this.amount = amount == null || currency == null ? amount : KillBillMoney.of(amount, currency);
         this.currency = currency;
-        this.processedAmount = processedAmount;
+        this.processedAmount = processedAmount == null || processedCurrency == null ? processedAmount : KillBillMoney.of(processedAmount, processedCurrency);
         this.processedCurrency = processedCurrency;
         this.gatewayErrorCode = gatewayErrorCode;
         this.gatewayErrorMsg = gatewayErrorMsg;

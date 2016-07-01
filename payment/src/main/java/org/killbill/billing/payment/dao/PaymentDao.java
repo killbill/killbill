@@ -56,7 +56,7 @@ public interface PaymentDao {
 
     public PaymentTransactionModelDao updatePaymentWithNewTransaction(UUID paymentId, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
 
-    public void updatePaymentAndTransactionOnCompletion(UUID accountId, UUID paymentId, TransactionType transactionType, String currentPaymentStateName, String lastPaymentSuccessStateName, UUID transactionId,
+    public void updatePaymentAndTransactionOnCompletion(UUID accountId, UUID attemptId, UUID paymentId, TransactionType transactionType, String currentPaymentStateName, String lastPaymentSuccessStateName, UUID transactionId,
                                                         TransactionStatus paymentStatus, BigDecimal processedAmount, Currency processedCurrency,
                                                         String gatewayErrorCode, String gatewayErrorMsg, InternalCallContext context);
 

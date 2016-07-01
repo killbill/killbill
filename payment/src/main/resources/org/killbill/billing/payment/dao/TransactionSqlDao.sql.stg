@@ -60,6 +60,7 @@ where transaction_external_key = :transactionExternalKey
 updateTransactionStatus() ::= <<
 update <tableName()>
 set transaction_status = :transactionStatus
+, attempt_id = :attemptId
 , processed_amount = :processedAmount
 , processed_currency = :processedCurrency
 , gateway_error_code = :gatewayErrorCode

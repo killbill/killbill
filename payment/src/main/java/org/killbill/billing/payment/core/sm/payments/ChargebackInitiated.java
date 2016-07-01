@@ -17,7 +17,14 @@
 
 package org.killbill.billing.payment.core.sm.payments;
 
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
+import org.killbill.automaton.State;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
@@ -25,6 +32,7 @@ import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class ChargebackInitiated extends PaymentLeavingStateCallback {
@@ -34,33 +42,35 @@ public class ChargebackInitiated extends PaymentLeavingStateCallback {
     }
 
     @Override
-    protected void validatePaymentIdAndTransactionType(final Iterable<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
-        if (OperationResult.FAILURE.equals(paymentStateContext.getOverridePluginOperationResult()) && !existingPaymentTransactions.iterator().hasNext()) {
-            // Chargeback reversals can only happen after a successful chargeback
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, paymentStateContext.getPaymentId());
+    public void leavingState(final State oldState) throws OperationException {
+        // Sanity: chargeback reversals can only happen after a successful chargeback
+        if (OperationResult.FAILURE.equals(paymentStateContext.getOverridePluginOperationResult())) {
+            final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = paymentStateContext.getPaymentId() != null ?
+                                                                                          daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext()) :
+                                                                                          ImmutableList.<PaymentTransactionModelDao>of();
+            final Iterable<PaymentTransactionModelDao> existingPaymentTransactionsForTransactionIdOrKey = filterExistingPaymentTransactionsForTransactionIdOrKey(paymentTransactionsForCurrentPayment, paymentStateContext.getTransactionId(), paymentStateContext.getPaymentTransactionExternalKey());
+
+            if (Iterables.<PaymentTransactionModelDao>isEmpty(existingPaymentTransactionsForTransactionIdOrKey)) {
+                // Chargeback reversals can only happen after a successful chargeback
+                throw new OperationException(new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, paymentStateContext.getPaymentId()));
+            }
         }
-        super.validatePaymentIdAndTransactionType(existingPaymentTransactions);
+
+        super.leavingState(oldState);
     }
 
-    @Override
-    protected void validateUniqueTransactionExternalKey(final Iterable<PaymentTransactionModelDao> existingPaymentTransactions) throws PaymentApiException {
-        // If no key specified, system will allocate a unique one later, there is nothing to check
-        if (paymentStateContext.getPaymentTransactionExternalKey() == null) {
-            return;
-        }
-
-        // The main difference with the default implementation is that an existing transaction in a SUCCESS state can exist (chargeback reversal)
-        if (Iterables.any(existingPaymentTransactions, new Predicate<PaymentTransactionModelDao>() {
+    private Iterable<PaymentTransactionModelDao> filterExistingPaymentTransactionsForTransactionIdOrKey(final Iterable<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment, @Nullable final UUID paymentTransactionId, @Nullable final String paymentTransactionExternalKey) {
+        return Iterables.filter(paymentTransactionsForCurrentPayment, new Predicate<PaymentTransactionModelDao>() {
             @Override
             public boolean apply(final PaymentTransactionModelDao input) {
-                // An existing transaction for a different payment (to do really well, we should also check on paymentExternalKey which is not available here)
-                return (paymentStateContext.getPaymentId() != null && input.getPaymentId().compareTo(paymentStateContext.getPaymentId()) != 0) ||
-                       // Or, an existing transaction for a different account.
-                       (!input.getAccountRecordId().equals(paymentStateContext.getInternalCallContext().getAccountRecordId()));
-
+                if (paymentTransactionId != null && input.getId().equals(paymentTransactionId)) {
+                    return true;
+                }
+                if (paymentTransactionExternalKey != null && input.getTransactionExternalKey().equals(paymentTransactionExternalKey)) {
+                    return true;
+                }
+                return false;
             }
-        })) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
-        }
+        });
     }
 }
