@@ -30,6 +30,7 @@ import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
+import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -150,6 +151,27 @@ public class InvoiceListener {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Commit Invoice", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
             invoiceApi.commitInvoice(invoiceId, context);
         } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    @AllowConcurrentEvents
+    @Subscribe
+    public void handleChildrenInvoiceAdjustmentEvent(final DefaultInvoiceAdjustmentEvent event) {
+
+        try {
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "AdjustParentInvoice", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+            // TODO it may change to Account - #459
+            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(event.getAccountId(), context);
+
+            // catch children invoices and populate the parent summary invoice
+            if (isChildrenAccountAndPaymentDelegated(account)) {
+                dispatcher.processParentInvoiceForAdjustments(account, event.getInvoiceId(), context);
+            }
+
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        } catch (AccountApiException e) {
             log.error(e.getMessage());
         }
     }

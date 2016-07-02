@@ -533,4 +533,27 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
     }
 
+    @Override
+    public void transferChildCreditToParent(final UUID childAccountId, final CallContext context) throws InvoiceApiException {
+
+        final Account childAccount;
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(childAccountId, ObjectType.ACCOUNT, context);
+        try {
+            childAccount = accountUserApi.getAccountById(childAccountId, internalCallContext);
+        } catch (AccountApiException e) {
+            throw new InvoiceApiException(e);
+        }
+
+        if (childAccount.getParentAccountId() == null) {
+            throw new InvoiceApiException(ErrorCode.ACCOUNT_DOES_NOT_HAVE_PARENT_ACCOUNT, childAccountId);
+        }
+
+        final BigDecimal accountCBA = getAccountCBA(childAccountId, context);
+        if (accountCBA.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvoiceApiException(ErrorCode.CHILD_ACCOUNT_MISSING_CREDIT, childAccountId);
+        }
+
+        dao.transferChildCreditToParent(childAccount, internalCallContext);
+
+    }
 }

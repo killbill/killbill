@@ -26,6 +26,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -193,4 +194,13 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @throws InvoiceApiException if any unexpected error occurs
      */
     void updateInvoiceItemAmount(UUID invoiceItemId, BigDecimal amount, InternalCallContext context) throws InvoiceApiException;
+
+    /**
+     * Move a given child credit to the parent level
+     *
+     * @param childAccount the child account
+     * @param childAccountContext the tenant context for the child account id
+     * @throws InvoiceApiException if any unexpected error occurs
+     */
+    void transferChildCreditToParent(Account childAccount, InternalCallContext childAccountContext) throws InvoiceApiException;
 }

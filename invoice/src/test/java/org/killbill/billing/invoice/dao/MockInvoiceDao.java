@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -400,4 +401,8 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void transferChildCreditToParent(final Account childAccount, final InternalCallContext context) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
 }

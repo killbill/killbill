@@ -29,6 +29,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.AuditLog;
 import org.killbill.billing.client.model.Credit;
@@ -677,6 +678,7 @@ public class TestInvoice extends TestJaxrsBase {
         invoice = killBillClient.getInvoice(creditJson.getInvoiceId());
         Assert.assertEquals(invoice.getStatus(), InvoiceStatus.COMMITTED.toString());
     }
+
     @Test(groups = "slow", description = "Can create a migration invoice")
     public void testInvoiceMigration() throws Exception {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
@@ -707,6 +709,60 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Account accountWithBalanceAfterMigration = killBillClient.getAccount(accountJson.getAccountId(), true, true);
         assertEquals(accountWithBalanceAfterMigration.getAccountBalance().compareTo(accountWithBalance.getAccountBalance()), 0);
+    }
+
+    @Test(groups = "slow", description = "Can transfer credit to parent account")
+    public void testInvoiceTransferCreditToParentAccount() throws Exception {
+        final Account parentAccount = createAccount();
+        final Account childAccount = createAccount(parentAccount.getAccountId());
+
+        final BigDecimal creditAmount = BigDecimal.TEN;
+        final Credit credit = new Credit();
+        credit.setAccountId(childAccount.getAccountId());
+        credit.setInvoiceId(null);
+        credit.setCreditAmount(creditAmount);
+
+        // insert credit to child account
+        final Credit creditJson = killBillClient.createCredit(credit, false, createdBy, reason, comment);
+
+        Invoices childInvoices = killBillClient.getInvoicesForAccount(childAccount.getAccountId(), true, false);
+        Assert.assertEquals(childInvoices.size(), 1);
+        Assert.assertEquals(childInvoices.get(0).getCreditAdj().compareTo(BigDecimal.TEN), 0);
+
+        Invoices parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false);
+        Assert.assertEquals(parentInvoices.size(), 0);
+
+        // transfer credit to parent account
+        killBillClient.transferChildCreditToParent(childAccount.getAccountId(), basicRequestOptions());
+
+        childInvoices = killBillClient.getInvoicesForAccount(childAccount.getAccountId(), true, false);
+        Assert.assertEquals(childInvoices.size(), 2);
+        Assert.assertEquals(childInvoices.get(1).getCreditAdj().compareTo(BigDecimal.TEN.negate()), 0);
+
+        parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false);
+        Assert.assertEquals(parentInvoices.size(), 1);
+        Assert.assertEquals(parentInvoices.get(0).getCreditAdj().compareTo(BigDecimal.TEN), 0);
+    }
+
+    @Test(groups = "slow", description = "Fail to transfer credit from an account without parent account",
+            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = ".* does not have a Parent Account associated")
+    public void testInvoiceTransferCreditAccountNoParent() throws Exception {
+        final Account account = createAccount();
+
+        // transfer credit to parent account
+        killBillClient.transferChildCreditToParent(account.getAccountId(), basicRequestOptions());
+
+    }
+
+    @Test(groups = "slow", description = "Fail to transfer credit from an account without parent account",
+            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = ".* does not have credit")
+    public void testInvoiceTransferCreditAccountNoCredit() throws Exception {
+        final Account parentAccount = createAccount();
+        final Account childAccount = createAccount(parentAccount.getAccountId());
+
+        // transfer credit to parent account
+        killBillClient.transferChildCreditToParent(childAccount.getAccountId(), basicRequestOptions());
+
     }
 
 }

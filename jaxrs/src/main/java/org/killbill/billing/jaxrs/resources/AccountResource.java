@@ -121,7 +121,6 @@ import org.killbill.commons.metrics.MetricTag;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -1318,6 +1317,28 @@ public class AccountResource extends JaxRsResourceBase {
             accountJson.add(getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext));
         }
         return Response.status(Status.OK).entity(accountJson).build();
+    }
+
+    @TimedResource
+    @POST
+    @Path("/{childAccountId:" + UUID_PATTERN + "}/" + TRANSFER_CREDIT)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Move a given child credit to the parent level")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Account does not have credit"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response transferChildCreditToParent(@PathParam("childAccountId") final String childAccountIdString,
+                                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                @HeaderParam(HDR_REASON) final String reason,
+                                                @HeaderParam(HDR_COMMENT) final String comment,
+                                                @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                @javax.ws.rs.core.Context final UriInfo uriInfo) throws InvoiceApiException {
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID childAccountId = UUID.fromString(childAccountIdString);
+
+        invoiceApi.transferChildCreditToParent(childAccountId, callContext);
+        return Response.status(Response.Status.OK).build();
     }
 
 }

@@ -53,7 +53,5 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
         protected PlatformDBTestingHelper getPlatformDBTestingHelper() {
             return DBTestingHelper.get();
         }
-
-        protected void configureKillbillNodesApi() {}
     }
 }
