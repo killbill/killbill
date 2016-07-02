@@ -14,4 +14,6 @@ CREATE UNIQUE INDEX invoice_parent_children_id ON invoice_parent_children(id);
 CREATE INDEX invoice_parent_children_invoice_id ON invoice_parent_children(parent_invoice_id);
 CREATE INDEX invoice_parent_children_tenant_account_record_id ON invoice_parent_children(tenant_record_id, account_record_id);
 
+
+alter table invoice_items add column child_account_id varchar(36) after account_id;
 alter table invoices add column  parent_invoice bool NOT NULL DEFAULT FALSE after migrated;
