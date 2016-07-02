@@ -54,6 +54,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.server.listeners.KillbillGuiceListener;
 import org.killbill.billing.server.modules.KillbillServerModule;
+import org.killbill.billing.tenant.api.TenantCacheInvalidation;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.config.definition.SecurityConfig;
@@ -101,6 +102,9 @@ public class TestJaxrsBase extends KillbillClient {
 
     @Inject
     protected SecurityConfig securityConfig;
+
+    @Inject
+    protected TenantCacheInvalidation tenantCacheInvalidation;
 
     protected DaoConfig daoConfig;
     protected KillbillServerConfig serverConfig;
@@ -191,6 +195,10 @@ public class TestJaxrsBase extends KillbillClient {
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+
+        // Because we truncate the tables, the database record_id auto_increment will be reset
+        tenantCacheInvalidation.setLatestRecordIdProcessed(0L);
+
         externalBus.start();
         internalBus.start();
         cacheControllerDispatcher.clearAll();
