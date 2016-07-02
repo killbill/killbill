@@ -42,6 +42,11 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
     }
 
     @Override
+    public List<Integer> getPaymentFailureRetryDays() {
+        return staticConfig.getPaymentFailureRetryDays();
+    }
+
+    @Override
     public List<Integer> getPaymentFailureRetryDays(@Param("dummy") final InternalTenantContext tenantContext) {
         // There is no good way to achieve that in java; this solution is expensive (we could consider hardcoding the method name each time instead)
         final Method method = new Object() {}.getClass().getEnclosingMethod();
@@ -49,7 +54,12 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
         if (result != null) {
             return convertToListInteger(result, method.getName());
         }
-        return staticConfig.getPaymentFailureRetryDays(tenantContext);
+        return getPaymentFailureRetryDays();
+    }
+
+    @Override
+    public int getPluginFailureInitialRetryInSec() {
+        return staticConfig.getPluginFailureInitialRetryInSec();
     }
 
     @Override
@@ -59,7 +69,12 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
         if (result != null) {
             return Integer.parseInt(result);
         }
-        return staticConfig.getPluginFailureInitialRetryInSec(tenantContext);
+        return getPluginFailureInitialRetryInSec();
+    }
+
+    @Override
+    public int getPluginFailureRetryMultiplier() {
+        return staticConfig.getPluginFailureRetryMultiplier();
     }
 
     @Override
@@ -70,7 +85,12 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
         if (result != null) {
             return Integer.parseInt(result);
         }
-        return staticConfig.getPluginFailureRetryMultiplier(tenantContext);
+        return getPluginFailureRetryMultiplier();
+    }
+
+    @Override
+    public List<TimeSpan> getIncompleteTransactionsRetries() {
+        return staticConfig.getIncompleteTransactionsRetries();
     }
 
     @Override
@@ -81,31 +101,39 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
         if (result != null) {
             return convertToListTimeSpan(result, method.getName());
         }
-        return staticConfig.getIncompleteTransactionsRetries(tenantContext);
+        return getIncompleteTransactionsRetries();
+    }
+
+    @Override
+    public int getPluginFailureRetryMaxAttempts() {
+        return staticConfig.getPluginFailureRetryMaxAttempts();
     }
 
     @Override
     public int getPluginFailureRetryMaxAttempts(@Param("dummy") final InternalTenantContext tenantContext) {
-
         final Method method = new Object() {}.getClass().getEnclosingMethod();
 
         final String result = getStringTenantConfig(method.getName(), tenantContext);
         if (result != null) {
             return Integer.parseInt(result);
         }
-        return staticConfig.getPluginFailureRetryMaxAttempts(tenantContext);
+        return getPluginFailureRetryMaxAttempts();
+    }
+
+    @Override
+    public List<String> getPaymentControlPluginNames() {
+        return staticConfig.getPaymentControlPluginNames();
     }
 
     @Override
     public List<String> getPaymentControlPluginNames(@Param("dummy") final InternalTenantContext tenantContext) {
-
         final Method method = new Object() {}.getClass().getEnclosingMethod();
 
         final String result = getStringTenantConfig(method.getName(), tenantContext);
         if (result != null) {
             return convertToListString(result, method.getName());
         }
-        return staticConfig.getPaymentControlPluginNames(tenantContext);
+        return getPaymentControlPluginNames();
     }
 
     @Override
@@ -146,5 +174,4 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
             throw new RuntimeException(e);
         }
     }
-
 }

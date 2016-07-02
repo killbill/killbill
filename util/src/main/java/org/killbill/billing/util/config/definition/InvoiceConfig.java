@@ -29,12 +29,27 @@ public interface InvoiceConfig extends KillbillConfig {
     @Config("org.killbill.invoice.maxNumberOfMonthsInFuture")
     @Default("36")
     @Description("Maximum target date to consider when generating an invoice")
+    int getNumberOfMonthsInFuture();
+
+    @Config("org.killbill.invoice.maxNumberOfMonthsInFuture")
+    @Default("36")
+    @Description("Maximum target date to consider when generating an invoice")
     int getNumberOfMonthsInFuture(@Param("dummy") final InternalTenantContext tenantContext);
 
     @Config("org.killbill.invoice.dryRunNotificationSchedule")
     @Default("0s")
     @Description("DryRun invoice notification time before targetDate (ignored if set to 0s)")
+    TimeSpan getDryRunNotificationSchedule();
+
+    @Config("org.killbill.invoice.dryRunNotificationSchedule")
+    @Default("0s")
+    @Description("DryRun invoice notification time before targetDate (ignored if set to 0s)")
     TimeSpan getDryRunNotificationSchedule(@Param("dummy") final InternalTenantContext tenantContext);
+
+    @Config("org.killbill.invoice.readMaxRawUsagePreviousPeriod")
+    @Default("2")
+    @Description("Maximum number of past billing periods we use to fetch raw usage data (usage optimization)")
+    int getMaxRawUsagePreviousPeriod();
 
     @Config("org.killbill.invoice.readMaxRawUsagePreviousPeriod")
     @Default("2")
@@ -50,5 +65,4 @@ public interface InvoiceConfig extends KillbillConfig {
     @Default("false")
     @Description("Whether to send email notifications on invoice creation (for configured accounts)")
     boolean isEmailNotificationsEnabled();
-
 }

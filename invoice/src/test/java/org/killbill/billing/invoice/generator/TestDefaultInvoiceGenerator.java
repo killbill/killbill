@@ -110,9 +110,15 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         super.beforeClass();
         final Clock clock = new DefaultClock();
         final InvoiceConfig invoiceConfig = new InvoiceConfig() {
+
+            @Override
+            public int getNumberOfMonthsInFuture() {
+                return 36;
+            }
+
             @Override
             public int getNumberOfMonthsInFuture(final InternalTenantContext context) {
-                return 36;
+                return getNumberOfMonthsInFuture();
             }
 
             @Override
@@ -121,13 +127,23 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
             }
 
             @Override
-            public TimeSpan getDryRunNotificationSchedule(final InternalTenantContext context) {
+            public TimeSpan getDryRunNotificationSchedule() {
                 return new TimeSpan("0s");
             }
 
             @Override
-            public int getMaxRawUsagePreviousPeriod(final InternalTenantContext context) {
+            public TimeSpan getDryRunNotificationSchedule(final InternalTenantContext context) {
+                return getDryRunNotificationSchedule();
+            }
+
+            @Override
+            public int getMaxRawUsagePreviousPeriod() {
                 return -1;
+            }
+
+            @Override
+            public int getMaxRawUsagePreviousPeriod(final InternalTenantContext context) {
+                return getMaxRawUsagePreviousPeriod();
             }
 
             @Override
