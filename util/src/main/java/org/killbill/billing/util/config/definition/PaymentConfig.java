@@ -31,7 +31,17 @@ public interface PaymentConfig extends KillbillConfig {
     @Config("org.killbill.payment.retry.days")
     @Default("8,8,8")
     @Description("Specify the number of payment retries along with the interval in days between payment retries when payment failures occur")
+    List<Integer> getPaymentFailureRetryDays();
+
+    @Config("org.killbill.payment.retry.days")
+    @Default("8,8,8")
+    @Description("Specify the number of payment retries along with the interval in days between payment retries when payment failures occur")
     List<Integer> getPaymentFailureRetryDays(@Param("dummy") final InternalTenantContext tenantContext);
+
+    @Config("org.killbill.payment.failure.retry.start.sec")
+    @Default("300")
+    @Description("Specify the interval of time in seconds before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...)")
+    int getPluginFailureInitialRetryInSec();
 
     @Config("org.killbill.payment.failure.retry.start.sec")
     @Default("300")
@@ -41,7 +51,17 @@ public interface PaymentConfig extends KillbillConfig {
     @Config("org.killbill.payment.failure.retry.multiplier")
     @Default("2")
     @Description("Specify the multiplier to apply between in retry before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...)")
+    int getPluginFailureRetryMultiplier();
+
+    @Config("org.killbill.payment.failure.retry.multiplier")
+    @Default("2")
+    @Description("Specify the multiplier to apply between in retry before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...)")
     int getPluginFailureRetryMultiplier(@Param("dummy") final InternalTenantContext tenantContext);
+
+    @Config("org.killbill.payment.janitor.transactions.retries")
+    @Default("15s,1m,3m,1h,1d,1d,1d,1d,1d")
+    @Description("Delay before which unresolved transactions should be retried")
+    List<TimeSpan> getIncompleteTransactionsRetries();
 
     @Config("org.killbill.payment.janitor.transactions.retries")
     @Default("15s,1m,3m,1h,1d,1d,1d,1d,1d")
@@ -51,7 +71,17 @@ public interface PaymentConfig extends KillbillConfig {
     @Config("org.killbill.payment.failure.retry.max.attempts")
     @Default("8")
     @Description("Specify the max number of attempts before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...)")
+    int getPluginFailureRetryMaxAttempts();
+
+    @Config("org.killbill.payment.failure.retry.max.attempts")
+    @Default("8")
+    @Description("Specify the max number of attempts before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...)")
     int getPluginFailureRetryMaxAttempts(@Param("dummy") final InternalTenantContext tenantContext);
+
+    @Config("org.killbill.payment.invoice.plugin")
+    @Default("")
+    @Description("Default payment control plugin names")
+    List<String> getPaymentControlPluginNames();
 
     @Config("org.killbill.payment.invoice.plugin")
     @Default("")
@@ -88,5 +118,4 @@ public interface PaymentConfig extends KillbillConfig {
     @Default("50")
     @Description("Maximum number of times the system will retry to grab global lock (with a 100ms wait each time)")
     int getMaxGlobalLockRetries();
-
 }

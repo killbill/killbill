@@ -40,14 +40,23 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
-    public int getNumberOfMonthsInFuture(final InternalTenantContext tenantContext) {
+    public int getNumberOfMonthsInFuture() {
+        return staticConfig.getNumberOfMonthsInFuture();
+    }
 
+    @Override
+    public int getNumberOfMonthsInFuture(final InternalTenantContext tenantContext) {
         final Method method = new Object(){}.getClass().getEnclosingMethod();
         final String result = getStringTenantConfig(method.getName(), tenantContext);
         if (result != null) {
             return Integer.parseInt(result);
         }
-        return staticConfig.getNumberOfMonthsInFuture(tenantContext);
+        return getNumberOfMonthsInFuture();
+    }
+
+    @Override
+    public TimeSpan getDryRunNotificationSchedule() {
+        return staticConfig.getDryRunNotificationSchedule();
     }
 
     @Override
@@ -57,7 +66,12 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
         if (result != null) {
             return new TimeSpan(result);
         }
-        return staticConfig.getDryRunNotificationSchedule(tenantContext);
+        return getDryRunNotificationSchedule();
+    }
+
+    @Override
+    public int getMaxRawUsagePreviousPeriod() {
+        return staticConfig.getMaxRawUsagePreviousPeriod();
     }
 
     @Override
@@ -67,7 +81,7 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
         if (result != null) {
             return Integer.parseInt(result);
         }
-        return staticConfig.getMaxRawUsagePreviousPeriod(tenantContext);
+        return getMaxRawUsagePreviousPeriod();
     }
 
     @Override
