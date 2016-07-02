@@ -402,12 +402,14 @@ public class TestAccount extends TestJaxrsBase {
         final Account childInput = getAccount();
         childInput.setParentAccountId(parentAccount.getAccountId());
         childInput.setIsPaymentDelegatedToParent(true);
-        final Account childAccount = killBillClient.createAccount(childInput, createdBy, reason, comment);
+        Account childAccount = killBillClient.createAccount(childInput, createdBy, reason, comment);
+        childAccount = killBillClient.getAccount(childAccount.getAccountId(), true, true, basicRequestOptions());
 
         final Account childInput2 = getAccount();
         childInput2.setParentAccountId(parentAccount.getAccountId());
         childInput2.setIsPaymentDelegatedToParent(true);
-        final Account childAccount2 = killBillClient.createAccount(childInput2, createdBy, reason, comment);
+        Account childAccount2 = killBillClient.createAccount(childInput2, createdBy, reason, comment);
+        childAccount2 = killBillClient.getAccount(childAccount2.getAccountId(), true, true, basicRequestOptions());
 
         // Retrieves children accounts by parent account id
         final Accounts childrenAccounts = killBillClient.getChildrenAccounts(parentAccount.getAccountId(), true, true, requestOptions);
