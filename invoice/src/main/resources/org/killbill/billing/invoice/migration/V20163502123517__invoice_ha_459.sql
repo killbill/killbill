@@ -16,4 +16,7 @@ CREATE INDEX invoice_parent_children_tenant_account_record_id ON invoice_parent_
 
 
 alter table invoice_items add column child_account_id varchar(36) after account_id;
+alter table invoice_items modify start_date date;
+
 alter table invoices add column  parent_invoice bool NOT NULL DEFAULT FALSE after migrated;
+alter table invoices modify target_date date;
