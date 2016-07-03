@@ -20,3 +20,6 @@ alter table invoice_items modify start_date date;
 
 alter table invoices add column  parent_invoice bool NOT NULL DEFAULT FALSE after migrated;
 alter table invoices modify target_date date;
+
+drop index invoices_account_target on invoices;
+create index invoices_account on invoices(account_id asc);

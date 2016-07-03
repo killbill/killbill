@@ -51,7 +51,7 @@ CREATE TABLE invoices (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX invoices_id ON invoices(id);
-CREATE INDEX invoices_account_target ON invoices(account_id ASC, target_date);
+CREATE INDEX invoices_account ON invoices(account_id ASC);
 CREATE INDEX invoices_tenant_account_record_id ON invoices(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS invoice_payments;
