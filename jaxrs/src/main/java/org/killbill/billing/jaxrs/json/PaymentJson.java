@@ -51,7 +51,7 @@ public class PaymentJson extends JsonBase {
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String paymentMethodId;
     private final List<? extends PaymentTransactionJson> transactions;
-    private final List<PaymentAttempt> paymentAttempts;
+    private final List<PaymentAttemptJson> paymentAttempts;
 
     @JsonCreator
     public PaymentJson(@JsonProperty("accountId") final String accountId,
@@ -66,7 +66,7 @@ public class PaymentJson extends JsonBase {
                        @JsonProperty("currency") final String currency,
                        @JsonProperty("paymentMethodId") final String paymentMethodId,
                        @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
-                       @JsonProperty("paymentAttempts") final List<PaymentAttempt> paymentAttempts,
+                       @JsonProperty("paymentAttempts") final List<PaymentAttemptJson> paymentAttempts,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.accountId = accountId;
@@ -97,7 +97,7 @@ public class PaymentJson extends JsonBase {
              dp.getCurrency() != null ? dp.getCurrency().toString() : null,
              dp.getPaymentMethodId() != null ? dp.getPaymentMethodId().toString() : null,
              getTransactions(dp.getTransactions(), dp.getExternalKey(), accountAuditLogs),
-             dp.getPaymentAttempts(),
+             getAttempts(dp.getPaymentAttempts(), dp.getExternalKey(), accountAuditLogs),
              toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPayment(dp.getId())));
     }
 
@@ -111,6 +111,18 @@ public class PaymentJson extends JsonBase {
                                                             }
                                                         }
                                                        ));
+    }
+
+    private static List<PaymentAttemptJson> getAttempts(final Iterable<PaymentAttempt> attempts, final String paymentExternalKey, @Nullable final AccountAuditLogs accountAuditLogs) {
+        return (attempts != null) ? ImmutableList.copyOf(Iterables.transform(attempts,
+                                                        new Function<PaymentAttempt, PaymentAttemptJson>() {
+                                                            @Override
+                                                            public PaymentAttemptJson apply(final PaymentAttempt paymentAttempt) {
+                                                                final List<AuditLog> auditLogsForPaymentAttempt = accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPaymentAttempt(paymentAttempt.getId());
+                                                                return new PaymentAttemptJson(paymentAttempt, paymentExternalKey, auditLogsForPaymentAttempt);
+                                                            }
+                                                        }
+                                                       )) : null;
     }
 
     public String getAccountId() {
@@ -161,7 +173,7 @@ public class PaymentJson extends JsonBase {
         return transactions;
     }
 
-    public List<PaymentAttempt> getPaymentAttempts() { return paymentAttempts; }
+    public List<? extends PaymentAttemptJson> getPaymentAttempts() { return paymentAttempts; }
 
     @Override
     public String toString() {

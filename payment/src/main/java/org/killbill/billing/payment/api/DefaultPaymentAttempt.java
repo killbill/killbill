@@ -89,6 +89,14 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
     }
 
     @Override
+    public DateTime getEffectiveDate() { return effectiveDate; }
+
+    @Override
+    public String getStateName() {
+        return stateName;
+    }
+
+    @Override
     public BigDecimal getAmount() {
         return amount;
     }
@@ -109,11 +117,6 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
     }
 
     @Override
-    public String getStateName() {
-        return stateName;
-    }
-
-    @Override
     public String toString() {
         return "DefaultPaymentAttempt{" +
                "accountId=" + accountId +
@@ -122,6 +125,7 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
                ", transactionId=" + transactionId +
                ", transactionExternalKey='" + transactionExternalKey + '\'' +
                ", transactionType=" + transactionType +
+               ", effectiveDate=" + effectiveDate +
                ", stateName=" + stateName +
                ", amount=" + amount +
                ", currency=" + currency +
@@ -190,6 +194,7 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
         result = 31 * result + (transactionId != null ? transactionId.hashCode() : 0);
         result = 31 * result + (transactionExternalKey != null ? transactionExternalKey.hashCode() : 0);
         result = 31 * result + (transactionType != null ? transactionType.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (stateName != null ? stateName.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);

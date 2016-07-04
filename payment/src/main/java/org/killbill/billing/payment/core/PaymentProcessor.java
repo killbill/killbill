@@ -59,6 +59,8 @@ import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
+import org.killbill.billing.payment.dao.PluginPropertySerializer;
+import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
@@ -622,9 +624,6 @@ public class PaymentProcessor extends ProcessorBase {
 
         List<PaymentAttempt> paymentAttempts = new ArrayList<PaymentAttempt>();
 
-        // Last Attempt from model dao
-        PaymentAttemptModelDao lastPaymentAttemptModelDao = pastPaymentAttempts.get(pastPaymentAttempts.size() - 1);
-
         // Add Past Payment Attempts
         for (PaymentAttemptModelDao pastPaymentAttempt : pastPaymentAttempts) {
             DefaultPaymentAttempt paymentAttempt = new DefaultPaymentAttempt(
@@ -642,7 +641,7 @@ public class PaymentProcessor extends ProcessorBase {
                     pastPaymentAttempt.getAmount(),
                     pastPaymentAttempt.getCurrency(),
                     pastPaymentAttempt.getPluginName(),
-                    null); // TODO: transform from byte[] to List<PluginProperty>
+                    buildPluginProperties(pastPaymentAttempt));
             paymentAttempts.add(paymentAttempt);
         }
 
@@ -652,29 +651,57 @@ public class PaymentProcessor extends ProcessorBase {
             final List<NotificationEventWithMetadata<NotificationEvent>> notificationEventWithMetadatas =
                     retryQueue.getFutureNotificationForSearchKeys(internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
 
-            for (NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationEventWithMetadatas) {
-                DefaultPaymentAttempt futurePaymentAttempt = new DefaultPaymentAttempt(
-                        lastPaymentAttemptModelDao.getAccountId(), // accountId
-                        lastPaymentAttemptModelDao.getPaymentMethodId(), // paymentMethodId
-                        ((PaymentRetryNotificationKey) notificationEvent.getEvent()).getAttemptId(), // id
-                        null, // createdDate
-                        null, // updatedDate
-                        notificationEvent.getEffectiveDate(), // effectiveDate
-                        lastPaymentAttemptModelDao.getPaymentExternalKey(), // paymentExternalKey
-                        null, // transactionId
-                        lastPaymentAttemptModelDao.getTransactionExternalKey(), // transactionExternalKey
-                        lastPaymentAttemptModelDao.getTransactionType(), // transactionType
-                        SCHEDULED, // stateName
-                        lastPaymentAttemptModelDao.getAmount(), // amount
-                        lastPaymentAttemptModelDao.getCurrency(), // currency
-                        ((PaymentRetryNotificationKey) notificationEvent.getEvent()).getPaymentControlPluginNames().get(0), // pluginName,
-                        null); // TODO: transform from byte[] to List<PluginProperty> // pluginProperties
-                paymentAttempts.add(futurePaymentAttempt);
+            for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationEventWithMetadatas) {
+                // Last Attempt
+                PaymentAttemptModelDao lastPaymentAttempt = getLastPaymentAttempt(pastPaymentAttempts,
+                                                                                  ((PaymentRetryNotificationKey) notificationEvent.getEvent()).getAttemptId());
+
+                if (lastPaymentAttempt != null) {
+                    DefaultPaymentAttempt futurePaymentAttempt = new DefaultPaymentAttempt(
+                            lastPaymentAttempt.getAccountId(), // accountId
+                            lastPaymentAttempt.getPaymentMethodId(), // paymentMethodId
+                            ((PaymentRetryNotificationKey) notificationEvent.getEvent()).getAttemptId(), // id
+                            null, // createdDate
+                            null, // updatedDate
+                            notificationEvent.getEffectiveDate(), // effectiveDate
+                            lastPaymentAttempt.getPaymentExternalKey(), // paymentExternalKey
+                            null, // transactionId
+                            lastPaymentAttempt.getTransactionExternalKey(), // transactionExternalKey
+                            lastPaymentAttempt.getTransactionType(), // transactionType
+                            SCHEDULED, // stateName
+                            lastPaymentAttempt.getAmount(), // amount
+                            lastPaymentAttempt.getCurrency(), // currency
+                            ((PaymentRetryNotificationKey) notificationEvent.getEvent()).getPaymentControlPluginNames().get(0), // pluginName,
+                            buildPluginProperties(lastPaymentAttempt)); // pluginProperties
+                    paymentAttempts.add(futurePaymentAttempt);
+                }
             }
         } catch (NoSuchNotificationQueue noSuchNotificationQueue) {
             log.error("ERROR Loading Notification Queue - " + noSuchNotificationQueue.getMessage());
         }
         return paymentAttempts;
+    }
+
+    private PaymentAttemptModelDao getLastPaymentAttempt(final List<PaymentAttemptModelDao> pastPaymentAttempts, final UUID attemptId) {
+        if (!pastPaymentAttempts.isEmpty()) {
+            for (int i = pastPaymentAttempts.size() - 1; i == 0; i--) {
+                if (pastPaymentAttempts.get(i).getId().equals(attemptId)) {
+                    return pastPaymentAttempts.get(i);
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<PluginProperty> buildPluginProperties(final PaymentAttemptModelDao pastPaymentAttempt) {
+        if (pastPaymentAttempt.getPluginProperties() != null) {
+            try {
+                return Lists.newArrayList(PluginPropertySerializer.deserialize(pastPaymentAttempt.getPluginProperties()));
+            } catch (PluginPropertySerializerException e) {
+                log.error("ERROR Deserializing Plugin Properties - " + e.getMessage());
+            }
+        }
+        return null;
     }
 
     private PaymentTransactionInfoPlugin findPaymentTransactionInfoPlugin(final PaymentTransactionModelDao paymentTransactionModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions) {
