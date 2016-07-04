@@ -18,6 +18,10 @@
 
 package org.killbill.billing.overdue.wrapper;
 
+import java.util.List;
+
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -32,6 +36,7 @@ import org.killbill.billing.overdue.calculator.BillingStateCalculator;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
@@ -39,8 +44,6 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.MoreObjects;
 
 public class OverdueWrapper {
 
@@ -59,6 +62,8 @@ public class OverdueWrapper {
     private final OverdueStateSet overdueStateSet;
     private final BillingStateCalculator billingStateCalcuator;
     private final OverdueStateApplicator overdueStateApplicator;
+    private final InternalCallContextFactory internalCallContextFactory;
+    private final AccountInternalApi accountApi;
 
     public OverdueWrapper(final ImmutableAccountData overdueable,
                           final BlockingInternalApi api,
@@ -66,7 +71,9 @@ public class OverdueWrapper {
                           final GlobalLocker locker,
                           final Clock clock,
                           final BillingStateCalculator billingStateCalcuator,
-                          final OverdueStateApplicator overdueStateApplicator) {
+                          final OverdueStateApplicator overdueStateApplicator,
+                          final InternalCallContextFactory internalCallContextFactory,
+                          final AccountInternalApi accountApi) {
         this.overdueable = overdueable;
         this.overdueStateSet = overdueStateSet;
         this.api = api;
@@ -74,6 +81,8 @@ public class OverdueWrapper {
         this.clock = clock;
         this.billingStateCalcuator = billingStateCalcuator;
         this.overdueStateApplicator = overdueStateApplicator;
+        this.internalCallContextFactory = internalCallContextFactory;
+        this.accountApi = accountApi;
     }
 
     public OverdueState refresh(final InternalCallContext context) throws OverdueException, OverdueApiException {
@@ -105,6 +114,33 @@ public class OverdueWrapper {
 
         overdueStateApplicator.apply(overdueStateSet, billingState, overdueable, currentOverdueState, nextOverdueState, context);
 
+        try {
+            final List<Account> childrenAccounts = accountApi.getChildrenAccounts(overdueable.getId(), context);
+            if (childrenAccounts != null) {
+                for (Account account : childrenAccounts) {
+
+                    // TODO maguero: should we check "childAccount.isPaymentDelegatedToParent()"?
+
+                    final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(account.getId(), context);
+                    final InternalCallContext accountContext = internalCallContextFactory.createInternalCallContext(internalTenantContext.getAccountRecordId(), context);
+
+                    final ImmutableAccountData accountData = accountApi.getImmutableAccountDataById(account.getId(), accountContext);
+                    final BillingState childBillingState = new BillingState(accountData.getId(),
+                                                                            billingState.getNumberOfUnpaidInvoices(),
+                                                                            billingState.getBalanceOfUnpaidInvoices(),
+                                                                            billingState.getDateOfEarliestUnpaidInvoice(),
+                                                                            accountData.getTimeZone(),
+                                                                            billingState.getIdOfEarliestUnpaidInvoice(),
+                                                                            billingState.getResponseForLastFailedPayment(),
+                                                                            billingState.getTags());
+                    overdueStateApplicator.apply(overdueStateSet, childBillingState, accountData, currentOverdueState, nextOverdueState, accountContext);
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("Error loading child accounts from account " + overdueable.getId());
+        }
+
         return nextOverdueState;
     }
 
@@ -128,6 +164,8 @@ public class OverdueWrapper {
         final String previousOverdueStateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
         final OverdueState previousOverdueState = overdueStateSet.findState(previousOverdueStateName);
         overdueStateApplicator.clear(overdueable, previousOverdueState, overdueStateSet.getClearState(), context);
+
+        // TODO maguero: should we do the same as "refreshWithLock"?
     }
 
     public BillingState billingState(final InternalTenantContext context) throws OverdueException {
