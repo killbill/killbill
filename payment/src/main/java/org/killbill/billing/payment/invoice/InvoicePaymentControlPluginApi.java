@@ -129,7 +129,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         switch (transactionType) {
             case PURCHASE:
-                return getPluginPurchaseResult(paymentControlContext, pluginProperties, internalContext);
+                // if the Payment Method is still null, abort payment
+                return (paymentControlContext.getPaymentMethodId() != null) ? getPluginPurchaseResult(paymentControlContext, pluginProperties, internalContext) :
+                        new DefaultPriorPaymentControlResult(true);
             case REFUND:
                 return getPluginRefundResult(paymentControlContext, pluginProperties, internalContext);
             case CHARGEBACK:
