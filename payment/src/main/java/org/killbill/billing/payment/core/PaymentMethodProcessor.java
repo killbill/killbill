@@ -454,7 +454,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     }
 
                     if (!paymentMethodModel.getAccountId().equals(account.getId())) {
-                        throw new PaymentApiException(ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID, paymentMethodId);
+                        throw new PaymentApiException(ErrorCode.PAYMENT_METHOD_DIFFERENT_ACCOUNT_ID, paymentMethodId);
                     }
 
                     try {
