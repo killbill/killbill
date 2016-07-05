@@ -2075,6 +2075,65 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(capturedPayment2.getTransactions().get(2).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
+    @Test(groups = "slow")
+    public void testKeysSanityOnFailure() throws Exception {
+        final String authKey = UUID.randomUUID().toString();
+        final Payment failedAuthorization1 = createPayment(TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.ERROR);
+        assertNotNull(failedAuthorization1);
+        Assert.assertEquals(failedAuthorization1.getTransactions().size(), 1);
+        Assert.assertEquals(failedAuthorization1.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+
+        final Account account1 = testHelper.createTestAccount("bobo2@gmail.com", true);
+        try {
+            // Different auth with the same payment external key on a different account should fail
+            createPayment(account1, TransactionType.AUTHORIZE, null, failedAuthorization1.getExternalKey(), null, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+        }
+
+        try {
+            // Different auth with the same transaction external key on a different account should fail
+            createPayment(account1, TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+        }
+
+        // Different auth with the same payment external key should go through
+        final Payment failedAuthorization2 = createPayment(TransactionType.AUTHORIZE, null, failedAuthorization1.getExternalKey(), null, BigDecimal.TEN, PaymentPluginStatus.ERROR);
+        assertNotNull(failedAuthorization2);
+        Assert.assertEquals(failedAuthorization2.getTransactions().size(), 2);
+        Assert.assertEquals(failedAuthorization2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertEquals(failedAuthorization2.getTransactions().get(0).getExternalKey(), authKey);
+        Assert.assertEquals(failedAuthorization2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertNotEquals(failedAuthorization2.getTransactions().get(1).getExternalKey(), authKey);
+
+        // Different auth with the same transaction external key should go through
+        final Payment failedAuthorization3 = createPayment(TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.ERROR);
+        assertNotNull(failedAuthorization3);
+        Assert.assertEquals(failedAuthorization3.getTransactions().size(), 3);
+        Assert.assertEquals(failedAuthorization3.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertEquals(failedAuthorization3.getTransactions().get(0).getExternalKey(), authKey);
+        Assert.assertEquals(failedAuthorization3.getTransactions().get(1).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertNotEquals(failedAuthorization3.getTransactions().get(1).getExternalKey(), authKey);
+        Assert.assertEquals(failedAuthorization3.getTransactions().get(2).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertEquals(failedAuthorization3.getTransactions().get(2).getExternalKey(), authKey);
+
+        // Different auth with the same payment external key but different transaction external key should go through
+        final Payment failedAuthorization4 = createPayment(TransactionType.AUTHORIZE, null, failedAuthorization1.getExternalKey(), UUID.randomUUID().toString(), BigDecimal.TEN, PaymentPluginStatus.ERROR);
+        assertNotNull(failedAuthorization4);
+        Assert.assertEquals(failedAuthorization4.getTransactions().size(), 4);
+        Assert.assertEquals(failedAuthorization4.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertEquals(failedAuthorization4.getTransactions().get(0).getExternalKey(), authKey);
+        Assert.assertEquals(failedAuthorization4.getTransactions().get(1).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertNotEquals(failedAuthorization4.getTransactions().get(1).getExternalKey(), authKey);
+        Assert.assertEquals(failedAuthorization4.getTransactions().get(2).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertEquals(failedAuthorization4.getTransactions().get(2).getExternalKey(), authKey);
+        Assert.assertEquals(failedAuthorization4.getTransactions().get(3).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertNotEquals(failedAuthorization4.getTransactions().get(3).getExternalKey(), authKey);
+    }
+
     private void verifyRefund(final Payment refund, final String paymentExternalKey, final String paymentTransactionExternalKey, final String refundTransactionExternalKey, final BigDecimal requestedAmount, final BigDecimal refundAmount, final TransactionStatus transactionStatus) {
         Assert.assertEquals(refund.getExternalKey(), paymentExternalKey);
         Assert.assertEquals(refund.getTransactions().size(), 2);
