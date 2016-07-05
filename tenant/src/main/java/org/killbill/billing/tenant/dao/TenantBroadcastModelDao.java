@@ -81,6 +81,20 @@ public class TenantBroadcastModelDao extends EntityModelDaoBase implements Entit
     }
 
     @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("TenantBroadcastModelDao{");
+        sb.append("recordId=").append(getRecordId());
+        sb.append(", accountRecordId=").append(getAccountRecordId());
+        sb.append(", tenantRecordId=").append(getTenantRecordId());
+        sb.append(", type='").append(type).append('\'');
+        sb.append(", targetRecordId=").append(targetRecordId);
+        sb.append(", targetTableName=").append(targetTableName);
+        sb.append(", userToken=").append(userToken);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
