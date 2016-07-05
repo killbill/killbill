@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -370,8 +371,7 @@ public class PaymentProcessor extends ProcessorBase {
 
             // Sanity: verify the payment belongs to the right account (in case it was looked-up by payment or transaction external key)
             if (!paymentModelDao.getAccountRecordId().equals(internalCallContext.getAccountRecordId())) {
-                // TODO 0.17.x New ErrorCode (it's not necessarily the transaction external key that matches)
-                throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
+                throw new PaymentApiException(ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID, paymentStateContext.getPaymentId());
             }
 
             if (paymentStateContext.getTransactionId() != null || paymentStateContext.getPaymentTransactionExternalKey() != null) {
@@ -455,7 +455,14 @@ public class PaymentProcessor extends ProcessorBase {
             // Sanity: don't share keys across accounts
             if (paymentTransactionModelDao.getTransactionExternalKey().equals(paymentStateContext.getPaymentTransactionExternalKey()) &&
                 !paymentTransactionModelDao.getAccountRecordId().equals(internalCallContext.getAccountRecordId())) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
+                UUID accountId;
+                try {
+                    accountId = accountInternalApi.getAccountByRecordId(paymentModelDao.getAccountRecordId(), internalCallContext).getId();
+                } catch (final AccountApiException e) {
+                    log.warn("Unable to retrieve account", e);
+                    accountId = null;
+                }
+                throw new PaymentApiException(ErrorCode.PAYMENT_TRANSACTION_DIFFERENT_ACCOUNT_ID, accountId);
             }
 
             // UNKNOWN transactions are potential candidates, we'll invoke the Janitor first though

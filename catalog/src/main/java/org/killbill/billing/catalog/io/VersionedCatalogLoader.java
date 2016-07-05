@@ -105,7 +105,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
         } catch (final CatalogApiException e) {
             throw e;
         } catch (final Exception e) {
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog ", e);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
         }
     }
 
