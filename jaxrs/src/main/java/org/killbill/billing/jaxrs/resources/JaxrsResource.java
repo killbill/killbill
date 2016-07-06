@@ -118,6 +118,8 @@ public interface JaxrsResource {
 
     public static final String QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF = "deleteDefaultPmWithAutoPayOff";
 
+    public static final String QUERY_FORCE_DEFAULT_PM_DELETION = "forceDefaultPmDeletion";
+
     public static final String QUERY_AUDIT = "audit";
 
     public static final String QUERY_PARALLEL = "parallel";

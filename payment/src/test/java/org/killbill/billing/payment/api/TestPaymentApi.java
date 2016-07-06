@@ -147,7 +147,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
 
-        paymentApi.deletePaymentMethod(account, paymentMethodId, true, ImmutableList.<PluginProperty>of(), callContext);
+        paymentApi.deletePaymentMethod(account, paymentMethodId, true, false, ImmutableList.<PluginProperty>of(), callContext);
 
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords, true);
     }

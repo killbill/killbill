@@ -293,7 +293,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(properties, "plugin properties");
 
         if (paymentMethodId == null && !paymentOptions.isExternalPayment()) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, "paymentMethodId", "should not be null");
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, "paymentMethodId", "should not be null");
         }
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
         final UUID nonNulPaymentMethodId = (paymentMethodId != null) ?
@@ -813,9 +813,9 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     }
 
     @Override
-    public void deletePaymentMethod(final Account account, final UUID paymentMethodId, final boolean deleteDefaultPaymentMethodWithAutoPayOff, final Iterable<PluginProperty> properties, final CallContext context)
+    public void deletePaymentMethod(final Account account, final UUID paymentMethodId, final boolean deleteDefaultPaymentMethodWithAutoPayOff, final boolean forceDefaultPaymentMethodDeletion, final Iterable<PluginProperty> properties, final CallContext context)
             throws PaymentApiException {
-        paymentMethodProcessor.deletedPaymentMethod(account, paymentMethodId, deleteDefaultPaymentMethodWithAutoPayOff, properties, context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        paymentMethodProcessor.deletedPaymentMethod(account, paymentMethodId, deleteDefaultPaymentMethodWithAutoPayOff, forceDefaultPaymentMethodDeletion, properties, context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
