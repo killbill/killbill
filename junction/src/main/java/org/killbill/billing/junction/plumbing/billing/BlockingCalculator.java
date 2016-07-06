@@ -98,9 +98,9 @@ public class BlockingCalculator {
      *
      * @param billingEvents the original list of billing events to update (without overdue events)
      */
-    public void insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final InternalTenantContext context) throws CatalogApiException {
+    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final InternalTenantContext context) throws CatalogApiException {
         if (billingEvents.size() <= 0) {
-            return;
+            return false;
         }
 
         final Hashtable<UUID, List<SubscriptionBase>> bundleMap = createBundleSubscriptionMap(billingEvents);
@@ -146,6 +146,8 @@ public class BlockingCalculator {
         for (final BillingEvent eventToRemove : billingEventsToRemove) {
             billingEvents.remove(eventToRemove);
         }
+
+        return !(billingEventsToAdd.isEmpty() && billingEventsToRemove.isEmpty());
     }
 
     final List<BlockingState> getAggregateBlockingEventsPerSubscription(final Iterable<BlockingState> subscriptionBlockingEvents, final Iterable<BlockingState> bundleBlockingEvents, final Iterable<BlockingState> accountBlockingEvents) {
