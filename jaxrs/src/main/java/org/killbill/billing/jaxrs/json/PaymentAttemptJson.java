@@ -87,7 +87,7 @@ public class PaymentAttemptJson extends JsonBase {
         this(paymentAttempt.getAccountId().toString(),
              paymentAttempt.getPaymentMethodId().toString(),
              paymentExternalKey,
-             paymentAttempt.getTransactionId().toString(),
+             paymentAttempt.getTransactionId() != null ? paymentAttempt.getTransactionId().toString() : null,
              paymentAttempt.getTransactionExternalKey(),
              paymentAttempt.getTransactionType().toString(),
              paymentAttempt.getEffectiveDate(),

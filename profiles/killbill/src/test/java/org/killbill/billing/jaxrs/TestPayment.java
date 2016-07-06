@@ -25,8 +25,10 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.ComboPaymentTransaction;
+import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
@@ -48,6 +50,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -145,6 +148,29 @@ public class TestPayment extends TestJaxrsBase {
         } catch (KillBillClientException e) {
             assertEquals(504, e.getResponse().getStatusCode());
         }
+    }
+
+    @Test(groups = "slow")
+    public void testWithFailedPaymentAndScheduledAttempts() throws Exception {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        // Getting Invoice #2 (first after Trial period)
+        UUID failedInvoiceId = killBillClient.getInvoicesForAccount(account.getAccountId(), false, RequestOptions.empty()).get(1).getInvoiceId();
+
+        HashMultimap<String, String> queryParams = HashMultimap.create();
+        queryParams.put("withAttempts", "true");
+        RequestOptions inputOptions = RequestOptions.builder()
+                                                    .withCreatedBy(createdBy)
+                                                    .withReason(reason)
+                                                    .withComment(comment)
+                                                    .withQueryParams(queryParams).build();
+
+        InvoicePayments invoicePayments = killBillClient.getInvoicePayment(failedInvoiceId, inputOptions);
+
+        Assert.assertEquals(invoicePayments.get(0).getTargetInvoiceId(), failedInvoiceId);
+        Assert.assertNotNull(invoicePayments.get(0).getPaymentAttempts());
+        Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
+        Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
     }
 
     @Test(groups = "slow")
