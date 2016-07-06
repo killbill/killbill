@@ -216,6 +216,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                      calculateBcdForTransition(catalog, baseSubscription, subscription, account, currentAccountBCD, transition);
 
                 if (currentAccountBCD == 0 && !updatedAccountBCD) {
+                    log.info("Setting account BCD='{}', accountId='{}'", bcdLocal, account.getId());
                     accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);
                     updatedAccountBCD = true;
                 }
