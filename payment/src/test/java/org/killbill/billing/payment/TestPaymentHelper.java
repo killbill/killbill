@@ -122,7 +122,8 @@ public class TestPaymentHelper {
 
         final InvoiceCreationInternalEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                 invoice.getBalance(), invoice.getCurrency(),
-                                                                                invoice.getInvoiceDate(), 1L, 2L, null);
+                                                                                invoice.getInvoiceDate(), internalCallContext.getAccountRecordId(),
+                                                                                internalCallContext.getTenantRecordId(), null);
 
         eventBus.post(event);
         return invoice;
