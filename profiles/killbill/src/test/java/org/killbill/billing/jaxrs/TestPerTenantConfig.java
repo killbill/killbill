@@ -17,42 +17,23 @@
 
 package org.killbill.billing.jaxrs;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
-import javax.annotation.Nullable;
-
-import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.ComboPaymentTransaction;
-import org.killbill.billing.client.model.Payment;
-import org.killbill.billing.client.model.PaymentMethod;
-import org.killbill.billing.client.model.PaymentMethodPluginDetail;
-import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Payments;
-import org.killbill.billing.client.model.PluginProperty;
 import org.killbill.billing.client.model.Tenant;
 import org.killbill.billing.client.model.TenantKey;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionStatus;
-import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
-import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-
-import static org.testng.Assert.assertEquals;
 
 public class TestPerTenantConfig extends TestJaxrsBase {
 
@@ -65,6 +46,10 @@ public class TestPerTenantConfig extends TestJaxrsBase {
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
+    }
+
+    @AfterMethod(groups = "slow")
+    public void tearDown() throws Exception {
         mockPaymentProviderPlugin.clear();
     }
 
@@ -140,8 +125,5 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         Assert.assertEquals(payments4.get(0).getTransactions().get(0).getStatus(), TransactionStatus.PAYMENT_FAILURE.name());
         Assert.assertEquals(payments4.get(0).getTransactions().get(1).getStatus(), TransactionStatus.PAYMENT_FAILURE.name());
         Assert.assertEquals(payments4.get(0).getTransactions().get(2).getStatus(), TransactionStatus.SUCCESS.name());
-
     }
-
-
 }
