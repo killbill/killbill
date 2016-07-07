@@ -134,7 +134,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 }
                 else {
                     // if the Payment Method is still null, abort payment
-                    log.warn("Payment for Invoice {} was not triggered - Payment Method is null", getInvoiceId(pluginProperties));
+                    log.warn("Payment for invoiceId='{}' was not triggered, accountId='{}' doesn't have a default payment method", getInvoiceId(pluginProperties), paymentControlContext.getAccountId());
                     return new DefaultPriorPaymentControlResult(true);
                 }
             case REFUND:
