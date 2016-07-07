@@ -871,7 +871,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
 
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments.size(), 1);
         final Payment payment = accountPayments.get(0);
         assertEquals(payment.getExternalKey(), paymentExternalKey);
@@ -928,7 +928,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
 
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments.size(), 1);
         final Payment payment = accountPayments.get(0);
         assertEquals(payment.getExternalKey(), paymentExternalKey);
@@ -956,7 +956,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                     createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
 
 
-        final List<Payment> accountPayments2 = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> accountPayments2 = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments2.size(), 1);
         final Payment payment2 = accountPayments2.get(0);
         assertEquals(payment2.getTransactions().size(), 2);

@@ -95,7 +95,7 @@ public class TestIntegrationWithWrittenOffTag extends TestIntegrationBase {
         remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
         assertListenerStatus();
 
-        List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments.size(), 0);
 
     }

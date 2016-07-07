@@ -722,17 +722,17 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     }
 
     @Override
-    public List<Payment> getAccountPayments(final UUID accountId, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
+    public List<Payment> getAccountPayments(final UUID accountId, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
         return paymentProcessor.getAccountPayments(accountId, withPluginInfo, tenantContext, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
     }
 
     @Override
-    public Pagination<Payment> getPayments(final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context) {
+    public Pagination<Payment> getPayments(final Long offset, final Long limit, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context) {
         return paymentProcessor.getPayments(offset, limit, withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
-    public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
+    public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
         return paymentProcessor.getPayments(offset, limit, pluginName, withPluginInfo, properties, tenantContext, internalCallContextFactory.createInternalTenantContext(tenantContext));
     }
 
@@ -746,7 +746,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     }
 
     @Override
-    public Payment getPaymentByExternalKey(final String paymentExternalKey, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext)
+    public Payment getPaymentByExternalKey(final String paymentExternalKey, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext)
             throws PaymentApiException {
         final Payment payment = paymentProcessor.getPaymentByExternalKey(paymentExternalKey, withPluginInfo, properties, tenantContext, internalCallContextFactory.createInternalTenantContext(tenantContext));
         if (payment == null) {
@@ -756,12 +756,12 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     }
 
     @Override
-    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context) {
+    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context) {
         return paymentProcessor.searchPayments(searchKey, offset, limit, withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
-    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
+    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
         return paymentProcessor.searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(context));
     }
 

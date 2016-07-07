@@ -362,7 +362,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         } catch (PaymentApiException ignore) {
             testListener.assertListenerStatus();
         }
-        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
 
         // Artificially move the transaction status to UNKNOWN
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();

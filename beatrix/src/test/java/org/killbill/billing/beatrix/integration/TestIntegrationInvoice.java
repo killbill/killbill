@@ -264,7 +264,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertTrue(accountBalance3.compareTo(BigDecimal.ZERO) == 0);
 
 
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(payments.size(), 1);
 
         final Payment payment = payments.get(0);

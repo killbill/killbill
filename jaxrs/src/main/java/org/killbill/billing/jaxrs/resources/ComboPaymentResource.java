@@ -123,7 +123,7 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
             final UUID paymentId = UUID.fromString(paymentIdStr);
             return paymentApi.getPayment(paymentId, false, false, pluginProperties, tenantContext);
         } else {
-            return paymentApi.getPaymentByExternalKey(externalKey, false, pluginProperties, tenantContext);
+            return paymentApi.getPaymentByExternalKey(externalKey, false, false, pluginProperties, tenantContext);
         }
     }
 }
