@@ -18,6 +18,8 @@
 package org.killbill.billing.jaxrs;
 
 import java.util.HashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Payments;
@@ -34,6 +36,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
 
 public class TestPerTenantConfig extends TestJaxrsBase {
 
@@ -55,7 +59,6 @@ public class TestPerTenantConfig extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testFailedPaymentWithPerTenantRetryConfig() throws Exception {
-
         // Create the tenant
         final String apiKeyTenant1 = "tenantSuperTuned";
         final String apiSecretTenant1 = "2367$$ffr79";
@@ -66,7 +69,7 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         killBillClient.createTenant(tenant1, createdBy, reason, comment);
 
         // Configure our plugin to fail
-        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        mockPaymentProviderPlugin.makeAllInvoicesFailWithError(true);
 
         // Upload the config
         final ObjectMapper mapper = new ObjectMapper();
@@ -86,10 +89,6 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         // Because we have specified a retry interval of one day we should see the new attempt after moving clock 1 day (and not 8 days which is default)
         //
 
-        // Configure our plugin to fail AGAIN
-        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
-
-
         //
         // Now unregister special per tenant config and we the first retry occurs one day after (and still fails), it now sets a retry date of 8 days
         //
@@ -97,16 +96,23 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         // org.killbill.tenant.broadcast.rate has been set to 1s
         crappyWaitForLackOfProperSynchonization(2000);
 
-
         clock.addDays(1);
-        crappyWaitForLackOfProperSynchonization(3000);
 
+        Awaitility.await()
+                  .atMost(4, TimeUnit.SECONDS)
+                  .pollInterval(Duration.ONE_SECOND)
+                  .until(new Callable<Boolean>() {
+                      @Override
+                      public Boolean call() throws Exception {
+
+                          return killBillClient.getPaymentsForAccount(accountJson.getAccountId()).get(0).getTransactions().size() == 2;
+                      }
+                  });
         final Payments payments2 = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
         Assert.assertEquals(payments2.size(), 1);
         Assert.assertEquals(payments2.get(0).getTransactions().size(), 2);
         Assert.assertEquals(payments2.get(0).getTransactions().get(0).getStatus(), TransactionStatus.PAYMENT_FAILURE.name());
         Assert.assertEquals(payments2.get(0).getTransactions().get(1).getStatus(), TransactionStatus.PAYMENT_FAILURE.name());
-
 
         clock.addDays(1);
         crappyWaitForLackOfProperSynchonization(3000);
@@ -116,9 +122,18 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         Assert.assertEquals(payments3.size(), 1);
         Assert.assertEquals(payments3.get(0).getTransactions().size(), 2);
 
+        mockPaymentProviderPlugin.makeAllInvoicesFailWithError(false);
         clock.addDays(7);
-        crappyWaitForLackOfProperSynchonization(3000);
 
+        Awaitility.await()
+                  .atMost(4, TimeUnit.SECONDS)
+                  .pollInterval(Duration.ONE_SECOND)
+                  .until(new Callable<Boolean>() {
+                      @Override
+                      public Boolean call() throws Exception {
+                          return killBillClient.getPaymentsForAccount(accountJson.getAccountId()).get(0).getTransactions().size() == 3;
+                      }
+                  });
         final Payments payments4 = killBillClient.getPaymentsForAccount(accountJson.getAccountId());
         Assert.assertEquals(payments4.size(), 1);
         Assert.assertEquals(payments4.get(0).getTransactions().size(), 3);
