@@ -68,8 +68,8 @@ public class RawUsageOptimizer {
 
     public RawUsageOptimizerResult getConsumableInArrearUsage(final LocalDate firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, final InternalCallContext internalCallContext) {
         final LocalDate targetStartDate = config.getMaxRawUsagePreviousPeriod(internalCallContext) > 0 ? getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, existingUsageItems, knownUsage, internalCallContext) : firstEventStartDate;
-        log.info("ConsumableInArrear accountRecordId='{}', rawUsageStartDate='{}', firstEventStartDate='{}'",
-                 internalCallContext.getAccountRecordId(), targetStartDate, firstEventStartDate);
+        log.debug("ConsumableInArrear accountRecordId='{}', rawUsageStartDate='{}', firstEventStartDate='{}'",
+                  internalCallContext.getAccountRecordId(), targetStartDate, firstEventStartDate);
         final List<RawUsage> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
         return new RawUsageOptimizerResult(firstEventStartDate, targetStartDate, rawUsageData);
     }

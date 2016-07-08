@@ -441,4 +441,14 @@ public class ContiguousIntervalConsumableInArrear {
         return billingEvents.get(0).getTimeZone();
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ContiguousIntervalConsumableInArrear{");
+        sb.append("transitionTimes=").append(transitionTimes);
+        sb.append(", billingEvents=").append(billingEvents);
+        sb.append(", rawSubscriptionUsage=").append(rawSubscriptionUsage);
+        sb.append(", rawUsageStartDate=").append(rawUsageStartDate);
+        sb.append('}');
+        return sb.toString();
+    }
 }

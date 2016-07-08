@@ -55,4 +55,15 @@ public class DefaultRawUsage implements RawUsage {
     public Long getAmount() {
         return amount;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultRawUsage{");
+        sb.append("subscriptionId=").append(subscriptionId);
+        sb.append(", recordDate=").append(recordDate);
+        sb.append(", unitType='").append(unitType).append('\'');
+        sb.append(", amount=").append(amount);
+        sb.append('}');
+        return sb.toString();
+    }
 }

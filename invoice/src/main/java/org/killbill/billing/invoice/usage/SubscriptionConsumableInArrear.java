@@ -34,6 +34,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceItemGeneratorLogger;
 import org.killbill.billing.invoice.usage.ContiguousIntervalConsumableInArrear.ConsumableInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
@@ -109,12 +110,17 @@ public class SubscriptionConsumableInArrear {
      * @return
      * @throws CatalogApiException
      */
-    public SubscriptionConsumableInArrearItemsAndNextNotificationDate computeMissingUsageInvoiceItems(final List<InvoiceItem> existingUsage) throws CatalogApiException {
+    public SubscriptionConsumableInArrearItemsAndNextNotificationDate computeMissingUsageInvoiceItems(final List<InvoiceItem> existingUsage, final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger) throws CatalogApiException {
 
         final SubscriptionConsumableInArrearItemsAndNextNotificationDate result = new SubscriptionConsumableInArrearItemsAndNextNotificationDate();
         final List<ContiguousIntervalConsumableInArrear> billingEventTransitionTimePeriods = computeInArrearUsageInterval();
         for (ContiguousIntervalConsumableInArrear usageInterval : billingEventTransitionTimePeriods) {
-            result.addConsumableInArrearItemsAndNextNotificationDate(usageInterval.getUsage().getName(), usageInterval.computeMissingItemsAndNextNotificationDate(existingUsage));
+            final ConsumableInArrearItemsAndNextNotificationDate newItemsAndDate = usageInterval.computeMissingItemsAndNextNotificationDate(existingUsage);
+
+            // For debugging purposes
+            invoiceItemGeneratorLogger.append(usageInterval, newItemsAndDate.getInvoiceItems());
+
+            result.addConsumableInArrearItemsAndNextNotificationDate(usageInterval.getUsage().getName(), newItemsAndDate);
         }
         return result;
     }

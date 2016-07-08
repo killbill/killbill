@@ -100,16 +100,12 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                @Nullable final List<Invoice> existingInvoices,
                                                final InternalCallContext internalCallContext) throws InvoiceApiException {
-        if (events.size() == 0) {
+        if (events.isEmpty()) {
             return;
         }
 
         // Pretty-print the generated invoice items from the junction events
-        final StringBuilder logStringBuilder = new StringBuilder("Proposed Invoice items for invoiceId='")
-                .append(invoiceId)
-                .append("', accountId='")
-                .append(accountId)
-                .append("'");
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, accountId, "recurring", log);
 
         final Iterator<BillingEvent> eventIt = events.iterator();
         BillingEvent nextEvent = eventIt.next();
@@ -119,29 +115,34 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             if (!events.getSubscriptionIdsWithAutoInvoiceOff().
                     contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
                 final BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-                final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, logStringBuilder, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate, internalCallContext);
+                final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, invoiceItemGeneratorLogger, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate, internalCallContext);
                 proposedItems.addAll(newProposedItems);
             }
         }
-        final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, nextEvent, null, targetDate, currency, logStringBuilder, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate, internalCallContext);
+        final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, nextEvent, null, targetDate, currency, invoiceItemGeneratorLogger, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate, internalCallContext);
 
         proposedItems.addAll(newProposedItems);
 
-        log.info(logStringBuilder.toString());
-
-        return;
+        invoiceItemGeneratorLogger.logItems();
     }
 
     @VisibleForTesting
     void processFixedBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events, final LocalDate targetDate,
                                    final Currency currency, final List<InvoiceItem> proposedItems, final InternalCallContext internalCallContext) throws InvoiceApiException {
+        if (events.isEmpty()) {
+            return;
+        }
+
         InvoiceItem prevItem = null;
+
+        // Pretty-print the generated invoice items from the junction events
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, accountId, "fixed", log);
 
         final Iterator<BillingEvent> eventIt = events.iterator();
         while (eventIt.hasNext()) {
             final BillingEvent thisEvent = eventIt.next();
 
-            final InvoiceItem currentFixedPriceItem = generateFixedPriceItem(invoiceId, accountId, thisEvent, targetDate, currency, internalCallContext);
+            final InvoiceItem currentFixedPriceItem = generateFixedPriceItem(invoiceId, accountId, thisEvent, targetDate, currency, invoiceItemGeneratorLogger, internalCallContext);
             if (!isSameDayAndSameSubscription(prevItem, thisEvent, internalCallContext) && prevItem != null) {
                 proposedItems.add(prevItem);
             }
@@ -151,6 +152,8 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         if (prevItem != null) {
             proposedItems.add(prevItem);
         }
+
+        invoiceItemGeneratorLogger.logItems();
     }
 
     @VisibleForTesting
@@ -168,12 +171,11 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
     private List<InvoiceItem> processRecurringEvent(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
                                                     final LocalDate targetDate, final Currency currency,
-                                                    final StringBuilder logStringBuilder, final BillingMode billingMode,
+                                                    final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger, final BillingMode billingMode,
                                                     final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                     final InternalCallContext internalCallContext) throws InvoiceApiException {
 
         try {
-
             final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
             // For FIXEDTERM phases we need to stop when the specified duration has been reached
@@ -224,14 +226,10 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             }
 
             // For debugging purposes
-            logStringBuilder.append("\n")
-                            .append(thisEvent);
-            for (final InvoiceItem item : items) {
-                logStringBuilder.append("\n\t")
-                                .append(item);
-            }
-            return items;
+            invoiceItemGeneratorLogger.append(thisEvent, items);
 
+
+            return items;
         } catch (final CatalogApiException e) {
             throw new InvoiceApiException(e);
         }
@@ -365,7 +363,8 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     }
 
     private InvoiceItem generateFixedPriceItem(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent,
-                                               final LocalDate targetDate, final Currency currency, final InternalCallContext internalCallContext) throws InvoiceApiException {
+                                               final LocalDate targetDate, final Currency currency,
+                                               final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger, final InternalCallContext internalCallContext) throws InvoiceApiException {
         final LocalDate roundedStartDate = internalCallContext.toLocalDate(thisEvent.getEffectiveDate());
         if (roundedStartDate.isAfter(targetDate)) {
             return null;
@@ -373,10 +372,15 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             final BigDecimal fixedPrice = thisEvent.getFixedPrice();
 
             if (fixedPrice != null) {
-                return new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getSubscription().getBundleId(),
-                                                 thisEvent.getSubscription().getId(),
-                                                 thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
-                                                 roundedStartDate, fixedPrice, currency);
+                final FixedPriceInvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getSubscription().getBundleId(),
+                                                                                              thisEvent.getSubscription().getId(),
+                                                                                              thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
+                                                                                              roundedStartDate, fixedPrice, currency);
+
+                // For debugging purposes
+                invoiceItemGeneratorLogger.append(thisEvent, fixedPriceInvoiceItem);
+
+                return fixedPriceInvoiceItem;
             } else {
                 return null;
             }
