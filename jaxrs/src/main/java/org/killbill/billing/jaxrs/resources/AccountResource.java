@@ -1118,7 +1118,7 @@ public class AccountResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final String accountIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
         final UUID accountId = UUID.fromString(accountIdString);
         return super.getTags(accountId, accountId, auditMode, includedDeleted, context.createContext(request));
@@ -1134,7 +1134,7 @@ public class AccountResource extends JaxRsResourceBase {
     public Response getAllTags(@PathParam(ID_PARAM_NAME) final String accountIdString,
                                @QueryParam(QUERY_OBJECT_TYPE) final ObjectType objectType,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                               @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                               @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
         final UUID accountId = UUID.fromString(accountIdString);
         final TenantContext tenantContext = context.createContext(request);

@@ -925,7 +925,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Invoice not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final String invoiceIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, InvoiceApiException {
         final UUID invoiceId = UUID.fromString(invoiceIdString);
         final TenantContext tenantContext = context.createContext(request);

@@ -88,7 +88,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                 if (compared2 != 0) {
                     return compared2;
                 } else {
-                    // Default, stable, ordering
+                    // Default stable ordering (in the sense that doing twice the same call will lead to same result)
                     return o1.getId().compareTo(o2.getId());
                 }
             }
@@ -203,8 +203,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             final SubscriptionBundle bundle = getSubscriptionBundle(cur.getId(), context);
             result.add(bundle);
         }
-
-        return result;
+        // Sorting by createdDate will likely place the active bundle last, but this is the same ordering we already use for getSubscriptionBundlesForAccount
+        return Ordering.from(SUBSCRIPTION_BUNDLE_COMPARATOR).sortedCopy(result);
     }
 
     @Override

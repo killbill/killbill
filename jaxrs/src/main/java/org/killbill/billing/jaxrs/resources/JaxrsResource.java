@@ -104,7 +104,6 @@ public interface JaxrsResource {
 
 
     public static final String QUERY_TAGS = "tagList";
-    public static final String QUERY_TAGS_INCLUDED_DELETED = "includedDeleted";
     public static final String QUERY_CUSTOM_FIELDS = "customFieldList";
 
     public static final String QUERY_OBJECT_TYPE = "objectType";
@@ -262,5 +261,8 @@ public interface JaxrsResource {
     public static final String CHILDREN = "children";
     public static final String BCD = "bcd";
     public static final String TRANSFER_CREDIT = "transferCredit";
+
+    public static final String QUERY_INCLUDED_DELETED = "includedDeleted";
+
 
 }

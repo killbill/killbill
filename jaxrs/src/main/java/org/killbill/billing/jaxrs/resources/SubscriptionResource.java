@@ -718,7 +718,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Subscription not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final String subscriptionIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
         final UUID subscriptionId = UUID.fromString(subscriptionIdString);
         final TenantContext tenantContext = context.createContext(request);

@@ -102,7 +102,7 @@ public class TestBundle extends TestJaxrsBase {
         final Subscription entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), bundleExternalKey, productName,
                                                                        ProductCategory.BASE, term, true);
 
-        final Bundle originalBundle = killBillClient.getBundle(bundleExternalKey);
+        final Bundle originalBundle = killBillClient.getBundle(bundleExternalKey, requestOptions);
         assertEquals(originalBundle.getAccountId(), accountJson.getAccountId());
         assertEquals(originalBundle.getExternalKey(), bundleExternalKey);
 
@@ -113,10 +113,18 @@ public class TestBundle extends TestJaxrsBase {
         bundle.setBundleId(entitlementJsonNoEvents.getBundleId());
         assertEquals(killBillClient.transferBundle(bundle, createdBy, reason, comment).getAccountId(), newAccount.getAccountId());
 
-        final Bundle newBundle = killBillClient.getBundle(bundleExternalKey);
+        final Bundle newBundle = killBillClient.getBundle(bundleExternalKey, requestOptions);
         assertNotEquals(newBundle.getBundleId(), originalBundle.getBundleId());
         assertEquals(newBundle.getExternalKey(), originalBundle.getExternalKey());
         assertEquals(newBundle.getAccountId(), newAccount.getAccountId());
+
+
+        final Bundles bundles = killBillClient.getAllBundlesForExternalKey(bundleExternalKey, requestOptions);
+        assertEquals(bundles.size(), 2);
+        assertEquals(bundles.get(0).getBundleId(), originalBundle.getBundleId());
+        assertEquals(bundles.get(0).getSubscriptions().get(0).getState(), EntitlementState.CANCELLED);
+        assertEquals(bundles.get(1).getBundleId(), newBundle.getBundleId());
+        assertEquals(bundles.get(1).getSubscriptions().get(0).getState(), EntitlementState.ACTIVE);
     }
 
     @Test(groups = "slow", description = "Block a bundle")
