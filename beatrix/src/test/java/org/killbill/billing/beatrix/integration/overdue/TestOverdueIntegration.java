@@ -634,7 +634,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD2");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
 
-        // 2012-07-20 => DAY 85 - 55 days after invoice
+        // 2012-07-20 => DAY 85 - 50 days after invoice
         addDaysAndCheckForCompletion(10, NextEvent.BLOCK);
 
         // Should now be in OD3
