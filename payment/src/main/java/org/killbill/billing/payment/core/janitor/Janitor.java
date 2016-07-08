@@ -108,25 +108,6 @@ public class Janitor {
 
     }
 
-    /*
-        public IncompletePaymentAttemptTask(final InternalCallContextFactory internalCallContextFactory,
-                                        final PaymentConfig paymentConfig,
-                                        final PaymentDao paymentDao,
-                                        final Clock clock,
-                                        final PaymentStateMachineHelper paymentStateMachineHelper,
-                                        final PaymentControlStateMachineHelper retrySMHelper,
-                                        final AccountInternalApi accountInternalApi,
-                                        final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
-                                        final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
-                                        final GlobalLocker locker) {
-
-
-    public IncompletePaymentTransactionTask(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                                            final PaymentDao paymentDao, final Clock clock,
-                                            final PaymentStateMachineHelper paymentStateMachineHelper, final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                                            final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final GlobalLocker locker) {
-
-     */
 
     public void initialize() throws NotificationQueueAlreadyExists {
         janitorQueue = notificationQueueService.createNotificationQueue(DefaultPaymentService.SERVICE_NAME,

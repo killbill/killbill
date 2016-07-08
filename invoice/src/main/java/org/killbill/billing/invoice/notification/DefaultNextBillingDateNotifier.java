@@ -44,7 +44,6 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
     public static final String NEXT_BILLING_DATE_NOTIFIER_QUEUE = "next-billing-date-queue";
 
     private final NotificationQueueService notificationQueueService;
-    private final InvoiceConfig config;
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final InvoiceListener listener;
     private final InternalCallContextFactory callContextFactory;
@@ -53,12 +52,10 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
     @Inject
     public DefaultNextBillingDateNotifier(final NotificationQueueService notificationQueueService,
-                                          final InvoiceConfig config,
                                           final SubscriptionBaseInternalApi subscriptionApi,
                                           final InvoiceListener listener,
                                           final InternalCallContextFactory callContextFactory) {
         this.notificationQueueService = notificationQueueService;
-        this.config = config;
         this.subscriptionApi = subscriptionApi;
         this.listener = listener;
         this.callContextFactory = callContextFactory;

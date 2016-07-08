@@ -42,21 +42,15 @@ public class ParentInvoiceCommitmentNotifier implements NextBillingDateNotifier 
     public static final String PARENT_INVOICE_COMMITMENT_NOTIFIER_QUEUE = "parent-invoice-commitment-queue";
 
     private final NotificationQueueService notificationQueueService;
-    private final InvoiceConfig config;
     private final InvoiceListener listener;
-    private final InternalCallContextFactory callContextFactory;
 
     private NotificationQueue commitInvoiceQueue;
 
     @Inject
     public ParentInvoiceCommitmentNotifier(final NotificationQueueService notificationQueueService,
-                                           final InvoiceConfig config,
-                                           final InvoiceListener listener,
-                                           final InternalCallContextFactory callContextFactory) {
+                                           final InvoiceListener listener) {
         this.notificationQueueService = notificationQueueService;
-        this.config = config;
         this.listener = listener;
-        this.callContextFactory = callContextFactory;
     }
 
     @Override
