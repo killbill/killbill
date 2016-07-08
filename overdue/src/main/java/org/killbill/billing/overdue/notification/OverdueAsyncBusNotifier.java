@@ -61,10 +61,10 @@ public class OverdueAsyncBusNotifier extends DefaultOverdueNotifierBase implemen
             final OverdueAsyncBusNotificationKey key = (OverdueAsyncBusNotificationKey) notificationKey;
             switch (key.getAction()) {
                 case CLEAR:
-                    dispatcher.clearOverdueForAccount(key.getUuidKey(), createCallContext(userToken, accountRecordId, tenantRecordId));
+                    dispatcher.clearOverdueForAccount(key.getUuidKey(), eventDate, createCallContext(userToken, accountRecordId, tenantRecordId));
                     break;
                 case REFRESH:
-                    dispatcher.processOverdueForAccount(key.getUuidKey(), createCallContext(userToken, accountRecordId, tenantRecordId));
+                    dispatcher.processOverdueForAccount(key.getUuidKey(), eventDate, createCallContext(userToken, accountRecordId, tenantRecordId));
                     break;
                 default:
                     throw new RuntimeException("Unexpected action " + key.getAction() + " for account " + key.getUuidKey());

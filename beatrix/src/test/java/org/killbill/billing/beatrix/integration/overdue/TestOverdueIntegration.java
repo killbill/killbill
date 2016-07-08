@@ -610,8 +610,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Should still be in clear state
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
-        // 2012-07-05 => DAY 65 - 35 days after invoice
-        addDaysAndCheckForCompletion(20, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT_ERROR);
+        // 2012-06-30 => DAY 65 - 30 days after invoice
+        addDaysAndCheckForCompletion(15, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT_ERROR);
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
@@ -627,14 +627,14 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
 
-        // 2012-07-15 => DAY 75 - 45 days after invoice
+        // 2012-07-10 => DAY 75 - 40 days after invoice
         addDaysAndCheckForCompletion(8, NextEvent.BLOCK, NextEvent.TAG);
 
         // Should now be in OD2
         checkODState("OD2");
         checkChangePlanWithOverdueState(baseEntitlement, true, true);
 
-        // 2012-07-25 => DAY 85 - 55 days after invoice
+        // 2012-07-20 => DAY 85 - 55 days after invoice
         addDaysAndCheckForCompletion(10, NextEvent.BLOCK);
 
         // Should now be in OD3
@@ -652,26 +652,26 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     // Item for the blocked period
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 15), new LocalDate(2012, 7, 25), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-80.63")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("80.63")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 20), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-80.63")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 20), new LocalDate(2012, 7, 20), InvoiceItemType.CBA_ADJ, new BigDecimal("80.63")));
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
 
-        checkChangePlanWithOverdueState(baseEntitlement, false, false);
+        checkChangePlanWithOverdueState(baseEntitlement, false, true);
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     // Item for the blocked period
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 15), new LocalDate(2012, 7, 25), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-80.63")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("80.63")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 20), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-80.63")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 20), new LocalDate(2012, 7, 20), InvoiceItemType.CBA_ADJ, new BigDecimal("80.63")));
 
         invoiceChecker.checkInvoice(account.getId(), 5, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("116.12")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-48.38")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-67.74")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 20), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("212.89")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 20), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-88.69")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 20), new LocalDate(2012, 7, 20), InvoiceItemType.CBA_ADJ, new BigDecimal("-80.63")));
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
 
-        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-12.89")), 0);
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
     }
 
     @Test(groups = "slow", description = "Test overdue for draft external charge")
