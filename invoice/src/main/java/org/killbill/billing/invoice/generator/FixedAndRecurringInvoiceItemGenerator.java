@@ -48,12 +48,10 @@ import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.currency.KillBillMoney;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateNumberOfWholeBillingPeriods;
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate;
@@ -63,16 +61,9 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
     private static final Logger log = LoggerFactory.getLogger(FixedAndRecurringInvoiceItemGenerator.class);
 
-    private final Clock clock;
-
-    @Inject
-    public FixedAndRecurringInvoiceItemGenerator(final Clock clock) {
-        this.clock = clock;
-    }
-
     public List<InvoiceItem> generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
                                            @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
-                                           final Currency targetCurrency, Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
+                                           final Currency targetCurrency, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                            final InternalCallContext internalCallContext) throws InvoiceApiException {
         final AccountItemTree accountItemTree = new AccountItemTree(account.getId(), invoiceId);
         if (existingInvoices != null) {
@@ -196,7 +187,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                     final RecurringInvoiceItemDataWithNextBillingCycleDate itemDataWithNextBillingCycleDate;
                     try {
                         itemDataWithNextBillingCycleDate = generateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod, billingMode);
-                    } catch (InvalidDateSequenceException e) {
+                    } catch (final InvalidDateSequenceException e) {
                         throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                     }
                     for (final RecurringInvoiceItemData itemDatum : itemDataWithNextBillingCycleDate.getItemData()) {
@@ -227,7 +218,6 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
             // For debugging purposes
             invoiceItemGeneratorLogger.append(thisEvent, items);
-
 
             return items;
         } catch (final CatalogApiException e) {
@@ -332,7 +322,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
         for (int i = 0; i < numberOfWholeBillingPeriods; i++) {
             final LocalDate servicePeriodStartDate;
-            if (results.size() > 0) {
+            if (!results.isEmpty()) {
                 // Make sure the periods align, especially with the pro-ration calculations above
                 servicePeriodStartDate = results.get(results.size() - 1).getEndDate();
             } else if (i == 0) {

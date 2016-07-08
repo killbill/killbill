@@ -142,16 +142,14 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             invoiceItemGeneratorLogger.logItems();
 
             return items;
-        } catch (CatalogApiException e) {
+        } catch (final CatalogApiException e) {
             throw new InvoiceApiException(e);
         }
     }
 
     private LocalDate getMinBillingEventDate(final BillingEventSet eventSet, final InternalCallContext internalCallContext) {
         DateTime minDate = null;
-        final Iterator<BillingEvent> events = eventSet.iterator();
-        while (events.hasNext()) {
-            final BillingEvent cur = events.next();
+        for (final BillingEvent cur : eventSet) {
             if (minDate == null || minDate.compareTo(cur.getEffectiveDate()) > 0) {
                 minDate = cur.getEffectiveDate();
             }
@@ -175,7 +173,6 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
     }
 
     private Map<UUID, List<InvoiceItem>> extractPerSubscriptionExistingConsumableInArrearUsageItems(final Map<String, Usage> knownUsage, @Nullable final List<Invoice> existingInvoices) {
-
         if (existingInvoices == null || existingInvoices.isEmpty()) {
             return ImmutableMap.of();
         }
@@ -198,7 +195,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             }
         }));
 
-        for (InvoiceItem cur : usageConsumableInArrearItems) {
+        for (final InvoiceItem cur : usageConsumableInArrearItems) {
             List<InvoiceItem> perSubscriptionUsageItems = result.get(cur.getSubscriptionId());
             if (perSubscriptionUsageItems == null) {
                 perSubscriptionUsageItems = new LinkedList<InvoiceItem>();

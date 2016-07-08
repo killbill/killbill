@@ -71,12 +71,11 @@ public class RawUsageOptimizer {
         log.debug("ConsumableInArrear accountRecordId='{}', rawUsageStartDate='{}', firstEventStartDate='{}'",
                   internalCallContext.getAccountRecordId(), targetStartDate, firstEventStartDate);
         final List<RawUsage> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
-        return new RawUsageOptimizerResult(firstEventStartDate, targetStartDate, rawUsageData);
+        return new RawUsageOptimizerResult(targetStartDate, rawUsageData);
     }
 
     @VisibleForTesting
     LocalDate getOptimizedRawUsageStartDate(final LocalDate firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, final InternalCallContext internalCallContext) {
-
         if (!existingUsageItems.iterator().hasNext()) {
             return firstEventStartDate;
 
@@ -99,7 +98,7 @@ public class RawUsageOptimizer {
         //
         final LocalDate[] perBillingPeriodMostRecentConsumableInArrearItemEndDate = new LocalDate[BillingPeriod.values().length - 1]; // Exclude the NO_BILLING_PERIOD
         int idx = 0;
-        for (BillingPeriod bp : BillingPeriod.values()) {
+        for (final BillingPeriod bp : BillingPeriod.values()) {
             if (bp != BillingPeriod.NO_BILLING_PERIOD) {
                 final LocalDate makerDateThanCannotBeChosenAsTheMinOfAllDates = InvoiceDateUtils.advanceByNPeriods(targetDate, bp, config.getMaxRawUsagePreviousPeriod(internalCallContext));
                 perBillingPeriodMostRecentConsumableInArrearItemEndDate[idx++] = (knownUsageBillingPeriod.contains(bp)) ? null : makerDateThanCannotBeChosenAsTheMinOfAllDates;
@@ -124,7 +123,7 @@ public class RawUsageOptimizer {
         // Extract the min from all the dates
         LocalDate targetStartDate = null;
         idx = 0;
-        for (BillingPeriod bp : BillingPeriod.values()) {
+        for (final BillingPeriod bp : BillingPeriod.values()) {
             if (bp != BillingPeriod.NO_BILLING_PERIOD) {
                 final LocalDate tmp = perBillingPeriodMostRecentConsumableInArrearItemEndDate[idx];
                 final LocalDate targetBillingPeriodDate = tmp != null ? InvoiceDateUtils.recedeByNPeriods(tmp, bp, config.getMaxRawUsagePreviousPeriod(internalCallContext)) : null;
@@ -152,18 +151,12 @@ public class RawUsageOptimizer {
 
     public static class RawUsageOptimizerResult {
 
-        private final LocalDate firstEventStartDate;
         private final LocalDate rawUsageStartDate;
         private final List<RawUsage> rawUsage;
 
-        public RawUsageOptimizerResult(final LocalDate firstEventStartDate, final LocalDate rawUsageStartDate, final List<RawUsage> rawUsage) {
-            this.firstEventStartDate = firstEventStartDate;
+        public RawUsageOptimizerResult(final LocalDate rawUsageStartDate, final List<RawUsage> rawUsage) {
             this.rawUsageStartDate = rawUsageStartDate;
             this.rawUsage = rawUsage;
-        }
-
-        public LocalDate getFirstEventStartDate() {
-            return firstEventStartDate;
         }
 
         public LocalDate getRawUsageStartDate() {
@@ -174,5 +167,4 @@ public class RawUsageOptimizer {
             return rawUsage;
         }
     }
-
 }
