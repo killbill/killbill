@@ -78,9 +78,17 @@ public class TestBundle extends TestJaxrsBase {
     public void testBundleNonExistent() throws Exception {
         final Account accountJson = createAccount();
 
-        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID()));
-        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892").isEmpty());
-        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId()).isEmpty());
+        // ID
+        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID(), requestOptions));
+
+        // External Key
+        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID().toString(), requestOptions));
+        Assert.assertTrue(killBillClient.getAllBundlesForExternalKey(UUID.randomUUID().toString(), requestOptions).isEmpty());
+
+        // Account Id
+        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892", requestOptions).isEmpty());
+        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), requestOptions).isEmpty());
+
     }
 
     @Test(groups = "slow", description = "Can handle non existent account")
