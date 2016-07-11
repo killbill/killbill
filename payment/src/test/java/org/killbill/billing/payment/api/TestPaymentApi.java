@@ -147,9 +147,40 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
 
-        paymentApi.deletePaymentMethod(account, paymentMethodId, true, ImmutableList.<PluginProperty>of(), callContext);
+        paymentApi.deletePaymentMethod(account, paymentMethodId, true, false, ImmutableList.<PluginProperty>of(), callContext);
 
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords, true);
+    }
+
+    @Test(groups = "slow")
+    public void testAddRemovePaymentMethodWithForcedDeletion() throws Exception {
+        final Long baseNbRecords = paymentApi.getPaymentMethods(0L, 1000L, false, ImmutableList.<PluginProperty>of(), callContext).getMaxNbRecords();
+        Assert.assertEquals(baseNbRecords, (Long) 1L);
+
+        final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
+
+        paymentApi.deletePaymentMethod(account, paymentMethodId, false, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords, true);
+    }
+
+    @Test(groups = "slow")
+    public void testAddRemovePaymentMethodWithoutForcedDeletion() throws Exception {
+        final Long baseNbRecords = paymentApi.getPaymentMethods(0L, 1000L, false, ImmutableList.<PluginProperty>of(), callContext).getMaxNbRecords();
+        Assert.assertEquals(baseNbRecords, (Long) 1L);
+
+        final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        try {
+            paymentApi.deletePaymentMethod(account, paymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INTERNAL_ERROR.getCode());
+        }
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
     }
 
     @Test(groups = "slow")

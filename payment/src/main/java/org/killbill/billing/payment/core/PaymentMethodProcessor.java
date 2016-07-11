@@ -399,6 +399,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
 
     public void deletedPaymentMethod(final Account account, final UUID paymentMethodId,
                                      final boolean deleteDefaultPaymentMethodWithAutoPayOff,
+                                     final boolean forceDefaultPaymentMethodDeletion,
                                      final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
         try {
@@ -414,7 +415,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     try {
                         // Note: account.getPaymentMethodId() may be null
                         if (paymentMethodId.equals(account.getPaymentMethodId())) {
-                            if (!deleteDefaultPaymentMethodWithAutoPayOff) {
+                            if (!deleteDefaultPaymentMethodWithAutoPayOff && !forceDefaultPaymentMethodDeletion) {
                                 throw new PaymentApiException(ErrorCode.PAYMENT_DEL_DEFAULT_PAYMENT_METHOD, account.getId());
                             } else {
                                 final boolean isAccountAutoPayOff = isAccountAutoPayOff(account.getId(), context);

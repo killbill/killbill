@@ -259,6 +259,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account or payment method not found")})
     public Response deletePaymentMethod(@PathParam("paymentMethodId") final String paymentMethodId,
                                         @QueryParam(QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF) @DefaultValue("false") final Boolean deleteDefaultPaymentMethodWithAutoPayOff,
+                                        @QueryParam(QUERY_FORCE_DEFAULT_PM_DELETION) @DefaultValue("false") final Boolean forceDefaultPaymentMethodDeletion,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -270,7 +271,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, false, pluginProperties, callContext);
         final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), callContext);
 
-        paymentApi.deletePaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, pluginProperties, callContext);
+        paymentApi.deletePaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, forceDefaultPaymentMethodDeletion, pluginProperties, callContext);
 
         return Response.status(Status.OK).build();
     }
