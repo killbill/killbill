@@ -315,9 +315,9 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
     }
 
-    // Scenario 1: Follow up Invoice Item Adjustment on unpaid invoice
+    // Scenario 1.a: Follow up Invoice Item Adjustment on unpaid DRAFT invoice
     @Test(groups = "slow")
-    public void testParentInvoiceItemAdjustmentUnpaidInvoice() throws Exception {
+    public void testParentInvoiceItemAdjustmentUnpaidDraftInvoice() throws Exception {
 
         final int billingDay = 14;
         final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
@@ -382,6 +382,89 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
         assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(239.95)), 0);
+
+    }
+
+    // Scenario 1.b: Follow up Invoice Item Adjustment on unpaid COMMITTED invoice
+    @Test(groups = "slow")
+    public void testParentInvoiceItemAdjustmentUnpaidCommittedInvoice() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // ---- trial period ----
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected because balance is 0
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // ---- recurring period ----
+        // Move through time and verify new parent Invoice. No payments are expected.
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addDays(29);
+        assertListenerStatus();
+
+        paymentPlugin.makeNextPaymentFailWithError();
+
+        // move one day to have parent invoice paid
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        // get last child invoice
+        Invoice childInvoice = childInvoices.get(1);
+        assertEquals(childInvoice.getNumberOfItems(), 1);
+
+        // Second Parent invoice over Recurring period
+        assertEquals(parentInvoices.size(), 2);
+
+        Invoice parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(249.95)), 0);
+
+        // issue a $10 adj when invoice is unpaid
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.insertInvoiceItemAdjustment(childAccount.getId(), childInvoice.getId(),
+                                                   childInvoice.getInvoiceItems().get(0).getId(),
+                                                   clock.getToday(childAccount.getTimeZone()), BigDecimal.TEN,
+                                                   childAccount.getCurrency(), "test adjustment", callContext);
+        assertListenerStatus();
+
+        // expected child invoice
+        // RECURRING : $ 249.95
+        // ITEM_ADJ : $ -10
+
+        // expected parent invoice
+        // PARENT_SUMMARY : $ 249.95
+        // ITEM_ADJ : $ -10
+
+        childInvoice = invoiceUserApi.getInvoice(childInvoice.getId(), callContext);
+        assertEquals(childInvoice.getNumberOfItems(), 2);
+        assertEquals(childInvoice.getBalance().compareTo(BigDecimal.valueOf(239.95)), 0);
+        assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+
+        // reload parent invoice
+        parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);
+        // check parent invoice is updated and still in DRAFT status
+        assertEquals(parentInvoice.getNumberOfItems(), 2);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(239.95)), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
+        assertEquals(parentInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
 
     }
 

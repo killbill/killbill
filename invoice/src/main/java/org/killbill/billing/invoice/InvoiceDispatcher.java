@@ -70,6 +70,7 @@ import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
+import org.killbill.billing.invoice.dao.InvoiceModelDaoHelper;
 import org.killbill.billing.invoice.dao.InvoiceParentChildModelDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata;
@@ -78,6 +79,7 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFu
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
+import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
@@ -88,6 +90,7 @@ import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -777,15 +780,15 @@ public class InvoiceDispatcher {
     public void processParentInvoiceForAdjustments(final ImmutableAccountData account, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
 
         final InvoiceModelDao childInvoiceModelDao = invoiceDao.getById(childInvoiceId, context);
-        final Invoice childInvoice = new DefaultInvoice(childInvoiceModelDao);
-        final InvoiceModelDao parentInvoice = childInvoiceModelDao.getParentInvoice();
+        final InvoiceModelDao parentInvoiceModelDao = childInvoiceModelDao.getParentInvoice();
 
-        if (parentInvoice == null) {
+        if (parentInvoiceModelDao == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_MISSING_PARENT_INVOICE, childInvoiceModelDao.getId());
-        } else if (parentInvoice.getStatus().equals(InvoiceStatus.COMMITTED)) {
-            // ignore parent invoice adjustment if it's in COMMITTED status.
-            return;
         }
+
+        final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(account.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));
+        final InternalCallContext parentContext = internalCallContextFactory.createInternalCallContext(parentAccountRecordId, context);
+        final String description = "Adjustment for account ".concat(account.getExternalKey());
 
         final InvoiceItemModelDao childInvoiceItemAdjustment = Iterables.find(childInvoiceModelDao.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
             @Override
@@ -794,24 +797,39 @@ public class InvoiceDispatcher {
             }
         });
         if (childInvoiceItemAdjustment == null) return;
-
         final BigDecimal childInvoiceAdjustmentAmount = childInvoiceItemAdjustment.getAmount();
 
-        final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(account.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));
-        final InternalCallContext parentContext = internalCallContextFactory.createInternalCallContext(parentAccountRecordId, context);
-        final DateTime today = clock.getNow(account.getTimeZone());
-        final String description = "Adjustment for account ".concat(account.getExternalKey());
-
-        final InvoiceItemModelDao parentInvoiceItemForChild = Iterables.find(parentInvoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
+        final InvoiceItemModelDao parentSummaryInvoiceItem = Iterables.find(parentInvoiceModelDao.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
             @Override
             public boolean apply(@Nullable final InvoiceItemModelDao input) {
-                return childInvoice.getAccountId().equals(input.getChildAccountId());
+                return input.getType().equals(InvoiceItemType.PARENT_SUMMARY)
+                       && input.getChildAccountId().equals(childInvoiceModelDao.getAccountId());
             }
         });
 
+        if (parentInvoiceModelDao.getStatus().equals(InvoiceStatus.COMMITTED)) {
+            if (InvoiceModelDaoHelper.getBalance(parentInvoiceModelDao).compareTo(BigDecimal.ZERO) > 0) {
+
+                ItemAdjInvoiceItem adj = new ItemAdjInvoiceItem(UUIDs.randomUUID(),
+                                                                context.getCreatedDate(),
+                                                                parentSummaryInvoiceItem.getInvoiceId(),
+                                                                parentSummaryInvoiceItem.getAccountId(),
+                                                                clock.getUTCToday(),
+                                                                description,
+                                                                childInvoiceAdjustmentAmount,
+                                                                parentInvoiceModelDao.getCurrency(),
+                                                                parentSummaryInvoiceItem.getId());
+                parentInvoiceModelDao.addInvoiceItem(new InvoiceItemModelDao(adj));
+                invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(parentInvoiceModelDao), parentContext);
+            }
+
+            // ignore parent invoice adjustment if it's already paid.
+            return;
+        }
+
         // update item amount
-        BigDecimal newParentInvoiceItemAmount = childInvoiceAdjustmentAmount.add(parentInvoiceItemForChild.getAmount());
-        invoiceDao.updateInvoiceItemAmount(parentInvoiceItemForChild.getId(), newParentInvoiceItemAmount, parentContext);
+        BigDecimal newParentInvoiceItemAmount = childInvoiceAdjustmentAmount.add(parentSummaryInvoiceItem.getAmount());
+        invoiceDao.updateInvoiceItemAmount(parentSummaryInvoiceItem.getId(), newParentInvoiceItemAmount, parentContext);
     }
 
 }
