@@ -25,14 +25,9 @@ import org.killbill.clock.ClockUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-
-public class BillCycleDayCalculator {
+public abstract class BillCycleDayCalculator {
 
     private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
-
-    public BillCycleDayCalculator() {
-    }
 
     public static int calculateBcdForAlignment(final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final BillingAlignment alignment, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal) {
         int result = 0;
@@ -50,12 +45,11 @@ public class BillCycleDayCalculator {
         return result;
     }
 
-    @VisibleForTesting
-    static int calculateBcdFromSubscription(final SubscriptionBase subscription, final DateTimeZone accountTimeZone) {
+    private static int calculateBcdFromSubscription(final SubscriptionBase subscription, final DateTimeZone accountTimeZone) {
         final DateTime date = subscription.getDateOfFirstRecurringNonZeroCharge();
         final int bcdLocal = ClockUtil.toDateTime(date, accountTimeZone).getDayOfMonth();
-        log.info("Calculated BCD: subscriptionId='{}', subscriptionStartDate='{}', accountTimeZone='{}', bcd='{}'",
-                 subscription.getId(), date.toDateTimeISO(), accountTimeZone, bcdLocal);
+        log.debug("Calculated BCD: subscriptionId='{}', subscriptionStartDate='{}', accountTimeZone='{}', bcd='{}'",
+                  subscription.getId(), date.toDateTimeISO(), accountTimeZone, bcdLocal);
         return bcdLocal;
     }
 }

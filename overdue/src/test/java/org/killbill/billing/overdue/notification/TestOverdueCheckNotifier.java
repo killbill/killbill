@@ -53,7 +53,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public void processOverdueForAccount(final UUID accountId, final InternalCallContext context) {
+        public void processOverdueForAccount(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
             eventCount++;
             latestAccountId = accountId;
         }

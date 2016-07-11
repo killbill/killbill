@@ -20,6 +20,7 @@ package org.killbill.billing.overdue.wrapper;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
@@ -85,7 +86,7 @@ public class OverdueWrapper {
         this.accountApi = accountApi;
     }
 
-    public OverdueState refresh(final InternalCallContext context) throws OverdueException, OverdueApiException {
+    public OverdueState refresh(final DateTime effectiveDate, final InternalCallContext context) throws OverdueException, OverdueApiException {
         if (overdueStateSet.size() < 1) { // No configuration available
             return overdueStateSet.getClearState();
         }
@@ -94,7 +95,7 @@ public class OverdueWrapper {
         try {
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), overdueable.getId().toString(), MAX_LOCK_RETRIES);
 
-            return refreshWithLock(context);
+            return refreshWithLock(effectiveDate, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process overdue for accountId='{}'", overdueable.getId(), e);
         } finally {
@@ -105,14 +106,14 @@ public class OverdueWrapper {
         return null;
     }
 
-    private OverdueState refreshWithLock(final InternalCallContext context) throws OverdueException, OverdueApiException {
+    private OverdueState refreshWithLock(final DateTime effectiveDate, final InternalCallContext context) throws OverdueException, OverdueApiException {
         final BillingState billingState = billingState(context);
         final BlockingState blockingStateForService = api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context);
         final String previousOverdueStateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
         final OverdueState currentOverdueState = overdueStateSet.findState(previousOverdueStateName);
         final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
 
-        overdueStateApplicator.apply(overdueStateSet, billingState, overdueable, currentOverdueState, nextOverdueState, context);
+        overdueStateApplicator.apply(effectiveDate, overdueStateSet, billingState, overdueable, currentOverdueState, nextOverdueState, context);
 
         try {
             final List<Account> childrenAccounts = accountApi.getChildrenAccounts(overdueable.getId(), context);
@@ -133,7 +134,7 @@ public class OverdueWrapper {
                                                                             billingState.getIdOfEarliestUnpaidInvoice(),
                                                                             billingState.getResponseForLastFailedPayment(),
                                                                             billingState.getTags());
-                    overdueStateApplicator.apply(overdueStateSet, childBillingState, accountData, currentOverdueState, nextOverdueState, accountContext);
+                    overdueStateApplicator.apply(effectiveDate, overdueStateSet, childBillingState, accountData, currentOverdueState, nextOverdueState, accountContext);
                 }
             }
 
@@ -144,12 +145,12 @@ public class OverdueWrapper {
         return nextOverdueState;
     }
 
-    public void clear(final InternalCallContext context) throws OverdueException, OverdueApiException {
+    public void clear(final DateTime effectiveDate, final InternalCallContext context) throws OverdueException, OverdueApiException {
         GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), overdueable.getId().toString(), MAX_LOCK_RETRIES);
 
-            clearWithLock(context);
+            clearWithLock(effectiveDate, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to clear overdue for accountId='{}'", overdueable.getId(), e);
         } finally {
@@ -159,13 +160,13 @@ public class OverdueWrapper {
         }
     }
 
-    private void clearWithLock(final InternalCallContext context) throws OverdueException, OverdueApiException {
+    private void clearWithLock(final DateTime effectiveDate, final InternalCallContext context) throws OverdueException, OverdueApiException {
         final BlockingState blockingStateForService = api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context);
         final String previousOverdueStateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
         final OverdueState previousOverdueState = overdueStateSet.findState(previousOverdueStateName);
-        overdueStateApplicator.clear(overdueable, previousOverdueState, overdueStateSet.getClearState(), context);
 
         // TODO maguero: should we do the same as "refreshWithLock"?
+        overdueStateApplicator.clear(effectiveDate, overdueable, previousOverdueState, overdueStateSet.getClearState(), context);
     }
 
     public BillingState billingState(final InternalTenantContext context) throws OverdueException {

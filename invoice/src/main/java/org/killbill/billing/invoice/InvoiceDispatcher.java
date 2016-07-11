@@ -460,14 +460,14 @@ public class InvoiceDispatcher {
     private void logInvoiceWithItems(final ImmutableAccountData account, final Invoice invoice, final LocalDate targetDate, final Set<UUID> adjustedUniqueOtherInvoiceId, final boolean isRealInvoiceWithItems) {
         final StringBuilder tmp = new StringBuilder();
         if (isRealInvoiceWithItems) {
-            tmp.append(String.format("Generated invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':\n", invoice.getId(), invoice.getNumberOfItems(), account.getId(), targetDate));
+            tmp.append(String.format("Generated invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':", invoice.getId(), invoice.getNumberOfItems(), account.getId(), targetDate));
         } else {
             final String adjustedInvoices = JOINER_COMMA.join(adjustedUniqueOtherInvoiceId.toArray(new UUID[adjustedUniqueOtherInvoiceId.size()]));
             tmp.append(String.format("Adjusting existing invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':\n",
                                      adjustedInvoices, invoice.getNumberOfItems(), account.getId(), targetDate));
         }
         for (final InvoiceItem item : invoice.getInvoiceItems()) {
-            tmp.append(String.format("\t item = %s\n", item));
+            tmp.append(String.format("\n\t item = %s", item));
         }
         log.info(tmp.toString());
     }

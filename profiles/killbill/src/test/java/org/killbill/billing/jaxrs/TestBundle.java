@@ -78,9 +78,17 @@ public class TestBundle extends TestJaxrsBase {
     public void testBundleNonExistent() throws Exception {
         final Account accountJson = createAccount();
 
-        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID()));
-        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892").isEmpty());
-        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId()).isEmpty());
+        // ID
+        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID(), requestOptions));
+
+        // External Key
+        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID().toString(), requestOptions));
+        Assert.assertTrue(killBillClient.getAllBundlesForExternalKey(UUID.randomUUID().toString(), requestOptions).isEmpty());
+
+        // Account Id
+        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892", requestOptions).isEmpty());
+        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), requestOptions).isEmpty());
+
     }
 
     @Test(groups = "slow", description = "Can handle non existent account")
@@ -102,7 +110,7 @@ public class TestBundle extends TestJaxrsBase {
         final Subscription entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), bundleExternalKey, productName,
                                                                        ProductCategory.BASE, term, true);
 
-        final Bundle originalBundle = killBillClient.getBundle(bundleExternalKey);
+        final Bundle originalBundle = killBillClient.getBundle(bundleExternalKey, requestOptions);
         assertEquals(originalBundle.getAccountId(), accountJson.getAccountId());
         assertEquals(originalBundle.getExternalKey(), bundleExternalKey);
 
@@ -113,10 +121,18 @@ public class TestBundle extends TestJaxrsBase {
         bundle.setBundleId(entitlementJsonNoEvents.getBundleId());
         assertEquals(killBillClient.transferBundle(bundle, createdBy, reason, comment).getAccountId(), newAccount.getAccountId());
 
-        final Bundle newBundle = killBillClient.getBundle(bundleExternalKey);
+        final Bundle newBundle = killBillClient.getBundle(bundleExternalKey, requestOptions);
         assertNotEquals(newBundle.getBundleId(), originalBundle.getBundleId());
         assertEquals(newBundle.getExternalKey(), originalBundle.getExternalKey());
         assertEquals(newBundle.getAccountId(), newAccount.getAccountId());
+
+
+        final Bundles bundles = killBillClient.getAllBundlesForExternalKey(bundleExternalKey, requestOptions);
+        assertEquals(bundles.size(), 2);
+        assertEquals(bundles.get(0).getBundleId(), originalBundle.getBundleId());
+        assertEquals(bundles.get(0).getSubscriptions().get(0).getState(), EntitlementState.CANCELLED);
+        assertEquals(bundles.get(1).getBundleId(), newBundle.getBundleId());
+        assertEquals(bundles.get(1).getSubscriptions().get(0).getState(), EntitlementState.ACTIVE);
     }
 
     @Test(groups = "slow", description = "Block a bundle")

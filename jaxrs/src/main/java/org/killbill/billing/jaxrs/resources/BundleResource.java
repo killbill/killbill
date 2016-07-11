@@ -17,6 +17,7 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,7 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.wordnik.swagger.annotations.Api;
@@ -132,14 +134,26 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a bundle by external key", response = BundleJson.class)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Bundle not found")})
     public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
+                                   @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
 
         final TenantContext tenantContext = this.context.createContext(request);
 
-        final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, tenantContext);
-        final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
-        final BundleJson json = new BundleJson(bundle, account.getCurrency(), null);
-        return Response.status(Status.OK).entity(json).build();
+        final List<SubscriptionBundle> bundles;
+        if (includedDeleted) {
+            bundles = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, tenantContext);
+        } else {
+            final SubscriptionBundle activeBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, tenantContext);
+            bundles = ImmutableList.of(activeBundle);
+        }
+
+        final List<BundleJson> result = new ArrayList<BundleJson>(bundles.size());
+        for (final SubscriptionBundle bundle : bundles) {
+            final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
+            final BundleJson json = new BundleJson(bundle, account.getCurrency(), null);
+            result.add(json);
+        }
+        return Response.status(Status.OK).entity(result).build();
     }
 
     @TimedResource
@@ -333,7 +347,7 @@ public class BundleResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final String bundleIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
         final UUID bundleId = UUID.fromString(bundleIdString);
         final TenantContext tenantContext = context.createContext(request);

@@ -34,6 +34,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceItemGeneratorLogger;
 import org.killbill.billing.invoice.usage.ContiguousIntervalConsumableInArrear.ConsumableInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
@@ -101,36 +102,35 @@ public class SubscriptionConsumableInArrear {
         }));
     }
 
-
     /**
      * Based on billing events, (@code existingUsage} and targetDate, figure out what remains to be billed.
      *
      * @param existingUsage the existing on disk usage items.
-     * @return
      * @throws CatalogApiException
      */
-    public SubscriptionConsumableInArrearItemsAndNextNotificationDate computeMissingUsageInvoiceItems(final List<InvoiceItem> existingUsage) throws CatalogApiException {
-
+    public SubscriptionConsumableInArrearItemsAndNextNotificationDate computeMissingUsageInvoiceItems(final List<InvoiceItem> existingUsage, final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger) throws CatalogApiException {
         final SubscriptionConsumableInArrearItemsAndNextNotificationDate result = new SubscriptionConsumableInArrearItemsAndNextNotificationDate();
         final List<ContiguousIntervalConsumableInArrear> billingEventTransitionTimePeriods = computeInArrearUsageInterval();
-        for (ContiguousIntervalConsumableInArrear usageInterval : billingEventTransitionTimePeriods) {
-            result.addConsumableInArrearItemsAndNextNotificationDate(usageInterval.getUsage().getName(), usageInterval.computeMissingItemsAndNextNotificationDate(existingUsage));
+        for (final ContiguousIntervalConsumableInArrear usageInterval : billingEventTransitionTimePeriods) {
+            final ConsumableInArrearItemsAndNextNotificationDate newItemsAndDate = usageInterval.computeMissingItemsAndNextNotificationDate(existingUsage);
+
+            // For debugging purposes
+            invoiceItemGeneratorLogger.append(usageInterval, newItemsAndDate.getInvoiceItems());
+
+            result.addConsumableInArrearItemsAndNextNotificationDate(usageInterval.getUsage().getName(), newItemsAndDate);
         }
         return result;
     }
 
-
-
     @VisibleForTesting
     List<ContiguousIntervalConsumableInArrear> computeInArrearUsageInterval() {
-
         final List<ContiguousIntervalConsumableInArrear> usageIntervals = Lists.newLinkedList();
 
         final Map<String, ContiguousIntervalConsumableInArrear> inFlightInArrearUsageIntervals = new HashMap<String, ContiguousIntervalConsumableInArrear>();
 
         final Set<String> allSeenUsage = new HashSet<String>();
 
-        for (BillingEvent event : subscriptionBillingEvents) {
+        for (final BillingEvent event : subscriptionBillingEvents) {
 
             // Extract all in arrear /consumable usage section for that billing event.
             final List<Usage> usages = findConsumableInArrearUsages(event);
@@ -144,7 +144,7 @@ public class SubscriptionConsumableInArrear {
             // All inflight usage interval are candidates to be closed unless we see that current billing event referencing the same usage section.
             final Set<String> toBeClosed = new HashSet<String>(allSeenUsage);
 
-            for (Usage usage : usages) {
+            for (final Usage usage : usages) {
 
                 // Add inflight usage interval if non existent
                 ContiguousIntervalConsumableInArrear existingInterval = inFlightInArrearUsageIntervals.get(usage.getName());
@@ -159,7 +159,7 @@ public class SubscriptionConsumableInArrear {
             }
 
             // Build the usage interval that are no longer referenced
-            for (String usageName : toBeClosed) {
+            for (final String usageName : toBeClosed) {
                 final ContiguousIntervalConsumableInArrear interval = inFlightInArrearUsageIntervals.remove(usageName);
                 if (interval != null) {
                     interval.addBillingEvent(event);
@@ -167,20 +167,20 @@ public class SubscriptionConsumableInArrear {
                 }
             }
         }
-        for (String usageName : inFlightInArrearUsageIntervals.keySet()) {
+        for (final String usageName : inFlightInArrearUsageIntervals.keySet()) {
             usageIntervals.add(inFlightInArrearUsageIntervals.get(usageName).build(false));
         }
         inFlightInArrearUsageIntervals.clear();
         return usageIntervals;
     }
 
-    List<Usage> findConsumableInArrearUsages(final BillingEvent event) {
-        if (event.getUsages().size() == 0) {
+    private List<Usage> findConsumableInArrearUsages(final BillingEvent event) {
+        if (event.getUsages().isEmpty()) {
             return Collections.emptyList();
         }
 
         final List<Usage> result = Lists.newArrayList();
-        for (Usage usage : event.getUsages()) {
+        for (final Usage usage : event.getUsages()) {
             if (usage.getUsageType() != UsageType.CONSUMABLE ||
                 usage.getBillingMode() != BillingMode.IN_ARREAR) {
                 continue;
@@ -191,6 +191,7 @@ public class SubscriptionConsumableInArrear {
     }
 
     public class SubscriptionConsumableInArrearItemsAndNextNotificationDate {
+
         private List<InvoiceItem> invoiceItems;
         private Map<String, LocalDate> perUsageNotificationDates;
 
@@ -224,5 +225,4 @@ public class SubscriptionConsumableInArrear {
             return perUsageNotificationDates != null ? perUsageNotificationDates : ImmutableMap.<String, LocalDate>of();
         }
     }
-
 }

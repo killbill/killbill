@@ -182,8 +182,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
 
     private boolean onPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final InternalCallContext context) {
         try {
-            final DateTime now = clock.getUTCNow();
-            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, context);
+            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, readyPhaseEvent.getEffectiveDate(), context);
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                                               PhaseEventData.createNextPhaseEvent(subscription.getId(),
                                                                                   nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
