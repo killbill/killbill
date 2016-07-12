@@ -120,24 +120,23 @@ public class OverdueWrapper {
             if (childrenAccounts != null) {
                 for (Account account : childrenAccounts) {
 
-                    // TODO maguero: should we check "childAccount.isPaymentDelegatedToParent()"?
+                    if (account.isPaymentDelegatedToParent()) {
+                        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(account.getId(), context);
+                        final InternalCallContext accountContext = internalCallContextFactory.createInternalCallContext(internalTenantContext.getAccountRecordId(), context);
 
-                    final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(account.getId(), context);
-                    final InternalCallContext accountContext = internalCallContextFactory.createInternalCallContext(internalTenantContext.getAccountRecordId(), context);
-
-                    final ImmutableAccountData accountData = accountApi.getImmutableAccountDataById(account.getId(), accountContext);
-                    final BillingState childBillingState = new BillingState(accountData.getId(),
-                                                                            billingState.getNumberOfUnpaidInvoices(),
-                                                                            billingState.getBalanceOfUnpaidInvoices(),
-                                                                            billingState.getDateOfEarliestUnpaidInvoice(),
-                                                                            accountData.getTimeZone(),
-                                                                            billingState.getIdOfEarliestUnpaidInvoice(),
-                                                                            billingState.getResponseForLastFailedPayment(),
-                                                                            billingState.getTags());
-                    overdueStateApplicator.apply(effectiveDate, overdueStateSet, childBillingState, accountData, currentOverdueState, nextOverdueState, accountContext);
+                        final ImmutableAccountData accountData = accountApi.getImmutableAccountDataById(account.getId(), accountContext);
+                        final BillingState childBillingState = new BillingState(accountData.getId(),
+                                                                                billingState.getNumberOfUnpaidInvoices(),
+                                                                                billingState.getBalanceOfUnpaidInvoices(),
+                                                                                billingState.getDateOfEarliestUnpaidInvoice(),
+                                                                                accountData.getTimeZone(),
+                                                                                billingState.getIdOfEarliestUnpaidInvoice(),
+                                                                                billingState.getResponseForLastFailedPayment(),
+                                                                                billingState.getTags());
+                        overdueStateApplicator.apply(effectiveDate, overdueStateSet, childBillingState, accountData, currentOverdueState, nextOverdueState, accountContext);
+                    }
                 }
             }
-
         } catch (Exception e) {
             log.error("Error loading child accounts from account " + overdueable.getId());
         }
@@ -167,6 +166,23 @@ public class OverdueWrapper {
 
         // TODO maguero: should we do the same as "refreshWithLock"?
         overdueStateApplicator.clear(effectiveDate, overdueable, previousOverdueState, overdueStateSet.getClearState(), context);
+
+        try {
+            final List<Account> childrenAccounts = accountApi.getChildrenAccounts(overdueable.getId(), context);
+            if (childrenAccounts != null) {
+                for (Account account : childrenAccounts) {
+                    if (account.isPaymentDelegatedToParent()) {
+                        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(account.getId(), context);
+                        final InternalCallContext accountContext = internalCallContextFactory.createInternalCallContext(internalTenantContext.getAccountRecordId(), context);
+
+                        final ImmutableAccountData accountData = accountApi.getImmutableAccountDataById(account.getId(), accountContext);
+                        overdueStateApplicator.clear(effectiveDate, accountData, previousOverdueState, overdueStateSet.getClearState(), accountContext);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error loading child accounts from account " + overdueable.getId());
+        }
     }
 
     public BillingState billingState(final InternalTenantContext context) throws OverdueException {
