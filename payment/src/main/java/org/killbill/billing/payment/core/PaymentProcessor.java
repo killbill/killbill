@@ -186,7 +186,7 @@ public class PaymentProcessor extends ProcessorBase {
                                 overridePluginResult, PLUGIN_PROPERTIES, callContext, internalCallContext);
     }
 
-    public List<Payment> getAccountPayments(final UUID accountId, final boolean withPluginInfo, final TenantContext context, final InternalTenantContext tenantContext) throws PaymentApiException {
+    public List<Payment> getAccountPayments(final UUID accountId, final boolean withPluginInfo, final boolean withAttempts, final TenantContext context, final InternalTenantContext tenantContext) throws PaymentApiException {
         final List<PaymentModelDao> paymentsModelDao = paymentDao.getPaymentsForAccount(accountId, tenantContext);
         final List<PaymentTransactionModelDao> transactionsModelDao = paymentDao.getTransactionsForAccount(accountId, tenantContext);
 
@@ -213,7 +213,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                         pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, context);
                                                                                                     }
 
-                                                                                                    return toPayment(paymentModelDao, transactionsModelDao, pluginInfo, false, tenantContext);
+                                                                                                    return toPayment(paymentModelDao, transactionsModelDao, pluginInfo, withAttempts, tenantContext);
                                                                                                 }
                                                                                             });
 
@@ -229,16 +229,16 @@ public class PaymentProcessor extends ProcessorBase {
         return toPayment(paymentModelDao, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
     }
 
-    public Payment getPaymentByExternalKey(final String paymentExternalKey, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+    public Payment getPaymentByExternalKey(final String paymentExternalKey, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentModelDao paymentModelDao = paymentDao.getPaymentByExternalKey(paymentExternalKey, internalTenantContext);
         if (paymentModelDao == null) {
             return null;
         }
-        return toPayment(paymentModelDao, withPluginInfo, false, properties, tenantContext, internalTenantContext);
+        return toPayment(paymentModelDao, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
     }
 
-    public Pagination<Payment> getPayments(final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties,
-                                           final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
+    public Pagination<Payment> getPayments(final Long offset, final Long limit, final boolean withPluginInfo, final boolean withAttempts,
+                                           final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
         return getEntityPaginationFromPlugins(true,
                                               getAvailablePlugins(),
                                               offset,
@@ -246,13 +246,13 @@ public class PaymentProcessor extends ProcessorBase {
                                               new EntityPaginationBuilder<Payment, PaymentApiException>() {
                                                   @Override
                                                   public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      return getPayments(offset, limit, pluginName, withPluginInfo, properties, tenantContext, internalTenantContext);
+                                                      return getPayments(offset, limit, pluginName, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
                                                   }
                                               }
                                              );
     }
 
-    public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+    public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentPluginApi pluginApi = withPluginInfo ? getPaymentPluginApi(pluginName) : null;
 
         return getEntityPagination(limit,
@@ -273,7 +273,7 @@ public class PaymentProcessor extends ProcessorBase {
                                   );
     }
 
-    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
+    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
         if (withPluginInfo) {
             return getEntityPaginationFromPlugins(false,
                                                   getAvailablePlugins(),
@@ -282,7 +282,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                   new EntityPaginationBuilder<Payment, PaymentApiException>() {
                                                       @Override
                                                       public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                          return searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, properties, tenantContext, internalTenantContext);
+                                                          return searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
                                                       }
                                                   }
                                                  );
@@ -309,7 +309,8 @@ public class PaymentProcessor extends ProcessorBase {
         }
     }
 
-    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+    public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo,
+                                              final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
 
         return getEntityPagination(limit,
@@ -574,7 +575,6 @@ public class PaymentProcessor extends ProcessorBase {
     // Used in bulk get API (getAccountPayments)
     private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Collection<PaymentTransactionModelDao> curTransactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final boolean withAttempts, final InternalTenantContext internalTenantContext) {
         final Collection<PaymentTransactionModelDao> transactionsModelDao = new LinkedList<PaymentTransactionModelDao>(curTransactionsModelDao);
-        final PaymentModelDao newPaymentModelDao = invokeJanitor(curPaymentModelDao, transactionsModelDao, pluginTransactions, internalTenantContext);
 
         final Collection<PaymentTransaction> transactions = new LinkedList<PaymentTransaction>();
         for (final PaymentTransactionModelDao newPaymentTransactionModelDao : transactionsModelDao) {
