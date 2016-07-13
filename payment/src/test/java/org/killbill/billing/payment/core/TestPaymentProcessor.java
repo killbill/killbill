@@ -199,6 +199,29 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
         paymentBusListener.verify(1, account.getId(), paymentId, TEN, TransactionStatus.SUCCESS);
     }
 
+    @Test(groups = "slow")
+    public void testNotifyPendingPaymentOfStateChanged() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToPending = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+
+        // Create Pending AUTH
+        final String authorizationKey = UUID.randomUUID().toString();
+        final Payment authorization = paymentProcessor.createAuthorization(true, null, account, null, null, TEN, CURRENCY, paymentExternalKey, authorizationKey,
+                                                                           SHOULD_LOCK_ACCOUNT, pluginPropertiesToDriveTransationToPending, callContext, internalCallContext);
+        final PaymentTransaction pendingTransaction = authorization.getTransactions().get(0);
+        Assert.assertEquals(pendingTransaction.getTransactionStatus(), TransactionStatus.PENDING);
+
+        final UUID transactionId = pendingTransaction.getId();
+        // Override plugin status of payment
+        mockPaymentProviderPlugin.overridePaymentPluginStatus(authorization.getId(), transactionId, PaymentPluginStatus.PROCESSED);
+        // Notify that state has changed, after changing the state in the plugin
+        final Payment updatedPayment = paymentProcessor.notifyPendingPaymentOfStateChanged(account, transactionId, true, callContext, internalCallContext);
+        verifyPayment(updatedPayment, paymentExternalKey, TEN, ZERO, ZERO, 1);
+
+        final PaymentTransaction updatedTransaction = updatedPayment.getTransactions().get(0);
+        Assert.assertEquals(updatedTransaction.getTransactionStatus(), TransactionStatus.SUCCESS);
+    }
+
     private void verifyPayment(final Payment payment, final String paymentExternalKey,
                                final BigDecimal authAmount, final BigDecimal capturedAmount, final BigDecimal refundedAmount,
                                final int transactionsSize) {
