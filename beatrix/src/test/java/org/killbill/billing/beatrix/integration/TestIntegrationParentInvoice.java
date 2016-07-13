@@ -438,15 +438,14 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         insertInvoiceItemAdjustmentToChildInvoice(childAccount, childInvoice, BigDecimal.TEN);
         // make sure there is time difference between item adjustments.
         // Otherwise they are created with same id and createdDate and it's used to sort them.
-        Thread.sleep(1000);
+        clock.addDeltaFromReality(1000);
 
         // issue a $5 adj when invoice is unpaid
         insertInvoiceItemAdjustmentToChildInvoice(childAccount, childInvoice, BigDecimal.valueOf(5));
-        Thread.sleep(1000);
+        clock.addDeltaFromReality(1000);
 
         // issue a $10 adj when invoice is unpaid
         insertInvoiceItemAdjustmentToChildInvoice(childAccount, childInvoice, BigDecimal.TEN);
-        Thread.sleep(1000);
 
         // move one day
         busHandler.pushExpectedEvents();
@@ -455,7 +454,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         // issue a $5 adj when invoice is unpaid
         insertInvoiceItemAdjustmentToChildInvoice(childAccount, childInvoice, BigDecimal.valueOf(5));
-        Thread.sleep(1000);
+        clock.addDeltaFromReality(1000);
 
         // issue a $10 adj when invoice is unpaid
         insertInvoiceItemAdjustmentToChildInvoice(childAccount, childInvoice, BigDecimal.TEN);
@@ -481,10 +480,15 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getBalance().compareTo(BigDecimal.valueOf(209.95)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(2).getAmount().compareTo(BigDecimal.valueOf(-5)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(3).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(3).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(4).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(4).getAmount().compareTo(BigDecimal.valueOf(-5)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(5).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(5).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
 
         // reload parent invoice
         parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);
@@ -494,10 +498,15 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(209.95)), 0);
         assertEquals(parentInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
         assertEquals(parentInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
         assertEquals(parentInvoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(2).getAmount().compareTo(BigDecimal.valueOf(-5)), 0);
         assertEquals(parentInvoice.getInvoiceItems().get(3).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(3).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
         assertEquals(parentInvoice.getInvoiceItems().get(4).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(4).getAmount().compareTo(BigDecimal.valueOf(-5)), 0);
         assertEquals(parentInvoice.getInvoiceItems().get(5).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(5).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
 
     }
 

@@ -786,6 +786,9 @@ public class InvoiceDispatcher {
 
         if (parentInvoiceModelDao == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_MISSING_PARENT_INVOICE, childInvoiceModelDao.getId());
+        } else if (InvoiceModelDaoHelper.getBalance(parentInvoiceModelDao).compareTo(BigDecimal.ZERO) == 0) {
+            // ignore item adjustments for paid invoices.
+            return;
         }
 
         final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(account.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));
@@ -809,34 +812,27 @@ public class InvoiceDispatcher {
         });
 
         // find last ITEM_ADJ invoice added in child invoice
-        Comparator<InvoiceItemModelDao> cmp = new Comparator<InvoiceItemModelDao>() {
+        final InvoiceItemModelDao lastChildInvoiceItemAdjustment = Collections.max(Lists.newArrayList(childAdjustments), new Comparator<InvoiceItemModelDao>() {
             @Override
             public int compare(InvoiceItemModelDao o1, InvoiceItemModelDao o2) {
                 return o1.getCreatedDate().compareTo(o2.getCreatedDate());
             }
-        };
-        final InvoiceItemModelDao lastChildInvoiceItemAdjustment = Collections.max(Lists.newArrayList(childAdjustments), cmp);
+        });
 
         final BigDecimal childInvoiceAdjustmentAmount = lastChildInvoiceItemAdjustment.getAmount();
 
         if (parentInvoiceModelDao.getStatus().equals(InvoiceStatus.COMMITTED)) {
-            if (InvoiceModelDaoHelper.getBalance(parentInvoiceModelDao).compareTo(BigDecimal.ZERO) > 0) {
-
-                ItemAdjInvoiceItem adj = new ItemAdjInvoiceItem(UUIDs.randomUUID(),
-                                                                lastChildInvoiceItemAdjustment.getCreatedDate(),
-                                                                parentSummaryInvoiceItem.getInvoiceId(),
-                                                                parentSummaryInvoiceItem.getAccountId(),
-                                                                lastChildInvoiceItemAdjustment.getStartDate(),
-                                                                description,
-                                                                childInvoiceAdjustmentAmount,
-                                                                parentInvoiceModelDao.getCurrency(),
-                                                                parentSummaryInvoiceItem.getId());
-                parentInvoiceModelDao.addInvoiceItem(new InvoiceItemModelDao(adj));
-                invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(parentInvoiceModelDao), parentContext);
-                return;
-            }
-
-            // ignore parent invoice adjustment if it's already paid.
+            ItemAdjInvoiceItem adj = new ItemAdjInvoiceItem(UUIDs.randomUUID(),
+                                                            lastChildInvoiceItemAdjustment.getCreatedDate(),
+                                                            parentSummaryInvoiceItem.getInvoiceId(),
+                                                            parentSummaryInvoiceItem.getAccountId(),
+                                                            lastChildInvoiceItemAdjustment.getStartDate(),
+                                                            description,
+                                                            childInvoiceAdjustmentAmount,
+                                                            parentInvoiceModelDao.getCurrency(),
+                                                            parentSummaryInvoiceItem.getId());
+            parentInvoiceModelDao.addInvoiceItem(new InvoiceItemModelDao(adj));
+            invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(parentInvoiceModelDao), parentContext);
             return;
         }
 
