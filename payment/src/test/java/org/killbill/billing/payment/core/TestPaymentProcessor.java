@@ -87,7 +87,7 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         mockPaymentProviderPlugin.overridePaymentPluginStatus(paymentId, authorization.getTransactions().get(0).getId(), PaymentPluginStatus.PROCESSED);
 
-        final List<Payment> payments = paymentProcessor.getAccountPayments(account.getId(), true, callContext, internalCallContext);
+        final List<Payment> payments = paymentProcessor.getAccountPayments(account.getId(), true, false, callContext, internalCallContext);
         Assert.assertEquals(payments.size(), 1);
         verifyPayment(payments.get(0), paymentExternalKey, TEN, ZERO, ZERO, 1);
         verifyPaymentTransaction(payments.get(0).getTransactions().get(0), authorizationKey, TransactionType.AUTHORIZE, TEN, paymentId);

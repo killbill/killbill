@@ -416,7 +416,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Callable<List<Payment>> paymentsCallable = new Callable<List<Payment>>() {
             @Override
             public List<Payment> call() throws Exception {
-                return paymentApi.getAccountPayments(accountId, false, ImmutableList.<PluginProperty>of(), tenantContext);
+                return paymentApi.getAccountPayments(accountId, false, false, ImmutableList.<PluginProperty>of(), tenantContext);
             }
         };
         final Callable<AccountAuditLogs> auditsCallable = new Callable<AccountAuditLogs>() {
@@ -633,13 +633,14 @@ public class AccountResource extends JaxRsResourceBase {
     public Response getInvoicePayments(@PathParam("accountId") final String accountIdStr,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                       @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                        @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID accountId = UUID.fromString(accountIdStr);
         final TenantContext tenantContext = context.createContext(request);
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), withPluginInfo, pluginProperties, tenantContext);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePaymentsByAccount(accountId, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
         final List<InvoicePaymentJson> result = new ArrayList<InvoicePaymentJson>(payments.size());
@@ -847,11 +848,12 @@ public class AccountResource extends JaxRsResourceBase {
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                 @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final UUID accountId = UUID.fromString(accountIdStr);
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
-        final List<Payment> payments = paymentApi.getAccountPayments(accountId, withPluginInfo, pluginProperties, tenantContext);
+        final List<Payment> payments = paymentApi.getAccountPayments(accountId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
         final List<PaymentJson> result = ImmutableList.copyOf(Iterables.transform(payments, new Function<Payment, PaymentJson>() {
             @Override
@@ -945,7 +947,7 @@ public class AccountResource extends JaxRsResourceBase {
         //
         final UUID paymentMethodId;
         if (paymentId != null) {
-            final Payment initialPayment = paymentApi.getPayment(paymentId, false, pluginProperties, callContext);
+            final Payment initialPayment = paymentApi.getPayment(paymentId, false, false, pluginProperties, callContext);
             final PaymentTransaction pendingTransaction = lookupPendingTransaction(initialPayment,
                                                                                    json != null ? json.getTransactionId() : null,
                                                                                    json != null ? json.getTransactionExternalKey() : null,

@@ -95,7 +95,7 @@ public class TransactionResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID paymentId = UUID.fromString(json.getPaymentId());
-        final Payment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
         final boolean success = TransactionStatus.SUCCESS.name().equals(json.getStatus());

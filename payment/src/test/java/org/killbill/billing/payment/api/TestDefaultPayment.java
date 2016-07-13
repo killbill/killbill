@@ -220,6 +220,7 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
                                   UUID.randomUUID(),
                                   1,
                                   UUID.randomUUID().toString(),
-                                  transactions);
+                                  transactions,
+                                  null);
     }
 }
