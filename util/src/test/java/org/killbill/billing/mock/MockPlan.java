@@ -53,7 +53,7 @@ public class MockPlan implements Plan {
     }
 
     @Override
-    public PriceList getPriceList() {
+    public String getPriceListName() {
         throw new UnsupportedOperationException();
     }
 

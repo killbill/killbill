@@ -374,7 +374,7 @@ public class EventsStreamBuilder {
             productCategory = lastActiveProduct.getCategory();
             final PlanPhase lastActivePlanPhase = subscription.getLastActivePhase();
             billingPeriod = lastActivePlanPhase.getRecurring() != null ? lastActivePlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
-            priceListName = subscription.getLastActivePlan().getPriceList().getName();
+            priceListName = subscription.getLastActivePlan().getPriceListName();
             phaseType = subscription.getLastActivePhase().getPhaseType();
         }
         return new PlanPhaseSpecifier(lastActiveProductName,
