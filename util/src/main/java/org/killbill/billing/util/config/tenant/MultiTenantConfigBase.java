@@ -24,10 +24,10 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.skife.config.Config;
 import org.skife.config.Separator;
 import org.skife.config.TimeSpan;
-import org.weakref.jmx.internal.guava.base.Function;
-import org.weakref.jmx.internal.guava.collect.Iterables;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public abstract class MultiTenantConfigBase {
 
