@@ -162,7 +162,8 @@ public class PaymentProcessor extends ProcessorBase {
 
         final OperationResult overridePluginResult = isSuccess ? OperationResult.SUCCESS : OperationResult.FAILURE;
 
-        return performOperation(true, null, transactionModelDao.getTransactionType(), account, null, transactionModelDao.getPaymentId(),
+        final boolean runJanitor = false;
+        return performOperation(true, runJanitor, null, transactionModelDao.getTransactionType(), account, null, transactionModelDao.getPaymentId(),
                                 transactionModelDao.getId(), transactionModelDao.getAmount(), transactionModelDao.getCurrency(), null, transactionModelDao.getTransactionExternalKey(), true,
                                 overridePluginResult, PLUGIN_PROPERTIES, callContext, internalCallContext);
     }
@@ -347,6 +348,29 @@ public class PaymentProcessor extends ProcessorBase {
                                      final Iterable<PluginProperty> properties,
                                      final CallContext callContext,
                                      final InternalCallContext internalCallContext) throws PaymentApiException {
+        boolean runJanitor = true;
+        return performOperation(isApiPayment, runJanitor, attemptId, transactionType, account, paymentMethodId, paymentId,
+                                transactionId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
+                                shouldLockAccountAndDispatch, overridePluginOperationResult, properties, callContext, internalCallContext);
+    }
+
+    private Payment performOperation(final boolean isApiPayment,
+                                     final boolean runJanitor,
+                                     @Nullable final UUID attemptId,
+                                     final TransactionType transactionType,
+                                     final Account account,
+                                     @Nullable final UUID paymentMethodId,
+                                     @Nullable final UUID paymentId,
+                                     @Nullable final UUID transactionId,
+                                     @Nullable final BigDecimal amount,
+                                     @Nullable final Currency currency,
+                                     @Nullable final String paymentExternalKey,
+                                     @Nullable final String paymentTransactionExternalKey,
+                                     final boolean shouldLockAccountAndDispatch,
+                                     @Nullable final OperationResult overridePluginOperationResult,
+                                     final Iterable<PluginProperty> properties,
+                                     final CallContext callContext,
+                                     final InternalCallContext internalCallContext) throws PaymentApiException {
         final PaymentStateContext paymentStateContext = paymentAutomatonRunner.buildPaymentStateContext(isApiPayment,
                                                                                                         transactionType,
                                                                                                         account,
@@ -382,9 +406,11 @@ public class PaymentProcessor extends ProcessorBase {
                 if (transactionToComplete != null) {
                     // For completion calls, always invoke the Janitor first to get the latest state. The state machine will then
                     // prevent disallowed transitions in case the state couldn't be fixed (or if it's already in a final state).
-                    final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), internalCallContext);
-                    final List<PaymentTransactionInfoPlugin> pluginTransactions = getPaymentTransactionInfoPlugins(plugin, paymentModelDao, properties, callContext);
-                    paymentModelDao = invokeJanitor(paymentModelDao, paymentTransactionsForCurrentPayment, pluginTransactions, internalCallContext);
+                    if (runJanitor) {
+                        final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), internalCallContext);
+                        final List<PaymentTransactionInfoPlugin> pluginTransactions = getPaymentTransactionInfoPlugins(plugin, paymentModelDao, properties, callContext);
+                        paymentModelDao = invokeJanitor(paymentModelDao, paymentTransactionsForCurrentPayment, pluginTransactions, internalCallContext);
+                    }
 
                     final UUID transactionToCompleteId = transactionToComplete.getId();
                     transactionToComplete = Iterables.<PaymentTransactionModelDao>find(paymentTransactionsForCurrentPayment,
