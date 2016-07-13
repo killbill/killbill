@@ -267,7 +267,7 @@ public class PaymentProcessor extends ProcessorBase {
                                        @Override
                                        public Payment apply(final PaymentModelDao paymentModelDao) {
                                            final List<PaymentTransactionInfoPlugin> pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, tenantContext);
-                                           return toPayment(paymentModelDao.getId(), pluginInfo, internalTenantContext);
+                                           return toPayment(paymentModelDao.getId(), pluginInfo, withAttempts, internalTenantContext);
                                        }
                                    }
                                   );
@@ -298,7 +298,7 @@ public class PaymentProcessor extends ProcessorBase {
                                            new Function<PaymentModelDao, Payment>() {
                                                @Override
                                                public Payment apply(final PaymentModelDao paymentModelDao) {
-                                                   return toPayment(paymentModelDao.getId(), null, internalTenantContext);
+                                                   return toPayment(paymentModelDao.getId(), null, withAttempts, internalTenantContext);
                                                }
                                            }
                                           );
@@ -341,7 +341,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                cachedPaymentTransactions.add(pluginTransaction);
                                                return null;
                                            } else {
-                                               final Payment result = toPayment(pluginTransaction.getKbPaymentId(), withPluginInfo ? ImmutableList.<PaymentTransactionInfoPlugin>copyOf(cachedPaymentTransactions) : ImmutableList.<PaymentTransactionInfoPlugin>of(), internalTenantContext);
+                                               final Payment result = toPayment(pluginTransaction.getKbPaymentId(), withPluginInfo ? ImmutableList.<PaymentTransactionInfoPlugin>copyOf(cachedPaymentTransactions) : ImmutableList.<PaymentTransactionInfoPlugin>of(), withAttempts, internalTenantContext);
                                                cachedPaymentTransactions.clear();
                                                cachedPaymentTransactions.add(pluginTransaction);
                                                return result;
@@ -512,14 +512,14 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     // Used in bulk get APIs (getPayments / searchPayments)
-    private Payment toPayment(final UUID paymentId, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final InternalTenantContext tenantContext) {
+    private Payment toPayment(final UUID paymentId, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final boolean withAttempts, final InternalTenantContext tenantContext) {
         final PaymentModelDao paymentModelDao = paymentDao.getPayment(paymentId, tenantContext);
         if (paymentModelDao == null) {
             log.warn("Unable to find payment id " + paymentId);
             return null;
         }
 
-        return toPayment(paymentModelDao, pluginTransactions, false, tenantContext);
+        return toPayment(paymentModelDao, pluginTransactions, withAttempts, tenantContext);
     }
 
     // Used in single get APIs (getPayment / getPaymentByExternalKey)
@@ -575,6 +575,7 @@ public class PaymentProcessor extends ProcessorBase {
     // Used in bulk get API (getAccountPayments)
     private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Collection<PaymentTransactionModelDao> curTransactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final boolean withAttempts, final InternalTenantContext internalTenantContext) {
         final Collection<PaymentTransactionModelDao> transactionsModelDao = new LinkedList<PaymentTransactionModelDao>(curTransactionsModelDao);
+        invokeJanitor(curPaymentModelDao, transactionsModelDao, pluginTransactions, internalTenantContext);
 
         final Collection<PaymentTransaction> transactions = new LinkedList<PaymentTransaction>();
         for (final PaymentTransactionModelDao newPaymentTransactionModelDao : transactionsModelDao) {
