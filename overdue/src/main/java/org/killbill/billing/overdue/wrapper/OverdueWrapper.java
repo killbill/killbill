@@ -107,6 +107,7 @@ public class OverdueWrapper {
         final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
 
         overdueStateApplicator.apply(effectiveDate, overdueStateSet, billingState, overdueable, currentOverdueState, nextOverdueState, context);
+
         return nextOverdueState;
     }
 
@@ -129,10 +130,12 @@ public class OverdueWrapper {
         final BlockingState blockingStateForService = api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context);
         final String previousOverdueStateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
         final OverdueState previousOverdueState = overdueStateSet.findState(previousOverdueStateName);
+        overdueStateApplicator.clear(effectiveDate, overdueable, previousOverdueState, overdueStateSet.getClearState(), context);
     }
 
     public BillingState billingState(final InternalCallContext context) throws OverdueException {
         if ((overdueable.getParentAccountId() != null) && (overdueable.isPaymentDelegatedToParent())) {
+            // calculate billing state from parent account
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(overdueable.getParentAccountId(), context);
             final InternalCallContext parentAccountContext = internalCallContextFactory.createInternalCallContext(internalTenantContext.getAccountRecordId(), context);
             return billingStateCalcuator.calculateBillingState(overdueable, parentAccountContext);
