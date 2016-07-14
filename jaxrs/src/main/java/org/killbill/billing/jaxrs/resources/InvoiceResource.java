@@ -576,6 +576,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     public Response getPayments(@PathParam("invoiceId") final String invoiceId,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, InvoiceApiException {
 
         final TenantContext tenantContext = context.createContext(request);
@@ -594,7 +595,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final List<Payment> payments = new ArrayList<Payment>();
         for (final UUID paymentId : invoicePaymentIds) {
-            final Payment payment = paymentApi.getPayment(paymentId, withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
+            final Payment payment = paymentApi.getPayment(paymentId, withPluginInfo, withAttempts, ImmutableList.<PluginProperty>of(), tenantContext);
             payments.add(payment);
         }
 

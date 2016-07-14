@@ -258,7 +258,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertTrue(accountBalance3.compareTo(BigDecimal.ZERO) == 0);
 
 
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(payments.size(), 1);
 
         final Payment payment = payments.get(0);
@@ -320,7 +320,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         invoiceUserApi.commitInvoice(draftInvoiceItems.get(0).getInvoiceId(), callContext);
         assertListenerStatus();
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, null, callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, null, callContext);
         assertEquals(accountPayments.size(), 3);
         assertEquals(accountPayments.get(2).getPurchasedAmount(), new BigDecimal("10.00"));
     }
