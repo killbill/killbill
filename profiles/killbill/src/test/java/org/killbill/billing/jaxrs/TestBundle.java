@@ -37,11 +37,14 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestBundle extends TestJaxrsBase {
 
@@ -129,10 +132,20 @@ public class TestBundle extends TestJaxrsBase {
 
         final Bundles bundles = killBillClient.getAllBundlesForExternalKey(bundleExternalKey, requestOptions);
         assertEquals(bundles.size(), 2);
-        assertEquals(bundles.get(0).getBundleId(), originalBundle.getBundleId());
-        assertEquals(bundles.get(0).getSubscriptions().get(0).getState(), EntitlementState.CANCELLED);
-        assertEquals(bundles.get(1).getBundleId(), newBundle.getBundleId());
-        assertEquals(bundles.get(1).getSubscriptions().get(0).getState(), EntitlementState.ACTIVE);
+        assertSubscriptionState(bundles, originalBundle.getBundleId(), EntitlementState.CANCELLED);
+        assertSubscriptionState(bundles, newBundle.getBundleId(), EntitlementState.ACTIVE);
+    }
+
+    private void assertSubscriptionState(final Bundles bundles, final UUID bundleId, final EntitlementState expectedState) {
+        final Bundle bundle = Iterables.tryFind(bundles, new Predicate<Bundle>() {
+            @Override
+            public boolean apply(final Bundle input) {
+                return input.getBundleId().equals(bundleId);
+            }
+        }).orNull();
+
+        assertNotNull(bundle);
+        assertEquals(bundle.getSubscriptions().get(0).getState(), expectedState);
     }
 
     @Test(groups = "slow", description = "Block a bundle")
