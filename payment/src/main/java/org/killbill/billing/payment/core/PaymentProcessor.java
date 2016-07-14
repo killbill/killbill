@@ -436,11 +436,6 @@ public class PaymentProcessor extends ProcessorBase {
             currentStateName = paymentModelDao.getLastSuccessStateName();
         }
 
-        // Sanity: no paymentMethodId was passed through API and account does not have a default paymentMethodId
-        if (paymentStateContext.getPaymentMethodId() == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, paymentStateContext.getAccount().getId());
-        }
-
         final UUID nonNullPaymentId = paymentAutomatonRunner.run(paymentStateContext, daoHelper, currentStateName, transactionType);
 
         return getPayment(nonNullPaymentId, true, properties, callContext, internalCallContext);

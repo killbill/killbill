@@ -177,18 +177,18 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
         boolean failed = false;
         try {
-            paymentApi.deletePaymentMethod(account, account.getPaymentMethodId(), false, PLUGIN_PROPERTIES, callContext);
+            paymentApi.deletePaymentMethod(account, account.getPaymentMethodId(), false, false, PLUGIN_PROPERTIES, callContext);
         } catch (final PaymentApiException e) {
             failed = true;
         }
         assertTrue(failed);
 
-        paymentApi.deletePaymentMethod(account, initDefaultMethod.getId(), true, PLUGIN_PROPERTIES, callContext);
+        paymentApi.deletePaymentMethod(account, initDefaultMethod.getId(), true, false, PLUGIN_PROPERTIES, callContext);
         methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         // NOW retry with default payment method with special flag
-        paymentApi.deletePaymentMethod(account, account.getPaymentMethodId(), true, PLUGIN_PROPERTIES, callContext);
+        paymentApi.deletePaymentMethod(account, account.getPaymentMethodId(), true, false, PLUGIN_PROPERTIES, callContext);
 
         methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 0);
