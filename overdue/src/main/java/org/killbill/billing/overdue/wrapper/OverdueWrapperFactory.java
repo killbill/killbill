@@ -77,13 +77,13 @@ public class OverdueWrapperFactory {
     }
 
     public OverdueWrapper createOverdueWrapperFor(final ImmutableAccountData blockable, final InternalTenantContext context) throws OverdueException {
-        return new OverdueWrapper(blockable, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator, internalCallContextFactory, accountApi);
+        return new OverdueWrapper(blockable, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator, internalCallContextFactory);
     }
 
     public OverdueWrapper createOverdueWrapperFor(final UUID id, final InternalTenantContext context) throws OverdueException {
         try {
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(id, context);
-            return new OverdueWrapper(account, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator, internalCallContextFactory, accountApi);
+            return new OverdueWrapper(account, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator, internalCallContextFactory);
         } catch (final AccountApiException e) {
             throw new OverdueException(e);
         }
