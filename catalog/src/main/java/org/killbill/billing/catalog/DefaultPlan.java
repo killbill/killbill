@@ -78,7 +78,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlElement(required = false)
     private Integer plansAllowedInBundle = 1;
 
-    private PriceList priceList;
+    private String priceListName;
 
     public DefaultPlan() {
         initialPhases = new DefaultPlanPhase[0];
@@ -94,7 +94,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             initialPhases[i] = newPhase;
         }
         this.finalPhase = new DefaultPlanPhase(this, in.getFinalPhase(), overrides[overrides.length - 1]);
-        this.priceList = in.getPriceList();
+        this.priceListName = in.getPriceListName();
     }
 
     @Override
@@ -113,8 +113,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     }
 
     @Override
-    public PriceList getPriceList() {
-        return priceList;
+    public String getPriceListName() {
+        return priceListName;
     }
 
     @Override
@@ -185,7 +185,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                 p.initialize(catalog, sourceURI);
             }
         }
-        this.priceList = findPriceListForPlan(catalog);
+        this.priceListName = findPriceListForPlan(catalog);
     }
 
     @Override
@@ -223,8 +223,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return this;
     }
 
-    public DefaultPlan setPriceList(final DefaultPriceList priceList) {
-        this.priceList = priceList;
+    public DefaultPlan setPriceListName(final String priceListName) {
+        this.priceListName = priceListName;
         return this;
     }
 
@@ -313,11 +313,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                + plansAllowedInBundle + "]";
     }
 
-    private DefaultPriceList findPriceListForPlan(final StandaloneCatalog catalog) {
+    private String findPriceListForPlan(final StandaloneCatalog catalog) {
         for (PriceList cur : catalog.getPriceLists().getAllPriceLists()) {
             for (Plan p : cur.getPlans()) {
                 if (p.getName().equals(name)) {
-                    return (DefaultPriceList) cur;
+                    return ((DefaultPriceList) cur).getName();
                 }
             }
         }

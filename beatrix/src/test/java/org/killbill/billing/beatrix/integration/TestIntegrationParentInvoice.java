@@ -315,9 +315,9 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
     }
 
-    // Scenario 1: Follow up Invoice Item Adjustment on unpaid invoice
+    // Scenario 1.a: Follow up Invoice Item Adjustment on unpaid DRAFT invoice
     @Test(groups = "slow")
-    public void testParentInvoiceItemAdjustmentUnpaidInvoice() throws Exception {
+    public void testParentInvoiceItemAdjustmentUnpaidDraftInvoice() throws Exception {
 
         final int billingDay = 14;
         final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
@@ -383,6 +383,140 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertTrue(parentInvoice.isParentInvoice());
         assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(239.95)), 0);
 
+    }
+
+    // Scenario 1.b: Follow up Invoice Item Adjustment on unpaid COMMITTED invoice
+    @Test(groups = "slow")
+    public void testParentInvoiceItemAdjustmentUnpaidCommittedInvoice() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2014, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // ---- trial period ----
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected because balance is 0
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // ---- recurring period ----
+        // Move through time and verify new parent Invoice. No payments are expected.
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addDays(29);
+        assertListenerStatus();
+
+        paymentPlugin.makeNextPaymentFailWithError();
+
+        // move one day to have parent invoice paid
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        // get last child invoice
+        Invoice childInvoice = childInvoices.get(1);
+        assertEquals(childInvoice.getNumberOfItems(), 1);
+
+        // Second Parent invoice over Recurring period
+        assertEquals(parentInvoices.size(), 2);
+
+        Invoice parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(249.95)), 0);
+
+        // issue a $10 adj when invoice is unpaid
+        insertInvoiceItemAdjustmentToChildInvoice(childAccount, childInvoice, BigDecimal.TEN);
+        // make sure there is time difference between item adjustments.
+        // Otherwise they are created with same id and createdDate and it's used to sort them.
+        clock.addDeltaFromReality(1000);
+
+        // issue a $5 adj when invoice is unpaid
+        insertInvoiceItemAdjustmentToChildInvoice(childAccount, childInvoice, BigDecimal.valueOf(5));
+        clock.addDeltaFromReality(1000);
+
+        // issue a $10 adj when invoice is unpaid
+        insertInvoiceItemAdjustmentToChildInvoice(childAccount, childInvoice, BigDecimal.TEN);
+
+        // move one day
+        busHandler.pushExpectedEvents();
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // issue a $5 adj when invoice is unpaid
+        insertInvoiceItemAdjustmentToChildInvoice(childAccount, childInvoice, BigDecimal.valueOf(5));
+        clock.addDeltaFromReality(1000);
+
+        // issue a $10 adj when invoice is unpaid
+        insertInvoiceItemAdjustmentToChildInvoice(childAccount, childInvoice, BigDecimal.TEN);
+
+        // expected child invoice
+        // RECURRING : $ 249.95
+        // ITEM_ADJ : $ -10
+        // ITEM_ADJ : $ -5
+        // ITEM_ADJ : $ -10
+        // ITEM_ADJ : $ -5
+        // ITEM_ADJ : $ -10
+
+        // expected parent invoice
+        // PARENT_SUMMARY : $ 249.95
+        // ITEM_ADJ : $ -10
+        // ITEM_ADJ : $ -5
+        // ITEM_ADJ : $ -10
+        // ITEM_ADJ : $ -5
+        // ITEM_ADJ : $ -10
+
+        childInvoice = invoiceUserApi.getInvoice(childInvoice.getId(), callContext);
+        assertEquals(childInvoice.getNumberOfItems(), 6);
+        assertEquals(childInvoice.getBalance().compareTo(BigDecimal.valueOf(209.95)), 0);
+        assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
+        assertEquals(childInvoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(2).getAmount().compareTo(BigDecimal.valueOf(-5)), 0);
+        assertEquals(childInvoice.getInvoiceItems().get(3).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(3).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
+        assertEquals(childInvoice.getInvoiceItems().get(4).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(4).getAmount().compareTo(BigDecimal.valueOf(-5)), 0);
+        assertEquals(childInvoice.getInvoiceItems().get(5).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(5).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
+
+        // reload parent invoice
+        parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);
+        assertEquals(parentInvoice.getNumberOfItems(), 6);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(209.95)), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
+        assertEquals(parentInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(2).getAmount().compareTo(BigDecimal.valueOf(-5)), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(3).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(3).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(4).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(4).getAmount().compareTo(BigDecimal.valueOf(-5)), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(5).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(parentInvoice.getInvoiceItems().get(5).getAmount().compareTo(BigDecimal.valueOf(-10)), 0);
+
+    }
+
+    private void insertInvoiceItemAdjustmentToChildInvoice(final Account childAccount, final Invoice childInvoice, BigDecimal amount) throws InvoiceApiException {
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.insertInvoiceItemAdjustment(childAccount.getId(), childInvoice.getId(),
+                                                   childInvoice.getInvoiceItems().get(0).getId(),
+                                                   clock.getToday(childAccount.getTimeZone()), amount,
+                                                   childAccount.getCurrency(), "test adjustment", callContext);
+        assertListenerStatus();
     }
 
     // Scenario 2: Follow up Invoice Item Adjustment on PAID invoice

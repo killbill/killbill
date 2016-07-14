@@ -23,10 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -149,9 +147,9 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
         }
     }
 
-    private Plan findPlan(final PlanRequestWrapper wrapper,
-                          final DateTime requestedDate,
-                          final DateTime subscriptionStartDate)
+    private CatalogPlanEntry findCatalogPlanEntry(final PlanRequestWrapper wrapper,
+                                                  final DateTime requestedDate,
+                                                  final DateTime subscriptionStartDate)
             throws CatalogApiException {
         final List<StandaloneCatalogWithPriceOverride> catalogs = versionsBeforeDate(requestedDate.toDate());
         if (catalogs.isEmpty()) {
@@ -174,12 +172,12 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
 
             final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(c.getEffectiveDate());
             if (!subscriptionStartDate.isBefore(catalogEffectiveDate)) { // Its a new subscription this plan always applies
-                return plan;
+                return new CatalogPlanEntry(c, plan);
             } else { //Its an existing subscription
                 if (plan.getEffectiveDateForExistingSubscriptions() != null) { //if it is null any change to this does not apply to existing subscriptions
                     final DateTime existingSubscriptionDate = CatalogDateHelper.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptions());
                     if (requestedDate.isAfter(existingSubscriptionDate)) { // this plan is now applicable to existing subs
-                        return plan;
+                        return new CatalogPlanEntry(c, plan);
                     }
                 }
             }
@@ -187,6 +185,26 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
 
         throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
     }
+
+    private static class CatalogPlanEntry {
+
+        private final StaticCatalog staticCatalog;
+        private final Plan plan;
+
+        public CatalogPlanEntry(final StaticCatalog staticCatalog, final Plan plan) {
+            this.staticCatalog = staticCatalog;
+            this.plan = plan;
+        }
+
+        public StaticCatalog getStaticCatalog() {
+            return staticCatalog;
+        }
+
+        public Plan getPlan() {
+            return plan;
+        }
+    }
+
 
     public Clock getClock() {
         return clock;
@@ -284,7 +302,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
                          final DateTime requestedDate,
                          final DateTime subscriptionStartDate)
             throws CatalogApiException {
-        return findPlan(new PlanRequestWrapper(name), requestedDate, subscriptionStartDate);
+        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(name), requestedDate, subscriptionStartDate);
+        return entry.getPlan();
     }
 
     @Override
@@ -295,7 +314,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
                                  final DateTime requestedDate,
                                  final DateTime subscriptionStartDate)
             throws CatalogApiException {
-        return findPlan(new PlanRequestWrapper(productName, term, priceListName, overrides), requestedDate, subscriptionStartDate);
+        final CatalogPlanEntry entry =  findCatalogPlanEntry(new PlanRequestWrapper(productName, term, priceListName, overrides), requestedDate, subscriptionStartDate);
+        return entry.getPlan();
     }
 
     //
@@ -320,13 +340,23 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     }
 
     //
-    // Find a price list
+    // Find a price list associated to a given subscription
     //
     @Override
+    public PriceList findPriceListForPlan(final String planName,
+                                          final DateTime requestedDate,
+                                          final DateTime subscriptionStartDate)
+            throws CatalogApiException {
+        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(planName), requestedDate, subscriptionStartDate);
+        return entry.getStaticCatalog().findCurrentPricelist(entry.getPlan().getPriceListName());
+    }
+
+
     public PriceList findPriceList(final String name, final DateTime requestedDate)
             throws CatalogApiException {
         return versionForDate(requestedDate).findCurrentPriceList(name);
     }
+
 
     //
     // Rules
