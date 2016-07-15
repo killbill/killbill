@@ -42,8 +42,8 @@ import org.killbill.commons.metrics.TimedResource;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 

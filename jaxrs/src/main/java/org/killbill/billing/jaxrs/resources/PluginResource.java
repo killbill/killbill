@@ -70,7 +70,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.sun.jersey.api.representation.Form;
-import com.wordnik.swagger.annotations.Api;
+import io.swagger.annotations.Api;
 
 @Singleton
 @Path(JaxrsResource.PLUGINS_PATH + "{subResources:.*}")

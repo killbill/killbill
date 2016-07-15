@@ -43,13 +43,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
-import com.wordnik.swagger.jaxrs.config.BeanConfig;
+import io.swagger.jaxrs.config.BeanConfig;
 
 public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
 
     private static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
 
-    private static final String SWAGGER_PATH = "api-docs";
+    // See io.swagger.jaxrs.listing.ApiListingResource
+    private static final String SWAGGER_PATH = "swagger.*";
 
     private KillbillEventHandler killbilleventHandler;
 
@@ -61,7 +62,7 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
                                                                              .addJaxrsResource("org.killbill.billing.jaxrs.mappers")
                                                                              .addJaxrsResource("org.killbill.billing.jaxrs.resources")
                                                                              // Swagger integration
-                                                                             .addJaxrsResource("com.wordnik.swagger.jersey.listing");
+                                                                             .addJaxrsResource("io.swagger.jaxrs.listing");
 
         // Set the per-thread RequestData first
         builder.addJerseyFilter(RequestDataFilter.class.getName());
@@ -144,7 +145,6 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         beanConfig.setContact("killbilling-users@googlegroups.com");
         beanConfig.setLicense("Apache License, Version 2.0");
         beanConfig.setLicenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html");
-        beanConfig.setBasePath(config.getBaseUrl());
         beanConfig.setScan(true);
     }
 }
