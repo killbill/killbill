@@ -18,11 +18,14 @@
 
 package org.killbill.billing.overdue.listener;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.ControlTagCreationInternalEvent;
@@ -66,6 +69,7 @@ public class OverdueListener {
     private final OverduePoster asyncPoster;
     private final OverdueConfigCache overdueConfigCache;
     private final NonEntityDao nonEntityDao;
+    private final AccountInternalApi accountApi;
 
     @Inject
     public OverdueListener(final NonEntityDao nonEntityDao,
@@ -73,13 +77,15 @@ public class OverdueListener {
                            final Clock clock,
                            @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED)  final OverduePoster asyncPoster,
                            final OverdueConfigCache overdueConfigCache,
-                           final InternalCallContextFactory internalCallContextFactory) {
+                           final InternalCallContextFactory internalCallContextFactory,
+                           final AccountInternalApi accountApi) {
         this.nonEntityDao = nonEntityDao;
         this.clock = clock;
         this.asyncPoster = asyncPoster;
         this.overdueConfigCache = overdueConfigCache;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.accountApi = accountApi;
     }
 
     @AllowConcurrentEvents
@@ -139,8 +145,26 @@ public class OverdueListener {
         final boolean shouldInsertNotification = shouldInsertNotification(callContext);
 
         if (shouldInsertNotification) {
-            final OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(accountId, action);
+            OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(accountId, action);
             asyncPoster.insertOverdueNotification(accountId, clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, callContext);
+
+            try {
+                final List<Account> childrenAccounts = accountApi.getChildrenAccounts(accountId, callContext);
+                if (childrenAccounts != null) {
+                    for (Account childAccount : childrenAccounts) {
+
+                        if (childAccount.isPaymentDelegatedToParent()) {
+                            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(childAccount.getId(), callContext);
+                            final InternalCallContext accountContext = internalCallContextFactory.createInternalCallContext(internalTenantContext.getAccountRecordId(), callContext);
+                            notificationKey = new OverdueAsyncBusNotificationKey(childAccount.getId(), action);
+                            asyncPoster.insertOverdueNotification(childAccount.getId(), clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, accountContext);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Error loading child accounts from account " + accountId);
+            }
+
         }
     }
 
