@@ -71,10 +71,19 @@ import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCancelEntitlement;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logChangePlan;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUncancelEntitlement;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUpdateBCD;
+
 public class DefaultEntitlement extends EntityBase implements Entitlement {
+
+    private Logger log = LoggerFactory.getLogger(DefaultEntitlement.class);
 
     private final SecurityApi securityApi;
     protected final EventsStreamBuilder eventsStreamBuilder;
@@ -287,6 +296,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public Entitlement cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
+        logCancelEntitlement(log, this, null, null, entitlementPolicy, null);
+
         // Get the latest state from disk - required to have the latest CTD
         refresh(callContext);
 
@@ -296,6 +307,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement cancelEntitlementWithDate(@Nullable final LocalDate entitlementEffectiveDate, final boolean overrideBillingEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        logCancelEntitlement(log, this, entitlementEffectiveDate, overrideBillingEffectiveDate, null, null);
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
 
@@ -360,6 +373,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public void uncancelEntitlement(final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
+        logUncancelEntitlement(log, this);
+
         checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
 
         // Get the latest state from disk
@@ -422,6 +437,9 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement cancelEntitlementWithPolicyOverrideBillingPolicy(final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        logCancelEntitlement(log, this, null, null, entitlementPolicy, billingPolicy);
+
         // Get the latest state from disk - required to have the latest CTD
         refresh(callContext);
 
@@ -432,6 +450,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     // See also EntitlementInternalApi#cancel for the bulk API
     @Override
     public Entitlement cancelEntitlementWithDateOverrideBillingPolicy(@Nullable final LocalDate entitlementEffectiveDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        logCancelEntitlement(log, this, entitlementEffectiveDate, null, null, billingPolicy);
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
 
@@ -508,6 +528,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public Entitlement changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
+        logChangePlan(log, this, productName, billingPeriod, priceList, overrides, null, null);
+
         checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
 
         // Get the latest state from disk
@@ -569,6 +591,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public Entitlement changePlanWithDate(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, @Nullable final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        logChangePlan(log, this, productName, billingPeriod, priceList, overrides, effectiveDate, null);
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
 
@@ -634,6 +658,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public Entitlement changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final List<PlanPhasePriceOverride> overrides, final LocalDate entitlementEffectiveDate, final BillingActionPolicy actionPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
+        logChangePlan(log, this, productName, billingPeriod, priceList, overrides, entitlementEffectiveDate, actionPolicy);
+
         checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
 
         // Get the latest state from disk
@@ -696,6 +722,9 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     @Override
     public void updateBCD(final int newBCD, @Nullable final LocalDate effectiveFromDate, final CallContext callContext) throws EntitlementApiException {
+
+        logUpdateBCD(log, this, newBCD, effectiveFromDate);
+
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
         try {
             subscriptionInternalApi.updateBCD(getId(), newBCD, effectiveFromDate, context);

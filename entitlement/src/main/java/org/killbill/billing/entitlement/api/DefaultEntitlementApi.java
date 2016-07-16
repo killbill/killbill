@@ -47,6 +47,7 @@ import org.killbill.billing.entitlement.block.BlockingChecker;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
 import org.killbill.billing.entitlement.engine.core.EventsStreamBuilder;
+import org.killbill.billing.entitlement.logging.EntitlementLoggingHelper;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
 import org.killbill.billing.junction.DefaultBlockingState;
@@ -71,7 +72,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCreateEntitlement;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCreateEntitlementWithAOs;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logPauseResumeEntitlement;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logTransferEntitlement;
+
 public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements EntitlementApi {
+
 
     public static final String ENT_STATE_START = "ENT_STARTED";
     public static final String ENT_STATE_BLOCKED = "ENT_BLOCKED";
@@ -120,6 +127,8 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final List<PlanPhasePriceOverride> overrides,
                                              @Nullable final LocalDate entitlementEffectiveDate, @Nullable  LocalDate billingEffectiveDate, final boolean isMigrated,
                                              final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        logCreateEntitlement(log, null, planPhaseSpecifier, overrides, entitlementEffectiveDate, billingEffectiveDate);
 
         final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(planPhaseSpecifier, overrides);
         final List<EntitlementSpecifier> entitlementSpecifierList = new ArrayList<EntitlementSpecifier>();
@@ -178,6 +187,9 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                        @Nullable LocalDate entitlementEffectiveDate,  @Nullable LocalDate billingEffectiveDate, final boolean isMigrated,
                                                        final Iterable<PluginProperty> properties, final CallContext callContext)
             throws EntitlementApiException {
+
+        logCreateEntitlementWithAOs(log, externalKey, entitlementSpecifiers, entitlementEffectiveDate, billingEffectiveDate);
+
 
         final EntitlementSpecifier baseSpecifier = Iterables.tryFind(entitlementSpecifiers, new Predicate<EntitlementSpecifier>() {
             @Override
@@ -246,6 +258,9 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     @Override
     public Entitlement addEntitlement(final UUID bundleId, final PlanPhaseSpecifier planPhaseSpecifier, final List<PlanPhasePriceOverride> overrides, @Nullable final LocalDate entitlementEffectiveDate, @Nullable final LocalDate billingEffectiveDate,
             final boolean isMigrated, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+
+        logCreateEntitlement(log, bundleId, planPhaseSpecifier, overrides, entitlementEffectiveDate, billingEffectiveDate);
 
         final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(planPhaseSpecifier, overrides);
         final List<EntitlementSpecifier> entitlementSpecifierList = new ArrayList<EntitlementSpecifier>();
@@ -372,12 +387,16 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     @Override
     public void pause(final UUID bundleId, final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
 
+        logPauseResumeEntitlement(log, "Pause", bundleId, localEffectiveDate);
+
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
         super.pause(bundleId, localEffectiveDate, properties, contextWithValidAccountRecordId);
     }
 
     @Override
     public void resume(final UUID bundleId, final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
+
+        logPauseResumeEntitlement(log, "Resume", bundleId, localEffectiveDate);
 
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
         super.resume(bundleId, localEffectiveDate, properties, contextWithValidAccountRecordId);
@@ -391,6 +410,8 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
     @Override
     public UUID transferEntitlementsOverrideBillingPolicy(final UUID sourceAccountId, final UUID destAccountId, final String externalKey, @Nullable final LocalDate effectiveDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
+
+        logTransferEntitlement(log, sourceAccountId, destAccountId, externalKey, effectiveDate, billingPolicy);
 
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.TRANSFER_BUNDLE,
                                                                                sourceAccountId,

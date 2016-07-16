@@ -71,6 +71,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logAddBlockingState;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUpdateExternalKey;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultSubscriptionApi implements SubscriptionApi {
@@ -103,7 +105,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     private final Clock clock;
     private final EntitlementPluginExecution pluginExecution;
     private final BlockingStateDao blockingStateDao;
-
 
     @Inject
     public DefaultSubscriptionApi(final AccountInternalApi accountApi,
@@ -262,6 +263,9 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public void updateExternalKey(final UUID bundleId, final String newExternalKey, final CallContext callContext) throws EntitlementApiException {
+
+        logUpdateExternalKey(log, bundleId, newExternalKey);
+
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(callContext);
 
         final SubscriptionBaseBundle bundle;
@@ -303,6 +307,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public void addBlockingState(final BlockingState inputBlockingState, @Nullable final LocalDate inputEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        logAddBlockingState(log, inputBlockingState, inputEffectiveDate);
 
         // This is in no way an exhaustive arg validation, but to to ensure plugin would not hijack private entitlement state or service name
         if (inputBlockingState.getService() == null || inputBlockingState.getService().equals(EntitlementService.ENTITLEMENT_SERVICE_NAME)) {
@@ -392,7 +398,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, internalTenantContextWithValidAccountRecordId);
 
-            final Iterable<BlockingState> filteredByTypes = typeFilter != null  && !typeFilter.isEmpty() ?
+            final Iterable<BlockingState> filteredByTypes = typeFilter != null && !typeFilter.isEmpty() ?
                                                             Iterables.filter(allBlockingStates, new Predicate<BlockingState>() {
                                                                 @Override
                                                                 public boolean apply(final BlockingState input) {
