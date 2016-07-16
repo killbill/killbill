@@ -29,6 +29,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.account.api.DefaultAccountEmail;
 import org.killbill.billing.account.api.DefaultMutableAccountData;
 import org.killbill.billing.account.api.ImmutableAccountData;
@@ -173,5 +174,16 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
         args[0] = loaderCallback;
         final ObjectType irrelevant = null;
         return new CacheLoaderArgument(irrelevant, args, context);
+    }
+
+    @Override
+    public List<Account> getChildrenAccounts(final UUID parentAccountId, final InternalCallContext context) throws AccountApiException {
+        return ImmutableList.<Account>copyOf(Collections2.transform(accountDao.getAccountsByParentId(parentAccountId, context),
+                                                                    new Function<AccountModelDao, Account>() {
+                                                                        @Override
+                                                                        public Account apply(final AccountModelDao input) {
+                                                                            return new DefaultAccount(input);
+                                                                        }
+                                                                    }));
     }
 }

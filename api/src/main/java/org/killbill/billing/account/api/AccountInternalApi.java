@@ -43,4 +43,6 @@ public interface AccountInternalApi extends ImmutableAccountInternalApi {
     void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws AccountApiException;
 
     UUID getByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
+
+    List<Account> getChildrenAccounts(UUID parentAccountId, InternalCallContext context) throws AccountApiException;
 }
