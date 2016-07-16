@@ -41,7 +41,7 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiModelProperty;
 
 public class SubscriptionJson extends JsonBase {
 
@@ -63,9 +63,11 @@ public class SubscriptionJson extends JsonBase {
     private final String phaseType;
     @ApiModelProperty(required = true)
     private final String priceList;
-    @ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementState")
+    //@ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementState")
+    @ApiModelProperty(dataType = "string", allowableValues = "PENDING,ACTIVE,BLOCKED,CANCELLED")
     private final String state;
-    @ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType")
+    //@ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType")
+    @ApiModelProperty(dataType = "string", allowableValues = "NATIVE,MIGRATED,TRANSFERRED")
     private final String sourceType;
     private final LocalDate cancelledDate;
     private final LocalDate chargedThroughDate;

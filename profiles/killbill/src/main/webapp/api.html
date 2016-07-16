@@ -1,7 +1,9 @@
 <!--
   ~ Copyright 2010-2013 Ning, Inc.
+  ~ Copyright 2014-2016 Groupon, Inc
+  ~ Copyright 2014-2016 The Billing Project, LLC
   ~
-  ~ Ning licenses this file to you under the Apache License, version 2.0
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
   ~ (the "License"); you may not use this file except in compliance with the
   ~ License.  You may obtain a copy of the License at:
   ~
@@ -17,90 +19,83 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Kill Bill APIs</title>
-  <link href='//fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/>
-  <link href='//fonts.googleapis.com/css?family=Roboto:400,700' rel='stylesheet' type='text/css'/>
+  <link rel="icon" href="images/favicon.ico" />
+  <link href='css/typography.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='css/reset.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='css/reset.css' media='print' rel='stylesheet' type='text/css'/>
-  <link href='css/screen.css' media='print' rel='stylesheet' type='text/css'/>
+  <link href='css/print.css' media='print' rel='stylesheet' type='text/css'/>
   <link href='css/killbill-swagger.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='css/killbill-swagger.css' media='print' rel='stylesheet' type='text/css'/>
-  <script type="text/javascript" src="lib/shred.bundle.js"></script>
+
+  <script src='lib/object-assign-pollyfill.js' type='text/javascript'></script>
   <script src='lib/jquery-1.8.0.min.js' type='text/javascript'></script>
   <script src='lib/jquery.slideto.min.js' type='text/javascript'></script>
   <script src='lib/jquery.wiggle.min.js' type='text/javascript'></script>
   <script src='lib/jquery.ba-bbq.min.js' type='text/javascript'></script>
-  <script src='lib/handlebars-1.0.0.js' type='text/javascript'></script>
-  <script src='lib/underscore-min.js' type='text/javascript'></script>
+  <script src='lib/handlebars-2.0.0.js' type='text/javascript'></script>
+  <script src='lib/js-yaml.min.js' type='text/javascript'></script>
+  <script src='lib/lodash.min.js' type='text/javascript'></script>
   <script src='lib/backbone-min.js' type='text/javascript'></script>
-  <script src='lib/swagger.js' type='text/javascript'></script>
-  <script src='lib/swagger-client.js' type='text/javascript'></script>
   <script src='lib/swagger-ui.min.js' type='text/javascript'></script>
-  <script src='lib/highlight.7.3.pack.js' type='text/javascript'></script>
-
-  <!-- enabling this will enable oauth2 implicit scope support -->
+  <script src='lib/highlight.9.1.0.pack.js' type='text/javascript'></script>
+  <script src='lib/highlight.9.1.0.pack_extended.js' type='text/javascript'></script>
+  <script src='lib/jsoneditor.min.js' type='text/javascript'></script>
+  <script src='lib/marked.js' type='text/javascript'></script>
   <script src='lib/swagger-oauth.js' type='text/javascript'></script>
+
   <script type="text/javascript">
     $(function () {
-      var url = window.location.href.replace(/(.*)(\/[^\/]*?)$/, '$1/api-docs')
+      var url = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname.replace(/(.*)(\/[^\/]*?)$/, '$1/swagger.json')
+
+      hljs.configure({
+        highlightSizeThreshold: 5000
+      });
+
+      // Pre load translate...
+      if(window.SwaggerTranslator) {
+        window.SwaggerTranslator.translate();
+      }
       window.swaggerUi = new SwaggerUi({
-        url: (url || "http://127.0.0.1:8080/api-docs"),
+        url: url,
         dom_id: "swagger-ui-container",
-        supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
+        supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
         onComplete: function(swaggerApi, swaggerUi){
-          log("Loaded SwaggerUI");
           if(typeof initOAuth == "function") {
-            /*
             initOAuth({
               clientId: "your-client-id",
+              clientSecret: "your-client-secret-if-required",
               realm: "your-realms",
-              appName: "your-app-name"
+              appName: "your-app-name",
+              scopeSeparator: ",",
+              additionalQueryStringParams: {}
             });
-            */
           }
-          $('pre code').each(function(i, e) {
-            hljs.highlightBlock(e)
-          });
+
+          if(window.SwaggerTranslator) {
+            window.SwaggerTranslator.translate();
+          }
+
+          $("input.parameter[name|='X-Killbill-CreatedBy']").val('Swagger');
         },
         onFailure: function(data) {
-          log("Unable to Load SwaggerUI");
+          log("Unable to Load SwaggerUI: " + data);
         },
         docExpansion: "none",
-        sorter : "alpha"
-      });
-
-      function addApiKeyAuthorization() {
-        var key = $('#input_apiKey')[0].value;
-        log("key: " + key);
-        if(key && key.trim() != "") {
-            log("added key " + key);
-            window.authorizations.add("api_key", new ApiKeyAuthorization("api_key", key, "query"));
-        }
-      }
-
-      $('#input_apiKey').change(function() {
-        addApiKeyAuthorization();
-      });
-
-      // if you have an apiKey you would like to pre-populate on the page for demonstration purposes...
-      /*
-        var apiKey = "myApiKeyXXXX123456789";
-        $('#input_apiKey').val(apiKey);
-        addApiKeyAuthorization();
-      */
-
-      $.each(["#input_kb_apiKey", "#input_kb_apiSecret", "#input_kb_username", "#input_kb_password"], function(idx, selector_id) {
-        $(selector_id).change(function() {
-          setHeaders();
-        });
+        apisSorter: "alpha",
+        operationsSorter: "alpha",
+        jsonEditor: false,
+        defaultModelRendering: 'schema',
+        showRequestHeaders: true
       });
 
       function setHeader(header, value) {
         if (value && value.trim() != "") {
           log("Setting header " + header + " to " + value);
-          window.authorizations.remove(header);
-          window.authorizations.add(header, new ApiKeyAuthorization(header, value, "header"));
+          window.swaggerUi.api.clientAuthorizations.remove(header);
+          window.swaggerUi.api.clientAuthorizations.add(header, new SwaggerClient.ApiKeyAuthorization(header, value, "header"));
         }
       }
 
@@ -110,9 +105,22 @@
         setHeader("Authorization", "Basic " + btoa(($("#input_kb_username")[0].value || "admin") + ":" + ($("#input_kb_password")[0].value || "password")));
       }
 
-      setHeaders();
+      $.each(["#input_kb_apiKey", "#input_kb_apiSecret", "#input_kb_username", "#input_kb_password"], function(idx, selector_id) {
+        $(selector_id).change(function() {
+          setHeaders();
+        });
+      });
+
 
       window.swaggerUi.load();
+
+      setHeaders();
+
+      function log() {
+        if ('console' in window) {
+          console.log.apply(console, arguments);
+        }
+      }
   });
   </script>
 </head>
@@ -126,17 +134,17 @@
       </a>
     </div>
     <form id='api_selector'>
-      <div class='input'><input placeholder="http://127.0.0.1:8080/api-docs" id="input_baseUrl" name="baseUrl" type="text" size="38"/></div>
+      <div class='input'><input placeholder="http://127.0.0.1:8080/swagger.json" id="input_baseUrl" name="baseUrl" type="text" size="38"/></div>
       <div class='input'><input placeholder="api_key" id="input_kb_apiKey" name="apiKey" type="text" size="8"/></div>
       <div class='input'><input placeholder="api_secret" id="input_kb_apiSecret" name="apiSecret" type="text" size="8"/></div>
       <div class='input'><input placeholder="username" id="input_kb_username" name="username" type="text" size="8"/></div>
       <div class='input'><input placeholder="password" id="input_kb_password" name="password" type="text" size="8"/></div>
-      <div class='input'><a id="explore" href="#">Explore</a></div>
+      <div class='input'><a id="explore" class="header__btn" href="#" data-sw-translate>Explore</a></div>
     </form>
   </div>
 </div>
 
-<div id="message-bar" class="swagger-ui-wrap">&nbsp;</div>
+<div id="message-bar" class="swagger-ui-wrap" data-sw-translate>&nbsp;</div>
 <div id="swagger-ui-container" class="swagger-ui-wrap"></div>
 </body>
 </html>

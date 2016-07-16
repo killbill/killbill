@@ -23,7 +23,7 @@ import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiModelProperty;
 
 public class HostedPaymentPageFormDescriptorJson extends JsonBase {
 

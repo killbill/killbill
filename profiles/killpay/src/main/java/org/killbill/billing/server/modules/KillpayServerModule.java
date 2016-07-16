@@ -25,6 +25,7 @@ import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.currency.glue.CurrencyModule;
 import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
+import org.killbill.billing.jaxrs.glue.DefaultJaxrsModule;
 import org.killbill.billing.jaxrs.resources.AccountResource;
 import org.killbill.billing.jaxrs.resources.CustomFieldResource;
 import org.killbill.billing.jaxrs.resources.ExportResource;
@@ -105,6 +106,7 @@ public class KillpayServerModule extends KillbillServerModule {
         install(new DefaultSubscriptionModule(configSource));
         install(new TemplateModule(configSource));
         install(new UsageModule(configSource));
+        install(new DefaultJaxrsModule(configSource));
         // TODO Dependencies for AccountResource
         install(new DefaultOverdueModule(configSource));
         install(new EmailModule(configSource));

@@ -28,7 +28,7 @@ import org.killbill.billing.payment.plugin.api.GatewayNotification;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiModelProperty;
 
 public class GatewayNotificationJson extends JsonBase {
 
