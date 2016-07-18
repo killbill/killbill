@@ -46,16 +46,16 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 
     @XmlElementWrapper(name = "included", required = false)
     @XmlIDREF
-    @XmlElement(name = "addonProduct", required = true)
+    @XmlElement(name = "addonProduct", required = false)
     private DefaultProduct[] included;
 
     @XmlElementWrapper(name = "available", required = false)
     @XmlIDREF
-    @XmlElement(name = "addonProduct", required = true)
+    @XmlElement(name = "addonProduct", required = false)
     private DefaultProduct[] available;
 
     @XmlElementWrapper(name = "limits", required = false)
-    @XmlElement(name = "limit", required = true)
+    @XmlElement(name = "limit", required = false)
     private DefaultLimit[] limits;
 
     //Not included in XML

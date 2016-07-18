@@ -71,7 +71,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     private Currency[] supportedCurrencies;
 
     @XmlElementWrapper(name = "units", required = false)
-    @XmlElement(name = "unit", required = true)
+    @XmlElement(name = "unit", required = false)
     private DefaultUnit[] units;
 
     @XmlElementWrapper(name = "products", required = true)

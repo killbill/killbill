@@ -58,17 +58,17 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
 
     // Used for when billing usage IN_ADVANCE & CAPACITY
     @XmlElementWrapper(name = "limits", required = false)
-    @XmlElement(name = "limit", required = true)
+    @XmlElement(name = "limit", required = false)
     private DefaultLimit[] limits;
 
     // Used for when billing usage IN_ADVANCE & CONSUMABLE
     @XmlElementWrapper(name = "blocks", required = false)
-    @XmlElement(name = "block", required = true)
+    @XmlElement(name = "block", required = false)
     private DefaultBlock[] blocks;
 
     // Used for when billing usage IN_ARREAR
     @XmlElementWrapper(name = "tiers", required = false)
-    @XmlElement(name = "tier", required = true)
+    @XmlElement(name = "tier", required = false)
     private DefaultTier[] tiers;
 
     // Used to define a fixed price for the whole usage section -- bundle several limits/blocks of units.
