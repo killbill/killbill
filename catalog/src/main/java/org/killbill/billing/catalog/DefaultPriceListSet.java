@@ -37,7 +37,7 @@ import org.killbill.xmlloader.ValidationErrors;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> implements PriceListSet {
     @XmlElement(required = true, name = "defaultPriceList")
-    private PriceListDefault defaultPricelist;
+    private DefaultPriceList defaultPricelist;
 
     @XmlElement(required = false, name = "childPriceList")
     private DefaultPriceList[] childPriceLists;
