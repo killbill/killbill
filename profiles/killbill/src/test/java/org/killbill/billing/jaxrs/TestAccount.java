@@ -186,7 +186,7 @@ public class TestAccount extends TestJaxrsBase {
         //
         // DELETE NON DEFAULT PM
         //
-        killBillClient.deletePaymentMethod(paymentMethodCC.getPaymentMethodId(), false, createdBy, reason, comment);
+        killBillClient.deletePaymentMethod(paymentMethodCC.getPaymentMethodId(), false, false, createdBy, reason, comment);
 
         //
         // FETCH ALL PAYMENT METHODS
@@ -198,7 +198,7 @@ public class TestAccount extends TestJaxrsBase {
         // DELETE DEFAULT PAYMENT METHOD (without special flag first)
         //
         try {
-            killBillClient.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), false, createdBy, reason, comment);
+            killBillClient.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), false, false, createdBy, reason, comment);
             fail();
         } catch (final KillBillClientException e) {
         }
@@ -206,7 +206,7 @@ public class TestAccount extends TestJaxrsBase {
         //
         // RETRY TO DELETE DEFAULT PAYMENT METHOD (with special flag this time)
         //
-        killBillClient.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), true, createdBy, reason, comment);
+        killBillClient.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), true, false, createdBy, reason, comment);
 
         // CHECK ACCOUNT IS NOW AUTO_PAY_OFF
         final List<Tag> tagsJson = killBillClient.getAccountTags(accountJson.getAccountId());

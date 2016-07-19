@@ -247,7 +247,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getChargedAmount().compareTo(BigDecimal.valueOf(19.95)), 0);
         assertEquals(parentInvoice.getCreditedAmount().compareTo(BigDecimal.ZERO), 0);
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(parentAccount.getId(), false, null, callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(parentAccount.getId(), false, false, null, callContext);
         assertEquals(accountPayments.size(), 1);
         assertEquals(accountPayments.get(0).getPurchasedAmount().setScale(2).compareTo(BigDecimal.valueOf(19.95)), 0);
         assertEquals(accountPayments.get(0).getCreditedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -308,7 +308,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertTrue(parentInvoice.isParentInvoice());
         assertEquals(parentInvoice.getChargedAmount().compareTo(BigDecimal.valueOf(29.95)), 0);
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(parentAccount.getId(), false, null, callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(parentAccount.getId(), false, false, null, callContext);
         assertEquals(accountPayments.size(), 1);
         assertEquals(accountPayments.get(0).getPurchasedAmount().setScale(2).compareTo(BigDecimal.valueOf(29.95)), 0);
         assertEquals(accountPayments.get(0).getCreditedAmount().compareTo(BigDecimal.ZERO), 0);

@@ -752,7 +752,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
         // Now, refund the second (first non-zero dollar) invoice
-        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).get(1).getPayments().get(0).getPaymentId(), false, PLUGIN_PROPERTIES, callContext);
+        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).get(1).getPayments().get(0).getPaymentId(), false, false, PLUGIN_PROPERTIES, callContext);
         refundPaymentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         // We should now be in OD1
         checkODState("OD1");
@@ -799,7 +799,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
         final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
-        Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         payment = createChargeBackAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         // We should now be in OD1
         checkODState("OD1");

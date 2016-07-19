@@ -59,7 +59,7 @@ public class PaymentChecker {
     }
 
     public Payment checkPayment(final UUID accountId, final int paymentOrderingNumber, final CallContext context, final ExpectedPaymentCheck expected) throws PaymentApiException {
-        final List<Payment> payments = paymentApi.getAccountPayments(accountId, false, ImmutableList.<PluginProperty>of(), context);
+        final List<Payment> payments = paymentApi.getAccountPayments(accountId, false, false, ImmutableList.<PluginProperty>of(), context);
         Assert.assertEquals(payments.size(), paymentOrderingNumber);
         final Payment payment = payments.get(paymentOrderingNumber - 1);
         final PaymentTransaction transaction = getPurchaseTransaction(payment);
