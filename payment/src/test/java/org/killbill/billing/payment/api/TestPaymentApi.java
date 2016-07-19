@@ -147,9 +147,40 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
 
-        paymentApi.deletePaymentMethod(account, paymentMethodId, true, ImmutableList.<PluginProperty>of(), callContext);
+        paymentApi.deletePaymentMethod(account, paymentMethodId, true, false, ImmutableList.<PluginProperty>of(), callContext);
 
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords, true);
+    }
+
+    @Test(groups = "slow")
+    public void testAddRemovePaymentMethodWithForcedDeletion() throws Exception {
+        final Long baseNbRecords = paymentApi.getPaymentMethods(0L, 1000L, false, ImmutableList.<PluginProperty>of(), callContext).getMaxNbRecords();
+        Assert.assertEquals(baseNbRecords, (Long) 1L);
+
+        final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
+
+        paymentApi.deletePaymentMethod(account, paymentMethodId, false, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords, true);
+    }
+
+    @Test(groups = "slow")
+    public void testAddRemovePaymentMethodWithoutForcedDeletion() throws Exception {
+        final Long baseNbRecords = paymentApi.getPaymentMethods(0L, 1000L, false, ImmutableList.<PluginProperty>of(), callContext).getMaxNbRecords();
+        Assert.assertEquals(baseNbRecords, (Long) 1L);
+
+        final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        try {
+            paymentApi.deletePaymentMethod(account, paymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INTERNAL_ERROR.getCode());
+        }
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
     }
 
     @Test(groups = "slow")
@@ -871,7 +902,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
 
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments.size(), 1);
         final Payment payment = accountPayments.get(0);
         assertEquals(payment.getExternalKey(), paymentExternalKey);
@@ -928,7 +959,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
 
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments.size(), 1);
         final Payment payment = accountPayments.get(0);
         assertEquals(payment.getExternalKey(), paymentExternalKey);
@@ -956,7 +987,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                     createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
 
 
-        final List<Payment> accountPayments2 = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> accountPayments2 = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments2.size(), 1);
         final Payment payment2 = accountPayments2.get(0);
         assertEquals(payment2.getTransactions().size(), 2);
@@ -1420,7 +1451,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT.getCode());
         }
 
-        assertEquals(paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext).getTransactions().size(), 1);
+        assertEquals(paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getTransactions().size(), 1);
 
         assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getStateName(), "PURCHASE_SUCCESS");
         assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getLastSuccessStateName(), "PURCHASE_SUCCESS");
@@ -1509,7 +1540,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_PAYMENT.getCode());
 
-            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), true, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
             assertEquals(latestPayment, initialPayment);
         }
     }
@@ -1527,7 +1558,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
 
-            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), true, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
             assertEquals(latestPayment, initialPayment);
         }
     }
@@ -2189,7 +2220,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     private void verifyPaymentViaGetPath(final Payment payment) throws PaymentApiException {
         // We can't use Assert.assertEquals because the updateDate may have been updated by the Janitor
-        final Payment refreshedPayment = paymentApi.getPayment(payment.getId(), true, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment refreshedPayment = paymentApi.getPayment(payment.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
 
         Assert.assertEquals(refreshedPayment.getAccountId(), payment.getAccountId());
 

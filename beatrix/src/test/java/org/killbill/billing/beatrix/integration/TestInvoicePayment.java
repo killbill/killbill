@@ -274,7 +274,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Invoice is not paid
-        Assert.assertEquals(paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext).size(), 0);
+        Assert.assertEquals(paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext).size(), 0);
         Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("249.95")), 0);
         Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
 
@@ -493,7 +493,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
 
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(payments.size(), 1);
         assertEquals(payments.get(0).getPurchasedAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(payments.get(0).getTransactions().size(), 1);
@@ -517,7 +517,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance2.compareTo(BigDecimal.ZERO) == 0);
 
-        final List<Payment> payments2 = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> payments2 = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(payments2.size(), 1);
         assertEquals(payments2.get(0).getTransactions().size(), 2);
         assertEquals(payments2.get(0).getTransactions().get(1).getAmount().compareTo(new BigDecimal("249.95")), 0);
@@ -595,7 +595,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertTrue(updateInvoice3.getPayments().get(0).isSuccess());
         Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
 
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         Assert.assertEquals(payments.size(), 1);
         Assert.assertEquals(payments.get(0).getTransactions().size(), 1);
 
