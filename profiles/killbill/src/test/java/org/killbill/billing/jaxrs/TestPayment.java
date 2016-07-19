@@ -36,6 +36,7 @@ import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.client.model.PluginProperty;
+import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
@@ -255,6 +256,24 @@ public class TestPayment extends TestJaxrsBase {
         Assert.assertNotNull(payment.getPaymentAttempts());
         Assert.assertEquals(payment.getPaymentAttempts().get(0).getStateName(), "RETRIED");
         Assert.assertEquals(payment.getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
+    }
+
+    @Test(groups = "slow")
+    public void testDeletePaymentMethodWithAutoPayOff() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        RequestOptions inputOptions = RequestOptions.builder()
+                                                    .withCreatedBy(createdBy)
+                                                    .withReason(reason)
+                                                    .withComment(comment).build();
+
+        killBillClient.deletePaymentMethod(paymentMethodId, true, false, inputOptions);
+
+        Tags accountTags = killBillClient.getAccountTags(account.getAccountId(), inputOptions);
+
+        Assert.assertNotNull(accountTags);
+        Assert.assertEquals(accountTags.get(0).getTagDefinitionName(), "AUTO_PAY_OFF");
     }
 
     @Test(groups = "slow")

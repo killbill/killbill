@@ -418,8 +418,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                             if (!deleteDefaultPaymentMethodWithAutoPayOff && !forceDefaultPaymentMethodDeletion) {
                                 throw new PaymentApiException(ErrorCode.PAYMENT_DEL_DEFAULT_PAYMENT_METHOD, account.getId());
                             } else {
-                                final boolean isAccountAutoPayOff = isAccountAutoPayOff(account.getId(), context);
-                                if (!isAccountAutoPayOff) {
+                                if (deleteDefaultPaymentMethodWithAutoPayOff && !isAccountAutoPayOff(account.getId(), context)) {
                                     log.info("Setting AUTO_PAY_OFF on accountId='{}' because of default payment method deletion", account.getId());
                                     setAccountAutoPayOff(account.getId(), context);
                                 }
