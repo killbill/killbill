@@ -93,14 +93,19 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getNumberOfItems(), 2);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
-        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(279.90)), 0);
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        // total 279.95
         assertEquals(parentInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(parentInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
+        assertEquals(parentInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(29.95)), 0);
 
         // Check Child Balance. It should be > 0 here because Parent invoice is unpaid yet.
         List<Invoice> child1Invoices = invoiceUserApi.getInvoicesByAccount(child1Account.getId(), false, callContext);
         assertEquals(child1Invoices.size(), 2);
-        assertTrue(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO) > 0);
+        // child balance is 0 because parent invoice status is DRAFT at this point
+        assertEquals(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
 
         // Moving a day the NotificationQ calls the commitInvoice. Payment is expected.
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -151,7 +156,9 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getNumberOfItems(), 1);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
-        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(29.95)), 0);
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(29.95)), 0);
 
         // upgrade plan
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
@@ -160,7 +167,6 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         // check parent invoice. Expected to have the same invoice item with the amount updated
         final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
-        BigDecimal totalAmount = childInvoices.get(1).getBalance().add(childInvoices.get(2).getBalance());
         parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
         assertEquals(parentInvoices.size(), 2);
 
@@ -168,7 +174,9 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getNumberOfItems(), 1);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
-        assertEquals(parentInvoice.getBalance(), totalAmount);
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+
 
         // Moving a day the NotificationQ calls the commitInvoice. Now payment is expected
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -221,7 +229,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(29.95)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
         assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-10.00)), 0);
-        assertEquals(childInvoice.getBalance().compareTo(BigDecimal.valueOf(19.95)), 0);
+        // child balance is 0 because parent invoice status is DRAFT at this point
+        assertEquals(childInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
 
         // check parent Invoice with child plan amount
         List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
@@ -231,7 +240,9 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getNumberOfItems(), 1);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
-        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(19.95)), 0);
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(19.95)), 0);
 
         // Moving a day the NotificationQ calls the commitInvoice.
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -247,7 +258,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getChargedAmount().compareTo(BigDecimal.valueOf(19.95)), 0);
         assertEquals(parentInvoice.getCreditedAmount().compareTo(BigDecimal.ZERO), 0);
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(parentAccount.getId(), false, null, callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(parentAccount.getId(), false, false, null, callContext);
         assertEquals(accountPayments.size(), 1);
         assertEquals(accountPayments.get(0).getPurchasedAmount().setScale(2).compareTo(BigDecimal.valueOf(19.95)), 0);
         assertEquals(accountPayments.get(0).getCreditedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -308,7 +319,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertTrue(parentInvoice.isParentInvoice());
         assertEquals(parentInvoice.getChargedAmount().compareTo(BigDecimal.valueOf(29.95)), 0);
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(parentAccount.getId(), false, null, callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(parentAccount.getId(), false, false, null, callContext);
         assertEquals(accountPayments.size(), 1);
         assertEquals(accountPayments.get(0).getPurchasedAmount().setScale(2).compareTo(BigDecimal.valueOf(29.95)), 0);
         assertEquals(accountPayments.get(0).getCreditedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -355,7 +366,10 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getNumberOfItems(), 1);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
-        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(249.95)), 0);
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
+
 
         // issue a $10 adj when invoice is unpaid
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
@@ -371,9 +385,12 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         childInvoice = invoiceUserApi.getInvoice(childInvoice.getId(), callContext);
         assertEquals(childInvoice.getNumberOfItems(), 2);
-        assertEquals(childInvoice.getBalance().compareTo(BigDecimal.valueOf(239.95)), 0);
+        // child balance is 0 because parent invoice status is DRAFT at this point
+        assertEquals(childInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        assertEquals(childInvoice.getInvoiceItems().get(1).getAmount().compareTo(BigDecimal.valueOf(-10.00)), 0);
 
         // reload parent invoice
         parentInvoice = invoiceUserApi.getInvoice(parentInvoice.getId(), callContext);
@@ -381,7 +398,9 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getNumberOfItems(), 1);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
-        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(239.95)), 0);
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(239.95)), 0);
 
     }
 
@@ -641,7 +660,9 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getNumberOfItems(), 1);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
-        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(249.95)), 0);
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
 
         // cancel subscription
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
@@ -662,7 +683,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // invoice 1
         childInvoice = childInvoices.get(1);
         assertEquals(childInvoice.getNumberOfItems(), 2);
-        assertEquals(childInvoice.getBalance().compareTo(BigDecimal.valueOf(16.66)), 0);
+        // child balance is 0 because parent invoice status is DRAFT at this point
+        assertEquals(childInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(childInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(childInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(childInvoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
@@ -684,7 +706,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         parentInvoice = parentInvoices.get(1);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
-        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(16.66)), 0);
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(parentInvoice.getNumberOfItems(), 1);
         assertEquals(parentInvoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.PARENT_SUMMARY);
         assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(16.66)), 0);
@@ -895,7 +918,9 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getNumberOfItems(), 1);
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
-        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.valueOf(8.33)), 0);
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(8.33)), 0);
 
     }
 

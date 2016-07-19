@@ -306,6 +306,21 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
 
             final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
+
+            if (!isAborted && paymentControlPluginContext.getPaymentMethodId() == null) {
+                log.warn("Payment for invoiceId='{}' was not triggered, accountId='{}' doesn't have a default payment method", getInvoiceId(pluginProperties), paymentControlPluginContext.getAccountId());
+                invoiceApi.recordPaymentAttemptCompletion(invoiceId,
+                                                          paymentControlPluginContext.getAmount(),
+                                                          paymentControlPluginContext.getCurrency(),
+                                                          paymentControlPluginContext.getProcessedCurrency(),
+                                                          paymentControlPluginContext.getPaymentId(),
+                                                          paymentControlPluginContext.getTransactionExternalKey(),
+                                                          paymentControlPluginContext.getCreatedDate(),
+                                                          false,
+                                                          internalContext);
+                return new DefaultPriorPaymentControlResult(true);
+            }
+
             if (!isAborted && insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
                 return new DefaultPriorPaymentControlResult(true);
             }

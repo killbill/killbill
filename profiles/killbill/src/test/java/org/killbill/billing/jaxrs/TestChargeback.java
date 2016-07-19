@@ -94,7 +94,7 @@ public class TestChargeback extends TestJaxrsBase {
         assertEquals(killBillClient.getPaymentMethod(payment.getPaymentMethodId()).getAccountId(), payment.getAccountId());
 
         // Delete the payment method
-        killBillClient.deletePaymentMethod(payment.getPaymentMethodId(), true, createdBy, reason, comment);
+        killBillClient.deletePaymentMethod(payment.getPaymentMethodId(), true, false, createdBy, reason, comment);
 
         // Check the payment method was deleted
         assertNull(killBillClient.getAccount(payment.getAccountId()).getPaymentMethodId());

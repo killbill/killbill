@@ -60,8 +60,8 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
         final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
                                                           ImmutableList.<PluginProperty>of(), callContext);
 
-        final Payment paymentPluginInfoFalse = paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
-        final Payment paymentPluginInfoTrue = paymentApi.getPayment(payment.getId(), true, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment paymentPluginInfoFalse = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment paymentPluginInfoTrue = paymentApi.getPayment(payment.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
 
         Assert.assertEquals(paymentPluginInfoFalse.getAccountId(), paymentPluginInfoTrue.getAccountId());
 
