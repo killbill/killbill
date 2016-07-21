@@ -58,7 +58,6 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,10 +247,9 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final BillingPeriod billingPeriod = phase.getRecurring() != null ? phase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
 
         return new PlanPhaseSpecifier(product.getName(),
-                               product.getCategory(),
-                               billingPeriod,
-                               transition.getNextPriceList(),
-                               phase.getPhaseType());
+                                      billingPeriod,
+                                      transition.getNextPriceList(),
+                                      phase.getPhaseType());
     }
 
     private boolean is_AUTO_INVOICING_OFF(final List<Tag> tags) {

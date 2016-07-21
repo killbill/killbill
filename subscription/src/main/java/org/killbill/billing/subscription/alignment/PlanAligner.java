@@ -198,7 +198,6 @@ public class PlanAligner extends BaseAligner {
         final Catalog catalog = catalogService.getFullCatalog(context);
 
         final PlanSpecifier planSpecifier = new PlanSpecifier(plan.getProduct().getName(),
-                                                              plan.getProduct().getCategory(),
                                                               plan.getRecurringBillingPeriod(),
                                                               priceList);
 
@@ -254,13 +253,11 @@ public class PlanAligner extends BaseAligner {
         final Catalog catalog = catalogService.getFullCatalog(context);
         final ProductCategory currentCategory = currentPlan.getProduct().getCategory();
         final PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                                                                                 currentCategory,
                                                                                  currentPlan.getRecurringBillingPeriod(),
                                                                                  currentPriceList,
                                                                                  currentPhase.getPhaseType());
 
         final PlanSpecifier toPlanSpecifier = new PlanSpecifier(nextPlan.getProduct().getName(),
-                                                                nextPlan.getProduct().getCategory(),
                                                                 nextPlan.getRecurringBillingPeriod(),
                                                                 priceList);
 

@@ -72,13 +72,13 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create base entitlement
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         baseEntitlement = (DefaultEntitlement) entitlementApi.createBaseEntitlement(account.getId(), baseSpec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Add ADD_ON
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         addOnEntitlement = (DefaultEntitlement) entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -266,7 +266,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     public void testChangePlanEOTWith2AddOns() throws Exception {
         // Add a second ADD_ON (Laser-Scope is available, not included)
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final PlanPhaseSpecifier secondAddOnSpec = new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier secondAddOnSpec = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final DefaultEntitlement secondAddOnEntitlement = (DefaultEntitlement) entitlementApi.addEntitlement(baseEntitlement.getBundleId(), secondAddOnSpec, null, clock.getUTCToday(), clock.getUTCToday(), false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -325,7 +325,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     public void testCancelAddonsWhenBaseEntitlementIsCancelled() throws Exception {
         // Add a second ADD_ON
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.PHASE);
-        final PlanPhaseSpecifier addOn2Spec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOn2Spec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final Entitlement addOn2Entitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOn2Spec, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 

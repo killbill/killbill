@@ -49,7 +49,6 @@ public abstract class DefaultCase<T> extends ValidatingConfig<StandaloneCatalog>
 
     protected boolean satisfiesCase(final PlanSpecifier planPhase, final StaticCatalog c) throws CatalogApiException {
         return (getProduct() == null || getProduct().equals(c.findCurrentProduct(planPhase.getProductName()))) &&
-                (getProductCategory() == null || getProductCategory().equals(planPhase.getProductCategory())) &&
                 (getBillingPeriod() == null || getBillingPeriod().equals(planPhase.getBillingPeriod())) &&
                 (getPriceList() == null || getPriceList().equals(c.findCurrentPricelist(planPhase.getPriceListName())));
     }

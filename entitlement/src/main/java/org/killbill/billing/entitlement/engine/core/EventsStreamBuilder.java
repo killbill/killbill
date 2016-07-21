@@ -378,7 +378,6 @@ public class EventsStreamBuilder {
             phaseType = subscription.getLastActivePhase().getPhaseType();
         }
         return new PlanPhaseSpecifier(lastActiveProductName,
-                                      productCategory,
                                       billingPeriod,
                                       priceListName,
                                       phaseType);

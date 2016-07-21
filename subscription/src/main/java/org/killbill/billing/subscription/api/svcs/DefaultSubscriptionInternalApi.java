@@ -47,6 +47,7 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -158,7 +159,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final Catalog catalog = catalogService.getFullCatalog(context);
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, callContext);
 
-            final Plan plan = catalog.createOrFindPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, effectiveDate);
+            final Plan plan = catalog.createOrFindPlan(new PlanSpecifier(spec.getProductName(), spec.getBillingPeriod(), realPriceList), overridesWithContext, effectiveDate);
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
@@ -196,6 +197,12 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final Catalog catalog = catalogService.getFullCatalog(context);
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
 
+            final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(bundleId, context);
+            if (bundle == null) {
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
+            }
+
+            boolean first = true;
             for (EntitlementSpecifier entitlement : entitlements) {
 
                 final PlanPhaseSpecifier spec = entitlement.getPlanPhaseSpecifier();
@@ -203,16 +210,18 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(entitlement.getOverrides(), callContext);
 
-                final Plan plan = catalog.createOrFindPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, overridesWithContext, effectiveDate);
+                final Plan plan = catalog.createOrFindPlan(new PlanSpecifier(spec.getProductName(), spec.getBillingPeriod(), realPriceList), overridesWithContext, effectiveDate);
                 final PlanPhase phase = plan.getAllPhases()[0];
                 if (phase == null) {
                     throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
                                                                   spec.getProductName(), spec.getBillingPeriod().toString(), realPriceList));
                 }
 
-                final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(bundleId, context);
-                if (bundle == null) {
-                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
+                if (first) {
+                    first = false;
+                    if (plan.getProduct().getCategory() != ProductCategory.BASE) {
+                        throw new SubscriptionBaseApiException(new IllegalArgumentException(), ErrorCode.SUB_CREATE_NO_BP.getCode(), "Missing Base Subscription.");
+                    }
                 }
 
                 SubscriptionSpecifier subscription = new SubscriptionSpecifier();
@@ -535,7 +544,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = null; // TODO not supported to dryRun with custom price
             final Plan plan = (inputSpec != null && inputSpec.getProductName() != null && inputSpec.getBillingPeriod() != null) ?
-                              catalog.createOrFindPlan(inputSpec.getProductName(), inputSpec.getBillingPeriod(), realPriceList, overridesWithContext, utcNow) : null;
+                              catalog.createOrFindPlan(new PlanSpecifier(inputSpec.getProductName(), inputSpec.getBillingPeriod(), realPriceList), overridesWithContext, utcNow) : null;
             final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
 
             if (dryRunArguments != null) {
@@ -585,7 +594,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                                 final Plan currentPlan = subscriptionForCancellation.getCurrentPlan();
                                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                                                                                       currentPlan.getProduct().getCategory(),
                                                                                        subscriptionForCancellation.getCurrentPlan().getRecurringBillingPeriod(),
                                                                                        subscriptionForCancellation.getCurrentPriceList().getName(),
                                                                                        subscriptionForCancellation.getCurrentPhase().getPhaseType());

@@ -322,8 +322,6 @@ public abstract class EntitlementLoggingHelper {
             if (addParentheseQuote) {
                 logLine.append("'(");
             }
-            logLine.append(spec.getProductCategory() != null ? spec.getProductCategory() : "null");
-            logLine.append(":");
             logLine.append(spec.getProductName() != null ? spec.getProductName() : "null");
             logLine.append(":");
             logLine.append(spec.getBillingPeriod() != null ? spec.getBillingPeriod() : "null");

@@ -58,7 +58,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // This is a simple smoke test at the dao level only to make sure we do sane
         // things in case there are no future add-on cancellation events to add in the stream.
         // See TestEntitlementUtils for a more comprehensive test
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();

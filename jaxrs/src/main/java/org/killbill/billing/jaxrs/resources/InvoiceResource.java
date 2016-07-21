@@ -1026,7 +1026,6 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                input.getProductCategory() != null &&
                                                                input.getBillingPeriod() != null) ?
                                                               new PlanPhaseSpecifier(input.getProductName(),
-                                                                                     ProductCategory.valueOf(input.getProductCategory()),
                                                                                      BillingPeriod.valueOf(input.getBillingPeriod()),
                                                                                      input.getPriceListName(),
                                                                                      input.getPhaseType() != null ? PhaseType.valueOf(input.getPhaseType()) : null) :

@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.entity.Entity;
 
@@ -58,6 +59,12 @@ public interface SubscriptionBaseTimeline extends Entity {
          * @return the {@code SubscriptionBaseTransitionType} for the event
          */
         public SubscriptionBaseTransitionType getSubscriptionTransitionType();
+
+        /**
+         *
+         * @return the product category
+         */
+        public ProductCategory getProductCategory();
 
         /**
          * @return the date at which this event was effective

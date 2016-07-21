@@ -195,13 +195,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final Account account = getAccountFromSubscriptionJson(entitlement, callContext);
                 final PhaseType phaseType = entitlement.getPhaseType() != null ? PhaseType.valueOf(entitlement.getPhaseType()) : null;
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(entitlement.getProductName(),
-                                                                       ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), phaseType);
 
                 final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(entitlementDate);
                 final LocalDate resolvedBillingDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(billingDate);
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
-                                                                 ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
 
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
@@ -311,11 +309,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 for (final SubscriptionJson entitlement : entitlements) {
 
                     final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(entitlement.getProductName(),
-                                                                                         ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                                          BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
 
                     final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
-                                                                     ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                      BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
                     final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
 
@@ -419,7 +415,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
                 final Account account = accountUserApi.getAccountById(current.getAccountId(), callContext);
                 final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
-                                                                 ProductCategory.valueOf(entitlement.getProductCategory()),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
 

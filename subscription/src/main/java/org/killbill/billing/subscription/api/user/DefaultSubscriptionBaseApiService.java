@@ -180,10 +180,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final Plan currentPlan = subscription.getCurrentPlan();
         final PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                                                                    currentPlan.getProduct().getCategory(),
                                                                     subscription.getCurrentPlan().getRecurringBillingPeriod(),
-                                                                    subscription.getCurrentPriceList().getName(),
-                                                                    subscription.getCurrentPhase().getPhaseType());
+                                                                    subscription.getCurrentPriceList().getName(), null);
 
         try {
             final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
@@ -386,12 +384,10 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final Plan currentPlan = subscription.getCurrentPlan();
             final PriceList currentPriceList = subscription.getCurrentPriceList();
             final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                                                                            currentPlan.getProduct().getCategory(),
                                                                             currentPlan.getRecurringBillingPeriod(),
                                                                             currentPriceList.getName(),
                                                                             subscription.getCurrentPhase().getPhaseType());
             final PlanSpecifier toPlanPhase = new PlanSpecifier(productName,
-                                                                destProduct.getCategory(),
                                                                 term,
                                                                 priceList);
 
@@ -412,7 +408,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                               final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
-        final Plan newPlan = catalogService.getFullCatalog(internalCallContext).createOrFindPlan(newProductName, newBillingPeriod, newPriceList, overridesWithContext, effectiveDate, subscription.getStartDate());
+        final Plan newPlan = catalogService.getFullCatalog(internalCallContext).createOrFindPlan(new PlanSpecifier(newProductName, newBillingPeriod, newPriceList), overridesWithContext, effectiveDate, subscription.getStartDate());
 
         if (newPlan.getProduct().getCategory() != subscription.getCategory()) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_INVALID, subscription.getId());

@@ -80,10 +80,8 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
         if (
                 (phaseType == null || from.getPhaseType() == phaseType) &&
                         (fromProduct == null || fromProduct.equals(catalog.findCurrentProduct(from.getProductName()))) &&
-                        (fromProductCategory == null || fromProductCategory.equals(from.getProductCategory())) &&
                         (fromBillingPeriod == null || fromBillingPeriod.equals(from.getBillingPeriod())) &&
                         (toProduct == null || toProduct.equals(catalog.findCurrentProduct(to.getProductName()))) &&
-                        (toProductCategory == null || toProductCategory.equals(to.getProductCategory())) &&
                         (toBillingPeriod == null || toBillingPeriod.equals(to.getBillingPeriod())) &&
                         (fromPriceList == null || fromPriceList.equals(catalog.findCurrentPricelist(from.getPriceListName()))) &&
                         (toPriceList == null || toPriceList.equals(catalog.findCurrentPricelist(to.getPriceListName())))

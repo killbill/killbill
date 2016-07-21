@@ -161,18 +161,18 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
       * @see org.killbill.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
       */
     @Override
-    public DefaultPlan createOrFindCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final PlanPhasePriceOverridesWithCallContext unused) throws CatalogApiException {
-        if (productName == null) {
+    public DefaultPlan createOrFindCurrentPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext unused) throws CatalogApiException {
+        if (spec.getProductName() == null) {
             throw new CatalogApiException(ErrorCode.CAT_NULL_PRODUCT_NAME);
         }
         if (priceLists == null) {
-            throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, priceListName);
+            throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, spec.getPriceListName());
         }
-        final Product product = findCurrentProduct(productName);
-        final DefaultPlan result = priceLists.getPlanFrom(priceListName, product, period);
+        final Product product = findCurrentProduct(spec.getProductName());
+        final DefaultPlan result = priceLists.getPlanFrom(spec.getPriceListName(), product, spec.getBillingPeriod());
         if (result == null) {
-            final String periodString = (period == null) ? "NULL" : period.toString();
-            throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, productName, periodString, priceListName);
+            final String periodString = (spec.getBillingPeriod() == null) ? "NULL" : spec.getBillingPeriod().toString();
+            throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, spec.getProductName(), periodString, spec.getPriceListName());
         }
         return result;
     }
@@ -344,7 +344,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @Override
     public boolean canCreatePlan(final PlanSpecifier specifier) throws CatalogApiException {
         final Product product = findCurrentProduct(specifier.getProductName());
-        final Plan plan = createOrFindCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName(), null);
+        final Plan plan = createOrFindCurrentPlan(specifier, null);
         final DefaultPriceList priceList = findCurrentPriceList(specifier.getPriceListName());
 
         return (product != null) &&

@@ -215,7 +215,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                     continue;
                 }
                 final List<ExistingEvent> existingEvents = cur.getExistingEvents();
-                final ProductCategory productCategory = existingEvents.get(0).getPlanPhaseSpecifier().getProductCategory();
+                final ProductCategory productCategory = existingEvents.get(0).getProductCategory();
 
                 // For future add-on cancellations, don't add a cancellation on disk right away (mirror the behavior
                 // on base plan cancellations, even though we don't support un-transfer today)

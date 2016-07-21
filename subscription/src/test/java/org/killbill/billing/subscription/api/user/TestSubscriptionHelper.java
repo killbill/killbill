@@ -91,7 +91,7 @@ public class TestSubscriptionHelper {
             throws SubscriptionBaseApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundleId,
-                                                                                                                  new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null), null,
+                                                                                                                  new PlanPhaseSpecifier(productName, term, planSet, null), null,
                                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, false, internalCallContext);
         assertNotNull(subscription);
 
@@ -162,7 +162,7 @@ public class TestSubscriptionHelper {
     public PlanPhaseSpecifier getProductSpecifier(final String productName, final String priceList,
                                                   final BillingPeriod term,
                                                   @Nullable final PhaseType phaseType) {
-        return new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, priceList, phaseType);
+        return new PlanPhaseSpecifier(productName, term, priceList, phaseType);
     }
 
     public void printEvents(final List<SubscriptionBaseEvent> events) {

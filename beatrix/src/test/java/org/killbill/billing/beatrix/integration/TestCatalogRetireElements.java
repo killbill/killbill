@@ -79,7 +79,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         // Catalog v2 should start now.
 
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
             entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
@@ -135,7 +135,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         // Catalog v3 should start now.
 
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
             entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
@@ -170,7 +170,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final String productName = "Pistol";
         final BillingPeriod term = BillingPeriod.MONTHLY;
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, "SpecialDiscount", null);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, "SpecialDiscount", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);

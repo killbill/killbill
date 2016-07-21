@@ -396,7 +396,6 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // This is just to double check our test catalog gives us what we want before we start the test
         final PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
-                                                              ProductCategory.ADD_ON,
                                                               aoTerm,
                                                               aoPriceList);
         final PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
@@ -413,7 +412,6 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // This is just to double check our test catalog gives us what we want before we start the test
         final PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
-                                                              ProductCategory.ADD_ON,
                                                               aoTerm,
                                                               aoPriceList);
         final PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
