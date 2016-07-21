@@ -93,6 +93,7 @@ import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.LocaleUtils;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -110,6 +111,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -486,6 +488,8 @@ public class InvoiceResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_PAY_INVOICE) @DefaultValue("false") final Boolean payInvoice,
                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                           @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
+                                          @QueryParam(QUERY_PAYMENT_EXTERNAL_KEY) final String paymentExternalKey,
+                                          @QueryParam(QUERY_TRANSACTION_EXTERNAL_KEY) final String transactionExternalKey,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
@@ -501,13 +505,24 @@ public class InvoiceResource extends JaxRsResourceBase {
         final LocalDate requestedDate = toLocalDateDefaultToday(account, requestedDateTimeString, callContext);
         final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, sanitizedExternalChargesJson, autoCommit, callContext);
 
+        // if all createdExternalCharges point to the same invoiceId, use the provided paymentExternalKey and / or transactionExternalKey
+        boolean haveSameInvoiceId = Iterables.all(createdExternalCharges, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(@Nullable final InvoiceItem input) {
+                return input.getInvoiceId().equals(createdExternalCharges.get(0).getInvoiceId());
+            }
+        });
+
         if (payInvoice) {
             final Collection<UUID> paidInvoices = new HashSet<UUID>();
             for (final InvoiceItem externalCharge : createdExternalCharges) {
                 if (!paidInvoices.contains(externalCharge.getInvoiceId())) {
                     paidInvoices.add(externalCharge.getInvoiceId());
                     final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
-                    createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), account.getPaymentMethodId(), false, pluginProperties, callContext);
+                    createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), account.getPaymentMethodId(), false,
+                                             (haveSameInvoiceId && paymentExternalKey != null) ? paymentExternalKey : UUIDs.randomUUID().toString(),
+                                             (haveSameInvoiceId && transactionExternalKey != null) ? transactionExternalKey : UUIDs.randomUUID().toString(),
+                                             pluginProperties, callContext);
                 }
             }
         }
@@ -630,6 +645,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                              payment.getPurchasedAmount(), "InvoicePaymentJson purchasedAmount needs to be set");
         Preconditions.checkArgument(!externalPayment || payment.getPaymentMethodId() == null, "InvoicePaymentJson should not contain a paymwentMethodId when this is an external payment");
 
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
@@ -639,7 +655,8 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
 
-        final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment, pluginProperties, callContext);
+        final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
+                                                        (payment.getPaymentExternalKey() != null) ? payment.getPaymentExternalKey() : UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(), pluginProperties, callContext);
         return result != null ?
                uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId()) :
                Response.status(Status.NO_CONTENT).build();
