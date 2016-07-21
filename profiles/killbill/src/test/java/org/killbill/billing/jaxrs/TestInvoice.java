@@ -30,6 +30,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.AuditLog;
 import org.killbill.billing.client.model.Credit;
@@ -40,6 +41,7 @@ import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.PaymentMethod;
+import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
@@ -54,6 +56,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -487,6 +490,53 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Verify the total number of invoices
         assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId()).size(), 3);
+    }
+
+    @Test(groups = "slow", description = "Can create multiple external charges with same invoice and external keys")
+    public void testExternalChargesWithSameInvoiceAndExternalKeys() throws Exception {
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId()).size(), 2);
+
+        // Post an external charge
+        final BigDecimal chargeAmount = BigDecimal.TEN;
+
+        final List<InvoiceItem> externalCharges = new ArrayList<InvoiceItem>();
+
+        // Does not pass currency to test on purpose that we will default to account currency
+        final InvoiceItem externalCharge1 = new InvoiceItem();
+        externalCharge1.setAccountId(accountJson.getAccountId());
+        externalCharge1.setAmount(chargeAmount);
+        externalCharge1.setDescription(UUID.randomUUID().toString());
+        externalCharges.add(externalCharge1);
+
+        final InvoiceItem externalCharge2 = new InvoiceItem();
+        externalCharge2.setAccountId(accountJson.getAccountId());
+        externalCharge2.setAmount(chargeAmount);
+        externalCharge2.setCurrency(accountJson.getCurrency());
+        externalCharge2.setDescription(UUID.randomUUID().toString());
+        externalCharges.add(externalCharge2);
+
+        String paymentExternalKey = "anyPaymentExternalKey";
+        String transactionExternalKey = "anyTransactionExternalKey";
+
+        final List<InvoiceItem> createdExternalCharges =
+                killBillClient.createExternalCharges(externalCharges, clock.getUTCToday(), true, true,
+                                                     paymentExternalKey, transactionExternalKey, createdBy, reason, comment);
+        assertEquals(createdExternalCharges.size(), 2);
+        assertEquals(createdExternalCharges.get(0).getCurrency().toString(), accountJson.getCurrency());
+        assertEquals(createdExternalCharges.get(1).getCurrency().toString(), accountJson.getCurrency());
+
+        // Verify the total number of invoices
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId()).size(), 3);
+
+        Payments payments = killBillClient.getPaymentsForAccount(accountJson.getAccountId(), AuditLevel.NONE, RequestOptions.empty());
+        assertNotNull(payments);
+        // Verify payment with paymentExternalKey provided
+        assertEquals(payments.get(payments.size() - 1).getPaymentExternalKey(), paymentExternalKey);
+        // Verify transactions with transactionExternalKey provided
+        assertEquals(payments.get(payments.size() - 1).getTransactions().get(0).getTransactionExternalKey(), transactionExternalKey);
     }
 
     @Test(groups = "slow", description = "Can create an external charge and trigger a payment")
