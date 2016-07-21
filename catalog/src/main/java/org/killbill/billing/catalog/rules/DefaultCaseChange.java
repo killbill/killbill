@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
@@ -73,18 +74,19 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
 
     protected abstract T getResult();
 
-
-
     public T getResult(final PlanPhaseSpecifier from,
                        final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
+
         if (
                 (phaseType == null || from.getPhaseType() == phaseType) &&
-                        (fromProduct == null || fromProduct.equals(catalog.findCurrentProduct(from.getProductName()))) &&
-                        (fromBillingPeriod == null || fromBillingPeriod.equals(from.getBillingPeriod())) &&
-                        (toProduct == null || toProduct.equals(catalog.findCurrentProduct(to.getProductName()))) &&
-                        (toBillingPeriod == null || toBillingPeriod.equals(to.getBillingPeriod())) &&
-                        (fromPriceList == null || fromPriceList.equals(catalog.findCurrentPricelist(from.getPriceListName()))) &&
-                        (toPriceList == null || toPriceList.equals(catalog.findCurrentPricelist(to.getPriceListName())))
+                (fromProduct == null || fromProduct.equals(catalog.findCurrentProduct(from.getProductName()))) &&
+                (fromProductCategory == null || fromProductCategory.equals(catalog.findCurrentProduct(from.getProductName()).getCategory())) &&
+                (fromBillingPeriod == null || fromBillingPeriod.equals(from.getBillingPeriod())) &&
+                (this.toProduct == null || this.toProduct.equals(catalog.findCurrentProduct(to.getProductName()))) &&
+                (toProductCategory == null || toProductCategory.equals(catalog.findCurrentProduct(to.getProductName()).getCategory())) &&
+                (toBillingPeriod == null || toBillingPeriod.equals(to.getBillingPeriod())) &&
+                (fromPriceList == null || fromPriceList.equals(catalog.findCurrentPricelist(from.getPriceListName()))) &&
+                (toPriceList == null || toPriceList.equals(catalog.findCurrentPricelist(to.getPriceListName())))
                 ) {
             return getResult();
         }

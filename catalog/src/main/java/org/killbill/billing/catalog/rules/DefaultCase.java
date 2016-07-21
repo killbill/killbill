@@ -22,7 +22,9 @@ import org.killbill.billing.catalog.DefaultProduct;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanSpecifier;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.xmlloader.ValidatingConfig;
@@ -49,6 +51,7 @@ public abstract class DefaultCase<T> extends ValidatingConfig<StandaloneCatalog>
 
     protected boolean satisfiesCase(final PlanSpecifier planPhase, final StaticCatalog c) throws CatalogApiException {
         return (getProduct() == null || getProduct().equals(c.findCurrentProduct(planPhase.getProductName()))) &&
+               (getProductCategory() == null || getProductCategory().equals(c.findCurrentProduct(planPhase.getProductName()).getCategory())) &&
                 (getBillingPeriod() == null || getBillingPeriod().equals(planPhase.getBillingPeriod())) &&
                 (getPriceList() == null || getPriceList().equals(c.findCurrentPricelist(planPhase.getPriceListName())));
     }
