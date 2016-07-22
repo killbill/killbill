@@ -93,24 +93,27 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
         currentPrices.setPrices((DefaultPrice []) newEntries);
     }
 
-    private <T> T [] allocateNewEntries(T [] existingEntries, T newEntry) throws CatalogApiException  {
-        if (newEntry instanceof CatalogEntity) {
-            final CatalogEntity newCatalogEntity = (CatalogEntity) newEntry;
-            final ImmutableList<CatalogEntity> existingCatalogEntries = ImmutableList.<CatalogEntity>copyOf((CatalogEntity []) existingEntries);
-            final CatalogEntity existing = Iterables.tryFind(existingCatalogEntries, new Predicate<CatalogEntity>() {
-                @Override
-                public boolean apply(final CatalogEntity input) {
-                    return input.getName().equals(newCatalogEntity.getName());
-                }
-            }).orNull();
+    private <T> T [] allocateNewEntries(final T [] existingEntries, final T newEntry) throws CatalogApiException  {
 
-            if (existing != null) {
-                //throw new CatalogApiException();
-                throw new IllegalStateException("Already existing " + newCatalogEntity.getName());
+        // Verify entry does not already exists
+        if (Iterables.any(ImmutableList.<T>copyOf(existingEntries), new Predicate<T>() {
+            @Override
+            public boolean apply(final T input) {
+                if (input instanceof CatalogEntity) {
+                    return ((CatalogEntity) input).getName().equals(((CatalogEntity) newEntry).getName());
+                } else if (input instanceof Enum) {
+                    return ((Enum) input).name().equals(((Enum) newEntry).name());
+                } else if (input instanceof Price) {
+                    return ((Price) input).getCurrency().equals(((Price) newEntry).getCurrency());
+                }
+                throw new IllegalStateException("Unexpected type " + newEntry.getClass());
             }
-        } else if (newEntry instanceof Currency) {
-            // TODO
+        })) {
+            //throw new CatalogApiException();
+            throw new IllegalStateException("Already existing " + newEntry);
         }
+
+        // Realloc and assign new entry
         final T [] newEntries = (T[]) Array.newInstance(newEntry.getClass(), existingEntries.length + 1);
         for (int i = 0 ; i < newEntries.length + 1; i++) {
             if (i < newEntries.length - 1) {

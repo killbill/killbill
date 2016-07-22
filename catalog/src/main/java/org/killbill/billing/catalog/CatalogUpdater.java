@@ -22,6 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingMode;
@@ -87,11 +88,10 @@ public class CatalogUpdater {
         return catalog;
     }
 
-    public String getCatalogXML() throws CatalogApiException {
+    public String getCatalogXML() {
         try {
             return XMLWriter.writeXML(catalog, StandaloneCatalog.class);
         } catch (final Exception e) {
-            // TODO
             throw new RuntimeException(e);
         }
     }
@@ -109,10 +109,6 @@ public class CatalogUpdater {
             catalog.addProduct(product);
         }
 
-        if (!isCurrencySupported(desc.getCurrency())) {
-            catalog.addCurrency(desc.getCurrency());
-        }
-
         DefaultPlan plan = getExistingPlan(desc.getPlanId());
         if (plan == null) {
             plan = new DefaultPlan();
@@ -127,9 +123,22 @@ public class CatalogUpdater {
                 trialPhase.setFixed(new DefaultFixed().setFixedPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(desc.getCurrency()).setValue(BigDecimal.ZERO)})));
                 plan.setInitialPhases(new DefaultPlanPhase[]{trialPhase});
             }
+            catalog.addPlan(plan);
         } else {
             validateExistingPlan(plan, desc);
         }
+
+        //
+        // At this point we have an old or newly created **simple** Plan and we need to either create the recurring section or add a new currency.
+        //
+        if (!isCurrencySupported(desc.getCurrency())) {
+            catalog.addCurrency(desc.getCurrency());
+            // Reset the fixed price to null so the isZero() logic goes through new currencies and set the zero price for all
+            if (plan.getInitialPhases().length == 1) {
+                ((DefaultInternationalPrice)plan.getInitialPhases()[0].getFixed().getPrice()).setPrices(null);
+            }
+        }
+
 
         DefaultPlanPhase evergreenPhase = plan.getFinalPhase();
         if (evergreenPhase == null) {
@@ -153,13 +162,11 @@ public class CatalogUpdater {
         } catch (CatalogApiException ignore) {
             catalog.addRecurringPriceToPlan(recurring.getRecurringPrice(), new DefaultPrice().setCurrency(desc.getCurrency()).setValue(desc.getAmount()));
         }
-
-        // TODO Ordering breaks
-        catalog.addPlan(plan);
-        plan.initialize(catalog, DUMMY_URI);
+        // Reinit catalog
+        catalog.initialize(catalog, DUMMY_URI);
     }
 
-    private void validateExistingPlan(final DefaultPlan plan, final SimplePlanDescriptor desc) {
+    private void validateExistingPlan(final DefaultPlan plan, final SimplePlanDescriptor desc) throws CatalogApiException {
 
         boolean failedValidation = false;
 
@@ -213,8 +220,7 @@ public class CatalogUpdater {
 
 
         if (failedValidation) {
-            // TODO
-            throw new RuntimeException("Incompatible plan ");
+            throw new CatalogApiException(ErrorCode.CAT_FAILED_SIMPLE_PLAN_VALIDATION, plan.toString(), desc.toString());
         }
     }
 
@@ -229,10 +235,14 @@ public class CatalogUpdater {
         });
     }
 
-    private void validateSimplePlanDescriptor(final SimplePlanDescriptor descriptor) throws CatalogApiException {
-        if (getExistingPlan(descriptor.getPlanId()) != null) {
-            // TODO
-            throw new RuntimeException("Existing plan" + descriptor.getPlanId());
+    private void validateSimplePlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {
+        if (desc == null ||
+            desc.getPlanId() == null ||
+            desc.getBillingPeriod() == null ||
+            desc.getProductName() == null ||
+            (desc.getAmount() == null || desc.getAmount().compareTo(BigDecimal.ZERO) <= 0) ||
+            desc.getCurrency() == null) {
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
         }
     }
 

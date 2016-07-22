@@ -17,13 +17,18 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.nio.charset.Charset;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.MutableStaticCatalog;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
@@ -33,12 +38,14 @@ import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
 import org.killbill.xmlloader.XMLLoader;
+import org.killbill.xmlloader.XMLWriter;
 import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
@@ -163,11 +170,418 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final PriceList priceList = catalog.getPriceLists().getAllPriceLists().get(0);
         assertEquals(priceList.getName(), new PriceListDefault().getName());
         assertEquals(priceList.getPlans().length, 4);
-
-        //System.err.println(catalogUpdater.getCatalogXML());
     }
 
 
 
+    @Test(groups = "fast")
+    public void testAddExistingPlanWithNewCurrency() throws Exception {
+        final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 3);
 
+        final CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
+
+        final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor("standard-monthly", "Standard", Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 30, TimeUnit.DAYS);
+        catalogUpdater.addSimplePlanDescriptor(desc);
+
+        final StandaloneCatalog catalog = catalogUpdater.getCatalog();
+
+        final Plan plan = catalog.findCurrentPlan("standard-monthly");
+        assertEquals(plan.getName(), "standard-monthly");
+
+        assertEquals(plan.getInitialPhases().length, 1);
+        assertEquals(plan.getInitialPhases()[0].getPhaseType(), PhaseType.TRIAL);
+        assertEquals(plan.getInitialPhases()[0].getFixed().getPrice().getPrices().length, 3);
+        assertEquals(plan.getInitialPhases()[0].getFixed().getPrice().getPrice(Currency.EUR), BigDecimal.ZERO);
+        assertEquals(plan.getInitialPhases()[0].getName(), "standard-monthly-trial");
+
+        assertEquals(plan.getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertNull(plan.getFinalPhase().getFixed());
+        assertEquals(plan.getFinalPhase().getName(), "standard-monthly-evergreen");
+        assertEquals(plan.getFinalPhase().getRecurring().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices().length, 3);
+        assertEquals(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrice(Currency.EUR), BigDecimal.TEN);
+    }
+
+    @Test(groups = "fast")
+    public void testInvalidPlanDescriptors() throws Exception {
+        final StandaloneCatalog originalCatalog = enhanceOriginalCatalogForInvalidTestCases("SpyCarBasic.xml");
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 5);
+
+        CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
+
+        // Existing Plan has a 30 days trial => try with no TRIAL
+        SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor("standard-monthly", "Standard", Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, null);
+        addBadSimplePlanDescriptor(catalogUpdater, desc);
+
+
+        // Existing Plan has a 30 days trial => try different trial length
+        desc = new DefaultSimplePlanDescriptor("standard-monthly", "Standard", Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 14, TimeUnit.DAYS);
+        addBadSimplePlanDescriptor(catalogUpdater, desc);
+
+        // Existing Plan has a 30 days trial => try different trial unit
+        desc = new DefaultSimplePlanDescriptor("standard-monthly", "Standard", Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 30, TimeUnit.MONTHS);
+        addBadSimplePlanDescriptor(catalogUpdater, desc);
+
+        // Existing Plan has a MONTHLY recurring => try with ANNUAL BillingPeriod
+        desc = new DefaultSimplePlanDescriptor("standard-monthly", "Standard", Currency.EUR, BigDecimal.TEN, BillingPeriod.ANNUAL, 30, TimeUnit.DAYS);
+        addBadSimplePlanDescriptor(catalogUpdater, desc);
+
+        // Existing Plan has a discount phase
+        desc = new DefaultSimplePlanDescriptor("dynamic-monthly", "Dynamic", Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 30, TimeUnit.MONTHS);
+        addBadSimplePlanDescriptor(catalogUpdater, desc);
+
+        // Existing Plan has final fixedterm phase
+        desc = new DefaultSimplePlanDescriptor("superdynamic-fixedterm", "SuperDynamic", Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 30, TimeUnit.DAYS);
+        addBadSimplePlanDescriptor(catalogUpdater, desc);
+
+        // Existing Plan a different recurring price ($100)
+        desc = new DefaultSimplePlanDescriptor("standard-monthly", "Standard", Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 30, TimeUnit.DAYS);
+        addBadSimplePlanDescriptor(catalogUpdater, desc);
+    }
+
+
+    @Test(groups = "fast")
+    public void testVerifyXML() throws Exception {
+
+        final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 3);
+
+        final CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
+
+        final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor("dynamic-annual", "Dynamic", Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 14, TimeUnit.DAYS);
+        catalogUpdater.addSimplePlanDescriptor(desc);
+
+        final String expectedXML = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+                                   "<catalog>\n" +
+                                   "    <effectiveDate>2013-02-08T00:00:00Z</effectiveDate>\n" +
+                                   "    <catalogName>SpyCarBasic</catalogName>\n" +
+                                   "    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>\n" +
+                                   "    <currencies>\n" +
+                                   "        <currency>USD</currency>\n" +
+                                   "        <currency>GBP</currency>\n" +
+                                   "    </currencies>\n" +
+                                   "    <products>\n" +
+                                   "        <product name=\"Standard\">\n" +
+                                   "            <category>BASE</category>\n" +
+                                   "            <included/>\n" +
+                                   "            <available/>\n" +
+                                   "            <limits/>\n" +
+                                   "        </product>\n" +
+                                   "        <product name=\"Sports\">\n" +
+                                   "            <category>BASE</category>\n" +
+                                   "            <included/>\n" +
+                                   "            <available/>\n" +
+                                   "            <limits/>\n" +
+                                   "        </product>\n" +
+                                   "        <product name=\"Super\">\n" +
+                                   "            <category>BASE</category>\n" +
+                                   "            <included/>\n" +
+                                   "            <available/>\n" +
+                                   "            <limits/>\n" +
+                                   "        </product>\n" +
+                                   "        <product name=\"Dynamic\">\n" +
+                                   "            <category>BASE</category>\n" +
+                                   "            <included/>\n" +
+                                   "            <available/>\n" +
+                                   "            <limits/>\n" +
+                                   "        </product>\n" +
+                                   "    </products>\n" +
+                                   "    <rules>\n" +
+                                   "        <changePolicy>\n" +
+                                   "            <changePolicyCase>\n" +
+                                   "                <policy>IMMEDIATE</policy>\n" +
+                                   "            </changePolicyCase>\n" +
+                                   "        </changePolicy>\n" +
+                                   "        <changeAlignment>\n" +
+                                   "            <changeAlignmentCase>\n" +
+                                   "                <alignment>START_OF_BUNDLE</alignment>\n" +
+                                   "            </changeAlignmentCase>\n" +
+                                   "        </changeAlignment>\n" +
+                                   "        <cancelPolicy>\n" +
+                                   "            <cancelPolicyCase>\n" +
+                                   "                <policy>IMMEDIATE</policy>\n" +
+                                   "            </cancelPolicyCase>\n" +
+                                   "        </cancelPolicy>\n" +
+                                   "        <createAlignment>\n" +
+                                   "            <createAlignmentCase>\n" +
+                                   "                <alignment>START_OF_BUNDLE</alignment>\n" +
+                                   "            </createAlignmentCase>\n" +
+                                   "        </createAlignment>\n" +
+                                   "        <billingAlignment>\n" +
+                                   "            <billingAlignmentCase>\n" +
+                                   "                <alignment>ACCOUNT</alignment>\n" +
+                                   "            </billingAlignmentCase>\n" +
+                                   "        </billingAlignment>\n" +
+                                   "        <priceList>\n" +
+                                   "            <priceListCase>\n" +
+                                   "                <toPriceList>DEFAULT</toPriceList>\n" +
+                                   "            </priceListCase>\n" +
+                                   "        </priceList>\n" +
+                                   "    </rules>\n" +
+                                   "    <plans>\n" +
+                                   "        <plan name=\"standard-monthly\">\n" +
+                                   "            <product>Standard</product>\n" +
+                                   "            <initialPhases>\n" +
+                                   "                <phase type=\"TRIAL\">\n" +
+                                   "                    <duration>\n" +
+                                   "                        <unit>DAYS</unit>\n" +
+                                   "                        <number>30</number>\n" +
+                                   "                    </duration>\n" +
+                                   "                    <fixed type=\"ONE_TIME\">\n" +
+                                   "                        <fixedPrice>\n" +
+                                   "                            <price>\n" +
+                                   "<currency>USD</currency>\n" +
+                                   "<value>0</value>\n" +
+                                   "                            </price>\n" +
+                                   "                            <price>\n" +
+                                   "<currency>GBP</currency>\n" +
+                                   "<value>0</value>\n" +
+                                   "                            </price>\n" +
+                                   "                        </fixedPrice>\n" +
+                                   "                    </fixed>\n" +
+                                   "                    <usages/>\n" +
+                                   "                </phase>\n" +
+                                   "            </initialPhases>\n" +
+                                   "            <finalPhase type=\"EVERGREEN\">\n" +
+                                   "                <duration>\n" +
+                                   "                    <unit>UNLIMITED</unit>\n" +
+                                   "                    <number>-1</number>\n" +
+                                   "                </duration>\n" +
+                                   "                <recurring>\n" +
+                                   "                    <billingPeriod>MONTHLY</billingPeriod>\n" +
+                                   "                    <recurringPrice>\n" +
+                                   "                        <price>\n" +
+                                   "                            <currency>GBP</currency>\n" +
+                                   "                            <value>75.00</value>\n" +
+                                   "                        </price>\n" +
+                                   "                        <price>\n" +
+                                   "                            <currency>USD</currency>\n" +
+                                   "                            <value>100.00</value>\n" +
+                                   "                        </price>\n" +
+                                   "                    </recurringPrice>\n" +
+                                   "                </recurring>\n" +
+                                   "                <usages/>\n" +
+                                   "            </finalPhase>\n" +
+                                   "            <plansAllowedInBundle>1</plansAllowedInBundle>\n" +
+                                   "        </plan>\n" +
+                                   "        <plan name=\"sports-monthly\">\n" +
+                                   "            <product>Sports</product>\n" +
+                                   "            <initialPhases>\n" +
+                                   "                <phase type=\"TRIAL\">\n" +
+                                   "                    <duration>\n" +
+                                   "                        <unit>DAYS</unit>\n" +
+                                   "                        <number>30</number>\n" +
+                                   "                    </duration>\n" +
+                                   "                    <fixed type=\"ONE_TIME\">\n" +
+                                   "                        <fixedPrice>\n" +
+                                   "                            <price>\n" +
+                                   "<currency>USD</currency>\n" +
+                                   "<value>0</value>\n" +
+                                   "                            </price>\n" +
+                                   "                            <price>\n" +
+                                   "<currency>GBP</currency>\n" +
+                                   "<value>0</value>\n" +
+                                   "                            </price>\n" +
+                                   "                        </fixedPrice>\n" +
+                                   "                    </fixed>\n" +
+                                   "                    <usages/>\n" +
+                                   "                </phase>\n" +
+                                   "            </initialPhases>\n" +
+                                   "            <finalPhase type=\"EVERGREEN\">\n" +
+                                   "                <duration>\n" +
+                                   "                    <unit>UNLIMITED</unit>\n" +
+                                   "                    <number>-1</number>\n" +
+                                   "                </duration>\n" +
+                                   "                <recurring>\n" +
+                                   "                    <billingPeriod>MONTHLY</billingPeriod>\n" +
+                                   "                    <recurringPrice>\n" +
+                                   "                        <price>\n" +
+                                   "                            <currency>GBP</currency>\n" +
+                                   "                            <value>375.00</value>\n" +
+                                   "                        </price>\n" +
+                                   "                        <price>\n" +
+                                   "                            <currency>USD</currency>\n" +
+                                   "                            <value>500.00</value>\n" +
+                                   "                        </price>\n" +
+                                   "                    </recurringPrice>\n" +
+                                   "                </recurring>\n" +
+                                   "                <usages/>\n" +
+                                   "            </finalPhase>\n" +
+                                   "            <plansAllowedInBundle>1</plansAllowedInBundle>\n" +
+                                   "        </plan>\n" +
+                                   "        <plan name=\"super-monthly\">\n" +
+                                   "            <product>Super</product>\n" +
+                                   "            <initialPhases>\n" +
+                                   "                <phase type=\"TRIAL\">\n" +
+                                   "                    <duration>\n" +
+                                   "                        <unit>DAYS</unit>\n" +
+                                   "                        <number>30</number>\n" +
+                                   "                    </duration>\n" +
+                                   "                    <fixed type=\"ONE_TIME\">\n" +
+                                   "                        <fixedPrice>\n" +
+                                   "                            <price>\n" +
+                                   "<currency>USD</currency>\n" +
+                                   "<value>0</value>\n" +
+                                   "                            </price>\n" +
+                                   "                            <price>\n" +
+                                   "<currency>GBP</currency>\n" +
+                                   "<value>0</value>\n" +
+                                   "                            </price>\n" +
+                                   "                        </fixedPrice>\n" +
+                                   "                    </fixed>\n" +
+                                   "                    <usages/>\n" +
+                                   "                </phase>\n" +
+                                   "            </initialPhases>\n" +
+                                   "            <finalPhase type=\"EVERGREEN\">\n" +
+                                   "                <duration>\n" +
+                                   "                    <unit>UNLIMITED</unit>\n" +
+                                   "                    <number>-1</number>\n" +
+                                   "                </duration>\n" +
+                                   "                <recurring>\n" +
+                                   "                    <billingPeriod>MONTHLY</billingPeriod>\n" +
+                                   "                    <recurringPrice>\n" +
+                                   "                        <price>\n" +
+                                   "                            <currency>GBP</currency>\n" +
+                                   "                            <value>750.00</value>\n" +
+                                   "                        </price>\n" +
+                                   "                        <price>\n" +
+                                   "                            <currency>USD</currency>\n" +
+                                   "                            <value>1000.00</value>\n" +
+                                   "                        </price>\n" +
+                                   "                    </recurringPrice>\n" +
+                                   "                </recurring>\n" +
+                                   "                <usages/>\n" +
+                                   "            </finalPhase>\n" +
+                                   "            <plansAllowedInBundle>1</plansAllowedInBundle>\n" +
+                                   "        </plan>\n" +
+                                   "        <plan name=\"dynamic-annual\">\n" +
+                                   "            <product>Dynamic</product>\n" +
+                                   "            <initialPhases>\n" +
+                                   "                <phase type=\"TRIAL\">\n" +
+                                   "                    <duration>\n" +
+                                   "                        <unit>DAYS</unit>\n" +
+                                   "                        <number>14</number>\n" +
+                                   "                    </duration>\n" +
+                                   "                    <fixed type=\"ONE_TIME\">\n" +
+                                   "                        <fixedPrice>\n" +
+                                   "                            <price>\n" +
+                                   "<currency>USD</currency>\n" +
+                                   "<value>0</value>\n" +
+                                   "                            </price>\n" +
+                                   "                        </fixedPrice>\n" +
+                                   "                    </fixed>\n" +
+                                   "                    <usages/>\n" +
+                                   "                </phase>\n" +
+                                   "            </initialPhases>\n" +
+                                   "            <finalPhase type=\"EVERGREEN\">\n" +
+                                   "                <duration>\n" +
+                                   "                    <unit>UNLIMITED</unit>\n" +
+                                   "                    <number>-1</number>\n" +
+                                   "                </duration>\n" +
+                                   "                <recurring>\n" +
+                                   "                    <billingPeriod>MONTHLY</billingPeriod>\n" +
+                                   "                    <recurringPrice>\n" +
+                                   "                        <price>\n" +
+                                   "                            <currency>USD</currency>\n" +
+                                   "                            <value>10</value>\n" +
+                                   "                        </price>\n" +
+                                   "                    </recurringPrice>\n" +
+                                   "                </recurring>\n" +
+                                   "                <usages/>\n" +
+                                   "            </finalPhase>\n" +
+                                   "            <plansAllowedInBundle>1</plansAllowedInBundle>\n" +
+                                   "        </plan>\n" +
+                                   "    </plans>\n" +
+                                   "    <priceLists>\n" +
+                                   "        <defaultPriceList name=\"DEFAULT\">\n" +
+                                   "            <plans>\n" +
+                                   "                <plan>standard-monthly</plan>\n" +
+                                   "                <plan>sports-monthly</plan>\n" +
+                                   "                <plan>super-monthly</plan>\n" +
+                                   "                <plan>dynamic-annual</plan>\n" +
+                                   "            </plans>\n" +
+                                   "        </defaultPriceList>\n" +
+                                   "    </priceLists>\n" +
+                                   "</catalog>\n";
+
+        assertEquals(catalogUpdater.getCatalogXML(), expectedXML);
+        System.err.println(catalogUpdater.getCatalogXML());
+    }
+
+
+    private StandaloneCatalog enhanceOriginalCatalogForInvalidTestCases(final String catalogName) throws Exception {
+
+        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource(catalogName).toExternalForm(), StandaloneCatalog.class);
+
+        final MutableStaticCatalog mutableCatalog = new DefaultMutableStaticCatalog(catalog);
+
+        final DefaultProduct newProduct1 = new DefaultProduct();
+        newProduct1.setName("Dynamic");
+        newProduct1.setCatagory(ProductCategory.BASE);
+        newProduct1.initialize((StandaloneCatalog) mutableCatalog, null);
+        mutableCatalog.addProduct(newProduct1);
+
+        final DefaultPlanPhase discountPhase1 = new DefaultPlanPhase();
+        discountPhase1.setPhaseType(PhaseType.DISCOUNT);
+        discountPhase1.setDuration(new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(14));
+        discountPhase1.setRecurring(new DefaultRecurring().setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.TEN)})));
+
+        final DefaultPlanPhase evergreenPhase1 = new DefaultPlanPhase();
+        evergreenPhase1.setPhaseType(PhaseType.EVERGREEN);
+        evergreenPhase1.setDuration(new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(1));
+        evergreenPhase1.setRecurring(new DefaultRecurring().setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.TEN)})));
+
+        // Add a Plan with a DISCOUNT phase
+        final DefaultPlan newPlan1 = new DefaultPlan();
+        newPlan1.setName("dynamic-monthly");
+        newPlan1.setPriceListName(DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
+        newPlan1.setProduct(newProduct1);
+        newPlan1.setInitialPhases(new DefaultPlanPhase[]{discountPhase1});
+        newPlan1.setFinalPhase(evergreenPhase1);
+        mutableCatalog.addPlan(newPlan1);
+        newPlan1.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
+
+
+        final DefaultProduct newProduct2 = new DefaultProduct();
+        newProduct2.setName("SuperDynamic");
+        newProduct2.setCatagory(ProductCategory.BASE);
+        newProduct2.initialize((StandaloneCatalog) mutableCatalog, null);
+        mutableCatalog.addProduct(newProduct2);
+
+        // Add a Plan with a FIXEDTERM phase
+        final DefaultPlanPhase fixedterm2 = new DefaultPlanPhase();
+        fixedterm2.setPhaseType(PhaseType.FIXEDTERM);
+        fixedterm2.setDuration(new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(3));
+        fixedterm2.setRecurring(new DefaultRecurring().setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.TEN)})));
+
+
+        final DefaultPlan newPlan2 = new DefaultPlan();
+        newPlan2.setName("superdynamic-fixedterm");
+        newPlan2.setPriceListName(DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
+        newPlan2.setProduct(newProduct2);
+        newPlan2.setFinalPhase(fixedterm2);
+        mutableCatalog.addPlan(newPlan2);
+        newPlan2.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
+
+
+        final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
+        return XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
+    }
+
+
+    private void addBadSimplePlanDescriptor(final CatalogUpdater catalogUpdater, final SimplePlanDescriptor desc) {
+        try {
+            catalogUpdater.addSimplePlanDescriptor(desc);
+            fail("Should have failed to add invalid desc " + desc);
+        } catch (final CatalogApiException e) {
+            assertEquals(e.getCode(), ErrorCode.CAT_FAILED_SIMPLE_PLAN_VALIDATION.getCode());
+        }
+    }
 }

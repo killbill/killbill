@@ -85,4 +85,16 @@ public class DefaultSimplePlanDescriptor implements SimplePlanDescriptor {
         return trialTimeUnit;
     }
 
+    @Override
+    public String toString() {
+        return "DefaultSimplePlanDescriptor{" +
+               "planId='" + planId + '\'' +
+               ", productName='" + productName + '\'' +
+               ", currency=" + currency +
+               ", amount=" + amount +
+               ", billingPeriod=" + billingPeriod +
+               ", trialLength=" + trialLength +
+               ", trialTimeUnit=" + trialTimeUnit +
+               '}';
+    }
 }
