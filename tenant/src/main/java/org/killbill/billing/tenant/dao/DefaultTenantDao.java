@@ -163,12 +163,16 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
 
                 // Retrieve all values for key ordered with recordId (last at the end)
                 final List<TenantKVModelDao> tenantKV = tenantKVSqlDao.getTenantValueForKey(key, context);
+                final String id;
                 if (!tenantKV.isEmpty()) {
-                    final String id = tenantKV.get(tenantKV.size() - 1).getId().toString();
+                    id = tenantKV.get(tenantKV.size() - 1).getId().toString();
                     tenantKVSqlDao.updateTenantValueKey(id, value, context);
-                    final TenantKVModelDao rehydrated = tenantKVSqlDao.getById(id, context);
-                    broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
+                } else {
+                    id = tenantKVModelDao.getId().toString();
+                    tenantKVSqlDao.create(tenantKVModelDao, context);
                 }
+                final TenantKVModelDao rehydrated = tenantKVSqlDao.getById(id, context);
+                broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
                 return null;
             }
         });
