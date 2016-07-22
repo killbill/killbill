@@ -48,7 +48,7 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         }
     }
 
-    public DefaultPriceListSet(final PriceListDefault defaultPricelist, final DefaultPriceList[] childPriceLists) {
+    public DefaultPriceListSet(final DefaultPriceList defaultPricelist, final DefaultPriceList[] childPriceLists) {
         this.defaultPricelist = defaultPricelist;
         this.childPriceLists = childPriceLists != null ? childPriceLists : new DefaultPriceList[0];
     }
