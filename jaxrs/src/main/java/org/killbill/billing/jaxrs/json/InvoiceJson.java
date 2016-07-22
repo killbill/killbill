@@ -22,15 +22,19 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.apache.shiro.util.CollectionUtils;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModelProperty;
 
 public class InvoiceJson extends JsonBase {
@@ -89,7 +93,7 @@ public class InvoiceJson extends JsonBase {
     }
 
     public InvoiceJson(final Invoice input) {
-        this(input, false, null);
+        this(input, false, null, null);
     }
 
     public InvoiceJson(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
@@ -98,12 +102,21 @@ public class InvoiceJson extends JsonBase {
              input.getBalance(), input.getAccountId().toString(), bundleKeys, credits, null, input.isParentInvoice(), toAuditLogJson(auditLogs));
     }
 
-    public InvoiceJson(final Invoice input, final boolean withItems, @Nullable final AccountAuditLogs accountAuditLogs) {
+    public InvoiceJson(final Invoice input, final boolean withItems, final List<InvoiceItem> childItems, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoice(input.getId())));
         this.items = new ArrayList<InvoiceItemJson>(input.getInvoiceItems().size());
-        if (withItems) {
+        if (withItems || !CollectionUtils.isEmpty(childItems)) {
             for (final InvoiceItem item : input.getInvoiceItems()) {
-                this.items.add(new InvoiceItemJson(item, accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
+                ImmutableList<InvoiceItem> childItemsFiltered = null;
+                if (item.getInvoiceItemType().equals(InvoiceItemType.PARENT_SUMMARY) && !CollectionUtils.isEmpty(childItems)) {
+                    childItemsFiltered = ImmutableList.copyOf(Iterables.filter(childItems, new Predicate<InvoiceItem>() {
+                        @Override
+                        public boolean apply(@Nullable final InvoiceItem invoice) {
+                            return invoice.getAccountId().equals(item.getChildAccountId());
+                        }
+                    }));
+                }
+                this.items.add(new InvoiceItemJson(item, childItemsFiltered, accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
             }
         }
         this.amount = input.getChargedAmount();

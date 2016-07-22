@@ -174,16 +174,18 @@ public class InvoiceResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Invoice not found")})
     public Response getInvoice(@PathParam("invoiceId") final String invoiceId,
                                @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                               @QueryParam(QUERY_INVOICE_WITH_CHILDREN_ITEMS) @DefaultValue("false") final boolean withChildrenItems,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createContext(request);
         final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), tenantContext);
+        final List<InvoiceItem> childInvoiceItems = withChildrenItems ? invoiceApi.getInvoiceItemsByParentInvoice(invoice.getId(), tenantContext) : null;
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
 
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         } else {
-            final InvoiceJson json = new InvoiceJson(invoice, withItems, accountAuditLogs);
+            final InvoiceJson json = new InvoiceJson(invoice, withItems, childInvoiceItems, accountAuditLogs);
             return Response.status(Status.OK).entity(json).build();
         }
     }
@@ -196,16 +198,18 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice not found")})
     public Response getInvoiceByNumber(@PathParam("invoiceNumber") final Integer invoiceNumber,
                                        @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                                       @QueryParam(QUERY_INVOICE_WITH_CHILDREN_ITEMS) @DefaultValue("false") final boolean withChildrenItems,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createContext(request);
         final Invoice invoice = invoiceApi.getInvoiceByNumber(invoiceNumber, tenantContext);
+        final List<InvoiceItem> childInvoiceItems = withChildrenItems ? invoiceApi.getInvoiceItemsByParentInvoice(invoice.getId(), tenantContext) : null;
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
 
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceNumber);
         } else {
-            final InvoiceJson json = new InvoiceJson(invoice, withItems, accountAuditLogs);
+            final InvoiceJson json = new InvoiceJson(invoice, withItems, childInvoiceItems, accountAuditLogs);
             return Response.status(Status.OK).entity(json).build();
         }
     }
@@ -246,7 +250,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                         if (accountsAuditLogs.get().get(invoice.getAccountId()) == null) {
                                                             accountsAuditLogs.get().put(invoice.getAccountId(), auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext));
                                                         }
-                                                        return new InvoiceJson(invoice, withItems, accountsAuditLogs.get().get(invoice.getAccountId()));
+                                                        return new InvoiceJson(invoice, withItems, null, accountsAuditLogs.get().get(invoice.getAccountId()));
                                                     }
                                                 },
                                                 nextPageUri
@@ -279,7 +283,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                         if (accountsAuditLogs.get().get(invoice.getAccountId()) == null) {
                                                             accountsAuditLogs.get().put(invoice.getAccountId(), auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext));
                                                         }
-                                                        return new InvoiceJson(invoice, withItems, accountsAuditLogs.get().get(invoice.getAccountId()));
+                                                        return new InvoiceJson(invoice, withItems, null, accountsAuditLogs.get().get(invoice.getAccountId()));
                                                     }
                                                 },
                                                 nextPageUri
@@ -393,7 +397,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRunArguments,
                                                                                  callContext);
-            return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice, true, null)).build();
+            return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice, true, null, null)).build();
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -550,6 +554,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                    input.getEndDate(),
                                                    input.getAmount(),
                                                    accountCurrency.name(),
+                                                   null,
                                                    null);
                     }
                 }

@@ -42,8 +42,8 @@ import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
-import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
@@ -762,6 +762,95 @@ public class TestInvoice extends TestJaxrsBase {
 
         // transfer credit to parent account
         killBillClient.transferChildCreditToParent(childAccount.getAccountId(), basicRequestOptions());
+
+    }
+
+    @Test(groups = "slow", description = "Can search and retrieve parent and children invoices with and without children items")
+    public void testParentInvoiceWithChildItems() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account parentAccount = createAccount();
+        final Account childAccount1 = createAccount(parentAccount.getAccountId());
+        final Account childAccount2 = createAccount(parentAccount.getAccountId());
+        final Account childAccount3 = createAccount(parentAccount.getAccountId());
+
+        // Add a bundle, subscription and move the clock to get the first invoice
+        createEntitlement(childAccount1.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+                          ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        createEntitlement(childAccount2.getAccountId(), UUID.randomUUID().toString(), "Pistol",
+                          ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        createEntitlement(childAccount3.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+                          ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+
+
+        clock.addDays(32);
+        crappyWaitForLackOfProperSynchonization();
+
+        final List<Invoice> child1Invoices = killBillClient.getInvoicesForAccount(childAccount1.getAccountId(), true, false, requestOptions);
+        final List<Invoice> child2Invoices = killBillClient.getInvoicesForAccount(childAccount2.getAccountId(), true, false, requestOptions);
+        final List<Invoice> child3Invoices = killBillClient.getInvoicesForAccount(childAccount3.getAccountId(), true, false, requestOptions);
+
+        assertEquals(child1Invoices.size(), 2);
+        final Invoice child1RecurringInvoice = child1Invoices.get(1);
+        final InvoiceItem child1RecurringInvoiceItem = child1RecurringInvoice.getItems().get(0);
+        final InvoiceItem child2RecurringInvoiceItem = child2Invoices.get(1).getItems().get(0);
+        final InvoiceItem child3RecurringInvoiceItem = child3Invoices.get(1).getItems().get(0);
+
+        final List<Invoice> parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false, requestOptions);
+        assertEquals(parentInvoices.size(), 2);
+
+        // check parent invoice with child invoice items and no adjustments
+        // parameters: withItems = true, withChildrenItems = true
+        Invoice parentInvoiceWithChildItems = killBillClient.getInvoice(parentInvoices.get(1).getInvoiceId(), true, true, requestOptions);
+        assertEquals(parentInvoiceWithChildItems.getItems().size(), 3);
+        assertEquals(parentInvoiceWithChildItems.getItems().get(0).getChildItems().size(), 1);
+        assertEquals(parentInvoiceWithChildItems.getItems().get(1).getChildItems().size(), 1);
+        assertEquals(parentInvoiceWithChildItems.getItems().get(2).getChildItems().size(), 1);
+
+        // add an item adjustment
+        final InvoiceItem adjustmentInvoiceItem = new InvoiceItem();
+        adjustmentInvoiceItem.setAccountId(childAccount1.getAccountId());
+        adjustmentInvoiceItem.setInvoiceId(child1RecurringInvoice.getInvoiceId());
+        adjustmentInvoiceItem.setInvoiceItemId(child1RecurringInvoiceItem.getInvoiceItemId());
+        adjustmentInvoiceItem.setAmount(BigDecimal.TEN);
+        adjustmentInvoiceItem.setCurrency(child1RecurringInvoiceItem.getCurrency());
+        final Invoice invoiceAdjustment = killBillClient.adjustInvoiceItem(adjustmentInvoiceItem, requestOptions);
+        final InvoiceItem child1AdjInvoiceItem = killBillClient.getInvoice(invoiceAdjustment.getInvoiceId(), requestOptions).getItems().get(1);
+
+        // check parent invoice with child invoice items and adjustments
+        // parameters: withItems = true, withChildrenItems = true
+        parentInvoiceWithChildItems = killBillClient.getInvoice(parentInvoices.get(1).getInvoiceId(), true, true, requestOptions);
+        assertEquals(parentInvoiceWithChildItems.getItems().size(), 3);
+        assertEquals(parentInvoiceWithChildItems.getItems().get(0).getChildItems().size(), 2);
+        assertEquals(parentInvoiceWithChildItems.getItems().get(1).getChildItems().size(), 1);
+        assertEquals(parentInvoiceWithChildItems.getItems().get(2).getChildItems().size(), 1);
+
+        final InvoiceItem child1InvoiceItemFromParent = parentInvoiceWithChildItems.getItems().get(0).getChildItems().get(0);
+        final InvoiceItem child1AdjInvoiceItemFromParent = parentInvoiceWithChildItems.getItems().get(0).getChildItems().get(1);
+        final InvoiceItem child2InvoiceItemFromParent = parentInvoiceWithChildItems.getItems().get(1).getChildItems().get(0);
+        final InvoiceItem child3InvoiceItemFromParent = parentInvoiceWithChildItems.getItems().get(2).getChildItems().get(0);
+
+        // check children items for each PARENT_SUMMARY item
+        assertTrue(child1InvoiceItemFromParent.equals(child1RecurringInvoiceItem));
+        assertTrue(child1AdjInvoiceItemFromParent.equals(child1AdjInvoiceItem));
+        assertTrue(child2InvoiceItemFromParent.equals(child2RecurringInvoiceItem));
+        assertTrue(child3InvoiceItemFromParent.equals(child3RecurringInvoiceItem));
+
+        // check parent invoice without child invoice items
+        parentInvoiceWithChildItems = killBillClient.getInvoice(parentInvoices.get(1).getInvoiceId(), true, false, requestOptions);
+        assertEquals(parentInvoiceWithChildItems.getItems().size(), 3);
+        assertNull(parentInvoiceWithChildItems.getItems().get(0).getChildItems());
+        assertNull(parentInvoiceWithChildItems.getItems().get(1).getChildItems());
+        assertNull(parentInvoiceWithChildItems.getItems().get(2).getChildItems());
+
+        // check parent invoice without items but with child invoice items and adjustment. Should return items anyway.
+        // parameters: withItems = false, withChildrenItems = true
+        parentInvoiceWithChildItems = killBillClient.getInvoice(parentInvoices.get(1).getInvoiceId(), false, true, requestOptions);
+        assertEquals(parentInvoiceWithChildItems.getItems().size(), 3);
+        assertEquals(parentInvoiceWithChildItems.getItems().get(0).getChildItems().size(), 2);
+        assertEquals(parentInvoiceWithChildItems.getItems().get(1).getChildItems().size(), 1);
+        assertEquals(parentInvoiceWithChildItems.getItems().get(2).getChildItems().size(), 1);
 
     }
 
