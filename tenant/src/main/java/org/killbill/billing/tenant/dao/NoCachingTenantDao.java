@@ -110,6 +110,11 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
     }
 
     @Override
+    public void updateTenantLastKeyValue(final String key, final String value, final InternalCallContext context) {
+        throw new IllegalStateException("Not implemented by NoCachingTenantDao");
+    }
+
+    @Override
     public void deleteTenantKey(final String key, final InternalCallContext context) {
         throw new IllegalStateException("Not implemented by NoCachingTenantDao");
     }

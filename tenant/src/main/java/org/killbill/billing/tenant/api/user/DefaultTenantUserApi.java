@@ -130,6 +130,15 @@ public class DefaultTenantUserApi implements TenantUserApi {
     }
 
     @Override
+    public void updateTenantKeyValue(final String key, final String value, final CallContext context) throws TenantApiException {
+        // Invalidate tenantKVCache after we store (to avoid race conditions). Multi-node invalidation will follow the TenantBroadcast pattern
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context);
+        final String tenantKey = getCacheKeyName(key, internalContext);
+        tenantDao.updateTenantLastKeyValue(key, value, internalContext);
+        tenantKVCache.remove(tenantKey);
+    }
+
+    @Override
     public void deleteTenantKey(final String key, final CallContext context) throws TenantApiException {
         // Invalidate tenantKVCache after we delete (to avoid race conditions). Multi-node invalidation will follow the TenantBroadcast pattern
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context);

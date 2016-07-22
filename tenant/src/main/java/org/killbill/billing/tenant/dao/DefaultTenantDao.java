@@ -154,6 +154,28 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
     }
 
     @Override
+    public void updateTenantLastKeyValue(final String key, final String value, final InternalCallContext context) {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUIDs.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
+                final TenantKVSqlDao tenantKVSqlDao = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class);
+
+                // Retrieve all values for key ordered with recordId (last at the end)
+                final List<TenantKVModelDao> tenantKV = tenantKVSqlDao.getTenantValueForKey(key, context);
+                if (!tenantKV.isEmpty()) {
+                    final String id = tenantKV.get(tenantKV.size() - 1).getId().toString();
+                    tenantKVSqlDao.updateTenantValueKey(id, value, context);
+                    final TenantKVModelDao rehydrated = tenantKVSqlDao.getById(id, context);
+                    broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
+                }
+                return null;
+            }
+        });
+
+    }
+
+    @Override
     public void deleteTenantKey(final String key, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
