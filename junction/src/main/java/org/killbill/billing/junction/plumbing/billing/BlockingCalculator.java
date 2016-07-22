@@ -197,7 +197,7 @@ public class BlockingCalculator {
     protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription, final InternalTenantContext context) throws CatalogApiException {
 
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
-        final Catalog catalog = catalogService.getFullCatalog(context);
+        final Catalog catalog = catalogService.getFullCatalog(true, context);
 
         for (final DisabledDuration duration : disabledDuration) {
             // The first one before the blocked duration

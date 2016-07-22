@@ -36,8 +36,8 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
 
         }, tenantInternalApi, catalogCache, cacheInvalidationCallback);
         service.loadCatalog();
-        Assert.assertNotNull(service.getFullCatalog(internalCallContext));
-        Assert.assertEquals(service.getFullCatalog(internalCallContext).getCatalogName(), "WeaponsHireSmall");
+        Assert.assertNotNull(service.getFullCatalog(true, internalCallContext));
+        Assert.assertEquals(service.getFullCatalog(true, internalCallContext).getCatalogName(), "WeaponsHireSmall");
     }
 
     @Test(groups = "fast")
@@ -50,7 +50,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
 
         },  tenantInternalApi, catalogCache, cacheInvalidationCallback);
         service.loadCatalog();
-        Assert.assertNotNull(service.getFullCatalog(internalCallContext));
-        Assert.assertEquals(service.getFullCatalog(internalCallContext).getCatalogName(), "Firearms");
+        Assert.assertNotNull(service.getFullCatalog(true, internalCallContext));
+        Assert.assertEquals(service.getFullCatalog(true, internalCallContext).getCatalogName(), "Firearms");
     }
 }

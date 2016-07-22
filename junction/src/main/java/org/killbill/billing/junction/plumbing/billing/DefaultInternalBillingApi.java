@@ -89,7 +89,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException {
-        final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(context);
+        final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(true, context);
 
         // Check to see if billing is off for the account
         final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
@@ -200,7 +200,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 return;
             }
 
-            final Catalog catalog = catalogService.getFullCatalog(context);
+            final Catalog catalog = catalogService.getFullCatalog(true, context);
 
             Integer overridenBCD = null;
             for (final EffectiveSubscriptionInternalEvent transition : billingTransitions) {

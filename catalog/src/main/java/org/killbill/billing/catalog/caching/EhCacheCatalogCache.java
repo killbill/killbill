@@ -81,7 +81,7 @@ public class EhCacheCatalogCache implements CatalogCache {
     }
 
     @Override
-    public VersionedCatalog getCatalog(final InternalTenantContext tenantContext) throws CatalogApiException {
+    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final InternalTenantContext tenantContext) throws CatalogApiException {
 
         // STEPH TODO what are the possibilities for caching here ?
         final VersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext);
@@ -90,7 +90,7 @@ public class EhCacheCatalogCache implements CatalogCache {
         }
 
         if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
-            return defaultCatalog;
+            return useDefaultCatalog ? defaultCatalog : null;
         }
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,
         // but to be on the safe side;;
@@ -98,7 +98,7 @@ public class EhCacheCatalogCache implements CatalogCache {
             VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
             // It means we are using a default catalog in a multi-tenant deployment, that does not really match a real use case, but we want to support it
             // for test purpose.
-            if (tenantCatalog == null) {
+            if (useDefaultCatalog && tenantCatalog == null) {
                 tenantCatalog = new VersionedCatalog(defaultCatalog.getClock(), defaultCatalog.getCatalogName(), defaultCatalog.getRecurringBillingMode(), defaultCatalog.getVersions(), tenantContext);
                 cacheController.add(tenantContext.getTenantRecordId(), tenantCatalog);
             }

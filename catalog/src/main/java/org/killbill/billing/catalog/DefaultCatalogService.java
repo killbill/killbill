@@ -91,16 +91,16 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
     }
 
     @Override
-    public Catalog getFullCatalog(final InternalTenantContext context) throws CatalogApiException {
+    public Catalog getFullCatalog(final boolean useDefaultCatalog, final InternalTenantContext context) throws CatalogApiException {
         return getCatalog(context);
     }
 
     @Override
-    public StaticCatalog getCurrentCatalog(final InternalTenantContext context) throws CatalogApiException {
+    public StaticCatalog getCurrentCatalog(final boolean useDefaultCatalog, final InternalTenantContext context) throws CatalogApiException {
         return getCatalog(context);
     }
 
     private VersionedCatalog getCatalog(final InternalTenantContext context) throws CatalogApiException {
-        return catalogCache.getCatalog(context);
+        return catalogCache.getCatalog(true, context);
     }
 }

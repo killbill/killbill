@@ -70,13 +70,13 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     @Override
     public Catalog getCatalog(final String catalogName, final TenantContext tenantContext) throws CatalogApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
-        return catalogService.getFullCatalog(internalTenantContext);
+        return catalogService.getFullCatalog(true, internalTenantContext);
     }
 
     @Override
     public StaticCatalog getCurrentCatalog(final String catalogName, final TenantContext tenantContext) throws CatalogApiException {
         final InternalTenantContext internalTenantContext = createInternalTenantContext(tenantContext);
-        return catalogService.getCurrentCatalog(internalTenantContext);
+        return catalogService.getCurrentCatalog(true, internalTenantContext);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
 
             final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
             catalogCache.clearCatalog(internalTenantContext);
-            tenantApi.addTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
+            tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
         } catch (TenantApiException e) {
             throw new CatalogApiException(e);
         }

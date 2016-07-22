@@ -156,7 +156,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             */
 
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
-            final Catalog catalog = catalogService.getFullCatalog(context);
+            final Catalog catalog = catalogService.getFullCatalog(true, context);
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, callContext);
 
             final Plan plan = catalog.createOrFindPlan(new PlanSpecifier(spec.getProductName(), spec.getBillingPeriod(), realPriceList), overridesWithContext, effectiveDate);
@@ -194,7 +194,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
         try {
             final List<SubscriptionSpecifier> subscriptions = new ArrayList<SubscriptionSpecifier>();
-            final Catalog catalog = catalogService.getFullCatalog(context);
+            final Catalog catalog = catalogService.getFullCatalog(true, context);
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
 
             final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(bundleId, context);
@@ -540,7 +540,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         try {
             final PlanPhaseSpecifier inputSpec = dryRunArguments.getPlanPhaseSpecifier();
             final String realPriceList = (inputSpec != null && inputSpec.getPriceListName() != null) ? inputSpec.getPriceListName() : PriceListSet.DEFAULT_PRICELIST_NAME;
-            final Catalog catalog = catalogService.getFullCatalog(context);
+            final Catalog catalog = catalogService.getFullCatalog(true, context);
 
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = null; // TODO not supported to dryRun with custom price
             final Plan plan = (inputSpec != null && inputSpec.getProductName() != null && inputSpec.getBillingPeriod() != null) ?
@@ -597,7 +597,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                                                        subscriptionForCancellation.getCurrentPlan().getRecurringBillingPeriod(),
                                                                                        subscriptionForCancellation.getCurrentPriceList().getName(),
                                                                                        subscriptionForCancellation.getCurrentPhase().getPhaseType());
-                                policy = catalogService.getFullCatalog(context).planCancelPolicy(spec, utcNow);
+                                policy = catalogService.getFullCatalog(true, context).planCancelPolicy(spec, utcNow);
                             }
                             cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy);
                         }
@@ -673,7 +673,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     public int getDefaultBillCycleDayLocal(final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException {
 
         try {
-            final Catalog catalog = catalogService.getFullCatalog(context);
+            final Catalog catalog = catalogService.getFullCatalog(true, context);
             final BillingAlignment alignment = catalog.billingAlignment(planPhaseSpecifier, effectiveDate);
             return BillCycleDayCalculator.calculateBcdForAlignment(subscription, baseSubscription, alignment, accountTimeZone, accountBillCycleDayLocal);
         } catch (final CatalogApiException e) {

@@ -110,7 +110,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final List<SubscriptionBaseEvent> events = getEventsOnCreation(subscription.getBundleId(), subscription.getId(), subscription.getAlignStartDate(), subscription.getBundleStartDate(),
                                                                            plan, initialPhase, realPriceList, effectiveDate, processedDate, internalCallContext);
             dao.createSubscription(subscription, events, internalCallContext);
-            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog(internalCallContext));
+            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog(true, internalCallContext));
             return subscription;
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
@@ -145,7 +145,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final DefaultSubscriptionBase baseSubscription = findBaseSubscription(subscriptionBaseList);
         try {
             baseSubscription.rebuildTransitions(dao.getEventsForSubscription(baseSubscription.getId(), internalCallContext),
-                                                catalogService.getFullCatalog(internalCallContext));
+                                                catalogService.getFullCatalog(true, internalCallContext));
 
             for (final DefaultSubscriptionBase input : subscriptionBaseList) {
                 if (input.getId().equals(baseSubscription.getId())) {
@@ -153,7 +153,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 }
 
                 input.rebuildTransitions(dao.getEventsForSubscription(input.getId(), internalCallContext),
-                                         catalogService.getFullCatalog(internalCallContext));
+                                         catalogService.getFullCatalog(true, internalCallContext));
             }
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
@@ -185,7 +185,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         try {
             final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
-            final BillingActionPolicy policy = catalogService.getFullCatalog(internalCallContext).planCancelPolicy(planPhase, now);
+            final BillingActionPolicy policy = catalogService.getFullCatalog(true, internalCallContext).planCancelPolicy(planPhase, now);
             final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy);
 
             return doCancelPlan(ImmutableMap.<DefaultSubscriptionBase, DateTime>of(subscription, effectiveDate), now, internalCallContext);
@@ -252,7 +252,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             boolean allSubscriptionsCancelled = true;
             for (final DefaultSubscriptionBase subscription : subscriptions.keySet()) {
-                final Catalog fullCatalog = catalogService.getFullCatalog(internalCallContext);
+                final Catalog fullCatalog = catalogService.getFullCatalog(true, internalCallContext);
                 subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), fullCatalog);
                 allSubscriptionsCancelled = allSubscriptionsCancelled && (subscription.getState() == EntitlementState.CANCELLED);
             }
@@ -289,7 +289,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         dao.uncancelSubscription(subscription, uncancelEvents, internalCallContext);
         try {
-            final Catalog fullCatalog = catalogService.getFullCatalog(internalCallContext);
+            final Catalog fullCatalog = catalogService.getFullCatalog(true, internalCallContext);
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), fullCatalog);
             return true;
         } catch (final CatalogApiException e) {
@@ -380,7 +380,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final PlanChangeResult planChangeResult;
         try {
             final InternalTenantContext internalCallContext = createTenantContextFromBundleId(subscription.getBundleId(), context);
-            final Product destProduct = catalogService.getFullCatalog(internalCallContext).findProduct(productName, effectiveDate);
+            final Product destProduct = catalogService.getFullCatalog(true, internalCallContext).findProduct(productName, effectiveDate);
             final Plan currentPlan = subscription.getCurrentPlan();
             final PriceList currentPriceList = subscription.getCurrentPriceList();
             final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
@@ -391,7 +391,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                 term,
                                                                 priceList);
 
-            planChangeResult = catalogService.getFullCatalog(internalCallContext).planChange(fromPlanPhase, toPlanPhase, effectiveDate);
+            planChangeResult = catalogService.getFullCatalog(true, internalCallContext).planChange(fromPlanPhase, toPlanPhase, effectiveDate);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
@@ -408,7 +408,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                               final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
-        final Plan newPlan = catalogService.getFullCatalog(internalCallContext).createOrFindPlan(new PlanSpecifier(newProductName, newBillingPeriod, newPriceList), overridesWithContext, effectiveDate, subscription.getStartDate());
+        final Plan newPlan = catalogService.getFullCatalog(true, internalCallContext).createOrFindPlan(new PlanSpecifier(newProductName, newBillingPeriod, newPriceList), overridesWithContext, effectiveDate, subscription.getStartDate());
 
         if (newPlan.getProduct().getCategory() != subscription.getCategory()) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_INVALID, subscription.getId());
@@ -420,7 +420,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         dao.changePlan(subscription, changeEvents, addOnSubscriptionsToBeCancelled, addOnCancelEvents, internalCallContext);
 
-        final Catalog fullCatalog = catalogService.getFullCatalog(internalCallContext);
+        final Catalog fullCatalog = catalogService.getFullCatalog(true, internalCallContext);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), fullCatalog);
     }
 

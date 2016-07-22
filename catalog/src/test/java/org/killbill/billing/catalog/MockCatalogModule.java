@@ -38,8 +38,8 @@ public class MockCatalogModule extends KillBillModule {
 
         final CatalogService catalogService = Mockito.mock(CatalogService.class);
         try {
-            Mockito.when(catalogService.getCurrentCatalog(Mockito.any(InternalCallContext.class))).thenReturn(new MockCatalog());
-            Mockito.when(catalogService.getFullCatalog(Mockito.any(InternalCallContext.class))).thenReturn(catalog);
+            Mockito.when(catalogService.getCurrentCatalog(true, Mockito.any(InternalCallContext.class))).thenReturn(new MockCatalog());
+            Mockito.when(catalogService.getFullCatalog(true, Mockito.any(InternalCallContext.class))).thenReturn(catalog);
             bind(CatalogService.class).toInstance(catalogService);
         } catch (CatalogApiException e) {
             throw new RuntimeException(e);
