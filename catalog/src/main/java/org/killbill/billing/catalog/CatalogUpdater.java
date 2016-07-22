@@ -51,15 +51,12 @@ import com.google.common.collect.Iterables;
 public class CatalogUpdater {
 
     private static URI DUMMY_URI;
-
-    {
+    static {
         try {
             DUMMY_URI = new URI("dummy");
         } catch (URISyntaxException e) {
         }
-    }
-
-    ;
+    };
 
     private static final DefaultPriceList DEFAULT_PRICELIST = new DefaultPriceList().setName(PriceListSet.DEFAULT_PRICELIST_NAME);
 

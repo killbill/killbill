@@ -27,6 +27,8 @@ import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogUpdater;
 import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
+import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -100,14 +102,14 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     public void addSimplePlan(final SimplePlanDescriptor descriptor, final DateTime effectiveDate, final CallContext callContext) throws CatalogApiException {
 
         try {
-            final StandaloneCatalog currentCatalog = (StandaloneCatalog) getCurrentCatalog("dummy", callContext);
+            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
+            final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
                                                   new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater("dummy", BillingMode.IN_ARREAR, effectiveDate, descriptor.getCurrency());
+                                                  new CatalogUpdater("dummy", BillingMode.IN_ADVANCE, effectiveDate, descriptor.getCurrency());
 
             catalogUpdater.addSimplePlanDescriptor(descriptor);
 
-            final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
             catalogCache.clearCatalog(internalTenantContext);
             tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
         } catch (TenantApiException e) {
@@ -115,6 +117,16 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         }
     }
 
+
+    private StandaloneCatalog getCurrentStandaloneCatalogForTenant(final InternalTenantContext internalTenantContext) throws CatalogApiException {
+        final VersionedCatalog versionedCatalog = (VersionedCatalog) catalogService.getCurrentCatalog(false, internalTenantContext);
+        if (versionedCatalog != null && !versionedCatalog.getVersions().isEmpty()) {
+            final StandaloneCatalogWithPriceOverride standaloneCatalogWithPriceOverride = versionedCatalog.getVersions().get(versionedCatalog.getVersions().size() - 1);
+            return standaloneCatalogWithPriceOverride.getStandaloneCatalog();
+        } else {
+            return null;
+        }
+    }
 
     private InternalTenantContext createInternalTenantContext(final TenantContext tenantContext) {
         // Only tenantRecordId will be populated -- this is important to always create the (ehcache) key the same way
