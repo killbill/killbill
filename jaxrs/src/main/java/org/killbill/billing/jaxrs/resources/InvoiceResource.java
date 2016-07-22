@@ -506,9 +506,9 @@ public class InvoiceResource extends JaxRsResourceBase {
         final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, sanitizedExternalChargesJson, autoCommit, callContext);
 
         // if all createdExternalCharges point to the same invoiceId, use the provided paymentExternalKey and / or transactionExternalKey
-        boolean haveSameInvoiceId = Iterables.all(createdExternalCharges, new Predicate<InvoiceItem>() {
+        final boolean haveSameInvoiceId = Iterables.all(createdExternalCharges, new Predicate<InvoiceItem>() {
             @Override
-            public boolean apply(@Nullable final InvoiceItem input) {
+            public boolean apply(final InvoiceItem input) {
                 return input.getInvoiceId().equals(createdExternalCharges.get(0).getInvoiceId());
             }
         });
@@ -520,7 +520,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                     paidInvoices.add(externalCharge.getInvoiceId());
                     final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
                     createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), account.getPaymentMethodId(), false,
-                                             (haveSameInvoiceId && paymentExternalKey != null) ? paymentExternalKey : UUIDs.randomUUID().toString(),
+                                             (haveSameInvoiceId && paymentExternalKey != null) ? paymentExternalKey : null,
                                              (haveSameInvoiceId && transactionExternalKey != null) ? transactionExternalKey : UUIDs.randomUUID().toString(),
                                              pluginProperties, callContext);
                 }
@@ -656,7 +656,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
 
         final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
-                                                        (payment.getPaymentExternalKey() != null) ? payment.getPaymentExternalKey() : UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(), pluginProperties, callContext);
+                                                        (payment.getPaymentExternalKey() != null) ? payment.getPaymentExternalKey() : null, UUIDs.randomUUID().toString(), pluginProperties, callContext);
         return result != null ?
                uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId()) :
                Response.status(Status.NO_CONTENT).build();
