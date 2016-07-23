@@ -42,7 +42,7 @@ public abstract class EntitlementLoggingHelper {
 
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Create ")
-                    .append(bundleId != null ? " BP " : " AO ")
+                    .append(bundleId != null ? " AO " : " BP ")
                     .append("Entitlement: ");
 
             if (bundleId != null) {

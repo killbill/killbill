@@ -94,6 +94,7 @@ public interface JaxrsResource {
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
     public static final String QUERY_WITH_MIGRATION_INVOICES = "withMigrationInvoices";
     public static final String QUERY_UNPAID_INVOICES_ONLY = "unpaidInvoicesOnly";
+    public static final String QUERY_INVOICE_WITH_CHILDREN_ITEMS = "withChildrenItems";
 
     public static final String QUERY_PAYMENT_EXTERNAL = "externalPayment";
     public static final String QUERY_PAYMENT_AMOUNT = "paymentAmount";

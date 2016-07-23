@@ -203,4 +203,14 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @throws InvoiceApiException if any unexpected error occurs
      */
     void transferChildCreditToParent(Account childAccount, InternalCallContext childAccountContext) throws InvoiceApiException;
+
+    /**
+     * Retrieve invoice items details associated to Parent SUMMARY invoice item
+     *
+     * @param parentInvoiceId the parent invoice id
+     * @param context the tenant context
+     * @return a list of invoice items associated with a parent invoice
+     * @throws InvoiceApiException if any unexpected error occurs
+     */
+    List<InvoiceItemModelDao> getInvoiceItemsByParentInvoice(UUID parentInvoiceId, final InternalTenantContext context) throws InvoiceApiException;
 }

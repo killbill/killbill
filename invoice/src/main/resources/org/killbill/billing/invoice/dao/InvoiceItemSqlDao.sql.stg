@@ -76,3 +76,13 @@ updateAmount() ::= <<
     WHERE id = :id
     <AND_CHECK_TENANT()>;
 >>
+
+getInvoiceItemsByParentInvoice() ::= <<
+  SELECT <allTableFields(("items."))>
+  FROM <tableName()> items
+  INNER JOIN invoice_parent_children invRel ON invRel.child_invoice_id = items.invoice_id
+  WHERE invRel.parent_invoice_id = :parentInvoiceId
+  <AND_CHECK_TENANT("items.")>
+  <defaultOrderBy()>
+  ;
+>>
