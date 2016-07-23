@@ -55,7 +55,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final InvoiceItemJson invoiceItemJson = new InvoiceItemJson(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, childAccountId,
                                                                                       bundleId, subscriptionId, planName, phaseName, usageName, type, description,
-                                                                                      startDate, endDate, amount, currency.name(), auditLogs);
+                                                                                      startDate, endDate, amount, currency.name(), null, auditLogs);
         Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItemId);
         Assert.assertEquals(invoiceItemJson.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceItemJson.getLinkedInvoiceItemId(), linkedInvoiceItemId);

@@ -53,4 +53,8 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
     void updateAmount(@Bind("id") String invoiceItemId,
                       @Bind("amount")BigDecimal amount,
                       @BindBean final InternalCallContext context);
+
+    @SqlQuery
+    List<InvoiceItemModelDao> getInvoiceItemsByParentInvoice(@Bind("parentInvoiceId") final String parentInvoiceId,
+                                                             @BindBean final InternalTenantContext context);
 }
