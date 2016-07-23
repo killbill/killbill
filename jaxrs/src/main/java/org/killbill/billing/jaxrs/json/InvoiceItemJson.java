@@ -339,8 +339,7 @@ public class InvoiceItemJson extends JsonBase {
         if (childAccountId != null ? !childAccountId.equals(that.childAccountId) : that.childAccountId != null) {
             return false;
         }
-        if (!((amount == null && that.amount == null) ||
-              (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
+        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
             return false;
         }
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
