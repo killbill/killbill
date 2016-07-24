@@ -37,14 +37,14 @@ public class GatewayNotificationJson extends JsonBase {
     private final Integer status;
     private final String entity;
     private final Map<String, List<String>> headers;
-    private final Map<String, String> properties;
+    private final Map<String, Object> properties;
 
     @JsonCreator
     public GatewayNotificationJson(@JsonProperty("kbPaymentId") final String kbPaymentId,
                                    @JsonProperty("status") final Integer status,
                                    @JsonProperty("entity") final String entity,
                                    @JsonProperty("headers") final Map<String, List<String>> headers,
-                                   @JsonProperty("properties") final Map<String, String> properties) {
+                                   @JsonProperty("properties") final Map<String, Object> properties) {
         this.kbPaymentId = kbPaymentId;
         this.status = status;
         this.entity = entity;
@@ -94,7 +94,7 @@ public class GatewayNotificationJson extends JsonBase {
         return headers;
     }
 
-    public Map<String, String> getProperties() {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 

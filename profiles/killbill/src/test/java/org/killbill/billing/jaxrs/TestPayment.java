@@ -241,17 +241,9 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        HashMultimap<String, String> queryParams = HashMultimap.create();
-        queryParams.put("withAttempts", "true");
-        RequestOptions inputOptions = RequestOptions.builder()
-                                                    .withCreatedBy(createdBy)
-                                                    .withReason(reason)
-                                                    .withComment(comment)
-                                                    .withQueryParams(queryParams).build();
-
-        Payments payments = killBillClient.searchPayments("", 0L, 100L, AuditLevel.NONE, inputOptions);
+        Payments payments = killBillClient.searchPayments("", 0L, 100L, AuditLevel.NONE, requestOptions);
         Assert.assertNotNull(payments.get(0));
-        Payment payment = killBillClient.getPayment(payments.get(0).getPaymentId(), inputOptions);
+        Payment payment = killBillClient.getPayment(payments.get(0).getPaymentId(), false, true, ImmutableMap.<String, String>of(), AuditLevel.NONE, requestOptions);
 
         Assert.assertNotNull(payment.getPaymentAttempts());
         Assert.assertEquals(payment.getPaymentAttempts().get(0).getStateName(), "RETRIED");
