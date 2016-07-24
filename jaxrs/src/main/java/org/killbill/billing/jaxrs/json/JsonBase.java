@@ -74,11 +74,11 @@ public abstract class JsonBase {
         return properties;
     }
 
-    protected Map<String, String> propertiesToMap(final Iterable<PluginProperty> properties) {
-        final Map<String, String> propertiesMap = new HashMap<String, String>();
+    protected Map<String, Object> propertiesToMap(final Iterable<PluginProperty> properties) {
+        final Map<String, Object> propertiesMap = new HashMap<String, Object>();
         for (final PluginProperty pluginProperty : properties) {
             if (pluginProperty.getValue() != null) {
-                propertiesMap.put(pluginProperty.getKey(), pluginProperty.getValue().toString());
+                propertiesMap.put(pluginProperty.getKey(), pluginProperty.getValue());
             }
         }
         return propertiesMap;

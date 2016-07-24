@@ -31,15 +31,15 @@ public class HostedPaymentPageFormDescriptorJson extends JsonBase {
     private final String kbAccountId;
     private final String formMethod;
     private final String formUrl;
-    private final Map<String, String> formFields;
-    private final Map<String, String> properties;
+    private final Map<String, Object> formFields;
+    private final Map<String, Object> properties;
 
     @JsonCreator
     public HostedPaymentPageFormDescriptorJson(@JsonProperty("kbAccountId") final String kbAccountId,
                                                @JsonProperty("formMethod") final String formMethod,
                                                @JsonProperty("formUrl") final String formUrl,
-                                               @JsonProperty("formFields") final Map<String, String> formFields,
-                                               @JsonProperty("properties") final Map<String, String> properties) {
+                                               @JsonProperty("formFields") final Map<String, Object> formFields,
+                                               @JsonProperty("properties") final Map<String, Object> properties) {
         this.kbAccountId = kbAccountId;
         this.formMethod = formMethod;
         this.formUrl = formUrl;
@@ -67,11 +67,11 @@ public class HostedPaymentPageFormDescriptorJson extends JsonBase {
         return formUrl;
     }
 
-    public Map<String, String> getFormFields() {
+    public Map<String, Object> getFormFields() {
         return formFields;
     }
 
-    public Map<String, String> getProperties() {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
