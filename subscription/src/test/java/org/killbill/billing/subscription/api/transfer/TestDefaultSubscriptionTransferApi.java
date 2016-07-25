@@ -134,13 +134,18 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
                 return SubscriptionBaseTransitionType.CANCEL.equals(subscriptionTransitionType) ? null :
-                       new PlanPhaseSpecifier("BicycleTrialEvergreen1USD", ProductCategory.BASE, BillingPeriod.NO_BILLING_PERIOD,
+                       new PlanPhaseSpecifier("BicycleTrialEvergreen1USD",  BillingPeriod.NO_BILLING_PERIOD,
                                               PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.FIXEDTERM);
             }
 
             @Override
             public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                 return subscriptionTransitionType;
+            }
+
+            @Override
+            public ProductCategory getProductCategory() {
+                return ProductCategory.BASE;
             }
         };
     }

@@ -191,17 +191,6 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         logCreateEntitlementWithAOs(log, externalKey, entitlementSpecifiers, entitlementEffectiveDate, billingEffectiveDate);
 
 
-        final EntitlementSpecifier baseSpecifier = Iterables.tryFind(entitlementSpecifiers, new Predicate<EntitlementSpecifier>() {
-            @Override
-            public boolean apply(final EntitlementSpecifier specifier) {
-                return specifier.getPlanPhaseSpecifier() != null && ProductCategory.BASE.equals(specifier.getPlanPhaseSpecifier().getProductCategory());
-            }
-        }).orNull();
-
-        if (baseSpecifier == null) {
-            throw new EntitlementApiException(new IllegalArgumentException(), ErrorCode.SUB_CREATE_NO_BP.getCode(), "Missing Base Subscription.");
-        }
-
         final List<EntitlementSpecifier> entitlementSpecifierList = new ArrayList<EntitlementSpecifier>();
         Iterables.addAll(entitlementSpecifierList, entitlementSpecifiers);
 

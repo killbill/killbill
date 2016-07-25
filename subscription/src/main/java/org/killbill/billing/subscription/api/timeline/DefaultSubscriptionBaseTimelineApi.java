@@ -136,7 +136,7 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
 
         for (final SubscriptionBase cur : subscriptions) {
             if (!repairIds.contains(cur.getId())) {
-                result.add(new DefaultSubscriptionBaseTimeline((DefaultSubscriptionBase) cur, catalogService.getFullCatalog(tenantContext)));
+                result.add(new DefaultSubscriptionBaseTimeline((DefaultSubscriptionBase) cur, catalogService.getFullCatalog(true, tenantContext)));
             }
         }
         return result;

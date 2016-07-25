@@ -75,4 +75,31 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
         value = tenantDao.getTenantValueForKey("THE_KEY", internalCallContext);
         Assert.assertEquals(value.size(), 0);
     }
+
+
+
+
+    @Test(groups = "slow")
+    public void testTenantKeyValueUpdate() throws Exception {
+        final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
+                                                       UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        tenantDao.create(new TenantModelDao(tenant), internalCallContext);
+
+        tenantDao .addTenantKeyValue("MY_KEY", "TheValue1", false, internalCallContext);
+        tenantDao .addTenantKeyValue("MY_KEY", "TheValue2", false, internalCallContext);
+        tenantDao .addTenantKeyValue("MY_KEY", "TheValue3", false, internalCallContext);
+
+        final List<String> value = tenantDao.getTenantValueForKey("MY_KEY", internalCallContext);
+        Assert.assertEquals(value.size(), 3);
+
+
+        tenantDao.updateTenantLastKeyValue("MY_KEY", "NewValue3", internalCallContext);
+
+        final List<String> newValues = tenantDao.getTenantValueForKey("MY_KEY", internalCallContext);
+        Assert.assertEquals(newValues.size(), 3);
+
+        Assert.assertEquals(newValues.get(0), "TheValue1");
+        Assert.assertEquals(newValues.get(1), "TheValue2");
+        Assert.assertEquals(newValues.get(2), "NewValue3");
+    }
 }

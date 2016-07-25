@@ -18,18 +18,17 @@ package org.killbill.billing.tenant.dao;
 
 import java.util.List;
 
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.tenant.api.TenantKV;
+import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.entity.dao.Audited;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-
-import org.killbill.billing.tenant.api.TenantKV;
-import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.util.entity.dao.Audited;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 public interface TenantKVSqlDao extends EntitySqlDao<TenantKVModelDao, TenantKV> {
@@ -42,4 +41,12 @@ public interface TenantKVSqlDao extends EntitySqlDao<TenantKVModelDao, TenantKV>
     @Audited(ChangeType.DELETE)
     public void markTenantKeyAsDeleted(@Bind("id")final String id,
                                        @BindBean final InternalCallContext context);
+
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    public void updateTenantValueKey(@Bind("id") final String id,
+                                     @Bind("tenantValue") final String tenantValue,
+                                     @BindBean final InternalCallContext context);
+
+
 }

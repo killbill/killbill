@@ -940,7 +940,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     private DefaultSubscriptionBase createSubscriptionForInternalUse(final SubscriptionBase shellSubscription, final List<SubscriptionBaseEvent> events, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase result = new DefaultSubscriptionBase(new SubscriptionBuilder(((DefaultSubscriptionBase) shellSubscription)), null, clock);
         if (events.size() > 0) {
-            final Catalog fullCatalog = catalogService.getFullCatalog(context);
+            final Catalog fullCatalog = catalogService.getFullCatalog(true, context);
             result.rebuildTransitions(events, fullCatalog);
         }
         return result;
@@ -1064,7 +1064,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             allEvents.addAll(subscriptionWithNewEvent.getEvents());
         }
         allEvents.add(newEvent);
-        subscriptionWithNewEvent.rebuildTransitions(allEvents, catalogService.getFullCatalog(context));
+        subscriptionWithNewEvent.rebuildTransitions(allEvents, catalogService.getFullCatalog(true, context));
         return subscriptionWithNewEvent;
     }
 

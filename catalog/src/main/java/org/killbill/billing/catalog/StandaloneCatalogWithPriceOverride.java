@@ -130,8 +130,8 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
     }
 
     @Override
-    public Plan createOrFindCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
-        final Plan defaultPlan = standaloneCatalog.createOrFindCurrentPlan(productName, period, priceListName, null);
+    public Plan createOrFindCurrentPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
+        final Plan defaultPlan = standaloneCatalog.createOrFindCurrentPlan(spec, null);
 
         if (overrides == null ||
             overrides.getOverrides() == null ||

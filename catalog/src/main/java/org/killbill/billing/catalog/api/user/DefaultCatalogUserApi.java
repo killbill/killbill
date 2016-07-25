@@ -19,15 +19,24 @@ package org.killbill.billing.catalog.api.user;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.Charset;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.CatalogUpdater;
 import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
+import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
+import org.killbill.billing.catalog.api.MutableStaticCatalog;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.tenant.api.TenantApiException;
@@ -37,6 +46,9 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.xmlloader.XMLLoader;
+import org.killbill.xmlloader.XMLWriter;
+
+import com.google.common.collect.ImmutableList;
 
 public class DefaultCatalogUserApi implements CatalogUserApi {
 
@@ -44,6 +56,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     private final InternalCallContextFactory internalCallContextFactory;
     private final TenantUserApi tenantApi;
     private final CatalogCache catalogCache;
+
 
     @Inject
     public DefaultCatalogUserApi(final CatalogService catalogService,
@@ -59,13 +72,13 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     @Override
     public Catalog getCatalog(final String catalogName, final TenantContext tenantContext) throws CatalogApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
-        return catalogService.getFullCatalog(internalTenantContext);
+        return catalogService.getFullCatalog(true, internalTenantContext);
     }
 
     @Override
     public StaticCatalog getCurrentCatalog(final String catalogName, final TenantContext tenantContext) throws CatalogApiException {
         final InternalTenantContext internalTenantContext = createInternalTenantContext(tenantContext);
-        return catalogService.getCurrentCatalog(internalTenantContext);
+        return catalogService.getCurrentCatalog(true, internalTenantContext);
     }
 
     @Override
@@ -82,6 +95,36 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             throw new CatalogApiException(e);
         } catch (final Exception e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    @Override
+    public void addSimplePlan(final SimplePlanDescriptor descriptor, final DateTime effectiveDate, final CallContext callContext) throws CatalogApiException {
+
+        try {
+            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
+            final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
+            final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
+                                                  new CatalogUpdater(currentCatalog) :
+                                                  new CatalogUpdater("dummy", BillingMode.IN_ADVANCE, effectiveDate, descriptor.getCurrency());
+
+            catalogUpdater.addSimplePlanDescriptor(descriptor);
+
+            catalogCache.clearCatalog(internalTenantContext);
+            tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
+        } catch (TenantApiException e) {
+            throw new CatalogApiException(e);
+        }
+    }
+
+
+    private StandaloneCatalog getCurrentStandaloneCatalogForTenant(final InternalTenantContext internalTenantContext) throws CatalogApiException {
+        final VersionedCatalog versionedCatalog = (VersionedCatalog) catalogService.getCurrentCatalog(false, internalTenantContext);
+        if (versionedCatalog != null && !versionedCatalog.getVersions().isEmpty()) {
+            final StandaloneCatalogWithPriceOverride standaloneCatalogWithPriceOverride = versionedCatalog.getVersions().get(versionedCatalog.getVersions().size() - 1);
+            return standaloneCatalogWithPriceOverride.getStandaloneCatalog();
+        } else {
+            return null;
         }
     }
 

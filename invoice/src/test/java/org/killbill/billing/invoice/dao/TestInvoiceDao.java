@@ -63,6 +63,7 @@ import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
+import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
@@ -1758,6 +1759,35 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertNotNull(parentDraftInvoice);
         assertEquals(parentDraftInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertEquals(parentDraftInvoice.getInvoiceItems().size(), 1);
+
+    }
+
+    @Test(groups = "slow")
+    public void testRetrieveInvoiceItemsByParentInvoice() throws InvoiceApiException {
+        final UUID childAccountId = account.getId();
+        final Invoice childInvoice = new DefaultInvoice(childAccountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final UUID invoiceId = childInvoice.getId();
+        final UUID subscriptionId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
+        final LocalDate startDate = new LocalDate(2010, 1, 1);
+        final LocalDate endDate = new LocalDate(2010, 4, 1);
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(invoiceId, childAccountId, bundleId, subscriptionId, "test plan", "test phase", startDate, endDate,
+                                                                 new BigDecimal("21.00"), new BigDecimal("7.00"), Currency.USD);
+        final InvoiceItem invoiceAdj = new ItemAdjInvoiceItem(invoiceItem, startDate, new BigDecimal("-5.00"), Currency.USD);
+
+        childInvoice.addInvoiceItem(invoiceItem);
+        childInvoice.addInvoiceItem(invoiceAdj);
+        invoiceUtil.createInvoice(childInvoice, true, context);
+
+        final UUID parentInvoiceId = UUID.randomUUID();
+
+        InvoiceParentChildModelDao invoiceRelation = new InvoiceParentChildModelDao(parentInvoiceId, childInvoice.getId(), childAccountId);
+        invoiceDao.createParentChildInvoiceRelation(invoiceRelation, context);
+
+        final List<InvoiceItemModelDao> invoiceItems = invoiceDao.getInvoiceItemsByParentInvoice(parentInvoiceId, context);
+        assertEquals(invoiceItems.size(), 2);
+        assertEquals(invoiceItems.get(0).getType(), InvoiceItemType.RECURRING);
+        assertEquals(invoiceItems.get(1).getType(), InvoiceItemType.ITEM_ADJ);
 
     }
 

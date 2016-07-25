@@ -121,7 +121,6 @@ public class TestCase extends CatalogTestSuiteNoDB {
 
         assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
         assertionNull(cr, cat.getCurrentProducts()[1].getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
-        assertionNull(cr, product.getName(), ProductCategory.ADD_ON, BillingPeriod.MONTHLY, priceList.getName(), cat);
         assertionNull(cr, product.getName(), ProductCategory.BASE, BillingPeriod.ANNUAL, priceList.getName(), cat);
         assertionException(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, "dipsy", cat);
     }
@@ -143,7 +142,6 @@ public class TestCase extends CatalogTestSuiteNoDB {
 
         assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
         assertion(Result.FOO, cr, cat.getCurrentProducts()[1].getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
-        assertionNull(cr, product.getName(), ProductCategory.ADD_ON, BillingPeriod.MONTHLY, priceList.getName(), cat);
         assertionNull(cr, product.getName(), ProductCategory.BASE, BillingPeriod.ANNUAL, priceList.getName(), cat);
         assertionException(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, "dipsy", cat);
     }
@@ -187,7 +185,6 @@ public class TestCase extends CatalogTestSuiteNoDB {
 
         assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
         assertionNull(cr, cat.getCurrentProducts()[1].getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
-        assertionNull(cr, product.getName(), ProductCategory.ADD_ON, BillingPeriod.MONTHLY, priceList.getName(), cat);
         assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.ANNUAL, priceList.getName(), cat);
         assertionException(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, "dipsy", cat);
     }
@@ -209,7 +206,6 @@ public class TestCase extends CatalogTestSuiteNoDB {
 
         assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
         assertionNull(cr, cat.getCurrentProducts()[1].getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
-        assertionNull(cr, product.getName(), ProductCategory.ADD_ON, BillingPeriod.MONTHLY, priceList.getName(), cat);
         assertionNull(cr, product.getName(), ProductCategory.BASE, BillingPeriod.ANNUAL, priceList.getName(), cat);
         assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, "dipsy", cat);
     }
@@ -250,21 +246,21 @@ public class TestCase extends CatalogTestSuiteNoDB {
                 Result.LALA);
 
         final Result r1 = DefaultCase.getResult(new DefaultCaseResult[]{cr0, cr1, cr2, cr3},
-                                                new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName()), cat);
+                                                new PlanSpecifier(product.getName(), BillingPeriod.MONTHLY, priceList.getName()), cat);
         Assert.assertEquals(r1, Result.FOO);
 
         final Result r2 = DefaultCase.getResult(new DefaultCaseResult[]{cr0, cr1, cr2},
-                                                new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName()), cat);
+                                                new PlanSpecifier(product.getName(), BillingPeriod.ANNUAL, priceList.getName()), cat);
         Assert.assertEquals(r2, Result.DIPSY);
     }
 
     protected void assertionNull(final DefaultCaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) throws CatalogApiException {
-        Assert.assertNull(cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
+        Assert.assertNull(cr.getResult(new PlanSpecifier(productName, bp, priceListName), cat));
     }
 
     protected void assertionException(final DefaultCaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) {
         try {
-            cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat);
+            cr.getResult(new PlanSpecifier(productName, bp, priceListName), cat);
             Assert.fail("Expecting an exception");
         } catch (CatalogApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.CAT_PRICE_LIST_NOT_FOUND.getCode());
@@ -272,6 +268,6 @@ public class TestCase extends CatalogTestSuiteNoDB {
     }
 
     protected void assertion(final Result result, final DefaultCaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) throws CatalogApiException {
-        Assert.assertEquals(result, cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
+        Assert.assertEquals(result, cr.getResult(new PlanSpecifier(productName, bp, priceListName), cat));
     }
 }

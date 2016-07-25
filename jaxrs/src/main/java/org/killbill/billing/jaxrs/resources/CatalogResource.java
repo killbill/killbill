@@ -40,9 +40,12 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Listing;
+import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
 import org.killbill.billing.jaxrs.json.CatalogJson;
 import org.killbill.billing.jaxrs.json.PlanDetailJson;
+import org.killbill.billing.jaxrs.json.SimplePlanJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
@@ -177,6 +180,33 @@ public class CatalogResource extends JaxRsResourceBase {
             details.add(new PlanDetailJson(listing));
         }
         return Response.status(Status.OK).entity(details).build();
+    }
+
+
+    @TimedResource
+    @POST
+    @Path("/simplePlan")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Upload the full catalog as XML")
+    @ApiResponses(value = {})
+    public Response addSimplePlan(final SimplePlanJson simplePlan,
+                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                     @HeaderParam(HDR_REASON) final String reason,
+                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request,
+                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor(simplePlan.getPlanId(),
+                                                                          simplePlan.getProductName(),
+                                                                          simplePlan.getCurrency(),
+                                                                          simplePlan.getAmount(),
+                                                                          simplePlan.getBillingPeriod(),
+                                                                          simplePlan.getTrialLength(),
+                                                                          simplePlan.getTrialTimeUnit());
+        catalogUserApi.addSimplePlan(desc, clock.getUTCNow(), callContext);
+        return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null);
     }
 
 }

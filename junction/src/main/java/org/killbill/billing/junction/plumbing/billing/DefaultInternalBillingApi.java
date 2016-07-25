@@ -58,7 +58,6 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +89,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException {
-        final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(context);
+        final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(true, context);
 
         // Check to see if billing is off for the account
         final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
@@ -201,7 +200,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 return;
             }
 
-            final Catalog catalog = catalogService.getFullCatalog(context);
+            final Catalog catalog = catalogService.getFullCatalog(true, context);
 
             Integer overridenBCD = null;
             for (final EffectiveSubscriptionInternalEvent transition : billingTransitions) {
@@ -248,10 +247,9 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final BillingPeriod billingPeriod = phase.getRecurring() != null ? phase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
 
         return new PlanPhaseSpecifier(product.getName(),
-                               product.getCategory(),
-                               billingPeriod,
-                               transition.getNextPriceList(),
-                               phase.getPhaseType());
+                                      billingPeriod,
+                                      transition.getNextPriceList(),
+                                      phase.getPhaseType());
     }
 
     private boolean is_AUTO_INVOICING_OFF(final List<Tag> tags) {

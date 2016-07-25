@@ -195,10 +195,9 @@ public class PlanAligner extends BaseAligner {
                                                    final DateTime effectiveDate,
                                                    final InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException {
-        final Catalog catalog = catalogService.getFullCatalog(context);
+        final Catalog catalog = catalogService.getFullCatalog(true, context);
 
         final PlanSpecifier planSpecifier = new PlanSpecifier(plan.getProduct().getName(),
-                                                              plan.getProduct().getCategory(),
                                                               plan.getRecurringBillingPeriod(),
                                                               priceList);
 
@@ -251,16 +250,14 @@ public class PlanAligner extends BaseAligner {
                                              final PhaseType originalInitialPhase,
                                              final WhichPhase which,
                                              final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
-        final Catalog catalog = catalogService.getFullCatalog(context);
+        final Catalog catalog = catalogService.getFullCatalog(true, context);
         final ProductCategory currentCategory = currentPlan.getProduct().getCategory();
         final PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                                                                                 currentCategory,
                                                                                  currentPlan.getRecurringBillingPeriod(),
                                                                                  currentPriceList,
                                                                                  currentPhase.getPhaseType());
 
         final PlanSpecifier toPlanSpecifier = new PlanSpecifier(nextPlan.getProduct().getName(),
-                                                                nextPlan.getProduct().getCategory(),
                                                                 nextPlan.getRecurringBillingPeriod(),
                                                                 priceList);
 

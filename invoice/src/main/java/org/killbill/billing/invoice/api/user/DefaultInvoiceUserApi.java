@@ -556,4 +556,16 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         dao.transferChildCreditToParent(childAccount, internalCallContext);
 
     }
+
+    @Override
+    public List<InvoiceItem> getInvoiceItemsByParentInvoice(final UUID parentInvoiceId, final TenantContext context) throws InvoiceApiException {
+        final InternalTenantContext  internalTenantContext = internalCallContextFactory.createInternalTenantContext(parentInvoiceId, ObjectType.INVOICE, context);
+        return ImmutableList.copyOf(Collections2.transform(dao.getInvoiceItemsByParentInvoice(parentInvoiceId, internalTenantContext),
+                                                                    new Function<InvoiceItemModelDao, InvoiceItem>() {
+            @Override
+            public InvoiceItem apply(final InvoiceItemModelDao input) {
+                return InvoiceItemFactory.fromModelDao(input);
+            }
+        }));
+    }
 }

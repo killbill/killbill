@@ -18,17 +18,22 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Catalog;
 import org.killbill.billing.client.model.Plan;
 import org.killbill.billing.client.model.PlanDetail;
 import org.killbill.billing.client.model.Product;
+import org.killbill.billing.client.model.SimplePlan;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -95,4 +100,27 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.fail();
     }
 
+    @Test(groups = "slow", description = "Can create a simple Plan into a per-tenant catalog")
+    public void testAddSimplePlan() throws Exception {
+
+        killBillClient.addSimplePan(new SimplePlan("foo-monthly", "Foo", Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED), requestOptions);
+        Catalog catalog = killBillClient.getJSONCatalog(requestOptions);
+        Assert.assertEquals(catalog.getProducts().size(),1);
+        Assert.assertEquals(catalog.getProducts().get(0).getName(),"Foo");
+        Assert.assertEquals(catalog.getPriceLists().size(),1);
+        Assert.assertEquals(catalog.getPriceLists().get(0).getName(), "DEFAULT");
+        Assert.assertEquals(catalog.getPriceLists().get(0).getPlans().size(), 1);
+        Assert.assertEquals(catalog.getPriceLists().get(0).getPlans().get(0), "foo-monthly");
+
+
+        killBillClient.addSimplePan(new SimplePlan("foo-annual", "Foo", Currency.USD, new BigDecimal("100.00"), BillingPeriod.ANNUAL, 0, TimeUnit.UNLIMITED), requestOptions);
+
+        catalog = killBillClient.getJSONCatalog(requestOptions);
+        Assert.assertEquals(catalog.getProducts().size(),1);
+        Assert.assertEquals(catalog.getProducts().get(0).getName(),"Foo");
+        Assert.assertEquals(catalog.getPriceLists().size(),1);
+        Assert.assertEquals(catalog.getPriceLists().get(0).getName(), "DEFAULT");
+        Assert.assertEquals(catalog.getPriceLists().get(0).getPlans().size(), 2);
+
+    }
 }

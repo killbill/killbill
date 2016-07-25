@@ -65,7 +65,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     private DefaultProduct product;
 
     @XmlElementWrapper(name = "initialPhases", required = false)
-    @XmlElement(name = "phase", required = true)
+    @XmlElement(name = "phase", required = false)
     private DefaultPlanPhase[] initialPhases;
 
     @XmlElement(name = "finalPhase", required = true)

@@ -120,29 +120,26 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
 
     private class PlanRequestWrapper {
 
-        String name;
-        String productName;
-        BillingPeriod bp;
-        String priceListName;
-        PlanPhasePriceOverridesWithCallContext overrides;
+        private final PlanSpecifier spec;
+        private final PlanPhasePriceOverridesWithCallContext overrides;
 
-        public PlanRequestWrapper(final String name) {
-            this.name = name;
+        public PlanRequestWrapper(final String planName) {
+            this.spec = new PlanSpecifier(planName);
+            this.overrides = null;
         }
 
-        public PlanRequestWrapper(final String productName, final BillingPeriod bp,
-                                  final String priceListName, final PlanPhasePriceOverridesWithCallContext overrides) {
-            this.productName = productName;
-            this.bp = bp;
-            this.priceListName = priceListName;
+        public PlanRequestWrapper(final PlanSpecifier spec,
+                                  final PlanPhasePriceOverridesWithCallContext overrides) {
+            this.spec = spec;
             this.overrides = overrides;
         }
 
+
         public Plan findPlan(final StandaloneCatalogWithPriceOverride catalog) throws CatalogApiException {
-            if (name != null) {
-                return catalog.findCurrentPlan(name);
+            if (spec.getPlanName() != null) {
+                return catalog.findCurrentPlan(spec.getPlanName());
             } else {
-                return catalog.createOrFindCurrentPlan(productName, bp, priceListName, overrides);
+                return catalog.createOrFindCurrentPlan(new PlanSpecifier(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName()), overrides);
             }
         }
     }
@@ -288,13 +285,11 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     }
 
     @Override
-    public Plan createOrFindPlan(final String productName,
-                                 final BillingPeriod term,
-                                 final String priceListName,
+    public Plan createOrFindPlan(final PlanSpecifier spec,
                                  final PlanPhasePriceOverridesWithCallContext overrides,
                                  final DateTime requestedDate)
             throws CatalogApiException {
-        return versionForDate(requestedDate).createOrFindCurrentPlan(productName, term, priceListName, overrides);
+        return versionForDate(requestedDate).createOrFindCurrentPlan(spec, overrides);
     }
 
     @Override
@@ -307,14 +302,12 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     }
 
     @Override
-    public Plan createOrFindPlan(final String productName,
-                                 final BillingPeriod term,
-                                 final String priceListName,
+    public Plan createOrFindPlan(final PlanSpecifier spec,
                                  final PlanPhasePriceOverridesWithCallContext overrides,
                                  final DateTime requestedDate,
                                  final DateTime subscriptionStartDate)
             throws CatalogApiException {
-        final CatalogPlanEntry entry =  findCatalogPlanEntry(new PlanRequestWrapper(productName, term, priceListName, overrides), requestedDate, subscriptionStartDate);
+        final CatalogPlanEntry entry =  findCatalogPlanEntry(new PlanRequestWrapper(spec, overrides), requestedDate, subscriptionStartDate);
         return entry.getPlan();
     }
 
@@ -463,9 +456,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     }
 
     @Override
-    public Plan createOrFindCurrentPlan(final String productName, final BillingPeriod term,
-                                        final String priceList, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).createOrFindCurrentPlan(productName, term, priceList, overrides);
+    public Plan createOrFindCurrentPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).createOrFindCurrentPlan(spec, overrides);
     }
 
     @Override

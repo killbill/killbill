@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.api.Payment;
@@ -121,6 +122,16 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertTrue(parentInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
         assertTrue(child1Invoices.get(1).getBalance().compareTo(BigDecimal.ZERO) == 0);
 
+        // load children invoice items
+        final List<InvoiceItem> childrenInvoiceItems = invoiceUserApi.getInvoiceItemsByParentInvoice(parentInvoice.getId(), callContext);
+        assertEquals(childrenInvoiceItems.size(), 2);
+        assertEquals(childrenInvoiceItems.get(0).getAccountId(), child1Account.getId());
+        assertEquals(childrenInvoiceItems.get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
+        assertEquals(childrenInvoiceItems.get(1).getAccountId(), child2Account.getId());
+        assertEquals(childrenInvoiceItems.get(1).getAmount().compareTo(BigDecimal.valueOf(29.95)), 0);
+
+        // loading children items from non parent account should return empty list
+        assertEquals(invoiceUserApi.getInvoiceItemsByParentInvoice(child1Invoices.get(1).getId(), callContext).size(), 0);
     }
 
     @Test(groups = "slow")

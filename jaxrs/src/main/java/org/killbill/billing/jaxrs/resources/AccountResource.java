@@ -614,7 +614,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
         for (final Invoice invoice : invoices) {
-            result.add(new InvoiceJson(invoice, withItems, accountAuditLogs));
+            result.add(new InvoiceJson(invoice, withItems, null, accountAuditLogs));
         }
 
         return Response.status(Status.OK).entity(result).build();
