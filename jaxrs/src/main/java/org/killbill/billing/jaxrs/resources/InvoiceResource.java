@@ -525,7 +525,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                     final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
                     createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), account.getPaymentMethodId(), false,
                                              (haveSameInvoiceId && paymentExternalKey != null) ? paymentExternalKey : null,
-                                             (haveSameInvoiceId && transactionExternalKey != null) ? transactionExternalKey : UUIDs.randomUUID().toString(),
+                                             (haveSameInvoiceId && transactionExternalKey != null) ? transactionExternalKey : null,
                                              pluginProperties, callContext);
                 }
             }
@@ -661,7 +661,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
 
         final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
-                                                        (payment.getPaymentExternalKey() != null) ? payment.getPaymentExternalKey() : null, UUIDs.randomUUID().toString(), pluginProperties, callContext);
+                                                        (payment.getPaymentExternalKey() != null) ? payment.getPaymentExternalKey() : null, null, pluginProperties, callContext);
         return result != null ?
                uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId()) :
                Response.status(Status.NO_CONTENT).build();
