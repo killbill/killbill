@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.catalog.DefaultPriceListSet;
-import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -41,7 +39,10 @@ import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.Tier;
+import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.TimeUnit;
+import org.killbill.billing.catalog.api.Usage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -109,7 +110,8 @@ public class CatalogJson {
                 }
 
                 final DurationJson durationJson = new DurationJson(phase.getDuration().getUnit(), phase.getDuration().getNumber());
-                final PhaseJson phaseJson = new PhaseJson(phase.getPhaseType().toString(), prices, fixedPrices, durationJson);
+                final List<UsageJson> usagesJson = buildUsagesJson(phase.getUsages());
+                final PhaseJson phaseJson = new PhaseJson(phase.getPhaseType().toString(), prices, fixedPrices, durationJson, usagesJson);
                 phases.add(phaseJson);
             }
 
@@ -124,6 +126,55 @@ public class CatalogJson {
             this.priceLists.add(new PriceListJson(childPriceList));
         }
 
+    }
+
+    private List<UsageJson> buildUsagesJson(final Usage[] usages) throws CurrencyValueNull {
+        List<UsageJson> usagesJson = new ArrayList<UsageJson>();
+        if (usages != null && usages.length > 0) {
+            for (int i=0; i < usages.length; i++) {
+                UsageJson usageJson = new UsageJson(usages[i].getBillingPeriod().toString(), buildTiers(usages[i].getTiers()));
+                usagesJson.add(usageJson);
+            }
+        }
+        return usagesJson;
+    }
+
+    private List<TierJson> buildTiers(final Tier[] tiers) throws CurrencyValueNull {
+        List<TierJson> tiersJson = new ArrayList<TierJson>();
+        if (tiers != null && tiers.length > 0) {
+            for (int i=0; i < tiers.length; i++) {
+                TierJson tierJson = new TierJson(buildTieredBlocks(tiers[i].getTieredBlocks()));
+                tiersJson.add(tierJson);
+            }
+        }
+        return tiersJson;
+    }
+
+    private List<TieredBlockJson> buildTieredBlocks(final TieredBlock[] tieredBlocks) throws CurrencyValueNull {
+        List<TieredBlockJson> tieredBlocksJson = new ArrayList<TieredBlockJson>();
+        if (tieredBlocks != null && tieredBlocks.length > 0) {
+            for (int i=0; i < tieredBlocks.length; i++) {
+                TieredBlockJson tieredBlockJson = new TieredBlockJson(tieredBlocks[i].getUnit().getName(),
+                                                                      tieredBlocks[i].getSize().toString(),
+                                                                      tieredBlocks[i].getMax().toString(),
+                                                                      buildPrices(tieredBlocks[i].getPrice().getPrices()));
+                tieredBlocksJson.add(tieredBlockJson);
+            }
+        }
+        return tieredBlocksJson;
+    }
+
+    private List<PriceJson> buildPrices(final Price[] prices) throws CurrencyValueNull {
+        List<PriceJson> pricesJson = new ArrayList<PriceJson>();
+        if (prices != null && prices.length > 0) {
+            for (int i=0; i < prices.length; i++) {
+                PriceJson priceJson = null;
+                priceJson = new PriceJson(prices[i].getCurrency().name(),
+                                          prices[i].getValue());
+                pricesJson.add(priceJson);
+            }
+        }
+        return pricesJson;
     }
 
     private List<String> toProductNames(final Product[] in) {
@@ -375,22 +426,204 @@ public class CatalogJson {
         }
     }
 
+    public static class TieredBlockJson {
+        private final String unit;
+        private final String size;
+        private final String max;
+        private final List<PriceJson> prices;
+
+        @JsonCreator
+        public TieredBlockJson(@JsonProperty("billingPeriod") final String unit,
+                               @JsonProperty("size") final String size,
+                               @JsonProperty("max") final String max,
+                               @JsonProperty("prices") final List<PriceJson> prices) {
+            this.unit = unit;
+            this.size = size;
+            this.max = max;
+            this.prices = prices;
+        }
+
+        public String getUnit() {
+            return unit;
+        }
+        public String getSize() {
+            return size;
+        }
+        public String getMax() {
+            return max;
+        }
+        public List<PriceJson> getPrices() {
+            return prices;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("TieredBlockJson{");
+            sb.append("unit='").append(unit).append('\'');
+            sb.append(", size=").append(size);
+            sb.append(", max=").append(max);
+            sb.append(", prices=").append(prices);
+            sb.append('}');
+            return sb.toString();
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final TieredBlockJson blockJson = (TieredBlockJson) o;
+
+            if (unit != null ? !unit.equals(blockJson.unit) : blockJson.unit != null) {
+                return false;
+            }
+            if (size != null ? !size.equals(blockJson.size) : blockJson.size != null) {
+                return false;
+            }
+            if (max != null ? !max.equals(blockJson.max) : blockJson.max != null) {
+                return false;
+            }
+            if (prices != null ? !prices.equals(blockJson.prices) : blockJson.prices != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = unit != null ? unit.hashCode() : 0;
+            result = 31 * result + (size != null ? size.hashCode() : 0);
+            result = 31 * result + (max != null ? max.hashCode() : 0);
+            result = 31 * result + (prices != null ? prices.hashCode() : 0);
+            return result;
+        }
+    }
+
+    public static class TierJson {
+        private final List<TieredBlockJson> blocks;
+
+        @JsonCreator
+        public TierJson(@JsonProperty("tiers") final List<TieredBlockJson> blocks) {
+            this.blocks = blocks;
+        }
+
+        public List<TieredBlockJson> getBlocks() {
+            return blocks;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("TierJson{");
+            sb.append("blocks='").append(blocks);
+            sb.append('}');
+            return sb.toString();
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final TierJson tierJson = (TierJson) o;
+
+            if (blocks != null ? !blocks.equals(tierJson.blocks) : tierJson.blocks != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = blocks != null ? blocks.hashCode() : 0;
+            return result;
+        }
+    }
+
+    public static class UsageJson {
+        private final String billingPeriod;
+        private final List<TierJson> tiers;
+
+        @JsonCreator
+        public UsageJson(@JsonProperty("billingPeriod") final String billingPeriod,
+                        @JsonProperty("tiers") final List<TierJson> tiers) {
+            this.billingPeriod = billingPeriod;
+            this.tiers = tiers;
+        }
+
+        public String getBillingPeriod() {
+            return billingPeriod;
+        }
+        public List<TierJson> getTiers() {
+            return tiers;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("UsageJson{");
+            sb.append("billingPeriod='").append(billingPeriod).append('\'');
+            sb.append(", tiers=").append(tiers);
+            sb.append('}');
+            return sb.toString();
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final UsageJson usageJson = (UsageJson) o;
+
+            if (billingPeriod != null ? !billingPeriod.equals(usageJson.billingPeriod) : usageJson.billingPeriod != null) {
+                return false;
+            }
+            if (tiers != null ? !tiers.equals(usageJson.tiers) : usageJson.tiers != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = billingPeriod != null ? billingPeriod.hashCode() : 0;
+            result = 31 * result + (tiers != null ? tiers.hashCode() : 0);
+            return result;
+        }
+    }
+
     public static class PhaseJson {
 
         private final String type;
         private final List<PriceJson> prices;
         private final List<PriceJson> fixedPrices;
         private final DurationJson duration;
+        private final List<UsageJson> usages;
 
         @JsonCreator
         public PhaseJson(@JsonProperty("type") final String type,
                          @JsonProperty("prices") final List<PriceJson> prices,
                          @JsonProperty("fixedPrices") final List<PriceJson> fixedPrices,
-                         @JsonProperty("duration") final DurationJson duration) {
+                         @JsonProperty("duration") final DurationJson duration,
+                         @JsonProperty("usages") final List<UsageJson> usages) {
             this.type = type;
             this.prices = prices;
             this.fixedPrices = fixedPrices;
             this.duration = duration;
+            this.usages = usages;
         }
 
         public String getType() {
@@ -405,6 +638,9 @@ public class CatalogJson {
         public DurationJson getDuration() {
             return duration;
         }
+        public List<UsageJson> getUsages() {
+            return usages;
+        }
 
         @Override
         public String toString() {
@@ -413,6 +649,7 @@ public class CatalogJson {
             sb.append(", prices=").append(prices);
             sb.append(", fixedPrices=").append(fixedPrices);
             sb.append(", duration=").append(duration);
+            sb.append(", usages=").append(usages);
             sb.append('}');
             return sb.toString();
         }
@@ -440,6 +677,9 @@ public class CatalogJson {
             if (duration != null ? !duration.equals(phaseJson.duration) : phaseJson.duration != null) {
                 return false;
             }
+            if (usages != null ? !usages.equals(phaseJson.usages) : phaseJson.usages!= null) {
+                return false;
+            }
 
             return true;
         }
@@ -450,6 +690,7 @@ public class CatalogJson {
             result = 31 * result + (prices != null ? prices.hashCode() : 0);
             result = 31 * result + (fixedPrices != null ? fixedPrices.hashCode() : 0);
             result = 31 * result + (duration != null ? duration.hashCode() : 0);
+            result = 31 * result + (usages != null ? usages.hashCode() : 0);
             return result;
         }
     }
