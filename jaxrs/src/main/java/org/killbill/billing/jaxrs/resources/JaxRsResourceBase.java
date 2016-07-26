@@ -454,7 +454,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return properties;
     }
 
-    protected Payment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final UUID paymentMethodId, final Boolean externalPayment, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
+    protected Payment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final UUID paymentMethodId, final Boolean externalPayment, final String paymentExternalKey, final String transactionExternalKey, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
 
         final List<PluginProperty> properties = new ArrayList<PluginProperty>();
         final Iterator<PluginProperty> pluginPropertyIterator = pluginProperties.iterator();
@@ -462,8 +462,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             properties.add(pluginPropertyIterator.next());
         }
 
-        final String paymentExternalKey = UUIDs.randomUUID().toString();
-        final String transactionExternalKey = UUIDs.randomUUID().toString();
         final PluginProperty invoiceProperty = new PluginProperty("IPCD_INVOICE_ID" /* InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID (contract with plugin)  */,
                                                                   invoiceId.toString(), false);
         properties.add(invoiceProperty);
