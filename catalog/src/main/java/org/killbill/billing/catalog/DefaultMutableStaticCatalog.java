@@ -19,6 +19,9 @@ package org.killbill.billing.catalog;
 
 import java.lang.reflect.Array;
 import java.util.Date;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogEntity;
@@ -76,8 +79,29 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
         final Plan[] newEntries = allocateNewEntries(getCurrentPlans(), plan);
         setPlans((DefaultPlan[]) newEntries);
 
+
         final DefaultPriceList priceList = getPriceLists().findPriceListFrom(plan.getPriceListName());
-        priceList.setPlans((DefaultPlan[])newEntries);
+
+        final Iterable<DefaultPlan> newPriceListPlan = Iterables.filter(ImmutableList.copyOf((DefaultPlan[]) newEntries), new Predicate<DefaultPlan>() {
+            @Override
+            public boolean apply(final DefaultPlan input) {
+                if (plan.getName().equals(input.getName())) {
+                    return true;
+                }
+                if (priceList.getPlans() != null) {
+                    for (final Plan priceListPlan : priceList.getPlans()) {
+                        if (priceListPlan.getName().equals(input.getName())) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        });
+        final List<DefaultPlan> foo = ImmutableList.<DefaultPlan >copyOf(newPriceListPlan);
+        final Plan[] newPriceListEntries = new DefaultPlan[foo.size()];
+        final Plan[] bar = foo.toArray(newPriceListEntries);
+        priceList.setPlans((DefaultPlan[]) bar);
     }
 
     @Override
