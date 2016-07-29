@@ -157,7 +157,7 @@ public class CatalogJson {
         List<LimitJson> limitsJson = new ArrayList<LimitJson>();
         if (limits != null && limits.length > 0) {
             for (int i=0; i < limits.length; i++) {
-                limitsJson.add(new LimitJson(new UnitJson(limits[i].getUnit().getName()),
+                limitsJson.add(new LimitJson(limits[i].getUnit().getName(),
                                              limits[i].getMax().toString(),
                                              limits[i].getMin().toString()));
             }
@@ -446,7 +446,7 @@ public class CatalogJson {
         private final List<PriceJson> prices;
 
         @JsonCreator
-        public TieredBlockJson(@JsonProperty("billingPeriod") final String unit,
+        public TieredBlockJson(@JsonProperty("unit") final String unit,
                                @JsonProperty("size") final String size,
                                @JsonProperty("max") final String max,
                                @JsonProperty("prices") final List<PriceJson> prices) {
@@ -517,58 +517,13 @@ public class CatalogJson {
         }
     }
 
-    public static class UnitJson {
-        private final String name;
-
-        @JsonCreator
-        public UnitJson(@JsonProperty("name") final String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public String toString() {
-            final StringBuilder sb = new StringBuilder("UnitJson{");
-            sb.append("name='").append(name).append('\'');
-            sb.append('}');
-            return sb.toString();
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            final UnitJson unitJson = (UnitJson) o;
-
-            if (name != null ? !name.equals(unitJson.name) : unitJson.name != null) {
-                return false;
-            }
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = name != null ? name.hashCode() : 0;
-            return result;
-        }
-    }
-
     public static class LimitJson {
-        private final UnitJson unit;
+        private final String unit;
         private final String max;
         private final String min;
 
         @JsonCreator
-        public LimitJson(@JsonProperty("unit") final UnitJson unit,
+        public LimitJson(@JsonProperty("unit") final String unit,
                          @JsonProperty("max") final String max,
                          @JsonProperty("min") final String min) {
             this.unit = unit;
@@ -576,7 +531,7 @@ public class CatalogJson {
             this.min = min;
         }
 
-        public UnitJson getUnit() {
+        public String getUnit() {
             return unit;
         }
         public String getMax() {
