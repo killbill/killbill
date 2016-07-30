@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -61,7 +61,6 @@ public class DefaultUserDao implements UserDao {
 
     @Override
     public void insertUser(final String username, final String password, final List<String> roles, final String createdBy) throws SecurityApiException {
-
         final ByteSource salt = rng.nextBytes();
         final String hashedPasswordBase64 = new SimpleHash(KillbillCredentialsMatcher.HASH_ALGORITHM_NAME,
                                                            password, salt.toBase64(), securityConfig.getShiroNbHashIterations()).toBase64();
@@ -99,7 +98,6 @@ public class DefaultUserDao implements UserDao {
                 return userRolesSqlDao.getByUsername(username);
             }
         });
-
     }
 
     @Override
@@ -108,13 +106,12 @@ public class DefaultUserDao implements UserDao {
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
-
                 final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
-                final List<RolesPermissionsModelDao> existingRole  = rolesPermissionsSqlDao.getByRoleName(role);
+                final List<RolesPermissionsModelDao> existingRole = rolesPermissionsSqlDao.getByRoleName(role);
                 if (!existingRole.isEmpty()) {
                     throw new SecurityApiException(ErrorCode.SECURITY_ROLE_ALREADY_EXISTS, role);
                 }
-                for (String permission : permissions) {
+                for (final String permission : permissions) {
                     rolesPermissionsSqlDao.create(new RolesPermissionsModelDao(role, permission, createdDate, createdBy));
                 }
                 return null;
@@ -136,7 +133,6 @@ public class DefaultUserDao implements UserDao {
 
     @Override
     public void updateUserPassword(final String username, final String password, final String updatedBy) throws SecurityApiException {
-
         final ByteSource salt = rng.nextBytes();
         final String hashedPasswordBase64 = new SimpleHash(KillbillCredentialsMatcher.HASH_ALGORITHM_NAME,
                                                            password, salt.toBase64(), securityConfig.getShiroNbHashIterations()).toBase64();
@@ -204,7 +200,6 @@ public class DefaultUserDao implements UserDao {
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
-
                 final DateTime updatedDate = clock.getUTCNow();
                 final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
                 final UserModelDao userModelDao = usersSqlDao.getByUsername(username);
