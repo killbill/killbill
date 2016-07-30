@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -103,10 +103,8 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
                 // Merge CBA items to avoid confusing the customer, since these are internal
                 // adjustments (auto generated)
                 mergedCBAItem = mergeCBAItem(invoiceItems, mergedCBAItem, item);
-            } else if (InvoiceItemType.REFUND_ADJ.equals(item.getInvoiceItemType()) ||
-                       InvoiceItemType.CREDIT_ADJ.equals(item.getInvoiceItemType())) {
-                // Merge refund adjustments and credit adjustments, as these are both
-                // the same for the customer (invoice adjustment)
+            } else if (InvoiceItemType.CREDIT_ADJ.equals(item.getInvoiceItemType())) {
+                // Merge credit adjustments, as these are both the same for the customer (invoice adjustment)
                 mergedInvoiceAdjustment = mergeInvoiceAdjustmentItem(invoiceItems, mergedInvoiceAdjustment, item);
             } else {
                 invoiceItems.add(item);

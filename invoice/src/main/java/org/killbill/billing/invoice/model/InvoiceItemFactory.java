@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -72,9 +72,6 @@ public class InvoiceItemFactory {
                 break;
             case CREDIT_ADJ:
                 item = new CreditAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency);
-                break;
-            case REFUND_ADJ:
-                item = new RefundAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency);
                 break;
             case REPAIR_ADJ:
                 item = new RepairAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, endDate, description, amount, currency, linkedItemId);

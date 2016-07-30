@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -42,7 +42,6 @@ import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
-import org.killbill.billing.invoice.model.RefundAdjInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.invoice.template.translator.DefaultInvoiceTranslator;
 import org.killbill.billing.util.email.templates.MustacheTemplateEngine;
@@ -109,8 +108,6 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         // Then, the invoice is adjusted for $1:
         // * $-1 credit adjustment
         // * $1 generated CBA due to the credit adjustment
-        // Then, we refund $1 with invoice level adjustment:
-        // * $-1 refund adjustment
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                           UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           new LocalDate(), BigDecimal.TEN, Currency.USD);
@@ -126,8 +123,6 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
                                                                                                          fixedItem.getStartDate(), creditAdjInvoiceItem.getAmount().negate(),
                                                                                                          fixedItem.getCurrency());
-        final RefundAdjInvoiceItem refundAdjInvoiceItem = new RefundAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
-                                                                                   fixedItem.getStartDate(), BigDecimal.ONE.negate(), fixedItem.getCurrency());
         final DefaultInvoice invoice = new DefaultInvoice(fixedItem.getInvoiceId(), fixedItem.getAccountId(), null,
                                                           new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
         invoice.addInvoiceItem(fixedItem);
@@ -135,13 +130,12 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem);
         invoice.addInvoiceItem(creditAdjInvoiceItem);
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem2);
-        invoice.addInvoiceItem(refundAdjInvoiceItem);
         invoice.addPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice.getId(), clock.getUTCNow(), BigDecimal.TEN,
                                                      Currency.USD, Currency.USD, null, true));
         invoice.addPayment(new DefaultInvoicePayment(InvoicePaymentType.REFUND, UUID.randomUUID(), invoice.getId(), clock.getUTCNow(), BigDecimal.ONE.negate(),
                                                      Currency.USD, Currency.USD, null, true));
         // Check the scenario
-        Assert.assertEquals(invoice.getBalance().doubleValue(), 0.00);
+        Assert.assertEquals(invoice.getBalance().doubleValue(), 1.00);
         Assert.assertEquals(invoice.getCreditedAmount().doubleValue(), 11.00);
         Assert.assertEquals(invoice.getRefundedAmount().doubleValue(), -1.00);
 
@@ -156,7 +150,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(invoiceItems.get(2).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
         Assert.assertEquals(invoiceItems.get(2).getAmount().doubleValue(), 11.00);
         Assert.assertEquals(invoiceItems.get(3).getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
-        Assert.assertEquals(invoiceItems.get(3).getAmount().doubleValue(), -2.00);
+        Assert.assertEquals(invoiceItems.get(3).getAmount().doubleValue(), -1.00);
     }
 
     @Test(groups = "fast")
