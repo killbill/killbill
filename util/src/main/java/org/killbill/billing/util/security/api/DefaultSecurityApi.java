@@ -52,6 +52,9 @@ import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.base.Strings;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -214,11 +217,19 @@ public class DefaultSecurityApi implements SecurityApi {
         }));
     }
 
-    private List<String> sanitizeAndValidatePermissions(final List<String> permissions) throws SecurityApiException {
-
-        if (permissions == null || permissions.isEmpty()) {
-            throw new SecurityApiException(ErrorCode.SECURITY_INVALID_PERMISSIONS, "null");
+    private List<String> sanitizeAndValidatePermissions(final List<String> permissionsRaw) throws SecurityApiException {
+        if (permissionsRaw == null) {
+            return ImmutableList.<String>of();
         }
+
+        final Collection<String> permissions = Collections2.<String>filter(Lists.<String, String>transform(permissionsRaw,
+                                                                                                           new Function<String, String>() {
+                                                                                                               @Override
+                                                                                                               public String apply(final String input) {
+                                                                                                                   return Strings.emptyToNull(input);
+                                                                                                               }
+                                                                                                           }),
+                                                                           Predicates.<String>notNull());
 
         final Map<String, Set<String>> groupToValues = new HashMap<String, Set<String>>();
         for (final String curPerm : permissions) {

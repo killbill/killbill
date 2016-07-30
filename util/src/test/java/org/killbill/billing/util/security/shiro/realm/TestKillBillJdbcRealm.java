@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -97,7 +97,6 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         } catch (final AuthenticationException e) {
         }
 
-
         final AuthenticationToken newGoodToken = new UsernamePasswordToken(username, newPassword);
         securityManager.login(subject, newGoodToken);
         Assert.assertTrue(true);
@@ -115,9 +114,16 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testEmptyPermissions() throws SecurityApiException {
+        securityApi.addRoleDefinition("sanity1", null, callContext);
+        validateUserRoles(securityApi.getRoleDefinition("sanity1", callContext), ImmutableList.<String>of());
+
+        securityApi.addRoleDefinition("sanity2", ImmutableList.<String>of(), callContext);
+        validateUserRoles(securityApi.getRoleDefinition("sanity2", callContext), ImmutableList.<String>of());
+    }
+
+    @Test(groups = "slow")
     public void testInvalidPermissions() {
-        testInvalidPermissionScenario(null);
-        testInvalidPermissionScenario(ImmutableList.<String>of());
         testInvalidPermissionScenario(ImmutableList.of("foo"));
         testInvalidPermissionScenario(ImmutableList.of("account:garbage"));
         testInvalidPermissionScenario(ImmutableList.of("tag:delete_tag_definition", "account:hsgdsgdjsgd"));
@@ -161,7 +167,6 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
         securityApi.addRoleDefinition("newRestricted", ImmutableList.of("account:*", "invoice", "tag:delete_tag_definition"), callContext);
         securityApi.updateUserRoles(username, ImmutableList.of("newRestricted"), callContext);
-
 
         final Subject newSubject = securityManager.login(null, goodToken);
         newSubject.checkPermission(Permission.ACCOUNT_CAN_CHARGE.toString());

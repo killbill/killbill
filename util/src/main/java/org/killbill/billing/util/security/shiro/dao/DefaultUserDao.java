@@ -70,12 +70,7 @@ public class DefaultUserDao implements UserDao {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final UserRolesSqlDao userRolesSqlDao = handle.attach(UserRolesSqlDao.class);
-                for (String role : roles) {
-                    final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
-                    final List<RolesPermissionsModelDao> currentRolePermissions = rolesPermissionsSqlDao.getByRoleName(role);
-                    if (currentRolePermissions.isEmpty()) {
-                        throw new SecurityApiException(ErrorCode.SECURITY_INVALID_ROLE, role);
-                    }
+                for (final String role : roles) {
                     userRolesSqlDao.create(new UserRolesModelDao(username, role, createdDate, createdBy));
                 }
 

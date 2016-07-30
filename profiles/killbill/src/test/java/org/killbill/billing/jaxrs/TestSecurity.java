@@ -22,11 +22,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Response.Status;
 
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Permissions;
 import org.killbill.billing.client.model.RoleDefinition;
 import org.killbill.billing.client.model.UserRoles;
@@ -82,6 +84,17 @@ public class TestSecurity extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testDynamicUserRolesIncorrectPermissions() throws Exception {
         testDynamicUserRolesInternal("wqsdeqwe", "jd23fsh63s", "incorrect", ImmutableList.of("account:*"), false);
+    }
+
+    @Test(groups = "slow")
+    public void testDynamicUserRolesNoPermissions() throws Exception {
+        final String username = UUID.randomUUID().toString();
+        final String password = UUID.randomUUID().toString();
+        final String role = UUID.randomUUID().toString();
+        testDynamicUserRolesInternal(username, password, role, ImmutableList.of(""), false);
+
+        final Permissions permissions = killBillClient.getPermissions(RequestOptions.builder().withUser(username).withPassword(password).build());
+        Assert.assertEquals(permissions.size(), 0);
     }
 
     @Test(groups = "slow")
