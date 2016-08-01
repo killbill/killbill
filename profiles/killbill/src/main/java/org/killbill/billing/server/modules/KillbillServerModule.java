@@ -58,6 +58,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.server.DefaultServerService;
 import org.killbill.billing.server.ServerService;
 import org.killbill.billing.server.config.KillbillServerConfig;
+import org.killbill.billing.server.config.MultiTenantNotificationConfig;
 import org.killbill.billing.server.filters.ResponseCorsFilter;
 import org.killbill.billing.server.notifications.PushNotificationListener;
 import org.killbill.billing.server.notifications.PushNotificationRetryService;
@@ -96,10 +97,12 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 public class KillbillServerModule extends KillbillPlatformModule {
 
     public static final String SHIRO_DATA_SOURCE_ID = "shiro";
+    public static final String STATIC_CONFIG = "StaticConfig";
 
     public KillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final KillbillConfigSource configSource) {
         super(servletContext, serverConfig, configSource);
@@ -212,7 +215,8 @@ public class KillbillServerModule extends KillbillPlatformModule {
     protected void configurePushNotification() {
         final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
         final NotificationConfig notificationConfig = factory.build(NotificationConfig.class);
-        bind(NotificationConfig.class).toInstance(notificationConfig);
+        bind(NotificationConfig.class).annotatedWith(Names.named(STATIC_CONFIG)).toInstance(notificationConfig);
+        bind(NotificationConfig.class).to(MultiTenantNotificationConfig.class).asEagerSingleton();
         bind(PushNotificationListener.class).asEagerSingleton();
         bind(PushNotificationRetryService.class).asEagerSingleton();
         bind(ServerService.class).to(DefaultServerService.class).asEagerSingleton();

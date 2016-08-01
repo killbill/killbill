@@ -31,7 +31,7 @@ public class PushNotificationKey implements NotificationEvent {
     private final String eventType;
     private final String objectType;
     private final UUID objectId;
-    private Integer attemptNumber;
+    private final int attemptNumber;
     private final String url;
 
     @JsonCreator
@@ -40,7 +40,7 @@ public class PushNotificationKey implements NotificationEvent {
                                @JsonProperty("eventType") final String eventType,
                                @JsonProperty("objectType") final String objectType,
                                @JsonProperty("objectId") final UUID objectId,
-                               @JsonProperty("attemptNumber")  final Integer attemptNumber,
+                               @JsonProperty("attemptNumber")  final int attemptNumber,
                                @JsonProperty("url") final String url) {
         this.tenantId = tenantId;
         this.accountId = accountId;
@@ -51,8 +51,9 @@ public class PushNotificationKey implements NotificationEvent {
         this.url = url;
     }
 
-    public void increaseAttemptNumber() {
-        this.attemptNumber = ++attemptNumber;
+    public PushNotificationKey(final PushNotificationKey key, final int attemptNumber) {
+        this(key.getTenantId(), key.getAccountId(), key.getEventType(), key.getObjectType(), key.getObjectId(),
+             attemptNumber, key.getUrl());
     }
 
     public UUID getTenantId() {
@@ -76,7 +77,7 @@ public class PushNotificationKey implements NotificationEvent {
     }
 
     public Integer getAttemptNumber() {
-        return attemptNumber == null ? 0 : attemptNumber;
+        return attemptNumber;
     }
 
     public String getUrl() {

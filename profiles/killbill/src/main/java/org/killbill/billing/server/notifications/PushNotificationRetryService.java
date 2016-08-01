@@ -20,11 +20,8 @@ package org.killbill.billing.server.notifications;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.server.DefaultServerService;
-import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -69,9 +66,8 @@ public class PushNotificationRetryService {
                                                                                   return;
                                                                               }
                                                                               final PushNotificationKey key = (PushNotificationKey) notificationKey;
-                                                                              final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, retryService, CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
                                                                               try {
-                                                                                  pushNotificationListener.resendPushNotification(key, callContext);
+                                                                                  pushNotificationListener.resendPushNotification(key);
                                                                               } catch (JsonProcessingException e) {
                                                                                   log.error("Failed to push notification url='{}', tenantId='{}'", key.getUrl(), key.getTenantId(), e);
                                                                               }

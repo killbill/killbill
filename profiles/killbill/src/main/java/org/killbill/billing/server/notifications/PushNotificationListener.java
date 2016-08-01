@@ -28,7 +28,6 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.jaxrs.json.NotificationJson;
 import org.killbill.billing.notification.plugin.api.ExtBusEvent;
@@ -118,11 +117,12 @@ public class PushNotificationListener {
         final NotificationJson notification = new NotificationJson(event);
         final String body = mapper.writeValueAsString(notification);
         for (final String cur : callbacks) {
-            doPost(tenantId, cur, body, TIMEOUT_NOTIFICATION);
+            doPost(tenantId, cur, body, notification, TIMEOUT_NOTIFICATION, 0);
         }
     }
 
-    private boolean doPost(final UUID tenantId, final String url, final String body, final int timeoutSec) {
+    private boolean doPost(final UUID tenantId, final String url, final String body, final NotificationJson notification,
+                           final int timeoutSec, final int attemptRetryNumber) {
         final BoundRequestBuilder builder = httpClient.preparePost(url);
         builder.setBody(body == null ? "{}" : body);
         builder.addHeader(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON);
@@ -138,81 +138,48 @@ public class PushNotificationListener {
                     });
             response = futureStatus.get(timeoutSec, TimeUnit.SECONDS);
         } catch (final TimeoutException toe) {
-            saveRetryPushNotificationInQueue(tenantId, url, body);
+            saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber);
             return false;
         } catch (final Exception e) {
             log.warn("Failed to push notification url='{}', tenantId='{}'", url, tenantId, e);
             return false;
         }
 
-        if ((response.getStatusCode() == 301) || (response.getStatusCode() == 500)) {
-            saveRetryPushNotificationInQueue(tenantId, url, body);
+        if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
+            return true;
+        } else {
+            saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber);
             return false;
         }
-
-        return response.getStatusCode() >= 200 && response.getStatusCode() < 300;
     }
 
-    public void resendPushNotification(final PushNotificationKey key, final InternalCallContext callContext) throws JsonProcessingException {
+    public void resendPushNotification(final PushNotificationKey key) throws JsonProcessingException {
 
         final NotificationJson notification = new NotificationJson(key.getEventType() != null ? key.getEventType().toString() : null,
                                                                    key.getAccountId() != null ? key.getAccountId().toString() : null,
                                                                    key.getObjectType() != null ? key.getObjectType().toString() : null,
                                                                    key.getObjectId() != null ? key.getObjectId().toString() : null);
         final String body = mapper.writeValueAsString(notification);
-
-        final BoundRequestBuilder builder = httpClient.preparePost(key.getUrl());
-        builder.setBody(body == null ? "{}" : body);
-        builder.addHeader(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON);
-
-        final Response response;
-        try {
-            final ListenableFuture<Response> futureStatus =
-                    builder.execute(new AsyncCompletionHandler<Response>() {
-                        @Override
-                        public Response onCompleted(final Response response) throws Exception {
-                            return response;
-                        }
-                    });
-            response = futureStatus.get(TIMEOUT_NOTIFICATION, TimeUnit.SECONDS);
-        } catch (final TimeoutException toe) {
-            saveRetryPushNotificationInQueue(key);
-            return;
-        } catch (final Exception e) {
-            log.warn("Failed to push notification url='{}', tenantId='{}'", key.getUrl(), key.getTenantId(), e);
-            return;
-        }
-
-        if ((response.getStatusCode() == 301) || (response.getStatusCode() == 500)) {
-            saveRetryPushNotificationInQueue(key);
-        }
+        doPost(key.getTenantId(), key.getUrl(), body, notification, TIMEOUT_NOTIFICATION, key.getAttemptNumber());
     }
 
-    private void saveRetryPushNotificationInQueue(final UUID tenantId, final String url, final String body) {
-        try {
-            final NotificationJson notificationJson = mapper.readValue(body, NotificationJson.class);
-            final PushNotificationKey key = new PushNotificationKey(tenantId,
-                                                                    notificationJson.getAccountId() != null ? UUID.fromString(notificationJson.getAccountId()) : null,
-                                                                    notificationJson.getEventType(),
-                                                                    notificationJson.getObjectType(),
-                                                                    notificationJson.getObjectId() != null ? UUID.fromString(notificationJson.getObjectId()) : null,
-                                                                    0, url);
-            saveRetryPushNotificationInQueue(key);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    private void saveRetryPushNotificationInQueue(final UUID tenantId, final String url, final NotificationJson notificationJson, final int attemptRetryNumber) {
+        final PushNotificationKey key = new PushNotificationKey(tenantId,
+                                                                notificationJson.getAccountId() != null ? UUID.fromString(notificationJson.getAccountId()) : null,
+                                                                notificationJson.getEventType(),
+                                                                notificationJson.getObjectType(),
+                                                                notificationJson.getObjectId() != null ? UUID.fromString(notificationJson.getObjectId()) : null,
+                                                                attemptRetryNumber + 1, url);
 
-    private void saveRetryPushNotificationInQueue(final PushNotificationKey key) {
-        final TenantContext tenantContext = contextFactory.createTenantContext(key.getTenantId());
-        key.increaseAttemptNumber();
+        final TenantContext tenantContext = contextFactory.createTenantContext(tenantId);
         final DateTime nextNotificationTime = getNextNotificationTime(key.getAttemptNumber(), internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext));
 
         if (nextNotificationTime == null) {
             log.warn("Max attempt number reached for push notification url='{}', tenantId='{}'", key.getUrl(), key.getTenantId());
             return;
         }
-        log.debug("Push notification is schedule to send at {} for url='{}', tenantId='{}'", nextNotificationTime, key.getUrl(), key.getTenantId());
+        log.debug("Push notification is scheduled to send at {} for url='{}', tenantId='{}'", nextNotificationTime, key.getUrl(), key.getTenantId());
+
         final Long accountRecordId = internalCallContextFactory.getRecordIdFromObject(key.getAccountId(), ObjectType.ACCOUNT, tenantContext);
         final Long tenantRecordId = internalCallContextFactory.getRecordIdFromObject(key.getTenantId(), ObjectType.TENANT, tenantContext);
         try {
