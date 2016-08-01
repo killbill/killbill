@@ -292,7 +292,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             checkNotNullParameter(amount, "amount");
             checkNotNullParameter(currency, "currency");
         }
-        checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
+
         checkNotNullParameter(properties, "plugin properties");
 
         if (paymentMethodId == null && !paymentOptions.isExternalPayment()) {
