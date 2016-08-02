@@ -66,6 +66,7 @@ import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
+import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
 import org.killbill.billing.events.NullInvoiceInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
@@ -617,6 +618,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
         @Override
         public void onPaymentPluginError(final PaymentPluginErrorInternalEvent event) {
             log.info("Got event PaymentPluginError token='{}'", event.getUserToken());
+            notifyForCompletion();
+        }
+
+        @Override
+        public void onInvoicePaymentError(final InvoicePaymentErrorInternalEvent event) {
+            log.info("Got event InvoicePaymentError token='{}'", event.getUserToken());
             notifyForCompletion();
         }
     }
