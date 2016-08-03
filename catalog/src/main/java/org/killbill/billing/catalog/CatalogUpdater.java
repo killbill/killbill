@@ -95,19 +95,30 @@ public class CatalogUpdater {
 
     public void addSimplePlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {
 
-        validateSimplePlanDescriptor(desc);
+        // We need at least a planId
+        if (desc == null ||
+            desc.getPlanId() == null) {
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
+        }
 
-        DefaultProduct product = getExistingProduct(desc.getProductName());
+        DefaultPlan plan = getExistingPlan(desc.getPlanId());
+        if (plan == null && desc.getProductName() == null) {
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
+        }
+
+        DefaultProduct product = plan != null ? (DefaultProduct) plan.getProduct() : getExistingProduct(desc.getProductName());
         if (product == null) {
             product = new DefaultProduct();
             product.setName(desc.getProductName());
-            product.setCatagory(ProductCategory.BASE); // TODO
+            product.setCatagory(desc.getProductCategory());
             product.initialize(catalog, DUMMY_URI);
             catalog.addProduct(product);
         }
 
-        DefaultPlan plan = getExistingPlan(desc.getPlanId());
         if (plan == null) {
+
+            validateNewPlanDescriptor(desc);
+
             plan = new DefaultPlan();
             plan.setName(desc.getPlanId());
             plan.setPriceListName(DEFAULT_PRICELIST.getName());
@@ -159,6 +170,13 @@ public class CatalogUpdater {
         } catch (CatalogApiException ignore) {
             catalog.addRecurringPriceToPlan(recurring.getRecurringPrice(), new DefaultPrice().setCurrency(desc.getCurrency()).setValue(desc.getAmount()));
         }
+
+        if (desc.getProductCategory() == ProductCategory.ADD_ON) {
+            for (final String bp : desc.getAvailableBaseProducts()) {
+                catalog.addProductAvailableAO(getExistingProduct(bp), product);
+            }
+        }
+
         // Reinit catalog
         catalog.initialize(catalog, DUMMY_URI);
     }
@@ -175,8 +193,8 @@ public class CatalogUpdater {
             (plan.getInitialPhases().length == 1 &&
              (plan.getInitialPhases()[0].getPhaseType() != PhaseType.TRIAL || !plan.getInitialPhases()[0].getFixed().getPrice().isZero()))) {
             failedValidation = true;
-        } else {
 
+        } else if (desc.getTrialLength() != null && desc.getTrialTimeUnit() != null) { // If desc includes trial info we verify this is valid
             final boolean isDescConfiguredWithTrial = desc.getTrialLength() > 0 && desc.getTrialTimeUnit() != TimeUnit.UNLIMITED;
             final boolean isPlanConfiguredWithTrial = plan.getInitialPhases().length == 1;
             // Current plan has trial and desc does not or reverse
@@ -202,9 +220,9 @@ public class CatalogUpdater {
             } else {
 
                 // Should be same recurring BillingPeriod
-                if (plan.getFinalPhase().getRecurring().getBillingPeriod() != desc.getBillingPeriod()) {
+                if (desc.getBillingPeriod() != null && plan.getFinalPhase().getRecurring().getBillingPeriod() != desc.getBillingPeriod()) {
                     failedValidation = true;
-                } else {
+                } else if (desc.getCurrency() != null && desc.getAmount() != null) {
                     try {
                         final BigDecimal currentAmount = plan.getFinalPhase().getRecurring().getRecurringPrice().getPrice(desc.getCurrency());
                         if (currentAmount.compareTo(desc.getAmount()) != 0) {
@@ -232,14 +250,23 @@ public class CatalogUpdater {
         });
     }
 
-    private void validateSimplePlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {
-        if (desc == null ||
-            desc.getPlanId() == null ||
+    private void validateNewPlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {
+        if (desc.getProductCategory() == null ||
             desc.getBillingPeriod() == null ||
-            desc.getProductName() == null ||
             (desc.getAmount() == null || desc.getAmount().compareTo(BigDecimal.ZERO) <= 0) ||
             desc.getCurrency() == null) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
+        }
+
+        if (desc.getProductCategory() == ProductCategory.ADD_ON) {
+            if (desc.getAvailableBaseProducts() == null || desc.getAvailableBaseProducts().isEmpty()) {
+                throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
+            }
+            for (final String cur : desc.getAvailableBaseProducts()) {
+                if (getExistingProduct(cur) == null) {
+                    throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
+                }
+            }
         }
     }
 

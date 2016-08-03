@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.TimeUnit;
@@ -88,7 +89,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
     public void testBasic() throws Exception {
 
         // Create a per-tenant catalog with one plan
-        final SimplePlanDescriptor desc1 = new DefaultSimplePlanDescriptor("foo-monthly", "Foo", account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED);
+        final SimplePlanDescriptor desc1 = new DefaultSimplePlanDescriptor("foo-monthly", "Foo", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc1, init, testCallContext);
         StaticCatalog catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
         assertEquals(catalog.getCurrentPlans().length, 1);
@@ -98,7 +99,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 7, 1), InvoiceItemType.RECURRING, BigDecimal.TEN));
 
         // Add another Plan in the catalog
-        final SimplePlanDescriptor desc2 = new DefaultSimplePlanDescriptor("superfoo-monthly", "SuperFoo", account.getCurrency(), new BigDecimal("20.00"), BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED);
+        final SimplePlanDescriptor desc2 = new DefaultSimplePlanDescriptor("superfoo-monthly", "SuperFoo", ProductCategory.BASE, account.getCurrency(), new BigDecimal("20.00"), BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc2, init, testCallContext);
         catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
         assertEquals(catalog.getCurrentPlans().length, 2);
