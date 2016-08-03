@@ -35,6 +35,7 @@ import javax.ws.rs.core.UriInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -121,15 +122,24 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiResponses(value = {})
     public Response getCatalogJson(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
-        DateTime catalogDateVersion = clock.getUTCNow();
-        if (requestedDate != null) {
-            catalogDateVersion = DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC);
-        }
 
         final TenantContext tenantContext = context.createContext(request);
-        final Catalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
-        final CatalogJson json = new CatalogJson(catalog, catalogDateVersion);
-        return Response.status(Status.OK).entity(json).build();
+        final DateTime catalogDateVersion = requestedDate != null ?
+                                      DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
+                                      null;
+
+        // Yack...
+        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
+
+        final List<CatalogJson> result = new ArrayList<CatalogJson>();
+        if (catalogDateVersion != null) {
+            result.add(new CatalogJson(catalog, catalogDateVersion));
+        } else {
+            for (final StandaloneCatalogWithPriceOverride v : catalog.getVersions()) {
+                result.add(new CatalogJson(catalog, new DateTime(v.getEffectiveDate())));
+            }
+        }
+        return Response.status(Status.OK).entity(result).build();
     }
 
     // Need to figure out dependency on StandaloneCatalog
@@ -200,11 +210,13 @@ public class CatalogResource extends JaxRsResourceBase {
 
         final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor(simplePlan.getPlanId(),
                                                                           simplePlan.getProductName(),
+                                                                          simplePlan.getProductCategory(),
                                                                           simplePlan.getCurrency(),
                                                                           simplePlan.getAmount(),
                                                                           simplePlan.getBillingPeriod(),
                                                                           simplePlan.getTrialLength(),
-                                                                          simplePlan.getTrialTimeUnit());
+                                                                          simplePlan.getTrialTimeUnit(),
+                                                                          simplePlan.getAvailableBaseProducts());
         catalogUserApi.addSimplePlan(desc, clock.getUTCNow(), callContext);
         return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null);
     }

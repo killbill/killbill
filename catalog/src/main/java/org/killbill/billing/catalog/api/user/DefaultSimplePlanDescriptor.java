@@ -18,9 +18,11 @@
 package org.killbill.billing.catalog.api.user;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.TimeUnit;
 
@@ -28,26 +30,32 @@ public class DefaultSimplePlanDescriptor implements SimplePlanDescriptor {
 
     private final String planId;
     private final String productName;
+    private final ProductCategory productCategory;
     private final Currency currency;
     private final BigDecimal amount;
     private final BillingPeriod billingPeriod;
-    private final int trialLength;
+    private final Integer trialLength;
     private final TimeUnit trialTimeUnit;
+    private final List<String> availableBaseProducts;
 
     public DefaultSimplePlanDescriptor(final String planId,
                                        final String productName,
+                                       final ProductCategory productCategory,
                                        final Currency currency,
                                        final BigDecimal amount,
                                        final BillingPeriod billingPeriod,
-                                       final int trialLength,
-                                       final TimeUnit trialTimeUnit) {
+                                       final Integer trialLength,
+                                       final TimeUnit trialTimeUnit,
+                                       final List<String> availableBaseProducts) {
         this.planId = planId;
         this.productName = productName;
+        this.productCategory = productCategory;
         this.currency = currency;
         this.amount = amount;
         this.billingPeriod = billingPeriod;
         this.trialLength = trialLength;
         this.trialTimeUnit = trialTimeUnit;
+        this.availableBaseProducts = availableBaseProducts;
     }
 
     @Override
@@ -58,6 +66,16 @@ public class DefaultSimplePlanDescriptor implements SimplePlanDescriptor {
     @Override
     public String getProductName() {
         return productName;
+    }
+
+    @Override
+    public ProductCategory getProductCategory() {
+        return productCategory;
+    }
+
+    @Override
+    public List<String> getAvailableBaseProducts() {
+        return availableBaseProducts;
     }
 
     @Override
@@ -76,7 +94,7 @@ public class DefaultSimplePlanDescriptor implements SimplePlanDescriptor {
     }
 
     @Override
-    public int getTrialLength() {
+    public Integer getTrialLength() {
         return trialLength;
     }
 

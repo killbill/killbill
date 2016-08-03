@@ -410,7 +410,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     // API for subscription and invoice generation: keep null, the lower layers will default to now()
     protected LocalDate toLocalDate(@Nullable final String inputDate) {
-        return inputDate == null ? null : LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
+        return inputDate == null || inputDate.isEmpty() ? null : LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
     }
 
     protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<PluginPropertyJson> pluginProperties) {

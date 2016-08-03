@@ -117,6 +117,11 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
         currentPrices.setPrices((DefaultPrice []) newEntries);
     }
 
+    public void addProductAvailableAO(final DefaultProduct targetBasePlan, final DefaultProduct aoProduct) throws CatalogApiException {
+        final Product[] newEntries = allocateNewEntries(targetBasePlan.getAvailable(), aoProduct);
+        targetBasePlan.setAvailable((DefaultProduct[]) newEntries);
+    }
+
     private <T> T [] allocateNewEntries(final T [] existingEntries, final T newEntry) throws CatalogApiException  {
 
         // Verify entry does not already exists
