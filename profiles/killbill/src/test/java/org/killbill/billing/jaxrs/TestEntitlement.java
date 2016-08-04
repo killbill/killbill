@@ -36,6 +36,7 @@ import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.PhasePriceOverride;
 import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
@@ -297,6 +298,36 @@ public class TestEntitlement extends TestJaxrsBase {
         // Retrieves with GET
         final Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         Assert.assertTrue(objFromJson.equals(entitlementJson));
+    }
+
+    @Test(groups = "slow", description = "Can create an entitlement with an account with autoPayOff")
+    public void testCreateEntitlementWithAutoPayOff() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // assign autoPaymentOff tag to account
+        Tags tags = killBillClient.createAccountTag(accountJson.getAccountId(), new UUID(0L, 1L), requestOptions);
+        assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_PAY_OFF");
+
+        // verify that number of invoices and payments for account is still 0
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 0);
+        assertEquals(killBillClient.getPaymentsForAccount(accountJson.getAccountId(), requestOptions).size(), 0);
+
+        // create a subscription with no trial plan
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Blowdart");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList("notrial");
+        final Subscription subscriptionJson = killBillClient.createSubscription(input, null, 10, requestOptions);
+        assertNotNull(subscriptionJson);
+
+        // verify that number of invoices is now 1
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 1);
+
+        // verify that number of payments is still 0 (no attempts)
+        assertEquals(killBillClient.getPaymentsForAccount(accountJson.getAccountId(), requestOptions).size(), 0);
     }
 
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
