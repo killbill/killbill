@@ -27,9 +27,11 @@ import java.util.Set;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Catalog;
+import org.killbill.billing.client.model.Catalogs;
 import org.killbill.billing.client.model.Plan;
 import org.killbill.billing.client.model.PlanDetail;
 import org.killbill.billing.client.model.Product;
@@ -37,6 +39,7 @@ import org.killbill.billing.client.model.SimplePlan;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
 public class TestCatalog extends TestJaxrsBase {
@@ -54,15 +57,15 @@ public class TestCatalog extends TestJaxrsBase {
     public void testCatalog() throws Exception {
         final Set<String> allBasePlans = new HashSet<String>();
 
-        final Catalog catalogJson = killBillClient.getJSONCatalog();
+        final List<Catalog> catalogsJson = killBillClient.getJSONCatalog();
 
-        Assert.assertEquals(catalogJson.getName(), "Firearms");
-        Assert.assertEquals(catalogJson.getEffectiveDate(), Date.valueOf("2011-01-01"));
-        Assert.assertEquals(catalogJson.getCurrencies().size(), 3);
-        Assert.assertEquals(catalogJson.getProducts().size(), 11);
-        Assert.assertEquals(catalogJson.getPriceLists().size(), 4);
+        Assert.assertEquals(catalogsJson.get(0).getName(), "Firearms");
+        Assert.assertEquals(catalogsJson.get(0).getEffectiveDate(), Date.valueOf("2011-01-01"));
+        Assert.assertEquals(catalogsJson.get(0).getCurrencies().size(), 3);
+        Assert.assertEquals(catalogsJson.get(0).getProducts().size(), 11);
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().size(), 4);
 
-        for (final Product productJson : catalogJson.getProducts()) {
+        for (final Product productJson : catalogsJson.get(0).getProducts()) {
             if (!"BASE".equals(productJson.getType())) {
                 Assert.assertEquals(productJson.getIncluded().size(), 0);
                 Assert.assertEquals(productJson.getAvailable().size(), 0);
@@ -96,31 +99,33 @@ public class TestCatalog extends TestJaxrsBase {
             expectedExceptions = KillBillClientException.class,
             expectedExceptionsMessageRegExp = "There is no catalog version that applies for the given date.*")
     public void testCatalogInvalidDate() throws Exception {
-        final Catalog catalogJson = killBillClient.getJSONCatalog(DateTime.parse("2008-01-01"));
+        final List<Catalog> catalogsJson = killBillClient.getJSONCatalog(DateTime.parse("2008-01-01"));
         Assert.fail();
     }
 
     @Test(groups = "slow", description = "Can create a simple Plan into a per-tenant catalog")
     public void testAddSimplePlan() throws Exception {
 
-        killBillClient.addSimplePan(new SimplePlan("foo-monthly", "Foo", Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED), requestOptions);
-        Catalog catalog = killBillClient.getJSONCatalog(requestOptions);
-        Assert.assertEquals(catalog.getProducts().size(),1);
-        Assert.assertEquals(catalog.getProducts().get(0).getName(),"Foo");
-        Assert.assertEquals(catalog.getPriceLists().size(),1);
-        Assert.assertEquals(catalog.getPriceLists().get(0).getName(), "DEFAULT");
-        Assert.assertEquals(catalog.getPriceLists().get(0).getPlans().size(), 1);
-        Assert.assertEquals(catalog.getPriceLists().get(0).getPlans().get(0), "foo-monthly");
+        killBillClient.addSimplePan(new SimplePlan("foo-monthly", "Foo", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptions);
+        List<Catalog> catalogsJson = killBillClient.getJSONCatalog(requestOptions);
+        Assert.assertEquals(catalogsJson.size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getProducts().size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getProducts().get(0).getName(),"Foo");
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getName(), "DEFAULT");
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 1);
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().get(0), "foo-monthly");
 
 
-        killBillClient.addSimplePan(new SimplePlan("foo-annual", "Foo", Currency.USD, new BigDecimal("100.00"), BillingPeriod.ANNUAL, 0, TimeUnit.UNLIMITED), requestOptions);
+        killBillClient.addSimplePan(new SimplePlan("foo-annual", "Foo", ProductCategory.BASE, Currency.USD, new BigDecimal("100.00"), BillingPeriod.ANNUAL, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptions);
 
-        catalog = killBillClient.getJSONCatalog(requestOptions);
-        Assert.assertEquals(catalog.getProducts().size(),1);
-        Assert.assertEquals(catalog.getProducts().get(0).getName(),"Foo");
-        Assert.assertEquals(catalog.getPriceLists().size(),1);
-        Assert.assertEquals(catalog.getPriceLists().get(0).getName(), "DEFAULT");
-        Assert.assertEquals(catalog.getPriceLists().get(0).getPlans().size(), 2);
+        catalogsJson = killBillClient.getJSONCatalog(requestOptions);
+        Assert.assertEquals(catalogsJson.size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getProducts().size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getProducts().get(0).getName(),"Foo");
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getName(), "DEFAULT");
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 2);
 
     }
 }
