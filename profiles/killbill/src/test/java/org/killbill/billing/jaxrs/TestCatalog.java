@@ -36,6 +36,7 @@ import org.killbill.billing.client.model.Plan;
 import org.killbill.billing.client.model.PlanDetail;
 import org.killbill.billing.client.model.Product;
 import org.killbill.billing.client.model.SimplePlan;
+import org.killbill.billing.client.model.Usage;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -75,6 +76,18 @@ public class TestCatalog extends TestJaxrsBase {
             // Save all plans for later (see below)
             for (final Plan planJson : productJson.getPlans()) {
                 allBasePlans.add(planJson.getName());
+            }
+
+            // Verify Usage info in json
+            if (productJson.getName().equals("Bullets")) {
+                Assert.assertEquals(productJson.getPlans().get(0).getName(), "bullets-usage-in-arrear");
+                Assert.assertEquals(productJson.getPlans().get(0).getPhases().get(0).getType(), "EVERGREEN");
+                List<Usage> usages = productJson.getPlans().get(0).getPhases().get(0).getUsages();
+                Assert.assertEquals(usages.get(0).getBillingPeriod(), "MONTHLY");
+                Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getUnit(), "bullets");
+                Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getSize(), "100.0");
+                Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getPrices().get(0).getCurrency(), "USD");
+                Assert.assertEquals(usages.get(0).getTiers().get(0).getBlocks().get(0).getPrices().get(0).getValue(), 2.95);
             }
 
             // Retrieve available products (addons) for that base product
