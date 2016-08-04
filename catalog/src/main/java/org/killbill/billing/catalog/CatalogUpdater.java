@@ -96,8 +96,7 @@ public class CatalogUpdater {
     public void addSimplePlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {
 
         // We need at least a planId
-        if (desc == null ||
-            desc.getPlanId() == null) {
+        if (desc == null || desc.getPlanId() == null) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
         }
 

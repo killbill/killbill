@@ -108,11 +108,13 @@ public class DefaultSimplePlanDescriptor implements SimplePlanDescriptor {
         return "DefaultSimplePlanDescriptor{" +
                "planId='" + planId + '\'' +
                ", productName='" + productName + '\'' +
+               ", productCategory=" + productCategory +
                ", currency=" + currency +
                ", amount=" + amount +
                ", billingPeriod=" + billingPeriod +
                ", trialLength=" + trialLength +
                ", trialTimeUnit=" + trialTimeUnit +
+               ", availableBaseProducts=" + availableBaseProducts +
                '}';
     }
 }
