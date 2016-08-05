@@ -19,6 +19,7 @@ package org.killbill.billing.overdue.calculator;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -26,6 +27,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.Invoice;
@@ -33,6 +35,7 @@ import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.payment.api.PaymentResponse;
+import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
 
@@ -41,6 +44,7 @@ import com.google.inject.Inject;
 public class BillingStateCalculator {
 
     private final InvoiceInternalApi invoiceApi;
+    private final TagInternalApi tagApi;
     private final Clock clock;
 
     protected class InvoiceDateComparator implements Comparator<Invoice> {
@@ -57,9 +61,10 @@ public class BillingStateCalculator {
     }
 
     @Inject
-    public BillingStateCalculator(final InvoiceInternalApi invoiceApi, final Clock clock) {
+    public BillingStateCalculator(final InvoiceInternalApi invoiceApi, final Clock clock, final TagInternalApi tagApi) {
         this.invoiceApi = invoiceApi;
         this.clock = clock;
+        this.tagApi = tagApi;
     }
 
     public BillingState calculateBillingState(final ImmutableAccountData account, final InternalTenantContext context) throws OverdueException {
@@ -75,7 +80,8 @@ public class BillingStateCalculator {
             idOfEarliestUnpaidInvoice = invoice.getId();
         }
         final PaymentResponse responseForLastFailedPayment = PaymentResponse.INSUFFICIENT_FUNDS; //TODO MDW
-        final Tag[] tags = new Tag[]{}; //TODO MDW
+        final List<Tag> accountTags = tagApi.getTags(account.getId(), ObjectType.ACCOUNT, context);
+        final Tag[] tags = accountTags.toArray(new Tag[accountTags.size()]);
 
         return new BillingState(account.getId(), numberOfUnpaidInvoices, unpaidInvoiceBalance, dateOfEarliestUnpaidInvoice, account.getTimeZone(), idOfEarliestUnpaidInvoice, responseForLastFailedPayment, tags);
     }
