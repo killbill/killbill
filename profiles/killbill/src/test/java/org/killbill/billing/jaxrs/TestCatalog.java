@@ -23,6 +23,7 @@ import java.sql.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -30,12 +31,14 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Catalog;
 import org.killbill.billing.client.model.Catalogs;
 import org.killbill.billing.client.model.Plan;
 import org.killbill.billing.client.model.PlanDetail;
 import org.killbill.billing.client.model.Product;
 import org.killbill.billing.client.model.SimplePlan;
+import org.killbill.billing.client.model.Tenant;
 import org.killbill.billing.client.model.Usage;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -45,7 +48,9 @@ import com.google.common.io.Resources;
 
 public class TestCatalog extends TestJaxrsBase {
 
-    @Test(groups = "slow", description = "Upload and retrieve a per tenant catalog")
+
+
+        @Test(groups = "slow", description = "Upload and retrieve a per tenant catalog")
     public void testMultiTenantCatalog() throws Exception {
         final String catalogPath = Resources.getResource("SpyCarBasic.xml").getPath();
         killBillClient.uploadXMLCatalog(catalogPath, createdBy, reason, comment);
@@ -141,4 +146,41 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 2);
 
     }
+
+    @Test(groups = "slow", description = "Upload and retrieve a per plugin payment state machine config")
+    public void testAddSimplePlanWithoutKBDefault() throws Exception {
+        // Create another tenant initialized with no default catalog,...
+        final Tenant otherTenantNoKBDefault = new Tenant();
+        otherTenantNoKBDefault.setApiKey(UUID.randomUUID().toString());
+        otherTenantNoKBDefault.setApiSecret(UUID.randomUUID().toString());
+
+        killBillClient.createTenant(otherTenantNoKBDefault, false, requestOptions);
+
+        final RequestOptions requestOptionsOtherTenant = requestOptions.extend()
+                                                                       .withTenantApiKey(otherTenantNoKBDefault.getApiKey())
+                                                                       .withTenantApiSecret(otherTenantNoKBDefault.getApiSecret())
+                                                                       .build();
+
+        killBillClient.addSimplePan(new SimplePlan("foo-monthly", "Foo", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptionsOtherTenant);
+        List<Catalog> catalogsJson = killBillClient.getJSONCatalog(requestOptionsOtherTenant);
+        Assert.assertEquals(catalogsJson.size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getProducts().size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getProducts().get(0).getName(),"Foo");
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getName(), "DEFAULT");
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 1);
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().get(0), "foo-monthly");
+
+
+        killBillClient.addSimplePan(new SimplePlan("foo-annual", "Foo", ProductCategory.BASE, Currency.USD, new BigDecimal("100.00"), BillingPeriod.ANNUAL, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptionsOtherTenant);
+
+        catalogsJson = killBillClient.getJSONCatalog(requestOptionsOtherTenant);
+        Assert.assertEquals(catalogsJson.size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getProducts().size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getProducts().get(0).getName(),"Foo");
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().size(),1);
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getName(), "DEFAULT");
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 2);
+    }
+
 }

@@ -20,6 +20,7 @@ package org.killbill.billing.catalog;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 
 import org.joda.time.DateTime;
@@ -51,6 +52,18 @@ import static org.testng.Assert.fail;
 public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
+    public void testEmptyDefaultCatalog() throws Exception {
+
+        final DateTime now = clock.getUTCNow();
+
+        final CatalogUpdater catalogUpdater = new CatalogUpdater("dummy", BillingMode.IN_ADVANCE, now, null);
+        final String catalogXML = catalogUpdater.getCatalogXML();
+        final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(catalogXML.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
+        assertEquals(catalog.getCurrentPlans().length, 0);
+    }
+
+
+        @Test(groups = "fast")
     public void testAddNoTrialPlanOnFirstCatalog() throws CatalogApiException {
 
         final DateTime now = clock.getUTCNow();

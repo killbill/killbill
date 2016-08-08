@@ -98,6 +98,24 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         }
     }
 
+
+    @Override
+    public void createDefaultEmptyCatalog(final DateTime effectiveDate, final CallContext callContext) throws CatalogApiException {
+
+        try {
+            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
+            final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
+            final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
+                                                  new CatalogUpdater(currentCatalog) :
+                                                  new CatalogUpdater("dummy", BillingMode.IN_ADVANCE, effectiveDate, null);
+
+            catalogCache.clearCatalog(internalTenantContext);
+            tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
+        } catch (TenantApiException e) {
+            throw new CatalogApiException(e);
+        }
+    }
+
     @Override
     public void addSimplePlan(final SimplePlanDescriptor descriptor, final DateTime effectiveDate, final CallContext callContext) throws CatalogApiException {
 

@@ -105,6 +105,8 @@ public interface JaxrsResource {
     public static final String QUERY_PAYMENT_METHOD_ID = "paymentMethodId";
     public static final String QUERY_PAYMENT_CONTROL_PLUGIN_NAME = "controlPluginName";
 
+    public static final String QUERY_TENANT_USE_GLOBAL_DEFAULT = "useGlobalDefault";
+
 
     public static final String QUERY_TAGS = "tagList";
     public static final String QUERY_CUSTOM_FIELDS = "customFieldList";

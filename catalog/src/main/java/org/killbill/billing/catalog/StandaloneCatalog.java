@@ -66,23 +66,23 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @XmlElement(required = true)
     private BillingMode recurringBillingMode;
 
-    @XmlElementWrapper(name = "currencies", required = true)
-    @XmlElement(name = "currency", required = true)
+    @XmlElementWrapper(name = "currencies", required = false)
+    @XmlElement(name = "currency", required = false)
     private Currency[] supportedCurrencies;
 
     @XmlElementWrapper(name = "units", required = false)
     @XmlElement(name = "unit", required = false)
     private DefaultUnit[] units;
 
-    @XmlElementWrapper(name = "products", required = true)
-    @XmlElement(name = "product", required = true)
+    @XmlElementWrapper(name = "products", required = false)
+    @XmlElement(name = "product", required = false)
     private DefaultProduct[] products;
 
     @XmlElement(name = "rules", required = true)
     private DefaultPlanRules planRules;
 
-    @XmlElementWrapper(name = "plans", required = true)
-    @XmlElement(name = "plan", required = true)
+    @XmlElementWrapper(name = "plans", required = false)
+    @XmlElement(name = "plan", required = false)
     private DefaultPlan[] plans;
 
     @XmlElement(name = "priceLists", required = true)

@@ -51,14 +51,13 @@ import com.google.common.collect.Iterables;
 public class CatalogUpdater {
 
     private static URI DUMMY_URI;
+
     static {
         try {
             DUMMY_URI = new URI("dummy");
         } catch (URISyntaxException e) {
         }
     };
-
-    private static final DefaultPriceList DEFAULT_PRICELIST = new DefaultPriceList().setName(PriceListSet.DEFAULT_PRICELIST_NAME);
 
     private final DefaultMutableStaticCatalog catalog;
 
@@ -67,15 +66,19 @@ public class CatalogUpdater {
     }
 
     public CatalogUpdater(final String catalogName, final BillingMode billingMode, final DateTime effectiveDate, final Currency... currencies) {
+
+        final DefaultPriceList defaultPriceList = new DefaultPriceList().setName(PriceListSet.DEFAULT_PRICELIST_NAME);
         final StandaloneCatalog tmp = new StandaloneCatalog()
                 .setCatalogName(catalogName)
                 .setEffectiveDate(effectiveDate.toDate())
-                .setSupportedCurrencies(currencies)
                 .setRecurringBillingMode(billingMode)
                 .setProducts(new DefaultProduct[0])
                 .setPlans(new DefaultPlan[0])
-                .setPriceLists(new DefaultPriceListSet(DEFAULT_PRICELIST, new DefaultPriceList[0]))
-                .setPlanRules(getSaneDefaultPlanRules());
+                .setPriceLists(new DefaultPriceListSet(defaultPriceList, new DefaultPriceList[0]))
+                .setPlanRules(getSaneDefaultPlanRules(defaultPriceList));
+        if (currencies != null && currencies.length > 0) {
+            tmp.setSupportedCurrencies(currencies);
+        }
         tmp.initialize(tmp, DUMMY_URI);
 
         this.catalog = new DefaultMutableStaticCatalog(tmp);
@@ -92,6 +95,7 @@ public class CatalogUpdater {
             throw new RuntimeException(e);
         }
     }
+
 
     public void addSimplePlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {
 
@@ -120,7 +124,7 @@ public class CatalogUpdater {
 
             plan = new DefaultPlan();
             plan.setName(desc.getPlanId());
-            plan.setPriceListName(DEFAULT_PRICELIST.getName());
+            plan.setPriceListName(PriceListSet.DEFAULT_PRICELIST_NAME);
             plan.setProduct(product);
 
             if (desc.getTrialLength() > 0 && desc.getTrialTimeUnit() != TimeUnit.UNLIMITED) {
@@ -142,10 +146,9 @@ public class CatalogUpdater {
             catalog.addCurrency(desc.getCurrency());
             // Reset the fixed price to null so the isZero() logic goes through new currencies and set the zero price for all
             if (plan.getInitialPhases().length == 1) {
-                ((DefaultInternationalPrice)plan.getInitialPhases()[0].getFixed().getPrice()).setPrices(null);
+                ((DefaultInternationalPrice) plan.getInitialPhases()[0].getFixed().getPrice()).setPrices(null);
             }
         }
-
 
         DefaultPlanPhase evergreenPhase = plan.getFinalPhase();
         if (evergreenPhase == null) {
@@ -200,7 +203,7 @@ public class CatalogUpdater {
             if ((isDescConfiguredWithTrial && !isPlanConfiguredWithTrial) ||
                 (!isDescConfiguredWithTrial && isPlanConfiguredWithTrial)) {
                 failedValidation = true;
-            // Both have trials , check they match
+                // Both have trials , check they match
             } else if (isDescConfiguredWithTrial && isPlanConfiguredWithTrial) {
                 if (plan.getInitialPhases()[0].getDuration().getUnit() != desc.getTrialTimeUnit() ||
                     plan.getInitialPhases()[0].getDuration().getNumber() != desc.getTrialLength()) {
@@ -227,18 +230,16 @@ public class CatalogUpdater {
                         if (currentAmount.compareTo(desc.getAmount()) != 0) {
                             failedValidation = true;
                         }
-                    } catch (CatalogApiException ignoreIfCurrencyIsCurrentlyUndefined) {}
+                    } catch (CatalogApiException ignoreIfCurrencyIsCurrentlyUndefined) {
+                    }
                 }
             }
         }
-
 
         if (failedValidation) {
             throw new CatalogApiException(ErrorCode.CAT_FAILED_SIMPLE_PLAN_VALIDATION, plan.toString(), desc.toString());
         }
     }
-
-
 
     private boolean isCurrencySupported(final Currency targetCurrency) {
         return Iterables.any(ImmutableList.copyOf(catalog.getCurrentSupportedCurrencies()), new Predicate<Currency>() {
@@ -287,7 +288,7 @@ public class CatalogUpdater {
         }).orNull();
     }
 
-    private DefaultPlanRules getSaneDefaultPlanRules() {
+    private DefaultPlanRules getSaneDefaultPlanRules(final DefaultPriceList defaultPriceList) {
 
         final DefaultCaseChangePlanPolicy[] changePolicy = new DefaultCaseChangePlanPolicy[1];
         changePolicy[0] = new DefaultCaseChangePlanPolicy();
@@ -311,7 +312,7 @@ public class CatalogUpdater {
 
         final DefaultCasePriceList[] priceList = new DefaultCasePriceList[1];
         priceList[0] = new DefaultCasePriceList();
-        priceList[0].setToPriceList(DEFAULT_PRICELIST);
+        priceList[0].setToPriceList(defaultPriceList);
 
         return new DefaultPlanRules()
                 .setChangeCase(changePolicy)

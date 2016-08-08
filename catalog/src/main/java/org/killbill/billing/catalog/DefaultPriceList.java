@@ -40,9 +40,9 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     @XmlID
     private String name;
 
-    @XmlElementWrapper(name = "plans", required = true)
+    @XmlElementWrapper(name = "plans", required = false)
     @XmlIDREF
-    @XmlElement(name = "plan", required = true)
+    @XmlElement(name = "plan", required = false)
     private DefaultPlan[] plans;
 
     public DefaultPriceList() {
@@ -82,13 +82,15 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        for (final DefaultPlan cur : getPlans()) {
-            final int numPlans = findNumberOfPlans(cur.getProduct(), cur.getRecurringBillingPeriod());
-            if (numPlans > 1) {
-                errors.add(new ValidationError(
-                        String.format("There are %d plans in pricelist %s and have the same product/billingPeriod (%s, %s)",
-                                      numPlans, getName(), cur.getProduct().getName(), cur.getRecurringBillingPeriod()), catalog.getCatalogURI(),
-                        DefaultPriceListSet.class, getName()));
+        if (getPlans() != null) {
+            for (final DefaultPlan cur : getPlans()) {
+                final int numPlans = findNumberOfPlans(cur.getProduct(), cur.getRecurringBillingPeriod());
+                if (numPlans > 1) {
+                    errors.add(new ValidationError(
+                            String.format("There are %d plans in pricelist %s and have the same product/billingPeriod (%s, %s)",
+                                          numPlans, getName(), cur.getProduct().getName(), cur.getRecurringBillingPeriod()), catalog.getCatalogURI(),
+                            DefaultPriceListSet.class, getName()));
+                }
             }
         }
         return errors;

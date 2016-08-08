@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -36,6 +37,8 @@ import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.jaxrs.json.TenantJson;
 import org.killbill.billing.jaxrs.json.TenantKeyJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -70,6 +73,7 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 public class TenantResource extends JaxRsResourceBase {
 
     private final TenantUserApi tenantApi;
+    private final CatalogUserApi catalogUserApi;
 
     @Inject
     public TenantResource(final TenantUserApi tenantApi,
@@ -79,10 +83,12 @@ public class TenantResource extends JaxRsResourceBase {
                           final AuditUserApi auditUserApi,
                           final AccountUserApi accountUserApi,
                           final PaymentApi paymentApi,
+                          final CatalogUserApi catalogUserApi,
                           final Clock clock,
                           final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.tenantApi = tenantApi;
+        this.catalogUserApi = catalogUserApi;
     }
 
     @TimedResource
@@ -114,17 +120,22 @@ public class TenantResource extends JaxRsResourceBase {
     @ApiOperation(value = "Create a tenant")
     @ApiResponses(value = {@ApiResponse(code = 500, message = "Tenant already exists")})
     public Response createTenant(final TenantJson json,
+                                 @QueryParam(QUERY_TENANT_USE_GLOBAL_DEFAULT) @DefaultValue("true") final Boolean useGlobalDefault,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
-                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException, CatalogApiException {
         verifyNonNullOrEmpty(json, "TenantJson body should be specified");
         verifyNonNullOrEmpty(json.getApiKey(), "TenantJson apiKey needs to be set",
                              json.getApiSecret(), "TenantJson apiSecret needs to be set");
 
         final TenantData data = json.toTenantData();
         final Tenant tenant = tenantApi.createTenant(data, context.createContext(createdBy, reason, comment, request));
+        if (!useGlobalDefault) {
+            final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+            catalogUserApi.createDefaultEmptyCatalog(clock.getUTCNow(),callContext);
+        }
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());
     }
 
