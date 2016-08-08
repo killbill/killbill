@@ -72,6 +72,7 @@
 </xs:complexType>
 </xs:element>
 <xs:element minOccurs="0" name="controlTag" type="controlTagType"/>
+<xs:element minOccurs="0" name="controlTagExclusion" type="controlTagType"/>
 </xs:sequence>
 </xs:extension>
 </xs:complexContent>

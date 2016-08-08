@@ -60,6 +60,9 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
     @XmlElement(required = false, name = "controlTag")
     private ControlTagType controlTag;
 
+    @XmlElement(required = false, name = "controlTagExclusion")
+    private ControlTagType controlTagExclusion;
+
     @Override
     public boolean evaluate(final BillingState state, final LocalDate date) {
         LocalDate unpaidInvoiceTriggerDate = null;
@@ -73,7 +76,8 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
                 (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds == null ||
                  (unpaidInvoiceTriggerDate != null && !unpaidInvoiceTriggerDate.isAfter(date))) &&
                 (responseForLastFailedPayment == null || responseIsIn(state.getResponseForLastFailedPayment(), responseForLastFailedPayment)) &&
-                (controlTag == null || isTagIn(controlTag, state.getTags()));
+                (controlTag == null || isTagIn(controlTag, state.getTags())) &&
+                (controlTagExclusion == null || isTagNotIn(controlTagExclusion, state.getTags()));
     }
 
     private boolean responseIsIn(final PaymentResponse actualResponse,
@@ -93,6 +97,15 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
             }
         }
         return false;
+    }
+
+    private boolean isTagNotIn(final ControlTagType tagType, final Tag[] tags) {
+        for (final Tag t : tags) {
+            if (t.getTagDefinitionId().equals(tagType.getId())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -140,6 +153,11 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
     }
 
     @Override
+    public ControlTagType getExclusionControlTagType() {
+        return controlTagExclusion;
+    }
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("DefaultOverdueCondition{");
         sb.append("numberOfUnpaidInvoicesEqualsOrExceeds=").append(numberOfUnpaidInvoicesEqualsOrExceeds);
@@ -147,6 +165,7 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
         sb.append(", timeSinceEarliestUnpaidInvoiceEqualsOrExceeds=").append(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds);
         sb.append(", responseForLastFailedPayment=").append(Arrays.toString(responseForLastFailedPayment));
         sb.append(", controlTag=").append(controlTag);
+        sb.append(", controlTagExclusion=").append(controlTagExclusion);
         sb.append('}');
         return sb.toString();
     }

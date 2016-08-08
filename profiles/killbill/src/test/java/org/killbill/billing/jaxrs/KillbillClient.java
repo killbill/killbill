@@ -147,6 +147,19 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return accountJson;
     }
 
+    protected Account createAccountNoPMBundleAndSubscription() throws Exception {
+        // Create an account with no payment method
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // Add a bundle, subscription and move the clock to get the first invoice
+        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        assertNotNull(subscriptionJson);
+
+        return accountJson;
+    }
+
     protected Account createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
         // Create an account with no payment method
         final Account accountJson = createAccount();
