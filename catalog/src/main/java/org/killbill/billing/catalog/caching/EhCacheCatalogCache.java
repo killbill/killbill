@@ -51,6 +51,7 @@ public class EhCacheCatalogCache implements CatalogCache {
 
     private final CacheController cacheController;
     private final VersionedCatalogLoader loader;
+    private final CacheLoaderArgument cacheLoaderArgumentWithTemplateFiltering;
     private final CacheLoaderArgument cacheLoaderArgument;
     private final OSGIServiceRegistration<CatalogPluginApi> pluginRegistry;
     private final VersionedCatalogMapper versionedCatalogMapper;
@@ -69,7 +70,8 @@ public class EhCacheCatalogCache implements CatalogCache {
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         this.loader = loader;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.cacheLoaderArgument = initializeCacheLoaderArgument(this);
+        this.cacheLoaderArgumentWithTemplateFiltering = initializeCacheLoaderArgument(true);
+        this.cacheLoaderArgument = initializeCacheLoaderArgument(false);
         setDefaultCatalog();
     }
 
@@ -81,7 +83,7 @@ public class EhCacheCatalogCache implements CatalogCache {
     }
 
     @Override
-    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final InternalTenantContext tenantContext) throws CatalogApiException {
+    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext tenantContext) throws CatalogApiException {
 
         // STEPH TODO what are the possibilities for caching here ?
         final VersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext);
@@ -95,7 +97,8 @@ public class EhCacheCatalogCache implements CatalogCache {
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,
         // but to be on the safe side;;
         try {
-            VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
+            VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(tenantContext.getTenantRecordId(),
+                                                                                    filterTemplateCatalog ? cacheLoaderArgumentWithTemplateFiltering : cacheLoaderArgument);
             // It means we are using a default catalog in a multi-tenant deployment, that does not really match a real use case, but we want to support it
             // for test purpose.
             if (useDefaultCatalog && tenantCatalog == null) {
@@ -134,11 +137,11 @@ public class EhCacheCatalogCache implements CatalogCache {
     // nothing about catalog.
     //
     // This is a contract between the TenantCatalogCacheLoader and the EhCacheCatalogCache
-    private CacheLoaderArgument initializeCacheLoaderArgument(final EhCacheCatalogCache parentCache) {
+    private CacheLoaderArgument initializeCacheLoaderArgument(final boolean filterTemplateCatalog) {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
             public Object loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
-                return loader.load(catalogXMLs, tenantRecordId);
+                return loader.load(catalogXMLs, filterTemplateCatalog, tenantRecordId);
             }
         };
         final Object[] args = new Object[1];

@@ -83,7 +83,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
         SubscriptionBaseEvent newEvent = null;
 
-        final Catalog catalog = catalogService.getFullCatalog(true, context);
+        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
 
         final DateTime effectiveDate = existingEvent.getEffectiveDate().isBefore(transferDate) ? transferDate : existingEvent.getEffectiveDate();
 

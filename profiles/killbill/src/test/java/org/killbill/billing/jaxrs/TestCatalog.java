@@ -160,9 +160,12 @@ public class TestCatalog extends TestJaxrsBase {
                                                                        .withTenantApiKey(otherTenantNoKBDefault.getApiKey())
                                                                        .withTenantApiSecret(otherTenantNoKBDefault.getApiSecret())
                                                                        .build();
+        // Verify the template catalog is not returned
+        List<Catalog> catalogsJson = killBillClient.getJSONCatalog(requestOptionsOtherTenant);
+        Assert.assertEquals(catalogsJson.size(), 0);
 
         killBillClient.addSimplePan(new SimplePlan("foo-monthly", "Foo", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptionsOtherTenant);
-        List<Catalog> catalogsJson = killBillClient.getJSONCatalog(requestOptionsOtherTenant);
+        catalogsJson = killBillClient.getJSONCatalog(requestOptionsOtherTenant);
         Assert.assertEquals(catalogsJson.size(),1);
         Assert.assertEquals(catalogsJson.get(0).getProducts().size(),1);
         Assert.assertEquals(catalogsJson.get(0).getProducts().get(0).getName(),"Foo");

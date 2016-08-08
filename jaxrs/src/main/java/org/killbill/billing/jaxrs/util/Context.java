@@ -84,7 +84,7 @@ public class Context {
     }
 
     // Use REQUEST_ID_HEADER if this is provided and lloks like a UUID, if not allocate a random one.
-    private UUID getOrCreateUserToken() {
+    public static  UUID getOrCreateUserToken() {
         UUID userToken;
         if (Request.getPerThreadRequestData().getRequestId() != null) {
             try {

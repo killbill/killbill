@@ -125,7 +125,7 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
     private <T> T [] allocateNewEntries(final T [] existingEntries, final T newEntry) throws CatalogApiException  {
 
         // Verify entry does not already exists
-        if (Iterables.any(ImmutableList.<T>copyOf(existingEntries), new Predicate<T>() {
+        if (existingEntries != null && Iterables.any(ImmutableList.<T>copyOf(existingEntries), new Predicate<T>() {
             @Override
             public boolean apply(final T input) {
                 if (input instanceof CatalogEntity) {
@@ -143,7 +143,8 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
         }
 
         // Realloc and assign new entry
-        final T [] newEntries = (T[]) Array.newInstance(newEntry.getClass(), existingEntries.length + 1);
+        final int length = existingEntries != null ? existingEntries.length : 0;
+        final T [] newEntries = (T[]) Array.newInstance(newEntry.getClass(), length + 1);
         for (int i = 0 ; i < newEntries.length + 1; i++) {
             if (i < newEntries.length - 1) {
                 newEntries[i] = existingEntries[i];

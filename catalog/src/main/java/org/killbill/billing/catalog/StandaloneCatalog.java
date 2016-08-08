@@ -141,6 +141,12 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return plans;
     }
 
+    public boolean isTemplateCatalog() {
+        return (products == null || products.length == 0) &&
+               (plans == null || plans.length == 0) &&
+               (supportedCurrencies == null || supportedCurrencies.length == 0);
+    }
+
     public URI getCatalogURI() {
         return catalogURI;
     }

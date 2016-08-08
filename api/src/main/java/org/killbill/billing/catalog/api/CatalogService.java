@@ -20,14 +20,13 @@ package org.killbill.billing.catalog.api;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.platform.api.KillbillService;
-import org.killbill.billing.util.callcontext.TenantContext;
 
 /**
  * The interface {@code CatalogService} is a {@code KillbillService} required to handle catalog operations.
  */
 public interface CatalogService extends KillbillService {
 
-    public Catalog getFullCatalog(boolean useDefaultCatalog, InternalTenantContext context) throws CatalogApiException;
+    public Catalog getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 
-    public StaticCatalog getCurrentCatalog(boolean useDefaultCatalog, InternalTenantContext context) throws CatalogApiException;
+    public StaticCatalog getCurrentCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 }

@@ -242,12 +242,16 @@ public class CatalogUpdater {
     }
 
     private boolean isCurrencySupported(final Currency targetCurrency) {
-        return Iterables.any(ImmutableList.copyOf(catalog.getCurrentSupportedCurrencies()), new Predicate<Currency>() {
-            @Override
-            public boolean apply(final Currency input) {
-                return input.equals(targetCurrency);
-            }
-        });
+        if (catalog.getCurrentSupportedCurrencies() != null) {
+            return Iterables.any(ImmutableList.copyOf(catalog.getCurrentSupportedCurrencies()), new Predicate<Currency>() {
+                @Override
+                public boolean apply(final Currency input) {
+                    return input.equals(targetCurrency);
+                }
+            });
+        } else {
+            return false;
+        }
     }
 
     private void validateNewPlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {

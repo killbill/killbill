@@ -55,7 +55,7 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
     public Catalog initCatalog(final CatalogService catalogService, final InternalTenantContext context) throws Exception {
 
         ((DefaultCatalogService) catalogService).loadCatalog();
-        final Catalog catalog = catalogService.getFullCatalog(true, context);
+        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
         assertNotNull(catalog);
         return catalog;
     }

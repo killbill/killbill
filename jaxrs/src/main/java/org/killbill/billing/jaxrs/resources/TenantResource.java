@@ -37,6 +37,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.jaxrs.json.TenantJson;
@@ -53,7 +54,9 @@ import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
@@ -133,7 +136,8 @@ public class TenantResource extends JaxRsResourceBase {
         final TenantData data = json.toTenantData();
         final Tenant tenant = tenantApi.createTenant(data, context.createContext(createdBy, reason, comment, request));
         if (!useGlobalDefault) {
-            final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+            final CallContext callContext = new DefaultCallContext(tenant.getId(), createdBy, CallOrigin.EXTERNAL,
+                                                                   UserType.CUSTOMER, Context.getOrCreateUserToken(), clock);
             catalogUserApi.createDefaultEmptyCatalog(clock.getUTCNow(),callContext);
         }
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());

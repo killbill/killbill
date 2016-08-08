@@ -40,12 +40,12 @@ public class MockCatalogService extends DefaultCatalogService {
     }
 
     @Override
-    public Catalog getFullCatalog(final boolean useDefaultCatalog, InternalTenantContext context) {
+    public Catalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
         return catalog;
     }
 
     @Override
-    public StaticCatalog getCurrentCatalog(final boolean useDefaultCatalog, InternalTenantContext context) {
+    public StaticCatalog getCurrentCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
         return catalog;
     }
 

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -940,7 +939,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     private DefaultSubscriptionBase createSubscriptionForInternalUse(final SubscriptionBase shellSubscription, final List<SubscriptionBaseEvent> events, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase result = new DefaultSubscriptionBase(new SubscriptionBuilder(((DefaultSubscriptionBase) shellSubscription)), null, clock);
         if (events.size() > 0) {
-            final Catalog fullCatalog = catalogService.getFullCatalog(true, context);
+            final Catalog fullCatalog = catalogService.getFullCatalog(true, true, context);
             result.rebuildTransitions(events, fullCatalog);
         }
         return result;
@@ -1064,7 +1063,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             allEvents.addAll(subscriptionWithNewEvent.getEvents());
         }
         allEvents.add(newEvent);
-        subscriptionWithNewEvent.rebuildTransitions(allEvents, catalogService.getFullCatalog(true, context));
+        subscriptionWithNewEvent.rebuildTransitions(allEvents, catalogService.getFullCatalog(true, true, context));
         return subscriptionWithNewEvent;
     }
 

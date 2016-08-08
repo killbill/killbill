@@ -91,7 +91,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
         return Resources.getResource(urlString);
     }
 
-    public VersionedCatalog load(final Iterable<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
+    public VersionedCatalog load(final Iterable<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {
         final VersionedCatalog result = new VersionedCatalog(clock);
         final URI uri;
         try {
@@ -99,7 +99,9 @@ public class VersionedCatalogLoader implements CatalogLoader {
             for (final String cur : catalogXMLs) {
                 final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes());
                 final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(uri, curCatalogStream, StandaloneCatalog.class);
-                result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory));
+                if (!filterTemplateCatalog || !catalog.isTemplateCatalog()) {
+                    result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory));
+                }
             }
             return result;
         } catch (final CatalogApiException e) {

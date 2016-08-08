@@ -195,7 +195,7 @@ public class PlanAligner extends BaseAligner {
                                                    final DateTime effectiveDate,
                                                    final InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException {
-        final Catalog catalog = catalogService.getFullCatalog(true, context);
+        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
 
         final PlanSpecifier planSpecifier = new PlanSpecifier(plan.getProduct().getName(),
                                                               plan.getRecurringBillingPeriod(),
@@ -250,7 +250,7 @@ public class PlanAligner extends BaseAligner {
                                              final PhaseType originalInitialPhase,
                                              final WhichPhase which,
                                              final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
-        final Catalog catalog = catalogService.getFullCatalog(true, context);
+        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
         final ProductCategory currentCategory = currentPlan.getProduct().getCategory();
         final PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                                                                                  currentPlan.getRecurringBillingPeriod(),
