@@ -81,7 +81,7 @@ public class TestOverdueHelper {
             "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
             "                   <unit>DAYS</unit><number>30</number>" +
             "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-            "               <controlTag>TEST</controlTag>" +
+            "               <controlTagInclusion>TEST</controlTagInclusion>" +
             "           </condition>" +
             "           <externalMessage>Reached OD1</externalMessage>" +
             "           <blockChanges>true</blockChanges>" +
