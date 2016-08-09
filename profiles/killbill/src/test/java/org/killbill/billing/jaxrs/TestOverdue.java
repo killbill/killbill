@@ -27,6 +27,8 @@ import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.Payment;
+import org.killbill.billing.client.model.Tags;
+import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -45,7 +47,6 @@ public class TestOverdue extends TestJaxrsBase {
         final String overdueConfig = killBillClient.getXMLOverdueConfig();
         Assert.assertNotNull(overdueConfig);
     }
-
 
     @Test(groups = "slow", description = "Can retrieve the account overdue status")
     public void testOverdueStatus() throws Exception {
@@ -98,5 +99,84 @@ public class TestOverdue extends TestJaxrsBase {
 
         // Verify we're in clear state
         Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getIsClearState());
+    }
+
+    @Test(groups = "slow", description = "Allow overdue condition by control tag defined in overdue config xml file")
+    public void testControlTagOverdueConfig() throws Exception {
+        final String overdueConfigPath = Resources.getResource("overdueWithControlTag.xml").getPath();
+        killBillClient.uploadXMLOverdueConfig(overdueConfigPath, requestOptions);
+
+        // Create an account without a payment method and assign a TEST tag
+        final Account accountJson = createAccountNoPMBundleAndSubscription();
+        final Tags accountTag = killBillClient.createAccountTag(accountJson.getAccountId(), ControlTagType.TEST.getId(), requestOptions);
+        assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.TEST.getId());
+
+        // Create an account without a TEST tag
+        final Account accountJsonNoTag = createAccountNoPMBundleAndSubscription();
+
+        // No payment will be triggered as the account doesn't have a payment method
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+
+        // Get the invoices
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
+        // 2 invoices but look for the non zero dollar one
+        assertEquals(invoices.size(), 2);
+
+        final List<Invoice> invoicesNoTag = killBillClient.getInvoicesForAccount(accountJsonNoTag.getAccountId(), requestOptions);
+        // 2 invoices but look for the non zero dollar one
+        assertEquals(invoicesNoTag.size(), 2);
+
+        // We're still clear - see the configuration
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJsonNoTag.getAccountId(), requestOptions).getIsClearState());
+
+        clock.addDays(30);
+        crappyWaitForLackOfProperSynchonization();
+
+        // This account is expected to move to OD1 state because it matches with controlTag defined
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD1");
+        // This account is not expected to move to OD1 state because it does not match with controlTag defined
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJsonNoTag.getAccountId(), requestOptions).getIsClearState());
+    }
+
+    @Test(groups = "slow", description = "Allow overdue condition by exclusion control tag defined in overdue config xml file")
+    public void testExclusionControlTagOverdueConfig() throws Exception {
+        final String overdueConfigPath = Resources.getResource("overdueWithExclusionControlTag.xml").getPath();
+        killBillClient.uploadXMLOverdueConfig(overdueConfigPath, requestOptions);
+
+        // Create an account without a payment method and assign a TEST tag
+        final Account accountJson = createAccountNoPMBundleAndSubscription();
+        final Tags accountTag = killBillClient.createAccountTag(accountJson.getAccountId(), ControlTagType.TEST.getId(), requestOptions);
+        assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.TEST.getId());
+
+        // Create an account without a TEST tag
+        final Account accountJsonNoTag = createAccountNoPMBundleAndSubscription();
+
+        // move a month a wait for invoicing
+        // No payment will be triggered as the account doesn't have a payment method
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+
+        // Get the invoices
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
+        // 2 invoices but look for the non zero dollar one
+        assertEquals(invoices.size(), 2);
+
+        final List<Invoice> invoicesNoTag = killBillClient.getInvoicesForAccount(accountJsonNoTag.getAccountId(), requestOptions);
+        // 2 invoices but look for the non zero dollar one
+        assertEquals(invoicesNoTag.size(), 2);
+
+        // We're still clear - see the configuration
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJsonNoTag.getAccountId(), requestOptions).getIsClearState());
+
+        clock.addDays(30);
+        crappyWaitForLackOfProperSynchonization();
+
+        // This account is not expected to move to OD1 state because it does not match with exclusion controlTag defined
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
+        // This account is expected to move to OD1 state because it matches with exclusion controlTag defined
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJsonNoTag.getAccountId(), requestOptions).getName(), "OD1");
     }
 }

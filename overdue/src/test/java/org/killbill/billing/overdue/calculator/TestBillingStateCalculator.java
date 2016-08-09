@@ -60,7 +60,7 @@ public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
 
         Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(invoices);
 
-        return new BillingStateCalculator(invoiceApi, clock) {
+        return new BillingStateCalculator(invoiceApi, clock, tagInternalApi) {
             @Override
             public BillingState calculateBillingState(final ImmutableAccountData overdueable,
                                                       final InternalTenantContext context) {
