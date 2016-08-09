@@ -23,6 +23,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Invoice;
@@ -30,18 +31,37 @@ import org.killbill.billing.client.model.InvoiceItem;
 import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.InvoicePaymentTransaction;
 import org.killbill.billing.client.model.InvoicePayments;
+import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
-import org.killbill.billing.client.model.Payments;
-import org.killbill.billing.client.model.InvoicePaymentTransaction;
 import org.killbill.billing.client.model.PaymentTransaction;
+import org.killbill.billing.client.model.Payments;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
+import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestInvoicePayment extends TestJaxrsBase {
+
+    @Inject
+    protected OSGIServiceRegistration<PaymentPluginApi> registry;
+
+    private MockPaymentProviderPlugin mockPaymentProviderPlugin;
+
+    @BeforeMethod(groups = "slow")
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
+        mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
+    }
 
     @Test(groups = "slow")
     public void testRetrievePayment() throws Exception {
@@ -222,6 +242,38 @@ public class TestInvoicePayment extends TestJaxrsBase {
             paymentsPage = paymentsPage.getNext();
         }
         Assert.assertNull(paymentsPage);
+    }
+
+    @Test(groups = "slow")
+    public void testWithFailedInvoicePayment() throws Exception {
+
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        InvoicePayments invoicePayments = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), basicRequestOptions());
+        assertEquals(invoicePayments.size(), 1);
+
+        final InvoicePayment invoicePayment = invoicePayments.get(0);
+        // Verify targetInvoiceId is not Null. See #593
+        assertNotNull(invoicePayment.getTargetInvoiceId());
+
+        final Invoices invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), basicRequestOptions());
+        assertEquals(invoices.size(), 2);
+        final Invoice invoice = invoices.get(1);
+        // Verify this is the correct value
+        assertEquals(invoicePayment.getTargetInvoiceId(), invoice.getInvoiceId());
+
+        // Make a payment and verify both invoice payment point to the same targetInvoiceId
+        killBillClient.payAllInvoices(accountJson.getAccountId(), false, null, basicRequestOptions());
+        invoicePayments = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), basicRequestOptions());
+        assertEquals(invoicePayments.size(), 2);
+        for (final InvoicePayment cur : invoicePayments) {
+            assertEquals(cur.getTargetInvoiceId(), invoice.getInvoiceId());
+        }
     }
 
     private BigDecimal getFractionOfAmount(final BigDecimal amount) {
