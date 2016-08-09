@@ -844,7 +844,7 @@ public class PaymentResource extends ComboPaymentResource {
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
         final UUID paymentId = UUID.fromString(id);
-        final Payment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), tenantContext);
         return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
     }
 
