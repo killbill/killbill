@@ -21,7 +21,6 @@ package org.killbill.billing.catalog;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
-import java.util.Date;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
@@ -38,8 +37,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
-import com.google.common.io.Resources;
-
 public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
 
     private VersionedCatalog vc;
@@ -50,11 +47,6 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         vc = loader.loadDefaultCatalog("versionedCatalog");
     }
 
-    @Test(groups = "fast")
-    public void testAddCatalog() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException, CatalogApiException {
-        vc.add(new StandaloneCatalogWithPriceOverride(new StandaloneCatalog(new Date()).setCatalogName(vc.getCatalogName()).setRecurringBillingMode(vc.getRecurringBillingMode()), null, 0L, null));
-        Assert.assertEquals(vc.size(), 4);
-    }
 
     @Test(groups = "fast")
     public void testFindPlanWithDates() throws Exception {

@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
@@ -60,47 +61,38 @@ import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
-@XmlRootElement(name = "catalog")
+@XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
-public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPriceOverride> implements Catalog, StaticCatalog {
+public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> implements Catalog, StaticCatalog {
 
     private final Clock clock;
-    @XmlElement(name = "catalogVersion", required = true)
-    private final List<StandaloneCatalogWithPriceOverride> versions;
+
+    @XmlElementWrapper(name = "versions", required = true)
+    @XmlElement(name = "version", required = true)
+    private final List<StandaloneCatalog> versions;
     private String catalogName;
     private BillingMode recurringBillingMode;
 
     // Required for JAXB deserialization
     public VersionedCatalog() {
         this.clock = null;
-        this.versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
+        this.versions = new ArrayList<StandaloneCatalog>();
     }
 
     public VersionedCatalog(final Clock clock) {
         this.clock = clock;
-        this.versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
-    }
-
-    public VersionedCatalog(final Clock clock, final String catalogName, final BillingMode recurringBillingMode, final List<StandaloneCatalogWithPriceOverride> versions, final InternalTenantContext tenantContext) {
-        this.clock = clock;
-        this.catalogName = catalogName;
-        this.recurringBillingMode = recurringBillingMode;
-        this.versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
-        for (final StandaloneCatalogWithPriceOverride cur : versions) {
-            final StandaloneCatalogWithPriceOverride catalogWithTenantInfo = new StandaloneCatalogWithPriceOverride(cur, tenantContext);
-            this.versions.add(catalogWithTenantInfo);
-        }
+        this.versions = new ArrayList<StandaloneCatalog>();
     }
 
     //
     // Private methods
     //
-    private StandaloneCatalogWithPriceOverride versionForDate(final DateTime date) throws CatalogApiException {
+    private StandaloneCatalog versionForDate(final DateTime date) throws CatalogApiException {
         return versions.get(indexOfVersionForDate(date.toDate()));
     }
 
-    private List<StandaloneCatalogWithPriceOverride> versionsBeforeDate(final Date date) throws CatalogApiException {
-        final List<StandaloneCatalogWithPriceOverride> result = new ArrayList<StandaloneCatalogWithPriceOverride>();
+    private List<StandaloneCatalog> versionsBeforeDate(final Date date) throws CatalogApiException {
+        final List<StandaloneCatalog> result = new ArrayList<StandaloneCatalog>();
         final int index = indexOfVersionForDate(date);
         for (int i = 0; i <= index; i++) {
             result.add(versions.get(i));
@@ -110,7 +102,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
 
     private int indexOfVersionForDate(final Date date) throws CatalogApiException {
         for (int i = versions.size() - 1; i >= 0; i--) {
-            final StandaloneCatalogWithPriceOverride c = versions.get(i);
+            final StandaloneCatalog c = versions.get(i);
             if (c.getEffectiveDate().getTime() <= date.getTime()) {
                 return i;
             }
@@ -135,7 +127,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
         }
 
 
-        public Plan findPlan(final StandaloneCatalogWithPriceOverride catalog) throws CatalogApiException {
+        public Plan findPlan(final StandaloneCatalog catalog) throws CatalogApiException {
             if (spec.getPlanName() != null) {
                 return catalog.findCurrentPlan(spec.getPlanName());
             } else {
@@ -148,13 +140,13 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
                                                   final DateTime requestedDate,
                                                   final DateTime subscriptionStartDate)
             throws CatalogApiException {
-        final List<StandaloneCatalogWithPriceOverride> catalogs = versionsBeforeDate(requestedDate.toDate());
+        final List<StandaloneCatalog> catalogs = versionsBeforeDate(requestedDate.toDate());
         if (catalogs.isEmpty()) {
             throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
         }
 
         for (int i = catalogs.size() - 1; i >= 0; i--) { // Working backwards to find the latest applicable plan
-            final StandaloneCatalogWithPriceOverride c = catalogs.get(i);
+            final StandaloneCatalog c = catalogs.get(i);
             final Plan plan;
             try {
                 plan = wrapper.findPlan(c);
@@ -207,14 +199,20 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
         return clock;
     }
 
-    public List<StandaloneCatalogWithPriceOverride> getVersions() {
+    public List<StandaloneCatalog> getVersions() {
         return versions;
     }
 
     //
     // Public methods not exposed in interface
     //
-    public void add(final StandaloneCatalogWithPriceOverride e) throws CatalogApiException {
+    public void addAll(final List<StandaloneCatalog> inputVersions) throws CatalogApiException {
+        for (final StandaloneCatalog cur : inputVersions) {
+            add(cur);
+        }
+    }
+
+    public void add(final StandaloneCatalog e) throws CatalogApiException {
         if (catalogName == null) {
             catalogName = e.getCatalogName();
         } else {
@@ -230,15 +228,15 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
             }
         }
         versions.add(e);
-        Collections.sort(versions, new Comparator<StandaloneCatalogWithPriceOverride>() {
+        Collections.sort(versions, new Comparator<StandaloneCatalog>() {
             @Override
-            public int compare(final StandaloneCatalogWithPriceOverride c1, final StandaloneCatalogWithPriceOverride c2) {
+            public int compare(final StandaloneCatalog c1, final StandaloneCatalog c2) {
                 return c1.getEffectiveDate().compareTo(c2.getEffectiveDate());
             }
         });
     }
 
-    public Iterator<StandaloneCatalogWithPriceOverride> iterator() {
+    public Iterator<StandaloneCatalog> iterator() {
         return versions.iterator();
     }
 
@@ -271,7 +269,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
 
     @Override
     public PriceListSet getPriceLists(final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).getStandaloneCatalog().getPriceLists();
+        return versionForDate(requestedDate).getPriceLists();
     }
 
     //
@@ -397,15 +395,15 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalogWithPric
     // VerifiableConfig API
     //
     @Override
-    public void initialize(final StandaloneCatalogWithPriceOverride catalog, final URI sourceURI) {
-        for (final StandaloneCatalogWithPriceOverride c : versions) {
-            c.initialize(catalog, sourceURI);
+    public void initialize(final VersionedCatalog catalog, final URI sourceURI) {
+        for (final StandaloneCatalog c : versions) {
+            c.initialize(c, sourceURI);
         }
     }
 
     @Override
-    public ValidationErrors validate(final StandaloneCatalogWithPriceOverride catalog, final ValidationErrors errors) {
-        for (final StandaloneCatalogWithPriceOverride c : versions) {
+    public ValidationErrors validate(final VersionedCatalog catalog, final ValidationErrors errors) {
+        for (final StandaloneCatalog c : versions) {
             errors.addAll(c.validate(c, errors));
         }
         //TODO MDW validation - ensure all catalog versions have a single name

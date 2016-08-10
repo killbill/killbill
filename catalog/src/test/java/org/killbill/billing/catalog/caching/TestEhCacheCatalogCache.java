@@ -29,6 +29,8 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.DefaultProduct;
+import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.xmlloader.UriAccessor;
@@ -85,11 +87,15 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         Assert.assertEquals(products.length, 3);
 
         // Verify the lookup with other contexts
-        final VersionedCatalog resultForMultiTenantContext = new VersionedCatalog(result.getClock(), result.getCatalogName(), result.getRecurringBillingMode(), result.getVersions(), multiTenantContext);
+        final VersionedCatalog resultForMultiTenantContext = new VersionedCatalog(result.getClock());
+        for (final StandaloneCatalog cur : result.getVersions()) {
+            resultForMultiTenantContext.add(new StandaloneCatalogWithPriceOverride(cur, priceOverride, multiTenantContext.getTenantRecordId(), internalCallContextFactory));
+        }
+
         Assert.assertEquals(catalogCache.getCatalog(true, true, multiTenantContext).getCatalogName(), resultForMultiTenantContext.getCatalogName());
         Assert.assertEquals(catalogCache.getCatalog(true, true, multiTenantContext).getVersions().size(), resultForMultiTenantContext.getVersions().size());
         for (int i = 0; i < catalogCache.getCatalog(true, true, multiTenantContext).getVersions().size(); i++) {
-            Assert.assertEquals(catalogCache.getCatalog(true, true, multiTenantContext).getVersions().get(i).getTenantRecordId(), resultForMultiTenantContext.getVersions().get(i).getTenantRecordId());
+           Assert.assertEquals(((StandaloneCatalogWithPriceOverride) catalogCache.getCatalog(true, true, multiTenantContext).getVersions().get(i)).getTenantRecordId(), ((StandaloneCatalogWithPriceOverride) resultForMultiTenantContext.getVersions().get(i)).getTenantRecordId());
         }
     }
 

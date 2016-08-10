@@ -24,9 +24,12 @@ import javax.inject.Inject;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
+import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.VersionedCatalogMapper;
 import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
 import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
@@ -55,6 +58,7 @@ public class EhCacheCatalogCache implements CatalogCache {
     private final CacheLoaderArgument cacheLoaderArgument;
     private final OSGIServiceRegistration<CatalogPluginApi> pluginRegistry;
     private final VersionedCatalogMapper versionedCatalogMapper;
+    private final PriceOverride priceOverride;
     private final InternalCallContextFactory internalCallContextFactory;
 
     private VersionedCatalog defaultCatalog;
@@ -64,11 +68,13 @@ public class EhCacheCatalogCache implements CatalogCache {
                                final VersionedCatalogMapper versionedCatalogMapper,
                                final CacheControllerDispatcher cacheControllerDispatcher,
                                final VersionedCatalogLoader loader,
+                               final PriceOverride priceOverride,
                                final InternalCallContextFactory internalCallContextFactory) {
         this.pluginRegistry = pluginRegistry;
         this.versionedCatalogMapper = versionedCatalogMapper;
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         this.loader = loader;
+        this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;
         this.cacheLoaderArgumentWithTemplateFiltering = initializeCacheLoaderArgument(true);
         this.cacheLoaderArgument = initializeCacheLoaderArgument(false);
@@ -102,7 +108,11 @@ public class EhCacheCatalogCache implements CatalogCache {
             // It means we are using a default catalog in a multi-tenant deployment, that does not really match a real use case, but we want to support it
             // for test purpose.
             if (useDefaultCatalog && tenantCatalog == null) {
-                tenantCatalog = new VersionedCatalog(defaultCatalog.getClock(), defaultCatalog.getCatalogName(), defaultCatalog.getRecurringBillingMode(), defaultCatalog.getVersions(), tenantContext);
+                tenantCatalog = new VersionedCatalog(defaultCatalog.getClock());
+                for (final StandaloneCatalog cur : defaultCatalog.getVersions()) {
+                    final StandaloneCatalogWithPriceOverride curWithOverride = new StandaloneCatalogWithPriceOverride(cur, priceOverride, tenantContext.getTenantRecordId(), internalCallContextFactory);
+                    tenantCatalog.add(curWithOverride);
+                }
                 cacheController.add(tenantContext.getTenantRecordId(), tenantCatalog);
             }
             return tenantCatalog;
@@ -118,7 +128,7 @@ public class EhCacheCatalogCache implements CatalogCache {
         }
     }
 
-    private VersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) {
+    private VersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) throws CatalogApiException {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
         for (final String service : pluginRegistry.getAllServices()) {
             final CatalogPluginApi plugin = pluginRegistry.getServiceForName(service);

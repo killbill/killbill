@@ -25,6 +25,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.api.StandalonePluginCatalog;
 import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
@@ -49,24 +50,18 @@ public class VersionedCatalogMapper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public VersionedCatalog toVersionedCatalog(final VersionedPluginCatalog pluginCatalog, final InternalTenantContext internalTenantContext) {
-        final VersionedCatalog result = new VersionedCatalog(clock, pluginCatalog.getCatalogName(), pluginCatalog.getRecurringBillingMode(), toStandaloneCatalogWithPriceOverrideList(pluginCatalog, internalTenantContext), internalTenantContext);
+    public VersionedCatalog toVersionedCatalog(final VersionedPluginCatalog pluginCatalog, final InternalTenantContext internalTenantContext) throws CatalogApiException {
+        final VersionedCatalog result = new VersionedCatalog(clock);
+        for (final StandalonePluginCatalog cur : pluginCatalog.getStandalonePluginCatalogs()) {
+            result.add(toStandaloneCatalogWithPriceOverride(pluginCatalog, cur, internalTenantContext));
+        }
         return result;
-    }
-
-    private List<StandaloneCatalogWithPriceOverride> toStandaloneCatalogWithPriceOverrideList(final VersionedPluginCatalog pluginCatalog, final InternalTenantContext internalTenantContext) {
-        return ImmutableList.copyOf(Iterables.transform(pluginCatalog.getStandalonePluginCatalogs(), new Function<StandalonePluginCatalog, StandaloneCatalogWithPriceOverride>() {
-            @Override
-            public StandaloneCatalogWithPriceOverride apply(final StandalonePluginCatalog input) {
-                return toStandaloneCatalogWithPriceOverride(pluginCatalog, input, internalTenantContext);
-            }
-        }));
     }
 
     private StandaloneCatalogWithPriceOverride toStandaloneCatalogWithPriceOverride(final VersionedPluginCatalog pluginCatalog, final StandalonePluginCatalog input, final InternalTenantContext internalTenantContext) {
         final StandaloneCatalogMapper mapper = new StandaloneCatalogMapper(pluginCatalog.getCatalogName(), pluginCatalog.getRecurringBillingMode());
-        final StandaloneCatalog standaloneCatalog = mapper.toStandaloneCatalog(input, null);
-        final StandaloneCatalogWithPriceOverride result = new StandaloneCatalogWithPriceOverride(standaloneCatalog, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
+        final StandaloneCatalog catalog = mapper.toStandaloneCatalog(input, null);
+        final StandaloneCatalogWithPriceOverride result = new StandaloneCatalogWithPriceOverride(catalog, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
         return result;
     }
 }

@@ -35,7 +35,6 @@ import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
@@ -120,10 +119,11 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
         public TestCatalogPluginApi(final PriceOverride priceOverride, final InternalTenantContext internalTenantContext, final InternalCallContextFactory internalCallContextFactory) throws Exception {
             final StandaloneCatalog inputCatalog = XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), StandaloneCatalog.class);
-            final List<StandaloneCatalogWithPriceOverride> versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
+            final List<StandaloneCatalog> versions = new ArrayList<StandaloneCatalog>();
             final StandaloneCatalogWithPriceOverride standaloneCatalogWithPriceOverride = new StandaloneCatalogWithPriceOverride(inputCatalog, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
             versions.add(standaloneCatalogWithPriceOverride);
-            versionedCatalog = new VersionedCatalog(getClock(), inputCatalog.getCatalogName(), inputCatalog.getRecurringBillingMode(), versions, internalTenantContext);
+            versionedCatalog = new VersionedCatalog(getClock());
+            versionedCatalog.addAll(versions);
         }
 
         @Override
@@ -131,23 +131,19 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
             return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), versionedCatalog.getRecurringBillingMode(), toStandalonePluginCatalogs(versionedCatalog.getVersions()));
         }
 
-        private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final List<StandaloneCatalogWithPriceOverride> input) {
-            return Iterables.transform(input, new Function<StandaloneCatalogWithPriceOverride, StandalonePluginCatalog>() {
+        private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final List<StandaloneCatalog> input) {
+            return Iterables.transform(input, new Function<StandaloneCatalog, StandalonePluginCatalog>() {
                 @Override
-                public StandalonePluginCatalog apply(final StandaloneCatalogWithPriceOverride input) {
-                    try {
+                public StandalonePluginCatalog apply(final StandaloneCatalog input) {
 
-                        return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
-                                                                    ImmutableList.copyOf(input.getCurrentSupportedCurrencies()),
-                                                                    ImmutableList.<Product>copyOf(input.getCurrentProducts()),
-                                                                    ImmutableList.<Plan>copyOf(input.getCurrentPlans()),
-                                                                    input.getStandaloneCatalog().getPriceLists().getDefaultPricelist(),
-                                                                    ImmutableList.<PriceList>copyOf(input.getStandaloneCatalog().getPriceLists().getChildPriceLists()),
-                                                                    input.getStandaloneCatalog().getPlanRules(),
-                                                                    null /*ImmutableList.<Unit>copyOf(input.getStandaloneCatalog().getCurrentUnits()) */);
-                    } catch (CatalogApiException e) {
-                        throw new IllegalStateException(e);
-                    }
+                    return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
+                                                                ImmutableList.copyOf(input.getCurrentSupportedCurrencies()),
+                                                                ImmutableList.<Product>copyOf(input.getCurrentProducts()),
+                                                                ImmutableList.<Plan>copyOf(input.getCurrentPlans()),
+                                                                input.getPriceLists().getDefaultPricelist(),
+                                                                ImmutableList.<PriceList>copyOf(input.getPriceLists().getChildPriceLists()),
+                                                                input.getPlanRules(),
+                                                                null /* ImmutableList.<Unit>copyOf(input.getCurrentUnits()) */);
                 }
 
                 private <I, C extends I> List<I> listOf(@Nullable C[] input) {

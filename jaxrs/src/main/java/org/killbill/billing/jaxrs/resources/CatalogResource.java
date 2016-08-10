@@ -35,6 +35,7 @@ import javax.ws.rs.core.UriInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.Catalog;
@@ -135,7 +136,7 @@ public class CatalogResource extends JaxRsResourceBase {
         if (catalogDateVersion != null) {
             result.add(new CatalogJson(catalog, catalogDateVersion));
         } else {
-            for (final StandaloneCatalogWithPriceOverride v : catalog.getVersions()) {
+            for (final StandaloneCatalog v : catalog.getVersions()) {
                 result.add(new CatalogJson(catalog, new DateTime(v.getEffectiveDate())));
             }
         }

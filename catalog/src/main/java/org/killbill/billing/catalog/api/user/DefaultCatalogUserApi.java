@@ -133,8 +133,8 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     private StandaloneCatalog getCurrentStandaloneCatalogForTenant(final InternalTenantContext internalTenantContext) throws CatalogApiException {
         final VersionedCatalog versionedCatalog = (VersionedCatalog) catalogService.getCurrentCatalog(false, false, internalTenantContext);
         if (versionedCatalog != null && !versionedCatalog.getVersions().isEmpty()) {
-            final StandaloneCatalogWithPriceOverride standaloneCatalogWithPriceOverride = versionedCatalog.getVersions().get(versionedCatalog.getVersions().size() - 1);
-            return standaloneCatalogWithPriceOverride.getStandaloneCatalog();
+            final StandaloneCatalog standaloneCatalogWithPriceOverride = versionedCatalog.getVersions().get(versionedCatalog.getVersions().size() - 1);
+            return standaloneCatalogWithPriceOverride;
         } else {
             return null;
         }
