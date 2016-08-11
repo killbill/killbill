@@ -68,6 +68,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -90,16 +92,18 @@ public class TestResource extends JaxRsResourceBase {
     private final PersistentBus persistentBus;
     private final NotificationQueueService notificationQueueService;
     private final RecordIdApi recordIdApi;
+    private final CacheManager cacheManager;
 
     @Inject
     public TestResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi,
                         final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final RecordIdApi recordIdApi,
                         final PersistentBus persistentBus, final NotificationQueueService notificationQueueService, final PaymentApi paymentApi,
-                        final Clock clock, final Context context) {
+                        final CacheManager cacheManager, final Clock clock, final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.persistentBus = persistentBus;
         this.notificationQueueService = notificationQueueService;
         this.recordIdApi = recordIdApi;
+        this.cacheManager = cacheManager;
     }
 
     public final class ClockResource {
@@ -204,6 +208,28 @@ public class TestResource extends JaxRsResourceBase {
         waitForNotificationToComplete(request, timeoutSec);
 
         return getCurrentTime(timeZoneStr);
+    }
+
+    @POST
+    @Path("/cache")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Invalidates the given Cache")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Cache name does not exist or is not alive")})
+    public Response invalidateCache(@QueryParam("cacheName") final String cacheName,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
+
+        final Ehcache cache = cacheManager.getEhcache(cacheName);
+
+        // check if cache is null
+        if (cache == null) {
+            log.warn("Cache for cacheName='{}' does not exist or is not alive", cacheName);
+            return Response.status(Status.BAD_REQUEST).build();
+        }
+
+        // Clear given cache
+        cache.removeAll();
+
+        return Response.status(Status.OK).build();
     }
 
     private boolean waitForNotificationToComplete(final ServletRequest request, final Long timeoutSec) {
