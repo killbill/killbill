@@ -22,12 +22,12 @@
          xsi:noNamespaceSchemaLocation="ehcache.xsd">
 
     <defaultCache
-            maxElementsInMemory="0"
+            maxElementsInMemory="100000"
             maxElementsOnDisk="0"
-            eternal="false"
-            timeToIdleSeconds="0"
-            timeToLiveSeconds="0"
+            eternal="true"
             overflowToDisk="false"
+            diskPersistent="false"
+            memoryStoreEvictionPolicy="LFU"
             statistics="true"
             />
 
