@@ -35,7 +35,7 @@ public class TestCache extends TestJaxrsBase {
         Assert.assertEquals(cache.getSize(), 1);
 
         // invalidate the specified cache
-        killBillClient.invalidatesCacheByName(cache.getName(), requestOptions);
+        killBillClient.invalidateCacheByName(cache.getName(), requestOptions);
 
         // verify that now the cache is empty and has no keys stored
         Assert.assertEquals(cache.getSize(), 0);
@@ -50,7 +50,7 @@ public class TestCache extends TestJaxrsBase {
         Assert.assertEquals(cache.getSize(), 1);
 
         // invalidate all caches
-        killBillClient.invalidatesAllCaches(requestOptions);
+        killBillClient.invalidateAllCaches(requestOptions);
 
         // verify that now the cache is empty and has no keys stored
         Assert.assertEquals(cache.getSize(), 0);
@@ -74,7 +74,7 @@ public class TestCache extends TestJaxrsBase {
         Assert.assertNotNull(accountBcdCache.get(input.getAccountId()));
 
         // invalidate caches per account level by accountId
-        killBillClient.invalidatesCacheByAccount(input.getAccountId().toString(), requestOptions);
+        killBillClient.invalidateCacheByAccount(input.getAccountId().toString(), requestOptions);
 
         // verify that now the caches don't have the accountId key stored
         Assert.assertNull(accountRecordIdCache.get(input.getAccountId().toString()));
@@ -119,7 +119,7 @@ public class TestCache extends TestJaxrsBase {
         Assert.assertFalse(tenantCatalogCache.getKeys().isEmpty());
 
         // invalidate caches per tenant level by tenantId
-        killBillClient.invalidatesCacheByTenant(input.getTenantId().toString(), requestOptions);
+        killBillClient.invalidateCacheByTenant(input.getApiKey(), requestOptions);
 
         // TODO: verify that now the caches are empty
 //        Assert.assertTrue(tenantRecordIdCache.getKeys().isEmpty());
