@@ -36,12 +36,15 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 /**
@@ -52,35 +55,37 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
     public static final String PLUGIN_NAME = "__EXTERNAL_PAYMENT__";
 
     private final Clock clock;
+    private final PaymentConfig paymentConfig;
 
     @Inject
-    public ExternalPaymentProviderPlugin(final Clock clock) {
+    public ExternalPaymentProviderPlugin(final Clock clock, final PaymentConfig paymentConfig) {
         this.clock = clock;
+        this.paymentConfig = paymentConfig;
     }
 
     @Override
     public PaymentTransactionInfoPlugin authorizePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.AUTHORIZE, amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.AUTHORIZE, amount, currency, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
     public PaymentTransactionInfoPlugin capturePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.CAPTURE, amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.CAPTURE, amount, currency, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
     public PaymentTransactionInfoPlugin purchasePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.PURCHASE, amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.PURCHASE, amount, currency, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
     public PaymentTransactionInfoPlugin voidPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.VOID, BigDecimal.ZERO, null, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.VOID, BigDecimal.ZERO, null, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
     public PaymentTransactionInfoPlugin creditPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.CREDIT, amount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.CREDIT, amount, currency, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
@@ -95,7 +100,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public PaymentTransactionInfoPlugin refundPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal refundAmount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.REFUND, refundAmount, currency, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.REFUND, refundAmount, currency, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
@@ -138,4 +143,46 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
     public GatewayNotification processNotification(final String notification, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
         return new DefaultNoOpGatewayNotification();
     }
+
+    private PaymentPluginStatus getPaymentPluginStatus(final Iterable<PluginProperty> properties) throws PaymentPluginApiException {
+        if (shouldPaymentFailWithError(properties)) {
+            return PaymentPluginStatus.ERROR;
+        } else if (shouldPaymentFailWithException(properties)) {
+            throw new PaymentPluginApiException("Failed to process payment", "Triggered from killbill.external.payment.fail.cancellation");
+        } else if (shouldPaymentFailWithCancellation(properties)) {
+            return PaymentPluginStatus.CANCELED;
+        } else if (shouldPaymentTimeout(properties)) {
+            try {
+                Thread.sleep(paymentConfig.getPaymentPluginTimeout().getMillis() + 1000);
+            } catch (final InterruptedException ignored) {
+            }
+        }
+        return PaymentPluginStatus.PROCESSED;
+    }
+
+    private boolean shouldPaymentFailWithError(final Iterable<PluginProperty> properties) {
+        return isPropertySet(properties, "killbill.external.payment.fail.error");
+    }
+
+    private boolean shouldPaymentFailWithException(final Iterable<PluginProperty> properties) {
+        return isPropertySet(properties, "killbill.external.payment.fail.exception");
+    }
+
+    private boolean shouldPaymentFailWithCancellation(final Iterable<PluginProperty> properties) {
+        return isPropertySet(properties, "killbill.external.payment.fail.cancellation");
+    }
+
+    private boolean shouldPaymentTimeout(final Iterable<PluginProperty> properties) {
+        return isPropertySet(properties, "killbill.external.payment.fail.timeout");
+    }
+
+    private boolean isPropertySet(final Iterable<PluginProperty> properties, final String targetProperty) {
+        return Iterables.any(properties, new Predicate<PluginProperty>() {
+            @Override
+            public boolean apply(final PluginProperty input) {
+                return input.getKey().equals(targetProperty) && input.getValue().equals("true");
+            }
+        });
+    }
+
 }
