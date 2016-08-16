@@ -270,6 +270,8 @@ public interface JaxrsResource {
     public static final String BCD = "bcd";
     public static final String TRANSFER_CREDIT = "transferCredit";
 
+    public static final String CACHE = "cache";
+
     public static final String QUERY_INCLUDED_DELETED = "includedDeleted";
 
 
