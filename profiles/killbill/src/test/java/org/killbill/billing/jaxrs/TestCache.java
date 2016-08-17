@@ -17,7 +17,7 @@
 package org.killbill.billing.jaxrs;
 
 import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.Tenant;
+import org.killbill.billing.tenant.api.DefaultTenant;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -82,14 +82,8 @@ public class TestCache extends TestJaxrsBase {
         Assert.assertNull(accountBcdCache.get(input.getAccountId()));
     }
 
-    @Test(groups = "slow", description = "Can Invalidate (clear) all Tenant Caches by tenantId")
+    @Test(groups = "slow", description = "Can Invalidate (clear) all Tenant Caches for current Tenant")
     public void testInvalidateCacheByTenant() throws Exception {
-
-        // create a new tenant so it can be stored in the cache
-        final Tenant tenant = new Tenant();
-        tenant.setApiKey("testApiKey");
-        tenant.setApiSecret("testApiSecret");
-        final Tenant input = killBillClient.createTenant(tenant, false, requestOptions);
 
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -102,32 +96,36 @@ public class TestCache extends TestJaxrsBase {
         final Ehcache tenantOverdueConfigCache = cacheManager.getEhcache(CacheType.TENANT_OVERDUE_CONFIG.getCacheName());
         final Ehcache tenantCatalogCache = cacheManager.getEhcache(CacheType.TENANT_CATALOG.getCacheName());
 
-        // verify that they are not null and empty
+        DefaultTenant currentTenant = (DefaultTenant) tenantCache.get(tenantCache.getKeys().get(0)).getObjectValue();
+
+        // verify that they are not null and have the expected tenant information
         Assert.assertNotNull(tenantRecordIdCache);
-        Assert.assertFalse(tenantRecordIdCache.getKeys().isEmpty());
+        Assert.assertNotNull(tenantRecordIdCache.get(currentTenant.getId().toString()));
         Assert.assertNotNull(tenantPaymentStateMachineConfigCache);
-        Assert.assertFalse(tenantPaymentStateMachineConfigCache.getKeys().isEmpty());
+        String tenantPaymentStateMachineConfigCacheKey = "PLUGIN_PAYMENT_STATE_MACHINE_noop::1";
+        Assert.assertNotNull(tenantPaymentStateMachineConfigCache.get(tenantPaymentStateMachineConfigCacheKey));
         Assert.assertNotNull(tenantCache);
-        Assert.assertFalse(tenantCache.getKeys().isEmpty());
+        Assert.assertNotNull(tenantCache.get(DEFAULT_API_KEY));
         Assert.assertNotNull(tenantKvCache);
-        Assert.assertFalse(tenantKvCache.getKeys().isEmpty());
+        String tenantKvCacheKey = "PUSH_NOTIFICATION_CB::1";
+        Assert.assertNotNull(tenantKvCache.get(tenantKvCacheKey));
         Assert.assertNotNull(tenantConfigCache);
-        Assert.assertFalse(tenantConfigCache.getKeys().isEmpty());
+        Assert.assertNotNull(tenantConfigCache.get(1L));
         Assert.assertNotNull(tenantOverdueConfigCache);
-        Assert.assertFalse(tenantOverdueConfigCache.getKeys().isEmpty());
+        Assert.assertNotNull(tenantOverdueConfigCache.get(1L));
         Assert.assertNotNull(tenantCatalogCache);
-        Assert.assertFalse(tenantCatalogCache.getKeys().isEmpty());
+        Assert.assertNotNull(tenantCatalogCache.get(1L));
 
         // invalidate caches per tenant level by tenantId
-        killBillClient.invalidateCacheByTenant(input.getApiKey(), requestOptions);
+        killBillClient.invalidateCacheByTenant(requestOptions);
 
-        // TODO: verify that now the caches are empty
-//        Assert.assertTrue(tenantRecordIdCache.getKeys().isEmpty());
-//        Assert.assertTrue(tenantPaymentStateMachineConfigCache.getKeys().isEmpty());
-//        Assert.assertTrue(tenantCache.getKeys().isEmpty());
-//        Assert.assertTrue(tenantKvCache.getKeys().isEmpty());
-//        Assert.assertTrue(tenantConfigCache.getKeys().isEmpty());
-//        Assert.assertTrue(tenantOverdueConfigCache.getKeys().isEmpty());
-//        Assert.assertTrue(tenantCatalogCache.getKeys().isEmpty());
+        // verify that now the caches don't have the previous values
+        Assert.assertNull(tenantRecordIdCache.get(currentTenant.getId().toString()));
+        Assert.assertNull(tenantPaymentStateMachineConfigCache.get(tenantPaymentStateMachineConfigCacheKey));
+        Assert.assertNull(tenantCache.get(DEFAULT_API_KEY));
+        Assert.assertNull(tenantKvCache.get(tenantKvCacheKey));
+        Assert.assertNull(tenantConfigCache.get(1L));
+        Assert.assertNull(tenantOverdueConfigCache.get(1L));
+        Assert.assertNull(tenantCatalogCache.get(1L));
     }
 }

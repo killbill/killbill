@@ -32,6 +32,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.jaxrs.json.AdminPaymentJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -48,9 +49,11 @@ import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
+import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 
 import com.google.common.base.Predicate;
@@ -74,12 +77,14 @@ public class AdminResource extends JaxRsResourceBase {
     private final AdminPaymentApi adminPaymentApi;
     private final TenantUserApi tenantApi;
     private final CacheManager cacheManager;
+    private final RecordIdApi recordIdApi;
 
     @Inject
-    public AdminResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi, final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final PaymentApi paymentApi, final AdminPaymentApi adminPaymentApi, final CacheManager cacheManager, final TenantUserApi tenantApi, final Clock clock, final Context context) {
+    public AdminResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi, final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final PaymentApi paymentApi, final AdminPaymentApi adminPaymentApi, final CacheManager cacheManager, final TenantUserApi tenantApi, final RecordIdApi recordIdApi, final Clock clock, final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.adminPaymentApi = adminPaymentApi;
         this.tenantApi = tenantApi;
+        this.recordIdApi = recordIdApi;
         this.cacheManager = cacheManager;
     }
 
@@ -171,36 +176,43 @@ public class AdminResource extends JaxRsResourceBase {
     public Response invalidatesCacheByTenant(@QueryParam("tenantApiKey") final String tenantApiKey,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
-        // getting Tenant information from the given Api Key
-        Tenant tenant = tenantApi.getTenantByApiKey(tenantApiKey);
+        // creating Tenant Context from Request
+        TenantContext tenantContext = context.createContext(request);
+
+        Tenant currentTenant = tenantApi.getTenantById(tenantContext.getTenantId());
+
+        // getting Tenant Record Id
+        Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
 
         // clear tenant-record-id cache by tenantId
         final Ehcache tenantRecordIdCache = cacheManager.getEhcache(CacheType.TENANT_RECORD_ID.getCacheName());
-        tenantRecordIdCache.remove(tenant.getId().toString());
+        tenantRecordIdCache.remove(currentTenant.getId().toString());
 
-        // clear tenant-payment-state-machine-config cache by tenantId
+        // clear tenant-payment-state-machine-config cache by tenantRecordId
         final Ehcache tenantPaymentStateMachineConfigCache = cacheManager.getEhcache(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG.getCacheName());
-        tenantPaymentStateMachineConfigCache.remove(tenant.getId().toString());
+        String tenantPaymentStateMachineConfigCacheKey = "PLUGIN_PAYMENT_STATE_MACHINE_noop::" + tenantRecordId.toString();
+        tenantPaymentStateMachineConfigCache.remove(tenantPaymentStateMachineConfigCacheKey);
 
-        // clear tenant cache by tenantId
+        // clear tenant cache by tenantApiKey
         final Ehcache tenantCache = cacheManager.getEhcache(CacheType.TENANT.getCacheName());
-        tenantCache.remove(tenant.getId().toString());
+        tenantCache.remove(currentTenant.getApiKey());
 
-        // clear tenant-kv cache by tenantId
+        // clear tenant-kv cache by tenantRecordId
         final Ehcache tenantKvCache = cacheManager.getEhcache(CacheType.TENANT_KV.getCacheName());
-        tenantKvCache.remove(tenant.getId().toString());
+        String tenantKvCacheKey = "PUSH_NOTIFICATION_CB::" + tenantRecordId.toString();
+        tenantKvCache.remove(tenantKvCacheKey);
 
-        // clear tenant-config cache by tenantId
+        // clear tenant-config cache by tenantRecordId
         final Ehcache tenantConfigCache = cacheManager.getEhcache(CacheType.TENANT_CONFIG.getCacheName());
-        tenantConfigCache.remove(tenant.getId().toString());
+        tenantConfigCache.remove(tenantRecordId);
 
-        // clear tenant-overdue-config cache by tenantId
+        // clear tenant-overdue-config cache by tenantRecordId
         final Ehcache tenantOverdueConfigCache = cacheManager.getEhcache(CacheType.TENANT_OVERDUE_CONFIG.getCacheName());
-        tenantOverdueConfigCache.remove(tenant.getId().toString());
+        tenantOverdueConfigCache.remove(tenantRecordId);
 
-        // clear tenant-catalog cache by tenantId
+        // clear tenant-catalog cache by tenantRecordId
         final Ehcache tenantCatalogCache = cacheManager.getEhcache(CacheType.TENANT_CATALOG.getCacheName());
-        tenantCatalogCache.remove(tenant.getId().toString());
+        tenantCatalogCache.remove(tenantRecordId);
 
         return Response.status(Status.OK).build();
     }
