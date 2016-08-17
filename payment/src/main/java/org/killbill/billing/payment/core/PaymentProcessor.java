@@ -713,7 +713,7 @@ public class PaymentProcessor extends ProcessorBase {
 
     private PaymentAttemptModelDao getLastPaymentAttempt(final List<PaymentAttemptModelDao> pastPaymentAttempts, final UUID attemptId) {
         if (!pastPaymentAttempts.isEmpty()) {
-            for (int i = pastPaymentAttempts.size() - 1; i == 0; i--) {
+            for (int i = pastPaymentAttempts.size() - 1; i >= 0; i--) {
                 if (pastPaymentAttempts.get(i).getId().equals(attemptId)) {
                     return pastPaymentAttempts.get(i);
                 }

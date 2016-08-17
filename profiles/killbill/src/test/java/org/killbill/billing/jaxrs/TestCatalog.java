@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -33,13 +35,13 @@ import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Catalog;
-import org.killbill.billing.client.model.Catalogs;
 import org.killbill.billing.client.model.Plan;
 import org.killbill.billing.client.model.PlanDetail;
 import org.killbill.billing.client.model.Product;
 import org.killbill.billing.client.model.SimplePlan;
 import org.killbill.billing.client.model.Tenant;
 import org.killbill.billing.client.model.Usage;
+import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -48,15 +50,23 @@ import com.google.common.io.Resources;
 
 public class TestCatalog extends TestJaxrsBase {
 
-
-
-        @Test(groups = "slow", description = "Upload and retrieve a per tenant catalog")
+    @Test(groups = "slow", description = "Upload and retrieve a per tenant catalog")
     public void testMultiTenantCatalog() throws Exception {
-        final String catalogPath = Resources.getResource("SpyCarBasic.xml").getPath();
-        killBillClient.uploadXMLCatalog(catalogPath, createdBy, reason, comment);
-
-        final String catalog = killBillClient.getXMLCatalog();
+        final String versionPath1 = Resources.getResource("versionedCatalog/WeaponsHireSmall-1.xml").getPath();
+        killBillClient.uploadXMLCatalog(versionPath1, createdBy, reason, comment);
+        String catalog = killBillClient.getXMLCatalog();
         Assert.assertNotNull(catalog);
+
+
+        final String versionPath2 = Resources.getResource("versionedCatalog/WeaponsHireSmall-2.xml").getPath();
+        killBillClient.uploadXMLCatalog(versionPath2, createdBy, reason, comment);
+        catalog = killBillClient.getXMLCatalog();
+        Assert.assertNotNull(catalog);
+
+        //
+        // We can't deserialize the VersionedCatalog using our JAXB models because it contains several
+        // Standalone catalog and ids (JAXB name) are not unique across the various catalogs so deserialization would fail
+        //
     }
 
     @Test(groups = "slow", description = "Can retrieve a json version of the catalog")

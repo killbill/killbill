@@ -45,7 +45,7 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        plugin = new ExternalPaymentProviderPlugin(clock);
+        plugin = new ExternalPaymentProviderPlugin(clock, paymentConfig);
     }
 
     @Test(groups = "fast")

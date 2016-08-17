@@ -111,6 +111,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Payment not found")})
     public Response getInvoicePayment(@PathParam("paymentId") final String paymentIdStr,
                                       @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                      @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
@@ -118,7 +119,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID paymentIdId = UUID.fromString(paymentIdStr);
         final TenantContext tenantContext = context.createContext(request);
-        final Payment payment = paymentApi.getPayment(paymentIdId, withPluginInfo, false, pluginProperties, tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentIdId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
 
         final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePayments(paymentIdId, tenantContext);
