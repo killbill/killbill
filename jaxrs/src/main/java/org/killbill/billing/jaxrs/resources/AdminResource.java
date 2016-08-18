@@ -17,11 +17,13 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -121,7 +123,7 @@ public class AdminResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @POST
+    @DELETE
     @Path("/" + CACHE)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates the given Cache if specified, otherwise invalidates all caches")
@@ -145,7 +147,7 @@ public class AdminResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @POST
+    @DELETE
     @Path("/" + CACHE + "/" + ACCOUNTS + "/{accountId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates Caches per account level")
@@ -168,7 +170,7 @@ public class AdminResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @POST
+    @DELETE
     @Path("/" + CACHE + "/" + TENANTS)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates Caches per tenant level")
@@ -190,8 +192,7 @@ public class AdminResource extends JaxRsResourceBase {
 
         // clear tenant-payment-state-machine-config cache by tenantRecordId
         final Ehcache tenantPaymentStateMachineConfigCache = cacheManager.getEhcache(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG.getCacheName());
-        String tenantPaymentStateMachineConfigCacheKey = "PLUGIN_PAYMENT_STATE_MACHINE_noop::" + tenantRecordId.toString();
-        tenantPaymentStateMachineConfigCache.remove(tenantPaymentStateMachineConfigCacheKey);
+        removeCacheByKey(tenantPaymentStateMachineConfigCache, tenantRecordId.toString());
 
         // clear tenant cache by tenantApiKey
         final Ehcache tenantCache = cacheManager.getEhcache(CacheType.TENANT.getCacheName());
@@ -199,8 +200,7 @@ public class AdminResource extends JaxRsResourceBase {
 
         // clear tenant-kv cache by tenantRecordId
         final Ehcache tenantKvCache = cacheManager.getEhcache(CacheType.TENANT_KV.getCacheName());
-        String tenantKvCacheKey = "PUSH_NOTIFICATION_CB::" + tenantRecordId.toString();
-        tenantKvCache.remove(tenantKvCacheKey);
+        removeCacheByKey(tenantKvCache, tenantRecordId.toString());
 
         // clear tenant-config cache by tenantRecordId
         final Ehcache tenantConfigCache = cacheManager.getEhcache(CacheType.TENANT_CONFIG.getCacheName());
@@ -216,4 +216,13 @@ public class AdminResource extends JaxRsResourceBase {
 
         return Response.status(Status.OK).build();
     }
+
+    private void removeCacheByKey(final Ehcache tenantCache, final String tenantRecordId) {
+        for (String key : (List<String>) tenantCache.getKeys()) {
+            if (key.endsWith("::" + tenantRecordId)) {
+                tenantCache.remove(key);
+            }
+        }
+    }
+
 }
