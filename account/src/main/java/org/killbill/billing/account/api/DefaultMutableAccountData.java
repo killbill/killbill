@@ -47,6 +47,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private String country;
     private String postalCode;
     private String phone;
+    private String notes;
     private Boolean isMigrated;
     private Boolean isNotifiedForInvoices;
 
@@ -57,7 +58,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
                                      final String locale, final String address1, final String address2,
                                      final String companyName, final String city, final String stateOrProvince,
                                      final String country, final String postalCode, final String phone,
-                                     final boolean isMigrated, final boolean isNotifiedForInvoices) {
+                                     final String notes, final boolean isMigrated, final boolean isNotifiedForInvoices) {
         this.externalKey = externalKey;
         this.email = email;
         this.name = name;
@@ -77,6 +78,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.country = country;
         this.postalCode = postalCode;
         this.phone = phone;
+        this.notes = notes;
         this.isMigrated = isMigrated;
         this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
@@ -101,6 +103,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.country = accountData.getCountry();
         this.postalCode = accountData.getPostalCode();
         this.phone = accountData.getPhone();
+        this.notes = accountData.getNotes();
         this.isMigrated = accountData.isMigrated();
         this.isNotifiedForInvoices = accountData.isNotifiedForInvoices();
     }
@@ -273,6 +276,16 @@ public class DefaultMutableAccountData implements MutableAccountData {
     @Override
     public void setPhone(final String phone) {
         this.phone = phone;
+    }
+
+    @Override
+    public String getNotes() {
+        return notes;
+    }
+
+    @Override
+    public void setNotes(final String notes) {
+        this.notes = notes;
     }
 
     @Override

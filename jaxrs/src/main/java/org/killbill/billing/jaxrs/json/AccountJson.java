@@ -62,6 +62,7 @@ public class AccountJson extends JsonBase {
     private final String country;
     private final String locale;
     private final String phone;
+    private final String notes;
     private final Boolean isMigrated;
     private final Boolean isNotifiedForInvoices;
 
@@ -89,6 +90,7 @@ public class AccountJson extends JsonBase {
         this.country = account.getCountry();
         this.locale = account.getLocale();
         this.phone = account.getPhone();
+        this.notes = account.getNotes();
         this.isMigrated = account.isMigrated();
         this.isNotifiedForInvoices = account.isNotifiedForInvoices();
     }
@@ -114,6 +116,7 @@ public class AccountJson extends JsonBase {
                        @JsonProperty("country") final String country,
                        @JsonProperty("locale") final String locale,
                        @JsonProperty("phone") final String phone,
+                       @JsonProperty("notes") final String notes,
                        @JsonProperty("isMigrated") final Boolean isMigrated,
                        @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices,
                        @JsonProperty("accountBalance") final BigDecimal accountBalance,
@@ -141,6 +144,7 @@ public class AccountJson extends JsonBase {
         this.country = country;
         this.locale = locale;
         this.phone = phone;
+        this.notes = notes;
         this.isMigrated = isMigrated;
         this.isNotifiedForInvoices = isNotifiedForInvoices;
         this.accountCBA = accountCBA;
@@ -170,6 +174,11 @@ public class AccountJson extends JsonBase {
             @Override
             public String getPhone() {
                 return phone;
+            }
+
+            @Override
+            public String getNotes() {
+                return notes;
             }
 
             @Override
@@ -360,6 +369,10 @@ public class AccountJson extends JsonBase {
         return phone;
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
     @JsonProperty("isMigrated")
     public Boolean isMigrated() {
         return isMigrated;
@@ -395,6 +408,7 @@ public class AccountJson extends JsonBase {
                ", country='" + country + '\'' +
                ", locale='" + locale + '\'' +
                ", phone='" + phone + '\'' +
+               ", notes='" + notes + '\'' +
                ", isMigrated=" + isMigrated +
                ", isNotifiedForInvoices=" + isNotifiedForInvoices +
                '}';
@@ -474,6 +488,9 @@ public class AccountJson extends JsonBase {
         if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
             return false;
         }
+        if (notes != null ? !notes.equals(that.notes) : that.notes != null) {
+            return false;
+        }
         if (postalCode != null ? !postalCode.equals(that.postalCode) : that.postalCode != null) {
             return false;
         }
@@ -511,6 +528,7 @@ public class AccountJson extends JsonBase {
         result = 31 * result + (country != null ? country.hashCode() : 0);
         result = 31 * result + (locale != null ? locale.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (notes != null ? notes.hashCode() : 0);
         result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
         result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;

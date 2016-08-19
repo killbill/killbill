@@ -24,6 +24,7 @@ tableFields(prefix) ::= <<
 , <prefix>country
 , <prefix>postal_code
 , <prefix>phone
+, <prefix>notes
 , <prefix>migrated
 , <prefix>is_notified_for_invoices
 , <prefix>created_by
@@ -52,6 +53,7 @@ tableValues() ::= <<
 , :country
 , :postalCode
 , :phone
+, :notes
 , :migrated
 , :isNotifiedForInvoices
 , :createdBy
@@ -70,7 +72,7 @@ update() ::= <<
         currency = :currency, billing_cycle_day_local = :billingCycleDayLocal,
         payment_method_id = :paymentMethodId, time_zone = :timeZone, locale = :locale,
         address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
-        country = :country, postal_code = :postalCode, phone = :phone,
+        country = :country, postal_code = :postalCode, phone = :phone, notes = :notes,
         is_notified_for_invoices = :isNotifiedForInvoices, updated_date = :updatedDate, updated_by = :updatedBy
     WHERE id = :id <AND_CHECK_TENANT()>;
 >>

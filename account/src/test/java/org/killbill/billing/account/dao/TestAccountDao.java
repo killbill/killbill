@@ -65,7 +65,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final AccountData accountData = new DefaultMutableAccountData(null, email, name, 0, null, null, false,
                                                                       0, null, null, null, null,
                                                                       null, null, null, null, null,
-                                                                      null, null, false, true);
+                                                                      null, null, null, false, true);
         final AccountModelDao account = new AccountModelDao(UUID.randomUUID(), accountData);
         accountDao.create(account, internalCallContext);
 
