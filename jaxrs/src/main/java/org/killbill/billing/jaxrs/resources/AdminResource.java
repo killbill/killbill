@@ -218,8 +218,8 @@ public class AdminResource extends JaxRsResourceBase {
     }
 
     private void removeCacheByKey(final Ehcache tenantCache, final String tenantRecordId) {
-        for (String key : (List<String>) tenantCache.getKeys()) {
-            if (key.endsWith("::" + tenantRecordId)) {
+        for (Object key : tenantCache.getKeys()) {
+            if (null != key && key.toString().endsWith("::" + tenantRecordId)) {
                 tenantCache.remove(key);
             }
         }
