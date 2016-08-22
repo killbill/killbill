@@ -24,6 +24,7 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -58,6 +59,7 @@ import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.fail;
 
 public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
 
@@ -136,7 +138,6 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
 
         final Entitlement baseEntitlement2 = createEntitlement("xxx-14-monthly", false);
 
-
         // Add a second plan for same product but with a 30 days trial
         final SimplePlanDescriptor desc3 = new DefaultSimplePlanDescriptor("xxx-30-monthly", "XXX", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 30, TimeUnit.DAYS, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc3, init, testCallContext);
@@ -157,9 +158,40 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         assertListenerStatus();
     }
 
+    @Test(groups = "slow")
+    public void testError_CAT_MULTIPLE_MATCHING_PLANS_FOR_PRICELIST() throws Exception {
+
+        // Create a per-tenant catalog with one plan
+        final SimplePlanDescriptor desc1 = new DefaultSimplePlanDescriptor("zoe-monthly", "Zoe", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
+        catalogUserApi.addSimplePlan(desc1, init, testCallContext);
+        StaticCatalog catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
+        assertEquals(catalog.getCurrentPlans().length, 1);
+
+        final SimplePlanDescriptor desc2 = new DefaultSimplePlanDescriptor("zoe-14-monthly", "Zoe", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 14, TimeUnit.DAYS, ImmutableList.<String>of());
+        catalogUserApi.addSimplePlan(desc2, init, testCallContext);
+        catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
+        assertEquals(catalog.getCurrentPlans().length, 2);
+
+        try {
+            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Zoe", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+            entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, null, null, false, ImmutableList.<PluginProperty>of(), testCallContext);
+            fail("Creating entitlement should fail");
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.CAT_MULTIPLE_MATCHING_PLANS_FOR_PRICELIST.getCode());
+        }
+    }
+
     private Entitlement createEntitlement(final String planName, final boolean expectPayment) throws EntitlementApiException {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(planName, null);
+        return createEntitlement(spec, expectPayment);
+    }
 
+    private Entitlement createEntitlement(final String product, final BillingPeriod billingPeriod, final String priceList, final boolean expectPayment) throws EntitlementApiException {
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(product, billingPeriod, priceList, null);
+        return createEntitlement(spec, expectPayment);
+    }
+
+    private Entitlement createEntitlement(final PlanPhaseSpecifier spec, final boolean expectPayment) throws EntitlementApiException {
         if (expectPayment) {
             busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         } else {

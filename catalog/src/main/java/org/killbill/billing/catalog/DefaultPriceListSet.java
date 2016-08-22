@@ -26,7 +26,6 @@ import java.util.List;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
@@ -53,18 +52,25 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         this.childPriceLists = childPriceLists != null ? childPriceLists : new DefaultPriceList[0];
     }
 
-    public DefaultPlan getPlanFrom(final String priceListName, final Product product,
-                                   final BillingPeriod period) throws CatalogApiException {
-        DefaultPlan result = null;
+    public DefaultPlan getPlanFrom(final Product product, final BillingPeriod period, final String priceListName) throws CatalogApiException {
+
+        DefaultPlan[] plans = null;
         final DefaultPriceList pl = findPriceListFrom(priceListName);
         if (pl != null) {
-            result = pl.findPlan(product, period);
+            plans = pl.findPlans(product, period);
         }
-        if (result != null) {
-            return result;
+        if (plans.length == 0) {
+            plans = defaultPricelist.findPlans(product, period);
         }
-
-        return defaultPricelist.findPlan(product, period);
+        switch(plans.length) {
+            case 0:
+                return null;
+            case 1:
+                return plans[0];
+            default:
+                throw new CatalogApiException(ErrorCode.CAT_MULTIPLE_MATCHING_PLANS_FOR_PRICELIST,
+                                              priceListName, product.getName(), period);
+        }
     }
 
     public DefaultPriceList findPriceListFrom(final String priceListName) throws CatalogApiException {
@@ -142,8 +148,4 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         return result;
     }
 
-    @Override
-    public Plan getPlanListFrom(final String s, final Product product, final BillingPeriod billingPeriod) {
-        return null;
-    }
 }

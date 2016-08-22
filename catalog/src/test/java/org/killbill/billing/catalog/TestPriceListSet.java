@@ -52,10 +52,10 @@ public class TestPriceListSet extends CatalogTestSuiteNoDB {
         };
         final DefaultPriceListSet set = new DefaultPriceListSet(defaultPriceList, childPriceLists);
 
-        Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
-        Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
-        Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.DISCOUNT);
-        Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(set.getPlanFrom(foo, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(set.getPlanFrom(foo, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(set.getPlanFrom(foo, BillingPeriod.ANNUAL, "child").getFinalPhase().getPhaseType(), PhaseType.DISCOUNT);
+        Assert.assertEquals(set.getPlanFrom(foo, BillingPeriod.MONTHLY, "child").getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
     }
 
     @Test(groups = "fast")
@@ -79,9 +79,9 @@ public class TestPriceListSet extends CatalogTestSuiteNoDB {
         };
         final DefaultPriceListSet set = new DefaultPriceListSet(defaultPriceList, childPriceLists);
 
-        Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.DISCOUNT);
-        Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
-        Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
-        Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(set.getPlanFrom(foo, BillingPeriod.ANNUAL, "child").getFinalPhase().getPhaseType(), PhaseType.DISCOUNT);
+        Assert.assertEquals(set.getPlanFrom(foo, BillingPeriod.MONTHLY, "child").getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(set.getPlanFrom(foo, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(set.getPlanFrom(foo, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
     }
 }

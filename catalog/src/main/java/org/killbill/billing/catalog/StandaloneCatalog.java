@@ -181,7 +181,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
             }
             final String inputOrDefaultPricelist = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final Product product = findCurrentProduct(spec.getProductName());
-            result = priceLists.getPlanFrom(inputOrDefaultPricelist, product, spec.getBillingPeriod());
+            result = priceLists.getPlanFrom(product, spec.getBillingPeriod(), inputOrDefaultPricelist);
         }
         if (result == null) {
             throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND,
@@ -379,9 +379,9 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
                     for (BillingPeriod billingPeriod : BillingPeriod.values()) {
                         for (PriceList priceList : getPriceLists().getAllPriceLists()) {
                             if (priceListName == null || priceListName.equals(priceList.getName())) {
-                                Plan addonInList = priceList.findPlan(availAddon, billingPeriod);
-                                if ((addonInList != null)) {
-                                    availAddons.add(new DefaultListing(addonInList, priceList));
+                                Plan[] addonInList = priceList.findPlans(availAddon, billingPeriod);
+                                for (Plan cur : addonInList) {
+                                    availAddons.add(new DefaultListing(cur, priceList));
                                 }
                             }
                         }
