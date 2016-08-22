@@ -74,6 +74,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
+import net.sf.ehcache.CacheManager;
 
 public class TestJaxrsBase extends KillbillClient {
 
@@ -105,6 +106,9 @@ public class TestJaxrsBase extends KillbillClient {
 
     @Inject
     protected TenantCacheInvalidation tenantCacheInvalidation;
+
+    @Inject
+    protected CacheManager cacheManager;
 
     protected DaoConfig daoConfig;
     protected KillbillServerConfig serverConfig;
