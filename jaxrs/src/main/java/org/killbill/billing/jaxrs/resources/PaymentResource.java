@@ -784,6 +784,45 @@ public class PaymentResource extends ComboPaymentResource {
         return createPaymentResponse(uriInfo, result, transactionType, paymentTransactionJson.getTransactionExternalKey());
     }
 
+    @TimedResource(name = "cancelScheduledPaymentTransaction")
+    @DELETE
+    @Path("/{paymentTransactionId:" + UUID_PATTERN + "}/" + CANCEL_SCHEDULED_PAYMENT_TRANSACTION)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Cancels a scheduled payment attempt retry")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentTransactionId supplied")})
+    public Response cancelScheduledPaymentTransactionById(@PathParam("paymentTransactionId") final String paymentTransactionId,
+                                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                          @HeaderParam(HDR_REASON) final String reason,
+                                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        paymentApi.cancelScheduledPaymentTransaction(UUID.fromString(paymentTransactionId), callContext);
+        return Response.status(Status.OK).build();
+    }
+
+    @TimedResource(name = "cancelScheduledPaymentTransaction")
+    @DELETE
+    @Path("/" + CANCEL_SCHEDULED_PAYMENT_TRANSACTION)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Cancels a scheduled payment attempt retry")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentTransactionExternalKey supplied")})
+    public Response cancelScheduledPaymentTransactionByExternalKey(@QueryParam(QUERY_TRANSACTION_EXTERNAL_KEY) final String paymentTransactionExternalKey,
+                                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                                   @HeaderParam(HDR_REASON) final String reason,
+                                                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        paymentApi.cancelScheduledPaymentTransaction(paymentTransactionExternalKey, callContext);
+        return Response.status(Status.OK).build();
+    }
+
+
+
+
     @TimedResource
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)

@@ -256,6 +256,8 @@ public interface JaxrsResource {
     public static final String FORM = "form";
     public static final String NOTIFICATION = "notification";
 
+    public static final String CANCEL_SCHEDULED_PAYMENT_TRANSACTION = "cancelScheduledPaymentTransaction";
+
 
     public static final String INVOICE_TEMPLATE = "template";
     public static final String INVOICE_MP_TEMPLATE = "manualPayTemplate";
