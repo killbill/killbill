@@ -18,6 +18,8 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -30,9 +32,12 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.callcontext.DefaultCallContext;
+import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -43,6 +48,7 @@ import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -181,23 +187,58 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         }
     }
 
+    @Test(groups = "slow")
+    public void testWithPriceOverride() throws Exception {
+
+        // Create a per-tenant catalog with one plan
+        final SimplePlanDescriptor desc1 = new DefaultSimplePlanDescriptor("bar-monthly", "Bar", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
+        catalogUserApi.addSimplePlan(desc1, init, testCallContext);
+        StaticCatalog catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
+        assertEquals(catalog.getCurrentPlans().length, 1);
+
+        final Plan plan = catalog.getCurrentPlans()[0];
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("bar-monthly", null);
+
+        final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
+        overrides.add(new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), account.getCurrency(), null, BigDecimal.ONE));
+        final Entitlement baseEntitlement = createEntitlement(spec, overrides, true);
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
+        assertEquals(invoices.size(), 1);
+        assertEquals(invoices.get(0).getChargedAmount().compareTo(BigDecimal.ONE), 0);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
+        assertEquals(invoices.size(), 2);
+        assertEquals(invoices.get(1).getChargedAmount().compareTo(BigDecimal.ONE), 0);
+
+        // Change plan to original (non overridden plan)
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        baseEntitlement.changePlan(spec, null, ImmutableList.<PluginProperty>of(), testCallContext);
+        assertListenerStatus();
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
+        assertEquals(invoices.size(), 3);
+        assertEquals(invoices.get(2).getChargedAmount().compareTo(new BigDecimal("9.00")), 0); // 10 (recurring) - 1 (repair)
+
+    }
+
     private Entitlement createEntitlement(final String planName, final boolean expectPayment) throws EntitlementApiException {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(planName, null);
-        return createEntitlement(spec, expectPayment);
+        return createEntitlement(spec, null, expectPayment);
     }
 
-    private Entitlement createEntitlement(final String product, final BillingPeriod billingPeriod, final String priceList, final boolean expectPayment) throws EntitlementApiException {
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(product, billingPeriod, priceList, null);
-        return createEntitlement(spec, expectPayment);
-    }
 
-    private Entitlement createEntitlement(final PlanPhaseSpecifier spec, final boolean expectPayment) throws EntitlementApiException {
+    private Entitlement createEntitlement(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final boolean expectPayment) throws EntitlementApiException {
         if (expectPayment) {
             busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         } else {
             busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         }
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, null, null, false, ImmutableList.<PluginProperty>of(), testCallContext);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), overrides, null, null, false, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
         return entitlement;
     }
