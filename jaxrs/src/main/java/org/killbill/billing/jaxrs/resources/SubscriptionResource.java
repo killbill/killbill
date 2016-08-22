@@ -173,10 +173,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                       @javax.ws.rs.core.Context final HttpServletRequest request,
                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
         verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified");
-        verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
-                             entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set",
-                             entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
-                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+        if (entitlement.getPlanName() == null) {
+            verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
+                                 entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set",
+                                 entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
+                                 entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+        }
 
         logDeprecationParameterWarningIfNeeded(QUERY_REQUESTED_DT, QUERY_ENTITLEMENT_REQUESTED_DT, QUERY_BILLING_REQUESTED_DT);
 
@@ -195,7 +197,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
                 final Account account = getAccountFromSubscriptionJson(entitlement, callContext);
                 final PhaseType phaseType = entitlement.getPhaseType() != null ? PhaseType.valueOf(entitlement.getPhaseType()) : null;
-                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(entitlement.getProductName(),
+                final PlanPhaseSpecifier spec = entitlement.getPlanName() != null ?
+                                                new PlanPhaseSpecifier(entitlement.getPlanName(), phaseType) :
+                                                new PlanPhaseSpecifier(entitlement.getProductName(),
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), phaseType);
 
                 final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(entitlementDate);
@@ -263,10 +267,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         for (SubscriptionJson entitlement : entitlements) {
             verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified for each element");
-            verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set for each element",
-                                 entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set for each element",
-                                 entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set for each element",
-                                 entitlement.getPriceList(), "SubscriptionJson priceList needs to be set for each element");
+            if (entitlement.getPlanName() == null) {
+                verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set for each element",
+                                     entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set for each element",
+                                     entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set for each element",
+                                     entitlement.getPriceList(), "SubscriptionJson priceList needs to be set for each element");
+            }
         }
 
         logDeprecationParameterWarningIfNeeded(QUERY_REQUESTED_DT, QUERY_ENTITLEMENT_REQUESTED_DT, QUERY_BILLING_REQUESTED_DT);
@@ -309,12 +315,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
                 for (final SubscriptionJson entitlement : entitlements) {
 
-                    final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(entitlement.getProductName(),
+                    final PlanPhaseSpecifier planPhaseSpecifier = entitlement.getPlanName() != null ?
+                                                                  new PlanPhaseSpecifier(entitlement.getPlanName(), null) :
+                                                                  new PlanPhaseSpecifier(entitlement.getProductName(),
                                                                                          BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
-
-                    final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
-                                                                     BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
-                    final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
+                    final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planPhaseSpecifier, account.getCurrency());
 
                     EntitlementSpecifier specifier = new EntitlementSpecifier() {
 
@@ -394,9 +399,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
         verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified");
-        verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
-                             entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
-                             entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+        if (entitlement.getPlanName() == null) {
+            verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set",
+                                 entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set",
+                                 entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
+        }
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
@@ -415,17 +422,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final Entitlement newEntitlement;
 
                 final Account account = accountUserApi.getAccountById(current.getAccountId(), callContext);
-                final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
+                final PlanSpecifier planSpec = entitlement.getPlanName() != null ?
+                                               new PlanSpecifier(entitlement.getPlanName()) :
+                                               new PlanSpecifier(entitlement.getProductName(),
                                                                  BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
 
                 if (requestedDate == null && policyString == null) {
-                    newEntitlement = current.changePlan(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), overrides, pluginProperties, ctx);
+                    newEntitlement = current.changePlan(planSpec, overrides, pluginProperties, ctx);
                 } else if (policyString == null) {
-                    newEntitlement = current.changePlanWithDate(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), overrides, inputLocalDate, pluginProperties, ctx);
+                    newEntitlement = current.changePlanWithDate(planSpec, overrides, inputLocalDate, pluginProperties, ctx);
                 } else {
                     final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
-                    newEntitlement = current.changePlanOverrideBillingPolicy(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), overrides, inputLocalDate, policy, pluginProperties, ctx);
+                    newEntitlement = current.changePlanOverrideBillingPolicy(planSpec, overrides, inputLocalDate, policy, pluginProperties, ctx);
                 }
                 isImmediateOp = newEntitlement.getLastActiveProduct().getName().equals(entitlement.getProductName()) &&
                                 newEntitlement.getLastActivePlan().getRecurringBillingPeriod() == BillingPeriod.valueOf(entitlement.getBillingPeriod()) &&

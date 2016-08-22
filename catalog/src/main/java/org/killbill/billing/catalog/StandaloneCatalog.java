@@ -46,6 +46,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
+import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
@@ -168,17 +169,26 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
       */
     @Override
     public DefaultPlan createOrFindCurrentPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext unused) throws CatalogApiException {
-        if (spec.getProductName() == null) {
-            throw new CatalogApiException(ErrorCode.CAT_NULL_PRODUCT_NAME);
+        final DefaultPlan result;
+        if (spec.getPlanName() != null) {
+            result = findCurrentPlan(spec.getPlanName());
+        } else {
+            if (spec.getProductName() == null) {
+                throw new CatalogApiException(ErrorCode.CAT_NULL_PRODUCT_NAME);
+            }
+            if (spec.getBillingPeriod() == null) {
+                throw new CatalogApiException(ErrorCode.CAT_NULL_BILLING_PERIOD);
+            }
+            final String inputOrDefaultPricelist = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
+            final Product product = findCurrentProduct(spec.getProductName());
+            result = priceLists.getPlanFrom(inputOrDefaultPricelist, product, spec.getBillingPeriod());
         }
-        if (priceLists == null) {
-            throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, spec.getPriceListName());
-        }
-        final Product product = findCurrentProduct(spec.getProductName());
-        final DefaultPlan result = priceLists.getPlanFrom(spec.getPriceListName(), product, spec.getBillingPeriod());
         if (result == null) {
-            final String periodString = (spec.getBillingPeriod() == null) ? "NULL" : spec.getBillingPeriod().toString();
-            throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, spec.getProductName(), periodString, spec.getPriceListName());
+            throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND,
+                                          spec.getPlanName() !=  null ? spec.getPlanName() : "undefined",
+                                          spec.getProductName() != null ? spec.getProductName() : "undefined",
+                                          spec.getBillingPeriod() != null ? spec.getBillingPeriod() : "undefined",
+                                          spec.getPriceListName() != null ? spec.getPriceListName() : "undefined");
         }
         return result;
     }

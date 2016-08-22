@@ -128,11 +128,7 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
 
 
         public Plan findPlan(final StandaloneCatalog catalog) throws CatalogApiException {
-            if (spec.getPlanName() != null) {
-                return catalog.findCurrentPlan(spec.getPlanName());
-            } else {
-                return catalog.createOrFindCurrentPlan(new PlanSpecifier(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName()), overrides);
-            }
+            return catalog.createOrFindCurrentPlan(spec, overrides);
         }
     }
 

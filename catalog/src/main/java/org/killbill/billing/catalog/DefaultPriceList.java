@@ -82,29 +82,7 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        if (getPlans() != null) {
-            for (final DefaultPlan cur : getPlans()) {
-                final int numPlans = findNumberOfPlans(cur.getProduct(), cur.getRecurringBillingPeriod());
-                if (numPlans > 1) {
-                    errors.add(new ValidationError(
-                            String.format("There are %d plans in pricelist %s and have the same product/billingPeriod (%s, %s)",
-                                          numPlans, getName(), cur.getProduct().getName(), cur.getRecurringBillingPeriod()), catalog.getCatalogURI(),
-                            DefaultPriceListSet.class, getName()));
-                }
-            }
-        }
         return errors;
-    }
-
-    private int findNumberOfPlans(final Product product, final BillingPeriod period) {
-        int count = 0;
-        for (final DefaultPlan cur : getPlans()) {
-            if (cur.getProduct().equals(product) &&
-                    (cur.getRecurringBillingPeriod() == null || cur.getRecurringBillingPeriod().equals(period))) {
-                count++;
-            }
-        }
-        return count;
     }
 
     public DefaultPriceList setName(final String name) {

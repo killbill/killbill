@@ -34,6 +34,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
@@ -88,8 +89,7 @@ public interface SubscriptionBaseInternalApi {
 
     public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(SubscriptionBase subscription, InternalTenantContext context);
 
-    public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, String productName, BillingPeriod term,
-                                                     String priceList, DateTime requestedDate, BillingActionPolicy policy, InternalTenantContext context) throws SubscriptionBaseApiException;
+    public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, PlanSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public List<EntitlementAOStatusDryRun> getDryRunChangePlanStatus(UUID subscriptionId, @Nullable String baseProductName,
                                                                      DateTime requestedDate, InternalTenantContext context) throws SubscriptionBaseApiException;

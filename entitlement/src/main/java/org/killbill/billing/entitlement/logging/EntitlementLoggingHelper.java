@@ -25,6 +25,7 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
@@ -197,7 +198,7 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
-    public static void logChangePlan(final Logger log, final Entitlement entitlement, String productName, final BillingPeriod billingPeriod, final String priceList,
+    public static void logChangePlan(final Logger log, final Entitlement entitlement, final PlanSpecifier spec,
                                      final List<PlanPhasePriceOverride> overrides, final LocalDate entitlementEffectiveDate, final BillingActionPolicy actionPolicy) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Change Entitlement Plan: ")
@@ -209,19 +210,24 @@ public abstract class EntitlementLoggingHelper {
                        .append(entitlementEffectiveDate)
                        .append("'");
             }
-            if (productName != null) {
+            if (spec.getPlanName() != null) {
+                logLine.append(", plan='")
+                       .append(spec.getPlanName())
+                       .append("'");
+            }
+            if (spec.getProductName() != null) {
                 logLine.append(", product='")
-                       .append(productName)
+                       .append(spec.getProductName())
                        .append("'");
             }
-            if (billingPeriod != null) {
+            if (spec.getBillingPeriod() != null) {
                 logLine.append(", billingPeriod='")
-                       .append(billingPeriod)
+                       .append(spec.getBillingPeriod())
                        .append("'");
             }
-            if (priceList != null) {
+            if (spec.getPriceListName() != null) {
                 logLine.append(", priceList='")
-                       .append(priceList)
+                       .append(spec.getBillingPeriod())
                        .append("'");
             }
             logPlanPhasePriceOverrides(logLine, overrides);
