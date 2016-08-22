@@ -36,7 +36,12 @@ import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.PluginProperty;
 import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.client.model.Tags;
+import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
+import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.tag.ControlTagType;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedDB {
@@ -111,6 +116,16 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return killBillClient.getAccount(input.getExternalKey());
     }
 
+    protected Account createAccountWithExternalPaymentMethod() throws Exception {
+        final Account input = createAccount();
+
+        final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
+        final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUIDs.randomUUID().toString(), input.getAccountId(),
+                                                                  true, ExternalPaymentProviderPlugin.PLUGIN_NAME, info);
+        killBillClient.createPaymentMethod(paymentMethodJson, requestOptions);
+        return killBillClient.getAccount(input.getExternalKey(), requestOptions);
+    }
+
     protected Account createAccount() throws Exception {
         return createAccount(null);
     }
@@ -136,6 +151,24 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected Account createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         assertNotNull(accountJson);
+
+        // Add a bundle, subscription and move the clock to get the first invoice
+        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        assertNotNull(subscriptionJson);
+        clock.addDays(32);
+        crappyWaitForLackOfProperSynchonization();
+
+        return accountJson;
+    }
+
+    protected Account createAccountWithExternalPMBundleAndSubscriptionAndManualPayTagAndWaitForFirstInvoice() throws Exception {
+        final Account accountJson = createAccountWithExternalPaymentMethod();
+        assertNotNull(accountJson);
+
+        final Tags accountTag = killBillClient.createAccountTag(accountJson.getAccountId(), ControlTagType.MANUAL_PAY.getId(), requestOptions);
+        assertNotNull(accountTag);
+        assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.MANUAL_PAY.getId());
 
         // Add a bundle, subscription and move the clock to get the first invoice
         final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",

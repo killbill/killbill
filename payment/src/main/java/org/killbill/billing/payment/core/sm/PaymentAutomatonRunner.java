@@ -68,6 +68,7 @@ import org.killbill.billing.payment.core.sm.payments.VoidCompleted;
 import org.killbill.billing.payment.core.sm.payments.VoidInitiated;
 import org.killbill.billing.payment.core.sm.payments.VoidOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
@@ -128,8 +129,10 @@ public class PaymentAutomatonRunner {
                                                         final Iterable<PluginProperty> properties,
                                                         final CallContext callContext,
                                                         final InternalCallContext internalCallContext) throws PaymentApiException {
+
         // Retrieve the payment id from the payment external key if needed
         final UUID effectivePaymentId = paymentId != null ? paymentId : retrievePaymentId(paymentExternalKey, paymentTransactionExternalKey, internalCallContext);
+        verifyPaymentMethodExistsForRefund(effectivePaymentId, transactionType, internalCallContext);
 
         return new PaymentStateContext(isApiPayment,
                                        effectivePaymentId,
@@ -284,4 +287,15 @@ public class PaymentAutomatonRunner {
 
         return paymentIdCandidate;
     }
+
+    private void verifyPaymentMethodExistsForRefund(final UUID paymentId, final TransactionType transactionType, final InternalCallContext internalCallContext) throws PaymentApiException {
+        if (TransactionType.REFUND.equals(transactionType) && (paymentId != null)) {
+            final PaymentModelDao payment = paymentDao.getPayment(paymentId, internalCallContext);
+            final PaymentMethodModelDao paymentMethod = paymentDao.getPaymentMethod(payment.getPaymentMethodId(), internalCallContext);
+            if (paymentMethod == null) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, payment.getPaymentMethodId());
+            }
+        }
+    }
+
 }
