@@ -57,7 +57,8 @@ public class MockAccountUserApi implements AccountUserApi {
                                            final String stateOrProvince,
                                            final String country,
                                            final String postalCode,
-                                           final String phone) {
+                                           final String phone,
+                                           final String notes) {
         final Account result = new MockAccountBuilder(id)
                 .externalKey(externalKey)
                 .email(email)
@@ -75,6 +76,7 @@ public class MockAccountUserApi implements AccountUserApi {
                 .country(country)
                 .postalCode(postalCode)
                 .phone(phone)
+                .notes(notes)
                 .isNotifiedForInvoices(false)
                 .build();
         accounts.add(result);

@@ -52,6 +52,7 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String country;
     private final String postalCode;
     private final String phone;
+    private final String notes;
     private final Boolean isMigrated;
     private final Boolean isNotifiedForInvoices;
 
@@ -82,6 +83,7 @@ public class DefaultAccount extends EntityBase implements Account {
              data.getCountry(),
              data.getPostalCode(),
              data.getPhone(),
+             data.getNotes(),
              data.isMigrated(),
              data.isNotifiedForInvoices());
     }
@@ -94,7 +96,7 @@ public class DefaultAccount extends EntityBase implements Account {
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
-                          final String postalCode, final String phone,
+                          final String postalCode, final String phone, final String notes,
                           final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
         this(id,
              null,
@@ -118,6 +120,7 @@ public class DefaultAccount extends EntityBase implements Account {
              country,
              postalCode,
              phone,
+             notes,
              isMigrated,
              isNotifiedForInvoices);
     }
@@ -130,7 +133,7 @@ public class DefaultAccount extends EntityBase implements Account {
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
-                          final String postalCode, final String phone,
+                          final String postalCode, final String phone, final String notes,
                           final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
         super(id, createdDate, updatedDate);
         this.externalKey = externalKey;
@@ -152,6 +155,7 @@ public class DefaultAccount extends EntityBase implements Account {
         this.postalCode = postalCode;
         this.country = country;
         this.phone = phone;
+        this.notes = notes;
         this.isMigrated = isMigrated;
         this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
@@ -179,6 +183,7 @@ public class DefaultAccount extends EntityBase implements Account {
              accountModelDao.getCountry(),
              accountModelDao.getPostalCode(),
              accountModelDao.getPhone(),
+             accountModelDao.getNotes(),
              accountModelDao.getMigrated(),
              accountModelDao.getIsNotifiedForInvoices());
     }
@@ -290,6 +295,11 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     @Override
+    public String getNotes() {
+        return notes;
+    }
+
+    @Override
     public MutableAccountData toMutableAccountData() {
         return new DefaultMutableAccountData(this);
     }
@@ -350,6 +360,7 @@ public class DefaultAccount extends EntityBase implements Account {
         accountData.setCountry(country != null ? country : currentAccount.getCountry());
         accountData.setPostalCode(postalCode != null ? postalCode : currentAccount.getPostalCode());
         accountData.setPhone(phone != null ? phone : currentAccount.getPhone());
+        accountData.setNotes(notes != null ? notes : currentAccount.getNotes());
         accountData.setParentAccountId(parentAccountId != null ? parentAccountId : currentAccount.getParentAccountId());
         accountData.setIsPaymentDelegatedToParent(isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : currentAccount.isPaymentDelegatedToParent());
         final Boolean isMigrated = this.isMigrated != null ? this.isMigrated : currentAccount.isMigrated();
@@ -399,6 +410,7 @@ public class DefaultAccount extends EntityBase implements Account {
                ", stateOrProvince=" + stateOrProvince +
                ", postalCode=" + postalCode +
                ", country=" + country +
+               ", notes=" + notes +
                "]";
     }
 
@@ -479,6 +491,9 @@ public class DefaultAccount extends EntityBase implements Account {
         if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
             return false;
         }
+        if (notes != null ? !notes.equals(that.notes) : that.notes != null) {
+            return false;
+        }
 
         return true;
     }
@@ -505,6 +520,7 @@ public class DefaultAccount extends EntityBase implements Account {
         result = 31 * result + (country != null ? country.hashCode() : 0);
         result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (notes != null ? notes.hashCode() : 0);
         result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
         result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;

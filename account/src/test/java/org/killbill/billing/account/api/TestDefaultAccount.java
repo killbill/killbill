@@ -151,6 +151,7 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
         Assert.assertEquals(finalAccount.getCountry(), delegateAccount.getCountry());
         Assert.assertEquals(finalAccount.getPostalCode(), delegateAccount.getPostalCode());
         Assert.assertEquals(finalAccount.getPhone(), delegateAccount.getPhone());
+        Assert.assertEquals(finalAccount.getNotes(), delegateAccount.getNotes());
         Assert.assertEquals(finalAccount.isMigrated(), delegateAccount.isMigrated());
         Assert.assertEquals(finalAccount.isNotifiedForInvoices(), delegateAccount.isNotifiedForInvoices());
     }

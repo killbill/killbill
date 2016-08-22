@@ -48,6 +48,7 @@ public class MockAccountBuilder {
     private String country = "";
     private String postalCode = "";
     private String phone = "";
+    private String notes = "";
     private boolean migrated;
     private boolean isNotifiedForInvoices;
     private DateTime createdDate = new DateTime(DateTimeZone.UTC);
@@ -80,6 +81,7 @@ public class MockAccountBuilder {
         this.name(data.getName());
         this.paymentMethodId(data.getPaymentMethodId());
         this.phone(data.getPhone());
+        this.notes(data.getNotes());
         this.postalCode(data.getPostalCode());
         this.stateOrProvince(data.getStateOrProvince());
         this.timeZone(data.getTimeZone());
@@ -184,6 +186,11 @@ public class MockAccountBuilder {
 
     public MockAccountBuilder phone(final String phone) {
         this.phone = phone;
+        return this;
+    }
+
+    public MockAccountBuilder notes(final String notes) {
+        this.notes = notes;
         return this;
     }
 
@@ -312,6 +319,11 @@ public class MockAccountBuilder {
             @Override
             public String getPhone() {
                 return phone;
+            }
+
+            @Override
+            public String getNotes() {
+                return notes;
             }
 
             @Override

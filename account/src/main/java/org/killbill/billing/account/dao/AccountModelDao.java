@@ -57,6 +57,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
     private String country;
     private String postalCode;
     private String phone;
+    private String notes;
     private Boolean migrated;
     private Boolean isNotifiedForInvoices;
 
@@ -69,7 +70,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
                            final int billingCycleDayLocal, final UUID paymentMethodId, final DateTimeZone timeZone,
                            final String locale, final String address1, final String address2, final String companyName,
                            final String city, final String stateOrProvince, final String country, final String postalCode,
-                           final String phone, final Boolean migrated, final Boolean notifiedForInvoices) {
+                           final String phone, final String notes, final Boolean migrated, final Boolean notifiedForInvoices) {
         super(id, createdDate, updatedDate);
         this.externalKey = MoreObjects.firstNonNull(externalKey, id.toString());
         this.email = email;
@@ -90,6 +91,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         this.country = country;
         this.postalCode = postalCode;
         this.phone = phone;
+        this.notes = notes;
         this.migrated = migrated;
         this.isNotifiedForInvoices = notifiedForInvoices;
     }
@@ -117,6 +119,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
              account.getCountry(),
              account.getPostalCode(),
              account.getPhone(),
+             account.getNotes(),
              account.isMigrated(),
              // There is a NOT NULL constraint on the is_notified_for_invoices column
              MoreObjects.firstNonNull(account.isNotifiedForInvoices(), false));
@@ -282,6 +285,14 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         this.phone = phone;
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(final String notes) {
+        this.notes = notes;
+    }
+
     public Boolean getMigrated() {
         return migrated;
     }
@@ -323,6 +334,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         sb.append(", country='").append(country).append('\'');
         sb.append(", postalCode='").append(postalCode).append('\'');
         sb.append(", phone='").append(phone).append('\'');
+        sb.append(", notes='").append(notes).append('\'');
         sb.append(", migrated=").append(migrated);
         sb.append(", isNotifiedForInvoices=").append(isNotifiedForInvoices);
         sb.append('}');
@@ -397,6 +409,9 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
             return false;
         }
+        if (notes != null ? !notes.equals(that.notes) : that.notes != null) {
+            return false;
+        }
         if (postalCode != null ? !postalCode.equals(that.postalCode) : that.postalCode != null) {
             return false;
         }
@@ -432,6 +447,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         result = 31 * result + (country != null ? country.hashCode() : 0);
         result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (notes != null ? notes.hashCode() : 0);
         result = 31 * result + (migrated != null ? migrated.hashCode() : 0);
         result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;
