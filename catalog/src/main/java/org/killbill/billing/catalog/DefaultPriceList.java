@@ -76,7 +76,7 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         final List<DefaultPlan> result = new ArrayList<DefaultPlan>(plans.length);
         for (final DefaultPlan cur : getPlans()) {
             if (cur.getProduct().equals(product) &&
-                    (cur.getRecurringBillingPeriod() == null || cur.getRecurringBillingPeriod().equals(period))) {
+                    (cur.getRecurringBillingPeriod() != null && cur.getRecurringBillingPeriod().equals(period))) {
                 result.add(cur);
             }
         }

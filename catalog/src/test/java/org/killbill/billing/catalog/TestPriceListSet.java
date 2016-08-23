@@ -65,8 +65,8 @@ public class TestPriceListSet extends CatalogTestSuiteNoDB {
         final DefaultPlan[] defaultPlans = new DefaultPlan[]{
                 new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(MONTHLY, null)).setPhaseType(EVERGREEN)),
                 new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(MONTHLY, null)).setPhaseType(EVERGREEN)),
-                new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(null, null)).setPhaseType(EVERGREEN)),
-                new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(null, null)).setPhaseType(EVERGREEN))
+                new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(ANNUAL, null)).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(ANNUAL, null)).setPhaseType(EVERGREEN))
         };
         final DefaultPlan[] childPlans = new DefaultPlan[]{
                 new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setRecurring(new MockRecurring(ANNUAL, null)).setPhaseType(DISCOUNT)),
