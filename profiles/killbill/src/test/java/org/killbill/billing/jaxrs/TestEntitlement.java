@@ -26,6 +26,8 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.DefaultPriceList;
+import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -362,6 +364,39 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription result2 = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         // Still shows as the 4 (BCD did not take effect)
         Assert.assertEquals(result2.getBillCycleDayLocal(), new Integer(9));
+    }
+
+
+
+    @Test(groups = "slow", description = "Can create subscription and change plan using planName")
+    public void testEntitlementUsingPlanName() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setExternalKey("somethingSpecial");
+        input.setPlanName("shotgun-monthly");
+
+        final Subscription entitlementJson = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+        Assert.assertEquals(entitlementJson.getProductName(), "Shotgun");
+        Assert.assertEquals(entitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
+        Assert.assertEquals(entitlementJson.getPriceList(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
+        Assert.assertEquals(entitlementJson.getPlanName(), "shotgun-monthly");
+
+
+        final Subscription newInput = new Subscription();
+        newInput.setAccountId(entitlementJson.getAccountId());
+        newInput.setSubscriptionId(entitlementJson.getSubscriptionId());
+        newInput.setPlanName("pistol-monthly");
+        final Subscription newEntitlementJson = killBillClient.updateSubscription(newInput, null, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+        Assert.assertEquals(newEntitlementJson.getProductName(), "Pistol");
+        Assert.assertEquals(newEntitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
+        Assert.assertEquals(newEntitlementJson.getPriceList(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
+        Assert.assertEquals(newEntitlementJson.getPlanName(), "pistol-monthly");
+
     }
 
 
