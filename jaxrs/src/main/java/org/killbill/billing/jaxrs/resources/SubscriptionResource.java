@@ -204,10 +204,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
                 final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(entitlementDate);
                 final LocalDate resolvedBillingDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(billingDate);
-                final PlanSpecifier planSpec = new PlanSpecifier(entitlement.getProductName(),
-                                                                 BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList());
-
-                final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
+                final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), spec, account.getCurrency());
                 final Entitlement result = createAddOnEntitlement ?
                                            entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext) :
                                            entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext);
