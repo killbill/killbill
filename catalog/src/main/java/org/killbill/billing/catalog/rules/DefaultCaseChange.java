@@ -77,16 +77,53 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
     public T getResult(final PlanPhaseSpecifier from,
                        final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
 
+
+
+        final Product inFromProduct;
+        final BillingPeriod inFromBillingPeriod;
+        final ProductCategory inFromProductCategory;
+        final PriceList inFromPriceList;
+        if (from.getPlanName() != null) {
+            final Plan plan = catalog.findCurrentPlan(from.getPlanName());
+            inFromProduct = plan.getProduct();
+            inFromBillingPeriod = plan.getRecurringBillingPeriod();
+            inFromProductCategory = plan.getProduct().getCategory();
+            inFromPriceList = catalog.findCurrentPricelist(plan.getPriceListName());
+        } else {
+            inFromProduct = catalog.findCurrentProduct(from.getProductName());
+            inFromBillingPeriod = from.getBillingPeriod();
+            inFromProductCategory = inFromProduct.getCategory();
+            inFromPriceList = from.getPriceListName() != null ? catalog.findCurrentPricelist(from.getPriceListName()) : null;
+        }
+
+        final Product inToProduct;
+        final BillingPeriod inToBillingPeriod;
+        final ProductCategory inToProductCategory;
+        final PriceList inToPriceList;
+        if (to.getPlanName() != null) {
+            final Plan plan = catalog.findCurrentPlan(to.getPlanName());
+            inToProduct = plan.getProduct();
+            inToBillingPeriod = plan.getRecurringBillingPeriod();
+            inToProductCategory = plan.getProduct().getCategory();
+            inToPriceList = catalog.findCurrentPricelist(plan.getPriceListName());
+        } else {
+            inToProduct = catalog.findCurrentProduct(to.getProductName());
+            inToBillingPeriod = to.getBillingPeriod();
+            inToProductCategory = inToProduct.getCategory();
+            inToPriceList = to.getPriceListName() != null ? catalog.findCurrentPricelist(to.getPriceListName()) : null;
+        }
+
+
         if (
                 (phaseType == null || from.getPhaseType() == phaseType) &&
-                (fromProduct == null || fromProduct.equals(catalog.findCurrentProduct(from.getProductName()))) &&
-                (fromProductCategory == null || fromProductCategory.equals(catalog.findCurrentProduct(from.getProductName()).getCategory())) &&
-                (fromBillingPeriod == null || fromBillingPeriod.equals(from.getBillingPeriod())) &&
-                (this.toProduct == null || this.toProduct.equals(catalog.findCurrentProduct(to.getProductName()))) &&
-                (toProductCategory == null || toProductCategory.equals(catalog.findCurrentProduct(to.getProductName()).getCategory())) &&
-                (toBillingPeriod == null || toBillingPeriod.equals(to.getBillingPeriod())) &&
-                (fromPriceList == null || fromPriceList.equals(catalog.findCurrentPricelist(from.getPriceListName()))) &&
-                (toPriceList == null || toPriceList.equals(catalog.findCurrentPricelist(to.getPriceListName())))
+                (fromProduct == null || fromProduct.equals(inFromProduct)) &&
+                (fromProductCategory == null || fromProductCategory.equals(inFromProductCategory)) &&
+                (fromBillingPeriod == null || fromBillingPeriod.equals(inFromBillingPeriod)) &&
+                (this.toProduct == null || this.toProduct.equals(inToProduct)) &&
+                (this.toProductCategory == null || this.toProductCategory.equals(inToProductCategory)) &&
+                (this.toBillingPeriod == null || this.toBillingPeriod.equals(inToBillingPeriod)) &&
+                (fromPriceList == null || fromPriceList.equals(inFromPriceList)) &&
+                (toPriceList == null || toPriceList.equals(inToPriceList))
                 ) {
             return getResult();
         }

@@ -179,9 +179,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final DateTime now = clock.getUTCNow();
 
         final Plan currentPlan = subscription.getCurrentPlan();
-        final PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                                                                    subscription.getCurrentPlan().getRecurringBillingPeriod(),
-                                                                    subscription.getCurrentPriceList().getName(), null);
+        final PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getName(), null);
 
         try {
             final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
@@ -377,9 +375,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final Plan currentPlan = subscription.getCurrentPlan();
 
             final PriceList currentPriceList = subscription.getCurrentPriceList();
-            final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                                                                            currentPlan.getRecurringBillingPeriod(),
-                                                                            currentPriceList.getName(),
+            final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getName(),
                                                                             subscription.getCurrentPhase().getPhaseType());
             planChangeResult = catalogService.getFullCatalog(true, true, internalCallContext).planChange(fromPlanPhase, toPlanPhase, effectiveDate);
         } catch (final CatalogApiException e) {

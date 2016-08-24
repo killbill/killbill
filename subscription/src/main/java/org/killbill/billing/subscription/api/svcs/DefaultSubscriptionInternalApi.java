@@ -584,9 +584,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                             if (policy == null) {
 
                                 final Plan currentPlan = subscriptionForCancellation.getCurrentPlan();
-                                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                                                                                       subscriptionForCancellation.getCurrentPlan().getRecurringBillingPeriod(),
-                                                                                       subscriptionForCancellation.getCurrentPriceList().getName(),
+                                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(currentPlan.getName(),
                                                                                        subscriptionForCancellation.getCurrentPhase().getPhaseType());
                                 policy = catalogService.getFullCatalog(true, true, context).planCancelPolicy(spec, utcNow);
                             }

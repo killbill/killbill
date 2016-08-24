@@ -632,7 +632,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         assertion(Result.FOO, cr,
                   product1.getName(), product2.getName(),
                   BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
-                  cat.getCurrentProducts()[1].getName(), priceList2.getName(),
+                  priceList1.getName(), priceList2.getName(),
                   PhaseType.EVERGREEN, cat);
 
         assertionException(cr,
@@ -711,7 +711,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         assertion(Result.FOO, cr,
                   product1.getName(), product2.getName(),
                   BillingPeriod.MONTHLY, BillingPeriod.MONTHLY,
-                  priceList1.getName(), cat.getCurrentProducts()[1].getName(),
+                  priceList1.getName(), priceList2.getName(),
                   PhaseType.EVERGREEN, cat);
 
         assertionNull(cr,

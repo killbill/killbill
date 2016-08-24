@@ -33,8 +33,7 @@ public abstract class DefaultCasePhase<T> extends DefaultCaseStandardNaming<T> {
 
     public T getResult(final PlanPhaseSpecifier specifier, final StaticCatalog c) throws CatalogApiException {
         if ((phaseType == null || specifier.getPhaseType() == phaseType)
-                && satisfiesCase(new PlanSpecifier(specifier), c)
-                ) {
+                && satisfiesCase(new PlanSpecifier(specifier), c)) {
             return getResult();
         }
         return null;
