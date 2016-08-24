@@ -19,7 +19,9 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,6 +57,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -180,11 +183,24 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         }
 
         final Payment result;
-        if (externalPayment) {
+        PaymentMethod paymentMethod = null;
+        try {
+            paymentMethod = paymentApi.getPaymentMethodById(payment.getPaymentMethodId(), false, false, pluginProperties, callContext);
+        } catch (PaymentApiException e) {
+            log.warn("Payment method {} does not found", payment.getPaymentMethodId());
+        }
 
-            result = paymentApi.createCreditWithPaymentControl(account, null, null, json.getAmount(), account.getCurrency(),
-                                                               paymentExternalKey, transactionExternalKey, pluginProperties,
-                                                               createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
+        if (externalPayment && (paymentMethod == null)) {
+            // TODO to complete when a different PM is passed
+            UUID externalPaymentMethodId = null;
+
+            final Collection<PluginProperty> pluginPropertiesForExternalRefund = new LinkedList<PluginProperty>();
+            Iterables.addAll(pluginPropertiesForExternalRefund, pluginProperties);
+            pluginPropertiesForExternalRefund.add(new PluginProperty("IPCD_PAYMENT_ID", paymentUuid, false));
+
+            result = paymentApi.createCreditWithPaymentControl(account, externalPaymentMethodId, null, json.getAmount(), account.getCurrency(),
+                                                               paymentExternalKey, transactionExternalKey, pluginPropertiesForExternalRefund,
+                                                               createInvoicePaymentControlPluginApiPaymentOptions(true), callContext);
         } else {
             result = paymentApi.createRefundWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(), transactionExternalKey,
                                                                pluginProperties, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);

@@ -93,6 +93,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public static final String PROP_IPCD_INVOICE_ID = "IPCD_INVOICE_ID";
     public static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REFUND_IDS_AMOUNTS";
     public static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
+    public static final String PROP_IPCD_PAYMENT_ID = "IPCD_PAYMENT_ID";
 
     private final PaymentConfig paymentConfig;
     private final InvoiceInternalApi invoiceApi;
@@ -221,7 +222,14 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     break;
 
                 case CREDIT:
-                    // TODO implement
+                    final Map<UUID, BigDecimal> idWithAmountMap = extractIdsWithAmountFromProperties(pluginProperties);
+                    final PluginProperty properties = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
+                    final boolean isInvoiceAdjusted = properties != null ? Boolean.valueOf((String) properties.getValue()) : false;
+
+                    final PluginProperty legacyPayment = getPluginProperty(pluginProperties, PROP_IPCD_PAYMENT_ID);
+                    final UUID paymentId = legacyPayment != null ? (UUID) legacyPayment.getValue() : paymentControlContext.getPaymentId();
+
+                    invoiceApi.recordRefund(paymentId, paymentControlContext.getAmount(), isInvoiceAdjusted, idWithAmountMap, paymentControlContext.getTransactionExternalKey(), internalContext);
                     break;
 
                 default:
@@ -261,6 +269,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
                 nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
                 break;
+            case CREDIT:
             case REFUND:
                 // We don't retry REFUND
                 break;
