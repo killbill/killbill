@@ -124,7 +124,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
             final String planNameWithClosure = planName;
             final String planPhaseNameWithClosure = planPhaseName;
             final Integer billCycleDayLocalWithClosure = billCycleDayLocal;
-            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, priceListName, phaseType);
+            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(planName, phaseType);
             result.add(new ExistingEvent() {
                 @Override
                 public SubscriptionBaseTransitionType getSubscriptionTransitionType() {

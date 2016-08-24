@@ -69,6 +69,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    UUID.randomUUID().toString(),
                                                                    UUID.randomUUID().toString(),
                                                                    UUID.randomUUID().toString(),
+                                                                   UUID.randomUUID().toString(),
                                                                    new LocalDate(),
                                                                    new LocalDate(),
                                                                    new LocalDate(),

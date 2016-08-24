@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration;
 import java.util.List;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -84,7 +85,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
             entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
-            assertTrue(e.getLocalizedMessage().startsWith("Could not find a plan matching: (product: 'Pistol', billing period: 'MONTHLY'"));
+            assertEquals(e.getCode(), ErrorCode.CAT_PLAN_NOT_FOUND.getCode());
         }
 
         // Move out a month and verify 'Pistol' plan continue working as expected.

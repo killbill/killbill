@@ -172,8 +172,16 @@ public class TestPayment extends TestJaxrsBase {
 
         Assert.assertEquals(invoicePayments.get(0).getTargetInvoiceId(), failedInvoiceId);
         Assert.assertNotNull(invoicePayments.get(0).getPaymentAttempts());
+        Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().size(), 2);
         Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
         Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
+
+
+        // Remove the future notification and check SCHEDULED does not appear any longer
+        killBillClient.cancelScheduledPaymentTransaction(null, invoicePayments.get(0).getPaymentAttempts().get(1).getTransactionExternalKey(), inputOptions);
+        invoicePayments = killBillClient.getInvoicePayment(failedInvoiceId, inputOptions);
+        Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().size(), 1);
+        Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
     }
 
     @Test(groups = "slow")

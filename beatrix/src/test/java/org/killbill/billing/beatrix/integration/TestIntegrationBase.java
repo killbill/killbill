@@ -53,6 +53,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
@@ -665,9 +666,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     if (billingPolicy == null) {
-                        refreshedEntitlement = refreshedEntitlement.changePlan(productName, billingPeriod, priceList, null, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlan(new PlanSpecifier(productName, billingPeriod, priceList), null, ImmutableList.<PluginProperty>of(), callContext);
                     } else {
-                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, priceList, null, null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(new PlanSpecifier(productName, billingPeriod, priceList), null, null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
                     }
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {

@@ -42,8 +42,10 @@ public class MockPriceList implements PriceList {
     }
 
     @Override
-    public Plan findPlan(final Product product, final BillingPeriod period) {
-        return plan;
+    public Plan[] findPlans(final Product product, final BillingPeriod period) {
+        final Plan[] result = new Plan[1];
+        result[0] = plan;
+        return result;
     }
 
     public Plan getPlan() {

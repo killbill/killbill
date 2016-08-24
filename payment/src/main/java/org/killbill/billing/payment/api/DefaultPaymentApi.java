@@ -596,6 +596,18 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     }
 
     @Override
+    public void cancelScheduledPaymentTransaction(final String paymentTransactionExternalKey, final CallContext callContext) throws PaymentApiException {
+        checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
+        paymentProcessor.cancelScheduledPaymentTransaction(null, paymentTransactionExternalKey, callContext);
+    }
+
+    @Override
+    public void cancelScheduledPaymentTransaction(final UUID paymentTransactionId, final CallContext callContext) throws PaymentApiException {
+        checkNotNullParameter(paymentTransactionId, "paymentTransactionId");
+        paymentProcessor.cancelScheduledPaymentTransaction(paymentTransactionId, null, callContext);
+    }
+
+    @Override
     public Payment notifyPendingTransactionOfStateChanged(final Account account, final UUID paymentTransactionId, final boolean isSuccess, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentTransactionId, "paymentTransactionId");

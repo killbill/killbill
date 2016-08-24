@@ -256,6 +256,8 @@ public interface JaxrsResource {
     public static final String FORM = "form";
     public static final String NOTIFICATION = "notification";
 
+    public static final String CANCEL_SCHEDULED_PAYMENT_TRANSACTION = "cancelScheduledPaymentTransaction";
+
 
     public static final String INVOICE_TEMPLATE = "template";
     public static final String INVOICE_MP_TEMPLATE = "manualPayTemplate";
@@ -269,6 +271,8 @@ public interface JaxrsResource {
     public static final String CHILDREN = "children";
     public static final String BCD = "bcd";
     public static final String TRANSFER_CREDIT = "transferCredit";
+
+    public static final String CACHE = "cache";
 
     public static final String QUERY_INCLUDED_DELETED = "includedDeleted";
 

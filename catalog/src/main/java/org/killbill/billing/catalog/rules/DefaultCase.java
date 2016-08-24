@@ -17,6 +17,7 @@
 package org.killbill.billing.catalog.rules;
 
 
+import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.DefaultPriceList;
 import org.killbill.billing.catalog.DefaultProduct;
 import org.killbill.billing.catalog.StandaloneCatalog;
@@ -24,6 +25,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanSpecifier;
+import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
@@ -50,10 +52,26 @@ public abstract class DefaultCase<T> extends ValidatingConfig<StandaloneCatalog>
     }
 
     protected boolean satisfiesCase(final PlanSpecifier planPhase, final StaticCatalog c) throws CatalogApiException {
-        return (getProduct() == null || getProduct().equals(c.findCurrentProduct(planPhase.getProductName()))) &&
-               (getProductCategory() == null || getProductCategory().equals(c.findCurrentProduct(planPhase.getProductName()).getCategory())) &&
-                (getBillingPeriod() == null || getBillingPeriod().equals(planPhase.getBillingPeriod())) &&
-                (getPriceList() == null || getPriceList().equals(c.findCurrentPricelist(planPhase.getPriceListName())));
+        final Product product;
+        final BillingPeriod billingPeriod;
+        final ProductCategory productCategory;
+        final PriceList priceList;
+        if (planPhase.getPlanName() != null) {
+            final Plan plan = c.findCurrentPlan(planPhase.getPlanName());
+            product = plan.getProduct();
+            billingPeriod = plan.getRecurringBillingPeriod();
+            productCategory = plan.getProduct().getCategory();
+            priceList = c.findCurrentPricelist(plan.getPriceListName());
+        } else {
+            product = c.findCurrentProduct(planPhase.getProductName());
+            billingPeriod = planPhase.getBillingPeriod();
+            productCategory = product.getCategory();
+            priceList = getPriceList() != null ? c.findCurrentPricelist(planPhase.getPriceListName()) : null;
+        }
+        return (getProduct() == null || getProduct().equals(product)) &&
+               (getProductCategory() == null || getProductCategory().equals(productCategory)) &&
+               (getBillingPeriod() == null || getBillingPeriod().equals(billingPeriod)) &&
+               (getPriceList() == null || getPriceList().equals(priceList));
     }
 
     public static <K> K getResult(final DefaultCase<K>[] cases, final PlanSpecifier planSpec, final StaticCatalog catalog) throws CatalogApiException {

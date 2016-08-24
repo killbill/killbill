@@ -101,10 +101,11 @@ public abstract class AccountTestUtils {
         final String stateOrProvince = UUID.randomUUID().toString();
         final String country = Locale.GERMANY.getCountry();
         final String postalCode = UUID.randomUUID().toString().substring(0, 4);
+        final String notes = UUID.randomUUID().toString();
 
         return new DefaultMutableAccountData(externalKey, email, name, firstNameLength, currency, null, false,
                                              billCycleDayLocal, paymentMethodId, timeZone,
                                              locale, address1, address2, companyName, city, stateOrProvince,
-                                             country, postalCode, phone, false, true);
+                                             country, postalCode, phone, notes, false, true);
     }
 }

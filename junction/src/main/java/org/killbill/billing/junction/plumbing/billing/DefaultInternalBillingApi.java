@@ -237,19 +237,13 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final Plan nextPlan = (transition.getNextPlan() != null) ? catalog.findPlan(transition.getNextPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final Plan plan = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPlan : prevPlan;
-        final Product product = plan.getProduct();
 
         final PlanPhase prevPhase = (transition.getPreviousPhase() != null) ? catalog.findPhase(transition.getPreviousPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
         final PlanPhase nextPhase = (transition.getNextPhase() != null) ? catalog.findPhase(transition.getNextPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
-
         final PlanPhase phase = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase;
 
-        final BillingPeriod billingPeriod = phase.getRecurring() != null ? phase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+        return new PlanPhaseSpecifier(plan.getName(), phase.getPhaseType());
 
-        return new PlanPhaseSpecifier(product.getName(),
-                                      billingPeriod,
-                                      transition.getNextPriceList(),
-                                      phase.getPhaseType());
     }
 
     private boolean is_AUTO_INVOICING_OFF(final List<Tag> tags) {

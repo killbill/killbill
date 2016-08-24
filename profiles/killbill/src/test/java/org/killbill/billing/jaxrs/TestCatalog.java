@@ -52,17 +52,10 @@ public class TestCatalog extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Upload and retrieve a per tenant catalog")
     public void testMultiTenantCatalog() throws Exception {
-        final String versionPath1 = Resources.getResource("versionedCatalog/WeaponsHireSmall-1.xml").getPath();
+        final String versionPath1 = Resources.getResource("SpyCarBasic.xml").getPath();
         killBillClient.uploadXMLCatalog(versionPath1, createdBy, reason, comment);
         String catalog = killBillClient.getXMLCatalog();
         Assert.assertNotNull(catalog);
-
-
-        final String versionPath2 = Resources.getResource("versionedCatalog/WeaponsHireSmall-2.xml").getPath();
-        killBillClient.uploadXMLCatalog(versionPath2, createdBy, reason, comment);
-        catalog = killBillClient.getXMLCatalog();
-        Assert.assertNotNull(catalog);
-
         //
         // We can't deserialize the VersionedCatalog using our JAXB models because it contains several
         // Standalone catalog and ids (JAXB name) are not unique across the various catalogs so deserialization would fail

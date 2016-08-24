@@ -30,6 +30,7 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementService;
@@ -498,7 +499,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertListenerStatus();
 
         try {
-            entitlement.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, ImmutableList.<PluginProperty>of(), callContext);
+            entitlement.changePlan(new PlanSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), callContext);
             fail();
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
@@ -507,7 +508,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         }
 
         try {
-            entitlement.changePlanWithDate("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+            entitlement.changePlanWithDate(new PlanSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
             fail();
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
@@ -516,7 +517,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         }
 
         try {
-            entitlement.changePlanOverrideBillingPolicy("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null, clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+            entitlement.changePlanOverrideBillingPolicy(new PlanSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
             fail();
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());

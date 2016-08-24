@@ -123,6 +123,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
         private final String postalCode;
         private final String country;
         private final String phone;
+        private final String notes;
         private final Boolean isMigrated;
         private final Boolean isNotifiedForInvoices;
 
@@ -146,6 +147,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
                  d.getPostalCode(),
                  d.getCountry(),
                  d.getPhone(),
+                 d.getNotes(),
                  d.getMigrated(),
                  d.getIsNotifiedForInvoices());
         }
@@ -170,6 +172,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
                                   @JsonProperty("postalCode") final String postalCode,
                                   @JsonProperty("country") final String country,
                                   @JsonProperty("phone") final String phone,
+                                  @JsonProperty("notes") final String notes,
                                   @JsonProperty("isMigrated") final Boolean isMigrated,
                                   @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices) {
             this.externalKey = externalKey;
@@ -191,6 +194,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             this.postalCode = postalCode;
             this.country = country;
             this.phone = phone;
+            this.notes = notes;
             this.isMigrated = isMigrated;
             this.isNotifiedForInvoices = isNotifiedForInvoices;
         }
@@ -301,6 +305,11 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
         }
 
         @Override
+        public String getNotes() {
+            return notes;
+        }
+
+        @Override
         public UUID getPaymentMethodId() {
             return paymentMethodId;
         }
@@ -396,6 +405,9 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
                 return false;
             }
+            if (notes != null ? !notes.equals(that.notes) : that.notes != null) {
+                return false;
+            }
             if (postalCode != null ? !postalCode.equals(that.postalCode) : that.postalCode != null) {
                 return false;
             }
@@ -430,6 +442,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
             result = 31 * result + (country != null ? country.hashCode() : 0);
             result = 31 * result + (phone != null ? phone.hashCode() : 0);
+            result = 31 * result + (notes != null ? notes.hashCode() : 0);
             result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
             result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
             return result;

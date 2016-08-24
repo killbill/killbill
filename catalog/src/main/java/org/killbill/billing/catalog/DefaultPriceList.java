@@ -16,7 +16,9 @@
 
 package org.killbill.billing.catalog;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -70,41 +72,20 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
       * @see org.killbill.billing.catalog.IPriceList#findPlan(org.killbill.billing.catalog.api.IProduct, org.killbill.billing.catalog.api.BillingPeriod)
       */
     @Override
-    public DefaultPlan findPlan(final Product product, final BillingPeriod period) {
+    public DefaultPlan[] findPlans(final Product product, final BillingPeriod period) {
+        final List<DefaultPlan> result = new ArrayList<DefaultPlan>(plans.length);
         for (final DefaultPlan cur : getPlans()) {
             if (cur.getProduct().equals(product) &&
-                    (cur.getRecurringBillingPeriod() == null || cur.getRecurringBillingPeriod().equals(period))) {
-                return cur;
+                    (cur.getRecurringBillingPeriod() != null && cur.getRecurringBillingPeriod().equals(period))) {
+                result.add(cur);
             }
         }
-        return null;
+        return result.toArray(new DefaultPlan[result.size()]);
     }
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        if (getPlans() != null) {
-            for (final DefaultPlan cur : getPlans()) {
-                final int numPlans = findNumberOfPlans(cur.getProduct(), cur.getRecurringBillingPeriod());
-                if (numPlans > 1) {
-                    errors.add(new ValidationError(
-                            String.format("There are %d plans in pricelist %s and have the same product/billingPeriod (%s, %s)",
-                                          numPlans, getName(), cur.getProduct().getName(), cur.getRecurringBillingPeriod()), catalog.getCatalogURI(),
-                            DefaultPriceListSet.class, getName()));
-                }
-            }
-        }
         return errors;
-    }
-
-    private int findNumberOfPlans(final Product product, final BillingPeriod period) {
-        int count = 0;
-        for (final DefaultPlan cur : getPlans()) {
-            if (cur.getProduct().equals(product) &&
-                    (cur.getRecurringBillingPeriod() == null || cur.getRecurringBillingPeriod().equals(period))) {
-                count++;
-            }
-        }
-        return count;
     }
 
     public DefaultPriceList setName(final String name) {

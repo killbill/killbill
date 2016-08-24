@@ -119,21 +119,25 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         return (result != null) ? result : BillingAlignment.ACCOUNT;
     }
 
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from, PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
-        final DefaultPriceList toPriceList;
-        if (to.getPriceListName() == null) { // Pricelist may be null because it is unspecified this is the principal use-case
-            toPriceList = findPriceList(from, catalog);
-            to = new PlanSpecifier(to.getProductName(), to.getBillingPeriod(), toPriceList.getName());
-        } else {
-            toPriceList = (DefaultPriceList) catalog.findCurrentPricelist(to.getPriceListName());
-        }
+    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
 
-        final BillingActionPolicy policy = getPlanChangePolicy(from, to, catalog);
+        final DefaultPriceList toPriceList = to.getPriceListName() != null ?
+                                             (DefaultPriceList) catalog.findCurrentPricelist(to.getPriceListName()) :
+                                             findPriceList(from, catalog);
+
+        // If we use old scheme {product, billingPeriod, pricelist}, ensure pricelist is correct
+        // (Pricelist may be null because if it is unspecified this is the principal use-case)
+        final PlanSpecifier toWithPriceList = to.getPlanName() == null ?
+                                              new PlanSpecifier(to.getProductName(), to.getBillingPeriod(), toPriceList.getName()) :
+                                              to;
+
+
+        final BillingActionPolicy policy = getPlanChangePolicy(from, toWithPriceList, catalog);
         if (policy == BillingActionPolicy.ILLEGAL) {
-            throw new IllegalPlanChange(from, to);
+            throw new IllegalPlanChange(from, toWithPriceList);
         }
 
-        final PlanAlignmentChange alignment = getPlanChangeAlignment(from, to, catalog);
+        final PlanAlignmentChange alignment = getPlanChangeAlignment(from, toWithPriceList, catalog);
 
         return new PlanChangeResult(toPriceList, policy, alignment);
     }
@@ -146,13 +150,6 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
 
     public BillingActionPolicy getPlanChangePolicy(final PlanPhaseSpecifier from,
                                                    final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
-        if (from.getProductName().equals(to.getProductName()) &&
-            from.getBillingPeriod() == to.getBillingPeriod() &&
-            from.getPriceListName().equals(to.getPriceListName())) {
-            return BillingActionPolicy.ILLEGAL;
-        }
-        //Plan toPlan = catalog.findPlan()
-
         final BillingActionPolicy result = DefaultCaseChange.getResult(changeCase, from, to, catalog);
         return (result != null) ? result : BillingActionPolicy.END_OF_TERM;
     }
@@ -160,7 +157,8 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
     private DefaultPriceList findPriceList(final PlanSpecifier specifier, final StaticCatalog catalog) throws CatalogApiException {
         DefaultPriceList result = DefaultCase.getResult(priceListCase, specifier, catalog);
         if (result == null) {
-            result = (DefaultPriceList) catalog.findCurrentPricelist(specifier.getPriceListName());
+            final String priceListName = specifier.getPlanName() != null ? catalog.findCurrentPlan(specifier.getPlanName()).getPriceListName() : specifier.getPriceListName();
+            result = (DefaultPriceList) catalog.findCurrentPricelist(priceListName);
         }
         return result;
     }

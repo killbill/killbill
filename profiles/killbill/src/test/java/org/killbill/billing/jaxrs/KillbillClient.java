@@ -236,11 +236,12 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final String country = "France";
         final String locale = "fr";
         final String phone = "81 53 26 56";
+        final String notes = "notes";
         final boolean isPaymentDelegatedToParent = parentAccountId != null;
 
         // Note: the accountId payload is ignored on account creation
         return new Account(accountId, name, length, externalKey, email, null, currency, parentAccountId, isPaymentDelegatedToParent, null, timeZone,
-                           address1, address2, postalCode, company, city, state, country, locale, phone, false, false, null, null);
+                           address1, address2, postalCode, company, city, state, country, locale, phone, notes, false, false, null, null);
     }
 
     /**

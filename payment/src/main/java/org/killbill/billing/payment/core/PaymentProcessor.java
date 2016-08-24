@@ -353,6 +353,43 @@ public class PaymentProcessor extends ProcessorBase {
                                   );
     }
 
+    public void cancelScheduledPaymentTransaction(@Nullable final UUID paymentTransactionId, @Nullable final String paymentTransactionExternalKey, final CallContext callContext) throws PaymentApiException {
+
+        final InternalCallContext internalCallContextWithoutAccountRecordId = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(callContext);
+        final String effectivePaymentTransactionExternalKey;
+        if (paymentTransactionExternalKey == null) {
+            final PaymentTransactionModelDao transaction = paymentDao.getPaymentTransaction(paymentTransactionId, internalCallContextWithoutAccountRecordId);
+            effectivePaymentTransactionExternalKey = transaction.getTransactionExternalKey();
+        } else {
+            effectivePaymentTransactionExternalKey = paymentTransactionExternalKey;
+        }
+
+        final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttemptByTransactionExternalKey(effectivePaymentTransactionExternalKey, internalCallContextWithoutAccountRecordId);
+        if (attempts.isEmpty()) {
+            return;
+        }
+
+        final PaymentAttemptModelDao lastPaymentAttempt =  attempts.get(attempts.size() - 1);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(lastPaymentAttempt.getAccountId(), callContext);
+
+        try {
+            final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, DefaultRetryService.QUEUE_NAME);
+            final List<NotificationEventWithMetadata<NotificationEvent>> notificationEventWithMetadatas =
+                    retryQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+
+            for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationEventWithMetadatas) {
+                if (((PaymentRetryNotificationKey) notificationEvent.getEvent()).getAttemptId().equals(lastPaymentAttempt.getId())) {
+                    retryQueue.removeNotification(notificationEvent.getRecordId());
+                    break;
+                }
+            }
+        } catch (final NoSuchNotificationQueue noSuchNotificationQueue) {
+            log.error("ERROR Loading Notification Queue - " + noSuchNotificationQueue.getMessage());
+            throw new IllegalStateException(noSuchNotificationQueue);
+        }
+    }
+
+
     private Payment performOperation(final boolean isApiPayment,
                                      @Nullable final UUID attemptId,
                                      final TransactionType transactionType,

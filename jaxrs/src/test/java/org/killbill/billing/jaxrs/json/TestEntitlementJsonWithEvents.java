@@ -76,6 +76,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                 UUID.randomUUID().toString(),
                                                                                 UUID.randomUUID().toString(),
                                                                                 UUID.randomUUID().toString(),
+                                                                                UUID.randomUUID().toString(),
                                                                                 new LocalDate(),
                                                                                 new LocalDate(),
                                                                                 new LocalDate(),

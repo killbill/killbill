@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -65,28 +66,25 @@ public interface SubscriptionBaseApiService {
             throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime dryRunChangePlan(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
-                                     String priceList, DateTime requestedDate, BillingActionPolicy policy, TenantContext context) throws SubscriptionBaseApiException;
+    public DateTime dryRunChangePlan(DefaultSubscriptionBase subscription, PlanSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, TenantContext context) throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime changePlan(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
-                               String priceList, List<PlanPhasePriceOverride> overrides, CallContext context)
+    public DateTime changePlan(DefaultSubscriptionBase subscription, PlanSpecifier spec, List<PlanPhasePriceOverride> overrides, CallContext context)
             throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime changePlanWithRequestedDate(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
-                                                String priceList, List<PlanPhasePriceOverride> overrides, DateTime requestedDate, CallContext context)
+    public DateTime changePlanWithRequestedDate(DefaultSubscriptionBase subscription, PlanSpecifier spec,
+                                                List<PlanPhasePriceOverride> overrides, DateTime requestedDate, CallContext context)
             throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime changePlanWithPolicy(DefaultSubscriptionBase subscription, String productName, BillingPeriod term,
-                                         String priceList, List<PlanPhasePriceOverride> overrides, BillingActionPolicy policy, CallContext context)
+    public DateTime changePlanWithPolicy(DefaultSubscriptionBase subscription, PlanSpecifier spec,
+                                         List<PlanPhasePriceOverride> overrides, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
     public int cancelAddOnsIfRequiredOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final CallContext context) throws CatalogApiException;
 
-    public PlanChangeResult getPlanChangeResult(final DefaultSubscriptionBase subscription, final String productName,
-                                                final BillingPeriod term, final String priceList, final DateTime effectiveDate, TenantContext context) throws SubscriptionBaseApiException;
+    public PlanChangeResult getPlanChangeResult(final DefaultSubscriptionBase subscription, PlanSpecifier spec, final DateTime effectiveDate, TenantContext context) throws SubscriptionBaseApiException;
 
     //
     // Lower level APIs for dryRun functionality

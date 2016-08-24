@@ -63,6 +63,8 @@ public class SubscriptionJson extends JsonBase {
     private final String phaseType;
     @ApiModelProperty(required = true)
     private final String priceList;
+    @ApiModelProperty(required = true)
+    private final String planName;
     //@ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementState")
     @ApiModelProperty(dataType = "string", allowableValues = "PENDING,ACTIVE,BLOCKED,CANCELLED")
     private final String state;
@@ -291,6 +293,7 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("billingPeriod") @Nullable final String billingPeriod,
                             @JsonProperty("phaseType") @Nullable final String phaseType,
                             @JsonProperty("priceList") @Nullable final String priceList,
+                            @JsonProperty("planName") @Nullable final String planName,
                             @JsonProperty("state") @Nullable final String state,
                             @JsonProperty("sourceType") @Nullable final String sourceType,
                             @JsonProperty("cancelledDate") @Nullable final LocalDate cancelledDate,
@@ -308,6 +311,7 @@ public class SubscriptionJson extends JsonBase {
         this.billingPeriod = billingPeriod;
         this.phaseType = phaseType;
         this.priceList = priceList;
+        this.planName = planName;
         this.state = state;
         this.sourceType = sourceType;
         this.cancelledDate = cancelledDate;
@@ -354,6 +358,12 @@ public class SubscriptionJson extends JsonBase {
         } else {
             this.priceList = subscription.getLastActivePriceList().getName();
         }
+        if (subscription.getLastActivePlan() == null) {
+            this.planName = firstEvent == null ? null : firstEvent.getNextPlan().getName();
+        } else {
+            this.planName = subscription.getLastActivePlan().getName();
+        }
+
 
         this.state = subscription.getState().name();
         this.sourceType = subscription.getSourceType().name();
@@ -426,6 +436,10 @@ public class SubscriptionJson extends JsonBase {
         return priceList;
     }
 
+    public String getPlanName() {
+        return planName;
+    }
+
     public String getState() {
         return state;
     }
@@ -475,6 +489,7 @@ public class SubscriptionJson extends JsonBase {
         sb.append(", billingPeriod='").append(billingPeriod).append('\'');
         sb.append(", phaseType='").append(phaseType).append('\'');
         sb.append(", priceList='").append(priceList).append('\'');
+        sb.append(", planName='").append(planName).append('\'');
         sb.append(", state='").append(state).append('\'');
         sb.append(", sourceType='").append(sourceType).append('\'');
         sb.append(", cancelledDate=").append(cancelledDate);
@@ -532,6 +547,9 @@ public class SubscriptionJson extends JsonBase {
         if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
             return false;
         }
+        if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
+            return false;
+        }
         if (productCategory != null ? !productCategory.equals(that.productCategory) : that.productCategory != null) {
             return false;
         }
@@ -571,6 +589,7 @@ public class SubscriptionJson extends JsonBase {
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         result = 31 * result + (phaseType != null ? phaseType.hashCode() : 0);
         result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
+        result = 31 * result + (planName != null ? planName.hashCode() : 0);
         result = 31 * result + (state != null ? state.hashCode() : 0);
         result = 31 * result + (sourceType != null ? sourceType.hashCode() : 0);
         result = 31 * result + (cancelledDate != null ? cancelledDate.hashCode() : 0);

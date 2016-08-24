@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -241,21 +242,21 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public DateTime changePlan(final String productName, final BillingPeriod term, final String priceList,
+    public DateTime changePlan(final PlanSpecifier spec,
                                final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlan(this, productName, term, priceList, overrides, context);
+        return apiService.changePlan(this, spec, overrides, context);
     }
 
     @Override
-    public DateTime changePlanWithDate(final String productName, final BillingPeriod term, final String priceList, final List<PlanPhasePriceOverride> overrides,
+    public DateTime changePlanWithDate(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides,
                                        final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlanWithRequestedDate(this, productName, term, priceList, overrides, requestedDate, context);
+        return apiService.changePlanWithRequestedDate(this, spec, overrides, requestedDate, context);
     }
 
     @Override
-    public DateTime changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
+    public DateTime changePlanWithPolicy(final PlanSpecifier spec,
                                          final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlanWithPolicy(this, productName, term, priceList, overrides, policy, context);
+        return apiService.changePlanWithPolicy(this, spec, overrides, policy, context);
     }
 
     @Override

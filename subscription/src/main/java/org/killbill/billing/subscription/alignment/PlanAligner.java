@@ -38,7 +38,6 @@ import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -116,7 +115,7 @@ public class PlanAligner extends BaseAligner {
                                                    final String priceList,
                                                    final DateTime effectiveDate,
                                                    final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
-        return getTimedPhaseOnChange(subscription, plan, priceList, effectiveDate, WhichPhase.CURRENT, context);
+        return getTimedPhaseOnChange(subscription, plan, effectiveDate, WhichPhase.CURRENT, context);
     }
 
     /**
@@ -136,7 +135,7 @@ public class PlanAligner extends BaseAligner {
                                                 final String priceList,
                                                 final DateTime effectiveDate,
                                                 final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
-        return getTimedPhaseOnChange(subscription, plan, priceList, effectiveDate, WhichPhase.NEXT, context);
+        return getTimedPhaseOnChange(subscription, plan, effectiveDate, WhichPhase.NEXT, context);
     }
 
     /**
@@ -170,9 +169,7 @@ public class PlanAligner extends BaseAligner {
                                                  subscription.getBundleStartDate(),
                                                  lastPlanTransition.getPreviousPhase(),
                                                  lastPlanTransition.getPreviousPlan(),
-                                                 lastPlanTransition.getPreviousPriceList().getName(),
                                                  lastPlanTransition.getNextPlan(),
-                                                 lastPlanTransition.getNextPriceList().getName(),
                                                  effectiveDate,
                                                  lastPlanTransition.getEffectiveTransitionTime(),
                                                  subscription.getAllTransitions().get(0).getNextPhase().getPhaseType(),
@@ -197,9 +194,7 @@ public class PlanAligner extends BaseAligner {
             throws CatalogApiException, SubscriptionBaseApiException {
         final Catalog catalog = catalogService.getFullCatalog(true, true, context);
 
-        final PlanSpecifier planSpecifier = new PlanSpecifier(plan.getProduct().getName(),
-                                                              plan.getRecurringBillingPeriod(),
-                                                              priceList);
+        final PlanSpecifier planSpecifier = new PlanSpecifier(plan.getName());
 
         final DateTime planStartDate;
         final PlanAlignmentCreate alignment = catalog.planCreateAlignment(planSpecifier, effectiveDate);
@@ -219,7 +214,6 @@ public class PlanAligner extends BaseAligner {
 
     private TimedPhase getTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
                                              final Plan nextPlan,
-                                             final String nextPriceList,
                                              final DateTime effectiveDate,
                                              final WhichPhase which,
                                              final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
@@ -227,9 +221,7 @@ public class PlanAligner extends BaseAligner {
                                      subscription.getBundleStartDate(),
                                      subscription.getCurrentPhase(),
                                      subscription.getCurrentPlan(),
-                                     subscription.getCurrentPriceList().getName(),
                                      nextPlan,
-                                     nextPriceList,
                                      effectiveDate,
                                      // This method is only called while doing the change, hence we want to pass the change effective date
                                      effectiveDate,
@@ -242,25 +234,17 @@ public class PlanAligner extends BaseAligner {
                                              final DateTime bundleStartDate,
                                              final PlanPhase currentPhase,
                                              final Plan currentPlan,
-                                             final String currentPriceList,
                                              final Plan nextPlan,
-                                             final String priceList,
                                              final DateTime effectiveDate,
                                              final DateTime lastOrCurrentChangeEffectiveDate,
                                              final PhaseType originalInitialPhase,
                                              final WhichPhase which,
                                              final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
         final Catalog catalog = catalogService.getFullCatalog(true, true, context);
-        final ProductCategory currentCategory = currentPlan.getProduct().getCategory();
-        final PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                                                                                 currentPlan.getRecurringBillingPeriod(),
-                                                                                 currentPriceList,
+        final PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getName(),
                                                                                  currentPhase.getPhaseType());
 
-        final PlanSpecifier toPlanSpecifier = new PlanSpecifier(nextPlan.getProduct().getName(),
-                                                                nextPlan.getRecurringBillingPeriod(),
-                                                                priceList);
-
+        final PlanSpecifier toPlanSpecifier = new PlanSpecifier(nextPlan.getName());
         final PhaseType initialPhase;
         final DateTime planStartDate;
         final PlanAlignmentChange alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier, effectiveDate);
