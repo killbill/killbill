@@ -18,7 +18,9 @@
 package org.killbill.billing.server.config;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.glue.PaymentModule;
@@ -33,6 +35,7 @@ import com.google.inject.name.Named;
 
 public class MultiTenantNotificationConfig extends MultiTenantConfigBase implements NotificationConfig {
 
+    private final Map<String, Method> methodsCache = new HashMap<String, Method>();
     private final NotificationConfig staticConfig;
 
     @Inject
@@ -43,11 +46,21 @@ public class MultiTenantNotificationConfig extends MultiTenantConfigBase impleme
 
     @Override
     protected Method getConfigStaticMethod(final String methodName) {
-        try {
-            return NotificationConfig.class.getMethod(methodName, InternalTenantContext.class);
-        } catch (final NoSuchMethodException e) {
-            throw new RuntimeException(e);
+        Method method = methodsCache.get(methodName);
+        if (method == null) {
+            synchronized (methodsCache) {
+                method = methodsCache.get(methodName);
+                if (method == null) {
+                    try {
+                        method = NotificationConfig.class.getMethod(methodName, InternalTenantContext.class);
+                        methodsCache.put(methodName, method);
+                    } catch (final NoSuchMethodException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
         }
+        return method;
     }
 
     @Override

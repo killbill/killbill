@@ -18,7 +18,9 @@
 package org.killbill.billing.payment.config;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,6 +35,7 @@ import org.skife.config.TimeSpan;
 
 public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements PaymentConfig {
 
+    private final Map<String, Method> methodsCache = new HashMap<String, Method>();
     private final PaymentConfig staticConfig;
 
     @Inject
@@ -157,10 +160,20 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
 
     @Override
     protected Method getConfigStaticMethod(final String methodName) {
-        try {
-            return PaymentConfig.class.getMethod(methodName, InternalTenantContext.class);
-        } catch (final NoSuchMethodException e) {
-            throw new RuntimeException(e);
+        Method method = methodsCache.get(methodName);
+        if (method == null) {
+            synchronized (methodsCache) {
+                method = methodsCache.get(methodName);
+                if (method == null) {
+                    try {
+                        method = PaymentConfig.class.getMethod(methodName, InternalTenantContext.class);
+                        methodsCache.put(methodName, method);
+                    } catch (final NoSuchMethodException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
         }
+        return method;
     }
 }
