@@ -17,6 +17,7 @@
 package org.killbill.billing.jaxrs.util;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -33,6 +34,10 @@ import org.killbill.billing.util.config.definition.JaxrsConfig;
 public class JaxrsUriBuilder {
 
     private final JaxrsConfig jaxrsConfig;
+    private final Map<Class, UriBuilder> classToUriBuilder = new HashMap<Class, UriBuilder>();
+    private final Map<String, UriBuilder> classAndMethodToUriBuilder = new HashMap<String, UriBuilder>();
+    private final Map<String, UriBuilder> pathAndClassToUriBuilder = new HashMap<String, UriBuilder>();
+    private final Map<String, UriBuilder> pathClassAndMethodToUriBuilder = new HashMap<String, UriBuilder>();
 
     @Inject
     public JaxrsUriBuilder(JaxrsConfig jaxrsConfig) {
@@ -53,8 +58,8 @@ public class JaxrsUriBuilder {
 
         if (jaxrsConfig.isJaxrsLocationFullUrl()) {
             uriBuilder.scheme(uriInfo.getAbsolutePath().getScheme())
-              .host(uriInfo.getAbsolutePath().getHost())
-              .port(uriInfo.getAbsolutePath().getPort());
+                      .host(uriInfo.getAbsolutePath().getHost())
+                      .port(uriInfo.getAbsolutePath().getPort());
         }
         return objectId != null ? uriBuilder.build(objectId) : uriBuilder.build();
     }
@@ -92,15 +97,74 @@ public class JaxrsUriBuilder {
 
     private UriBuilder getUriBuilder(final String path, final Class<? extends JaxrsResource> theClassMaybeEnhanced, @Nullable final String getMethodName) {
         final Class theClass = getNonEnhancedClass(theClassMaybeEnhanced);
-        return getMethodName != null ? UriBuilder.fromPath(path.equals("/") ? path.substring(1) : path).path(theClass).path(theClass, getMethodName) :
-               UriBuilder.fromPath(path).path(theClass);
+        return getMethodName != null ? fromPath(path.equals("/") ? path.substring(1) : path, theClass, getMethodName) : fromPath(path, theClass);
+    }
+
+    private UriBuilder fromPath(final String path, final Class theClass, final String getMethodName) {
+        final String key = path + theClass.getName() + getMethodName;
+
+        UriBuilder uriBuilder = pathClassAndMethodToUriBuilder.get(key);
+        if (uriBuilder == null) {
+            synchronized (pathClassAndMethodToUriBuilder) {
+                uriBuilder = pathClassAndMethodToUriBuilder.get(key);
+                if (uriBuilder == null) {
+                    uriBuilder = fromPath(path, theClass).path(theClass, getMethodName);
+                    pathClassAndMethodToUriBuilder.put(key, uriBuilder);
+                }
+            }
+        }
+        return uriBuilder.clone();
+    }
+
+    private UriBuilder fromPath(final String path, final Class theClass) {
+        final String key = path + theClass.getName();
+
+        UriBuilder uriBuilder = pathAndClassToUriBuilder.get(key);
+        if (uriBuilder == null) {
+            synchronized (pathAndClassToUriBuilder) {
+                uriBuilder = pathAndClassToUriBuilder.get(key);
+                if (uriBuilder == null) {
+                    uriBuilder = UriBuilder.fromPath(path).path(theClass);
+                    pathAndClassToUriBuilder.put(key, uriBuilder);
+                }
+            }
+        }
+        return uriBuilder.clone();
     }
 
     private UriBuilder getUriBuilder(final Class<? extends JaxrsResource> theClassMaybeEnhanced, @Nullable final String getMethodName) {
         final Class theClass = getNonEnhancedClass(theClassMaybeEnhanced);
-        return getMethodName != null ? UriBuilder.fromResource(theClass).path(theClass, getMethodName) :
-               UriBuilder.fromResource(theClass);
+        return getMethodName != null ? fromResource(theClass, getMethodName) : fromResource(theClass);
+    }
 
+    private UriBuilder fromResource(final Class theClass, final String getMethodName) {
+        final String key = theClass.getName() + getMethodName;
+
+        UriBuilder uriBuilder = classAndMethodToUriBuilder.get(key);
+        if (uriBuilder == null) {
+            synchronized (classAndMethodToUriBuilder) {
+                uriBuilder = classAndMethodToUriBuilder.get(key);
+                if (uriBuilder == null) {
+                    uriBuilder = fromResource(theClass).path(theClass, getMethodName);
+                    classAndMethodToUriBuilder.put(key, uriBuilder);
+                }
+            }
+        }
+        return uriBuilder.clone();
+    }
+
+    private UriBuilder fromResource(final Class theClass) {
+        UriBuilder uriBuilder = classToUriBuilder.get(theClass);
+        if (uriBuilder == null) {
+            synchronized (classToUriBuilder) {
+                uriBuilder = classToUriBuilder.get(theClass);
+                if (uriBuilder == null) {
+                    uriBuilder = UriBuilder.fromResource(theClass);
+                    classToUriBuilder.put(theClass, uriBuilder);
+                }
+            }
+        }
+        return uriBuilder.clone();
     }
 
     private Class getNonEnhancedClass(final Class<? extends JaxrsResource> theClassMaybeEnhanced) {
