@@ -48,11 +48,9 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
 
     @Override
     public List<Integer> getPaymentFailureRetryDays(@Param("dummy") final InternalTenantContext tenantContext) {
-        // There is no good way to achieve that in java; this solution is expensive (we could consider hardcoding the method name each time instead)
-        final Method method = new Object() {}.getClass().getEnclosingMethod();
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getPaymentFailureRetryDays", tenantContext);
         if (result != null) {
-            return convertToListInteger(result, method.getName());
+            return convertToListInteger(result, "getPaymentFailureRetryDays");
         }
         return getPaymentFailureRetryDays();
     }
@@ -64,8 +62,7 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
 
     @Override
     public int getPluginFailureInitialRetryInSec(@Param("dummy") final InternalTenantContext tenantContext) {
-        final Method method = new Object() {}.getClass().getEnclosingMethod();
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getPluginFailureInitialRetryInSec", tenantContext);
         if (result != null) {
             return Integer.parseInt(result);
         }
@@ -79,9 +76,7 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
 
     @Override
     public int getPluginFailureRetryMultiplier(@Param("dummy") final InternalTenantContext tenantContext) {
-        final Method method = new Object() {}.getClass().getEnclosingMethod();
-
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getPluginFailureRetryMultiplier", tenantContext);
         if (result != null) {
             return Integer.parseInt(result);
         }
@@ -95,11 +90,9 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
 
     @Override
     public List<TimeSpan> getIncompleteTransactionsRetries(@Param("dummy") final InternalTenantContext tenantContext) {
-        final Method method = new Object() {}.getClass().getEnclosingMethod();
-
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getIncompleteTransactionsRetries", tenantContext);
         if (result != null) {
-            return convertToListTimeSpan(result, method.getName());
+            return convertToListTimeSpan(result, "getIncompleteTransactionsRetries");
         }
         return getIncompleteTransactionsRetries();
     }
@@ -111,9 +104,7 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
 
     @Override
     public int getPluginFailureRetryMaxAttempts(@Param("dummy") final InternalTenantContext tenantContext) {
-        final Method method = new Object() {}.getClass().getEnclosingMethod();
-
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getPluginFailureRetryMaxAttempts", tenantContext);
         if (result != null) {
             return Integer.parseInt(result);
         }
@@ -127,11 +118,9 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
 
     @Override
     public List<String> getPaymentControlPluginNames(@Param("dummy") final InternalTenantContext tenantContext) {
-        final Method method = new Object() {}.getClass().getEnclosingMethod();
-
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getPaymentControlPluginNames", tenantContext);
         if (result != null) {
-            return convertToListString(result, method.getName());
+            return convertToListString(result, "getPaymentControlPluginNames");
         }
         return getPaymentControlPluginNames();
     }

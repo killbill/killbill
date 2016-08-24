@@ -18,6 +18,8 @@
 package org.killbill.billing.invoice.config;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,6 +33,7 @@ import org.skife.config.TimeSpan;
 
 public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements InvoiceConfig {
 
+    private final Map<String, Method> methodsCache = new HashMap<String, Method>();
     private final InvoiceConfig staticConfig;
 
     @Inject
@@ -46,8 +49,7 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
 
     @Override
     public int getNumberOfMonthsInFuture(final InternalTenantContext tenantContext) {
-        final Method method = new Object(){}.getClass().getEnclosingMethod();
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getNumberOfMonthsInFuture", tenantContext);
         if (result != null) {
             return Integer.parseInt(result);
         }
@@ -61,8 +63,7 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
 
     @Override
     public TimeSpan getDryRunNotificationSchedule(final InternalTenantContext tenantContext) {
-        final Method method = new Object(){}.getClass().getEnclosingMethod();
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getDryRunNotificationSchedule", tenantContext);
         if (result != null) {
             return new TimeSpan(result);
         }
@@ -76,8 +77,7 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
 
     @Override
     public int getMaxRawUsagePreviousPeriod(final InternalTenantContext tenantContext) {
-        final Method method = new Object(){}.getClass().getEnclosingMethod();
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getMaxRawUsagePreviousPeriod", tenantContext);
         if (result != null) {
             return Integer.parseInt(result);
         }
@@ -96,10 +96,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
 
     @Override
     protected Method getConfigStaticMethod(final String methodName) {
-        try {
-            return InvoiceConfig.class.getMethod(methodName, InternalTenantContext.class);
-        } catch (final NoSuchMethodException e) {
-            throw new RuntimeException(e);
+        Method method = methodsCache.get(methodName);
+        if (method == null) {
+            synchronized (methodsCache) {
+                method = methodsCache.get(methodName);
+                if (method == null) {
+                    try {
+                        method = InvoiceConfig.class.getMethod(methodName, InternalTenantContext.class);
+                        methodsCache.put(methodName, method);
+                    } catch (final NoSuchMethodException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
         }
+        return method;
     }
 }

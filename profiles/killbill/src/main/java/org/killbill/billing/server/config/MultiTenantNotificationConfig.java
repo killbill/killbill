@@ -57,11 +57,9 @@ public class MultiTenantNotificationConfig extends MultiTenantConfigBase impleme
 
     @Override
     public List<TimeSpan> getPushNotificationsRetries(@Param("dummy") final InternalTenantContext tenantContext) {
-        final Method method = new Object() {}.getClass().getEnclosingMethod();
-
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getPushNotificationsRetries", tenantContext);
         if (result != null) {
-            return convertToListTimeSpan(result, method.getName());
+            return convertToListTimeSpan(result, "getPushNotificationsRetries");
         }
         return getPushNotificationsRetries();
     }
