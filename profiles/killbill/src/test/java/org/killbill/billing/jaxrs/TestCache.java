@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -118,7 +119,7 @@ public class TestCache extends TestJaxrsBase {
                                                     .build();
 
         // Uploading the test catalog using the new Tenant created before
-        killBillClient.uploadXMLCatalog(Resources.getResource("catalogTest.xml").getPath(), inputOptions);
+        killBillClient.uploadXMLCatalog(Resources.getResource("SpyCarAdvanced.xml").getPath(), inputOptions);
 
         // creating an Account with PaymentMethod and a Subscription
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoiceWithInputOptions(inputOptions);
@@ -184,11 +185,13 @@ public class TestCache extends TestJaxrsBase {
         final Subscription subscription = new Subscription();
         subscription.setAccountId(account.getAccountId());
         subscription.setExternalKey(UUID.randomUUID().toString());
-        subscription.setProductName("Shotgun");
+        subscription.setProductName("Sports");
         subscription.setProductCategory(ProductCategory.BASE);
         subscription.setBillingPeriod(BillingPeriod.MONTHLY);
         subscription.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
+        clock.resetDeltaFromReality();
+        clock.setDay(new LocalDate(2013, 3, 1));
         final Subscription subscriptionJson = killBillClient.createSubscription(subscription, clock.getUTCToday(), DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, inputOptions);
 
         assertNotNull(subscriptionJson);
