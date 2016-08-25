@@ -17,23 +17,19 @@
 
 package org.killbill.billing.invoice.config;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.glue.InvoiceModule;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.config.definition.KillbillConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.MultiTenantConfigBase;
 import org.skife.config.TimeSpan;
 
 public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements InvoiceConfig {
 
-    private final Map<String, Method> methodsCache = new HashMap<String, Method>();
     private final InvoiceConfig staticConfig;
 
     @Inject
@@ -95,21 +91,7 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
-    protected Method getConfigStaticMethod(final String methodName) {
-        Method method = methodsCache.get(methodName);
-        if (method == null) {
-            synchronized (methodsCache) {
-                method = methodsCache.get(methodName);
-                if (method == null) {
-                    try {
-                        method = InvoiceConfig.class.getMethod(methodName, InternalTenantContext.class);
-                        methodsCache.put(methodName, method);
-                    } catch (final NoSuchMethodException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        }
-        return method;
+    protected Class<? extends KillbillConfig> getConfigClass() {
+        return InvoiceConfig.class;
     }
 }

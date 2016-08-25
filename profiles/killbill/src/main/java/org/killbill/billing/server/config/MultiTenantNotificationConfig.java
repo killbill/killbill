@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.glue.PaymentModule;
+import org.killbill.billing.util.config.definition.KillbillConfig;
 import org.killbill.billing.util.config.definition.NotificationConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.MultiTenantConfigBase;
@@ -45,25 +46,6 @@ public class MultiTenantNotificationConfig extends MultiTenantConfigBase impleme
     }
 
     @Override
-    protected Method getConfigStaticMethod(final String methodName) {
-        Method method = methodsCache.get(methodName);
-        if (method == null) {
-            synchronized (methodsCache) {
-                method = methodsCache.get(methodName);
-                if (method == null) {
-                    try {
-                        method = NotificationConfig.class.getMethod(methodName, InternalTenantContext.class);
-                        methodsCache.put(methodName, method);
-                    } catch (final NoSuchMethodException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        }
-        return method;
-    }
-
-    @Override
     public List<TimeSpan> getPushNotificationsRetries() {
         return staticConfig.getPushNotificationsRetries();
     }
@@ -75,5 +57,10 @@ public class MultiTenantNotificationConfig extends MultiTenantConfigBase impleme
             return convertToListTimeSpan(result, "getPushNotificationsRetries");
         }
         return getPushNotificationsRetries();
+    }
+
+    @Override
+    protected Class<? extends KillbillConfig> getConfigClass() {
+        return NotificationConfig.class;
     }
 }
