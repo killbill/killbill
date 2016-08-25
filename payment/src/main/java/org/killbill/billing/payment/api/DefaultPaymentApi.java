@@ -303,7 +303,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         // TODO validate if the code is located properly here
         // The code should understand that the external payment method needs to be created
         // if it doesn't exist yet and trigger a CREDIT using the (built-in) external payment plugin.
-        final UUID nonNulPaymentMethodId = (paymentMethodId != null) ?
+        final UUID nonNullPaymentMethodId = (paymentMethodId != null) ?
                                            paymentMethodId :
                                            paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, properties, callContext, internalCallContext);
 
@@ -314,7 +314,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         try {
             logEnterAPICall(log, transactionType, account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey, null, paymentControlPluginNames);
 
-            payment = pluginControlPaymentProcessor.createPurchase(IS_API_PAYMENT, account, nonNulPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
+            payment = pluginControlPaymentProcessor.createPurchase(IS_API_PAYMENT, account, nonNullPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                                  properties, paymentControlPluginNames, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
@@ -569,11 +569,11 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             // TODO validate if the code is located properly here
             // The code should understand that the external payment method needs to be created
             // if it doesn't exist yet and trigger a CREDIT using the (built-in) external payment plugin.
-            final UUID nonNulPaymentMethodId = (paymentMethodId != null) ?
+            final UUID nonNullPaymentMethodId = (paymentMethodId != null) ?
                                                paymentMethodId :
                                                paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, properties, callContext, internalCallContext);
 
-            payment = pluginControlPaymentProcessor.createCredit(IS_API_PAYMENT, account, nonNulPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
+            payment = pluginControlPaymentProcessor.createCredit(IS_API_PAYMENT, account, nonNullPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                                properties, paymentControlPluginNames, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);

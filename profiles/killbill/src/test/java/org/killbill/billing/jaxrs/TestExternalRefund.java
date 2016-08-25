@@ -31,6 +31,8 @@ import org.killbill.billing.client.model.InvoicePaymentTransaction;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.Payment;
+import org.killbill.billing.client.model.PaymentMethod;
+import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.TransactionType;
@@ -120,7 +122,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         final InvoicePaymentTransaction invoicePaymentTransactionRequest = new InvoicePaymentTransaction();
         invoicePaymentTransactionRequest.setAmount(BigDecimal.valueOf(249.95));
         invoicePaymentTransactionRequest.setPaymentId(invoicePayment.getPaymentId());
-        final InvoicePayment invoicePaymentRefund = killBillClient.createInvoicePaymentRefund(invoicePaymentTransactionRequest, true, requestOptions);
+        final InvoicePayment invoicePaymentRefund = killBillClient.createInvoicePaymentRefund(invoicePaymentTransactionRequest, requestOptions);
         assertNotNull(invoicePaymentRefund);
 
         assertSingleInvoicePaymentRefund(invoicePaymentRefund);
@@ -180,7 +182,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentTransactionRequest.setAmount(BigDecimal.valueOf(249.95));
         invoicePaymentTransactionRequest.setCurrency(accountJson.getCurrency().toString());
         invoicePaymentTransactionRequest.setPaymentId(payment.getPaymentId());
-        final InvoicePayment invoicePaymentExternalRefund = killBillClient.createInvoicePaymentRefund(invoicePaymentTransactionRequest, true, requestOptions);
+        final InvoicePayment invoicePaymentExternalRefund = killBillClient.createInvoicePaymentRefund(invoicePaymentTransactionRequest, true, null, requestOptions);
         assertNotNull(invoicePaymentExternalRefund);
 
         assertInvoicePaymentsExternalRefund(accountJson.getAccountId(), invoicePaymentExternalRefund);
@@ -197,6 +199,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
         // delete PM
         killBillClient.deletePaymentMethod(accountJson.getPaymentMethodId(), true, true, requestOptions);
+
         final Payments paymentsForAccount = killBillClient.getPaymentsForAccount(accountJson.getAccountId(), requestOptions);
         final Payment payment = paymentsForAccount.get(paymentsForAccount.size() - 1);
 
@@ -210,7 +213,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentTransactionRequest.setPaymentId(payment.getPaymentId());
         invoicePaymentTransactionRequest.setIsAdjusted(true);
         invoicePaymentTransactionRequest.setAdjustments(itemsToBeAdjusted);
-        final InvoicePayment invoicePaymentExternalRefund = killBillClient.createInvoicePaymentRefund(invoicePaymentTransactionRequest, true, requestOptions);
+        final InvoicePayment invoicePaymentExternalRefund = killBillClient.createInvoicePaymentRefund(invoicePaymentTransactionRequest, true, null, requestOptions);
         assertNotNull(invoicePaymentExternalRefund);
 
         assertInvoicePaymentsExternalRefund(accountJson.getAccountId(), invoicePaymentExternalRefund);
@@ -220,13 +223,40 @@ public class TestExternalRefund extends TestJaxrsBase {
     }
 
     @Test(groups = "slow", description = "#255 - Scenario 2b - Can refund an automatic payment though another existing payment method")
-    public void testAutomaticPaymentAndRefundWithDifferentPM() throws Exception {
+    public void testAutomaticPaymentAndExternalRefundWithDifferentPM() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        // TODO complete test
+        // delete PM
+        killBillClient.deletePaymentMethod(accountJson.getPaymentMethodId(), true, true, requestOptions);
+
+        // create another PM
+        final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
+        final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), false, PLUGIN_NAME, info);
+        final PaymentMethod otherPaymentMethod = killBillClient.createPaymentMethod(paymentMethodJson, requestOptions);
+
+        final Payments paymentsForAccount = killBillClient.getPaymentsForAccount(accountJson.getAccountId(), requestOptions);
+        final Payment payment = paymentsForAccount.get(paymentsForAccount.size() - 1);
+
+        final Invoices invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, true, requestOptions);
+        final List<InvoiceItem> itemsToBeAdjusted = invoices.get(1).getItems();
+
+        // external refund
+        final InvoicePaymentTransaction invoicePaymentTransactionRequest = new InvoicePaymentTransaction();
+        invoicePaymentTransactionRequest.setAmount(BigDecimal.valueOf(249.95));
+        invoicePaymentTransactionRequest.setCurrency(accountJson.getCurrency().toString());
+        invoicePaymentTransactionRequest.setPaymentId(payment.getPaymentId());
+        invoicePaymentTransactionRequest.setIsAdjusted(true);
+        invoicePaymentTransactionRequest.setAdjustments(itemsToBeAdjusted);
+        final InvoicePayment invoicePaymentExternalRefund = killBillClient.createInvoicePaymentRefund(invoicePaymentTransactionRequest, true, otherPaymentMethod.getPaymentMethodId(), requestOptions);
+        assertNotNull(invoicePaymentExternalRefund);
+        assertEquals(invoicePaymentExternalRefund.getPaymentMethodId(), otherPaymentMethod.getPaymentMethodId());
+
+        assertInvoicePaymentsExternalRefund(accountJson.getAccountId(), invoicePaymentExternalRefund);
+        assertRefundInvoiceAdjustments(accountJson.getAccountId());
+        assertRefundAccountBalance(accountJson.getAccountId(), BigDecimal.ZERO, BigDecimal.ZERO);
 
     }
 

@@ -73,6 +73,7 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -149,6 +150,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     public Response createRefundWithAdjustments(final InvoicePaymentTransactionJson json,
                                                 @PathParam("paymentId") final String paymentId,
                                                 @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
+                                                @QueryParam(QUERY_PAYMENT_METHOD_ID) @DefaultValue("") final String paymentMethodId,
                                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                 @HeaderParam(HDR_REASON) final String reason,
@@ -183,16 +185,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         }
 
         final Payment result;
-        PaymentMethod paymentMethod = null;
-        try {
-            paymentMethod = paymentApi.getPaymentMethodById(payment.getPaymentMethodId(), false, false, pluginProperties, callContext);
-        } catch (PaymentApiException e) {
-            log.warn("Payment method {} does not found", payment.getPaymentMethodId());
-        }
-
-        if (externalPayment && (paymentMethod == null)) {
-            // TODO to complete when a different PM is passed
-            UUID externalPaymentMethodId = null;
+        if (externalPayment) {
+            UUID externalPaymentMethodId = Strings.isNullOrEmpty(paymentMethodId) ? null : UUID.fromString(paymentMethodId);
 
             final Collection<PluginProperty> pluginPropertiesForExternalRefund = new LinkedList<PluginProperty>();
             Iterables.addAll(pluginPropertiesForExternalRefund, pluginProperties);
