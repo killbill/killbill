@@ -18,10 +18,13 @@
 package org.killbill.billing.server.config;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.glue.PaymentModule;
+import org.killbill.billing.util.config.definition.KillbillConfig;
 import org.killbill.billing.util.config.definition.NotificationConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.MultiTenantConfigBase;
@@ -33,6 +36,7 @@ import com.google.inject.name.Named;
 
 public class MultiTenantNotificationConfig extends MultiTenantConfigBase implements NotificationConfig {
 
+    private final Map<String, Method> methodsCache = new HashMap<String, Method>();
     private final NotificationConfig staticConfig;
 
     @Inject
@@ -42,27 +46,21 @@ public class MultiTenantNotificationConfig extends MultiTenantConfigBase impleme
     }
 
     @Override
-    protected Method getConfigStaticMethod(final String methodName) {
-        try {
-            return NotificationConfig.class.getMethod(methodName, InternalTenantContext.class);
-        } catch (final NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     public List<TimeSpan> getPushNotificationsRetries() {
         return staticConfig.getPushNotificationsRetries();
     }
 
     @Override
     public List<TimeSpan> getPushNotificationsRetries(@Param("dummy") final InternalTenantContext tenantContext) {
-        final Method method = new Object() {}.getClass().getEnclosingMethod();
-
-        final String result = getStringTenantConfig(method.getName(), tenantContext);
+        final String result = getStringTenantConfig("getPushNotificationsRetries", tenantContext);
         if (result != null) {
-            return convertToListTimeSpan(result, method.getName());
+            return convertToListTimeSpan(result, "getPushNotificationsRetries");
         }
         return getPushNotificationsRetries();
+    }
+
+    @Override
+    protected Class<? extends KillbillConfig> getConfigClass() {
+        return NotificationConfig.class;
     }
 }

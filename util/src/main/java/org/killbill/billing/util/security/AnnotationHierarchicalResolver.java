@@ -18,6 +18,7 @@ package org.killbill.billing.util.security;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -26,13 +27,26 @@ import org.apache.shiro.aop.MethodInvocation;
 
 public class AnnotationHierarchicalResolver implements AnnotationResolver {
 
+    private final Map<String, Annotation> methodToAnnotation = new HashMap<String, Annotation>();
+
     @Override
     public Annotation getAnnotation(final MethodInvocation mi, final Class<? extends Annotation> clazz) {
         return getAnnotationFromMethod(mi.getMethod(), clazz);
     }
 
     public Annotation getAnnotationFromMethod(final Method method, final Class<? extends Annotation> clazz) {
-        return findAnnotation(method, clazz);
+        final String key = method.toString();
+        Annotation annotation = methodToAnnotation.get(key);
+        if (annotation == null) {
+            synchronized (methodToAnnotation) {
+                annotation = methodToAnnotation.get(key);
+                if (annotation == null) {
+                    annotation = findAnnotation(method, clazz);
+                    methodToAnnotation.put(key, annotation);
+                }
+            }
+        }
+        return annotation;
     }
 
     // The following comes from spring-core (AnnotationUtils) to handle annotations on interfaces
