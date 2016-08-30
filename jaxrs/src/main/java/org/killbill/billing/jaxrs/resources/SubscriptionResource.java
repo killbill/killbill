@@ -41,6 +41,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -63,6 +64,7 @@ import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
+import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
@@ -202,6 +204,21 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                 new PlanPhaseSpecifier(entitlement.getProductName(),
                                                                        BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), phaseType);
 
+                // verify the number of subscriptions (of the same kind) allowed per bundle
+                if (createAddOnEntitlement) {
+                    String currentPlanName = entitlement.getPlanName() != null ? entitlement.getPlanName() :
+                                             entitlement.getProductName() + "-" + entitlement.getBillingPeriod();
+                    int existingSubscriptions = countExistingAddOnsWithSamePlanName(
+                            subscriptionApi.getSubscriptionBundle(getBundleIdForAddOnCreation(entitlement), callContext).getSubscriptions(), currentPlanName);
+                    Entitlement entitlementForId = entitlementApi.getEntitlementForId(getBundleIdForAddOnCreation(entitlement), callContext);
+                    if (entitlementForId.getLastActivePlan() != null
+                            && entitlementForId.getLastActivePlan().getPlansAllowedInBundle() != -1
+                            && existingSubscriptions == entitlementForId.getLastActivePlan().getPlansAllowedInBundle()) {
+                        // a new ADD_ON subscription of the same plan can't be added because it has reached its limit by bundle
+                        throw new EntitlementApiException(ErrorCode.SUB_CREATE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, currentPlanName);
+                    }
+                }
+
                 final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(entitlementDate);
                 final LocalDate resolvedBillingDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(billingDate);
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), spec, account.getCurrency());
@@ -237,6 +254,27 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         final EntitlementCallCompletion<Entitlement> callCompletionCreation = new EntitlementCallCompletion<Entitlement>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
+    }
+
+    private int countExistingAddOnsWithSamePlanName(final List<Subscription> subscriptionsForBundle, final String planName) {
+        int countExistingAddOns = 0;
+        for (Subscription subscription : subscriptionsForBundle) {
+            if (getSubscriptionPlanName(subscription).equalsIgnoreCase(planName)
+                    && subscription.getLastActiveProductCategory() != null
+                    && ProductCategory.ADD_ON.toString().equals(subscription.getLastActiveProductCategory().toString())) {
+                countExistingAddOns++;
+            }
+        }
+        return countExistingAddOns;
+    }
+
+    private String getSubscriptionPlanName(final Subscription subscription) {
+        final SubscriptionEvent firstEvent = subscription.getSubscriptionEvents().isEmpty() ? null : subscription.getSubscriptionEvents().get(0);
+        if (subscription.getLastActivePlan() == null) {
+            return firstEvent == null ? "" : firstEvent.getNextPlan().getName();
+        } else {
+            return subscription.getLastActivePlan().getName();
+        }
     }
 
     @TimedResource
