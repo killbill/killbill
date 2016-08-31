@@ -17,7 +17,6 @@
 
 package org.killbill.billing.jaxrs.json;
 
-import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.jaxrs.json.CatalogJson.DurationJson;
 import org.killbill.billing.overdue.api.OverdueCondition;
 import org.killbill.billing.util.tag.ControlTagType;

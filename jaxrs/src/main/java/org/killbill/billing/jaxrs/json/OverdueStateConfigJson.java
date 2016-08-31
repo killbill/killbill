@@ -17,8 +17,6 @@
 
 package org.killbill.billing.jaxrs.json;
 
-import org.killbill.billing.catalog.api.CurrencyValueNull;
-import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueCancellationPolicy;
 import org.killbill.billing.overdue.api.OverdueState;
@@ -59,7 +57,7 @@ public class OverdueStateConfigJson {
     public OverdueStateConfigJson(final OverdueState input) {
         this.name = input.getName();
         this.isClearState = input.isClearState();
-        this.condition = input.getOverdueCondition() !=  null ? new OverdueConditionJson(input.getOverdueCondition()) : null;
+        this.condition = input.getOverdueCondition() != null ? new OverdueConditionJson(input.getOverdueCondition()) : null;
         this.externalMessage = input.getExternalMessage();
         this.blockChanges = input.isBlockChanges();
         this.disableEntitlement = input.isDisableEntitlementAndChangesBlocked();
@@ -77,7 +75,8 @@ public class OverdueStateConfigJson {
         return name;
     }
 
-    public Boolean getClearState() {
+    @JsonProperty("isClearState")
+    public Boolean isClearState() {
         return isClearState;
     }
 
