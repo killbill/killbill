@@ -383,7 +383,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "                </recurring>\n" +
                                    "                <usages/>\n" +
                                    "            </finalPhase>\n" +
-                                   "            <plansAllowedInBundle>1</plansAllowedInBundle>\n" +
+                                   "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
                                    "        </plan>\n" +
                                    "        <plan name=\"sports-monthly\">\n" +
                                    "            <product>Sports</product>\n" +
@@ -428,7 +428,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "                </recurring>\n" +
                                    "                <usages/>\n" +
                                    "            </finalPhase>\n" +
-                                   "            <plansAllowedInBundle>1</plansAllowedInBundle>\n" +
+                                   "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
                                    "        </plan>\n" +
                                    "        <plan name=\"super-monthly\">\n" +
                                    "            <product>Super</product>\n" +
@@ -473,7 +473,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "                </recurring>\n" +
                                    "                <usages/>\n" +
                                    "            </finalPhase>\n" +
-                                   "            <plansAllowedInBundle>1</plansAllowedInBundle>\n" +
+                                   "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
                                    "        </plan>\n" +
                                    "        <plan name=\"dynamic-annual\">\n" +
                                    "            <product>Dynamic</product>\n" +
@@ -510,7 +510,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "                </recurring>\n" +
                                    "                <usages/>\n" +
                                    "            </finalPhase>\n" +
-                                   "            <plansAllowedInBundle>1</plansAllowedInBundle>\n" +
+                                   "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
                                    "        </plan>\n" +
                                    "    </plans>\n" +
                                    "    <priceLists>\n" +
