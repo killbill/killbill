@@ -588,12 +588,17 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         List<SubscriptionBaseEvent> dryRunEvents = null;
         try {
             final PlanPhaseSpecifier inputSpec = dryRunArguments.getPlanPhaseSpecifier();
+            final boolean isInputSpecNullOrEmpty = inputSpec == null ||
+                                                   (inputSpec.getPlanName() == null && inputSpec.getProductName() == null && inputSpec.getBillingPeriod() == null);
             final Catalog catalog = catalogService.getFullCatalog(true, true, context);
 
-            final PlanPhasePriceOverridesWithCallContext overridesWithContext = null; // TODO not supported to dryRun with custom price
-            final Plan plan = (inputSpec != null && inputSpec.getProductName() != null && inputSpec.getBillingPeriod() != null) ?
-                              catalog.createOrFindPlan(inputSpec, overridesWithContext, utcNow) : null;
+            // Create an overridesWithContext with a null context to indicate this is dryRun and no price overriden plan should be created.
+            final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(dryRunArguments.getPlanPhasePriceOverrides(), null);
+            final Plan plan = isInputSpecNullOrEmpty ?
+                              null :
+                              catalog.createOrFindPlan(inputSpec, overridesWithContext, utcNow);
             final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
+
 
             if (dryRunArguments != null) {
                 switch (dryRunArguments.getAction()) {

@@ -111,12 +111,12 @@ public class DefaultDuration extends ValidatingConfig<DefaultOverdueConfig> impl
         return errors;
     }
 
-    protected DefaultDuration setUnit(final TimeUnit unit) {
+    public DefaultDuration setUnit(final TimeUnit unit) {
         this.unit = unit;
         return this;
     }
 
-    protected DefaultDuration setNumber(final Integer number) {
+    public DefaultDuration setNumber(final Integer number) {
         this.number = number;
         return this;
     }
