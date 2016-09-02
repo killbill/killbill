@@ -17,8 +17,11 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.jaxrs.json.CatalogJson.DurationJson;
 import org.killbill.billing.overdue.api.OverdueCondition;
+import org.killbill.billing.overdue.config.DefaultDuration;
+import org.killbill.billing.overdue.config.DefaultOverdueCondition;
 import org.killbill.billing.util.tag.ControlTagType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -92,6 +95,16 @@ public class OverdueConditionJson {
         int result = timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null ? timeSinceEarliestUnpaidInvoiceEqualsOrExceeds.hashCode() : 0;
         result = 31 * result + (controlTagInclusion != null ? controlTagInclusion.hashCode() : 0);
         result = 31 * result + (controlTagExclusion != null ? controlTagExclusion.hashCode() : 0);
+        return result;
+    }
+
+    public static DefaultOverdueCondition toOverdueCondition(final OverdueConditionJson input) {
+        final DefaultOverdueCondition result = new DefaultOverdueCondition();
+        if (input.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds() != null) {
+            result.setTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds(new DefaultDuration().setUnit(input.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getUnit()).setNumber(input.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getNumber()));
+        }
+        result.setControlTagInclusion(input.getControlTagInclusion());
+        result.setControlTagExclusion(input.getControlTagExclusion());
         return result;
     }
 }

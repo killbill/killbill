@@ -119,22 +119,26 @@ public class DefaultOverdueState extends ValidatingConfig<DefaultOverdueConfig> 
         return autoReevaluationInterval.toJodaPeriod();
     }
 
-    protected DefaultOverdueState setName(final String name) {
+    public void setAutoReevaluationInterval(final DefaultDuration autoReevaluationInterval) {
+        this.autoReevaluationInterval = autoReevaluationInterval;
+    }
+
+    public DefaultOverdueState setName(final String name) {
         this.name = name;
         return this;
     }
 
-    protected DefaultOverdueState setClearState(final boolean isClearState) {
+    public DefaultOverdueState setClearState(final boolean isClearState) {
         this.isClearState = isClearState;
         return this;
     }
 
-    protected DefaultOverdueState setExternalMessage(final String externalMessage) {
+    public DefaultOverdueState setExternalMessage(final String externalMessage) {
         this.externalMessage = externalMessage;
         return this;
     }
 
-    protected DefaultOverdueState setDisableEntitlement(final boolean cancel) {
+    public DefaultOverdueState setDisableEntitlement(final boolean cancel) {
         this.disableEntitlement = cancel;
         return this;
     }
@@ -144,12 +148,12 @@ public class DefaultOverdueState extends ValidatingConfig<DefaultOverdueConfig> 
         return this;
     }
 
-    protected DefaultOverdueState setBlockChanges(final boolean cancel) {
+    public DefaultOverdueState setBlockChanges(final boolean cancel) {
         this.blockChanges = cancel;
         return this;
     }
 
-    protected DefaultOverdueState setCondition(final DefaultOverdueCondition condition) {
+    public DefaultOverdueState setCondition(final DefaultOverdueCondition condition) {
         this.condition = condition;
         return this;
     }

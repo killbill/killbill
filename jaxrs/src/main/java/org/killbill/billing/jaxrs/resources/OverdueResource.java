@@ -45,6 +45,7 @@ import org.killbill.billing.jaxrs.json.CatalogJson;
 import org.killbill.billing.jaxrs.json.OverdueJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.overdue.api.DefaultOverdueApi;
 import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
@@ -125,12 +126,31 @@ public class OverdueResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve the overdue config as JSON" , response = OverdueJson.class)
     @ApiResponses(value = {})
     public Response getOverdueConfigJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
-
-
         final TenantContext tenantContext = context.createContext(request);
         final OverdueConfig overdueConfig = overdueApi.getOverdueConfig(tenantContext);
         final OverdueJson result = new OverdueJson(overdueConfig);
         return Response.status(Status.OK).entity(result).build();
+    }
+
+
+
+    @TimedResource
+    @POST
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Upload the full overdue config as JSON")
+    @ApiResponses(value = {})
+    public Response uploadOverdueConfigJson(final OverdueJson overdueJson,
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final OverdueConfig overdueConfig = OverdueJson.toOverdueConfig(overdueJson);
+        ((DefaultOverdueApi)overdueApi).uploadOverdueConfig(overdueConfig, callContext);
+        return uriBuilder.buildResponse(uriInfo, OverdueResource.class, null, null);
     }
 
 }

@@ -20,9 +20,14 @@ package org.killbill.billing.jaxrs.json;
 import java.util.List;
 
 import org.killbill.billing.catalog.api.CurrencyValueNull;
+import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.overdue.api.OverdueState;
+import org.killbill.billing.overdue.config.DefaultDuration;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
+import org.killbill.billing.overdue.config.DefaultOverdueState;
+import org.killbill.billing.overdue.config.DefaultOverdueStatesAccount;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -91,6 +96,30 @@ public class OverdueJson {
     public int hashCode() {
         int result = initialReevaluationIntervalDays != null ? initialReevaluationIntervalDays.hashCode() : 0;
         result = 31 * result + (overdueStates != null ? overdueStates.hashCode() : 0);
+        return result;
+    }
+
+    public static OverdueConfig toOverdueConfig(final OverdueJson input) {
+        final DefaultOverdueConfig result = new DefaultOverdueConfig();
+        final DefaultOverdueStatesAccount overdueStateAccount = new DefaultOverdueStatesAccount();
+        result.setOverdueStates(overdueStateAccount);
+
+        final DefaultOverdueState [] states = new DefaultOverdueState[input.getOverdueStates().size()];
+        int i = 0;
+        for (final OverdueStateConfigJson cur : input.getOverdueStates()) {
+            final DefaultOverdueState state = new DefaultOverdueState();
+            state.setName(cur.getName());
+            state.setExternalMessage(cur.getExternalMessage());
+            state.setBlockChanges(cur.getBlockChanges());
+            state.setDisableEntitlement(cur.getDisableEntitlement());
+            state.setSubscriptionCancellationPolicy(cur.getSubscriptionCancellationPolicy());
+            state.setClearState(cur.isClearState());
+            state.setAutoReevaluationInterval((new DefaultDuration()).setUnit(TimeUnit.DAYS).setNumber(cur.getAutoReevaluationIntervalDays()));
+            state.setCondition(OverdueConditionJson.toOverdueCondition(cur.getCondition()));
+            states[i++] = state;
+        }
+        overdueStateAccount.setAccountOverdueStates(states);
+        overdueStateAccount.setInitialReevaluationInterval(null);
         return result;
     }
 }
