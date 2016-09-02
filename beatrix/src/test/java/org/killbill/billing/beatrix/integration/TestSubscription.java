@@ -271,6 +271,7 @@ public class TestSubscription extends TestIntegrationBase {
         specifierList.add(addOnEntitlementSpecifier2);
         specifierList.add(addOnEntitlementSpecifier3);
 
+        // Trying to add the third add_on with the same plan should throw an exception (the limit is 2 for this plan)
         try {
             entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         } catch (final EntitlementApiException e) {
@@ -298,10 +299,12 @@ public class TestSubscription extends TestIntegrationBase {
         entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec1, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
+        // Create second add_on subscription with the same plan
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec2, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
+        // Trying to add the third add_on with the same plan should throw an exception (the limit is 2 for this plan)
         try {
             entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec3, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         } catch (final EntitlementApiException e) {
