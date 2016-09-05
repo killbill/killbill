@@ -224,6 +224,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             }
 
             boolean first = true;
+            final List<SubscriptionBase> subscriptionsForBundle = getSubscriptionsForBundle(bundleId, null, context);
+
             for (EntitlementSpecifier entitlement : entitlements) {
 
                 final PlanPhaseSpecifier spec = entitlement.getPlanPhaseSpecifier();
@@ -247,7 +249,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 // verify the number of subscriptions (of the same kind) allowed per bundle and the existing ones
                 if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
                     if (plan.getPlansAllowedInBundle() != -1 && plan.getPlansAllowedInBundle() > 0) {
-                        int existingAddOnsWithSamePlanName = countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(bundleId, null, context), plan.getName());
+                        int existingAddOnsWithSamePlanName = countExistingAddOnsWithSamePlanName(subscriptionsForBundle, plan.getName());
                         int currentAddOnsWithSamePlanName = countCurrentAddOnsWithSamePlanName(entitlements, catalog, plan.getName(), effectiveDate, callContext);
                         if ((existingAddOnsWithSamePlanName + currentAddOnsWithSamePlanName) > plan.getPlansAllowedInBundle()) {
                             // a new ADD_ON subscription of the same plan can't be added because it has reached its limit by bundle
@@ -518,8 +520,26 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                      final PlanSpecifier spec,
                                                      final DateTime requestedDateWithMs,
                                                      final BillingActionPolicy requestedPolicy,
-                                                     final InternalTenantContext context) throws SubscriptionBaseApiException {
+                                                     final List<PlanPhasePriceOverride> overrides,
+                                                     final InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
+        final CallContext callContext = internalCallContextFactory.createCallContext(context);
+
+        // verify the number of subscriptions (of the same kind) allowed per bundle
+        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
+        final DateTime now = clock.getUTCNow();
+        final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
+        final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, callContext);
+        final Plan plan = catalog.createOrFindPlan(spec, overridesWithContext, effectiveDate);
+        if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
+            if (plan.getPlansAllowedInBundle() != -1
+                && plan.getPlansAllowedInBundle() > 0
+                && countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(subscription.getBundleId(), null, context), plan.getName())
+                   >= plan.getPlansAllowedInBundle()) {
+                // the plan can be changed to the new value, because it has reached its limit by bundle
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, plan.getName());
+            }
+        }
         return apiService.dryRunChangePlan((DefaultSubscriptionBase) subscription, spec, requestedDateWithMs, requestedPolicy, tenantContext);
     }
 
