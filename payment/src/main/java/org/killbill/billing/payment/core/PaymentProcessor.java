@@ -516,8 +516,7 @@ public class PaymentProcessor extends ProcessorBase {
             }
 
             // Sanity: don't share keys across accounts
-            if (paymentTransactionModelDao.getTransactionExternalKey().equals(paymentStateContext.getPaymentTransactionExternalKey()) &&
-                !paymentTransactionModelDao.getAccountRecordId().equals(internalCallContext.getAccountRecordId())) {
+            if (!paymentTransactionModelDao.getAccountRecordId().equals(internalCallContext.getAccountRecordId())) {
                 UUID accountId;
                 try {
                     accountId = accountInternalApi.getAccountByRecordId(paymentTransactionModelDao.getAccountRecordId(), internalCallContext).getId();
