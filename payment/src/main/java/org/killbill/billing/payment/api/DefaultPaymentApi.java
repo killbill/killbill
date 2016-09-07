@@ -462,7 +462,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(paymentId, "paymentId");
-        checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
         checkNotNullParameter(properties, "plugin properties");
 
         final String transactionType = TransactionType.REFUND.name();
@@ -717,7 +716,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     public Payment createChargebackReversal(final Account account, final UUID paymentId, final String paymentTransactionExternalKey, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
-        checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
 
         final String transactionType = TransactionType.CHARGEBACK.name();
         Payment payment = null;
@@ -756,7 +754,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
-        checkNotNullParameter(paymentTransactionExternalKey, "paymentTransactionExternalKey");
 
         final String transactionType = TransactionType.CHARGEBACK.name();
         Payment payment = null;
