@@ -2008,7 +2008,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(TransactionType.CAPTURE, authorization.getId(), null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
         }
 
         try {
@@ -2080,7 +2080,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(TransactionType.AUTHORIZE, null, null, captureKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
         }
 
         try {
@@ -2098,6 +2098,44 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(capturedPayment2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         Assert.assertEquals(capturedPayment2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
         Assert.assertEquals(capturedPayment2.getTransactions().get(2).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        final String refundKey = UUID.randomUUID().toString();
+        final Payment refundedPayment = createPayment(TransactionType.REFUND, authorization.getId(), null, refundKey, BigDecimal.ONE, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(refundedPayment.getTransactions().size(), 4);
+        Assert.assertEquals(refundedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(refundedPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(refundedPayment.getTransactions().get(2).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(refundedPayment.getTransactions().get(3).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        // Second payment
+
+        final String auth2Key = UUID.randomUUID().toString();
+        final Payment authorization2 = createPayment(TransactionType.AUTHORIZE, null, null, auth2Key, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+        assertNotNull(authorization2);
+        Assert.assertEquals(authorization2.getTransactions().size(), 1);
+        Assert.assertEquals(authorization2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        try {
+            // Capture with an existing successful transaction external key should fail
+            createPayment(TransactionType.CAPTURE, authorization2.getId(), null, captureKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+        }
+
+        final String capture2Key = UUID.randomUUID().toString();
+        final Payment capture2 = createPayment(TransactionType.CAPTURE, authorization2.getId(), null, capture2Key, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(capture2.getTransactions().size(), 2);
+        Assert.assertEquals(capture2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(capture2.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        try {
+            // Refund with an existing successful transaction external key should fail
+            createPayment(TransactionType.REFUND, authorization2.getId(), null, refundKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+        }
     }
 
     @Test(groups = "slow")
@@ -2301,6 +2339,14 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                 paymentTransactionExternalKey,
                                                 pluginProperties,
                                                 callContext);
+            case REFUND:
+                return paymentApi.createRefund(account,
+                                               paymentId,
+                                               amount,
+                                               amount == null ? null : account.getCurrency(),
+                                               paymentTransactionExternalKey,
+                                               pluginProperties,
+                                               callContext);
             default:
                 Assert.fail();
                 return null;
