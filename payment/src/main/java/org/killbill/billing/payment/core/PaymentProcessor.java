@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -446,7 +447,7 @@ public class PaymentProcessor extends ProcessorBase {
                     log.warn("Unable to retrieve account", e);
                     accountId = null;
                 }
-                throw new PaymentApiException(ErrorCode.PAYMENT_TRANSACTION_DIFFERENT_ACCOUNT_ID, accountId);
+                throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, accountId);
             }
         }
     }
