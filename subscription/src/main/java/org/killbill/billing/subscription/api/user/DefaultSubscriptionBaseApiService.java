@@ -385,18 +385,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         return planChangeResult;
     }
 
-    private int countExistingAddOnsWithSamePlanName(final List<SubscriptionBase> subscriptionsForBundle, final String planName) {
-        int countExistingAddOns = 0;
-        for (SubscriptionBase subscription : subscriptionsForBundle) {
-            if (subscription.getCurrentPlan().getName().equalsIgnoreCase(planName)
-                && subscription.getLastActiveProduct().getCategory() != null
-                && ProductCategory.ADD_ON.equals(subscription.getLastActiveProduct().getCategory())) {
-                countExistingAddOns++;
-            }
-        }
-        return countExistingAddOns;
-    }
-
     private void doChangePlan(final DefaultSubscriptionBase subscription,
                               final PlanSpecifier spec,
                               final List<PlanPhasePriceOverride> overrides,
@@ -409,7 +397,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(newPlan.getProduct().getCategory().toString())) {
             if (newPlan.getPlansAllowedInBundle() != -1
                 && newPlan.getPlansAllowedInBundle() > 0
-                && countExistingAddOnsWithSamePlanName(dao.getSubscriptions(subscription.getBundleId(), null, internalCallContext), newPlan.getName())
+                && addonUtils.countExistingAddOnsWithSamePlanName(dao.getSubscriptions(subscription.getBundleId(), null, internalCallContext), newPlan.getName())
                    >= newPlan.getPlansAllowedInBundle()) {
                 // the plan can be changed to the new value, because it has reached its limit by bundle
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, newPlan.getName());

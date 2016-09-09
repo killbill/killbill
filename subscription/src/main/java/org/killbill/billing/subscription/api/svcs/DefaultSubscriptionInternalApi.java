@@ -174,7 +174,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
                 if (plan.getPlansAllowedInBundle() != -1
                     && plan.getPlansAllowedInBundle() > 0
-                    && countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(bundleId, null, context), plan.getName())
+                    && addonUtils.countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(bundleId, null, context), plan.getName())
                        >= plan.getPlansAllowedInBundle()) {
                     // a new ADD_ON subscription of the same plan can't be added because it has reached its limit by bundle
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, plan.getName());
@@ -193,18 +193,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
-    }
-
-    private int countExistingAddOnsWithSamePlanName(final List<SubscriptionBase> subscriptionsForBundle, final String planName) {
-        int countExistingAddOns = 0;
-        for (SubscriptionBase subscription : subscriptionsForBundle) {
-            if (subscription.getCurrentPlan().getName().equalsIgnoreCase(planName)
-                && subscription.getLastActiveProduct().getCategory() != null
-                && ProductCategory.ADD_ON.equals(subscription.getLastActiveProduct().getCategory())) {
-                countExistingAddOns++;
-            }
-        }
-        return countExistingAddOns;
     }
 
     @Override
@@ -249,7 +237,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 // verify the number of subscriptions (of the same kind) allowed per bundle and the existing ones
                 if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
                     if (plan.getPlansAllowedInBundle() != -1 && plan.getPlansAllowedInBundle() > 0) {
-                        int existingAddOnsWithSamePlanName = countExistingAddOnsWithSamePlanName(subscriptionsForBundle, plan.getName());
+                        int existingAddOnsWithSamePlanName = addonUtils.countExistingAddOnsWithSamePlanName(subscriptionsForBundle, plan.getName());
                         int currentAddOnsWithSamePlanName = countCurrentAddOnsWithSamePlanName(entitlements, catalog, plan.getName(), effectiveDate, callContext);
                         if ((existingAddOnsWithSamePlanName + currentAddOnsWithSamePlanName) > plan.getPlansAllowedInBundle()) {
                             // a new ADD_ON subscription of the same plan can't be added because it has reached its limit by bundle
@@ -534,7 +522,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
             if (plan.getPlansAllowedInBundle() != -1
                 && plan.getPlansAllowedInBundle() > 0
-                && countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(subscription.getBundleId(), null, context), plan.getName())
+                && addonUtils.countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(subscription.getBundleId(), null, context), plan.getName())
                    >= plan.getPlansAllowedInBundle()) {
                 // the plan can be changed to the new value, because it has reached its limit by bundle
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, plan.getName());

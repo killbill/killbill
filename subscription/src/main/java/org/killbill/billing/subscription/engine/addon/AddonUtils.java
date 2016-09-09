@@ -16,6 +16,8 @@
 
 package org.killbill.billing.subscription.engine.addon;
 
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -23,7 +25,9 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
@@ -120,5 +124,17 @@ public class AddonUtils {
             }
         }
         return false;
+    }
+
+    public int countExistingAddOnsWithSamePlanName(final List<SubscriptionBase> subscriptionsForBundle, final String planName) {
+        int countExistingAddOns = 0;
+        for (SubscriptionBase subscription : subscriptionsForBundle) {
+            if (subscription.getCurrentPlan().getName().equalsIgnoreCase(planName)
+                && subscription.getLastActiveProduct().getCategory() != null
+                && ProductCategory.ADD_ON.equals(subscription.getLastActiveProduct().getCategory())) {
+                countExistingAddOns++;
+            }
+        }
+        return countExistingAddOns;
     }
 }
