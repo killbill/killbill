@@ -394,6 +394,16 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
         final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).createOrFindPlan(spec, overridesWithContext, effectiveDate, subscription.getStartDate());
 
+        if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(newPlan.getProduct().getCategory().toString())) {
+            if (newPlan.getPlansAllowedInBundle() != -1
+                && newPlan.getPlansAllowedInBundle() > 0
+                && addonUtils.countExistingAddOnsWithSamePlanName(dao.getSubscriptions(subscription.getBundleId(), null, internalCallContext), newPlan.getName())
+                   >= newPlan.getPlansAllowedInBundle()) {
+                // the plan can be changed to the new value, because it has reached its limit by bundle
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, newPlan.getName());
+            }
+        }
+
         if (newPlan.getProduct().getCategory() != subscription.getCategory()) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_INVALID, subscription.getId());
         }

@@ -76,7 +76,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     //No other value is allowed for Tiered ADDONS
     //A value of -1 means unlimited
     @XmlElement(required = false)
-    private Integer plansAllowedInBundle = 1;
+    private Integer plansAllowedInBundle = -1;
 
     private String priceListName;
 

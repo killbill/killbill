@@ -35,6 +35,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -559,8 +560,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
                 final DateTime effectiveChangeDate;
                 try {
-                    effectiveChangeDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, null, null, context);
+                    effectiveChangeDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, null, null, overrides, context);
                 } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                } catch (final CatalogApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
@@ -624,8 +627,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
                 final DateTime resultingEffectiveDate;
                 try {
-                    resultingEffectiveDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, effectiveChangeDate, null, context);
+                    resultingEffectiveDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, effectiveChangeDate, null, overrides, context);
                 } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                } catch (final CatalogApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
@@ -689,8 +694,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
                 final DateTime effectiveChangeDate;
                 try {
-                    effectiveChangeDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, null, actionPolicy, context);
+                    effectiveChangeDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, null, actionPolicy, overrides, context);
                 } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                } catch (final CatalogApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
 
