@@ -51,6 +51,6 @@ public class UsageInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String getDescription() {
-        return Objects.firstNonNull(description, String.format("%s (usage item)", usageName));
+        return Objects.firstNonNull(description, usageName);
     }
 }
