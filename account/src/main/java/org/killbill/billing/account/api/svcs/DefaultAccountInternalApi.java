@@ -156,17 +156,16 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
         return accountModelDao;
     }
 
-    private int getBCDInternal(final UUID accountId, final InternalTenantContext context) {
-        final Integer bcd = accountDao.getAccountBCD(accountId, context);
-        return bcd != null ? bcd : DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
-    }
-
     private CacheLoaderArgument createBCDCacheLoaderArgument(final InternalTenantContext context) {
         final AccountBCDCacheLoader.LoaderCallback loaderCallback = new AccountBCDCacheLoader.LoaderCallback() {
             @Override
             public Object loadAccountBCD(final UUID accountId, final InternalTenantContext context) {
-                int bcd = getBCDInternal(accountId, context);
-                return new Integer(bcd);
+                Object result = accountDao.getAccountBCD(accountId, context);
+                if (result != null) {
+                    // If the value is 0, then account BCD was not set so we don't want to create a cache entry
+                    result = result.equals(DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL) ? null : result;
+                }
+                return result;
             }
         };
         final Object[] args = new Object[1];
