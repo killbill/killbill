@@ -32,6 +32,7 @@ import org.killbill.billing.overdue.config.DefaultOverdueStatesAccount;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -99,14 +100,27 @@ public class OverdueJson {
         return result;
     }
 
-    public static OverdueConfig toOverdueConfig(final OverdueJson input) {
+    public static OverdueConfig toOverdueConfigWithValidation(final OverdueJson input) {
         final DefaultOverdueConfig result = new DefaultOverdueConfig();
         final DefaultOverdueStatesAccount overdueStateAccount = new DefaultOverdueStatesAccount();
         result.setOverdueStates(overdueStateAccount);
 
         final DefaultOverdueState [] states = new DefaultOverdueState[input.getOverdueStates().size()];
         int i = 0;
+
+
+        int prevTimeSinceEarliestUnpaidInvoice = -1;
         for (final OverdueStateConfigJson cur : input.getOverdueStates()) {
+
+            Preconditions.checkNotNull(cur.getName());
+
+            // We only support timeSinceEarliestUnpaidInvoiceEqualsOrExceeds condition (see #611)
+            Preconditions.checkNotNull(cur.getCondition());
+            Preconditions.checkNotNull(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds());
+            Preconditions.checkNotNull(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getUnit());
+            Preconditions.checkState(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getUnit() == TimeUnit.DAYS);
+            Preconditions.checkState(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getNumber() > 0);
+
             final DefaultOverdueState state = new DefaultOverdueState();
             state.setName(cur.getName());
             state.setExternalMessage(cur.getExternalMessage());
@@ -114,12 +128,29 @@ public class OverdueJson {
             state.setDisableEntitlement(cur.getDisableEntitlement());
             state.setSubscriptionCancellationPolicy(cur.getSubscriptionCancellationPolicy());
             state.setClearState(cur.isClearState());
-            state.setAutoReevaluationInterval((new DefaultDuration()).setUnit(TimeUnit.DAYS).setNumber(cur.getAutoReevaluationIntervalDays()));
+            state.setAutoReevaluationInterval(computeReevaluationInterval(cur.getAutoReevaluationIntervalDays(), prevTimeSinceEarliestUnpaidInvoice, cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getNumber()));
             state.setCondition(OverdueConditionJson.toOverdueCondition(cur.getCondition()));
             states[i++] = state;
+
+            prevTimeSinceEarliestUnpaidInvoice = cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getNumber();
         }
         overdueStateAccount.setAccountOverdueStates(states);
-        overdueStateAccount.setInitialReevaluationInterval(null);
+        overdueStateAccount.setInitialReevaluationInterval(computeReevaluationInterval(null, prevTimeSinceEarliestUnpaidInvoice, 0));
         return result;
+    }
+
+    // Unless the user knows what it's doing (inputReevaluationInterval != null), for time based condition we set the reevaluation interval to match the transition to the next state
+    private static DefaultDuration computeReevaluationInterval(final Integer inputReevaluationInterval,  int prevTimeSinceEarliestUnpaidInvoice, int curTimeSinceEarliestUnpaidInvoice) {
+        if (inputReevaluationInterval != null && inputReevaluationInterval > 0) {
+            return new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(inputReevaluationInterval);
+        }
+
+        if (prevTimeSinceEarliestUnpaidInvoice == -1) {
+            return null;
+        }
+
+        Preconditions.checkState(prevTimeSinceEarliestUnpaidInvoice - curTimeSinceEarliestUnpaidInvoice > 0);
+
+        return new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(prevTimeSinceEarliestUnpaidInvoice - curTimeSinceEarliestUnpaidInvoice);
     }
 }
