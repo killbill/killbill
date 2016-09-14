@@ -288,7 +288,7 @@ public class OverdueStateApplicator {
     }
 
     private boolean blockChanges(final OverdueState nextOverdueState) {
-        return nextOverdueState.isBlockChanges();
+        return nextOverdueState.isBlockChanges() || nextOverdueState.isDisableEntitlementAndChangesBlocked();
     }
 
     private boolean blockBilling(final OverdueState nextOverdueState) {
