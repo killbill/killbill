@@ -22,11 +22,11 @@ import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 
+import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.Invoices;
-import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
@@ -42,9 +42,9 @@ public class TestOverdue extends TestJaxrsBase {
     @Test(groups = "slow", description = "Upload and retrieve a per tenant overdue config")
     public void testMultiTenantOverdueConfig() throws Exception {
         final String overdueConfigPath = Resources.getResource("overdue.xml").getPath();
-        killBillClient.uploadXMLOverdueConfig(overdueConfigPath, createdBy, reason, comment);
+        killBillClient.uploadXMLOverdueConfig(overdueConfigPath, requestOptions);
 
-        final String overdueConfig = killBillClient.getXMLOverdueConfig();
+        final String overdueConfig = killBillClient.getXMLOverdueConfig(requestOptions);
         Assert.assertNotNull(overdueConfig);
     }
 
@@ -54,51 +54,35 @@ public class TestOverdue extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
 
         // We're still clear - see the configuration
-        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getIsClearState());
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
 
         clock.addDays(30);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD1");
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD1");
 
         clock.addDays(10);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD2");
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD2");
 
         clock.addDays(10);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD3");
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD3");
 
         // Post external payments, paying the most recent invoice first: this is to avoid a race condition where
         // a refresh overdue notification kicks in after the first payment, which makes the account goes CLEAR and
         // triggers an AUTO_INVOICE_OFF tag removal (hence adjustment of the other invoices balance).
-        final Invoices invoicesForAccount = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
-        final List<Invoice> mostRecentInvoiceFirst = Ordering.<Invoice>from(new Comparator<Invoice>() {
-            @Override
-            public int compare(final Invoice invoice1, final Invoice invoice2) {
-                return invoice1.getInvoiceDate().compareTo(invoice2.getInvoiceDate());
-            }
-        }).reverse().sortedCopy(invoicesForAccount);
-        for (final Invoice invoice : mostRecentInvoiceFirst) {
-            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
-
-                final InvoicePayment invoicePayment = new InvoicePayment();
-                invoicePayment.setPurchasedAmount(invoice.getAmount());
-                invoicePayment.setAccountId(accountJson.getAccountId());
-                invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
-                killBillClient.createInvoicePayment(invoicePayment, true, createdBy, reason, comment);
-            }
-        }
+        postExternalPayments(accountJson);
 
         // Wait a bit for overdue to pick up the payment events...
         crappyWaitForLackOfProperSynchonization();
 
         // Verify we're in clear state
-        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getIsClearState());
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
     }
 
     @Test(groups = "slow", description = "Allow overdue condition by control tag defined in overdue config xml file")
@@ -178,5 +162,129 @@ public class TestOverdue extends TestJaxrsBase {
         Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
         // This account is expected to move to OD1 state because it matches with exclusion controlTag defined
         Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJsonNoTag.getAccountId(), requestOptions).getName(), "OD1");
+    }
+
+    @Test(groups = "slow", description = "Allow overdue condition by number of unpaid invoices defined in overdue config xml file")
+    public void testOverdueStatusWithNumberOfUnpaidInvoicesCondition() throws Exception {
+        final String overdueConfigPath = Resources.getResource("overdueWithNumberOfUnpaidInvoicesCondition.xml").getPath();
+        killBillClient.uploadXMLOverdueConfig(overdueConfigPath, requestOptions);
+
+        // Create an account without a payment method
+        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        // 2 invoices but look for the non zero dollar one
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 2);
+
+        // We're still clear - see the configuration
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
+
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+        // 3 invoices, 2 unpaid, must be inside OD1
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD1");
+
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+        // 4 invoices, 3 unpaid, must be inside OD2
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 4);
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD2");
+
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+        // 5 invoices, 4 unpaid, must be still in OD2
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 5);
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD2");
+
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+        // 6 invoices, 5 unpaid, must be inside OD3
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 6);
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD3");
+
+        // Post external payments, paying the most recent invoice first: this is to avoid a race condition where
+        // a refresh overdue notification kicks in after the first payment, which makes the account goes CLEAR and
+        // triggers an AUTO_INVOICE_OFF tag removal (hence adjustment of the other invoices balance).
+        postExternalPayments(accountJson);
+
+        // Wait a bit for overdue to pick up the payment events...
+        crappyWaitForLackOfProperSynchonization();
+
+        // Verify we're in clear state
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
+    }
+
+    @Test(groups = "slow", description = "Allow overdue condition by total unpaid invoice balance defined in overdue config xml file")
+    public void testOverdueStatusWithTotalUnpaidInvoiceBalanceCondition() throws Exception {
+        final String overdueConfigPath = Resources.getResource("overdueWithTotalUnpaidInvoiceBalanceCondition.xml").getPath();
+        killBillClient.uploadXMLOverdueConfig(overdueConfigPath, requestOptions);
+
+        // Create an account without a payment method
+        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Amount balance should be USD 249.95
+        assertEquals(killBillClient.getAccount(accountJson.getAccountId(), true, false, requestOptions).getAccountBalance().compareTo(BigDecimal.valueOf(249.95)), 0);
+        // We're still clear - see the configuration
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
+
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+        // Amount balance should be USD 499.90
+        assertEquals(killBillClient.getAccount(accountJson.getAccountId(), true, false, requestOptions).getAccountBalance().compareTo(BigDecimal.valueOf(499.90)), 0);
+        // State must be inside OD1
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD1");
+
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+        // Amount balance should be USD 749.85
+        assertEquals(killBillClient.getAccount(accountJson.getAccountId(), true, false, requestOptions).getAccountBalance().compareTo(BigDecimal.valueOf(749.85)), 0);
+        // State must be inside OD2
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD2");
+
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+        // Amount balance should be USD 999.80
+        assertEquals(killBillClient.getAccount(accountJson.getAccountId(), true, false, requestOptions).getAccountBalance().compareTo(BigDecimal.valueOf(999.80)), 0);
+        // State must be still OD2
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD2");
+
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+        // Amount balance should be USD 1249.75
+        assertEquals(killBillClient.getAccount(accountJson.getAccountId(), true, false, requestOptions).getAccountBalance().compareTo(BigDecimal.valueOf(1249.75)), 0);
+        // State must be inside OD3
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD3");
+
+        // Post external payments, paying the most recent invoice first: this is to avoid a race condition where
+        // a refresh overdue notification kicks in after the first payment, which makes the account goes CLEAR and
+        // triggers an AUTO_INVOICE_OFF tag removal (hence adjustment of the other invoices balance).
+        postExternalPayments(accountJson);
+
+        // Wait a bit for overdue to pick up the payment events...
+        crappyWaitForLackOfProperSynchonization();
+
+        // Verify we're in clear state
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
+    }
+
+    private void postExternalPayments(final Account accountJson) throws KillBillClientException {
+        final Invoices invoicesForAccount = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
+        final List<Invoice> mostRecentInvoiceFirst = Ordering.<Invoice>from(new Comparator<Invoice>() {
+            @Override
+            public int compare(final Invoice invoice1, final Invoice invoice2) {
+                return invoice1.getInvoiceDate().compareTo(invoice2.getInvoiceDate());
+            }
+        }).reverse().sortedCopy(invoicesForAccount);
+        for (final Invoice invoice : mostRecentInvoiceFirst) {
+            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
+
+                final InvoicePayment invoicePayment = new InvoicePayment();
+                invoicePayment.setPurchasedAmount(invoice.getAmount());
+                invoicePayment.setAccountId(accountJson.getAccountId());
+                invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
+                killBillClient.createInvoicePayment(invoicePayment, true, requestOptions);
+            }
+        }
     }
 }
