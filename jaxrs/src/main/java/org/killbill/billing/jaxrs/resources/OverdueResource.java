@@ -20,8 +20,6 @@ package org.killbill.billing.jaxrs.resources;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -30,22 +28,14 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.VersionedCatalog;
-import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.jaxrs.json.CatalogJson;
 import org.killbill.billing.jaxrs.json.OverdueJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.overdue.api.DefaultOverdueApi;
 import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
@@ -148,7 +138,7 @@ public class OverdueResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final OverdueConfig overdueConfig = OverdueJson.toOverdueConfig(overdueJson);
+        final OverdueConfig overdueConfig = OverdueJson.toOverdueConfigWithValidation(overdueJson);
         overdueApi.uploadOverdueConfig(overdueConfig, callContext);
         return uriBuilder.buildResponse(uriInfo, OverdueResource.class, null, null);
     }
