@@ -46,13 +46,16 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -946,6 +949,151 @@ public class TestOverdueIntegration extends TestOverdueBase {
         }
 
         // We should be cleared again
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
+    }
+
+    @Test(groups = "slow", description = "Test overdue state with number of unpaid invoices condition")
+    public void testOverdueStateWithNumberOfUnpaidInvoicesCondition() throws Exception {
+        // 2012-05-01T00:03:42.000Z
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        final DefaultOverdueConfig config = XMLLoader.getObjectFromString(Resources.getResource("overdueWithNumberOfUnpaidInvoicesCondition.xml").toExternalForm(), DefaultOverdueConfig.class);
+        overdueConfigCache.loadDefaultOverdueConfig(config);
+
+        setupAccount();
+
+        paymentPlugin.makeAllInvoicesFailWithError(true);
+
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE,
+                                                   term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // 2012-05-31 => DAY 30 have to get out of trial before first payment
+        addMonthsAndCheckForCompletion(1, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // Verify that number of unpaid invoices is 1
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 1);
+        // Should still be in clear state
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
+
+        // Add 1 month
+        addMonthsAndCheckForCompletion(1, NextEvent.INVOICE, NextEvent.BLOCK, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // Verify that number of unpaid invoices is 2
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 2);
+        // Now we should be in OD1
+        checkODState("OD1");
+
+        // Add 1 month
+        addMonthsAndCheckForCompletion(1, NextEvent.INVOICE, NextEvent.BLOCK, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // Verify that number of unpaid invoices is 3
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 3);
+        // Now we should be in OD2
+        checkODState("OD2");
+
+        // Add 1 month
+        addMonthsAndCheckForCompletion(1, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // Verify that number of unpaid invoices is 4
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 4);
+        // We should still be in OD2
+        checkODState("OD2");
+
+        // Add 1 month
+        addMonthsAndCheckForCompletion(1, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR, NextEvent.TAG,  NextEvent.BLOCK);
+        // Verify that number of unpaid invoices is 5
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 5);
+        // Now we should be in OD3
+        checkODState("OD3");
+
+        // Get all unpaid invoices and pay them to clear the overdue state
+        paymentPlugin.makeAllInvoicesFailWithError(false);
+        List<Invoice> unpaidInvoices = getUnpaidInvoicesOrderFromRecent();
+        createPaymentAndCheckForCompletion(account, unpaidInvoices.get(0), NextEvent.BLOCK, NextEvent.TAG, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        createPaymentAndCheckForCompletion(account, unpaidInvoices.get(1), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        createPaymentAndCheckForCompletion(account, unpaidInvoices.get(2), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
+        createPaymentAndCheckForCompletion(account, unpaidInvoices.get(3), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
+        createPaymentAndCheckForCompletion(account, unpaidInvoices.get(4), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        // We should be clear now
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
+    }
+
+    @Test(groups = "slow", description = "Test overdue state with total unpaid invoice balance condition")
+    public void testOverdueStateWithTotalUnpaidInvoiceBalanceCondition() throws Exception {
+        // 2012-05-01T00:03:42.000Z
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        final DefaultOverdueConfig config = XMLLoader.getObjectFromString(Resources.getResource("overdueWithTotalUnpaidInvoiceBalanceCondition.xml").toExternalForm(), DefaultOverdueConfig.class);
+        overdueConfigCache.loadDefaultOverdueConfig(config);
+
+        setupAccount();
+
+        paymentPlugin.makeAllInvoicesFailWithError(true);
+
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE,
+                                                   term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // 2012-05-31 => DAY 30 have to get out of trial before first payment
+        addMonthsAndCheckForCompletion(1, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+
+        // Amount balance should be USD 249.95
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.valueOf(249.95)), 0);
+        // Should still be in clear state
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
+
+        // Add 1 month
+        addMonthsAndCheckForCompletion(1, NextEvent.INVOICE, NextEvent.BLOCK, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // Amount balance should be USD 499.90
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.valueOf(499.90)), 0);
+        // Now we should be in OD1
+        checkODState("OD1");
+
+        // Add 1 month
+        addMonthsAndCheckForCompletion(1, NextEvent.INVOICE, NextEvent.BLOCK, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // Amount balance should be USD 749.85
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.valueOf(749.85)), 0);
+        // Now we should be in OD2
+        checkODState("OD2");
+
+        // Add 1 month
+        addMonthsAndCheckForCompletion(1, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        // Amount balance should be USD 999.80
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.valueOf(999.80)), 0);
+        // We should still be in OD2
+        checkODState("OD2");
+
+        // Add 1 month
+        addMonthsAndCheckForCompletion(1, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
+                                       NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR, NextEvent.TAG,  NextEvent.BLOCK);
+        // Amount balance should be USD 1249.75
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(BigDecimal.valueOf(1249.75)), 0);
+        // Now we should be in OD3
+        checkODState("OD3");
+
+        // Get all unpaid invoices and pay them to clear the overdue state
+        paymentPlugin.makeAllInvoicesFailWithError(false);
+        List<Invoice> unpaidInvoices = getUnpaidInvoicesOrderFromRecent();
+        createPaymentAndCheckForCompletion(account, unpaidInvoices.get(0), NextEvent.BLOCK, NextEvent.TAG, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        createPaymentAndCheckForCompletion(account, unpaidInvoices.get(1), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        createPaymentAndCheckForCompletion(account, unpaidInvoices.get(2), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
+        createPaymentAndCheckForCompletion(account, unpaidInvoices.get(3), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
+        createPaymentAndCheckForCompletion(account, unpaidInvoices.get(4), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        // We should be clear now
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
     }
 
