@@ -237,7 +237,7 @@ public class TestPayment extends TestJaxrsBase {
                                                     .withComment(comment)
                                                     .withQueryParams(queryParams).build();
 
-        Payments payments = killBillClient.searchPayments("1", 0L, 100L, AuditLevel.NONE, inputOptions);
+        Payments payments = killBillClient.searchPayments("", 0L, 100L, AuditLevel.NONE, inputOptions);
 
         Assert.assertNotNull(payments.get(0).getPaymentAttempts());
         Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");

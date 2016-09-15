@@ -98,7 +98,7 @@ public class DefaultOverdueState extends ValidatingConfig<DefaultOverdueConfig> 
 
     @Override
     public boolean isBlockChanges() {
-        return blockChanges || disableEntitlement;
+        return blockChanges;
     }
 
     @Override
