@@ -947,7 +947,7 @@ public class CatalogJson {
             this.number = number;
         }
 
-        public DurationJson(final Duration duration) throws CurrencyValueNull {
+        public DurationJson(final Duration duration) {
             this(duration.getUnit(), duration.getNumber());
         }
 

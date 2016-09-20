@@ -248,6 +248,110 @@ public class TestSubscription extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
+    public void testCreateSubscriptionWithAddOnsWithLimitException() throws Exception {
+        final LocalDate initialDate = new LocalDate(2015, 10, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec3 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        final String externalKey = "baseExternalKey";
+        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
+        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
+        EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2, null);
+        EntitlementSpecifier addOnEntitlementSpecifier3 = new DefaultEntitlementSpecifier(addOnSpec3, null);
+
+        final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
+        specifierList.add(baseEntitlementSpecifier);
+        specifierList.add(addOnEntitlementSpecifier1);
+        specifierList.add(addOnEntitlementSpecifier2);
+        specifierList.add(addOnEntitlementSpecifier3);
+
+        // Trying to add the third add_on with the same plan should throw an exception (the limit is 2 for this plan)
+        try {
+            entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.SUB_CREATE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseSubscriptionAndAddOnsWithLimitException() throws Exception {
+        final LocalDate initialDate = new LocalDate(2015, 10, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec3 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create base subscription
+        final Entitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), account.getExternalKey(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        assertNotNull(baseEntitlement);
+
+        // Create first add_on subscription
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec1, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Create second add_on subscription with the same plan
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec2, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Trying to add the third add_on with the same plan should throw an exception (the limit is 2 for this plan)
+        try {
+            entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec3, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.SUB_CREATE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testChangePlanWithLimitException() throws Exception {
+        final LocalDate initialDate = new LocalDate(2015, 10, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec3 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create base subscription
+        final Entitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), account.getExternalKey(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        assertNotNull(baseEntitlement);
+
+        // Create first add_on subscription
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec1, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Create second add_on subscription with the same plan
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec2, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Create third add_on subscription with another plan
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        Entitlement addOn3 = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec3, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Trying to change the plan of the third add_on to 'Laser-Scope' plan, should throw an exception (the limit is 2 for this plan)
+        try {
+            final PlanPhaseSpecifier addOnSpecChangedPlan = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+            addOn3.changePlan(addOnSpecChangedPlan, null, ImmutableList.<PluginProperty>of(), callContext);
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
     public void testCancelFutureSubscriptionWithPolicy() throws Exception {
         final LocalDate initialDate = new LocalDate(2015, 9, 1);
         clock.setDay(initialDate);

@@ -49,6 +49,7 @@ import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -223,7 +224,54 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
         assertEquals(invoices.size(), 3);
         assertEquals(invoices.get(2).getChargedAmount().compareTo(new BigDecimal("9.00")), 0); // 10 (recurring) - 1 (repair)
+    }
 
+
+
+    // Use custom plan definition to create a THIRTY_DAYS plan with no trial and test issue #598
+    @Test(groups = "slow")
+    public void testWithThirtyDaysPlan() throws Exception {
+
+        // Create a per-tenant catalog with one plan
+        final SimplePlanDescriptor desc1 = new DefaultSimplePlanDescriptor("thirty-monthly", "Thirty", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.THIRTY_DAYS, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
+        catalogUserApi.addSimplePlan(desc1, init, testCallContext);
+        StaticCatalog catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
+        assertEquals(catalog.getCurrentPlans().length, 1);
+
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("thirty-monthly", null);
+
+        createEntitlement(spec, null, true);
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
+        assertEquals(invoices.size(), 1);
+        assertEquals(invoices.get(0).getChargedAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 7, 1), InvoiceItemType.RECURRING, BigDecimal.TEN));
+        invoiceChecker.checkInvoiceNoAudits(invoices.get(0), callContext, expectedInvoices);
+
+        int invoiceSize = 2;
+        LocalDate startDate = new LocalDate(2016, 7, 1);
+        for (int i = 0; i < 14; i++) {
+
+            expectedInvoices.clear();
+
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+            clock.addDays(30);
+            assertListenerStatus();
+
+            LocalDate endDate = startDate.plusDays(30);
+            invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
+            assertEquals(invoices.size(), invoiceSize);
+
+            expectedInvoices.add(new ExpectedInvoiceItemCheck(startDate, endDate, InvoiceItemType.RECURRING, BigDecimal.TEN));
+            invoiceChecker.checkInvoiceNoAudits(invoices.get(invoices.size() - 1), callContext, expectedInvoices);
+
+            startDate = endDate;
+            invoiceSize++;
+        }
     }
 
     private Entitlement createEntitlement(final String planName, final boolean expectPayment) throws EntitlementApiException {

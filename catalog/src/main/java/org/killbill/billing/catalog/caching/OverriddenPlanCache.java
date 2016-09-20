@@ -20,9 +20,12 @@ package org.killbill.billing.catalog.caching;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultPlan;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.StaticCatalog;
 
 public interface OverriddenPlanCache {
 
     DefaultPlan getOverriddenPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException;
+
+    void addDryRunPlan(final String planName, final Plan plan);
 }

@@ -838,6 +838,7 @@
                     </recurringPrice>
                 </recurring>
             </finalPhase>
+            <plansAllowedInBundle>2</plansAllowedInBundle>
         </plan>
         <plan name="cleaning-monthly">
             <product>Cleaning</product>

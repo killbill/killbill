@@ -18,9 +18,12 @@
 package org.killbill.billing.util.config.tenant;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.config.definition.KillbillConfig;
 import org.skife.config.Config;
 import org.skife.config.Separator;
 import org.skife.config.TimeSpan;
@@ -31,6 +34,7 @@ import com.google.common.collect.Iterables;
 
 public abstract class MultiTenantConfigBase {
 
+    private final Map<String, Method> methodsCache = new HashMap<String, Method>();
     protected final CacheConfig cacheConfig;
 
     private final static Function<String, Integer> INT_CONVERTER = new Function<String, Integer>() {
@@ -107,5 +111,23 @@ public abstract class MultiTenantConfigBase {
         return ImmutableList.copyOf(value.split(separator == null ? Separator.DEFAULT : separator.value()));
     }
 
-    protected abstract Method getConfigStaticMethod(final String methodName);
+    protected Method getConfigStaticMethod(final String methodName) {
+        Method method = methodsCache.get(methodName);
+        if (method == null) {
+            synchronized (methodsCache) {
+                method = methodsCache.get(methodName);
+                if (method == null) {
+                    try {
+                        method = getConfigClass().getMethod(methodName, InternalTenantContext.class);
+                        methodsCache.put(methodName, method);
+                    } catch (final NoSuchMethodException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+        return method;
+    }
+
+    protected abstract Class<? extends KillbillConfig> getConfigClass();
 }

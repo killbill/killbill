@@ -175,7 +175,17 @@ public class CatalogUpdater {
 
         if (desc.getProductCategory() == ProductCategory.ADD_ON) {
             for (final String bp : desc.getAvailableBaseProducts()) {
-                catalog.addProductAvailableAO(getExistingProduct(bp), product);
+                final DefaultProduct targetBasePlan = getExistingProduct(bp);
+                boolean found = false;
+                for (DefaultProduct cur : targetBasePlan.getAvailable()) {
+                    if (cur.getName().equals(product.getName())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    catalog.addProductAvailableAO(getExistingProduct(bp), product);
+                }
             }
         }
 

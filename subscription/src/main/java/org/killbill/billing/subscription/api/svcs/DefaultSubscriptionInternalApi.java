@@ -37,7 +37,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
@@ -170,6 +169,18 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             }
 
             final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundleId, context);
+
+            // verify the number of subscriptions (of the same kind) allowed per bundle
+            if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
+                if (plan.getPlansAllowedInBundle() != -1
+                    && plan.getPlansAllowedInBundle() > 0
+                    && addonUtils.countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(bundleId, null, context), plan.getName())
+                       >= plan.getPlansAllowedInBundle()) {
+                    // a new ADD_ON subscription of the same plan can't be added because it has reached its limit by bundle
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, plan.getName());
+                }
+            }
+
             final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, effectiveDate, context);
             return apiService.createPlan(new SubscriptionBuilder()
                                                  .setId(UUIDs.randomUUID())
@@ -201,6 +212,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             }
 
             boolean first = true;
+            final List<SubscriptionBase> subscriptionsForBundle = getSubscriptionsForBundle(bundleId, null, context);
+
             for (EntitlementSpecifier entitlement : entitlements) {
 
                 final PlanPhaseSpecifier spec = entitlement.getPlanPhaseSpecifier();
@@ -218,6 +231,18 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     first = false;
                     if (plan.getProduct().getCategory() != ProductCategory.BASE) {
                         throw new SubscriptionBaseApiException(new IllegalArgumentException(), ErrorCode.SUB_CREATE_NO_BP.getCode(), "Missing Base Subscription.");
+                    }
+                }
+
+                // verify the number of subscriptions (of the same kind) allowed per bundle and the existing ones
+                if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
+                    if (plan.getPlansAllowedInBundle() != -1 && plan.getPlansAllowedInBundle() > 0) {
+                        int existingAddOnsWithSamePlanName = addonUtils.countExistingAddOnsWithSamePlanName(subscriptionsForBundle, plan.getName());
+                        int currentAddOnsWithSamePlanName = countCurrentAddOnsWithSamePlanName(entitlements, catalog, plan.getName(), effectiveDate, callContext);
+                        if ((existingAddOnsWithSamePlanName + currentAddOnsWithSamePlanName) > plan.getPlansAllowedInBundle()) {
+                            // a new ADD_ON subscription of the same plan can't be added because it has reached its limit by bundle
+                            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, plan.getName());
+                        }
                     }
                 }
 
@@ -248,6 +273,25 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
+    }
+
+    private int countCurrentAddOnsWithSamePlanName(final Iterable<EntitlementSpecifier> entitlements,
+                                                   final Catalog catalog, final String planName,
+                                                   final DateTime effectiveDate, final CallContext callContext) throws CatalogApiException {
+        int countCurrentAddOns = 0;
+        for (EntitlementSpecifier entitlement : entitlements) {
+            final PlanPhaseSpecifier spec = entitlement.getPlanPhaseSpecifier();
+            final PlanPhasePriceOverridesWithCallContext overridesWithContext =
+                    new DefaultPlanPhasePriceOverridesWithCallContext(entitlement.getOverrides(), callContext);
+            final Plan plan = catalog.createOrFindPlan(spec, overridesWithContext, effectiveDate);
+
+            if (plan.getName().equalsIgnoreCase(planName)
+                && plan.getProduct().getCategory() != null
+                && ProductCategory.ADD_ON.equals(plan.getProduct().getCategory())) {
+                countCurrentAddOns++;
+            }
+        }
+        return countCurrentAddOns;
     }
 
     @Override
@@ -464,8 +508,26 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                      final PlanSpecifier spec,
                                                      final DateTime requestedDateWithMs,
                                                      final BillingActionPolicy requestedPolicy,
-                                                     final InternalTenantContext context) throws SubscriptionBaseApiException {
+                                                     final List<PlanPhasePriceOverride> overrides,
+                                                     final InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
+        final CallContext callContext = internalCallContextFactory.createCallContext(context);
+
+        // verify the number of subscriptions (of the same kind) allowed per bundle
+        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
+        final DateTime now = clock.getUTCNow();
+        final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
+        final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, callContext);
+        final Plan plan = catalog.createOrFindPlan(spec, overridesWithContext, effectiveDate);
+        if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
+            if (plan.getPlansAllowedInBundle() != -1
+                && plan.getPlansAllowedInBundle() > 0
+                && addonUtils.countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(subscription.getBundleId(), null, context), plan.getName())
+                   >= plan.getPlansAllowedInBundle()) {
+                // the plan can be changed to the new value, because it has reached its limit by bundle
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, plan.getName());
+            }
+        }
         return apiService.dryRunChangePlan((DefaultSubscriptionBase) subscription, spec, requestedDateWithMs, requestedPolicy, tenantContext);
     }
 
@@ -534,12 +596,17 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         List<SubscriptionBaseEvent> dryRunEvents = null;
         try {
             final PlanPhaseSpecifier inputSpec = dryRunArguments.getPlanPhaseSpecifier();
+            final boolean isInputSpecNullOrEmpty = inputSpec == null ||
+                                                   (inputSpec.getPlanName() == null && inputSpec.getProductName() == null && inputSpec.getBillingPeriod() == null);
             final Catalog catalog = catalogService.getFullCatalog(true, true, context);
 
-            final PlanPhasePriceOverridesWithCallContext overridesWithContext = null; // TODO not supported to dryRun with custom price
-            final Plan plan = (inputSpec != null && inputSpec.getProductName() != null && inputSpec.getBillingPeriod() != null) ?
-                              catalog.createOrFindPlan(inputSpec, overridesWithContext, utcNow) : null;
+            // Create an overridesWithContext with a null context to indicate this is dryRun and no price overriden plan should be created.
+            final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(dryRunArguments.getPlanPhasePriceOverrides(), null);
+            final Plan plan = isInputSpecNullOrEmpty ?
+                              null :
+                              catalog.createOrFindPlan(inputSpec, overridesWithContext, utcNow);
             final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
+
 
             if (dryRunArguments != null) {
                 switch (dryRunArguments.getAction()) {

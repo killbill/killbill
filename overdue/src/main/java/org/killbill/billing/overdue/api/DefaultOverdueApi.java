@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -36,6 +37,7 @@ import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.xmlloader.XMLWriter;
 
 public class DefaultOverdueApi implements OverdueApi {
 
@@ -73,6 +75,16 @@ public class DefaultOverdueApi implements OverdueApi {
             overdueConfigCache.clearOverdueConfig(internalTenantContext);
         } catch (final TenantApiException e) {
             throw new OverdueApiException(e);
+        }
+    }
+
+    @Override
+    public void uploadOverdueConfig(final OverdueConfig overdueConfig, final CallContext callContext) throws OverdueApiException {
+        try {
+            final String overdueXML = XMLWriter.writeXML((DefaultOverdueConfig) overdueConfig, DefaultOverdueConfig.class);
+            uploadOverdueConfig(overdueXML, callContext);
+        } catch (final Exception e) {
+            throw new OverdueApiException(ErrorCode.OVERDUE_INVALID_FOR_TENANT, callContext.getTenantId());
         }
     }
 

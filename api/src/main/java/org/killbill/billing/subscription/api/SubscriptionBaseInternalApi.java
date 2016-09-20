@@ -89,7 +89,7 @@ public interface SubscriptionBaseInternalApi {
 
     public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(SubscriptionBase subscription, InternalTenantContext context);
 
-    public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, PlanSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, InternalTenantContext context) throws SubscriptionBaseApiException;
+    public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, PlanSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, List<PlanPhasePriceOverride> overrides, InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException;
 
     public List<EntitlementAOStatusDryRun> getDryRunChangePlanStatus(UUID subscriptionId, @Nullable String baseProductName,
                                                                      DateTime requestedDate, InternalTenantContext context) throws SubscriptionBaseApiException;

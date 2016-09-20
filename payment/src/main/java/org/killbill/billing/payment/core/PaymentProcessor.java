@@ -55,8 +55,8 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonRunner;
-import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
+import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -456,6 +456,11 @@ public class PaymentProcessor extends ProcessorBase {
                 throw new PaymentApiException(ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID, paymentStateContext.getPaymentId());
             }
 
+            if (paymentStateContext.getPaymentTransactionExternalKey() != null) {
+                final List<PaymentTransactionModelDao> allPaymentTransactionsForKey = daoHelper.getPaymentDao().getPaymentTransactionsByExternalKey(paymentStateContext.getPaymentTransactionExternalKey(), internalCallContext);
+                runSanityOnTransactionExternalKey(allPaymentTransactionsForKey, paymentStateContext, internalCallContext);
+            }
+
             if (paymentStateContext.getTransactionId() != null || paymentStateContext.getPaymentTransactionExternalKey() != null) {
                 // If a transaction id or key is passed, we are maybe completing an existing transaction (unless a new key was provided)
                 final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext());
@@ -499,6 +504,31 @@ public class PaymentProcessor extends ProcessorBase {
         return getPayment(nonNullPaymentId, true, false, properties, callContext, internalCallContext);
     }
 
+    private void runSanityOnTransactionExternalKey(final Iterable<PaymentTransactionModelDao> allPaymentTransactionsForKey,
+                                                   final PaymentStateContext paymentStateContext,
+                                                   final InternalCallContext internalCallContext) throws PaymentApiException {
+        for (final PaymentTransactionModelDao paymentTransactionModelDao : allPaymentTransactionsForKey) {
+            // Sanity: verify we don't already have a successful transaction for that key (chargeback reversals are a bit special, it's the only transaction type we can revert)
+            if (paymentTransactionModelDao.getTransactionExternalKey().equals(paymentStateContext.getPaymentTransactionExternalKey()) &&
+                paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.SUCCESS &&
+                paymentTransactionModelDao.getTransactionType() != TransactionType.CHARGEBACK) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
+            }
+
+            // Sanity: don't share keys across accounts
+            if (!paymentTransactionModelDao.getAccountRecordId().equals(internalCallContext.getAccountRecordId())) {
+                UUID accountId;
+                try {
+                    accountId = accountInternalApi.getAccountByRecordId(paymentTransactionModelDao.getAccountRecordId(), internalCallContext).getId();
+                } catch (final AccountApiException e) {
+                    log.warn("Unable to retrieve account", e);
+                    accountId = null;
+                }
+                throw new PaymentApiException(ErrorCode.PAYMENT_TRANSACTION_DIFFERENT_ACCOUNT_ID, accountId);
+            }
+        }
+    }
+
     private PaymentTransactionModelDao findTransactionToCompleteAndRunSanityChecks(final PaymentModelDao paymentModelDao,
                                                                                    final Iterable<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment,
                                                                                    final PaymentStateContext paymentStateContext,
@@ -522,26 +552,6 @@ public class PaymentProcessor extends ProcessorBase {
             // Sanity: if we already have a transaction for that id or key, the transaction type must match
             if (paymentTransactionModelDao.getTransactionType() != paymentStateContext.getTransactionType()) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, "transactionType", String.format("%s doesn't match existing transaction type %s", paymentStateContext.getTransactionType(), paymentTransactionModelDao.getTransactionType()));
-            }
-
-            // Sanity: verify we don't already have a successful transaction for that key (chargeback reversals are a bit special, it's the only transaction type we can revert)
-            if (paymentTransactionModelDao.getTransactionExternalKey().equals(paymentStateContext.getPaymentTransactionExternalKey()) &&
-                paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.SUCCESS &&
-                paymentTransactionModelDao.getTransactionType() != TransactionType.CHARGEBACK) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
-            }
-
-            // Sanity: don't share keys across accounts
-            if (paymentTransactionModelDao.getTransactionExternalKey().equals(paymentStateContext.getPaymentTransactionExternalKey()) &&
-                !paymentTransactionModelDao.getAccountRecordId().equals(internalCallContext.getAccountRecordId())) {
-                UUID accountId;
-                try {
-                    accountId = accountInternalApi.getAccountByRecordId(paymentModelDao.getAccountRecordId(), internalCallContext).getId();
-                } catch (final AccountApiException e) {
-                    log.warn("Unable to retrieve account", e);
-                    accountId = null;
-                }
-                throw new PaymentApiException(ErrorCode.PAYMENT_TRANSACTION_DIFFERENT_ACCOUNT_ID, accountId);
             }
 
             // UNKNOWN transactions are potential candidates, we'll invoke the Janitor first though

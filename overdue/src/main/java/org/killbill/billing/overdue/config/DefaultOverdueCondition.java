@@ -157,6 +157,30 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
         return controlTagExclusion;
     }
 
+    public void setNumberOfUnpaidInvoicesEqualsOrExceeds(final Integer numberOfUnpaidInvoicesEqualsOrExceeds) {
+        this.numberOfUnpaidInvoicesEqualsOrExceeds = numberOfUnpaidInvoicesEqualsOrExceeds;
+    }
+
+    public void setTotalUnpaidInvoiceBalanceEqualsOrExceeds(final BigDecimal totalUnpaidInvoiceBalanceEqualsOrExceeds) {
+        this.totalUnpaidInvoiceBalanceEqualsOrExceeds = totalUnpaidInvoiceBalanceEqualsOrExceeds;
+    }
+
+    public void setTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds(final DefaultDuration timeSinceEarliestUnpaidInvoiceEqualsOrExceeds) {
+        this.timeSinceEarliestUnpaidInvoiceEqualsOrExceeds = timeSinceEarliestUnpaidInvoiceEqualsOrExceeds;
+    }
+
+    public void setResponseForLastFailedPayment(final PaymentResponse[] responseForLastFailedPayment) {
+        this.responseForLastFailedPayment = responseForLastFailedPayment;
+    }
+
+    public void setControlTagInclusion(final ControlTagType controlTagInclusion) {
+        this.controlTagInclusion = controlTagInclusion;
+    }
+
+    public void setControlTagExclusion(final ControlTagType controlTagExclusion) {
+        this.controlTagExclusion = controlTagExclusion;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("DefaultOverdueCondition{");

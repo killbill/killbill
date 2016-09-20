@@ -18,7 +18,10 @@
 package org.killbill.billing.catalog.override;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
@@ -43,6 +46,8 @@ import com.google.inject.Inject;
 
 public class DefaultPriceOverride implements PriceOverride {
 
+    private static final AtomicLong DRY_RUN_PLAN_IDX = new AtomicLong(0);
+
     public static final Pattern CUSTOM_PLAN_NAME_PATTERN = Pattern.compile("(.*)-(\\d+)$");
 
     private final CatalogOverrideDao overrideDao;
@@ -55,7 +60,7 @@ public class DefaultPriceOverride implements PriceOverride {
     }
 
     @Override
-    public DefaultPlan getOrCreateOverriddenPlan(final Plan parentPlan, final DateTime catalogEffectiveDate, final List<PlanPhasePriceOverride> overrides, final InternalCallContext context) throws CatalogApiException {
+    public DefaultPlan getOrCreateOverriddenPlan(final Plan parentPlan, final DateTime catalogEffectiveDate, final List<PlanPhasePriceOverride> overrides, @Nullable final InternalCallContext context) throws CatalogApiException {
 
         final PlanPhasePriceOverride[] resolvedOverride = new PlanPhasePriceOverride[parentPlan.getAllPhases().length];
         int index = 0;
@@ -97,9 +102,17 @@ public class DefaultPriceOverride implements PriceOverride {
             }
         }
 
-        final CatalogOverridePlanDefinitionModelDao overriddenPlan = overrideDao.getOrCreateOverridePlanDefinition(parentPlan.getName(), catalogEffectiveDate, resolvedOverride, context);
-        final String planName = new StringBuffer(parentPlan.getName()).append("-").append(overriddenPlan.getRecordId()).toString();
+        final String planName;
+        if (context != null) {
+            final CatalogOverridePlanDefinitionModelDao overriddenPlan = overrideDao.getOrCreateOverridePlanDefinition(parentPlan.getName(), catalogEffectiveDate, resolvedOverride, context);
+            planName = new StringBuffer(parentPlan.getName()).append("-").append(overriddenPlan.getRecordId()).toString();
+        } else {
+            planName = new StringBuffer(parentPlan.getName()).append("-dryrun-").append(DRY_RUN_PLAN_IDX.incrementAndGet()).toString();
+        }
         final DefaultPlan result = new DefaultPlan(planName, (DefaultPlan) parentPlan, resolvedOverride);
+        if (context == null) {
+            overriddenPlanCache.addDryRunPlan(planName, result);
+        }
         return result;
     }
 

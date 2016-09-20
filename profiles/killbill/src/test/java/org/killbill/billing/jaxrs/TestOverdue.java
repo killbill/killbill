@@ -22,11 +22,11 @@ import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 
+import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.Invoices;
-import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
@@ -42,9 +42,9 @@ public class TestOverdue extends TestJaxrsBase {
     @Test(groups = "slow", description = "Upload and retrieve a per tenant overdue config")
     public void testMultiTenantOverdueConfig() throws Exception {
         final String overdueConfigPath = Resources.getResource("overdue.xml").getPath();
-        killBillClient.uploadXMLOverdueConfig(overdueConfigPath, createdBy, reason, comment);
+        killBillClient.uploadXMLOverdueConfig(overdueConfigPath, requestOptions);
 
-        final String overdueConfig = killBillClient.getXMLOverdueConfig();
+        final String overdueConfig = killBillClient.getXMLOverdueConfig(requestOptions);
         Assert.assertNotNull(overdueConfig);
     }
 
@@ -54,29 +54,29 @@ public class TestOverdue extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
 
         // We're still clear - see the configuration
-        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getIsClearState());
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
 
         clock.addDays(30);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD1");
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD1");
 
         clock.addDays(10);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD2");
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD2");
 
         clock.addDays(10);
         crappyWaitForLackOfProperSynchonization();
-        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getName(), "OD3");
+        Assert.assertEquals(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getName(), "OD3");
 
         // Post external payments, paying the most recent invoice first: this is to avoid a race condition where
         // a refresh overdue notification kicks in after the first payment, which makes the account goes CLEAR and
         // triggers an AUTO_INVOICE_OFF tag removal (hence adjustment of the other invoices balance).
-        final Invoices invoicesForAccount = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
+        final Invoices invoicesForAccount = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         final List<Invoice> mostRecentInvoiceFirst = Ordering.<Invoice>from(new Comparator<Invoice>() {
             @Override
             public int compare(final Invoice invoice1, final Invoice invoice2) {
@@ -90,7 +90,7 @@ public class TestOverdue extends TestJaxrsBase {
                 invoicePayment.setPurchasedAmount(invoice.getAmount());
                 invoicePayment.setAccountId(accountJson.getAccountId());
                 invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
-                killBillClient.createInvoicePayment(invoicePayment, true, createdBy, reason, comment);
+                killBillClient.createInvoicePayment(invoicePayment, true, requestOptions);
             }
         }
 
@@ -98,7 +98,7 @@ public class TestOverdue extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Verify we're in clear state
-        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId()).getIsClearState());
+        Assert.assertTrue(killBillClient.getOverdueStateForAccount(accountJson.getAccountId(), requestOptions).getIsClearState());
     }
 
     @Test(groups = "slow", description = "Allow overdue condition by control tag defined in overdue config xml file")
