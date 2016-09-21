@@ -70,7 +70,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     public OperationResult doOperationCallback() throws OperationException {
         final String pluginName;
         try {
-            pluginName = daoHelper.getPaymentProviderPluginName();
+            pluginName = daoHelper.getPaymentProviderPluginName(true);
             this.plugin = daoHelper.getPaymentPluginApi();
         } catch (final PaymentApiException e) {
             throw convertToUnknownTransactionStatusAndErroredPaymentState(e);

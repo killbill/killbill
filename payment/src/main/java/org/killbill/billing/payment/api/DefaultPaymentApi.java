@@ -515,11 +515,11 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             logEnterAPICall(log, transactionType, account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey, null, null);
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-            final UUID nonNulPaymentMethodId = (paymentMethodId != null) ?
+            final UUID nonNullPaymentMethodId = (paymentMethodId != null) ?
                                                paymentMethodId :
                                                paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, properties, callContext, internalCallContext);
 
-            payment = paymentProcessor.createCredit(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, nonNulPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
+            payment = paymentProcessor.createCredit(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, nonNullPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                   SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);

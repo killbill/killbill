@@ -68,7 +68,6 @@ import org.killbill.billing.payment.core.sm.payments.VoidCompleted;
 import org.killbill.billing.payment.core.sm.payments.VoidInitiated;
 import org.killbill.billing.payment.core.sm.payments.VoidOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
-import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
@@ -132,7 +131,6 @@ public class PaymentAutomatonRunner {
 
         // Retrieve the payment id from the payment external key if needed
         final UUID effectivePaymentId = paymentId != null ? paymentId : retrievePaymentId(paymentExternalKey, paymentTransactionExternalKey, internalCallContext);
-        verifyPaymentMethodExistsForRefund(effectivePaymentId, transactionType, internalCallContext);
 
         return new PaymentStateContext(isApiPayment,
                                        effectivePaymentId,
@@ -168,6 +166,7 @@ public class PaymentAutomatonRunner {
         final OperationCallback operationCallback;
         final LeavingStateCallback leavingStateCallback;
         final EnteringStateCallback enteringStateCallback;
+        Boolean includeDeletedPaymentMethod = Boolean.FALSE;
         switch (transactionType) {
             case PURCHASE:
                 operationCallback = new PurchaseOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
@@ -203,12 +202,13 @@ public class PaymentAutomatonRunner {
                 operationCallback = new ChargebackOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new ChargebackInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new ChargebackCompleted(daoHelper, paymentStateContext);
+                includeDeletedPaymentMethod = Boolean.TRUE;
                 break;
             default:
                 throw new IllegalStateException("Unsupported transaction type " + transactionType);
         }
 
-        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback, paymentStateContext, daoHelper);
+        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback, includeDeletedPaymentMethod, paymentStateContext, daoHelper);
 
         return paymentStateContext.getPaymentId();
     }
@@ -229,10 +229,11 @@ public class PaymentAutomatonRunner {
                                           final LeavingStateCallback leavingStateCallback,
                                           final OperationCallback operationCallback,
                                           final EnteringStateCallback enteringStateCallback,
+                                          final Boolean includeDeletedPaymentMethod,
                                           final PaymentStateContext paymentStateContext,
                                           final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
         try {
-            final StateMachineConfig stateMachineConfig = paymentSMHelper.getStateMachineConfig(daoHelper.getPaymentProviderPluginName(), paymentStateContext.getInternalCallContext());
+            final StateMachineConfig stateMachineConfig = paymentSMHelper.getStateMachineConfig(daoHelper.getPaymentProviderPluginName(includeDeletedPaymentMethod), paymentStateContext.getInternalCallContext());
             final StateMachine initialStateMachine = stateMachineConfig.getStateMachineForState(initialStateName);
             final State initialState = initialStateMachine.getState(initialStateName);
             final Operation operation = paymentSMHelper.getOperationForTransaction(stateMachineConfig, transactionType);
@@ -286,16 +287,6 @@ public class PaymentAutomatonRunner {
         }
 
         return paymentIdCandidate;
-    }
-
-    private void verifyPaymentMethodExistsForRefund(final UUID paymentId, final TransactionType transactionType, final InternalCallContext internalCallContext) throws PaymentApiException {
-        if (TransactionType.REFUND.equals(transactionType) && (paymentId != null)) {
-            final PaymentModelDao payment = paymentDao.getPayment(paymentId, internalCallContext);
-            final PaymentMethodModelDao paymentMethod = paymentDao.getPaymentMethod(payment.getPaymentMethodId(), internalCallContext);
-            if (paymentMethod == null) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, payment.getPaymentMethodId());
-            }
-        }
     }
 
 }

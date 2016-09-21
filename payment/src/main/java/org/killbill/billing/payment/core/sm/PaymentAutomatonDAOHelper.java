@@ -149,13 +149,14 @@ public class PaymentAutomatonDAOHelper {
         paymentStateContext.setPaymentTransactionModelDao(paymentDao.getPaymentTransaction(paymentStateContext.getPaymentTransactionModelDao().getId(), internalCallContext));
     }
 
-    public String getPaymentProviderPluginName() throws PaymentApiException {
+    public String getPaymentProviderPluginName(final boolean includeDeteled) throws PaymentApiException {
         if (pluginName != null) {
             return pluginName;
         }
 
         final UUID paymentMethodId = paymentStateContext.getPaymentMethodId();
-        final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, internalCallContext);
+        final PaymentMethodModelDao methodDao = (includeDeteled) ? paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, internalCallContext) :
+                paymentDao.getPaymentMethod(paymentMethodId, internalCallContext);
         if (methodDao == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
@@ -164,7 +165,7 @@ public class PaymentAutomatonDAOHelper {
     }
 
     public PaymentPluginApi getPaymentPluginApi() throws PaymentApiException {
-        final String pluginName = getPaymentProviderPluginName();
+        final String pluginName = getPaymentProviderPluginName(true);
         return getPaymentPluginApi(pluginName);
     }
 
