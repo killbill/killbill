@@ -165,7 +165,7 @@ public class PaymentAutomatonDAOHelper {
     }
 
     public PaymentPluginApi getPaymentPluginApi() throws PaymentApiException {
-        final String pluginName = getPaymentProviderPluginName(true);
+        final String pluginName = getPaymentProviderPluginName(false);
         return getPaymentPluginApi(pluginName);
     }
 
@@ -228,5 +228,9 @@ public class PaymentAutomatonDAOHelper {
                                               paymentStateContext.getCurrency(),
                                               gatewayErrorCode,
                                               gatewayErrorMsg);
+    }
+
+    public String getPluginName() {
+        return pluginName;
     }
 }
