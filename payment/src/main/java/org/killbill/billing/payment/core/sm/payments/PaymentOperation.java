@@ -55,7 +55,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     private final Logger logger = LoggerFactory.getLogger(PaymentOperation.class);
 
     protected final PaymentAutomatonDAOHelper daoHelper;
-    protected PaymentPluginApi plugin;
+    protected PaymentPluginApi paymentPluginApi;
 
     protected PaymentOperation(final GlobalLocker locker,
                                final PaymentAutomatonDAOHelper daoHelper,
@@ -69,7 +69,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     @Override
     public OperationResult doOperationCallback() throws OperationException {
         try {
-            this.plugin = daoHelper.getPaymentPluginApi();
+            this.paymentPluginApi = daoHelper.getPaymentPluginApi();
         } catch (final PaymentApiException e) {
             throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
         }

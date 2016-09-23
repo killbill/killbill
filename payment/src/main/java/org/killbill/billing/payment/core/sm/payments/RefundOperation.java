@@ -44,13 +44,13 @@ public class RefundOperation extends PaymentOperation {
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting REFUND for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
-        return plugin.refundPayment(paymentStateContext.getAccount().getId(),
-                                    paymentStateContext.getPaymentId(),
-                                    paymentStateContext.getTransactionId(),
-                                    paymentStateContext.getPaymentMethodId(),
-                                    paymentStateContext.getAmount(),
-                                    paymentStateContext.getCurrency(),
-                                    paymentStateContext.getProperties(),
-                                    paymentStateContext.getCallContext());
+        return paymentPluginApi.refundPayment(paymentStateContext.getAccount().getId(),
+                                              paymentStateContext.getPaymentId(),
+                                              paymentStateContext.getTransactionId(),
+                                              paymentStateContext.getPaymentMethodId(),
+                                              paymentStateContext.getAmount(),
+                                              paymentStateContext.getCurrency(),
+                                              paymentStateContext.getProperties(),
+                                              paymentStateContext.getCallContext());
     }
 }

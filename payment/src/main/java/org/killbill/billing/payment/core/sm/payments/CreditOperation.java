@@ -44,13 +44,13 @@ public class CreditOperation extends PaymentOperation {
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting CREDIT for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
-        return plugin.creditPayment(paymentStateContext.getAccount().getId(),
-                                    paymentStateContext.getPaymentId(),
-                                    paymentStateContext.getTransactionId(),
-                                    paymentStateContext.getPaymentMethodId(),
-                                    paymentStateContext.getAmount(),
-                                    paymentStateContext.getCurrency(),
-                                    paymentStateContext.getProperties(),
-                                    paymentStateContext.getCallContext());
+        return paymentPluginApi.creditPayment(paymentStateContext.getAccount().getId(),
+                                              paymentStateContext.getPaymentId(),
+                                              paymentStateContext.getTransactionId(),
+                                              paymentStateContext.getPaymentMethodId(),
+                                              paymentStateContext.getAmount(),
+                                              paymentStateContext.getCurrency(),
+                                              paymentStateContext.getProperties(),
+                                              paymentStateContext.getCallContext());
     }
 }

@@ -44,13 +44,13 @@ public class AuthorizeOperation extends PaymentOperation {
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting AUTHORIZE for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
-        return plugin.authorizePayment(paymentStateContext.getAccount().getId(),
-                                       paymentStateContext.getPaymentId(),
-                                       paymentStateContext.getTransactionId(),
-                                       paymentStateContext.getPaymentMethodId(),
-                                       paymentStateContext.getAmount(),
-                                       paymentStateContext.getCurrency(),
-                                       paymentStateContext.getProperties(),
-                                       paymentStateContext.getCallContext());
+        return paymentPluginApi.authorizePayment(paymentStateContext.getAccount().getId(),
+                                                 paymentStateContext.getPaymentId(),
+                                                 paymentStateContext.getTransactionId(),
+                                                 paymentStateContext.getPaymentMethodId(),
+                                                 paymentStateContext.getAmount(),
+                                                 paymentStateContext.getCurrency(),
+                                                 paymentStateContext.getProperties(),
+                                                 paymentStateContext.getCallContext());
     }
 }

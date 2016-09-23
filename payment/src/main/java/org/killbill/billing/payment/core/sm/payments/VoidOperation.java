@@ -44,11 +44,11 @@ public class VoidOperation extends PaymentOperation {
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting VOID for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
-        return plugin.voidPayment(paymentStateContext.getAccount().getId(),
-                                  paymentStateContext.getPaymentId(),
-                                  paymentStateContext.getTransactionId(),
-                                  paymentStateContext.getPaymentMethodId(),
-                                  paymentStateContext.getProperties(),
-                                  paymentStateContext.getCallContext());
+        return paymentPluginApi.voidPayment(paymentStateContext.getAccount().getId(),
+                                            paymentStateContext.getPaymentId(),
+                                            paymentStateContext.getTransactionId(),
+                                            paymentStateContext.getPaymentMethodId(),
+                                            paymentStateContext.getProperties(),
+                                            paymentStateContext.getCallContext());
     }
 }
