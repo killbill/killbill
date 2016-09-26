@@ -389,26 +389,13 @@ public class PaymentProcessor extends ProcessorBase {
         }
     }
 
-    public PaymentTransaction getPaymentTransactionById(final UUID transactionId,
-                                                        final InternalTenantContext internalTenantContext) throws PaymentApiException {
+    public Payment getPaymentByTransactionId(final UUID transactionId, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentTransactionModelDao paymentTransactionDao = paymentDao.getPaymentTransaction(transactionId, internalTenantContext);
-        return new DefaultPaymentTransaction(
-                paymentTransactionDao.getId(),
-                paymentTransactionDao.getAttemptId(),
-                paymentTransactionDao.getTransactionExternalKey(),
-                paymentTransactionDao.getCreatedDate(),
-                paymentTransactionDao.getUpdatedDate(),
-                paymentTransactionDao.getPaymentId(),
-                paymentTransactionDao.getTransactionType(),
-                paymentTransactionDao.getEffectiveDate(),
-                paymentTransactionDao.getTransactionStatus(),
-                paymentTransactionDao.getAmount(),
-                paymentTransactionDao.getCurrency(),
-                paymentTransactionDao.getProcessedAmount(),
-                paymentTransactionDao.getProcessedCurrency(),
-                paymentTransactionDao.getGatewayErrorCode(),
-                paymentTransactionDao.getGatewayErrorMsg(),
-                null);
+        if (null != paymentTransactionDao) {
+            PaymentModelDao paymentModelDao = paymentDao.getPayment(paymentTransactionDao.getPaymentId(), internalTenantContext);
+            return toPayment(paymentModelDao, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
+        }
+        return null;
     }
 
     private Payment performOperation(final boolean isApiPayment,

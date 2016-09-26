@@ -173,12 +173,15 @@ public class TransactionResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied"),
                            @ApiResponse(code = 404, message = "Invoice not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
+                            @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                            @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
+                            @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
-        final PaymentTransaction paymentTransaction = paymentApi.getPaymentTransactionById(UUID.fromString(id), tenantContext);
-        final Payment payment = paymentApi.getPayment(paymentTransaction.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), tenantContext);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final Payment payment = paymentApi.getPaymentByTransactionId(UUID.fromString(id), withPluginInfo, withAttempts, pluginProperties, tenantContext);
         return super.getTags(payment.getAccountId(), UUID.fromString(id), auditMode, includedDeleted, tenantContext);
     }
 
