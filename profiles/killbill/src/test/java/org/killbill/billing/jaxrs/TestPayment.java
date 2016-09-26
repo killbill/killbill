@@ -36,6 +36,7 @@ import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.client.model.PluginProperty;
+import org.killbill.billing.client.model.TagDefinition;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
@@ -642,6 +643,50 @@ public class TestPayment extends TestJaxrsBase {
         final Payment payment = killBillClient.createPayment(comboPaymentTransaction, ImmutableMap.<String, String>of(), basicRequestOptions());
         // Client returns null in case of a 404
         Assert.assertNull(payment);
+    }
+
+    @Test(groups = "slow")
+    public void testGetTagsForPaymentTransaction() throws Exception {
+        UUID tagDefinitionId = UUID.randomUUID();
+        String tagDefinitionName = "payment-transaction";
+        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", null);
+        final TagDefinition createdTagDefinition = killBillClient.createTagDefinition(tagDefinition, requestOptions);
+
+        final Account account = createAccountWithDefaultPaymentMethod();
+        final String externalPaymentKey = UUID.randomUUID().toString();
+        final UUID paymentId = testCreateRetrievePayment(account, null, externalPaymentKey, 1);
+
+        final Payment payment = killBillClient.getPaymentByExternalKey(externalPaymentKey, requestOptions);
+        assertEquals(payment.getPaymentId(), paymentId);
+
+        UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
+        killBillClient.createPaymentTransactionTag(paymentTransactionId, createdTagDefinition.getId(), requestOptions);
+
+        final Tags paymentTransactionTags = killBillClient.getPaymentTransactionTags(paymentTransactionId, requestOptions);
+
+        Assert.assertNotNull(paymentTransactionTags);
+        Assert.assertEquals(paymentTransactionTags.get(0).getTagDefinitionName(), tagDefinitionName);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateTagForPaymentTransaction() throws Exception {
+        UUID tagDefinitionId = UUID.randomUUID();
+        String tagDefinitionName = "payment-transaction";
+        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", null);
+        final TagDefinition createdTagDefinition = killBillClient.createTagDefinition(tagDefinition, requestOptions);
+
+        final Account account = createAccountWithDefaultPaymentMethod();
+        final String externalPaymentKey = UUID.randomUUID().toString();
+        final UUID paymentId = testCreateRetrievePayment(account, null, externalPaymentKey, 1);
+
+        final Payment payment = killBillClient.getPaymentByExternalKey(externalPaymentKey, requestOptions);
+        assertEquals(payment.getPaymentId(), paymentId);
+
+        UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
+        final Tags paymentTransactionTag = killBillClient.createPaymentTransactionTag(paymentTransactionId, createdTagDefinition.getId(), requestOptions);
+
+        Assert.assertNotNull(paymentTransactionTag);
+        Assert.assertEquals(paymentTransactionTag.get(0).getTagDefinitionName(), tagDefinitionName);
     }
 
     private UUID testCreateRetrievePayment(final Account account, @Nullable final UUID paymentMethodId,

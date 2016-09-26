@@ -911,6 +911,11 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         return paymentMethods;
     }
 
+    @Override
+    public PaymentTransaction getPaymentTransactionById(final UUID paymentTransactionId, final TenantContext context) throws PaymentApiException {
+        return paymentProcessor.getPaymentTransactionById(paymentTransactionId, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
+    }
+
     private PaymentTransaction findPaymentTransaction(final Payment payment, @Nullable final String paymentTransactionExternalKey) {
         // By design, the payment transactions are already correctly sorted (by effective date asc)
         if (paymentTransactionExternalKey == null) {

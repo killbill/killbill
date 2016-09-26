@@ -389,6 +389,27 @@ public class PaymentProcessor extends ProcessorBase {
         }
     }
 
+    public PaymentTransaction getPaymentTransactionById(final UUID transactionId,
+                                                        final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        final PaymentTransactionModelDao paymentTransactionDao = paymentDao.getPaymentTransaction(transactionId, internalTenantContext);
+        return new DefaultPaymentTransaction(
+                paymentTransactionDao.getId(),
+                paymentTransactionDao.getAttemptId(),
+                paymentTransactionDao.getTransactionExternalKey(),
+                paymentTransactionDao.getCreatedDate(),
+                paymentTransactionDao.getUpdatedDate(),
+                paymentTransactionDao.getPaymentId(),
+                paymentTransactionDao.getTransactionType(),
+                paymentTransactionDao.getEffectiveDate(),
+                paymentTransactionDao.getTransactionStatus(),
+                paymentTransactionDao.getAmount(),
+                paymentTransactionDao.getCurrency(),
+                paymentTransactionDao.getProcessedAmount(),
+                paymentTransactionDao.getProcessedCurrency(),
+                paymentTransactionDao.getGatewayErrorCode(),
+                paymentTransactionDao.getGatewayErrorMsg(),
+                null);
+    }
 
     private Payment performOperation(final boolean isApiPayment,
                                      @Nullable final UUID attemptId,
