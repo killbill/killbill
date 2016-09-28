@@ -389,6 +389,14 @@ public class PaymentProcessor extends ProcessorBase {
         }
     }
 
+    public Payment getPaymentByTransactionId(final UUID transactionId, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        final PaymentTransactionModelDao paymentTransactionDao = paymentDao.getPaymentTransaction(transactionId, internalTenantContext);
+        if (null != paymentTransactionDao) {
+            PaymentModelDao paymentModelDao = paymentDao.getPayment(paymentTransactionDao.getPaymentId(), internalTenantContext);
+            return toPayment(paymentModelDao, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
+        }
+        return null;
+    }
 
     private Payment performOperation(final boolean isApiPayment,
                                      @Nullable final UUID attemptId,

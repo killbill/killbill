@@ -925,6 +925,15 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         return paymentMethods;
     }
 
+    @Override
+    public Payment getPaymentByTransactionId(final UUID transactionId, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
+        final Payment payment = paymentProcessor.getPaymentByTransactionId(transactionId, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContext(transactionId, ObjectType.PAYMENT, context));
+        if (payment == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, transactionId);
+        }
+        return payment;
+    }
+
     private PaymentTransaction findPaymentTransaction(final Payment payment, @Nullable final String paymentTransactionExternalKey) {
         // By design, the payment transactions are already correctly sorted (by effective date asc)
         if (paymentTransactionExternalKey == null) {

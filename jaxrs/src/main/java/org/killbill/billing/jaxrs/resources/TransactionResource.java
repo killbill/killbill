@@ -47,6 +47,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -172,12 +173,16 @@ public class TransactionResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied"),
                            @ApiResponse(code = 404, message = "Invoice not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
+                            @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                            @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
+                            @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
-                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
+                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
-        //return super.getTags(accountId, invoiceId, auditMode, includedDeleted, tenantContext);
-        throw new IllegalStateException("Not implemented");
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final Payment payment = paymentApi.getPaymentByTransactionId(UUID.fromString(id), withPluginInfo, withAttempts, pluginProperties, tenantContext);
+        return super.getTags(payment.getAccountId(), UUID.fromString(id), auditMode, includedDeleted, tenantContext);
     }
 
     @TimedResource
