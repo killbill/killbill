@@ -34,6 +34,8 @@ public interface JaxrsResource {
     public static final String USER_KEY_VALUE = "userKeyValue";
     public static final String SEARCH = "search";
 
+    public static final String PLUGIN_CONFIG = "pluginConfig";
+
     /*
      * Multi-Tenancy headers
      */

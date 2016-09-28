@@ -201,6 +201,16 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         });
     }
 
+    @Override
+    public List<TenantKVModelDao> searchTenantKeyValues(final String searchKeyPrefix, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TenantKVModelDao>>() {
+            @Override
+            public List<TenantKVModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).searchTenantKeyValues(String.format("%s%%", searchKeyPrefix), context);
+            }
+        });
+    }
+
     private Void deleteFromTransaction(final String key, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
         final List<TenantKVModelDao> tenantKVs = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
         for (TenantKVModelDao cur : tenantKVs) {

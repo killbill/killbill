@@ -18,7 +18,10 @@
 
 package org.killbill.billing.tenant.api.user;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.ErrorCode;
@@ -32,6 +35,7 @@ import org.killbill.billing.tenant.api.TenantData;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.tenant.dao.TenantDao;
+import org.killbill.billing.tenant.dao.TenantKVModelDao;
 import org.killbill.billing.tenant.dao.TenantModelDao;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
@@ -146,6 +150,21 @@ public class DefaultTenantUserApi implements TenantUserApi {
         tenantDao.deleteTenantKey(key, internalContext);
         tenantKVCache.remove(tenantKey);
     }
+
+    @Override
+    public Map<String, List<String>> searchTenantKeyValues(String searchKey, TenantContext context) throws TenantApiException {
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
+        final List<TenantKVModelDao> daoResult = tenantDao.searchTenantKeyValues(searchKey, internalContext);
+        final Map<String, List<String>> result = new HashMap<String, List<String>>();
+        for (final TenantKVModelDao cur : daoResult) {
+            if (!result.containsKey(cur.getTenantKey())) {
+                result.put(cur.getTenantKey(), new ArrayList<String>());
+            }
+            result.get(cur.getTenantKey()).add(cur.getTenantValue());
+        }
+        return result;
+    }
+
 
     private List<String> getCachedTenantValuesForKey(final String key, final InternalTenantContext internalContext) {
         final String tenantKey = getCacheKeyName(key, internalContext);

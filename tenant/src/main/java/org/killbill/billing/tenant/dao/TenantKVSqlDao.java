@@ -37,6 +37,11 @@ public interface TenantKVSqlDao extends EntitySqlDao<TenantKVModelDao, TenantKV>
     public List<TenantKVModelDao> getTenantValueForKey(@Bind("tenantKey") final String key,
                                                        @BindBean final InternalTenantContext context);
 
+
+    @SqlQuery
+    public List<TenantKVModelDao> searchTenantKeyValues(@Bind("tenantKeyPrefix") final String tenantKeyPrefix,
+                                                       @BindBean final InternalTenantContext context);
+
     @SqlUpdate
     @Audited(ChangeType.DELETE)
     public void markTenantKeyAsDeleted(@Bind("id")final String id,

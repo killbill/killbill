@@ -17,6 +17,7 @@
 package org.killbill.billing.tenant.dao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -102,4 +103,28 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
         Assert.assertEquals(newValues.get(1), "TheValue2");
         Assert.assertEquals(newValues.get(2), "NewValue3");
     }
+
+
+    @Test(groups = "slow")
+    public void testTenantSearch() throws Exception {
+        final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
+                                                       UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        tenantDao.create(new TenantModelDao(tenant), internalCallContext);
+
+        tenantDao .addTenantKeyValue("foobar", "foobar1", false, internalCallContext);
+        tenantDao .addTenantKeyValue("foobar", "foobar2", false, internalCallContext);
+        tenantDao .addTenantKeyValue("foobar", "foobar3", false, internalCallContext);
+
+
+        tenantDao.updateTenantLastKeyValue("foo", "foo1", internalCallContext);
+
+        tenantDao.updateTenantLastKeyValue("fooXX", "fooXX1", internalCallContext);
+
+        tenantDao.updateTenantLastKeyValue("bar", "bar", internalCallContext);
+
+        final List<TenantKVModelDao> result = tenantDao.searchTenantKeyValues("foo", internalCallContext);
+        Assert.assertEquals(result.size(), 5);
+
+    }
+
 }

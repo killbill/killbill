@@ -16,7 +16,9 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -223,6 +225,26 @@ public class TenantResource extends JaxRsResourceBase {
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return deleteTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, createdBy, reason, comment, request);
     }
+
+
+    @TimedResource
+    @GET
+    @Path("/" + UPLOAD_PER_TENANT_CONFIG + "/{keyPrefix:" + ANYTHING_PATTERN + "}" + "/" + SEARCH)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a per tenant key value based on key prefix", response = TenantKeyJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response getAllPluginConfiguration(@PathParam("keyPrefix") final String keyPrefix,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+
+        final TenantContext tenantContext = context.createContext(request);
+        final Map<String, List<String>> apiResult = tenantApi.searchTenantKeyValues(keyPrefix, tenantContext);
+        final List<TenantKeyJson> result = new ArrayList<TenantKeyJson>();
+        for (final String cur : apiResult.keySet()) {
+            result.add(new TenantKeyJson(cur, apiResult.get(cur)));
+        }
+        return Response.status(Status.OK).entity(result).build();
+    }
+
 
     @TimedResource
     @POST
