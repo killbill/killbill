@@ -44,13 +44,13 @@ public class CaptureOperation extends PaymentOperation {
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting CAPTURE for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
-        return plugin.capturePayment(paymentStateContext.getAccount().getId(),
-                                     paymentStateContext.getPaymentId(),
-                                     paymentStateContext.getTransactionId(),
-                                     paymentStateContext.getPaymentMethodId(),
-                                     paymentStateContext.getAmount(),
-                                     paymentStateContext.getCurrency(),
-                                     paymentStateContext.getProperties(),
-                                     paymentStateContext.getCallContext());
+        return paymentPluginApi.capturePayment(paymentStateContext.getAccount().getId(),
+                                               paymentStateContext.getPaymentId(),
+                                               paymentStateContext.getTransactionId(),
+                                               paymentStateContext.getPaymentMethodId(),
+                                               paymentStateContext.getAmount(),
+                                               paymentStateContext.getCurrency(),
+                                               paymentStateContext.getProperties(),
+                                               paymentStateContext.getCallContext());
     }
 }

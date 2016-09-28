@@ -19,7 +19,9 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,6 +57,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -70,6 +73,7 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -145,6 +149,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createRefundWithAdjustments(final InvoicePaymentTransactionJson json,
                                                 @PathParam("paymentId") final String paymentId,
+                                                @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
+                                                @QueryParam(QUERY_PAYMENT_METHOD_ID) @DefaultValue("") final String paymentMethodId,
                                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                 @HeaderParam(HDR_REASON) final String reason,
@@ -160,6 +166,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
 
         final Iterable<PluginProperty> pluginProperties;
         final String transactionExternalKey = json.getTransactionExternalKey() != null ? json.getTransactionExternalKey() : UUIDs.randomUUID().toString();
+        final String paymentExternalKey = json.getPaymentExternalKey() != null ? json.getPaymentExternalKey() : UUIDs.randomUUID().toString();
         if (json.isAdjusted() != null && json.isAdjusted()) {
             if (json.getAdjustments() != null && json.getAdjustments().size() > 0) {
                 final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
@@ -177,8 +184,22 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
             pluginProperties = extractPluginProperties(pluginPropertiesString);
         }
 
-        final Payment result = paymentApi.createRefundWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(), transactionExternalKey,
-                                                                               pluginProperties, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
+        final Payment result;
+        if (externalPayment) {
+            UUID externalPaymentMethodId = Strings.isNullOrEmpty(paymentMethodId) ? null : UUID.fromString(paymentMethodId);
+
+            final Collection<PluginProperty> pluginPropertiesForExternalRefund = new LinkedList<PluginProperty>();
+            Iterables.addAll(pluginPropertiesForExternalRefund, pluginProperties);
+            pluginPropertiesForExternalRefund.add(new PluginProperty("IPCD_PAYMENT_ID", paymentUuid, false));
+
+            result = paymentApi.createCreditWithPaymentControl(account, externalPaymentMethodId, null, json.getAmount(), account.getCurrency(),
+                                                               paymentExternalKey, transactionExternalKey, pluginPropertiesForExternalRefund,
+                                                               createInvoicePaymentControlPluginApiPaymentOptions(true), callContext);
+        } else {
+            result = paymentApi.createRefundWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(), transactionExternalKey,
+                                                               pluginProperties, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
+        }
+
         return uriBuilder.buildResponse(InvoicePaymentResource.class, "getInvoicePayment", result.getId(), uriInfo.getBaseUri().toString());
     }
 

@@ -116,6 +116,20 @@ public class TestPaymentRefund extends TestIntegrationBase {
         }
     }
 
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/255",
+            expectedExceptions = PaymentApiException.class, expectedExceptionsMessageRegExp = "Payment method .* does not exist")
+    public void testRefundWithDeletedPaymentMethod() throws Exception {
+
+        // delete payment method
+        busHandler.pushExpectedEvent(NextEvent.TAG);
+        paymentApi.deletePaymentMethod(account, account.getPaymentMethodId(), true, true, new ArrayList<PluginProperty>(), callContext);
+        assertListenerStatus();
+
+        // try to create a refund for a payment with its payment method deleted
+        paymentApi.createRefund(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(),
+                                UUID.randomUUID().toString(), PLUGIN_PROPERTIES, callContext);
+    }
+
     private void setupRefundTest() throws Exception {
 
         final int billingDay = 31;

@@ -648,7 +648,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(payment.getAccountId(), "InvoicePaymentJson accountId needs to be set",
                              payment.getTargetInvoiceId(), "InvoicePaymentJson targetInvoiceId needs to be set",
                              payment.getPurchasedAmount(), "InvoicePaymentJson purchasedAmount needs to be set");
-        Preconditions.checkArgument(!externalPayment || payment.getPaymentMethodId() == null, "InvoicePaymentJson should not contain a paymwentMethodId when this is an external payment");
+        Preconditions.checkArgument(!externalPayment || payment.getPaymentMethodId() == null, "InvoicePaymentJson should not contain a paymentMethodId when this is an external payment");
 
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);

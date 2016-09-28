@@ -93,6 +93,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     public static final String PROP_IPCD_INVOICE_ID = "IPCD_INVOICE_ID";
     public static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REFUND_IDS_AMOUNTS";
     public static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
+    public static final String PROP_IPCD_PAYMENT_ID = "IPCD_PAYMENT_ID";
 
     private final PaymentConfig paymentConfig;
     private final InvoiceInternalApi invoiceApi;
@@ -131,7 +132,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         Preconditions.checkArgument(paymentControlContext.getPaymentApiType() == PaymentApiType.PAYMENT_TRANSACTION);
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
                                     transactionType == TransactionType.REFUND ||
-                                    transactionType == TransactionType.CHARGEBACK);
+                                    transactionType == TransactionType.CHARGEBACK ||
+                                   transactionType == TransactionType.CREDIT);
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         switch (transactionType) {
@@ -141,6 +143,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return getPluginRefundResult(paymentControlContext, pluginProperties, internalContext);
             case CHARGEBACK:
                 return new DefaultPriorPaymentControlResult(false, paymentControlContext.getAmount());
+            case CREDIT:
+                return getPluginCreditResult(paymentControlContext, pluginProperties, internalContext);
             default:
                 throw new IllegalStateException("Unexpected transactionType " + transactionType);
         }
@@ -151,7 +155,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         Preconditions.checkArgument(transactionType == TransactionType.PURCHASE ||
                                     transactionType == TransactionType.REFUND ||
-                                    transactionType == TransactionType.CHARGEBACK);
+                                    transactionType == TransactionType.CHARGEBACK ||
+                                    transactionType == TransactionType.CREDIT);
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         try {
@@ -216,6 +221,17 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     }
                     break;
 
+                case CREDIT:
+                    final Map<UUID, BigDecimal> idWithAmountMap = extractIdsWithAmountFromProperties(pluginProperties);
+                    final PluginProperty properties = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
+                    final boolean isInvoiceAdjusted = properties != null ? Boolean.valueOf((String) properties.getValue()) : false;
+
+                    final PluginProperty legacyPayment = getPluginProperty(pluginProperties, PROP_IPCD_PAYMENT_ID);
+                    final UUID paymentId = legacyPayment != null ? (UUID) legacyPayment.getValue() : paymentControlContext.getPaymentId();
+
+                    invoiceApi.recordRefund(paymentId, paymentControlContext.getAmount(), isInvoiceAdjusted, idWithAmountMap, paymentControlContext.getTransactionExternalKey(), internalContext);
+                    break;
+
                 default:
                     throw new IllegalStateException("Unexpected transactionType " + transactionType);
             }
@@ -253,6 +269,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
                 nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
                 break;
+            case CREDIT:
             case REFUND:
                 // We don't retry REFUND
                 break;
@@ -399,6 +416,11 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
 
         return new DefaultPriorPaymentControlResult(isAborted, amountToBeRefunded);
+    }
+
+    private PriorPaymentControlResult getPluginCreditResult(final PaymentControlContext paymentControlPluginContext, final Iterable<PluginProperty> pluginProperties, final InternalCallContext internalContext) throws PaymentControlApiException {
+        // TODO implement
+        return new DefaultPriorPaymentControlResult(false, paymentControlPluginContext.getAmount());
     }
 
     private Map<UUID, BigDecimal> extractIdsWithAmountFromProperties(final Iterable<PluginProperty> properties) {

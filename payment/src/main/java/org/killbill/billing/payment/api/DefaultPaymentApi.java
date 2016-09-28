@@ -299,7 +299,11 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, "paymentMethodId", "should not be null");
         }
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        final UUID nonNulPaymentMethodId = (paymentMethodId != null) ?
+
+        // TODO validate if the code is located properly here
+        // The code should understand that the external payment method needs to be created
+        // if it doesn't exist yet and trigger a CREDIT using the (built-in) external payment plugin.
+        final UUID nonNullPaymentMethodId = (paymentMethodId != null) ?
                                            paymentMethodId :
                                            paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, properties, callContext, internalCallContext);
 
@@ -310,7 +314,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         try {
             logEnterAPICall(log, transactionType, account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey, null, paymentControlPluginNames);
 
-            payment = pluginControlPaymentProcessor.createPurchase(IS_API_PAYMENT, account, nonNulPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
+            payment = pluginControlPaymentProcessor.createPurchase(IS_API_PAYMENT, account, nonNullPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                                  properties, paymentControlPluginNames, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
@@ -498,7 +502,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
                                 @Nullable final String paymentExternalKey, @Nullable final String paymentTransactionExternalKey,
                                 final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
-        checkNotNullParameter(paymentMethodId, "paymentMethodId");
         if (paymentId == null) {
             checkNotNullParameter(amount, "amount");
             checkNotNullParameter(currency, "currency");
@@ -512,7 +515,11 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             logEnterAPICall(log, transactionType, account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey, null, null);
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-            payment = paymentProcessor.createCredit(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
+            final UUID nonNullPaymentMethodId = (paymentMethodId != null) ?
+                                               paymentMethodId :
+                                               paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, properties, callContext, internalCallContext);
+
+            payment = paymentProcessor.createCredit(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, nonNullPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                   SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
@@ -544,7 +551,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        checkNotNullParameter(paymentMethodId, "paymentMethodId");
         if (paymentId == null) {
             checkNotNullParameter(amount, "amount");
             checkNotNullParameter(currency, "currency");
@@ -558,7 +564,15 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             logEnterAPICall(log, transactionType, account, paymentMethodId, paymentId, null, amount, currency, paymentExternalKey, paymentTransactionExternalKey, null, paymentControlPluginNames);
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-            payment = pluginControlPaymentProcessor.createCredit(IS_API_PAYMENT, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
+
+            // TODO validate if the code is located properly here
+            // The code should understand that the external payment method needs to be created
+            // if it doesn't exist yet and trigger a CREDIT using the (built-in) external payment plugin.
+            final UUID nonNullPaymentMethodId = (paymentMethodId != null) ?
+                                               paymentMethodId :
+                                               paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, properties, callContext, internalCallContext);
+
+            payment = pluginControlPaymentProcessor.createCredit(IS_API_PAYMENT, account, nonNullPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
                                                                                properties, paymentControlPluginNames, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
