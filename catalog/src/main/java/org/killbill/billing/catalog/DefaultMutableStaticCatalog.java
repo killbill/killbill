@@ -18,26 +18,18 @@
 package org.killbill.billing.catalog;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogEntity;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.MutableStaticCatalog;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class DefaultMutableStaticCatalog extends StandaloneCatalog implements MutableStaticCatalog {
 
@@ -61,10 +53,9 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
         initialize(this, null);
     }
 
-
     @Override
     public void addCurrency(final Currency currency) throws CatalogApiException {
-        final Currency [] newEntries = allocateNewEntries(getCurrentSupportedCurrencies(), currency);
+        final Currency[] newEntries = allocateNewEntries(getCurrentSupportedCurrencies(), currency);
         setSupportedCurrencies(newEntries);
     }
 
@@ -79,28 +70,25 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
         final Plan[] newEntries = allocateNewEntries(getCurrentPlans(), plan);
         setPlans((DefaultPlan[]) newEntries);
 
-
         final DefaultPriceList priceList = getPriceLists().findPriceListFrom(plan.getPriceListName());
-
-        final Iterable<DefaultPlan> newPriceListPlan = Iterables.filter(ImmutableList.copyOf((DefaultPlan[]) newEntries), new Predicate<DefaultPlan>() {
-            @Override
-            public boolean apply(final DefaultPlan input) {
-                if (plan.getName().equals(input.getName())) {
-                    return true;
-                }
-                if (priceList.getPlans() != null) {
-                    for (final Plan priceListPlan : priceList.getPlans()) {
-                        if (priceListPlan.getName().equals(input.getName())) {
-                            return true;
-                        }
+        final List<DefaultPlan> newPriceListPlan = new ArrayList<DefaultPlan>();
+        for (Plan input : newEntries) {
+            if (plan.getName().equals(input.getName())) {
+                newPriceListPlan.add((DefaultPlan) plan);
+                continue;
+            }
+            if (priceList.getPlans() != null) {
+                for (final Plan priceListPlan : priceList.getPlans()) {
+                    if (priceListPlan.getName().equals(input.getName())) {
+                        newPriceListPlan.add((DefaultPlan) priceListPlan);
+                        break;
                     }
                 }
-                return false;
             }
-        });
-        final List<DefaultPlan> foo = ImmutableList.<DefaultPlan >copyOf(newPriceListPlan);
-        final Plan[] newPriceListEntries = new DefaultPlan[foo.size()];
-        final Plan[] bar = foo.toArray(newPriceListEntries);
+        }
+
+        final Plan[] newPriceListEntries = new DefaultPlan[newPriceListPlan.size()];
+        final Plan[] bar = newPriceListPlan.toArray(newPriceListEntries);
         priceList.setPlans((DefaultPlan[]) bar);
     }
 
@@ -111,10 +99,9 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
         setPriceLists(priceListSet);
     }
 
-
     public void addRecurringPriceToPlan(final DefaultInternationalPrice currentPrices, final Price newPrice) throws CatalogApiException {
-        final Price [] newEntries = allocateNewEntries(currentPrices.getPrices(), newPrice);
-        currentPrices.setPrices((DefaultPrice []) newEntries);
+        final Price[] newEntries = allocateNewEntries(currentPrices.getPrices(), newPrice);
+        currentPrices.setPrices((DefaultPrice[]) newEntries);
     }
 
     public void addProductAvailableAO(final DefaultProduct targetBasePlan, final DefaultProduct aoProduct) throws CatalogApiException {
@@ -122,30 +109,31 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
         targetBasePlan.setAvailable((DefaultProduct[]) newEntries);
     }
 
-    private <T> T [] allocateNewEntries(final T [] existingEntries, final T newEntry) throws CatalogApiException  {
+    private <T> T[] allocateNewEntries(final T[] existingEntries, final T newEntry) throws CatalogApiException {
 
-        // Verify entry does not already exists
-        if (existingEntries != null && Iterables.any(ImmutableList.<T>copyOf(existingEntries), new Predicate<T>() {
-            @Override
-            public boolean apply(final T input) {
+        if (existingEntries != null) {
+            for (T input : existingEntries) {
+                boolean found;
                 if (input instanceof CatalogEntity) {
-                    return ((CatalogEntity) input).getName().equals(((CatalogEntity) newEntry).getName());
+                    found = ((CatalogEntity) input).getName().equals(((CatalogEntity) newEntry).getName());
                 } else if (input instanceof Enum) {
-                    return ((Enum) input).name().equals(((Enum) newEntry).name());
+                    found = ((Enum) input).name().equals(((Enum) newEntry).name());
                 } else if (input instanceof Price) {
-                    return ((Price) input).getCurrency().equals(((Price) newEntry).getCurrency());
+                    found = ((Price) input).getCurrency().equals(((Price) newEntry).getCurrency());
+                } else {
+                    throw new IllegalStateException("Unexpected type " + newEntry.getClass());
                 }
-                throw new IllegalStateException("Unexpected type " + newEntry.getClass());
+                if (found) {
+                    //throw new CatalogApiException();
+                    throw new IllegalStateException("Already existing " + newEntry);
+                }
             }
-        })) {
-            //throw new CatalogApiException();
-            throw new IllegalStateException("Already existing " + newEntry);
         }
 
         // Realloc and assign new entry
         final int length = existingEntries != null ? existingEntries.length : 0;
-        final T [] newEntries = (T[]) Array.newInstance(newEntry.getClass(), length + 1);
-        for (int i = 0 ; i < newEntries.length + 1; i++) {
+        final T[] newEntries = (T[]) Array.newInstance(newEntry.getClass(), length + 1);
+        for (int i = 0; i < newEntries.length + 1; i++) {
             if (i < newEntries.length - 1) {
                 newEntries[i] = existingEntries[i];
             } else {

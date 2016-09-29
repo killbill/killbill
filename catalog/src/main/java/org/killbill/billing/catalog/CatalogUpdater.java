@@ -44,10 +44,6 @@ import org.killbill.billing.catalog.rules.DefaultCasePriceList;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
 import org.killbill.xmlloader.XMLWriter;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
 public class CatalogUpdater {
 
     private static URI DUMMY_URI;
@@ -253,15 +249,13 @@ public class CatalogUpdater {
 
     private boolean isCurrencySupported(final Currency targetCurrency) {
         if (catalog.getCurrentSupportedCurrencies() != null) {
-            return Iterables.any(ImmutableList.copyOf(catalog.getCurrentSupportedCurrencies()), new Predicate<Currency>() {
-                @Override
-                public boolean apply(final Currency input) {
-                    return input.equals(targetCurrency);
+            for (final Currency input : catalog.getCurrentSupportedCurrencies()) {
+                if (input.equals(targetCurrency)) {
+                    return true;
                 }
-            });
-        } else {
-            return false;
+            }
         }
+        return false;
     }
 
     private void validateNewPlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {
@@ -285,21 +279,21 @@ public class CatalogUpdater {
     }
 
     private DefaultProduct getExistingProduct(final String productName) {
-        return Iterables.tryFind(ImmutableList.copyOf(catalog.getCurrentProducts()), new Predicate<DefaultProduct>() {
-            @Override
-            public boolean apply(final DefaultProduct input) {
-                return input.getName().equals(productName);
+        for (final DefaultProduct input : catalog.getCurrentProducts()) {
+            if (input.getName().equals(productName)) {
+                return input;
             }
-        }).orNull();
+        }
+        return null;
     }
 
     private DefaultPlan getExistingPlan(final String planName) {
-        return Iterables.tryFind(ImmutableList.copyOf(catalog.getCurrentPlans()), new Predicate<DefaultPlan>() {
-            @Override
-            public boolean apply(final DefaultPlan input) {
-                return input.getName().equals(planName);
+        for (final DefaultPlan input : catalog.getCurrentPlans()) {
+            if (input.getName().equals(planName)) {
+                return input;
             }
-        }).orNull();
+        }
+        return null;
     }
 
     private DefaultPlanRules getSaneDefaultPlanRules(final DefaultPriceList defaultPriceList) {
