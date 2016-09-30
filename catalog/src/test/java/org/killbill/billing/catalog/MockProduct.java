@@ -33,23 +33,23 @@ public class MockProduct extends DefaultProduct {
     }
 
     public static MockProduct createBicycle() {
-        return new MockProduct("Bicycle", ProductCategory.BASE, "Vehcles");
+        return new MockProduct("1-Bicycle", ProductCategory.BASE, "Vehcles");
     }
 
     public static MockProduct createPickup() {
-        return new MockProduct("Pickup", ProductCategory.BASE, "Vehcles");
+        return new MockProduct("2-Pickup", ProductCategory.BASE, "Vehcles");
     }
 
     public static MockProduct createSportsCar() {
-        return new MockProduct("SportsCar", ProductCategory.BASE, "Vehcles");
+        return new MockProduct("3-SportsCar", ProductCategory.BASE, "Vehcles");
     }
 
     public static MockProduct createJet() {
-        return new MockProduct("Jet", ProductCategory.BASE, "Vehcles");
+        return new MockProduct("4-Jet", ProductCategory.BASE, "Vehcles");
     }
 
     public static MockProduct createHorn() {
-        return new MockProduct("Horn", ProductCategory.ADD_ON, "Vehcles");
+        return new MockProduct("5-Horn", ProductCategory.ADD_ON, "Vehcles");
     }
 
     public static MockProduct createSpotlight() {
@@ -57,7 +57,7 @@ public class MockProduct extends DefaultProduct {
     }
 
     public static MockProduct createRedPaintJob() {
-        return new MockProduct("RedPaintJob", ProductCategory.ADD_ON, "Vehcles");
+        return new MockProduct("6-RedPaintJob", ProductCategory.ADD_ON, "Vehcles");
     }
 
     public static DefaultProduct[] createAll() {

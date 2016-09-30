@@ -19,6 +19,7 @@ package org.killbill.billing.catalog;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -77,14 +78,14 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     @XmlElementWrapper(name = "products", required = false)
     @XmlElement(name = "product", required = false)
-    private DefaultProduct[] products;
+    private CatalogEntityCollection<DefaultProduct> products;
 
     @XmlElement(name = "rules", required = true)
     private DefaultPlanRules planRules;
 
     @XmlElementWrapper(name = "plans", required = false)
     @XmlElement(name = "plan", required = false)
-    private DefaultPlan[] plans;
+    private CatalogEntityCollection<DefaultPlan> plans;
 
     @XmlElement(name = "priceLists", required = true)
     private DefaultPriceListSet priceLists;
@@ -121,7 +122,16 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
      */
     @Override
     public DefaultProduct[] getCurrentProducts() {
-        return products;
+        return (DefaultProduct[]) products.toArray(new DefaultProduct[products.size()]);
+    }
+
+    public Collection<DefaultProduct> getAllProducts() {
+        return products.getEntries();
+    }
+
+
+    public Collection<DefaultPlan> getAllPlans() {
+        return plans.getEntries();
     }
 
     /* (non-Javadoc)
@@ -139,12 +149,12 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     @Override
     public DefaultPlan[] getCurrentPlans() {
-        return plans;
+        return (DefaultPlan[])  plans.toArray(new DefaultPlan[plans.size()]);
     }
 
     public boolean isTemplateCatalog() {
-        return (products == null || products.length == 0) &&
-               (plans == null || plans.length == 0) &&
+        return (products == null || products.size() == 0) &&
+               (plans == null || plans.size() == 0) &&
                (supportedCurrencies == null || supportedCurrencies.length == 0);
     }
 
@@ -198,10 +208,9 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         if (name == null || plans == null) {
             throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PLAN, name);
         }
-        for (final DefaultPlan p : plans) {
-            if (p.getName().equals(name)) {
-                return p;
-            }
+        final DefaultPlan result = plans.findByName(name);
+        if (result != null) {
+            return result;
         }
         throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PLAN, name);
     }
@@ -211,10 +220,9 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         if (name == null || products == null) {
             throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PRODUCT, name);
         }
-        for (final DefaultProduct p : products) {
-            if (p.getName().equals(name)) {
-                return p;
-            }
+        final Product result = products.findByName(name);
+        if (result != null) {
+            return result;
         }
         throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PRODUCT, name);
     }
@@ -224,7 +232,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         if (name == null || plans == null) {
             throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PHASE, name);
         }
-
         final String planName = DefaultPlanPhase.planName(name);
         final Plan plan = findCurrentPlan(planName);
         return plan.findPhase(name);
@@ -236,7 +243,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         if (name == null || priceLists == null) {
             throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, name);
         }
-
         return priceLists.findPriceListFrom(name);
     }
 
@@ -278,8 +284,8 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        validateCollection(catalog, errors, products);
-        validateCollection(catalog, errors, plans);
+        validateCollection(catalog, errors, (DefaultProduct[])  products.toArray(new DefaultProduct[products.size()]));
+        validateCollection(catalog, errors, (DefaultPlan[])  plans.toArray(new DefaultPlan[plans.size()]));
         priceLists.validate(catalog, errors);
         planRules.validate(catalog, errors);
         return errors;
@@ -313,7 +319,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     public StandaloneCatalog setProducts(final DefaultProduct[] products) {
-        this.products = products;
+        this.products = new CatalogEntityCollection<DefaultProduct>(products);
         return this;
     }
 
@@ -323,7 +329,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     public StandaloneCatalog setPlans(final DefaultPlan[] plans) {
-        this.plans = plans;
+        this.plans = new CatalogEntityCollection<DefaultPlan>(plans);
         return this;
     }
 
@@ -391,7 +397,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         } catch (CatalogApiException e) {
             // No such product - just return an empty list
         }
-
         return availAddons;
     }
 
@@ -437,13 +442,13 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         if (planRules != null ? !planRules.equals(that.planRules) : that.planRules != null) {
             return false;
         }
-        if (!Arrays.equals(plans, that.plans)) {
+        if (!plans.equals(that.plans)) {
             return false;
         }
         if (priceLists != null ? !priceLists.equals(that.priceLists) : that.priceLists != null) {
             return false;
         }
-        if (!Arrays.equals(products, that.products)) {
+        if (!products.equals(that.products)) {
             return false;
         }
         if (recurringBillingMode != that.recurringBillingMode) {
@@ -455,7 +460,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         if (!Arrays.equals(units, that.units)) {
             return false;
         }
-
         return true;
     }
 
@@ -466,9 +470,9 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         result = 31 * result + (recurringBillingMode != null ? recurringBillingMode.hashCode() : 0);
         result = 31 * result + (supportedCurrencies != null ? Arrays.hashCode(supportedCurrencies) : 0);
         result = 31 * result + (units != null ? Arrays.hashCode(units) : 0);
-        result = 31 * result + (products != null ? Arrays.hashCode(products) : 0);
+        result = 31 * result + (products != null ? products.hashCode() : 0);
         result = 31 * result + (planRules != null ? planRules.hashCode() : 0);
-        result = 31 * result + (plans != null ? Arrays.hashCode(plans) : 0);
+        result = 31 * result + (plans != null ? plans.hashCode() : 0);
         result = 31 * result + (priceLists != null ? priceLists.hashCode() : 0);
         result = 31 * result + (catalogURI != null ? catalogURI.hashCode() : 0);
         return result;

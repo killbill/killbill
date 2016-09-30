@@ -314,11 +314,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     }
 
     private String findPriceListForPlan(final StandaloneCatalog catalog) {
-        for (PriceList cur : catalog.getPriceLists().getAllPriceLists()) {
-            for (Plan p : cur.getPlans()) {
-                if (p.getName().equals(name)) {
-                    return ((DefaultPriceList) cur).getName();
-                }
+        for (final PriceList cur : catalog.getPriceLists().getAllPriceLists()) {
+            final DefaultPriceList curDefaultPriceList = (DefaultPriceList) cur;
+            if (curDefaultPriceList.findPlan(name) != null) {
+                return curDefaultPriceList.getName();
             }
         }
         throw new IllegalStateException("Cannot extract pricelist for plan " + name);

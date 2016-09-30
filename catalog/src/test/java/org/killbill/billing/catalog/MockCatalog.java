@@ -16,16 +16,18 @@
 
 package org.killbill.billing.catalog;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
-import java.util.Set;
+import java.util.LinkedList;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogEntity;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanAlignmentChange;
@@ -233,6 +235,36 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     @Override
     public boolean canCreatePlan(final PlanSpecifier specifier) throws CatalogApiException {
         return canCreatePlan;
+    }
+
+    @Override
+    public DefaultProduct[] getCurrentProducts() {
+        final Collection<DefaultProduct> unordered = super.getAllProducts();
+        final  DefaultProduct[] result = new DefaultProduct[unordered.size()];
+        convertCurrentEntries(unordered, result);
+        return result;
+    }
+
+
+    @Override
+    public DefaultPlan[] getCurrentPlans() {
+        final Collection<DefaultPlan> unordered = super.getAllPlans();
+        final DefaultPlan[] result = new DefaultPlan[unordered.size()];
+        convertCurrentEntries(unordered, result);
+        return result;
+    }
+
+
+    private <T extends CatalogEntity> void convertCurrentEntries(final Collection<T> unordered, final T [] result) {
+        // Tests are not so well written and make assumption on how such entries are ordered
+        final LinkedList<T> list = new LinkedList<T>(unordered);
+        Collections.sort(list, new Comparator<T>() {
+            @Override
+            public int compare(final T o1, final T o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        list.toArray(result);
     }
 
     public void setCanCreatePlan(final boolean canCreatePlan) {

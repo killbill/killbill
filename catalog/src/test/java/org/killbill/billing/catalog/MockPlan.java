@@ -19,7 +19,7 @@ package org.killbill.billing.catalog;
 public class MockPlan extends DefaultPlan {
 
     public static MockPlan createBicycleTrialEvergreen1USD(final int trialDurationInDays) {
-        return new MockPlan("BicycleTrialEvergreen1USD",
+        return new MockPlan("1-BicycleTrialEvergreen1USD",
                             MockProduct.createBicycle(),
                             new DefaultPlanPhase[]{MockPlanPhase.createTrial(trialDurationInDays)},
                             MockPlanPhase.create1USDMonthlyEvergreen(),
@@ -27,7 +27,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public static MockPlan createBicycleTrialEvergreen1USD() {
-        return new MockPlan("BicycleTrialEvergreen1USD",
+        return new MockPlan("1-BicycleTrialEvergreen1USD",
                             MockProduct.createBicycle(),
                             new DefaultPlanPhase[]{MockPlanPhase.create30DayTrial()},
                             MockPlanPhase.create1USDMonthlyEvergreen(),
@@ -35,7 +35,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public static MockPlan createSportsCarTrialEvergreen100USD() {
-        return new MockPlan("SportsCarTrialEvergreen100USD",
+        return new MockPlan("4-SportsCarTrialEvergreen100USD",
                             MockProduct.createSportsCar(),
                             new DefaultPlanPhase[]{MockPlanPhase.create30DayTrial()},
                             MockPlanPhase.createUSDMonthlyEvergreen("100.00", null),
@@ -43,7 +43,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public static MockPlan createPickupTrialEvergreen10USD() {
-        return new MockPlan("PickupTrialEvergreen10USD",
+        return new MockPlan("3-PickupTrialEvergreen10USD",
                             MockProduct.createPickup(),
                             new DefaultPlanPhase[]{MockPlanPhase.create30DayTrial()},
                             MockPlanPhase.createUSDMonthlyEvergreen("10.00", null),
@@ -51,7 +51,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public static MockPlan createJetTrialEvergreen1000USD() {
-        return new MockPlan("JetTrialEvergreen1000USD",
+        return new MockPlan("5-JetTrialEvergreen1000USD",
                             MockProduct.createJet(),
                             new DefaultPlanPhase[]{MockPlanPhase.create30DayTrial()},
                             MockPlanPhase.create1USDMonthlyEvergreen(),
@@ -59,7 +59,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public static MockPlan createJetTrialFixedTermEvergreen1000USD() {
-        return new MockPlan("JetTrialEvergreen1000USD",
+        return new MockPlan("6-JetTrialEvergreen1000USD",
                             MockProduct.createJet(),
                             new DefaultPlanPhase[]{MockPlanPhase.create30DayTrial(), MockPlanPhase.createUSDMonthlyFixedTerm("500.00", null, 6)},
                             MockPlanPhase.create1USDMonthlyEvergreen(),
@@ -67,7 +67,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public static MockPlan createHornMonthlyNoTrial1USD() {
-        return new MockPlan("Horn1USD",
+        return new MockPlan("7-Horn1USD",
                             MockProduct.createHorn(),
                             new DefaultPlanPhase[]{},
                             MockPlanPhase.create1USDMonthlyEvergreen(),
@@ -75,7 +75,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public MockPlan() {
-        this("BicycleTrialEvergreen1USD",
+        this("1-BicycleTrialEvergreen1USD",
              MockProduct.createBicycle(),
              new DefaultPlanPhase[]{MockPlanPhase.create30DayTrial()},
              MockPlanPhase.create1USDMonthlyEvergreen(),
@@ -96,7 +96,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public static MockPlan createBicycleNoTrialEvergreen1USD() {
-        return new MockPlan("BicycleNoTrialEvergreen1USD",
+        return new MockPlan("2-BicycleNoTrialEvergreen1USD",
                             MockProduct.createBicycle(),
                             new DefaultPlanPhase[]{},
                             MockPlanPhase.createUSDMonthlyEvergreen("1.0", null),
