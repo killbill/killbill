@@ -17,7 +17,6 @@
 package org.killbill.billing.catalog;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -56,8 +55,8 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public Collection<Plan> getPlans() {
-        return (Collection<Plan>) plans.getEntries();
+    public Plan[] getPlans() {
+        return (Plan[]) plans.toArray(new DefaultPlan[plans.size()]);
     }
 
     /* (non-Javadoc)
@@ -74,10 +73,10 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public DefaultPlan[] findPlans(final Product product, final BillingPeriod period) {
         final List<DefaultPlan> result = new ArrayList<DefaultPlan>(plans.size());
-        for (final DefaultPlan cur : getPlans()) {
+        for (final Plan cur : getPlans()) {
             if (cur.getProduct().equals(product) &&
                 (cur.getRecurringBillingPeriod() != null && cur.getRecurringBillingPeriod().equals(period))) {
-                result.add(cur);
+                result.add((DefaultPlan) cur);
             }
         }
         return result.toArray(new DefaultPlan[result.size()]);
