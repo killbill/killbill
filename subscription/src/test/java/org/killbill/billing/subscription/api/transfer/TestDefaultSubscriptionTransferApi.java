@@ -113,12 +113,12 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
 
             @Override
             public String getPlanName() {
-                return "BicycleTrialEvergreen1USD";
+                return "1-BicycleTrialEvergreen1USD";
             }
 
             @Override
             public String getPlanPhaseName() {
-                return SubscriptionBaseTransitionType.CANCEL.equals(subscriptionTransitionType) ? null : "BicycleTrialEvergreen1USD-trial";
+                return SubscriptionBaseTransitionType.CANCEL.equals(subscriptionTransitionType) ? null : "1-BicycleTrialEvergreen1USD-trial";
             }
 
             @Override
@@ -134,7 +134,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
                 return SubscriptionBaseTransitionType.CANCEL.equals(subscriptionTransitionType) ? null :
-                       new PlanPhaseSpecifier("BicycleTrialEvergreen1USD",  BillingPeriod.NO_BILLING_PERIOD,
+                       new PlanPhaseSpecifier("1-BicycleTrialEvergreen1USD",  BillingPeriod.NO_BILLING_PERIOD,
                                               PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.FIXEDTERM);
             }
 
