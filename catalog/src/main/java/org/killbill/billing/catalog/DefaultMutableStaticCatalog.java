@@ -61,35 +61,16 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
 
     @Override
     public void addProduct(final Product product) throws CatalogApiException {
-        final Product[] newEntries = allocateNewEntries(getCurrentProducts(), product);
-        setProducts((DefaultProduct[]) newEntries);
+        getCatalogEntityCollectionProduct().add(product);
     }
 
     @Override
     public void addPlan(final Plan plan) throws CatalogApiException {
-        final Plan[] newEntries = allocateNewEntries(getCurrentPlans(), plan);
-        setPlans((DefaultPlan[]) newEntries);
+
+        getCatalogEntityCollectionPlan().add(plan);
 
         final DefaultPriceList priceList = getPriceLists().findPriceListFrom(plan.getPriceListName());
-        final List<DefaultPlan> newPriceListPlan = new ArrayList<DefaultPlan>();
-        for (Plan input : newEntries) {
-            if (plan.getName().equals(input.getName())) {
-                newPriceListPlan.add((DefaultPlan) plan);
-                continue;
-            }
-            if (priceList.getPlans() != null) {
-                for (final Plan priceListPlan : priceList.getPlans()) {
-                    if (priceListPlan.getName().equals(input.getName())) {
-                        newPriceListPlan.add((DefaultPlan) priceListPlan);
-                        break;
-                    }
-                }
-            }
-        }
-
-        final Plan[] newPriceListEntries = new DefaultPlan[newPriceListPlan.size()];
-        final Plan[] bar = newPriceListPlan.toArray(newPriceListEntries);
-        priceList.setPlans((DefaultPlan[]) bar);
+        priceList.getCatalogEntityCollectionPlan().add(plan);
     }
 
     @Override
@@ -104,9 +85,8 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
         currentPrices.setPrices((DefaultPrice[]) newEntries);
     }
 
-    public void addProductAvailableAO(final DefaultProduct targetBasePlan, final DefaultProduct aoProduct) throws CatalogApiException {
-        final Product[] newEntries = allocateNewEntries(targetBasePlan.getAvailable(), aoProduct);
-        targetBasePlan.setAvailable((DefaultProduct[]) newEntries);
+    public void addProductAvailableAO(final Product targetBasePlan, final DefaultProduct aoProduct) throws CatalogApiException {
+        ((DefaultProduct) targetBasePlan).getCatalogEntityCollectionAvailable().add(aoProduct);
     }
 
     private <T> T[] allocateNewEntries(final T[] existingEntries, final T newEntry) throws CatalogApiException {

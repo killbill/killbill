@@ -58,7 +58,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final CatalogUpdater catalogUpdater = new CatalogUpdater("dummy", BillingMode.IN_ADVANCE, now, null);
         final String catalogXML = catalogUpdater.getCatalogXML();
         final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(catalogXML.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
-        assertEquals(catalog.getCurrentPlans().length, 0);
+        assertEquals(catalog.getCurrentPlans().size(), 0);
     }
 
     @Test(groups = "fast")
@@ -73,13 +73,13 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final StandaloneCatalog catalog = catalogUpdater.getCatalog();
 
-        assertEquals(catalog.getCurrentProducts().length, 1);
+        assertEquals(catalog.getCurrentProducts().size(), 1);
 
-        final Product product = catalog.getCurrentProducts()[0];
+        final Product product = catalog.getCurrentProducts().iterator().next();
         assertEquals(product.getName(), "Foo");
         assertEquals(product.getCategory(), ProductCategory.BASE);
 
-        assertEquals(catalog.getCurrentPlans().length, 1);
+        assertEquals(catalog.getCurrentPlans().size(), 1);
 
         final Plan plan = catalog.findCurrentPlan("foo-monthly");
         assertEquals(plan.getName(), "foo-monthly");
@@ -97,8 +97,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         assertEquals(catalog.getPriceLists().getAllPriceLists().size(), 1);
         final PriceList priceList = catalog.getPriceLists().getAllPriceLists().get(0);
         assertEquals(priceList.getName(), new PriceListDefault().getName());
-        assertEquals(priceList.getPlans().length, 1);
-        assertEquals(priceList.getPlans()[0].getName(), "foo-monthly");
+        assertEquals(priceList.getPlans().size(), 1);
+        assertEquals(priceList.getPlans().iterator().next().getName(), "foo-monthly");
     }
 
 
@@ -114,13 +114,13 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final StandaloneCatalog catalog = catalogUpdater.getCatalog();
 
-        assertEquals(catalog.getCurrentProducts().length, 1);
+        assertEquals(catalog.getCurrentProducts().size(), 1);
 
-        final Product product = catalog.getCurrentProducts()[0];
+        final Product product = catalog.getCurrentProducts().iterator().next();
         assertEquals(product.getName(), "Foo");
         assertEquals(product.getCategory(), ProductCategory.BASE);
 
-        assertEquals(catalog.getCurrentPlans().length, 1);
+        assertEquals(catalog.getCurrentPlans().size(), 1);
 
         final Plan plan = catalog.findCurrentPlan("foo-monthly");
         assertEquals(plan.getName(), "foo-monthly");
@@ -144,8 +144,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         assertEquals(catalog.getPriceLists().getAllPriceLists().size(), 1);
         final PriceList priceList = catalog.getPriceLists().getAllPriceLists().get(0);
         assertEquals(priceList.getName(), new PriceListDefault().getName());
-        assertEquals(priceList.getPlans().length, 1);
-        assertEquals(priceList.getPlans()[0].getName(), "foo-monthly");
+        assertEquals(priceList.getPlans().size(), 1);
+        assertEquals(priceList.getPlans().iterator().next().getName(), "foo-monthly");
     }
 
 
@@ -156,7 +156,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
-        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 3);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 3);
 
         final CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
 
@@ -181,7 +181,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         assertEquals(catalog.getPriceLists().getAllPriceLists().size(), 1);
         final PriceList priceList = catalog.getPriceLists().getAllPriceLists().get(0);
         assertEquals(priceList.getName(), new PriceListDefault().getName());
-        assertEquals(priceList.getPlans().length, 4);
+        assertEquals(priceList.getPlans().size(), 4);
     }
 
 
@@ -191,7 +191,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
-        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 3);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 3);
 
         final CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
 
@@ -222,7 +222,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final StandaloneCatalog originalCatalog = enhanceOriginalCatalogForInvalidTestCases("SpyCarBasic.xml");
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
-        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 5);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 5);
 
         CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
 
@@ -263,7 +263,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
-        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 3);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 3);
 
         final CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
 

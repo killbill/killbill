@@ -20,6 +20,7 @@ package org.killbill.billing.catalog;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -249,7 +250,7 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     }
 
     @Override
-    public DefaultProduct[] getProducts(final DateTime requestedDate) throws CatalogApiException {
+    public Collection<Product> getProducts(final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).getCurrentProducts();
     }
 
@@ -259,7 +260,7 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     }
 
     @Override
-    public DefaultPlan[] getPlans(final DateTime requestedDate) throws CatalogApiException {
+    public Collection<Plan> getPlans(final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).getCurrentPlans();
     }
 
@@ -435,7 +436,7 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     }
 
     @Override
-    public Product[] getCurrentProducts() throws CatalogApiException {
+    public Collection<Product> getCurrentProducts() throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).getCurrentProducts();
     }
 
@@ -445,7 +446,7 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     }
 
     @Override
-    public Plan[] getCurrentPlans() throws CatalogApiException {
+    public Collection<Plan> getCurrentPlans() throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).getCurrentPlans();
     }
 

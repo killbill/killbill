@@ -21,11 +21,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
@@ -52,21 +54,21 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         this.childPriceLists = childPriceLists != null ? childPriceLists : new DefaultPriceList[0];
     }
 
-    public DefaultPlan getPlanFrom(final Product product, final BillingPeriod period, final String priceListName) throws CatalogApiException {
+    public Plan getPlanFrom(final Product product, final BillingPeriod period, final String priceListName) throws CatalogApiException {
 
-        DefaultPlan[] plans = null;
+        Collection<Plan> plans = null;
         final DefaultPriceList pl = findPriceListFrom(priceListName);
         if (pl != null) {
             plans = pl.findPlans(product, period);
         }
-        if (plans.length == 0) {
+        if (plans.size() == 0) {
             plans = defaultPricelist.findPlans(product, period);
         }
-        switch(plans.length) {
+        switch(plans.size()) {
             case 0:
                 return null;
             case 1:
-                return plans[0];
+                return plans.iterator().next();
             default:
                 throw new CatalogApiException(ErrorCode.CAT_MULTIPLE_MATCHING_PLANS_FOR_PRICELIST,
                                               priceListName, product.getName(), period);

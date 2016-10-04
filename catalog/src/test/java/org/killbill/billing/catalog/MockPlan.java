@@ -16,6 +16,12 @@
 
 package org.killbill.billing.catalog;
 
+import java.util.Collection;
+
+import org.killbill.billing.catalog.api.Plan;
+
+import com.google.common.collect.ImmutableList;
+
 public class MockPlan extends DefaultPlan {
 
     public static MockPlan createBicycleTrialEvergreen1USD(final int trialDurationInDays) {
@@ -119,16 +125,14 @@ public class MockPlan extends DefaultPlan {
         setPlansAllowedInBundle(1);
     }
 
-    public static DefaultPlan[] createAll() {
-        return new DefaultPlan[]{
-                createBicycleTrialEvergreen1USD(),
-                createBicycleNoTrialEvergreen1USD(),
-                createPickupTrialEvergreen10USD(),
-                createSportsCarTrialEvergreen100USD(),
-                createJetTrialEvergreen1000USD(),
-                createJetTrialFixedTermEvergreen1000USD(),
-                createHornMonthlyNoTrial1USD()
-        };
+    public static Collection<Plan> createAll() {
+        return ImmutableList.<Plan>of(createBicycleTrialEvergreen1USD(),
+                               createBicycleNoTrialEvergreen1USD(),
+                               createPickupTrialEvergreen10USD(),
+                               createSportsCarTrialEvergreen100USD(),
+                               createJetTrialEvergreen1000USD(),
+                               createJetTrialFixedTermEvergreen1000USD(),
+                               createHornMonthlyNoTrial1USD());
     }
 
 

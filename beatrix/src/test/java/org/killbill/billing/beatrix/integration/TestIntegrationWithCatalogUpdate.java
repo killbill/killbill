@@ -101,7 +101,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final SimplePlanDescriptor desc1 = new DefaultSimplePlanDescriptor("foo-monthly", "Foo", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc1, init, testCallContext);
         StaticCatalog catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
-        assertEquals(catalog.getCurrentPlans().length, 1);
+        assertEquals(catalog.getCurrentPlans().size(), 1);
 
         final Entitlement baseEntitlement = createEntitlement("foo-monthly", true);
 
@@ -111,7 +111,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final SimplePlanDescriptor desc2 = new DefaultSimplePlanDescriptor("superfoo-monthly", "SuperFoo", ProductCategory.BASE, account.getCurrency(), new BigDecimal("20.00"), BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc2, init, testCallContext);
         catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
-        assertEquals(catalog.getCurrentPlans().length, 2);
+        assertEquals(catalog.getCurrentPlans().size(), 2);
 
         // Change Plan to the newly added Plan and verify correct default rules behavior (IMMEDIATE change)
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -131,8 +131,8 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final SimplePlanDescriptor desc1 = new DefaultSimplePlanDescriptor("xxx-monthly", "XXX", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc1, init, testCallContext);
         StaticCatalog catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
-        assertEquals(catalog.getCurrentProducts().length, 1);
-        assertEquals(catalog.getCurrentPlans().length, 1);
+        assertEquals(catalog.getCurrentProducts().size(), 1);
+        assertEquals(catalog.getCurrentPlans().size(), 1);
 
         final Entitlement baseEntitlement1 = createEntitlement("xxx-monthly", true);
 
@@ -140,8 +140,8 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final SimplePlanDescriptor desc2 = new DefaultSimplePlanDescriptor("xxx-14-monthly", "XXX", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 14, TimeUnit.DAYS, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc2, init, testCallContext);
         catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
-        assertEquals(catalog.getCurrentProducts().length, 1);
-        assertEquals(catalog.getCurrentPlans().length, 2);
+        assertEquals(catalog.getCurrentProducts().size(), 1);
+        assertEquals(catalog.getCurrentPlans().size(), 2);
 
         final Entitlement baseEntitlement2 = createEntitlement("xxx-14-monthly", false);
 
@@ -149,8 +149,8 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final SimplePlanDescriptor desc3 = new DefaultSimplePlanDescriptor("xxx-30-monthly", "XXX", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 30, TimeUnit.DAYS, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc3, init, testCallContext);
         catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
-        assertEquals(catalog.getCurrentProducts().length, 1);
-        assertEquals(catalog.getCurrentPlans().length, 3);
+        assertEquals(catalog.getCurrentProducts().size(), 1);
+        assertEquals(catalog.getCurrentPlans().size(), 3);
 
         final Entitlement baseEntitlement3 = createEntitlement("xxx-30-monthly", false);
 
@@ -172,12 +172,12 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final SimplePlanDescriptor desc1 = new DefaultSimplePlanDescriptor("zoe-monthly", "Zoe", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc1, init, testCallContext);
         StaticCatalog catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
-        assertEquals(catalog.getCurrentPlans().length, 1);
+        assertEquals(catalog.getCurrentPlans().size(), 1);
 
         final SimplePlanDescriptor desc2 = new DefaultSimplePlanDescriptor("zoe-14-monthly", "Zoe", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 14, TimeUnit.DAYS, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc2, init, testCallContext);
         catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
-        assertEquals(catalog.getCurrentPlans().length, 2);
+        assertEquals(catalog.getCurrentPlans().size(), 2);
 
         try {
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Zoe", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
@@ -195,9 +195,9 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final SimplePlanDescriptor desc1 = new DefaultSimplePlanDescriptor("bar-monthly", "Bar", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc1, init, testCallContext);
         StaticCatalog catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
-        assertEquals(catalog.getCurrentPlans().length, 1);
+        assertEquals(catalog.getCurrentPlans().size(), 1);
 
-        final Plan plan = catalog.getCurrentPlans()[0];
+        final Plan plan = catalog.getCurrentPlans().iterator().next();
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("bar-monthly", null);
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
@@ -236,7 +236,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final SimplePlanDescriptor desc1 = new DefaultSimplePlanDescriptor("thirty-monthly", "Thirty", ProductCategory.BASE, account.getCurrency(), BigDecimal.TEN, BillingPeriod.THIRTY_DAYS, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(desc1, init, testCallContext);
         StaticCatalog catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
-        assertEquals(catalog.getCurrentPlans().length, 1);
+        assertEquals(catalog.getCurrentPlans().size(), 1);
 
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("thirty-monthly", null);

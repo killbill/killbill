@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,6 +34,7 @@ import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -83,8 +85,8 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
 
         final VersionedCatalog result = catalogCache.getCatalog(true, true, internalCallContext);
         Assert.assertNotNull(result);
-        final DefaultProduct[] products = result.getProducts(clock.getUTCNow());
-        Assert.assertEquals(products.length, 3);
+        final Collection<Product> products = result.getProducts(clock.getUTCNow());
+        Assert.assertEquals(products.size(), 3);
 
         // Verify the lookup with other contexts
         final VersionedCatalog resultForMultiTenantContext = new VersionedCatalog(result.getClock());
@@ -155,14 +157,14 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         // Verify the lookup for this tenant
         final VersionedCatalog result = catalogCache.getCatalog(true, true, multiTenantContext);
         Assert.assertNotNull(result);
-        final DefaultProduct[] products = result.getProducts(clock.getUTCNow());
-        Assert.assertEquals(products.length, 6);
+        final Collection<Product> products = result.getProducts(clock.getUTCNow());
+        Assert.assertEquals(products.size(), 6);
 
         // Verify the lookup for another tenant
         final VersionedCatalog otherResult = catalogCache.getCatalog(true, true, otherMultiTenantContext);
         Assert.assertNotNull(otherResult);
-        final DefaultProduct[] otherProducts = otherResult.getProducts(clock.getUTCNow());
-        Assert.assertEquals(otherProducts.length, 3);
+        final Collection<Product> otherProducts = otherResult.getProducts(clock.getUTCNow());
+        Assert.assertEquals(otherProducts.size(), 3);
 
         shouldThrow.set(true);
 

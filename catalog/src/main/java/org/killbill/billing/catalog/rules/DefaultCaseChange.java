@@ -154,8 +154,8 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
         return this;
     }
 
-    public DefaultCaseChange<T> setFromProduct(final DefaultProduct fromProduct) {
-        this.fromProduct = fromProduct;
+    public DefaultCaseChange<T> setFromProduct(final Product fromProduct) {
+        this.fromProduct = (DefaultProduct) fromProduct;
         return this;
     }
 
@@ -174,8 +174,8 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
         return this;
     }
 
-    public DefaultCaseChange<T> setToProduct(final DefaultProduct toProduct) {
-        this.toProduct = toProduct;
+    public DefaultCaseChange<T> setToProduct(final Product toProduct) {
+        this.toProduct = (DefaultProduct) toProduct;
         return this;
     }
 

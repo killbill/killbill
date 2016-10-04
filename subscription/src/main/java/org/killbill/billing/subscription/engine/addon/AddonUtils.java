@@ -16,6 +16,7 @@
 
 package org.killbill.billing.subscription.engine.addon;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -105,7 +106,7 @@ public class AddonUtils {
 
     private boolean isAddonAvailable(final Product baseProduct, final Plan targetAddOnPlan) {
         final Product targetAddonProduct = targetAddOnPlan.getProduct();
-        final Product[] availableAddOns = baseProduct.getAvailable();
+        final Collection<Product> availableAddOns = baseProduct.getAvailable();
 
         for (final Product curAv : availableAddOns) {
             if (curAv.getName().equals(targetAddonProduct.getName())) {
@@ -117,7 +118,7 @@ public class AddonUtils {
 
     private boolean isAddonIncluded(final Product baseProduct, final Plan targetAddOnPlan) {
         final Product targetAddonProduct = targetAddOnPlan.getProduct();
-        final Product[] includedAddOns = baseProduct.getIncluded();
+        final Collection<Product> includedAddOns = baseProduct.getIncluded();
         for (final Product curAv : includedAddOns) {
             if (curAv.getName().equals(targetAddonProduct.getName())) {
                 return true;

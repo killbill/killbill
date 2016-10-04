@@ -218,8 +218,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return this;
     }
 
-    public DefaultPlan setProduct(final DefaultProduct product) {
-        this.product = product;
+    public DefaultPlan setProduct(final Product product) {
+        this.product = (DefaultProduct) product;
         return this;
     }
 

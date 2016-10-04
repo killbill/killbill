@@ -19,6 +19,8 @@ package org.killbill.billing.catalog.plugin;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -81,8 +83,8 @@ public class StandaloneCatalogMapper {
     private final String catalogName;
     private final BillingMode recurringBillingMode;
 
-    private Iterable<DefaultProduct> tmpDefaultProducts;
-    private Iterable<DefaultPlan> tmpDefaultPlans;
+    private Collection<Product> tmpDefaultProducts;
+    private Collection<Plan> tmpDefaultPlans;
     private DefaultPriceListSet tmpDefaultPriceListSet;
 
     public StandaloneCatalogMapper(final String catalogName, final BillingMode recurringBillingMode) {
@@ -105,10 +107,10 @@ public class StandaloneCatalogMapper {
         result.setPlanRules(toDefaultPlanRules(pluginCatalog.getPlanRules()));
 
         for (final Product cur : pluginCatalog.getProducts()) {
-            for (DefaultProduct target : result.getCurrentProducts()) {
+            for (Product target :  result.getCurrentProducts()) {
                 if (target.getName().equals(cur.getName())) {
-                    target.setAvailable(toFilteredDefaultProduct(ImmutableList.copyOf(cur.getAvailable())));
-                    target.setIncluded(toFilteredDefaultProduct(ImmutableList.copyOf(cur.getIncluded())));
+                    ((DefaultProduct) target).setAvailable(toFilteredDefaultProduct(ImmutableList.copyOf(cur.getAvailable())));
+                    ((DefaultProduct) target).setIncluded(toFilteredDefaultProduct(ImmutableList.copyOf(cur.getIncluded())));
                     break;
                 }
             }
@@ -250,22 +252,22 @@ public class StandaloneCatalogMapper {
     }
 
 
-    private DefaultProduct[] toDefaultProducts(final Iterable<Product> input) {
+    private Collection<Product> toDefaultProducts(final Iterable<Product> input) {
         if (tmpDefaultProducts == null) {
-            final Function<Product, DefaultProduct> productTransformer = new Function<Product, DefaultProduct>() {
+            final Function<Product, Product> productTransformer = new Function<Product, Product>() {
                 @Override
-                public DefaultProduct apply(final Product input) {
+                public Product apply(final Product input) {
                     return toDefaultProduct(input);
                 }
             };
-            tmpDefaultProducts = ImmutableList.copyOf(Iterables.transform(input, productTransformer));
+            tmpDefaultProducts = ImmutableList.<Product>copyOf(Iterables.transform(input, productTransformer));
         }
-        return toArray(tmpDefaultProducts);
+        return tmpDefaultProducts;
     }
 
-    private DefaultProduct[] toFilteredDefaultProduct(final Iterable<Product> input) {
+    private Collection<Product> toFilteredDefaultProduct(final Iterable<Product> input) {
         if (!input.iterator().hasNext()) {
-            return new DefaultProduct[0];
+            return Collections.emptyList();
         }
         final List<String> inputProductNames = ImmutableList.copyOf(Iterables.transform(input, new Function<Product, String>() {
             @Override
@@ -273,33 +275,33 @@ public class StandaloneCatalogMapper {
                 return input.getName();
             }
         }));
-        final List<DefaultProduct> filteredAndOrdered = new ArrayList<DefaultProduct>(inputProductNames.size());
+        final Collection<Product> filteredAndOrdered = new ArrayList<Product>(inputProductNames.size());
         for (final String cur : inputProductNames) {
-            final DefaultProduct found = findOrIllegalState(tmpDefaultProducts, new Predicate<DefaultProduct>() {
+            final Product found = findOrIllegalState(tmpDefaultProducts, new Predicate<Product>() {
                 @Override
-                public boolean apply(final DefaultProduct inputPredicate) {
+                public boolean apply(final Product inputPredicate) {
                     return inputPredicate.getName().equals(cur);
                 }
             }, "Failed to find product " + cur);
             filteredAndOrdered.add(found);
         }
-        return toArray(filteredAndOrdered);
+        return filteredAndOrdered;
     }
 
-    private DefaultPlan[] toDefaultPlans(final Iterable<Plan> input) {
+    private Collection<Plan> toDefaultPlans(final Iterable<Plan> input) {
         if (tmpDefaultPlans == null) {
-            final Function<Plan, DefaultPlan> planTransformer = new Function<Plan, DefaultPlan>() {
+            final Function<Plan, Plan> planTransformer = new Function<Plan, Plan>() {
                 @Override
-                public DefaultPlan apply(final Plan input) {
+                public Plan apply(final Plan input) {
                     return toDefaultPlan(input);
                 }
             };
-            tmpDefaultPlans = ImmutableList.copyOf(Iterables.transform(input, planTransformer));
+            tmpDefaultPlans = ImmutableList.<Plan>copyOf(Iterables.transform(input, planTransformer));
         }
-        return toArray(tmpDefaultPlans);
+        return tmpDefaultPlans;
     }
 
-    private DefaultPlan[] toFilterDefaultPlans(final Iterable<Plan> input) {
+    private Collection<Plan> toFilterDefaultPlans(final Iterable<Plan> input) {
         if (tmpDefaultPlans == null) {
             throw new IllegalStateException("Cannot filter on uninitialized plans");
         }
@@ -309,17 +311,17 @@ public class StandaloneCatalogMapper {
                 return input.getName();
             }
         }));
-        final List<DefaultPlan> filteredAndOrdered = new ArrayList<DefaultPlan>(inputPlanNames.size());
+        final List<Plan> filteredAndOrdered = new ArrayList<Plan>(inputPlanNames.size());
         for (final String cur : inputPlanNames) {
-            final DefaultPlan found = findOrIllegalState(tmpDefaultPlans, new Predicate<DefaultPlan>() {
+            final Plan found = findOrIllegalState(tmpDefaultPlans, new Predicate<Plan>() {
                 @Override
-                public boolean apply(final DefaultPlan inputPredicate) {
+                public boolean apply(final Plan inputPredicate) {
                     return inputPredicate.getName().equals(cur);
                 }
             }, "Failed to find plan " + cur);
             filteredAndOrdered.add(found);
         }
-        return toArray(filteredAndOrdered);
+        return filteredAndOrdered;
     }
 
     private DefaultPriceListSet toDefaultPriceListSet(final PriceList defaultPriceList, final Iterable<PriceList> childrenPriceLists) {
@@ -395,14 +397,14 @@ public class StandaloneCatalogMapper {
         return result;
     }
 
-    private DefaultProduct toDefaultProduct(@Nullable final Product input) {
+    private Product toDefaultProduct(@Nullable final Product input) {
         if (input == null) {
             return null;
         }
         if (tmpDefaultProducts != null) {
-            final DefaultProduct existingProduct = findOrIllegalState(tmpDefaultProducts, new Predicate<DefaultProduct>() {
+            final Product existingProduct = findOrIllegalState(tmpDefaultProducts, new Predicate<Product>() {
                 @Override
-                public boolean apply(final DefaultProduct predicateInput) {
+                public boolean apply(final Product predicateInput) {
                     return predicateInput.getName().equals(input.getName());
                 }
             }, "Unknown product " + input.getName());
@@ -415,11 +417,11 @@ public class StandaloneCatalogMapper {
         return result;
     }
 
-    private DefaultPlan toDefaultPlan(final Plan input) {
+    private Plan toDefaultPlan(final Plan input) {
         if (tmpDefaultPlans != null) {
-            final DefaultPlan existingPlan = findOrIllegalState(tmpDefaultPlans, new Predicate<DefaultPlan>() {
+            final Plan existingPlan = findOrIllegalState(tmpDefaultPlans, new Predicate<Plan>() {
                 @Override
-                public boolean apply(final DefaultPlan predicateInput) {
+                public boolean apply(final Plan predicateInput) {
                     return predicateInput.getName().equals(input.getName());
                 }
             }, "Unknown plan " + input.getName());

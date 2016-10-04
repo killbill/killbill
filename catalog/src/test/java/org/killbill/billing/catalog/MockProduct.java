@@ -16,7 +16,12 @@
 
 package org.killbill.billing.catalog;
 
+import java.util.Collection;
+
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+
+import com.google.common.collect.ImmutableList;
 
 public class MockProduct extends DefaultProduct {
 
@@ -60,15 +65,14 @@ public class MockProduct extends DefaultProduct {
         return new MockProduct("6-RedPaintJob", ProductCategory.ADD_ON, "Vehcles");
     }
 
-    public static DefaultProduct[] createAll() {
-        return new MockProduct[]{
+    public static Collection<Product> createAll() {
+        return ImmutableList.<Product>of(
                 createBicycle(),
                 createPickup(),
                 createSportsCar(),
                 createJet(),
                 createHorn(),
-                createRedPaintJob()
-        };
+                createRedPaintJob());
     }
 
 

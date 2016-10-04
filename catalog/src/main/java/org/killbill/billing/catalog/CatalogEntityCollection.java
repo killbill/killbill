@@ -41,6 +41,14 @@ public class CatalogEntityCollection<T extends CatalogEntity> implements Collect
         }
     }
 
+
+    public CatalogEntityCollection(final Collection<T> entities) {
+        this.data = new TreeMap<String, T>(Ordering.<String>natural());
+        for (final T cur : entities) {
+            addEntry(cur);
+        }
+    }
+
     //
     // Returning such entries will be log(N)
     //
