@@ -240,8 +240,8 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         dfs.setInternationalCurrencySymbol(currencyUnit.getCurrencyCode());
 
         try {
-            final java.util.Currency currency = java.util.Currency.getInstance(invoiceCurrencyCode);
-            dfs.setCurrencySymbol(currency.getSymbol(currencyLocaleMap.get(currency)));
+            Currency currency = Currency.fromCode(invoiceCurrencyCode);
+            dfs.setCurrencySymbol(currency.getSymbol());
         } catch (final IllegalArgumentException e) {
             dfs.setCurrencySymbol(currencyUnit.getSymbol(locale));
         }
