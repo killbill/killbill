@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 
 import org.joda.money.CurrencyUnit;
@@ -72,11 +71,10 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     private final CurrencyConversionApi currencyConversionApi;
     private final InternalTenantContext context;
     private final ResourceBundleFactory bundleFactory;
-    private final Map<java.util.Currency, Locale> currencyLocaleMap;
 
     public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale,
                                    final CurrencyConversionApi currencyConversionApi, final ResourceBundleFactory bundleFactory,
-                                   final InternalTenantContext context, final Map<java.util.Currency, Locale> currencyLocaleMap) {
+                                   final InternalTenantContext context) {
         this.config = config;
         this.invoice = invoice;
         this.dateFormatter = DateTimeFormat.mediumDate().withLocale(locale);
@@ -84,7 +82,6 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         this.currencyConversionApi = currencyConversionApi;
         this.bundleFactory = bundleFactory;
         this.context = context;
-        this.currencyLocaleMap = currencyLocaleMap;
     }
 
     @Override
