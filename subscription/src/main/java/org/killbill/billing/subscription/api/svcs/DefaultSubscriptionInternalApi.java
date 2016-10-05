@@ -18,6 +18,7 @@
 
 package org.killbill.billing.subscription.api.svcs;
 
+import java.sql.SQLDataException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -318,7 +319,15 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         final DateTime now = clock.getUTCNow();
         final DateTime originalCreatedDate = existingBundles.size() > 0 ? existingBundles.get(0).getCreatedDate() : now;
         final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, originalCreatedDate, now, now);
-        return dao.createSubscriptionBundle(bundle, context);
+        SubscriptionBaseBundle subscriptionBundle = null;
+        try {
+            subscriptionBundle = dao.createSubscriptionBundle(bundle, context);
+        } catch (final Exception e) {
+            if (e.getCause() instanceof SQLDataException) {
+                throw new SubscriptionBaseApiException(e, ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
+            }
+        }
+        return subscriptionBundle;
     }
 
     @Override

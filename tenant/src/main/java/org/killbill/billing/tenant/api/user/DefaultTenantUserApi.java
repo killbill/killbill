@@ -18,6 +18,7 @@
 
 package org.killbill.billing.tenant.api.user;
 
+import java.sql.SQLDataException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -89,8 +90,11 @@ public class DefaultTenantUserApi implements TenantUserApi {
 
         try {
             tenantDao.create(new TenantModelDao(tenant), internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
-        } catch (final TenantApiException e) {
-            throw new TenantApiException(e, ErrorCode.TENANT_CREATION_FAILED);
+        } catch (final Exception e) {
+            if (e.getCause() instanceof SQLDataException) {
+                throw new TenantApiException(e, ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
+            }
+            else throw new TenantApiException(e, ErrorCode.TENANT_CREATION_FAILED);
         }
         return tenant;
     }

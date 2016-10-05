@@ -18,6 +18,7 @@
 
 package org.killbill.billing.account.api.user;
 
+import java.sql.SQLDataException;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +35,7 @@ import org.killbill.billing.account.dao.AccountEmailModelDao;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -93,7 +95,14 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
         }
 
         final AccountModelDao account = new AccountModelDao(data);
-        accountDao.create(account, internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
+
+        try {
+            accountDao.create(account, internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
+        } catch (final Exception e) {
+            if (e.getCause() instanceof SQLDataException) {
+                throw new AccountApiException(e, ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
+            }
+        }
 
         return new DefaultAccount(account);
     }
