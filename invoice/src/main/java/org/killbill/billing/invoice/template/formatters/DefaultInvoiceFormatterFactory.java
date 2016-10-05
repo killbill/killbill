@@ -46,10 +46,16 @@ public class DefaultInvoiceFormatterFactory implements InvoiceFormatterFactory {
         }
     }
 
+    /*
+      public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale,
+                                   final CurrencyConversionApi currencyConversionApi, final ResourceBundleFactory bundleFactory,
+                                   final InternalTenantContext context) {
+     */
+
     @Override
     public InvoiceFormatter createInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale, final CurrencyConversionApi currencyConversionApi,
                                                    final ResourceBundleFactory bundleFactory, final InternalTenantContext context) {
-        return new DefaultInvoiceFormatter(config, invoice, locale, currencyConversionApi, bundleFactory, context, currencyLocaleMap);
+        return new DefaultInvoiceFormatter(config, invoice, locale, currencyConversionApi, bundleFactory, context);
     }
 
     @VisibleForTesting
