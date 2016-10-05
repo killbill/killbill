@@ -202,13 +202,13 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
                     "</tr>",
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 499,958 ر.ع.\u200F</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 499,958 ر.ع</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>0,000 ر.ع.\u200F</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>0,000 ر.ع</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 499,958 ر.ع.\u200F</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 499,958 ر.ع</strong></td>\n" +
                     "</tr>",
                     Locale.FRANCE);
     }
@@ -232,13 +232,13 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
                     "</tr>",
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 500 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 500 ¥</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>0 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>0 ¥</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 500 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 500 ¥</strong></td>\n" +
                     "</tr>",
                     Locale.FRANCE);
     }
@@ -262,13 +262,13 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
                     "</tr>",
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>BTC1,105.28843439</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>Ƀ1,105.28843439</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>BTC0.00000000</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>Ƀ0.00000000</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>BTC1,105.28843439</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>Ƀ1,105.28843439</strong></td>\n" +
                     "</tr>",
                     Locale.US);
     }
