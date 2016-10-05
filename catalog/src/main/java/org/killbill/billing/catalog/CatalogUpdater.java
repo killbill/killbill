@@ -284,21 +284,19 @@ public class CatalogUpdater {
     }
 
     private Product getExistingProduct(final String productName) {
-        for (final Product input : catalog.getCurrentProducts()) {
-            if (input.getName().equals(productName)) {
-                return input;
-            }
+        try {
+            return catalog.findCurrentProduct(productName);
+        } catch (final CatalogApiException e) {
+            return null;
         }
-        return null;
     }
 
     private Plan getExistingPlan(final String planName) {
-        for (final Plan input : catalog.getCurrentPlans()) {
-            if (input.getName().equals(planName)) {
-                return input;
-            }
+        try {
+            return catalog.findCurrentPlan(planName);
+        } catch (CatalogApiException e) {
+            return null;
         }
-        return null;
     }
 
     private DefaultPlanRules getSaneDefaultPlanRules(final DefaultPriceList defaultPriceList) {
