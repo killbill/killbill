@@ -172,6 +172,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         final AccountData accountData = new DefaultAccount(accountModelDao);
         try {
             accountUserApi.createAccount(accountData, callContext);
+            Assert.fail();
         } catch (final AccountApiException e) {
             assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
         }

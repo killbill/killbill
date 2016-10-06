@@ -881,6 +881,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         try {
             paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                         createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+            Assert.fail();
         } catch (final PaymentApiException e) {
             assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
         }

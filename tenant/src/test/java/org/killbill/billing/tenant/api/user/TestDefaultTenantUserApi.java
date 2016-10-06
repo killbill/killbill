@@ -153,6 +153,7 @@ public class TestDefaultTenantUserApi extends TenantTestSuiteWithEmbeddedDb {
                                                         "TTR445ee2", "dskjhfs^^54R");
         try {
             tenantUserApi.createTenant(tenantdata, callContext);
+            Assert.fail();
         } catch (final TenantApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
         }

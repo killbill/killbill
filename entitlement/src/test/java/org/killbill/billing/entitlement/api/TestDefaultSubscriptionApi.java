@@ -541,6 +541,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         try {
             entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, null, effectiveDate, effectiveDate, false, ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail();
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
         }
