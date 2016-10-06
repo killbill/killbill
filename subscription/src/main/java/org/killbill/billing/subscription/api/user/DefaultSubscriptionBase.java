@@ -45,7 +45,6 @@ import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Kind;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Order;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.TimeLimit;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Visibility;
@@ -209,7 +208,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
 
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
-                clock, transitions, Order.ASC_FROM_PAST, Kind.SUBSCRIPTION,
+                clock, transitions, Order.ASC_FROM_PAST,
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
         while (it.hasNext()) {
             final SubscriptionBaseTransition cur = it.next();
@@ -265,7 +264,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             return null;
         }
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
-                clock, transitions, Order.ASC_FROM_PAST, Kind.SUBSCRIPTION,
+                clock, transitions, Order.ASC_FROM_PAST,
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
         return it.hasNext() ? it.next() : null;
     }
@@ -342,7 +341,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             return null;
         }
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
-                clock, transitions, Order.DESC_FROM_FUTURE, Kind.SUBSCRIPTION,
+                clock, transitions, Order.DESC_FROM_FUTURE,
                 Visibility.FROM_DISK_ONLY, TimeLimit.PAST_OR_PRESENT_ONLY);
         return it.hasNext() ? it.next() : null;
     }
@@ -356,7 +355,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     public Integer getBillCycleDayLocal() {
 
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
-                clock, transitions, Order.DESC_FROM_FUTURE, Kind.SUBSCRIPTION,
+                clock, transitions, Order.DESC_FROM_FUTURE,
                 Visibility.FROM_DISK_ONLY, TimeLimit.PAST_OR_PRESENT_ONLY);
         while (it.hasNext()) {
             final SubscriptionBaseTransition cur = it.next();
@@ -387,7 +386,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             return Collections.emptyList();
         }
         final List<SubscriptionBaseTransition> result = new ArrayList<SubscriptionBaseTransition>();
-        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(clock, transitions, Order.ASC_FROM_PAST, Kind.ALL, Visibility.ALL, TimeLimit.ALL);
+        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(clock, transitions, Order.ASC_FROM_PAST, Visibility.ALL, TimeLimit.ALL);
         while (it.hasNext()) {
             result.add(it.next());
         }
@@ -464,7 +463,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     public long getLastEventOrderedId() {
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
-                clock, transitions, Order.DESC_FROM_FUTURE, Kind.SUBSCRIPTION,
+                clock, transitions, Order.DESC_FROM_FUTURE,
                 Visibility.FROM_DISK_ONLY, TimeLimit.ALL);
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
@@ -476,7 +475,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
         final List<SubscriptionBaseTransition> result = new ArrayList<SubscriptionBaseTransition>();
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
-                clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
+                clock, transitions, Order.ASC_FROM_PAST,
                 Visibility.ALL, TimeLimit.ALL);
         // Remove anything prior to first CREATE
         boolean foundInitialEvent = false;
@@ -502,7 +501,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(clock,
                                                                                                      transitions,
                                                                                                      Order.DESC_FROM_FUTURE,
-                                                                                                     Kind.SUBSCRIPTION,
                                                                                                      Visibility.ALL,
                                                                                                      TimeLimit.PAST_OR_PRESENT_ONLY);
 
@@ -552,7 +550,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     "No transitions for subscription %s", getId()));
         }
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
-                clock, transitions, Order.DESC_FROM_FUTURE, Kind.SUBSCRIPTION,
+                clock, transitions, Order.DESC_FROM_FUTURE,
                 Visibility.ALL, TimeLimit.PAST_OR_PRESENT_ONLY);
         while (it.hasNext()) {
             final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();

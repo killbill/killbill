@@ -27,21 +27,15 @@ public class SubscriptionBaseTransitionDataIterator implements Iterator<Subscrip
 
     private final Clock clock;
     private final Iterator<SubscriptionBaseTransition> it;
-    private final Kind kind;
     private final TimeLimit timeLimit;
     private final Visibility visibility;
+    private final Order order;
 
     private SubscriptionBaseTransition next;
 
     public enum Order {
         ASC_FROM_PAST,
         DESC_FROM_FUTURE
-    }
-
-    public enum Kind {
-        SUBSCRIPTION,
-        BILLING,
-        ALL
     }
 
     public enum TimeLimit {
@@ -56,12 +50,12 @@ public class SubscriptionBaseTransitionDataIterator implements Iterator<Subscrip
     }
 
     public SubscriptionBaseTransitionDataIterator(final Clock clock, final LinkedList<SubscriptionBaseTransition> transitions,
-                                                  final Order order, final Kind kind, final Visibility visibility, final TimeLimit timeLimit) {
+                                                  final Order order, final Visibility visibility, final TimeLimit timeLimit) {
         this.it = (order == Order.DESC_FROM_FUTURE) ? transitions.descendingIterator() : transitions.iterator();
         this.clock = clock;
-        this.kind = kind;
         this.timeLimit = timeLimit;
         this.visibility = visibility;
+        this.order = order;
         this.next = null;
     }
 
