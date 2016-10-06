@@ -16,16 +16,19 @@
 
 package org.killbill.billing.catalog;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
-import java.util.Set;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogEntity;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanAlignmentChange;
@@ -44,6 +47,8 @@ import org.killbill.billing.catalog.rules.DefaultCaseChangePlanPolicy;
 import org.killbill.billing.catalog.rules.DefaultCaseCreateAlignment;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
 
+import com.google.common.collect.ImmutableList;
+
 public class MockCatalog extends StandaloneCatalog implements Catalog {
 
     private static final String[] PRODUCT_NAMES = new String[]{"TestProduct1", "TestProduct2", "TestProduct3"};
@@ -55,7 +60,7 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     public MockCatalog() {
         setEffectiveDate(new Date());
         setProducts(MockProduct.createAll());
-        setPlans((DefaultPlan[]) MockPlan.createAll());
+        setPlans(MockPlan.createAll());
         populateRules();
         populatePriceLists();
     }
@@ -74,14 +79,19 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     public void populatePriceLists() {
-        final DefaultPlan[] plans = getCurrentPlans();
+        final Collection<Plan> plans = getCurrentPlans();
 
-        final DefaultPriceList[] priceList = new DefaultPriceList[plans.length - 1];
-        for (int i = 1; i < plans.length; i++) {
-            priceList[i - 1] = new DefaultPriceList(new DefaultPlan[]{plans[i]}, plans[i].getName() + "-pl");
+        final DefaultPriceList[] priceList = new DefaultPriceList[plans.size() - 1];
+        int i = 1;
+        final Iterator<Plan> it = plans.iterator();
+        final Plan initialPlan = it.next();
+        while (it.hasNext()) {
+            final Plan plan = it.next();
+            priceList[i - 1] = new DefaultPriceList(new DefaultPlan[] { (DefaultPlan) plan}, plan.getName() + "-pl");
+            i++;
         }
 
-        final DefaultPriceListSet set = new DefaultPriceListSet(new PriceListDefault(new DefaultPlan[]{plans[0]}), priceList);
+        final DefaultPriceListSet set = new DefaultPriceListSet(new PriceListDefault(new DefaultPlan[]{(DefaultPlan) initialPlan}), priceList);
         setPriceLists(set);
     }
 
@@ -100,12 +110,12 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public Product[] getProducts(final DateTime requestedDate) throws CatalogApiException {
+    public Collection<Product> getProducts(final DateTime requestedDate) throws CatalogApiException {
         return getCurrentProducts();
     }
 
     @Override
-    public Plan[] getPlans(final DateTime requestedDate) throws CatalogApiException {
+    public Collection<Plan> getPlans(final DateTime requestedDate) throws CatalogApiException {
         return getCurrentPlans();
     }
 
@@ -233,6 +243,23 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     @Override
     public boolean canCreatePlan(final PlanSpecifier specifier) throws CatalogApiException {
         return canCreatePlan;
+    }
+
+
+    public DefaultProduct getCurrentProduct(int idx) {
+        return (DefaultProduct) getCurrentProducts().toArray()[idx];
+    }
+
+    private <T extends CatalogEntity> void convertCurrentEntries(final Collection<T> unordered, final T [] result) {
+        // Tests are not so well written and make assumption on how such entries are ordered
+        final LinkedList<T> list = new LinkedList<T>(unordered);
+        Collections.sort(list, new Comparator<T>() {
+            @Override
+            public int compare(final T o1, final T o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        list.toArray(result);
     }
 
     public void setCanCreatePlan(final boolean canCreatePlan) {

@@ -20,7 +20,6 @@ package org.killbill.billing.catalog;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 
 import org.joda.time.DateTime;
@@ -59,11 +58,10 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final CatalogUpdater catalogUpdater = new CatalogUpdater("dummy", BillingMode.IN_ADVANCE, now, null);
         final String catalogXML = catalogUpdater.getCatalogXML();
         final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(catalogXML.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
-        assertEquals(catalog.getCurrentPlans().length, 0);
+        assertEquals(catalog.getCurrentPlans().size(), 0);
     }
 
-
-        @Test(groups = "fast")
+    @Test(groups = "fast")
     public void testAddNoTrialPlanOnFirstCatalog() throws CatalogApiException {
 
         final DateTime now = clock.getUTCNow();
@@ -75,13 +73,13 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final StandaloneCatalog catalog = catalogUpdater.getCatalog();
 
-        assertEquals(catalog.getCurrentProducts().length, 1);
+        assertEquals(catalog.getCurrentProducts().size(), 1);
 
-        final Product product = catalog.getCurrentProducts()[0];
+        final Product product = catalog.getCurrentProducts().iterator().next();
         assertEquals(product.getName(), "Foo");
         assertEquals(product.getCategory(), ProductCategory.BASE);
 
-        assertEquals(catalog.getCurrentPlans().length, 1);
+        assertEquals(catalog.getCurrentPlans().size(), 1);
 
         final Plan plan = catalog.findCurrentPlan("foo-monthly");
         assertEquals(plan.getName(), "foo-monthly");
@@ -99,8 +97,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         assertEquals(catalog.getPriceLists().getAllPriceLists().size(), 1);
         final PriceList priceList = catalog.getPriceLists().getAllPriceLists().get(0);
         assertEquals(priceList.getName(), new PriceListDefault().getName());
-        assertEquals(priceList.getPlans().length, 1);
-        assertEquals(priceList.getPlans()[0].getName(), "foo-monthly");
+        assertEquals(priceList.getPlans().size(), 1);
+        assertEquals(priceList.getPlans().iterator().next().getName(), "foo-monthly");
     }
 
 
@@ -116,13 +114,13 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final StandaloneCatalog catalog = catalogUpdater.getCatalog();
 
-        assertEquals(catalog.getCurrentProducts().length, 1);
+        assertEquals(catalog.getCurrentProducts().size(), 1);
 
-        final Product product = catalog.getCurrentProducts()[0];
+        final Product product = catalog.getCurrentProducts().iterator().next();
         assertEquals(product.getName(), "Foo");
         assertEquals(product.getCategory(), ProductCategory.BASE);
 
-        assertEquals(catalog.getCurrentPlans().length, 1);
+        assertEquals(catalog.getCurrentPlans().size(), 1);
 
         final Plan plan = catalog.findCurrentPlan("foo-monthly");
         assertEquals(plan.getName(), "foo-monthly");
@@ -146,8 +144,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         assertEquals(catalog.getPriceLists().getAllPriceLists().size(), 1);
         final PriceList priceList = catalog.getPriceLists().getAllPriceLists().get(0);
         assertEquals(priceList.getName(), new PriceListDefault().getName());
-        assertEquals(priceList.getPlans().length, 1);
-        assertEquals(priceList.getPlans()[0].getName(), "foo-monthly");
+        assertEquals(priceList.getPlans().size(), 1);
+        assertEquals(priceList.getPlans().iterator().next().getName(), "foo-monthly");
     }
 
 
@@ -158,7 +156,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
-        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 3);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 3);
 
         final CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
 
@@ -183,7 +181,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         assertEquals(catalog.getPriceLists().getAllPriceLists().size(), 1);
         final PriceList priceList = catalog.getPriceLists().getAllPriceLists().get(0);
         assertEquals(priceList.getName(), new PriceListDefault().getName());
-        assertEquals(priceList.getPlans().length, 4);
+        assertEquals(priceList.getPlans().size(), 4);
     }
 
 
@@ -193,7 +191,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
-        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 3);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 3);
 
         final CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
 
@@ -224,7 +222,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final StandaloneCatalog originalCatalog = enhanceOriginalCatalogForInvalidTestCases("SpyCarBasic.xml");
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
-        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 5);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 5);
 
         CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
 
@@ -265,7 +263,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
-        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().length, 3);
+        assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 3);
 
         final CatalogUpdater catalogUpdater = new CatalogUpdater(originalCatalog);
 
@@ -282,7 +280,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "        <currency>GBP</currency>\n" +
                                    "    </currencies>\n" +
                                    "    <products>\n" +
-                                   "        <product name=\"Standard\">\n" +
+                                   "        <product name=\"Dynamic\">\n" +
                                    "            <category>BASE</category>\n" +
                                    "            <included/>\n" +
                                    "            <available/>\n" +
@@ -294,13 +292,13 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "            <available/>\n" +
                                    "            <limits/>\n" +
                                    "        </product>\n" +
-                                   "        <product name=\"Super\">\n" +
+                                   "        <product name=\"Standard\">\n" +
                                    "            <category>BASE</category>\n" +
                                    "            <included/>\n" +
                                    "            <available/>\n" +
                                    "            <limits/>\n" +
                                    "        </product>\n" +
-                                   "        <product name=\"Dynamic\">\n" +
+                                   "        <product name=\"Super\">\n" +
                                    "            <category>BASE</category>\n" +
                                    "            <included/>\n" +
                                    "            <available/>\n" +
@@ -340,22 +338,18 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "        </priceList>\n" +
                                    "    </rules>\n" +
                                    "    <plans>\n" +
-                                   "        <plan name=\"standard-monthly\">\n" +
-                                   "            <product>Standard</product>\n" +
+                                   "        <plan name=\"dynamic-annual\">\n" +
+                                   "            <product>Dynamic</product>\n" +
                                    "            <initialPhases>\n" +
                                    "                <phase type=\"TRIAL\">\n" +
                                    "                    <duration>\n" +
                                    "                        <unit>DAYS</unit>\n" +
-                                   "                        <number>30</number>\n" +
+                                   "                        <number>14</number>\n" +
                                    "                    </duration>\n" +
                                    "                    <fixed type=\"ONE_TIME\">\n" +
                                    "                        <fixedPrice>\n" +
                                    "                            <price>\n" +
                                    "<currency>USD</currency>\n" +
-                                   "<value>0</value>\n" +
-                                   "                            </price>\n" +
-                                   "                            <price>\n" +
-                                   "<currency>GBP</currency>\n" +
                                    "<value>0</value>\n" +
                                    "                            </price>\n" +
                                    "                        </fixedPrice>\n" +
@@ -372,12 +366,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "                    <billingPeriod>MONTHLY</billingPeriod>\n" +
                                    "                    <recurringPrice>\n" +
                                    "                        <price>\n" +
-                                   "                            <currency>GBP</currency>\n" +
-                                   "                            <value>75.00</value>\n" +
-                                   "                        </price>\n" +
-                                   "                        <price>\n" +
                                    "                            <currency>USD</currency>\n" +
-                                   "                            <value>100.00</value>\n" +
+                                   "                            <value>10</value>\n" +
                                    "                        </price>\n" +
                                    "                    </recurringPrice>\n" +
                                    "                </recurring>\n" +
@@ -430,6 +420,51 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "            </finalPhase>\n" +
                                    "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
                                    "        </plan>\n" +
+                                   "        <plan name=\"standard-monthly\">\n" +
+                                   "            <product>Standard</product>\n" +
+                                   "            <initialPhases>\n" +
+                                   "                <phase type=\"TRIAL\">\n" +
+                                   "                    <duration>\n" +
+                                   "                        <unit>DAYS</unit>\n" +
+                                   "                        <number>30</number>\n" +
+                                   "                    </duration>\n" +
+                                   "                    <fixed type=\"ONE_TIME\">\n" +
+                                   "                        <fixedPrice>\n" +
+                                   "                            <price>\n" +
+                                   "<currency>USD</currency>\n" +
+                                   "<value>0</value>\n" +
+                                   "                            </price>\n" +
+                                   "                            <price>\n" +
+                                   "<currency>GBP</currency>\n" +
+                                   "<value>0</value>\n" +
+                                   "                            </price>\n" +
+                                   "                        </fixedPrice>\n" +
+                                   "                    </fixed>\n" +
+                                   "                    <usages/>\n" +
+                                   "                </phase>\n" +
+                                   "            </initialPhases>\n" +
+                                   "            <finalPhase type=\"EVERGREEN\">\n" +
+                                   "                <duration>\n" +
+                                   "                    <unit>UNLIMITED</unit>\n" +
+                                   "                    <number>-1</number>\n" +
+                                   "                </duration>\n" +
+                                   "                <recurring>\n" +
+                                   "                    <billingPeriod>MONTHLY</billingPeriod>\n" +
+                                   "                    <recurringPrice>\n" +
+                                   "                        <price>\n" +
+                                   "                            <currency>GBP</currency>\n" +
+                                   "                            <value>75.00</value>\n" +
+                                   "                        </price>\n" +
+                                   "                        <price>\n" +
+                                   "                            <currency>USD</currency>\n" +
+                                   "                            <value>100.00</value>\n" +
+                                   "                        </price>\n" +
+                                   "                    </recurringPrice>\n" +
+                                   "                </recurring>\n" +
+                                   "                <usages/>\n" +
+                                   "            </finalPhase>\n" +
+                                   "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
+                                   "        </plan>\n" +
                                    "        <plan name=\"super-monthly\">\n" +
                                    "            <product>Super</product>\n" +
                                    "            <initialPhases>\n" +
@@ -475,51 +510,14 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "            </finalPhase>\n" +
                                    "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
                                    "        </plan>\n" +
-                                   "        <plan name=\"dynamic-annual\">\n" +
-                                   "            <product>Dynamic</product>\n" +
-                                   "            <initialPhases>\n" +
-                                   "                <phase type=\"TRIAL\">\n" +
-                                   "                    <duration>\n" +
-                                   "                        <unit>DAYS</unit>\n" +
-                                   "                        <number>14</number>\n" +
-                                   "                    </duration>\n" +
-                                   "                    <fixed type=\"ONE_TIME\">\n" +
-                                   "                        <fixedPrice>\n" +
-                                   "                            <price>\n" +
-                                   "<currency>USD</currency>\n" +
-                                   "<value>0</value>\n" +
-                                   "                            </price>\n" +
-                                   "                        </fixedPrice>\n" +
-                                   "                    </fixed>\n" +
-                                   "                    <usages/>\n" +
-                                   "                </phase>\n" +
-                                   "            </initialPhases>\n" +
-                                   "            <finalPhase type=\"EVERGREEN\">\n" +
-                                   "                <duration>\n" +
-                                   "                    <unit>UNLIMITED</unit>\n" +
-                                   "                    <number>-1</number>\n" +
-                                   "                </duration>\n" +
-                                   "                <recurring>\n" +
-                                   "                    <billingPeriod>MONTHLY</billingPeriod>\n" +
-                                   "                    <recurringPrice>\n" +
-                                   "                        <price>\n" +
-                                   "                            <currency>USD</currency>\n" +
-                                   "                            <value>10</value>\n" +
-                                   "                        </price>\n" +
-                                   "                    </recurringPrice>\n" +
-                                   "                </recurring>\n" +
-                                   "                <usages/>\n" +
-                                   "            </finalPhase>\n" +
-                                   "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
-                                   "        </plan>\n" +
                                    "    </plans>\n" +
                                    "    <priceLists>\n" +
                                    "        <defaultPriceList name=\"DEFAULT\">\n" +
                                    "            <plans>\n" +
-                                   "                <plan>standard-monthly</plan>\n" +
-                                   "                <plan>sports-monthly</plan>\n" +
-                                   "                <plan>super-monthly</plan>\n" +
                                    "                <plan>dynamic-annual</plan>\n" +
+                                   "                <plan>sports-monthly</plan>\n" +
+                                   "                <plan>standard-monthly</plan>\n" +
+                                   "                <plan>super-monthly</plan>\n" +
                                    "            </plans>\n" +
                                    "        </defaultPriceList>\n" +
                                    "    </priceLists>\n" +

@@ -91,7 +91,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(invoice.getCreditedAmount().doubleValue(), 0.00);
 
         // Verify the merge
-        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap());
+        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext);
         final List<InvoiceItem> invoiceItems = formatter.getInvoiceItems();
         Assert.assertEquals(invoiceItems.size(), 1);
         Assert.assertEquals(invoiceItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
@@ -140,7 +140,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(invoice.getRefundedAmount().doubleValue(), -1.00);
 
         // Verify the merge
-        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap());
+        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext);
         final List<InvoiceItem> invoiceItems = formatter.getInvoiceItems();
         Assert.assertEquals(invoiceItems.size(), 4);
         Assert.assertEquals(invoiceItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
@@ -202,13 +202,13 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
                     "</tr>",
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 499,958 ر.ع.\u200F</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 499,958 ر.ع</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>0,000 ر.ع.\u200F</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>0,000 ر.ع</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 499,958 ر.ع.\u200F</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 499,958 ر.ع</strong></td>\n" +
                     "</tr>",
                     Locale.FRANCE);
     }
@@ -232,13 +232,13 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
                     "</tr>",
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 500 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 500 ¥</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>0 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>0 ¥</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 500 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 500 ¥</strong></td>\n" +
                     "</tr>",
                     Locale.FRANCE);
     }
@@ -262,13 +262,13 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
                     "</tr>",
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>BTC1,105.28843439</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>Ƀ1,105.28843439</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>BTC0.00000000</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>Ƀ0.00000000</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>BTC1,105.28843439</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>Ƀ1,105.28843439</strong></td>\n" +
                     "</tr>",
                     Locale.US);
     }
@@ -513,7 +513,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
         data.put("text", translator);
 
-        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, Locale.US, currencyConversionApi, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap()));
+        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, Locale.US, currencyConversionApi, resourceBundleFactory, internalCallContext));
 
         final String formattedText = templateEngine.executeTemplateText(template, data);
 
@@ -522,7 +522,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     private void checkOutput(final Invoice invoice, final String template, final String expected, final Locale locale) {
         final Map<String, Object> data = new HashMap<String, Object>();
-        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, locale, null, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap()));
+        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, locale, null, resourceBundleFactory, internalCallContext));
 
         final String formattedText = templateEngine.executeTemplateText(template, data);
         Assert.assertEquals(formattedText, expected);

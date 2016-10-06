@@ -122,7 +122,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsNoBillingPeriod() throws CatalogApiException, AccountApiException {
-        final Plan nextPlan = catalog.findPlan("PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
         // The trial has no billing period
         final PlanPhase nextPhase = nextPlan.getAllPhases()[0];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
@@ -135,7 +135,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsSubscriptionAligned() throws CatalogApiException, AccountApiException {
-        final Plan nextPlan = catalog.findPlan("PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -150,7 +150,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsAccountAligned() throws CatalogApiException, AccountApiException {
-        final Plan nextPlan = catalog.findPlan("PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -163,14 +163,14 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsBundleAligned() throws CatalogApiException, AccountApiException {
-        final Plan nextPlan = catalog.findPlan("Horn1USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("7-Horn1USD", clock.getUTCNow());
         final PlanPhase nextPhase = nextPlan.getAllPhases()[0];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
         final Account account = createAccount(1);
 
         catalog.setBillingAlignment(BillingAlignment.BUNDLE);
-        ((MockSubscription) subscription).setPlan(catalog.findPlan("PickupTrialEvergreen10USD", now));
+        ((MockSubscription) subscription).setPlan(catalog.findPlan("3-PickupTrialEvergreen10USD", now));
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
         // The expected BCD is when the subscription started
@@ -179,7 +179,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsWithBlock() throws CatalogApiException, AccountApiException {
-        final Plan nextPlan = catalog.findPlan("PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -201,7 +201,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsAutoInvoicingOffAccount() throws CatalogApiException, AccountApiException, TagApiException {
-        final Plan nextPlan = catalog.findPlan("PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -217,7 +217,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsAutoInvoicingOffBundle() throws CatalogApiException, AccountApiException, TagApiException {
-        final Plan nextPlan = catalog.findPlan("PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         createSubscriptionCreationEvent(nextPlan, nextPhase);
 

@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -80,7 +81,7 @@ public class CatalogJson {
         currencies = Arrays.asList(catalog.getSupportedCurrencies(requestedDate));
         priceLists = new ArrayList<PriceListJson>();
 
-        final Plan[] plans = catalog.getPlans(requestedDate);
+        final Collection<Plan> plans = catalog.getPlans(requestedDate);
         final Map<String, ProductJson> productMap = new HashMap<String, ProductJson>();
         for (final Plan plan : plans) {
             // Build the product associated with this plan
@@ -190,7 +191,7 @@ public class CatalogJson {
         return pricesJson;
     }
 
-    private List<String> toProductNames(final Product[] in) {
+    private List<String> toProductNames(final Collection<Product> in) {
         return Lists.transform(ImmutableList.<Product>copyOf(in),
                                new Function<Product, String>() {
                                    @Override

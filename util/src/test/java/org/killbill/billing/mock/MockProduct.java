@@ -16,17 +16,21 @@
 
 package org.killbill.billing.mock;
 
+import java.util.Collection;
+
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+
+import com.google.common.collect.ImmutableList;
 
 public class MockProduct implements Product {
 
     private final String name;
     private final ProductCategory category;
     private final String catalogName;
-    private final Product[] included;
-    private final Product[] available;
+    private final Collection<Product> included;
+    private final Collection<Product> available;
 
     public MockProduct() {
         this("TestProduct", ProductCategory.BASE, "Vehicules");
@@ -40,8 +44,8 @@ public class MockProduct implements Product {
         this.name = name;
         this.category = category;
         this.catalogName = catalogName;
-        this.included = included;
-        this.available = available;
+        this.included = ImmutableList.copyOf(included);
+        this.available = ImmutableList.copyOf(available);
     }
 
     @Override
@@ -60,12 +64,12 @@ public class MockProduct implements Product {
     }
 
     @Override
-    public Product[] getAvailable() {
+    public Collection<Product> getAvailable() {
         return available;
     }
 
     @Override
-    public Product[] getIncluded() {
+    public Collection<Product> getIncluded() {
         return included;
     }
 
