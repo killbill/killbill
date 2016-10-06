@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.AccountTestSuiteWithEmbeddedDB;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -41,6 +42,7 @@ import com.google.common.eventbus.Subscribe;
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.killbill.billing.account.AccountTestUtils.createTestAccount;
+import static org.testng.Assert.assertEquals;
 
 public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
@@ -162,4 +164,16 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
     }
 
+    @Test(groups = "slow", description = "Test Account creation with External Key over limit")
+        public void testCreateAccountWithExternalKeyOverLimit() throws Exception {
+        AccountModelDao accountModelDao = createTestAccount();
+        // Set an externalKey of 256 characters (over limit)
+        accountModelDao.setExternalKey("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.");
+        final AccountData accountData = new DefaultAccount(accountModelDao);
+        try {
+            accountUserApi.createAccount(accountData, callContext);
+        } catch (final AccountApiException e) {
+            assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
+        }
+    }
 }

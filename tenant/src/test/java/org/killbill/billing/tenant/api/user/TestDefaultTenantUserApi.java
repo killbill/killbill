@@ -20,9 +20,11 @@ package org.killbill.billing.tenant.api.user;
 import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.tenant.TenantTestSuiteWithEmbeddedDb;
 import org.killbill.billing.tenant.api.DefaultTenant;
 import org.killbill.billing.tenant.api.Tenant;
+import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantData;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.testng.Assert;
@@ -140,5 +142,19 @@ public class TestDefaultTenantUserApi extends TenantTestSuiteWithEmbeddedDb {
         tenantUserApi.deleteTenantKey(tenantKey, callContext);
         value = tenantUserApi.getTenantValuesForKey(tenantKey, callContext);
         Assert.assertEquals(value.size(), 0);
+    }
+
+    @Test(groups = "slow", description = "Test Tenant creation with External Key over limit")
+    public void testCreateTenantWithExternalKeyOverLimit() throws Exception {
+        final TenantData tenantdata = new DefaultTenant(UUID.randomUUID(),
+                                                        clock.getUTCNow(),
+                                                        clock.getUTCNow(),
+                                                        "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.",
+                                                        "TTR445ee2", "dskjhfs^^54R");
+        try {
+            tenantUserApi.createTenant(tenantdata, callContext);
+        } catch (final TenantApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
+        }
     }
 }

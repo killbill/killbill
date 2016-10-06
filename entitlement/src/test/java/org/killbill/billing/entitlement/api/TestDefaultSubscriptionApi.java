@@ -32,7 +32,6 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
@@ -526,6 +525,26 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         }
     }
 
+    @Test(groups = "slow")
+    public void testSubscriptionCreationWithExternalKeyOverLimit() throws AccountApiException, SubscriptionApiException, EntitlementApiException {
+        final String externalKey = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.";
+
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        //2013-08-07
+        final LocalDate effectiveDate = initialDate.plusMonths(1);
+
+        try {
+            entitlementApi.createBaseEntitlement(account.getId(), spec, externalKey, null, effectiveDate, effectiveDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
+        }
+    }
 
     private void verifyBlockingStates(final Iterable<BlockingState> result, final List<BlockingState> expected) {
         int i = 0;
