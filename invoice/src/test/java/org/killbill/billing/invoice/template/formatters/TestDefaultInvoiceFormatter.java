@@ -55,14 +55,12 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     private TranslatorConfig config;
     private MustacheTemplateEngine templateEngine;
-    private DefaultInvoiceFormatterFactory defaultInvoiceFormatterFactory;
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
         config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();
-        defaultInvoiceFormatterFactory = new DefaultInvoiceFormatterFactory();
     }
 
     @Test(groups = "fast")
