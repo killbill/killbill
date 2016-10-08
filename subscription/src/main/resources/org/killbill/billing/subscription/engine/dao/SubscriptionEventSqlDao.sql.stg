@@ -70,6 +70,19 @@ and effective_date > :now
 ;
 >>
 
+getFutureOrPresentActiveEventForSubscription() ::= <<
+select <allTableFields()>
+, record_id as total_ordering
+from <tableName()>
+where
+subscription_id = :subscriptionId
+and is_active = true
+and effective_date >= :now
+<AND_CHECK_TENANT()>
+<defaultOrderBy()>
+;
+>>
+
 getEventsForSubscription() ::= <<
 select <allTableFields()>
 , record_id as total_ordering
