@@ -153,6 +153,12 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 return;
             }
 
+            final SubscriptionBaseTransitionData transition = subscription.getTransitionFromEvent(event, seqId);
+            if (transition == null) {
+                log.warn("Skipping event ='{}', no matching transition was built", event.getType());
+                return;
+            }
+
             boolean eventSent = false;
             if (event.getType() == EventType.PHASE) {
                 eventSent = onPhaseEvent(subscription, event, context);
@@ -165,7 +171,6 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
 
             if (!eventSent) {
                 // Methods above invoking the DAO will send this event directly from the transaction
-                final SubscriptionBaseTransitionData transition = subscription.getTransitionFromEvent(event, seqId);
                 final BusEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition,
                                                                                 subscription.getAlignStartDate(),
                                                                                 context.getUserToken(),

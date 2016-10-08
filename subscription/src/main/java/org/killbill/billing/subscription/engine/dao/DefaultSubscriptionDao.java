@@ -688,8 +688,14 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     private void cancelFutureEventsFromTransaction(final UUID subscriptionId, final DateTime effectiveDate, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final boolean includingBCDChange, final InternalCallContext context) {
-        final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), effectiveDate.toDate(), context);
+        final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getFutureOrPresentActiveEventForSubscription(subscriptionId.toString(), effectiveDate.toDate(), context);
         for (final SubscriptionEventModelDao cur : eventModels) {
+
+            // Skip CREATE event (because of date equality in the query and we don't want to invalidate CREATE event that match a CANCEL event)
+            if (cur.getEventType() == EventType.API_USER && cur.getUserType()== ApiEventType.CREATE) {
+                continue;
+            }
+
             if (includingBCDChange || cur.getEventType() != EventType.BCD_UPDATE) {
                 unactivateEventFromTransaction(cur, entitySqlDaoWrapperFactory, context);
             }
@@ -707,6 +713,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
         SubscriptionEventModelDao futureEvent = null;
         final Date now = clock.getUTCNow().toDate();
+
         final List<SubscriptionEventModelDao> eventModels = dao.become(SubscriptionEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
         for (final SubscriptionEventModelDao cur : eventModels) {
             if (cur.getEventType() == type &&
@@ -985,13 +992,15 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                      final SubscriptionBaseEvent immediateEvent, final int seqId, final InternalCallContext context) {
         try {
             final SubscriptionBaseTransitionData transition = subscription.getTransitionFromEvent(immediateEvent, seqId);
-            final BusEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition,
-                                                                            subscription.getAlignStartDate(),
-                                                                            context.getUserToken(),
-                                                                            context.getAccountRecordId(),
-                                                                            context.getTenantRecordId());
+            if (transition != null) {
+                final BusEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition,
+                                                                                subscription.getAlignStartDate(),
+                                                                                context.getUserToken(),
+                                                                                context.getAccountRecordId(),
+                                                                                context.getTenantRecordId());
 
-            eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
+                eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
+            }
         } catch (final EventBusException e) {
             log.warn("Failed to post effective event for subscriptionId='{}'", subscription.getId(), e);
         }

@@ -16,6 +16,7 @@
 
 package org.killbill.billing.subscription.alignment;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -38,7 +39,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
 
 public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
@@ -159,7 +159,9 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
                                                                     phaseType,
                                                                     ApiEventType.CREATE
                                                                    );
-        defaultSubscriptionBase.rebuildTransitions(ImmutableList.<SubscriptionBaseEvent>of(event), catalogService.getFullCatalog(true, true, internalCallContext));
+        final List<SubscriptionBaseEvent> events = new ArrayList<SubscriptionBaseEvent>();
+        events.add(event);
+        defaultSubscriptionBase.rebuildTransitions(events, catalogService.getFullCatalog(true, true, internalCallContext));
 
         Assert.assertEquals(defaultSubscriptionBase.getAllTransitions().size(), 1);
         Assert.assertNull(defaultSubscriptionBase.getAllTransitions().get(0).getPreviousPhase());
@@ -184,7 +186,11 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
                                                                     ApiEventType.CHANGE
                                                                    );
 
-        defaultSubscriptionBase.rebuildTransitions(ImmutableList.<SubscriptionBaseEvent>of(previousEvent, event), catalogService.getFullCatalog(true, true, internalCallContext));
+        final List<SubscriptionBaseEvent> events = new ArrayList<SubscriptionBaseEvent>();
+        events.add(previousEvent);
+        events.add(event);
+
+        defaultSubscriptionBase.rebuildTransitions(events, catalogService.getFullCatalog(true, true, internalCallContext));
 
         final List<SubscriptionBaseTransition> newTransitions = defaultSubscriptionBase.getAllTransitions();
         Assert.assertEquals(newTransitions.size(), 2);

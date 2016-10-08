@@ -29,7 +29,6 @@ public class SubscriptionBaseTransitionDataIterator implements Iterator<Subscrip
     private final Iterator<SubscriptionBaseTransition> it;
     private final TimeLimit timeLimit;
     private final Visibility visibility;
-    private final Order order;
 
     private SubscriptionBaseTransition next;
 
@@ -55,7 +54,6 @@ public class SubscriptionBaseTransitionDataIterator implements Iterator<Subscrip
         this.clock = clock;
         this.timeLimit = timeLimit;
         this.visibility = visibility;
-        this.order = order;
         this.next = null;
     }
 

@@ -350,7 +350,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
         // ACTIVATE CHANGE BY MOVING AFTER CTD
-        testListener.pushExpectedEvents(NextEvent.CHANGE, NextEvent.CHANGE);
+        testListener.pushExpectedEvents(NextEvent.CHANGE);
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
