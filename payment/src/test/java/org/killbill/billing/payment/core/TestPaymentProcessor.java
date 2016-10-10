@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
@@ -33,6 +34,7 @@ import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -197,6 +199,35 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
         final UUID paymentId = purchase.getId();
         verifyPaymentTransaction(purchase.getTransactions().get(0), creditKey, TransactionType.CREDIT, TEN, paymentId);
         paymentBusListener.verify(1, account.getId(), paymentId, TEN, TransactionStatus.SUCCESS);
+    }
+
+    @Test(groups = "slow")
+    public void testInvalidTransition() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToPending = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.ERROR, false));
+
+        // AUTH
+        final String authorizationKey = UUID.randomUUID().toString();
+        final Payment authorization = paymentProcessor.createAuthorization(true, null, account, null, null, TEN, CURRENCY, paymentExternalKey, authorizationKey,
+                                                                           SHOULD_LOCK_ACCOUNT, pluginPropertiesToDriveTransationToPending, callContext, internalCallContext);
+        verifyPayment(authorization, paymentExternalKey, ZERO, ZERO, ZERO, 1);
+        final UUID paymentId = authorization.getId();
+        verifyPaymentTransaction(authorization.getTransactions().get(0), authorizationKey, TransactionType.AUTHORIZE, TEN, paymentId);
+        paymentBusListener.verify(0, 1, 0, account.getId(), paymentId, ZERO, TransactionStatus.PAYMENT_FAILURE);
+
+        // REFUND
+        final String refundKey = UUID.randomUUID().toString();
+        try {
+            paymentProcessor.createRefund(true, null, account, paymentId, TEN, CURRENCY, refundKey,
+                                          SHOULD_LOCK_ACCOUNT, PLUGIN_PROPERTIES, callContext, internalCallContext);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+        }
+        final Payment refreshedPayment = paymentProcessor.getPayment(authorization.getId(), false, false, PLUGIN_PROPERTIES, callContext, internalCallContext);
+        // Make sure no state has been created (no UNKNOWN transaction for the refund)
+        verifyPayment(refreshedPayment, paymentExternalKey, ZERO, ZERO, ZERO, 1);
+        paymentBusListener.verify(0, 1, 0, account.getId(), paymentId, ZERO, TransactionStatus.PAYMENT_FAILURE);
     }
 
     @Test(groups = "slow")
