@@ -52,7 +52,7 @@ DROP TABLE IF EXISTS bundles;
 CREATE TABLE bundles (
     record_id serial unique,
     id varchar(36) NOT NULL,
-    external_key varchar(64) NOT NULL,
+    external_key varchar(255) NOT NULL,
     account_id varchar(36) NOT NULL,
     last_sys_update_date datetime,
     original_created_date datetime NOT NULL,

@@ -79,6 +79,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentExternalKey);
 
         final String transactionType = TransactionType.AUTHORIZE.name();
         Payment payment = null;
@@ -125,6 +126,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentExternalKey);
 
         final String transactionType = TransactionType.AUTHORIZE.name();
 
@@ -165,6 +167,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(amount, "amount");
         checkNotNullParameter(currency, "currency");
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.CAPTURE.name();
         Payment payment = null;
@@ -208,6 +211,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(amount, "amount");
         checkNotNullParameter(currency, "currency");
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.CAPTURE.name();
         Payment payment = null;
@@ -249,6 +253,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.PURCHASE.name();
         Payment payment = null;
@@ -294,6 +299,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         if (paymentMethodId == null && !paymentOptions.isExternalPayment()) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, "paymentMethodId", "should not be null");
@@ -343,6 +349,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.VOID.name();
         Payment payment = null;
@@ -384,6 +391,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.VOID.name();
         Payment payment = null;
@@ -423,6 +431,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
         checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.REFUND.name();
         Payment payment = null;
@@ -467,6 +476,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
         checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.REFUND.name();
         Payment payment = null;
@@ -507,6 +517,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.CREDIT.name();
         Payment payment = null;
@@ -556,6 +567,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             checkNotNullParameter(currency, "currency");
         }
         checkNotNullParameter(properties, "plugin properties");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.CREDIT.name();
         Payment payment = null;
@@ -655,6 +667,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         checkNotNullParameter(amount, "amount");
         checkNotNullParameter(currency, "currency");
         checkNotNullParameter(paymentId, "paymentId");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.CHARGEBACK.name();
         Payment payment = null;
@@ -730,6 +743,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     public Payment createChargebackReversal(final Account account, final UUID paymentId, final String paymentTransactionExternalKey, final CallContext callContext) throws PaymentApiException {
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.CHARGEBACK.name();
         Payment payment = null;
@@ -768,6 +782,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
+        checkExternalKeyLength(paymentTransactionExternalKey);
 
         final String transactionType = TransactionType.CHARGEBACK.name();
         Payment payment = null;

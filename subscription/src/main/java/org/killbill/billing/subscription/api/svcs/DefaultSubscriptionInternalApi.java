@@ -318,6 +318,10 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         final DateTime now = clock.getUTCNow();
         final DateTime originalCreatedDate = existingBundles.size() > 0 ? existingBundles.get(0).getCreatedDate() : now;
         final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, originalCreatedDate, now, now);
+
+        if (null != bundleKey && bundleKey.length() > 255) {
+            throw new SubscriptionBaseApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
+        }
         return dao.createSubscriptionBundle(bundle, context);
     }
 

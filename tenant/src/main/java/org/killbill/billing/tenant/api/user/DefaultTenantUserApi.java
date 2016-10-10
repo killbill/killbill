@@ -87,6 +87,10 @@ public class DefaultTenantUserApi implements TenantUserApi {
     public Tenant createTenant(final TenantData data, final CallContext context) throws TenantApiException {
         final Tenant tenant = new DefaultTenant(data);
 
+        if (null != tenant.getExternalKey() && tenant.getExternalKey().length() > 255) {
+            throw new TenantApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
+        }
+
         try {
             tenantDao.create(new TenantModelDao(tenant), internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
         } catch (final TenantApiException e) {

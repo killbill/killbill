@@ -65,4 +65,10 @@ public class DefaultApiBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, parameterName, "should not be null");
         }
     }
+
+    protected void checkExternalKeyLength(final String externalKey) throws PaymentApiException {
+        if (null != externalKey && externalKey.length() > 255) {
+            throw new PaymentApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
+        }
+    }
 }

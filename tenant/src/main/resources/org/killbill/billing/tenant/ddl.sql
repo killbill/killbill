@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS tenants;
 CREATE TABLE tenants (
     record_id serial unique,
     id varchar(36) NOT NULL,
-    external_key varchar(128) NULL,
+    external_key varchar(255) NULL,
     api_key varchar(128) NULL,
     api_secret varchar(128) NULL,
     api_salt varchar(128) NULL,
