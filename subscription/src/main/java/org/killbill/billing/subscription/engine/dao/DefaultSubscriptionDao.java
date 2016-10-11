@@ -692,7 +692,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         for (final SubscriptionEventModelDao cur : eventModels) {
 
             // Skip CREATE event (because of date equality in the query and we don't want to invalidate CREATE event that match a CANCEL event)
-            if (cur.getEventType() == EventType.API_USER && cur.getUserType()== ApiEventType.CREATE) {
+            if (cur.getEventType() == EventType.API_USER && (cur.getUserType()== ApiEventType.CREATE || cur.getUserType()== ApiEventType.TRANSFER)) {
                 continue;
             }
 
