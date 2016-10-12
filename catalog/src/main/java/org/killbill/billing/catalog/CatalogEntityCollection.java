@@ -42,7 +42,7 @@ public class CatalogEntityCollection<T extends CatalogEntity> implements Collect
     }
 
 
-    public CatalogEntityCollection(final Collection<T> entities) {
+    public CatalogEntityCollection(final Iterable<T> entities) {
         this.data = new TreeMap<String, T>(Ordering.<String>natural());
         for (final T cur : entities) {
             addEntry(cur);

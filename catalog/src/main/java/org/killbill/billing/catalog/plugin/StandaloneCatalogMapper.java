@@ -21,7 +21,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -37,7 +38,6 @@ import org.killbill.billing.catalog.DefaultProduct;
 import org.killbill.billing.catalog.DefaultRecurring;
 import org.killbill.billing.catalog.DefaultUnit;
 import org.killbill.billing.catalog.DefaultUsage;
-import org.killbill.billing.catalog.PriceListDefault;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -83,18 +83,22 @@ public class StandaloneCatalogMapper {
     private final String catalogName;
     private final BillingMode recurringBillingMode;
 
-    private Collection<Product> tmpDefaultProducts;
-    private Collection<Plan> tmpDefaultPlans;
+    private Iterable<Product> tmpDefaultProducts;
+    private Iterable<Plan> tmpDefaultPlans;
     private DefaultPriceListSet tmpDefaultPriceListSet;
+    private Map<String, DefaultPriceList> tmpDefaultPriceListMap;
 
     public StandaloneCatalogMapper(final String catalogName, final BillingMode recurringBillingMode) {
         this.catalogName = catalogName;
         this.recurringBillingMode = recurringBillingMode;
         this.tmpDefaultProducts = null;
         this.tmpDefaultPlans = null;
+        this.tmpDefaultPriceListMap = new HashMap<String, DefaultPriceList>();
     }
 
     public StandaloneCatalog toStandaloneCatalog(final StandalonePluginCatalog pluginCatalog, @Nullable URI catalogURI) {
+
+
         final StandaloneCatalog result = new StandaloneCatalog();
         result.setCatalogName(catalogName);
         result.setEffectiveDate(pluginCatalog.getEffectiveDate().toDate());
@@ -105,12 +109,11 @@ public class StandaloneCatalogMapper {
         result.setSupportedCurrencies(toArray(pluginCatalog.getCurrencies()));
         result.setUnits(toDefaultUnits(pluginCatalog.getUnits()));
         result.setPlanRules(toDefaultPlanRules(pluginCatalog.getPlanRules()));
-
         for (final Product cur : pluginCatalog.getProducts()) {
             for (Product target :  result.getCurrentProducts()) {
                 if (target.getName().equals(cur.getName())) {
-                    ((DefaultProduct) target).setAvailable(toFilteredDefaultProduct(ImmutableList.copyOf(cur.getAvailable())));
-                    ((DefaultProduct) target).setIncluded(toFilteredDefaultProduct(ImmutableList.copyOf(cur.getIncluded())));
+                    ((DefaultProduct) target).setAvailable(toFilteredDefaultProduct(cur.getAvailable()));
+                    ((DefaultProduct) target).setIncluded(toFilteredDefaultProduct(cur.getIncluded()));
                     break;
                 }
             }
@@ -252,7 +255,7 @@ public class StandaloneCatalogMapper {
     }
 
 
-    private Collection<Product> toDefaultProducts(final Iterable<Product> input) {
+    private Iterable<Product> toDefaultProducts(final Iterable<Product> input) {
         if (tmpDefaultProducts == null) {
             final Function<Product, Product> productTransformer = new Function<Product, Product>() {
                 @Override
@@ -260,22 +263,22 @@ public class StandaloneCatalogMapper {
                     return toDefaultProduct(input);
                 }
             };
-            tmpDefaultProducts = ImmutableList.<Product>copyOf(Iterables.transform(input, productTransformer));
+            tmpDefaultProducts = ImmutableList.copyOf(Iterables.transform(input, productTransformer));
         }
         return tmpDefaultProducts;
     }
 
-    private Collection<Product> toFilteredDefaultProduct(final Iterable<Product> input) {
+    private Collection<Product> toFilteredDefaultProduct(final Collection<Product> input) {
         if (!input.iterator().hasNext()) {
             return Collections.emptyList();
         }
-        final List<String> inputProductNames = ImmutableList.copyOf(Iterables.transform(input, new Function<Product, String>() {
+        final Iterable<String> inputProductNames = Iterables.transform(input, new Function<Product, String>() {
             @Override
             public String apply(final Product input) {
                 return input.getName();
             }
-        }));
-        final Collection<Product> filteredAndOrdered = new ArrayList<Product>(inputProductNames.size());
+        });
+        final Collection<Product> filteredAndOrdered = new ArrayList<Product>(input.size());
         for (final String cur : inputProductNames) {
             final Product found = findOrIllegalState(tmpDefaultProducts, new Predicate<Product>() {
                 @Override
@@ -288,7 +291,7 @@ public class StandaloneCatalogMapper {
         return filteredAndOrdered;
     }
 
-    private Collection<Plan> toDefaultPlans(final Iterable<Plan> input) {
+    private Iterable<Plan> toDefaultPlans(final Iterable<Plan> input) {
         if (tmpDefaultPlans == null) {
             final Function<Plan, Plan> planTransformer = new Function<Plan, Plan>() {
                 @Override
@@ -296,37 +299,26 @@ public class StandaloneCatalogMapper {
                     return toDefaultPlan(input);
                 }
             };
-            tmpDefaultPlans = ImmutableList.<Plan>copyOf(Iterables.transform(input, planTransformer));
+            tmpDefaultPlans = ImmutableList.copyOf(Iterables.transform(input, planTransformer));
         }
         return tmpDefaultPlans;
     }
 
-    private Collection<Plan> toFilterDefaultPlans(final Iterable<Plan> input) {
+    private Iterable<Plan> toFilterDefaultPlans(final String priceListName) {
         if (tmpDefaultPlans == null) {
             throw new IllegalStateException("Cannot filter on uninitialized plans");
         }
-        final List<String> inputPlanNames = ImmutableList.copyOf(Iterables.transform(input, new Function<Plan, String>() {
+        return Iterables.filter(tmpDefaultPlans, new Predicate<Plan>() {
             @Override
-            public String apply(final Plan input) {
-                return input.getName();
+            public boolean apply(final Plan input) {
+                return input.getPriceListName().equals(priceListName);
             }
-        }));
-        final List<Plan> filteredAndOrdered = new ArrayList<Plan>(inputPlanNames.size());
-        for (final String cur : inputPlanNames) {
-            final Plan found = findOrIllegalState(tmpDefaultPlans, new Predicate<Plan>() {
-                @Override
-                public boolean apply(final Plan inputPredicate) {
-                    return inputPredicate.getName().equals(cur);
-                }
-            }, "Failed to find plan " + cur);
-            filteredAndOrdered.add(found);
-        }
-        return filteredAndOrdered;
+        });
     }
 
     private DefaultPriceListSet toDefaultPriceListSet(final PriceList defaultPriceList, final Iterable<PriceList> childrenPriceLists) {
         if (tmpDefaultPriceListSet == null) {
-            tmpDefaultPriceListSet = new DefaultPriceListSet(toPriceListDefault(defaultPriceList), toDefaultPriceLists(childrenPriceLists));
+            tmpDefaultPriceListSet = new DefaultPriceListSet(toDefaultPriceList(defaultPriceList), toDefaultPriceLists(childrenPriceLists));
         }
         return tmpDefaultPriceListSet;
     }
@@ -381,21 +373,17 @@ public class StandaloneCatalogMapper {
         if (input == null) {
             return null;
         }
-        final DefaultPriceList result = new DefaultPriceList();
-        result.setName(input.getName());
-        result.setPlans(toFilterDefaultPlans(ImmutableList.copyOf(input.getPlans())));
+
+        DefaultPriceList result = tmpDefaultPriceListMap.get(input.getName());
+        if (result == null) {
+            result = new DefaultPriceList();
+            result.setName(input.getName());
+            result.setPlans(toFilterDefaultPlans(input.getName()));
+            tmpDefaultPriceListMap.put(input.getName(), result);
+        }
         return result;
     }
 
-    private PriceListDefault toPriceListDefault(@Nullable final PriceList input) {
-        if (input == null) {
-            return null;
-        }
-        final PriceListDefault result = new PriceListDefault();
-        result.setName(input.getName());
-        result.setPlans(toFilterDefaultPlans(ImmutableList.copyOf(input.getPlans())));
-        return result;
-    }
 
     private Product toDefaultProduct(@Nullable final Product input) {
         if (input == null) {
@@ -434,6 +422,7 @@ public class StandaloneCatalogMapper {
         result.setInitialPhases(toDefaultPlanPhases(ImmutableList.copyOf(input.getInitialPhases())));
         result.setPlansAllowedInBundle(input.getPlansAllowedInBundle());
         result.setProduct(toDefaultProduct(input.getProduct()));
+        result.setPriceListName(input.getPriceListName());
         return result;
     }
 

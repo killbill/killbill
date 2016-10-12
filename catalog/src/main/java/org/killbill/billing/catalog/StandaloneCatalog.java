@@ -323,7 +323,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return phase.compliesWithLimits(unit, value);
     }
 
-    public StandaloneCatalog setProducts(final Collection<Product> products) {
+    public StandaloneCatalog setProducts(final Iterable<Product> products) {
         this.products = new CatalogEntityCollection<Product>(products);
         return this;
     }
@@ -333,7 +333,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
-    public StandaloneCatalog setPlans(final Collection<Plan> plans) {
+    public StandaloneCatalog setPlans(final Iterable<Plan> plans) {
         this.plans = new CatalogEntityCollection<Plan>(plans);
         return this;
     }

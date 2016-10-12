@@ -185,7 +185,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                 p.initialize(catalog, sourceURI);
             }
         }
-        this.priceListName = findPriceListForPlan(catalog);
+        this.priceListName = this.priceListName  != null ? this.priceListName : findPriceListForPlan(catalog);
     }
 
     @Override

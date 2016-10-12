@@ -102,7 +102,7 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         return this;
     }
 
-    public DefaultPriceList setPlans(final Collection<Plan> plans) {
+    public DefaultPriceList setPlans(final Iterable<Plan> plans) {
         this.plans = new CatalogEntityCollection(plans);
         return this;
     }
