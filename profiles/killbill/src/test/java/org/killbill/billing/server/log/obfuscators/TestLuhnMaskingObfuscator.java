@@ -50,17 +50,17 @@ public class TestLuhnMaskingObfuscator extends ServerTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConvert() {
-        verify("try 5137 0049 8639 6404 and 5137 0049 8639 6403", "try 5137 0049 8639 6404 and 513700*MASKED*6403");
+        verify("try 5137 0049 8639 6404 and 5137 0049 8639 6403", "try 5137 0049 8639 6404 and 513700********6403");
     }
 
     @Test(groups = "fast")
     public void testConvertCcNumberAtStartNonCcNumberAtEnd() {
-        verify("5137 0049 8639 6403 and 5137 0049 8639 6404", "513700*MASKED*6403 and 5137 0049 8639 6404");
+        verify("5137 0049 8639 6403 and 5137 0049 8639 6404", "513700********6403 and 5137 0049 8639 6404");
     }
 
     @Test(groups = "fast")
     public void testConvertMultiple() {
-        verify("try 5137 0049 8639 6403 multiple 5137 0049 8639 6404 possible 4111-1111-1111 1111 card 4111111111111112 numbers", "try 513700*MASKED*6403 multiple 5137 0049 8639 6404 possible 411111*MASKED*1111 card 4111111111111112 numbers");
+        verify("try 5137 0049 8639 6403 multiple 5137 0049 8639 6404 possible 4111-1111-1111 1111 card 4111111111111112 numbers", "try 513700********6403 multiple 5137 0049 8639 6404 possible 411111********1111 card 4111111111111112 numbers");
     }
 
     @Test(groups = "fast")
@@ -102,41 +102,41 @@ public class TestLuhnMaskingObfuscator extends ServerTestSuiteNoDB {
                + "Switch/Solo (Paymentech)"
                + "6331101999990016",
                "American Express"
-               + "378282MASKED0005"
+               + "378282*****0005"
                + "American Express"
-               + "371449MASKED8431"
+               + "371449*****8431"
                + "American Express Corporate"
-               + "378734MASKED1000"
+               + "378734*****1000"
                + "Australian BankCard"
-               + "561059MASKED8250"
+               + "561059******8250"
                + "Diners Club"
-               + "305693MASKED5904"
+               + "305693****5904"
                + "Diners Club"
-               + "385200MASKED3237"
+               + "385200****3237"
                + "Discover"
-               + "601111MASKED1117"
+               + "601111******1117"
                + "Discover"
-               + "601100MASKED9424"
+               + "601100******9424"
                + "JCB"
-               + "353011MASKED0000"
+               + "353011******0000"
                + "JCB"
-               + "356600MASKED0505"
+               + "356600******0505"
                + "MasterCard"
-               + "555555MASKED4444"
+               + "555555******4444"
                + "MasterCard"
-               + "510510MASKED5100"
+               + "510510******5100"
                + "Visa"
-               + "411111MASKED1111"
+               + "411111******1111"
                + "Visa"
-               + "401288MASKED1881"
+               + "401288******1881"
                + "Visa"
-               + "422222MASKED2222"
+               + "422222***2222"
                + "Note : Even though this number has a different character count than the other test numbers, it is the correct and functional number."
                + "Processor-specific Cards"
                + "Dankort (PBS)"
-               + "501971MASKED3742"
+               + "501971******3742"
                + "Switch/Solo (Paymentech)"
-               + "633110MASKED0016");
+               + "633110******0016");
     }
 
     @Test(groups = "fast")
@@ -235,7 +235,7 @@ public class TestLuhnMaskingObfuscator extends ServerTestSuiteNoDB {
                "1 > Content-Type: application/json\n" +
                "1 > Accept: */*",
                "1 * Server in-bound request\n" +
-               "1 > POST http://127.0.0.1:8080/1.0/kb/accounts/2a55045a-ce1d-4344-942d-b825536328f9/payments?pluginProperty=cc_number=411111MASKED1111\n" +
+               "1 > POST http://127.0.0.1:8080/1.0/kb/accounts/2a55045a-ce1d-4344-942d-b825536328f9/payments?pluginProperty=cc_number=411111******1111\n" +
                "1 > X-Killbill-ApiSecret: lazar\n" +
                "1 > Authorization: Basic YWRtaW46cGFzc3dvcmQ=\n" +
                "1 > X-Killbill-CreatedBy: admin\n" +
