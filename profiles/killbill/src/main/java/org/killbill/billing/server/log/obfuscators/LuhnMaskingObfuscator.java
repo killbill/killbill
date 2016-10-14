@@ -76,10 +76,7 @@ public class LuhnMaskingObfuscator extends Obfuscator {
                 numberEnd = last4pos[3] + 1;
                 if ((digitsSeen >= MIN_CC_DIGITS)
                     && luhnCheck(stripSeparators(formattedMessage.substring(numberStart, numberEnd)))) {
-                    masked.append(formattedMessage, unwrittenStart, numberStart);
-                    masked.append(obfuscateConfidentialData(formattedMessage.substring(numberStart, numberEnd),
-                                                            formattedMessage.substring(last4pos[0], numberEnd)));
-                    masked.append(formattedMessage, last4pos[0], numberEnd);
+                    maskCC(formattedMessage, unwrittenStart, numberStart, numberEnd, last4pos[0], masked);
                     unwrittenStart = numberEnd;
                 }
                 numberStart = -1;
@@ -89,15 +86,36 @@ public class LuhnMaskingObfuscator extends Obfuscator {
 
         if (numberStart != -1 && (digitsSeen >= MIN_CC_DIGITS)
             && luhnCheck(stripSeparators(formattedMessage.substring(numberStart, pos)))) {
-            masked.append(formattedMessage, unwrittenStart, numberStart);
-            masked.append(obfuscateConfidentialData(formattedMessage.substring(numberStart, pos),
-                                                    formattedMessage.substring(last4pos[0], pos)));
-            masked.append(formattedMessage, last4pos[0], pos);
+            maskCC(formattedMessage, unwrittenStart, numberStart, pos, last4pos[0], masked);
         } else {
             masked.append(formattedMessage, unwrittenStart, pos);
         }
 
         return masked.toString();
+    }
+
+    private void maskCC(final String formattedMessage, final int unwrittenStart, final int numberStart, final int numberEnd, final int last4pos, final StringBuilder masked) {
+        masked.append(formattedMessage, unwrittenStart, numberStart);
+
+        // Don't mask the BIN
+        int binNumbersLeft = 6;
+        int panStartPos = numberStart;
+        char current;
+        while (binNumbersLeft > 0) {
+            current = formattedMessage.charAt(panStartPos);
+            if (isDigit(current)) {
+                masked.append(current);
+                binNumbersLeft--;
+            }
+            panStartPos++;
+        }
+
+        // Append the mask
+        masked.append(obfuscateConfidentialData(formattedMessage.substring(panStartPos, numberEnd),
+                                                formattedMessage.substring(last4pos, numberEnd)));
+
+        // Append last 4
+        masked.append(formattedMessage, last4pos, numberEnd);
     }
 
     private boolean hasEnoughDigits(final CharSequence formattedMessage) {
