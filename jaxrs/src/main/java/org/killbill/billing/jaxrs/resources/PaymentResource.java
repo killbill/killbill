@@ -61,6 +61,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -310,11 +311,17 @@ public class PaymentResource extends ComboPaymentResource {
         final BigDecimal amount = json == null ? null : json.getAmount();
         final Currency currency = json == null || json.getCurrency() == null ? null : Currency.valueOf(json.getCurrency());
 
-            final PaymentTransaction pendingTransaction = lookupPendingTransaction(initialPayment,
-                                                                                   json != null ? json.getTransactionId() : null,
-                                                                                   json != null ? json.getTransactionExternalKey() : null,
-                                                                                   json != null ? json.getTransactionType() : null);
+        final PaymentTransaction pendingOrSuccessTransaction = lookupPendingOrSuccessTransaction(initialPayment,
+                                                                                                 json != null ? json.getTransactionId() : null,
+                                                                                                 json != null ? json.getTransactionExternalKey() : null,
+                                                                                                 json != null ? json.getTransactionType() : null);
+        // If transaction was already completed, return early (See #626)
+        if (pendingOrSuccessTransaction.getTransactionStatus() == TransactionStatus.SUCCESS) {
+            return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId());
+        }
 
+
+        final PaymentTransaction pendingTransaction = pendingOrSuccessTransaction;
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
         switch (pendingTransaction.getTransactionType()) {
