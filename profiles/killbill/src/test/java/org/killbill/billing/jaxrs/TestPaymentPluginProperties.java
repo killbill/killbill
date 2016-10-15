@@ -152,16 +152,6 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         mockPaymentControlProviderPlugin.clearExpectPluginProperties();
     }
 
-    private void addProperty(final String key, final String value, final Map<String, String> dest, final List<org.killbill.billing.payment.api.PluginProperty> expectProperties) {
-        dest.put(key, value);
-        expectProperties.add(new org.killbill.billing.payment.api.PluginProperty(key, value, false));
-    }
-
-    private void addProperty(final String key, final String value, List<PluginProperty> bodyProperties, final List<org.killbill.billing.payment.api.PluginProperty> expectProperties) {
-        bodyProperties.add(new PluginProperty(key, value, false));
-        expectProperties.add(new org.killbill.billing.payment.api.PluginProperty(key, value, false));
-    }
-
     @Test(groups = "slow")
     public void testWithQueryPropertiesOnly() throws Exception {
         final List<org.killbill.billing.payment.api.PluginProperty> expectProperties = new ArrayList<org.killbill.billing.payment.api.PluginProperty>();
@@ -211,8 +201,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         testInternal(queryProperties, bodyProperties, expectProperties);
     }
 
-    @Test(groups = "slow")
-    public void testInternal(final Map<String, String> queryProperties, final List<PluginProperty> bodyProperties, final List<org.killbill.billing.payment.api.PluginProperty> expectProperties) throws Exception {
+    private void testInternal(final Map<String, String> queryProperties, final List<PluginProperty> bodyProperties, final List<org.killbill.billing.payment.api.PluginProperty> expectProperties) throws Exception {
         final Account account = createAccountWithDefaultPaymentMethod();
         final UUID paymentMethodId = account.getPaymentMethodId();
         final BigDecimal amount = BigDecimal.TEN;
@@ -258,5 +247,15 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         authTransaction.setTransactionType(transactionType.toString());
         final Payment payment = killBillClient.createPayment(account.getAccountId(), paymentMethodId, authTransaction, pluginProperties, basicRequestOptions());
         return payment;
+    }
+
+    private void addProperty(final String key, final String value, final Map<String, String> dest, final List<org.killbill.billing.payment.api.PluginProperty> expectProperties) {
+        dest.put(key, value);
+        expectProperties.add(new org.killbill.billing.payment.api.PluginProperty(key, value, false));
+    }
+
+    private void addProperty(final String key, final String value, List<PluginProperty> bodyProperties, final List<org.killbill.billing.payment.api.PluginProperty> expectProperties) {
+        bodyProperties.add(new PluginProperty(key, value, false));
+        expectProperties.add(new org.killbill.billing.payment.api.PluginProperty(key, value, false));
     }
 }
