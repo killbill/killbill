@@ -61,6 +61,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -80,6 +81,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -302,7 +304,12 @@ public class PaymentResource extends ComboPaymentResource {
                                                  final UriInfo uriInfo,
                                                  final HttpServletRequest request) throws PaymentApiException, AccountApiException {
 
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginPropertiesFromBody = extractPluginProperties(json.getProperties());
+
+        final Iterable<PluginProperty> pluginPropertiesFromQuery = extractPluginProperties(pluginPropertiesString);
+
+        final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json == null ? null : json.getPaymentExternalKey(), pluginProperties, callContext);
 
@@ -310,11 +317,17 @@ public class PaymentResource extends ComboPaymentResource {
         final BigDecimal amount = json == null ? null : json.getAmount();
         final Currency currency = json == null || json.getCurrency() == null ? null : Currency.valueOf(json.getCurrency());
 
-            final PaymentTransaction pendingTransaction = lookupPendingTransaction(initialPayment,
-                                                                                   json != null ? json.getTransactionId() : null,
-                                                                                   json != null ? json.getTransactionExternalKey() : null,
-                                                                                   json != null ? json.getTransactionType() : null);
+        final PaymentTransaction pendingOrSuccessTransaction = lookupPendingOrSuccessTransaction(initialPayment,
+                                                                                                 json != null ? json.getTransactionId() : null,
+                                                                                                 json != null ? json.getTransactionExternalKey() : null,
+                                                                                                 json != null ? json.getTransactionType() : null);
+        // If transaction was already completed, return early (See #626)
+        if (pendingOrSuccessTransaction.getTransactionStatus() == TransactionStatus.SUCCESS) {
+            return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId());
+        }
 
+
+        final PaymentTransaction pendingTransaction = pendingOrSuccessTransaction;
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
         switch (pendingTransaction.getTransactionType()) {
