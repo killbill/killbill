@@ -30,11 +30,11 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
+import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
@@ -51,6 +51,9 @@ public interface SubscriptionBaseInternalApi {
 
     public List<SubscriptionBase> createBaseSubscriptionWithAddOns(UUID bundleId, Iterable<EntitlementSpecifier> entitlements, DateTime requestedDateWithMs,
                                                                    final boolean isMigrated, InternalCallContext context) throws SubscriptionBaseApiException;
+
+    public List<SubscriptionBase> createBaseSubscriptionsWithAddOns(UUID accountId, Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier,
+                                                                    InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
 
     public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, InternalCallContext context) throws SubscriptionBaseApiException;
 

@@ -118,6 +118,57 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
+    public List<List<DefaultSubscriptionBase>> createPlansWithAddOns(final UUID accountId, final Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, final CallContext context) throws SubscriptionBaseApiException {
+
+        Map<UUID, List<SubscriptionBaseEvent>> eventsMap = new HashMap<UUID, List<SubscriptionBaseEvent>>();
+        List<List<DefaultSubscriptionBase>> subscriptionBaseAndAddOnsList = new ArrayList<List<DefaultSubscriptionBase>>();
+
+        for (SubscriptionAndAddOnsSpecifier subscriptionAndAddOns : subscriptionsAndAddOns) {
+            List<DefaultSubscriptionBase> subscriptionBaseList = new ArrayList<DefaultSubscriptionBase>();
+            for (SubscriptionSpecifier subscription : subscriptionAndAddOns.getSubscriptionSpecifiers()) {
+
+                try {
+                    final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(subscription.getBuilder(), this, clock);
+                    final InternalCallContext internalCallContext = createCallContextFromBundleId(subscriptionBase.getBundleId(), context);
+                    final List<SubscriptionBaseEvent> events = getEventsOnCreation(subscriptionBase.getBundleId(), subscriptionBase.getId(), subscriptionBase.getAlignStartDate(),
+                                                                                   subscriptionBase.getBundleStartDate(), subscription.getPlan(),
+                                                                                   subscription.getInitialPhase(), subscription.getRealPriceList(),
+                                                                                   subscription.getEffectiveDate(), subscription.getProcessedDate(), internalCallContext);
+                    eventsMap.put(subscriptionBase.getId(), events);
+                    subscriptionBaseList.add(subscriptionBase);
+
+                } catch (final CatalogApiException e) {
+                    throw new SubscriptionBaseApiException(e);
+                }
+            }
+            subscriptionBaseAndAddOnsList.add(subscriptionBaseList);
+        }
+
+        final InternalCallContext internalCallContext = createCallContextFromAccountId(accountId, context);
+        dao.createSubscriptionsWithAddOns(subscriptionBaseAndAddOnsList, eventsMap, internalCallContext);
+
+        for (List<DefaultSubscriptionBase> subscriptionBase : subscriptionBaseAndAddOnsList) {
+            final DefaultSubscriptionBase baseSubscription = findBaseSubscription(subscriptionBase);
+            try {
+                baseSubscription.rebuildTransitions(dao.getEventsForSubscription(baseSubscription.getId(), internalCallContext),
+                                                    catalogService.getFullCatalog(true, true, internalCallContext));
+
+                for (final DefaultSubscriptionBase input : subscriptionBase) {
+                    if (input.getId().equals(baseSubscription.getId())) {
+                        continue;
+                    }
+
+                    input.rebuildTransitions(dao.getEventsForSubscription(input.getId(), internalCallContext),
+                                             catalogService.getFullCatalog(true, true, internalCallContext));
+                }
+            } catch (CatalogApiException e) {
+                throw new SubscriptionBaseApiException(e);
+            }
+        }
+        return subscriptionBaseAndAddOnsList;
+    }
+
+    @Override
     public List<DefaultSubscriptionBase> createPlans(final Iterable<SubscriptionSpecifier> subscriptions, final CallContext context) throws SubscriptionBaseApiException {
 
         Map<UUID, List<SubscriptionBaseEvent>> eventsMap = new HashMap<UUID, List<SubscriptionBaseEvent>>();
@@ -590,6 +641,10 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     private InternalCallContext createCallContextFromBundleId(final UUID bundleId, final CallContext context) {
         return internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
+    }
+
+    private InternalCallContext createCallContextFromAccountId(final UUID accountId, final CallContext context) {
+        return internalCallContextFactory.createInternalCallContext(accountId, ObjectType.ACCOUNT, context);
     }
 
     private InternalTenantContext createTenantContextFromBundleId(final UUID bundleId, final TenantContext context) {

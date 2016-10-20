@@ -40,8 +40,10 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
 import org.killbill.billing.entitlement.EntitlementService;
+import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.DefaultBaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
 import org.killbill.billing.entitlement.api.DefaultEntitlementContext;
@@ -107,14 +109,20 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
                 continue;
             }
 
+            final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
+                    entitlement.getBundleId(),
+                    entitlement.getExternalKey(),
+                    null,
+                    effectiveDate,
+                    null,
+                    false);
+            final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+            baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
+
             final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CANCEL_SUBSCRIPTION,
                                                                                    entitlement.getAccountId(),
                                                                                    null,
-                                                                                   entitlement.getBundleId(),
-                                                                                   entitlement.getExternalKey(),
-                                                                                   null,
-                                                                                   effectiveDate,
-                                                                                   null,
+                                                                                   baseEntitlementWithAddOnsSpecifierList,
                                                                                    billingPolicy,
                                                                                    properties,
                                                                                    callContext);
@@ -219,7 +227,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         @Override
         public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getEntitlementEffectiveDate(), internalCallContext);
+            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getEntitlementEffectiveDate(), internalCallContext);
             // Avoid timing issues for IMM cancellations (we don't want an entitlement cancel date one second or so after the subscription cancel date or
             // add-ons cancellations computations won't work).
             if (effectiveDate.compareTo(entitlement.getSubscriptionBase().getEndDate()) > 0) {

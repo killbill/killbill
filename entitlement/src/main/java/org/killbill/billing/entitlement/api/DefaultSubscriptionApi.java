@@ -279,15 +279,21 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
+
         final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), account.getTimeZone());
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
+                bundleId,
+                newExternalKey,
+                new ArrayList<EntitlementSpecifier>(),
+                effectiveDate,
+                effectiveDate,
+                false);
+        final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+        baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UPDATE_BUNDLE_EXTERNAL_KEY,
                                                                                bundle.getAccountId(),
                                                                                null,
-                                                                               bundleId,
-                                                                               newExternalKey,
-                                                                               new ArrayList<EntitlementSpecifier>(),
-                                                                               effectiveDate,
-                                                                               effectiveDate,
+                                                                               baseEntitlementWithAddOnsSpecifierList,
                                                                                null,
                                                                                ImmutableList.<PluginProperty>of(),
                                                                                callContext);
@@ -365,14 +371,19 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         final DateTime effectiveDate = inputEffectiveDate == null ? clock.getUTCNow() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
         final DefaultBlockingState blockingState = new DefaultBlockingState(inputBlockingState, effectiveDate);
 
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
+                bundleId,
+                externalKey,
+                new ArrayList<EntitlementSpecifier>(),
+                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
+                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
+                false);
+        final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+        baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.ADD_BLOCKING_STATE,
                                                                                accountId,
                                                                                null,
-                                                                               bundleId,
-                                                                               externalKey,
-                                                                               new ArrayList<EntitlementSpecifier>(),
-                                                                               internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
-                                                                               null,
+                                                                               baseEntitlementWithAddOnsSpecifierList,
                                                                                null,
                                                                                properties,
                                                                                callContext);

@@ -34,6 +34,8 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
+import org.killbill.billing.entitlement.api.DefaultBaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
@@ -136,9 +138,21 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
         @Override
         public PriorEntitlementResult priorCall(final EntitlementContext entitlementContext, final Iterable<PluginProperty> properties) throws EntitlementPluginApiException {
             if (planPhasePriceOverride != null) {
-                final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(entitlementContext.getEntitlementSpecifiers().get(0).getPlanPhaseSpecifier(), planPhasePriceOverride);
+                final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getEntitlementSpecifier().iterator().next().getPlanPhaseSpecifier(), planPhasePriceOverride);
                 final List<EntitlementSpecifier> entitlementSpecifiers = new ArrayList<EntitlementSpecifier>();
                 entitlementSpecifiers.add(entitlementSpecifier);
+
+                final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier =
+                        new DefaultBaseEntitlementWithAddOnsSpecifier(
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getBundleId(),
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getExternalKey(),
+                                entitlementSpecifiers,
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getEntitlementEffectiveDate(),
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getBillingEffectiveDate(),
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).isMigrated()
+                        );
+                final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiersList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+                baseEntitlementWithAddOnsSpecifiersList.add(baseEntitlementWithAddOnsSpecifier);
 
                 return new PriorEntitlementResult() {
                     @Override
@@ -146,20 +160,12 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
                         return false;
                     }
                     @Override
-                    public LocalDate getAdjustedEntitlementEffectiveDate() {
-                        return null;
-                    }
-                    @Override
-                    public LocalDate getAdjustedBillingEffectiveDate() {
-                        return null;
-                    }
-                    @Override
                     public BillingActionPolicy getAdjustedBillingActionPolicy() {
                         return null;
                     }
                     @Override
-                    public List<EntitlementSpecifier> getAdjustedEntitlementSpecifiers() {
-                        return entitlementSpecifiers;
+                    public List<BaseEntitlementWithAddOnsSpecifier> getAdjustedBaseEntitlementWithAddOnsSpecifiers() {
+                        return baseEntitlementWithAddOnsSpecifiersList;
                     }
                     @Override
                     public Iterable<PluginProperty> getAdjustedPluginProperties() {

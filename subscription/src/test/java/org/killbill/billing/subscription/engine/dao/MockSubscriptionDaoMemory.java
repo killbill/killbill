@@ -239,6 +239,26 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
+    public void createSubscriptionsWithAddOns(final List<List<DefaultSubscriptionBase>> subscriptionsWithAddOns,
+                                              final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap,
+                                              final InternalCallContext context) {
+        synchronized (events) {
+            for (List<DefaultSubscriptionBase> subscriptionAndAddOns : subscriptionsWithAddOns) {
+                for (DefaultSubscriptionBase subscription : subscriptionAndAddOns) {
+                    final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(subscription.getId());
+                    events.addAll(initialEvents);
+                    for (final SubscriptionBaseEvent cur : initialEvents) {
+                        recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
+                    }
+                    final SubscriptionBase updatedSubscription = buildSubscription(subscription, context);
+                    this.subscriptions.add(updatedSubscription);
+                    mockNonEntityDao.addTenantRecordIdMapping(updatedSubscription.getId(), context);
+                }
+            }
+        }
+    }
+
+    @Override
     public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final List<SubscriptionBaseEvent> dryRunEvents, final InternalTenantContext context) {
         final List<SubscriptionBase> results = new ArrayList<SubscriptionBase>();
         for (final SubscriptionBase cur : subscriptions) {

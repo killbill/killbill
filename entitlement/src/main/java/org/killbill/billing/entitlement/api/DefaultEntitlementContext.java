@@ -23,7 +23,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
@@ -39,11 +38,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private final OperationType operationType;
     private final UUID accountId;
     private final UUID destinationAccountId;
-    private final UUID bundleId;
-    private final String externalKey;
-    private final List<EntitlementSpecifier> entitlementSpecifiers;
-    private final LocalDate entitlementEffectiveDate;
-    private final LocalDate billingEffectiveDate;
+    private final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers;
     private final BillingActionPolicy billingActionPolicy;
     private final Iterable<PluginProperty> pluginProperties;
     private final UUID userToken;
@@ -62,11 +57,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
         this(prev.getOperationType(),
              prev.getAccountId(),
              prev.getDestinationAccountId(),
-             prev.getBundleId(),
-             prev.getExternalKey(),
-             pluginResult != null && pluginResult.getAdjustedEntitlementSpecifiers() != null ? pluginResult.getAdjustedEntitlementSpecifiers() : prev.getEntitlementSpecifiers(),
-             pluginResult != null && pluginResult.getAdjustedEntitlementEffectiveDate() != null ? pluginResult.getAdjustedEntitlementEffectiveDate() : prev.getEntitlementEffectiveDate(),
-             pluginResult != null && pluginResult.getAdjustedBillingEffectiveDate() != null ? pluginResult.getAdjustedBillingEffectiveDate() : prev.getBillingEffectiveDate(),
+             pluginResult != null && pluginResult.getAdjustedBaseEntitlementWithAddOnsSpecifiers() != null ? pluginResult.getAdjustedBaseEntitlementWithAddOnsSpecifiers() : prev.getBaseEntitlementWithAddOnsSpecifiers(),
              pluginResult != null && pluginResult.getAdjustedBillingActionPolicy() != null ? pluginResult.getAdjustedBillingActionPolicy() : prev.getBillingActionPolicy(),
              pluginResult != null && pluginResult.getAdjustedPluginProperties() != null ? pluginResult.getAdjustedPluginProperties() : prev.getPluginProperties(),
              prev);
@@ -75,15 +66,11 @@ public class DefaultEntitlementContext implements EntitlementContext {
     public DefaultEntitlementContext(final OperationType operationType,
                                      final UUID accountId,
                                      final UUID destinationAccountId,
-                                     final UUID bundleId,
-                                     final String externalKey,
-                                     final List<EntitlementSpecifier> entitlementSpecifiers,
-                                     @Nullable final LocalDate entitlementEffectiveDate,
-                                     @Nullable final LocalDate billingEffectiveDate,
+                                     final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers,
                                      @Nullable final BillingActionPolicy actionPolicy,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final CallContext callContext) {
-        this(operationType, accountId, destinationAccountId, bundleId, externalKey, entitlementSpecifiers, entitlementEffectiveDate, billingEffectiveDate, actionPolicy, pluginProperties,
+        this(operationType, accountId, destinationAccountId, baseEntitlementWithAddOnsSpecifiers, actionPolicy, pluginProperties,
              callContext.getUserToken(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(),
              callContext.getComments(), callContext.getCreatedDate(), callContext.getUpdatedDate(), callContext.getTenantId());
     }
@@ -92,11 +79,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
     public DefaultEntitlementContext(final OperationType operationType,
                                      final UUID accountId,
                                      final UUID destinationAccountId,
-                                     final UUID bundleId,
-                                     final String externalKey,
-                                     final List<EntitlementSpecifier> entitlementSpecifiers,
-                                     @Nullable final LocalDate entitlementEffectiveDate,
-                                     @Nullable final LocalDate billingEffectiveDate,
+                                     final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers,
                                      @Nullable final BillingActionPolicy actionPolicy,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final UUID userToken,
@@ -111,11 +94,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
         this.operationType = operationType;
         this.accountId = accountId;
         this.destinationAccountId = destinationAccountId;
-        this.bundleId = bundleId;
-        this.externalKey = externalKey;
-        this.entitlementSpecifiers = entitlementSpecifiers;
-        this.entitlementEffectiveDate = entitlementEffectiveDate;
-        this.billingEffectiveDate = billingEffectiveDate;
+        this.baseEntitlementWithAddOnsSpecifiers = baseEntitlementWithAddOnsSpecifiers;
         this.billingActionPolicy = actionPolicy;
         this.pluginProperties = pluginProperties;
         this.userToken = userToken;
@@ -145,29 +124,8 @@ public class DefaultEntitlementContext implements EntitlementContext {
     }
 
     @Override
-    public UUID getBundleId() {
-        return bundleId;
-    }
-
-    @Override
-    public String getExternalKey() {
-        return externalKey;
-    }
-
-    @Override
-    public List<EntitlementSpecifier> getEntitlementSpecifiers() {
-        return entitlementSpecifiers;
-    }
-
-
-    @Override
-    public LocalDate getEntitlementEffectiveDate() {
-        return entitlementEffectiveDate;
-    }
-
-    @Override
-    public LocalDate getBillingEffectiveDate() {
-        return billingEffectiveDate;
+    public List<BaseEntitlementWithAddOnsSpecifier> getBaseEntitlementWithAddOnsSpecifiers() {
+        return baseEntitlementWithAddOnsSpecifiers;
     }
 
     @Override
