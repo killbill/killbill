@@ -505,15 +505,10 @@ public class TestPayment extends TestJaxrsBase {
 
         final Payment initialPayment = createVerifyTransaction(account, paymentMethodId, paymentExternalKey, authTransactionExternalKey, transactionType, TransactionStatus.SUCCESS.name(), amount, amount, pluginProperties, 1);
 
-        // The payment was already completed
+        // The payment was already completed, it should succeed (no-op)
         final PaymentTransaction completeTransactionByPaymentId = new PaymentTransaction();
         completeTransactionByPaymentId.setPaymentId(initialPayment.getPaymentId());
-        try {
-            killBillClient.completePayment(completeTransactionByPaymentId, pluginProperties, basicRequestOptions());
-            fail("Completion should not succeed, there is no PENDING payment transaction");
-        } catch (final KillBillClientException expected) {
-            // Invalid parameter paymentId: XXXX
-        }
+        killBillClient.completePayment(completeTransactionByPaymentId, pluginProperties, basicRequestOptions());
     }
 
 

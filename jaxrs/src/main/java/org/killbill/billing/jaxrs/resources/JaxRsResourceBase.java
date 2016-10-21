@@ -348,11 +348,11 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-    protected PaymentTransaction lookupPendingTransaction(final Payment initialPayment, @Nullable final String transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
+    protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final String transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
         final Collection<PaymentTransaction> pendingTransaction  =  Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
             public boolean apply(final PaymentTransaction input) {
-                if (input.getTransactionStatus() != TransactionStatus.PENDING) {
+                if (input.getTransactionStatus() != TransactionStatus.PENDING && input.getTransactionStatus() != TransactionStatus.SUCCESS) {
                     return false;
                 }
                 if (transactionId != null && !transactionId.equals(input.getId().toString())) {

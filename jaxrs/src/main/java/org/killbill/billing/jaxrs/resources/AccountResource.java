@@ -99,6 +99,7 @@ import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditLevel;
@@ -949,10 +950,15 @@ public class AccountResource extends JaxRsResourceBase {
         final UUID paymentMethodId;
         if (paymentId != null) {
             final Payment initialPayment = paymentApi.getPayment(paymentId, false, false, pluginProperties, callContext);
-            final PaymentTransaction pendingTransaction = lookupPendingTransaction(initialPayment,
+            final PaymentTransaction pendingOrSuccessTransaction = lookupPendingOrSuccessTransaction(initialPayment,
                                                                                    json != null ? json.getTransactionId() : null,
                                                                                    json != null ? json.getTransactionExternalKey() : null,
                                                                                    json != null ? json.getTransactionType() : null);
+            // If transaction was already completed, return early (See #626)
+            if (pendingOrSuccessTransaction.getTransactionStatus() == TransactionStatus.SUCCESS) {
+                return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId());
+            }
+
             paymentMethodId = initialPayment.getPaymentMethodId();
         } else {
             paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
