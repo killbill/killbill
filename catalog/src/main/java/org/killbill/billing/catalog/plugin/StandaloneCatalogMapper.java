@@ -76,6 +76,7 @@ import org.killbill.billing.catalog.rules.DefaultPlanRules;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class StandaloneCatalogMapper {
@@ -83,7 +84,7 @@ public class StandaloneCatalogMapper {
     private final String catalogName;
     private final BillingMode recurringBillingMode;
 
-    private Iterable<Product> tmpDefaultProducts;
+    private Map<String, Product> tmpDefaultProducts;
     private Iterable<Plan> tmpDefaultPlans;
     private DefaultPriceListSet tmpDefaultPriceListSet;
     private Map<String, DefaultPriceList> tmpDefaultPriceListMap;
@@ -257,15 +258,11 @@ public class StandaloneCatalogMapper {
 
     private Iterable<Product> toDefaultProducts(final Iterable<Product> input) {
         if (tmpDefaultProducts == null) {
-            final Function<Product, Product> productTransformer = new Function<Product, Product>() {
-                @Override
-                public Product apply(final Product input) {
-                    return toDefaultProduct(input);
-                }
-            };
-            tmpDefaultProducts = ImmutableList.copyOf(Iterables.transform(input, productTransformer));
+            final Map<String, Product> map = new HashMap<String, Product>();
+            for (final Product product : input) map.put(product.getName(), toDefaultProduct(product));
+            tmpDefaultProducts = ImmutableMap.copyOf(map);
         }
-        return tmpDefaultProducts;
+        return tmpDefaultProducts.values();
     }
 
     private Collection<Product> toFilteredDefaultProduct(final Collection<Product> input) {
@@ -280,12 +277,8 @@ public class StandaloneCatalogMapper {
         });
         final Collection<Product> filteredAndOrdered = new ArrayList<Product>(input.size());
         for (final String cur : inputProductNames) {
-            final Product found = findOrIllegalState(tmpDefaultProducts, new Predicate<Product>() {
-                @Override
-                public boolean apply(final Product inputPredicate) {
-                    return inputPredicate.getName().equals(cur);
-                }
-            }, "Failed to find product " + cur);
+            final Product found = tmpDefaultProducts.get(cur);
+            if (found == null) throw new IllegalStateException("Failed to find product " + cur);
             filteredAndOrdered.add(found);
         }
         return filteredAndOrdered;
@@ -390,12 +383,8 @@ public class StandaloneCatalogMapper {
             return null;
         }
         if (tmpDefaultProducts != null) {
-            final Product existingProduct = findOrIllegalState(tmpDefaultProducts, new Predicate<Product>() {
-                @Override
-                public boolean apply(final Product predicateInput) {
-                    return predicateInput.getName().equals(input.getName());
-                }
-            }, "Unknown product " + input.getName());
+            final Product existingProduct = tmpDefaultProducts.get(input.getName());
+            if (existingProduct == null) throw new IllegalStateException("Unknown product " + input.getName());
             return existingProduct;
         }
         final DefaultProduct result = new DefaultProduct();
