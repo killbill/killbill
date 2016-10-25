@@ -81,9 +81,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
     // SubscriptionBase creation, cancellation, changePlanWithRequestedDate apis
     public void createSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> initialEvents, InternalCallContext context);
 
-    public void createSubscriptionWithAddOns(List<DefaultSubscriptionBase> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, InternalCallContext context);
-
-    public void createSubscriptionsWithAddOns(List<List<DefaultSubscriptionBase>> subscriptionsWithAddOns, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, InternalCallContext context);
+    public void createSubscriptionsWithAddOns(List<DefaultSubscriptionBase> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, InternalCallContext context);
 
     public void cancelSubscriptionsOnBasePlanEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, InternalCallContext context);
 

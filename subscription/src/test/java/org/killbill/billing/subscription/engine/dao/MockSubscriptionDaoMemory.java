@@ -220,10 +220,9 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         mockNonEntityDao.addTenantRecordIdMapping(updatedSubscription.getId(), context);
     }
 
-    @Override
-    public void createSubscriptionWithAddOns(final List<DefaultSubscriptionBase> subscriptions,
-                                             final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap,
-                                             final InternalCallContext context) {
+    public void createSubscriptionsWithAddOns(final List<DefaultSubscriptionBase> subscriptions,
+                                              final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap,
+                                              final InternalCallContext context) {
         synchronized (events) {
             for (DefaultSubscriptionBase subscription : subscriptions) {
                 final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(subscription.getId());
@@ -234,26 +233,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
                 final SubscriptionBase updatedSubscription = buildSubscription(subscription, context);
                 this.subscriptions.add(updatedSubscription);
                 mockNonEntityDao.addTenantRecordIdMapping(updatedSubscription.getId(), context);
-            }
-        }
-    }
-
-    @Override
-    public void createSubscriptionsWithAddOns(final List<List<DefaultSubscriptionBase>> subscriptionsWithAddOns,
-                                              final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap,
-                                              final InternalCallContext context) {
-        synchronized (events) {
-            for (List<DefaultSubscriptionBase> subscriptionAndAddOns : subscriptionsWithAddOns) {
-                for (DefaultSubscriptionBase subscription : subscriptionAndAddOns) {
-                    final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(subscription.getId());
-                    events.addAll(initialEvents);
-                    for (final SubscriptionBaseEvent cur : initialEvents) {
-                        recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
-                    }
-                    final SubscriptionBase updatedSubscription = buildSubscription(subscription, context);
-                    this.subscriptions.add(updatedSubscription);
-                    mockNonEntityDao.addTenantRecordIdMapping(updatedSubscription.getId(), context);
-                }
             }
         }
     }

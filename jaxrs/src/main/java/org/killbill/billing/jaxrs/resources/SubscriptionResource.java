@@ -386,18 +386,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final SubscriptionJson baseEntitlement = Iterables.tryFind(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns(), new Predicate<SubscriptionJson>() {
-            @Override
-            public boolean apply(final SubscriptionJson subscription) {
-                return ProductCategory.BASE.toString().equalsIgnoreCase(subscription.getProductCategory());
-            }
-        }).orNull();
-        verifyNonNull(baseEntitlement.getAccountId(), "SubscriptionJson accountId needs to be set for BASE product.");
-
-        final Account account = getAccountFromSubscriptionJson(baseEntitlement, callContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns().get(0).getAccountId()), callContext);
 
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         for (BulkBaseSubscriptionAndAddOnsJson bulkBaseEntitlementWithAddOns : entitlementsWithAddOns) {
+
+            final SubscriptionJson baseEntitlement = Iterables.tryFind(bulkBaseEntitlementWithAddOns.getBaseEntitlementAndAddOns(), new Predicate<SubscriptionJson>() {
+                @Override
+                public boolean apply(final SubscriptionJson subscription) {
+                    return ProductCategory.BASE.toString().equalsIgnoreCase(subscription.getProductCategory());
+                }
+            }).orNull();
+            verifyNonNull(baseEntitlement.getAccountId(), "SubscriptionJson accountId needs to be set for BASE product.");
+
             final List<EntitlementSpecifier> entitlementSpecifierList = new ArrayList<EntitlementSpecifier>();
 
             // verify the number of BASE subscriptions
