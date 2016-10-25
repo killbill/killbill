@@ -24,15 +24,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
 
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.api.Block;
-import org.killbill.billing.catalog.api.BlockType;
-import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.InternationalPrice;
-import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.Unit;
+import org.killbill.billing.catalog.api.*;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
+
+import java.math.BigDecimal;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements Block {
@@ -91,6 +88,17 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
                                                          phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
         }
         return errors;
+    }
+
+
+    public DefaultBlock(final DefaultUnit unit, final Double size,final DefaultInternationalPrice prices, final BigDecimal overriddenPrice, Currency currency) {
+
+        this.unit = unit;
+        this.size = size;
+        this.prices = prices != null ? new DefaultInternationalPrice(prices, overriddenPrice, currency) : null;
+    }
+
+    public DefaultBlock() {
     }
 
     public DefaultBlock setType(final BlockType type) {

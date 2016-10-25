@@ -29,15 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.Duration;
-import org.killbill.billing.catalog.api.Fixed;
-import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.Recurring;
-import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.*;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
@@ -73,9 +65,16 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         this.duration = (DefaultDuration) in.getDuration();
         this.fixed = override != null && override.getFixedPrice() != null ? new DefaultFixed((DefaultFixed) in.getFixed(), override) : (DefaultFixed) in.getFixed();
         this.recurring = override != null && override.getRecurringPrice() != null ? new DefaultRecurring((DefaultRecurring) in.getRecurring(), override) : (DefaultRecurring) in.getRecurring();
-        this.usages = new DefaultUsage[in.getUsages().length];
+        this.usages =  new DefaultUsage[in.getUsages().length];
         for (int i = 0; i < in.getUsages().length; i++) {
-            usages[i] = (DefaultUsage) in.getUsages()[i];
+
+            if(override != null && override.getUsagePriceOverrides().get(i)!= null) {
+                usages[i] = new DefaultUsage(in.getUsages()[i], override.getUsagePriceOverrides().get(i), override.getCurrency());
+            }
+            else {
+
+                usages[i] = (DefaultUsage) in.getUsages()[i];
+            }
         }
         this.plan = parentPlan;
     }

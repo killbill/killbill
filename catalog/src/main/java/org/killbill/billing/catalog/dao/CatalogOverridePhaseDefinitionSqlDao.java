@@ -42,7 +42,7 @@ public interface CatalogOverridePhaseDefinitionSqlDao extends Transactional<Cata
                                                                 @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public CatalogOverridePhaseDefinitionModelDao getByAttributes(@Bind("parentPhaseName") String parentPhaseName,
+    public List<CatalogOverridePhaseDefinitionModelDao> getByAttributes(@Bind("parentPhaseName") String parentPhaseName,
                                                                   @Bind("currency") String currency,
                                                                   @Bind("fixedPrice") BigDecimal fixedPrice,
                                                                   @Bind("recurringPrice") BigDecimal recurringPrice,

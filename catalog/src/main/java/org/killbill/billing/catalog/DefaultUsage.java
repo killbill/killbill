@@ -27,15 +27,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
 
-import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Block;
-import org.killbill.billing.catalog.api.InternationalPrice;
-import org.killbill.billing.catalog.api.Limit;
-import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.Tier;
-import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.catalog.api.UsageType;
+import org.killbill.billing.catalog.api.*;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
@@ -87,6 +79,24 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         blocks = new DefaultBlock[0];
         tiers = new DefaultTier[0];
     }
+
+    public DefaultUsage(final Usage in, UsagePriceOverride override, Currency currency) {
+              this.name = in.getName();
+              this.usageType = in.getUsageType();
+              this.billingMode = in.getBillingMode();
+              this.limits = (DefaultLimit[]) in.getLimits();
+              this.blocks = (DefaultBlock[]) in.getBlocks();
+              this.tiers = new DefaultTier[in.getTiers().length];
+               for (int i = 0; i < in.getTiers().length; i++) {
+
+                 if(override != null && override.getTierPriceOverrides().get(i)!=null)
+                    tiers[i] = new DefaultTier(in.getTiers()[i], override.getTierPriceOverrides().get(i), currency) ;
+                 else
+                    tiers[i] = (DefaultTier) in.getTiers()[i];
+               }
+    }
+
+
 
     @Override
     public String getName() {

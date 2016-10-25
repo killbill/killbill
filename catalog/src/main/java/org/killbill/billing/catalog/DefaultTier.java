@@ -24,11 +24,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
-import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.catalog.api.InternationalPrice;
-import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.Tier;
-import org.killbill.billing.catalog.api.UsageType;
+import org.killbill.billing.catalog.api.*;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
@@ -60,6 +56,21 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     public DefaultTier() {
         limits = new DefaultLimit[0];
         blocks = new DefaultTieredBlock[0];
+    }
+
+    public DefaultTier(Tier in, TierPriceOverride override, Currency currency) {
+        this.limits = (DefaultLimit[])in.getLimits();
+        this.blocks = new DefaultTieredBlock[in.getTieredBlocks().length];
+
+        for (int i = 0; i < in.getTieredBlocks().length; i++) {
+
+            if(override != null && override.getTieredBlockPriceOverrides().get(i)!=null)
+                blocks[i] = new DefaultTieredBlock(in.getTieredBlocks()[i], override.getTieredBlockPriceOverrides().get(i), currency) ;
+            else
+                blocks[i] = (DefaultTieredBlock) in.getTieredBlocks()[i];
+
+        }
+
     }
 
     @Override

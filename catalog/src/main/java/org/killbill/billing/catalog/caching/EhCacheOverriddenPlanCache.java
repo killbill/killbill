@@ -17,24 +17,20 @@
 
 package org.killbill.billing.catalog.caching;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.DefaultPlan;
-import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.dao.CatalogOverrideDao;
-import org.killbill.billing.catalog.dao.CatalogOverridePhaseDefinitionModelDao;
+import org.killbill.billing.catalog.*;
+import org.killbill.billing.catalog.api.*;
+import org.killbill.billing.catalog.dao.*;
 import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
@@ -86,12 +82,11 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
 
         final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs = overrideDao.getOverriddenPlanPhases(planDefRecordId, context);
         final DefaultPlan defaultPlan = (DefaultPlan) catalog.findCurrentPlan(parentPlanName);
-
-        final PlanPhasePriceOverride[] overrides = createOverrides(defaultPlan, phaseDefs);
+        final PlanPhasePriceOverride[] overrides = createOverrides(defaultPlan, phaseDefs, context);
         return new DefaultPlan(planName, defaultPlan, overrides);
     }
 
-    private PlanPhasePriceOverride[] createOverrides(final Plan defaultPlan, final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs) {
+    private PlanPhasePriceOverride[] createOverrides(final Plan defaultPlan, final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs, final InternalTenantContext context) {
 
         final PlanPhasePriceOverride[] result = new PlanPhasePriceOverride[defaultPlan.getAllPhases().length];
 
@@ -104,10 +99,99 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
                     return input.getParentPhaseName().equals(curPhase.getName());
                 }
             }).orNull();
+
             result[i] = (overriddenPhase != null) ?
-                        new DefaultPlanPhasePriceOverride(curPhase.getName(), Currency.valueOf(overriddenPhase.getCurrency()), overriddenPhase.getFixedPrice(), overriddenPhase.getRecurringPrice()) :
+                        new DefaultPlanPhasePriceOverride(curPhase.getName(), Currency.valueOf(overriddenPhase.getCurrency()), overriddenPhase.getFixedPrice(), overriddenPhase.getRecurringPrice(), getUsagePriceOverrides(curPhase, overriddenPhase, context)) :
                         null;
         }
         return result;
     }
+
+    List<UsagePriceOverride> getUsagePriceOverrides(PlanPhase curPhase, CatalogOverridePhaseDefinitionModelDao overriddenPhase, final InternalTenantContext context) {
+
+        final List<UsagePriceOverride> usagePriceOverrides = new ArrayList<UsagePriceOverride>();
+        for(int i = 0; i < curPhase.getUsages().length; i++){
+            final Usage curUsage = curPhase.getUsages()[i];
+
+            final List<CatalogOverrideUsageDefinitionModelDao> usageDefs = overrideDao.getOverriddenPhaseUsages(overriddenPhase.getRecordId(), context);
+
+            final CatalogOverrideUsageDefinitionModelDao overriddenUsage = Iterables.tryFind(usageDefs, new Predicate<CatalogOverrideUsageDefinitionModelDao>() {
+                @Override
+                public boolean apply(final CatalogOverrideUsageDefinitionModelDao input) {
+                    return input.getParentUsageName().equals(curUsage.getName());
+                }
+            }).orNull();
+
+            if(overriddenUsage != null)
+               usagePriceOverrides.add(new DefaultUsagePriceOverride(overriddenUsage.getParentUsageName(), curUsage.getUsageType(), getTierPriceOverrides(curUsage, overriddenUsage, context)));
+            else
+                usagePriceOverrides.add(null);
+        }
+        return usagePriceOverrides;
+
+    }
+
+    List<TierPriceOverride> getTierPriceOverrides(Usage curUsage, CatalogOverrideUsageDefinitionModelDao overriddenUsage, final InternalTenantContext context) {
+
+        final List<TierPriceOverride> tierPriceOverrides = new ArrayList<TierPriceOverride>();
+        for(int i = 0; i < curUsage.getTiers().length; i++){
+            final Tier curTier = curUsage.getTiers()[i];
+            final TieredBlock[] curTieredBlocks = curTier.getTieredBlocks();
+
+            final List<CatalogOverrideTierDefinitionModelDao> tierDefs = overrideDao.getOverriddenUsageTiers(overriddenUsage.getRecordId(), context);
+
+            final CatalogOverrideTierDefinitionModelDao overriddenTier = Iterables.tryFind(tierDefs, new Predicate<CatalogOverrideTierDefinitionModelDao>() {
+                @Override
+                public boolean apply(final CatalogOverrideTierDefinitionModelDao input) {
+                    final List<CatalogOverrideBlockDefinitionModelDao> blockDefs = overrideDao.getOverriddenTierBlocks(input.getRecordId(), context);
+                     for(CatalogOverrideBlockDefinitionModelDao blockDef : blockDefs) {
+
+                         String unitName = blockDef.getParentUnitName();
+                         Double max = blockDef.getMax();
+                         Double size = blockDef.getSize();
+
+                         for(int j=0; j <curTieredBlocks.length;j++)
+                             if (unitName.equals(curTieredBlocks[j].getUnit().getName()) &&
+                                     Double.compare(size, curTieredBlocks[j].getSize()) == 0 &&
+                                     Double.compare(max, curTieredBlocks[j].getMax()) == 0) {
+                                 return true;
+                             }
+                     }
+                    return false;
+                }
+
+            }).orNull();
+
+            if(overriddenTier != null)
+                tierPriceOverrides.add(new DefaultTierPriceOverride(getTieredBlockPriceOverrides(curTier, overriddenTier, context)));
+            else
+                tierPriceOverrides.add(null);
+        }
+        return tierPriceOverrides;
+
+    }
+
+    List<TieredBlockPriceOverride> getTieredBlockPriceOverrides(Tier curTier, CatalogOverrideTierDefinitionModelDao overriddenTier, final InternalTenantContext context) {
+
+        final List<TieredBlockPriceOverride> blockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
+        for(int i = 0; i < curTier.getTieredBlocks().length; i++){
+            final List<CatalogOverrideBlockDefinitionModelDao> blockDefs = overrideDao.getOverriddenTierBlocks(overriddenTier.getRecordId(), context);
+
+            final CatalogOverrideBlockDefinitionModelDao overriddenTierBlock = Iterables.tryFind(blockDefs, new Predicate<CatalogOverrideBlockDefinitionModelDao>() {
+                @Override
+                public boolean apply(final CatalogOverrideBlockDefinitionModelDao input) {
+                    return true;
+                }
+
+            }).orNull();
+
+            if(overriddenTierBlock != null)
+                blockPriceOverrides.add(new DefaultTieredBlockPriceOverride(overriddenTierBlock.getParentUnitName(),overriddenTierBlock.getSize(),overriddenTierBlock.getPrice(),overriddenTierBlock.getMax()));
+            else
+                blockPriceOverrides.add(null);
+        }
+        return blockPriceOverrides;
+
+    }
+
 }
