@@ -46,6 +46,14 @@ function fill_empty_columns() {
         mv $tmp $filename
         grep ',,' $filename > /dev/null
     done
+
+    grep ',$' $filename > /dev/null
+    while [[ $? = 0 ]]; do
+        cat $filename | sed s/,$/,\\\\N/ > $tmp
+        mv $tmp $filename
+        grep ',$' $filename > /dev/null
+    done
+
 }
 
 function replace_boolean() {
@@ -74,7 +82,8 @@ function export_data() {
 
 function import_data() {
     local filename=$1
-     mysqlimport --ignore-lines=1 --fields-terminated-by=, --fields-enclosed-by=\" --verbose -u$USERNAME -p$PASSWORD $DATABASE $TMP_DIR/$filename
+    local columns_names=$2
+     mysqlimport --ignore-lines=1 --fields-terminated-by=, --fields-enclosed-by=\" --columns=$columns_names --verbose -u$USERNAME -p$PASSWORD $DATABASE $TMP_DIR/$filename
 }
 
 function main() {
@@ -86,6 +95,7 @@ function main() {
 
         # Extract table name and move temp file with that name
         table_name=$(cat $i | head -1 | awk '{print $2}')
+        columns_names=$(cat $i | head -1 | awk '{print $3}')
         rm -f $table_name
         mv $i $table_name
 
@@ -94,7 +104,7 @@ function main() {
 
         replace_boolean $table_name
 
-        import_data $table_name
+        import_data $table_name $columns_names
      done
 }
 
