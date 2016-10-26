@@ -38,7 +38,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private final OperationType operationType;
     private final UUID accountId;
     private final UUID destinationAccountId;
-    private final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers;
+    private final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers;
     private final BillingActionPolicy billingActionPolicy;
     private final Iterable<PluginProperty> pluginProperties;
     private final UUID userToken;
@@ -66,7 +66,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
     public DefaultEntitlementContext(final OperationType operationType,
                                      final UUID accountId,
                                      final UUID destinationAccountId,
-                                     final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers,
+                                     final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers,
                                      @Nullable final BillingActionPolicy actionPolicy,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final CallContext callContext) {
@@ -79,7 +79,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
     public DefaultEntitlementContext(final OperationType operationType,
                                      final UUID accountId,
                                      final UUID destinationAccountId,
-                                     final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers,
+                                     final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers,
                                      @Nullable final BillingActionPolicy actionPolicy,
                                      final Iterable<PluginProperty> pluginProperties,
                                      final UUID userToken,
@@ -124,7 +124,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
     }
 
     @Override
-    public List<BaseEntitlementWithAddOnsSpecifier> getBaseEntitlementWithAddOnsSpecifiers() {
+    public Iterable<BaseEntitlementWithAddOnsSpecifier> getBaseEntitlementWithAddOnsSpecifiers() {
         return baseEntitlementWithAddOnsSpecifiers;
     }
 

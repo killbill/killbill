@@ -227,7 +227,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         @Override
         public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getEntitlementEffectiveDate(), internalCallContext);
+            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementEffectiveDate(), internalCallContext);
             // Avoid timing issues for IMM cancellations (we don't want an entitlement cancel date one second or so after the subscription cancel date or
             // add-ons cancellations computations won't work).
             if (effectiveDate.compareTo(entitlement.getSubscriptionBase().getEndDate()) > 0) {

@@ -32,7 +32,6 @@ import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.DefaultBaseEntitlementWithAddOnsSpecifier;
@@ -138,18 +137,18 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
         @Override
         public PriorEntitlementResult priorCall(final EntitlementContext entitlementContext, final Iterable<PluginProperty> properties) throws EntitlementPluginApiException {
             if (planPhasePriceOverride != null) {
-                final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getEntitlementSpecifier().iterator().next().getPlanPhaseSpecifier(), planPhasePriceOverride);
+                final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementSpecifier().iterator().next().getPlanPhaseSpecifier(), planPhasePriceOverride);
                 final List<EntitlementSpecifier> entitlementSpecifiers = new ArrayList<EntitlementSpecifier>();
                 entitlementSpecifiers.add(entitlementSpecifier);
 
                 final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier =
                         new DefaultBaseEntitlementWithAddOnsSpecifier(
-                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getBundleId(),
-                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getExternalKey(),
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBundleId(),
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getExternalKey(),
                                 entitlementSpecifiers,
-                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getEntitlementEffectiveDate(),
-                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getBillingEffectiveDate(),
-                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).isMigrated()
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementEffectiveDate(),
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBillingEffectiveDate(),
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().isMigrated()
                         );
                 final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiersList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
                 baseEntitlementWithAddOnsSpecifiersList.add(baseEntitlementWithAddOnsSpecifier);

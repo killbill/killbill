@@ -647,7 +647,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-                final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().get(0).getBillingEffectiveDate(), context);
+                final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBillingEffectiveDate(), context);
 
                 final DateTime resultingEffectiveDate;
                 try {

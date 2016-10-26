@@ -397,6 +397,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     return ProductCategory.BASE.toString().equalsIgnoreCase(subscription.getProductCategory());
                 }
             }).orNull();
+            verifyNonNull(baseEntitlement, "SubscriptionJson Base Entitlement needs to be provided");
             verifyNonNull(baseEntitlement.getAccountId(), "SubscriptionJson accountId needs to be set for BASE product.");
 
             final List<EntitlementSpecifier> entitlementSpecifierList = new ArrayList<EntitlementSpecifier>();
