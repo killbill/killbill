@@ -252,6 +252,9 @@ public class InvoiceDispatcher {
         } catch (final AccountApiException e) {
             log.error("Failed handling SubscriptionBase change.", e);
             return null;
+        } catch (SubscriptionBaseApiException e) {
+            log.error("Failed handling SubscriptionBase change.", e);
+            return null;
         }
     }
 

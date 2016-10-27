@@ -86,28 +86,22 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     @Override
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException {
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, SubscriptionBaseApiException, AccountApiException {
         final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(context);
 
         final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
         final DefaultBillingEventSet result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode(), context);
 
-
-
         final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
-        try {
-            // Check to see if billing is off for the account
-            final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
-            final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
-            if (found_AUTO_INVOICING_OFF) {
-                return new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode(), context); // billing is off, we are done
-            }
-
-            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);
-        } catch (SubscriptionBaseApiException e) {
-            log.warn("Failed while getting BillingEvent", e);
+        // Check to see if billing is off for the account
+        final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
+        final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
+        if (found_AUTO_INVOICING_OFF) {
+            return new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode(), context); // billing is off, we are done
         }
+
+        addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);
 
         // Pretty-print the events, before and after the blocking calculator does its magic
         final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
@@ -127,7 +121,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final ImmutableAccountData account, final DryRunArguments dryRunArguments, final InternalCallContext context,
-                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet) throws SubscriptionBaseApiException, AccountApiException {
+                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet) throws SubscriptionBaseApiException, AccountApiException, CatalogApiException {
 
         final boolean dryRunMode = dryRunArguments != null;
 
@@ -170,7 +164,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                                  final boolean dryRunMode,
                                                  final InternalCallContext context,
                                                  final DefaultBillingEventSet result,
-                                                 final Set<UUID> skipSubscriptionsSet) throws AccountApiException {
+                                                 final Set<UUID> skipSubscriptionsSet) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
 
         // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
         boolean updatedAccountBCD = dryRunMode;
@@ -194,27 +188,16 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 return;
             }
 
-
             for (final EffectiveSubscriptionInternalEvent transition : billingTransitions) {
-                try {
-                    final int bcdLocal = bcdCalculator.calculateBcd(account, currentAccountBCD, bundleId, subscription, transition, context);
+                final int bcdLocal = bcdCalculator.calculateBcd(account, currentAccountBCD, bundleId, subscription, transition, context);
 
-                    if (currentAccountBCD == 0 && !updatedAccountBCD) {
-                        accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);
-                        updatedAccountBCD = true;
-                    }
-
-                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcdLocal, account.getCurrency(), catalogService.getFullCatalog(context));
-                    result.add(event);
-                } catch (CatalogApiException e) {
-                    log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
-                              transition.getId().toString(), e);
-                } catch (AccountApiException e) {
-                    // This is unexpected  (failed to update BCD) but if this happens we don't want to ignore..
-                    throw e;
-                } catch (Exception e) {
-                    log.warn("Failed while getting BillingEvent", e);
+                if (currentAccountBCD == 0 && !updatedAccountBCD) {
+                    accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);
+                    updatedAccountBCD = true;
                 }
+
+                final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcdLocal, account.getCurrency(), catalogService.getFullCatalog(context));
+                result.add(event);
             }
         }
     }
