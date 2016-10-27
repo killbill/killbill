@@ -88,7 +88,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     @Override
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException {
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, SubscriptionBaseApiException, AccountApiException {
         final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(true, context);
 
         // Check to see if billing is off for the account
@@ -104,11 +104,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final DefaultBillingEventSet result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode());
 
         final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
-        try {
-            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);
-        } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed while getting BillingEvent", e);
-        }
+        addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);
 
         if (result.isEmpty()) {
             log.info("No billing event for accountId='{}'", accountId);
