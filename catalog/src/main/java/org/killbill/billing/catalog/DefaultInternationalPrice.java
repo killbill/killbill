@@ -62,7 +62,6 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
 
     public DefaultInternationalPrice(final DefaultInternationalPrice in, final BigDecimal overriddenPrice, final Currency currency) {
         this.prices = in.getPrices() != null ? new DefaultPrice[in.getPrices().length] : null;
-        // There is a question on whether we keep the other prices that were not overridden or only have one entry for the overridden price on that currency.
         for (int i = 0; i < in.getPrices().length; i++) {
             final DefaultPrice curPrice = (DefaultPrice)  in.getPrices()[i];
             if (curPrice.getCurrency().equals(currency)){

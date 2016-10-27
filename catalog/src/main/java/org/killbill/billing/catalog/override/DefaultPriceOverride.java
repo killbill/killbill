@@ -99,17 +99,14 @@ public class DefaultPriceOverride implements PriceOverride {
     }
 
 
-    public List<UsagePriceOverride> getResolvedUsageOverrides(Usage[] usages, List<UsagePriceOverride> usagePriceOverrides){
+    public List<UsagePriceOverride> getResolvedUsageOverrides(Usage[] usages, List<UsagePriceOverride> usagePriceOverrides) throws CatalogApiException{
         List<UsagePriceOverride> resolvedUsageOverrides = new ArrayList<UsagePriceOverride>();
-        int index = 0;
+
         for (final Usage curUsage : usages) {
             final UsagePriceOverride curOverride = Iterables.tryFind(usagePriceOverrides, new Predicate<UsagePriceOverride>() {
                 @Override
                 public boolean apply(final UsagePriceOverride input) {
-                    if (input.getName() != null) {
-                        return input.getName().equals(curUsage.getName());
-                    }
-                    return false;
+                    return input.getName() != null && input.getName().equals(curUsage.getName());
                 }
             }).orNull();
               if(curOverride != null)
@@ -117,18 +114,19 @@ public class DefaultPriceOverride implements PriceOverride {
               else
                  resolvedUsageOverrides.add(null);
         }
+
         return resolvedUsageOverrides;
     }
 
-    public List<TierPriceOverride> getResolvedTierOverrides(Tier[] tiers, List<TierPriceOverride> tierPriceOverrides){
+    public List<TierPriceOverride> getResolvedTierOverrides(Tier[] tiers, List<TierPriceOverride> tierPriceOverrides) throws CatalogApiException{
         List<TierPriceOverride> resolvedTierOverrides = new ArrayList<TierPriceOverride>();
-        int index = 0;
+
         for (final Tier curTier : tiers) {
             final TierPriceOverride curOverride = Iterables.tryFind(tierPriceOverrides, new Predicate<TierPriceOverride>() {
                 @Override
                 public boolean apply(final TierPriceOverride input) {
 
-                    if (input.getTieredBlockPriceOverrides() != null)
+                    if (input.getTieredBlockPriceOverrides() != null) {
                         for (TieredBlockPriceOverride blockPriceOverride : input.getTieredBlockPriceOverrides()) {
                             String unitName = blockPriceOverride.getUnitName();
                             Double max = blockPriceOverride.getMax();
@@ -143,12 +141,13 @@ public class DefaultPriceOverride implements PriceOverride {
                                 }
                             }
                         }
+                    }
                     return false;
                 }
             }).orNull();
 
             if(curOverride != null)
-            resolvedTierOverrides.add(new DefaultTierPriceOverride(getResolvedTieredBlockPriceOverrides(curTier.getTieredBlocks(),curOverride.getTieredBlockPriceOverrides())));
+                resolvedTierOverrides.add(new DefaultTierPriceOverride(getResolvedTieredBlockPriceOverrides(curTier.getTieredBlocks(),curOverride.getTieredBlockPriceOverrides())));
             else
                 resolvedTierOverrides.add(null);
         }
@@ -156,19 +155,18 @@ public class DefaultPriceOverride implements PriceOverride {
         return resolvedTierOverrides;
     }
 
-    public List<TieredBlockPriceOverride> getResolvedTieredBlockPriceOverrides(TieredBlock[] tieredBlocks, List<TieredBlockPriceOverride> tieredBlockPriceOverrides){
+    public List<TieredBlockPriceOverride> getResolvedTieredBlockPriceOverrides(TieredBlock[] tieredBlocks, List<TieredBlockPriceOverride> tieredBlockPriceOverrides) throws CatalogApiException {
         List<TieredBlockPriceOverride> resolvedTieredBlockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
-        int index = 0;
+
         for (final TieredBlock curTieredBlock : tieredBlocks) {
 
             final TieredBlockPriceOverride curOverride = Iterables.tryFind(tieredBlockPriceOverrides, new Predicate<TieredBlockPriceOverride>() {
                 @Override
                 public boolean apply(final TieredBlockPriceOverride input) {
-                    if (input.getUnitName() != null  && input.getSize()!=null && input.getMax()!=null) {
-
-                        return (input.getUnitName().equals(curTieredBlock.getUnit().getName()) && Double.compare(input.getSize(),curTieredBlock.getSize())==0 && Double.compare(input.getMax(),curTieredBlock.getMax())==0);
-                    }
-                    return false;
+                    return input.getUnitName() != null && input.getSize() != null && input.getMax() != null &&
+                            (input.getUnitName().equals(curTieredBlock.getUnit().getName()) &&
+                             Double.compare(input.getSize(), curTieredBlock.getSize()) == 0 &&
+                             Double.compare(input.getMax(), curTieredBlock.getMax()) == 0);
                 }
             }).orNull();
 
@@ -179,7 +177,19 @@ public class DefaultPriceOverride implements PriceOverride {
                 resolvedTieredBlockPriceOverrides.add(null);
         }
 
-      return resolvedTieredBlockPriceOverrides;
+        for (int i = 0; i < resolvedTieredBlockPriceOverrides.size(); i++) {
+            final TieredBlockPriceOverride curOverride = resolvedTieredBlockPriceOverrides.get(i);
+            if (curOverride != null) {
+                final DefaultTieredBlock curTieredBlock = (DefaultTieredBlock)tieredBlocks[i];
+
+                if (curTieredBlock.getPrice() == null && curOverride.getPrice() != null) {
+                    final String error = String.format("There is no existing price for the tiered block %s", curTieredBlock.getUnit().getName());
+                    throw new CatalogApiException(ErrorCode.CAT_INVALID_INVALID_UNIT_PRICE_OVERRIDE, curTieredBlock.getUnit().getName() , error);
+                }
+            }
+        }
+
+        return resolvedTieredBlockPriceOverrides;
     }
 
 

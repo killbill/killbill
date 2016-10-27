@@ -91,7 +91,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     }
 
 
-    public DefaultBlock(final DefaultUnit unit, final Double size,final DefaultInternationalPrice prices, final BigDecimal overriddenPrice, Currency currency) {
+    public DefaultBlock(final DefaultUnit unit, final Double size, final DefaultInternationalPrice prices, final BigDecimal overriddenPrice, Currency currency) {
 
         this.unit = unit;
         this.size = size;

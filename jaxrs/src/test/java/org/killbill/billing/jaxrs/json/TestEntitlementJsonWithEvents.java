@@ -51,8 +51,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final List<UsageOverrideJson> usageOverrideJson = new ArrayList<UsageOverrideJson>();
-        usageOverrideJson.add(new UsageOverrideJson("test",null,null,null));
+
         final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId.toString(),
                                                                          BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                          requestedDate.toLocalDate(),
@@ -67,7 +66,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                          PhaseType.DISCOUNT.toString(),
                                                                          auditLogs);
 
-        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson("bar", null, BigDecimal.TEN, BigDecimal.ONE,usageOverrideJson);
+        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson("bar", null, BigDecimal.TEN, BigDecimal.ONE,null);
 
         final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(accountId,
                                                                                 bundleId,

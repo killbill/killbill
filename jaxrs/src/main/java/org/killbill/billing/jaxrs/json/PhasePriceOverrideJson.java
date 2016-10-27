@@ -41,34 +41,34 @@ public class PhasePriceOverrideJson {
     private final String phaseType;
     private final BigDecimal fixedPrice;
     private final BigDecimal recurringPrice;
-    private final List<UsageOverrideJson> usageOverrides;
+    private final List<UsagePriceOverrideJson> usagePriceOverrides;
 
     @JsonCreator
     public PhasePriceOverrideJson(@JsonProperty("phaseName") final String phaseName,
                                   @JsonProperty("phaseType") final String phaseType,
                                   @Nullable @JsonProperty("fixedPrice") final BigDecimal fixedPrice,
                                   @Nullable @JsonProperty("recurringPrice") final BigDecimal recurringPrice,
-                                  @Nullable @JsonProperty("usageOverrides") final List<UsageOverrideJson> usageOverrides) {
+                                  @Nullable @JsonProperty("usageOverrides") final List<UsagePriceOverrideJson> usagePriceOverrides) {
         this.phaseName = phaseName;
         this.phaseType = phaseType;
         this.fixedPrice = fixedPrice;
         this.recurringPrice = recurringPrice;
-        this.usageOverrides = usageOverrides;
+        this.usagePriceOverrides = usagePriceOverrides;
     }
 
     public PhasePriceOverrideJson(final String phaseName,
                                   final String phaseType,
                                   final BigDecimal fixedPrice,
                                   final BigDecimal recurringPrice,
-                                  final Usage[] usageOverrides,
+                                  final Usage[] usagePriceOverrides,
                                   final Currency currency) throws CatalogApiException {
         this.phaseName = phaseName;
         this.phaseType = phaseType;
         this.fixedPrice = fixedPrice;
         this.recurringPrice = recurringPrice;
-        this.usageOverrides = new LinkedList<UsageOverrideJson>();
+        this.usagePriceOverrides = new LinkedList<UsagePriceOverrideJson>();
 
-        for (final Usage usage : usageOverrides) {
+        for (final Usage usage : usagePriceOverrides) {
             List <TierPriceOverrideJson> tierPriceOverridesJson = new LinkedList<TierPriceOverrideJson>();
              for(final Tier tier :usage.getTiers())
              {
@@ -82,8 +82,8 @@ public class PhasePriceOverrideJson {
                      TierPriceOverrideJson tierPriceOverrideJson  = new TierPriceOverrideJson(blockPriceOverridesJson);
                      tierPriceOverridesJson.add(tierPriceOverrideJson);
              }
-            final UsageOverrideJson usageOverrideJson = new UsageOverrideJson(usage.getName(), usage.getUsageType(),usage.getBillingMode(), tierPriceOverridesJson);
-            this.usageOverrides.add(usageOverrideJson);
+            final UsagePriceOverrideJson usagePriceOverrideJson = new UsagePriceOverrideJson(usage.getName(), usage.getUsageType(),usage.getBillingMode(), tierPriceOverridesJson);
+            this.usagePriceOverrides.add(usagePriceOverrideJson);
         }
 
     }
@@ -104,8 +104,8 @@ public class PhasePriceOverrideJson {
         return phaseType;
     }
 
-    public List<UsageOverrideJson> getUsageOverrides() {
-        return usageOverrides;
+    public List<UsagePriceOverrideJson> getUsagePriceOverrides() {
+        return usagePriceOverrides;
     }
 
 
@@ -116,7 +116,7 @@ public class PhasePriceOverrideJson {
                "phaseType='" + phaseType + '\'' +
                ", fixedPrice=" + fixedPrice +
                ", recurringPrice=" + recurringPrice +
-                ", usageOverrides=" + usageOverrides +
+                ", usageOverrides=" + usagePriceOverrides +
                '}';
     }
 
@@ -144,7 +144,7 @@ public class PhasePriceOverrideJson {
         if (recurringPrice != null ? recurringPrice.compareTo(that.recurringPrice) != 0 : that.recurringPrice != null) {
             return false;
         }
-        if (usageOverrides != null ? usageOverrides.equals(that.usageOverrides)  : that.usageOverrides != null) {
+        if (usagePriceOverrides != null ? usagePriceOverrides.equals(that.usagePriceOverrides)  : that.usagePriceOverrides != null) {
             return false;
         }
         return true;
@@ -156,7 +156,7 @@ public class PhasePriceOverrideJson {
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         result = 31 * result + (phaseType != null ? phaseType.hashCode() : 0);
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
-        result = 31 * result + (usageOverrides != null ? usageOverrides.hashCode() : 0);
+        result = 31 * result + (usagePriceOverrides != null ? usagePriceOverrides.hashCode() : 0);
         return result;
     }
 
@@ -170,10 +170,10 @@ public class PhasePriceOverrideJson {
             public PlanPhasePriceOverride apply(@Nullable final PhasePriceOverrideJson input) {
 
                 List <UsagePriceOverride> usagePriceOverrides = new LinkedList<UsagePriceOverride>();
-                if(input.getUsageOverrides()!=null) {
-                    for (final UsageOverrideJson usageOverrideJson : input.getUsageOverrides()) {
+                assert input != null;
+                if(input.getUsagePriceOverrides()!=null) {
+                    for (final UsagePriceOverrideJson usageOverrideJson : input.getUsagePriceOverrides()) {
                         List<TierPriceOverride> tierPriceOverrides = new LinkedList<TierPriceOverride>();
-
                         for (final TierPriceOverrideJson tierPriceOverrideJson : usageOverrideJson.getTierPriceOverrides()) {
                             List<TieredBlockPriceOverride> blockPriceOverrides = new LinkedList<TieredBlockPriceOverride>();
                             for (final BlockPriceOverrideJson block : tierPriceOverrideJson.getBlockPriceOverrides()) {

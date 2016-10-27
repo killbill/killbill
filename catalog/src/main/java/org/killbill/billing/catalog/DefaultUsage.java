@@ -83,6 +83,7 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     public DefaultUsage(final Usage in, UsagePriceOverride override, Currency currency) {
               this.name = in.getName();
               this.usageType = in.getUsageType();
+              this.billingPeriod = in.getBillingPeriod();
               this.billingMode = in.getBillingMode();
               this.limits = (DefaultLimit[]) in.getLimits();
               this.blocks = (DefaultBlock[]) in.getBlocks();

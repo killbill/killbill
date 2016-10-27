@@ -10,7 +10,7 @@ import org.killbill.billing.catalog.api.UsageType;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class UsageOverrideJson {
+public class UsagePriceOverrideJson {
 
 
     private final String usageName;
@@ -39,7 +39,7 @@ public class UsageOverrideJson {
     }
 
     @JsonCreator
-    public UsageOverrideJson(@JsonProperty("usageName") final String usageName,
+    public UsagePriceOverrideJson(@JsonProperty("usageName") final String usageName,
                              @Nullable @JsonProperty("usageType") final UsageType usageType,
                              @Nullable @JsonProperty("billingMode") final BillingMode billingMode,
                              @Nullable @JsonProperty("tierPriceOverrides") final List<TierPriceOverrideJson> tierPriceOverrides ) {

@@ -8,6 +8,7 @@ tableFields(prefix) ::= <<
 , <prefix>effective_date
 , <prefix>created_date
 , <prefix>created_by
+, <prefix>currency
 , <prefix>tenant_record_id
 >>
 
@@ -23,6 +24,7 @@ tableValues() ::= <<
 , :effectiveDate
 , :createdDate
 , :createdBy
+, :currency
 , :tenantRecordId
 >>
 

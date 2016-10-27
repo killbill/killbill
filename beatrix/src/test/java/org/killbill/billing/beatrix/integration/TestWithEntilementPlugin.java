@@ -103,7 +103,7 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
         clock.setDay(new LocalDate(2012, 4, 1));
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, BigDecimal.TEN));
+        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, BigDecimal.TEN, null));
 
         testEntitlementPluginApi.setPlanPhasePriceOverride(overrides);
 
