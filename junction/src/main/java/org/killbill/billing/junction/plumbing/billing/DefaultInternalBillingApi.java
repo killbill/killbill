@@ -176,6 +176,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             // The subscription did not even start, so there is nothing to do yet, we can skip and avoid some NPE down the line when calculating the BCD
             if (subscription.getState() == null) {
+                log.info("Skipping subscription id='{}', state = NULL, might be future started", subscription.getId());
                 continue;
             }
 
