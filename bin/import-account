@@ -31,10 +31,9 @@ USERNAME=${USERNAME-root}
 PASSWORD=${PASSWORD-root}
 
 # Temporary directory
-TMP_DIR=/var/tmp
+TMP_DIR=$(mktemp -d)
 
 WHO=`whoami`
-
 
 function fill_empty_columns() {
 
@@ -74,43 +73,96 @@ function replace_boolean() {
     mv $tmp $filename
 }
 
-function export_data() {
-    local account_id=$1
-    curl $KILLBILL_URL/1.0/kb/export/$1 -H"X-Killbill-CreatedBy: $WHO" | split -p '--'  --
+function fix_dates() {
+
+    local filename=$1
+    local tmp=${filename}.tmp
+
+    cat $filename | sed s/+0000\",/\",/g > $tmp
+    mv $tmp $filename
 }
 
+function export_data() {
+    local account_id=$1
+    curl $KILLBILL_URL/1.0/kb/export/$1 -H"X-Killbill-CreatedBy: $WHO" > $TMP_DIR/kbdump
+}
 
 function import_data() {
     local filename=$1
     local columns_names=$2
-     mysqlimport --ignore-lines=1 --fields-terminated-by=, --fields-enclosed-by=\" --columns=$columns_names --verbose -u$USERNAME -p$PASSWORD $DATABASE $TMP_DIR/$filename
+    mysqlimport --local --ignore-lines=1 --fields-terminated-by=, --fields-enclosed-by=\" --columns=$columns_names --verbose -u$USERNAME -p$PASSWORD $DATABASE $TMP_DIR/$filename
 }
 
-function main() {
-
-    local account_id=$1
-    export_data $account_id
+function sanitize_and_import() {
+    cd $TMP_DIR
+    echo "Splitting dump $1 into tables. Working dir is $TMP_DIR"
+    cat $1 | split -p '--'  --
 
     for i in `ls x*`; do
-
         # Extract table name and move temp file with that name
         table_name=$(cat $i | head -1 | awk '{print $2}')
         columns_names=$(cat $i | head -1 | awk '{print $3}')
         rm -f $table_name
         mv $i $table_name
+        echo "Importing $table_name"
 
         # Fill empty column with '\N'
         fill_empty_columns $table_name
 
         replace_boolean $table_name
 
+        fix_dates $table_name
+
         import_data $table_name $columns_names
-     done
+    done
 }
 
-# Setup
+# test if user is running gnu-getopt
+TEST=`getopt -o "a:" -l "action:" -- --action dump`
+if [ "$TEST" != " --action 'dump' --" ]; then
+    echo "You are not using gnu-getopt or latest getopt."
+    echo "For Mac OS X, please upgrade 'getopt' to 'gnu-getopt',"
+    echo "For Linux, please upgrade 'getopt'."
+    exit
+fi
 
-cd $TMP_DIR
-rm -f xa*
-main $1
+ARGS=`getopt -o "a:" -l "action:,help" -n "import-account" -- "$@"`
+eval set -- "${ARGS}"
 
+function usage() {
+    echo -n "./import-account"
+    echo -n " -a|--action <export|import>"
+    echo -n " --help this message"
+    echo
+    exit 1
+}
+
+while true; do
+  case "$1" in
+    -a|--action) ACTION=$2; shift 2;;
+    --help) usage; shift;;
+    --) shift; break;;
+  esac
+done
+
+if [ -z $ACTION ]; then
+    echo "Need to specify an action"
+    usage
+fi
+
+if [ $ACTION == "export" ]; then
+  if [ -z $1 ]; then
+      echo "Need to specify an account id"
+      usage
+  fi
+  export_data $1
+  sanitize_and_import $TMP_DIR/kbdump
+fi
+
+if [ $ACTION == "import" ]; then
+  if [ -z $1 ]; then
+      echo "Need to specify a file"
+      usage
+  fi
+  sanitize_and_import $1
+fi
