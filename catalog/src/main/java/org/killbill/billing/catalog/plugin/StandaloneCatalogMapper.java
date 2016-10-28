@@ -111,18 +111,15 @@ public class StandaloneCatalogMapper {
         result.setUnits(toDefaultUnits(pluginCatalog.getUnits()));
         result.setPlanRules(toDefaultPlanRules(pluginCatalog.getPlanRules()));
         for (final Product cur : pluginCatalog.getProducts()) {
-            for (Product target :  result.getCurrentProducts()) {
-                if (target.getName().equals(cur.getName())) {
-                    ((DefaultProduct) target).setAvailable(toFilteredDefaultProduct(cur.getAvailable()));
-                    ((DefaultProduct) target).setIncluded(toFilteredDefaultProduct(cur.getIncluded()));
-                    break;
-                }
+            final Product target = result.getCatalogEntityCollectionProduct().findByName(cur.getName());
+            if (target != null) {
+                ((DefaultProduct) target).setAvailable(toFilteredDefaultProduct(cur.getAvailable()));
+                ((DefaultProduct) target).setIncluded(toFilteredDefaultProduct(cur.getIncluded()));
             }
         }
         result.initialize(result, catalogURI);
         return result;
     }
-
 
     private DefaultPlanRules toDefaultPlanRules(final PlanRules input) {
         final DefaultPlanRules result = new DefaultPlanRules();
