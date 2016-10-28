@@ -32,14 +32,12 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
@@ -88,26 +86,25 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     @Override
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException {
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
+
         final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(true, true, context);
 
         // Check to see if billing is off for the account
         final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
         final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
-        if (found_AUTO_INVOICING_OFF) {
-            return new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode()); // billing is off, we are done
-        }
-
-        final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
-
-        final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
-        final DefaultBillingEventSet result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode());
 
         final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
-        try {
+        final DefaultBillingEventSet result;
+
+        if (found_AUTO_INVOICING_OFF) {
+            result = new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode()); // billing is off, we are done
+        } else {
+            final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
+
+            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
+            result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode());
             addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);
-        } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed while getting BillingEvent", e);
         }
 
         if (result.isEmpty()) {
@@ -188,6 +185,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             // The subscription did not even start, so there is nothing to do yet, we can skip and avoid some NPE down the line when calculating the BCD
             if (subscription.getState() == EntitlementState.PENDING) {
+                log.info("Skipping subscription id='{}', state = EntitlementState.PENDING", subscription.getId());
                 continue;
             }
 

@@ -22,12 +22,12 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.invoice.api.DryRunArguments;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 
 public interface BillingInternalApi {
 
     /**
      * @return an ordered list of billing event for the given accounts
      */
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, DryRunArguments dryRunArguments, InternalCallContext context) throws CatalogApiException, AccountApiException;
-
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, DryRunArguments dryRunArguments, InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException;
 }
