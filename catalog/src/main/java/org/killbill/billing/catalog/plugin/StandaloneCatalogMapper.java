@@ -85,7 +85,7 @@ public class StandaloneCatalogMapper {
     private final BillingMode recurringBillingMode;
 
     private Map<String, Product> tmpDefaultProducts;
-    private Iterable<Plan> tmpDefaultPlans;
+    private Map<String, Plan> tmpDefaultPlans;
     private DefaultPriceListSet tmpDefaultPriceListSet;
     private Map<String, DefaultPriceList> tmpDefaultPriceListMap;
 
@@ -286,22 +286,18 @@ public class StandaloneCatalogMapper {
 
     private Iterable<Plan> toDefaultPlans(final Iterable<Plan> input) {
         if (tmpDefaultPlans == null) {
-            final Function<Plan, Plan> planTransformer = new Function<Plan, Plan>() {
-                @Override
-                public Plan apply(final Plan input) {
-                    return toDefaultPlan(input);
-                }
-            };
-            tmpDefaultPlans = ImmutableList.copyOf(Iterables.transform(input, planTransformer));
+            final Map<String, Plan> map = new HashMap<String, Plan>();
+            for (final Plan plan : input) map.put(plan.getName(), toDefaultPlan(plan));
+            tmpDefaultPlans = ImmutableMap.copyOf(map);
         }
-        return tmpDefaultPlans;
+        return tmpDefaultPlans.values();
     }
 
     private Iterable<Plan> toFilterDefaultPlans(final String priceListName) {
         if (tmpDefaultPlans == null) {
             throw new IllegalStateException("Cannot filter on uninitialized plans");
         }
-        return Iterables.filter(tmpDefaultPlans, new Predicate<Plan>() {
+        return Iterables.filter(tmpDefaultPlans.values(), new Predicate<Plan>() {
             @Override
             public boolean apply(final Plan input) {
                 return input.getPriceListName().equals(priceListName);
@@ -396,12 +392,8 @@ public class StandaloneCatalogMapper {
 
     private Plan toDefaultPlan(final Plan input) {
         if (tmpDefaultPlans != null) {
-            final Plan existingPlan = findOrIllegalState(tmpDefaultPlans, new Predicate<Plan>() {
-                @Override
-                public boolean apply(final Plan predicateInput) {
-                    return predicateInput.getName().equals(input.getName());
-                }
-            }, "Unknown plan " + input.getName());
+            final Plan existingPlan = tmpDefaultPlans.get(input.getName());
+            if (existingPlan == null) throw new IllegalStateException("Unknown plan " + input.getName());
             return existingPlan;
         }
         final DefaultPlan result = new DefaultPlan();
@@ -486,11 +478,4 @@ public class StandaloneCatalogMapper {
         return ImmutableList.<C>copyOf(input).toArray(foo);
     }
 
-    private <T> T findOrIllegalState(final Iterable<T> input, final Predicate<T> predicate, final String msg) {
-        T result = Iterables.<T> tryFind(input, predicate).orNull();
-        if (result == null) {
-            throw new IllegalStateException(msg);
-        }
-        return result;
-    }
 }
