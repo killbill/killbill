@@ -247,13 +247,13 @@ public class InvoiceDispatcher {
             }
             return null;
         } catch (final CatalogApiException e) {
-            log.error("Failed handling SubscriptionBase change.", e);
+            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             return null;
         } catch (final AccountApiException e) {
-            log.error("Failed handling SubscriptionBase change.", e);
+            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             return null;
-        } catch (SubscriptionBaseApiException e) {
-            log.error("Failed handling SubscriptionBase change.", e);
+        } catch (final SubscriptionBaseApiException e) {
+            log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             return null;
         }
     }
@@ -696,6 +696,14 @@ public class InvoiceDispatcher {
         @Override
         public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
             return null;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("TargetDateDryRunArguments{");
+            sb.append("dryRunType=").append(DryRunType.TARGET_DATE);
+            sb.append('}');
+            return sb.toString();
         }
     }
 }

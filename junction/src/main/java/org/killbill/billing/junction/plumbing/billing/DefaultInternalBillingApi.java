@@ -87,21 +87,22 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, SubscriptionBaseApiException, AccountApiException {
-        final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(context);
-
-        final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
-        final DefaultBillingEventSet result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode(), context);
-
         final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
+
         // Check to see if billing is off for the account
         final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
         final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
+        final DefaultBillingEventSet result;
         if (found_AUTO_INVOICING_OFF) {
-            return new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode(), context); // billing is off, we are done
-        }
+            result = new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode(), context); // billing is off, we are done
+        } else {
+            result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode(), context);
 
-        addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);
+            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
+            final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
+            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);
+        }
 
         // Pretty-print the events, before and after the blocking calculator does its magic
         final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
