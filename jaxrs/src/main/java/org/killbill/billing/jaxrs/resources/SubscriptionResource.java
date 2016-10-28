@@ -20,7 +20,9 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
@@ -262,6 +264,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                 @javax.ws.rs.core.Context final HttpServletRequest request,
                                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
 
+
         Preconditions.checkArgument(Iterables.size(entitlements) > 0, "Subscription list mustn't be null or empty.");
 
         for (SubscriptionJson entitlement : entitlements) {
@@ -493,12 +496,34 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 return true;
             }
             @Override
-            public Response doResponseOk(final List<Entitlement> entitlement) {
-                return Response.status(Status.CREATED).build();
+            public Response doResponseOk(final List<Entitlement> entitlements) {
+                return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccountBundles", entitlements.get(0).getAccountId(), buildQueryParams(buildBundleIdList(entitlements)));
             }
         };
         final EntitlementCallCompletion<List<Entitlement>> callCompletionCreation = new EntitlementCallCompletion<List<Entitlement>>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
+    }
+
+    private List<String> buildBundleIdList(final List<Entitlement> entitlements) {
+        List<String> result = new ArrayList<String>();
+        for (Entitlement entitlement : entitlements) {
+            if (!result.contains(entitlement.getBundleId().toString())) {
+                result.add(entitlement.getBundleId().toString());
+            }
+        }
+        return result;
+    }
+
+    private Map<String, String> buildQueryParams(final List<String> bundleIdList) {
+        Map<String, String> queryParams = new HashMap<String, String>();
+        String value = "";
+        for (String bundleId : bundleIdList) {
+            if (value.equals("")) {
+                value += bundleId;
+            } else value+="," + bundleId;
+        }
+        queryParams.put(QUERY_BUNDLES_FILTER, value);
+        return queryParams;
     }
 
     @TimedResource

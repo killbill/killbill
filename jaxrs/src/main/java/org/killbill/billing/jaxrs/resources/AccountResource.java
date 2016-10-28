@@ -21,6 +21,7 @@ package org.killbill.billing.jaxrs.resources;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -265,15 +266,19 @@ public class AccountResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getAccountBundles(@PathParam("accountId") final String accountId,
                                       @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
+                                      @QueryParam(QUERY_BUNDLES_FILTER) final String bundlesFilter,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID uuid = UUID.fromString(accountId);
-       final Account account = accountUserApi.getAccountById(uuid, tenantContext);
+        final Account account = accountUserApi.getAccountById(uuid, tenantContext);
 
+        boolean filter = (null != bundlesFilter && !bundlesFilter.isEmpty());
         final List<SubscriptionBundle> bundles = (externalKey != null) ?
-                                                 subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext) :
-                                                 subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext);
+                                                 ((filter) ? filterBundles(subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext), Arrays.asList(bundlesFilter.split(","))) :
+                                                  subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext)):
+                                                 ((filter) ? filterBundles(subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext), Arrays.asList(bundlesFilter.split(","))) :
+                                                  subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext));
 
         final Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
             @Override
@@ -287,6 +292,16 @@ public class AccountResource extends JaxRsResourceBase {
             }
         });
         return Response.status(Status.OK).entity(result).build();
+    }
+
+    private List<SubscriptionBundle> filterBundles(final List<SubscriptionBundle> subscriptionBundlesForAccountId, final List<String> bundlesFilter) {
+        List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>();
+        for (SubscriptionBundle subscription : subscriptionBundlesForAccountId) {
+            if (bundlesFilter.contains(subscription.getId().toString())) {
+                result.add(subscription);
+            }
+        }
+        return result;
     }
 
     @TimedResource
