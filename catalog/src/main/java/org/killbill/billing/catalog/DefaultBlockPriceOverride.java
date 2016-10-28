@@ -12,14 +12,11 @@ import java.math.BigDecimal;
  */
 public class DefaultBlockPriceOverride implements BlockPriceOverride {
 
-
     private String unitName;
 
     private Double size;
 
     private BigDecimal price;
-
-
 
     @Override
     public String getUnitName() {
@@ -41,5 +38,4 @@ public class DefaultBlockPriceOverride implements BlockPriceOverride {
         this.size = size;
         this.price = price;
     }
-
 }

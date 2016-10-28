@@ -91,7 +91,6 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
         final PlanPhasePriceOverride[] result = new PlanPhasePriceOverride[defaultPlan.getAllPhases().length];
 
         for (int i = 0; i < defaultPlan.getAllPhases().length; i++) {
-
             final PlanPhase curPhase = defaultPlan.getAllPhases()[i];
             final CatalogOverridePhaseDefinitionModelDao overriddenPhase = Iterables.tryFind(phaseDefs, new Predicate<CatalogOverridePhaseDefinitionModelDao>() {
                 @Override
@@ -100,9 +99,12 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
                 }
             }).orNull();
 
-            result[i] = (overriddenPhase != null) ?
-                        new DefaultPlanPhasePriceOverride(curPhase.getName(), Currency.valueOf(overriddenPhase.getCurrency()), overriddenPhase.getFixedPrice(), overriddenPhase.getRecurringPrice(), getUsagePriceOverrides(curPhase, overriddenPhase, context)) :
-                        null;
+            if(overriddenPhase != null){
+              List<UsagePriceOverride> usagePriceOverrides =  getUsagePriceOverrides(curPhase, overriddenPhase, context);
+              result[i] = new DefaultPlanPhasePriceOverride(curPhase.getName(), Currency.valueOf(overriddenPhase.getCurrency()), overriddenPhase.getFixedPrice(), overriddenPhase.getRecurringPrice(), usagePriceOverrides);
+            }
+            else
+              result[i] = null;
         }
         return result;
     }
@@ -122,13 +124,14 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
                 }
             }).orNull();
 
-            if(overriddenUsage != null)
-               usagePriceOverrides.add(new DefaultUsagePriceOverride(overriddenUsage.getParentUsageName(), curUsage.getUsageType(), getTierPriceOverrides(curUsage, overriddenUsage, context)));
+            if(overriddenUsage != null) {
+                List<TierPriceOverride> tierPriceOverrides = getTierPriceOverrides(curUsage, overriddenUsage, context);
+                usagePriceOverrides.add(new DefaultUsagePriceOverride(overriddenUsage.getParentUsageName(), curUsage.getUsageType(),tierPriceOverrides));
+            }
             else
                 usagePriceOverrides.add(null);
         }
         return usagePriceOverrides;
-
     }
 
     List<TierPriceOverride> getTierPriceOverrides(Usage curUsage, CatalogOverrideUsageDefinitionModelDao overriddenUsage, final InternalTenantContext context) {
@@ -162,13 +165,14 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
 
             }).orNull();
 
-            if(overriddenTier != null)
-                tierPriceOverrides.add(new DefaultTierPriceOverride(getTieredBlockPriceOverrides(curTier, overriddenTier, context)));
+            if(overriddenTier != null) {
+                List<TieredBlockPriceOverride> tieredBlockPriceOverrides = getTieredBlockPriceOverrides(curTier, overriddenTier, context);
+                tierPriceOverrides.add(new DefaultTierPriceOverride(tieredBlockPriceOverrides));
+            }
             else
                 tierPriceOverrides.add(null);
         }
         return tierPriceOverrides;
-
     }
 
     List<TieredBlockPriceOverride> getTieredBlockPriceOverrides(Tier curTier, CatalogOverrideTierDefinitionModelDao overriddenTier, final InternalTenantContext context) {
@@ -186,12 +190,10 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
             }).orNull();
 
             if(overriddenTierBlock != null)
-                blockPriceOverrides.add(new DefaultTieredBlockPriceOverride(overriddenTierBlock.getParentUnitName(),overriddenTierBlock.getSize(),overriddenTierBlock.getPrice(),overriddenTierBlock.getMax()));
+                blockPriceOverrides.add(new DefaultTieredBlockPriceOverride(overriddenTierBlock.getParentUnitName(), overriddenTierBlock.getSize(), overriddenTierBlock.getPrice(), overriddenTierBlock.getMax()));
             else
                 blockPriceOverrides.add(null);
         }
         return blockPriceOverrides;
-
     }
-
 }

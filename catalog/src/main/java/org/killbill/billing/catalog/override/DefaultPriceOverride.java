@@ -70,9 +70,12 @@ public class DefaultPriceOverride implements PriceOverride {
                 }
             }).orNull();
 
-            resolvedOverride[index++] = curOverride != null ?
-                                        new DefaultPlanPhasePriceOverride(curPhase.getName(), curOverride.getCurrency(), curOverride.getFixedPrice(), curOverride.getRecurringPrice(), getResolvedUsageOverrides(curPhase.getUsages(), curOverride.getUsagePriceOverrides())) :
-                                        null;
+            if(curOverride != null) {
+                List<UsagePriceOverride> resolvedUsageOverrides = getResolvedUsageOverrides(curPhase.getUsages(), curOverride.getUsagePriceOverrides());
+                resolvedOverride[index++] = new DefaultPlanPhasePriceOverride(curPhase.getName(), curOverride.getCurrency(), curOverride.getFixedPrice(), curOverride.getRecurringPrice(), resolvedUsageOverrides);
+            }
+            else
+                resolvedOverride[index++] = null;
         }
 
         for (int i = 0; i < resolvedOverride.length; i++) {
@@ -98,7 +101,6 @@ public class DefaultPriceOverride implements PriceOverride {
         return result;
     }
 
-
     public List<UsagePriceOverride> getResolvedUsageOverrides(Usage[] usages, List<UsagePriceOverride> usagePriceOverrides) throws CatalogApiException{
         List<UsagePriceOverride> resolvedUsageOverrides = new ArrayList<UsagePriceOverride>();
 
@@ -109,9 +111,10 @@ public class DefaultPriceOverride implements PriceOverride {
                     return input.getName() != null && input.getName().equals(curUsage.getName());
                 }
             }).orNull();
-              if(curOverride != null)
-                   resolvedUsageOverrides.add(new DefaultUsagePriceOverride(curUsage.getName(), curUsage.getUsageType(), getResolvedTierOverrides(curUsage.getTiers(), curOverride.getTierPriceOverrides())));
-              else
+              if(curOverride != null) {
+                  List<TierPriceOverride>  tierPriceOverrides = getResolvedTierOverrides(curUsage.getTiers(), curOverride.getTierPriceOverrides());
+                  resolvedUsageOverrides.add(new DefaultUsagePriceOverride(curUsage.getName(), curUsage.getUsageType(),tierPriceOverrides));
+              } else
                  resolvedUsageOverrides.add(null);
         }
 
@@ -146,8 +149,10 @@ public class DefaultPriceOverride implements PriceOverride {
                 }
             }).orNull();
 
-            if(curOverride != null)
-                resolvedTierOverrides.add(new DefaultTierPriceOverride(getResolvedTieredBlockPriceOverrides(curTier.getTieredBlocks(),curOverride.getTieredBlockPriceOverrides())));
+            if(curOverride != null) {
+                List<TieredBlockPriceOverride> tieredBlockPriceOverrides = getResolvedTieredBlockPriceOverrides(curTier.getTieredBlocks(),curOverride.getTieredBlockPriceOverrides());
+                resolvedTierOverrides.add(new DefaultTierPriceOverride(tieredBlockPriceOverrides));
+            }
             else
                 resolvedTierOverrides.add(null);
         }
@@ -175,18 +180,6 @@ public class DefaultPriceOverride implements PriceOverride {
             }
             else
                 resolvedTieredBlockPriceOverrides.add(null);
-        }
-
-        for (int i = 0; i < resolvedTieredBlockPriceOverrides.size(); i++) {
-            final TieredBlockPriceOverride curOverride = resolvedTieredBlockPriceOverrides.get(i);
-            if (curOverride != null) {
-                final DefaultTieredBlock curTieredBlock = (DefaultTieredBlock)tieredBlocks[i];
-
-                if (curTieredBlock.getPrice() == null && curOverride.getPrice() != null) {
-                    final String error = String.format("There is no existing price for the tiered block %s", curTieredBlock.getUnit().getName());
-                    throw new CatalogApiException(ErrorCode.CAT_INVALID_INVALID_UNIT_PRICE_OVERRIDE, curTieredBlock.getUnit().getName() , error);
-                }
-            }
         }
 
         return resolvedTieredBlockPriceOverrides;

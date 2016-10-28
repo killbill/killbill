@@ -61,16 +61,12 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     public DefaultTier(Tier in, TierPriceOverride override, Currency currency) {
         this.limits = (DefaultLimit[])in.getLimits();
         this.blocks = new DefaultTieredBlock[in.getTieredBlocks().length];
-
         for (int i = 0; i < in.getTieredBlocks().length; i++) {
-
             if(override != null && override.getTieredBlockPriceOverrides().get(i)!=null)
                 blocks[i] = new DefaultTieredBlock(in.getTieredBlocks()[i], override.getTieredBlockPriceOverrides().get(i), currency) ;
             else
                 blocks[i] = (DefaultTieredBlock) in.getTieredBlocks()[i];
-
         }
-
     }
 
     @Override

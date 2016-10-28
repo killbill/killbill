@@ -1,8 +1,6 @@
 group CatalogOverrideTierBlockSqlDao;
 
-
 tableName() ::= "catalog_override_tier_block"
-
 
 tableFields(prefix) ::= <<
   <prefix>block_number
@@ -18,7 +16,6 @@ allTableFields(prefix) ::= <<
 , <tableFields(prefix)>
 >>
 
-
 tableValues() ::= <<
   :blockNumber
 , :blockDefRecordId
@@ -27,7 +24,6 @@ tableValues() ::= <<
 , :createdBy
 , :tenantRecordId
 >>
-
 
 allTableValues() ::= <<
   :recordId
@@ -70,6 +66,7 @@ where
 and tmp.count = :targetCount
 ;
 >>
+
 getLastInsertId() ::= <<
 select LAST_INSERT_ID();
 >>

@@ -69,7 +69,6 @@ public class CatalogOverrideBlockDefinitionModelDao {
         this.size = size;
     }
 
-
     public double getMax() {
         return max;
     }
@@ -102,7 +101,6 @@ public class CatalogOverrideBlockDefinitionModelDao {
         this.createdBy = createdBy;
     }
 
-
     public Long getTenantRecordId() {
         return tenantRecordId;
     }
@@ -115,7 +113,6 @@ public class CatalogOverrideBlockDefinitionModelDao {
     }
 
     public CatalogOverrideBlockDefinitionModelDao(String parentUnitName, String currency, BigDecimal price, double size, double max, DateTime effectiveDate) {
-
         this.parentUnitName = parentUnitName;
         this.currency = currency;
         this.price = price;

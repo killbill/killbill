@@ -88,16 +88,13 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
               this.limits = (DefaultLimit[]) in.getLimits();
               this.blocks = (DefaultBlock[]) in.getBlocks();
               this.tiers = new DefaultTier[in.getTiers().length];
-               for (int i = 0; i < in.getTiers().length; i++) {
-
-                 if(override != null && override.getTierPriceOverrides().get(i)!=null)
-                    tiers[i] = new DefaultTier(in.getTiers()[i], override.getTierPriceOverrides().get(i), currency) ;
-                 else
+              for (int i = 0; i < in.getTiers().length; i++) {
+                if(override != null && override.getTierPriceOverrides().get(i)!=null)
+                    tiers[i] = new DefaultTier(in.getTiers()[i], override.getTierPriceOverrides().get(i), currency);
+                else
                     tiers[i] = (DefaultTier) in.getTiers()[i];
-               }
+              }
     }
-
-
 
     @Override
     public String getName() {

@@ -107,11 +107,9 @@ PRIMARY KEY(record_id)
 );
 CREATE INDEX catalog_override_phase_usage_idx ON catalog_override_phase_usage(tenant_record_id, usage_number, usage_def_record_id);
 
-
 DROP TABLE IF EXISTS catalog_override_usage_tier;
 create table catalog_override_usage_tier
 (
-
 record_id serial unique,
 tier_number smallint(5) unsigned,
 tier_def_record_id bigint /*! unsigned */ not null,

@@ -15,7 +15,6 @@ public class CatalogOverrideUsageTierModelDao {
     private String createdBy;
     private Long tenantRecordId;
 
-
     public CatalogOverrideUsageTierModelDao() {
     }
 
@@ -81,5 +80,4 @@ public class CatalogOverrideUsageTierModelDao {
     public Long getTenantRecordId() {
         return tenantRecordId;
     }
-
 }

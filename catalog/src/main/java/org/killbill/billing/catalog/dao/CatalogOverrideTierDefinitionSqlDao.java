@@ -25,7 +25,7 @@ public interface CatalogOverrideTierDefinitionSqlDao extends Transactional<Catal
 
     @SqlQuery
     public List<CatalogOverrideTierDefinitionModelDao> getOverriddenUsageTiers(@Bind("targetUsageDefRecordId") Long targetUsageDefRecordId,
-                                                                                @SmartBindBean final InternalTenantContext context);
+                                                                               @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getLastInsertId();

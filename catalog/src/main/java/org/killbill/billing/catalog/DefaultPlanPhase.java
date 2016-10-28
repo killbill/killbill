@@ -65,14 +65,12 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         this.duration = (DefaultDuration) in.getDuration();
         this.fixed = override != null && override.getFixedPrice() != null ? new DefaultFixed((DefaultFixed) in.getFixed(), override) : (DefaultFixed) in.getFixed();
         this.recurring = override != null && override.getRecurringPrice() != null ? new DefaultRecurring((DefaultRecurring) in.getRecurring(), override) : (DefaultRecurring) in.getRecurring();
-        this.usages =  new DefaultUsage[in.getUsages().length];
+        this.usages = new DefaultUsage[in.getUsages().length];
         for (int i = 0; i < in.getUsages().length; i++) {
-
             if(override != null && override.getUsagePriceOverrides().get(i)!= null) {
                 usages[i] = new DefaultUsage(in.getUsages()[i], override.getUsagePriceOverrides().get(i), override.getCurrency());
             }
             else {
-
                 usages[i] = (DefaultUsage) in.getUsages()[i];
             }
         }

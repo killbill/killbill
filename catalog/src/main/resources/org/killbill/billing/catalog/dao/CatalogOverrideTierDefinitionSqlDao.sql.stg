@@ -17,7 +17,6 @@ allTableFields(prefix) ::= <<
 , <tableFields(prefix)>
 >>
 
-
 tableValues() ::= <<
   :fixedPrice
 , :recurringPrice
@@ -27,7 +26,6 @@ tableValues() ::= <<
 , :currency
 , :tenantRecordId
 >>
-
 
 allTableValues() ::= <<
   :recordId

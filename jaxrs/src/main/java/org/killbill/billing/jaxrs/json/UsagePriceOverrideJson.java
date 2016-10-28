@@ -12,13 +12,11 @@ import java.util.List;
 
 public class UsagePriceOverrideJson {
 
-
     private final String usageName;
 
     private final UsageType usageType;
 
     private final BillingMode billingMode;
-
 
     private final List<TierPriceOverrideJson> tierPriceOverrides;
 
@@ -48,6 +46,4 @@ public class UsagePriceOverrideJson {
         this.billingMode = billingMode;
         this.tierPriceOverrides = tierPriceOverrides;
     }
-
-
 }

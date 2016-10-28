@@ -90,15 +90,13 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         return errors;
     }
 
+    public DefaultBlock() {
+    }
 
     public DefaultBlock(final DefaultUnit unit, final Double size, final DefaultInternationalPrice prices, final BigDecimal overriddenPrice, Currency currency) {
-
         this.unit = unit;
         this.size = size;
         this.prices = prices != null ? new DefaultInternationalPrice(prices, overriddenPrice, currency) : null;
-    }
-
-    public DefaultBlock() {
     }
 
     public DefaultBlock setType(final BlockType type) {

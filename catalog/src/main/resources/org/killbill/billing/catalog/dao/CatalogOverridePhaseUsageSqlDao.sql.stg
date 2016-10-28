@@ -1,8 +1,6 @@
 group CatalogOverridePhaseUsageSqlDao;
 
-
 tableName() ::= "catalog_override_phase_usage"
-
 
 tableFields(prefix) ::= <<
   <prefix>usage_number
@@ -18,7 +16,6 @@ allTableFields(prefix) ::= <<
 , <tableFields(prefix)>
 >>
 
-
 tableValues() ::= <<
   :usageNumber
 , :usageDefRecordId
@@ -27,7 +24,6 @@ tableValues() ::= <<
 , :createdBy
 , :tenantRecordId
 >>
-
 
 allTableValues() ::= <<
   :recordId
@@ -70,6 +66,7 @@ where
 and tmp.count = :targetCount
 ;
 >>
+
 getLastInsertId() ::= <<
 select LAST_INSERT_ID();
 >>

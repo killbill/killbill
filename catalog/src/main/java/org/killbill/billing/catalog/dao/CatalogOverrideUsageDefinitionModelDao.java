@@ -50,8 +50,6 @@ public class CatalogOverrideUsageDefinitionModelDao {
         this.parentUsageType = parentUsageType;
     }
 
-
-
     public void setCurrency(String currency) {
         this.currency = currency;
     }
@@ -88,8 +86,6 @@ public class CatalogOverrideUsageDefinitionModelDao {
     public String getParentUsageType() {
         return parentUsageType;
     }
-
-
 
     public String getCurrency() {
         return currency;

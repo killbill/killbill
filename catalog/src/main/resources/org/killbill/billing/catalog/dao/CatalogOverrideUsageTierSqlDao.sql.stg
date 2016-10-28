@@ -1,8 +1,6 @@
 group CatalogOverrideUsageTierSqlDao;
 
-
 tableName() ::= "catalog_override_usage_tier"
-
 
 tableFields(prefix) ::= <<
   <prefix>tier_number
@@ -18,7 +16,6 @@ allTableFields(prefix) ::= <<
 , <tableFields(prefix)>
 >>
 
-
 tableValues() ::= <<
   :tierNumber
 , :tierDefRecordId
@@ -27,7 +24,6 @@ tableValues() ::= <<
 , :createdBy
 , :tenantRecordId
 >>
-
 
 allTableValues() ::= <<
   :recordId

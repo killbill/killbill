@@ -2,7 +2,6 @@ group CatalogOverrideBlockDefinitionSqlDao;
 
 tableName() ::= "catalog_override_block_definition"
 
-
 tableFields(prefix) ::= <<
   <prefix>parent_unit_name
 , <prefix>size
@@ -20,7 +19,6 @@ allTableFields(prefix) ::= <<
 , <tableFields(prefix)>
 >>
 
-
 tableValues() ::= <<
   :parentUnitName
 , :size
@@ -32,7 +30,6 @@ tableValues() ::= <<
 , :createdBy
 , :tenantRecordId
 >>
-
 
 allTableValues() ::= <<
   :recordId
@@ -77,7 +74,6 @@ tb.target_tier_def_record_id = :targetTierDefRecordId
 and tb.tenant_record_id = :tenantRecordId
 ;
 >>
-
 
 getLastInsertId() ::= <<
 select LAST_INSERT_ID();

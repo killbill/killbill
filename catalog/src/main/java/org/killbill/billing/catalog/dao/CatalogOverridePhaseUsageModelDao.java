@@ -32,7 +32,6 @@ public class CatalogOverridePhaseUsageModelDao {
         return usageNumber;
     }
 
-
     public Long getUsageDefRecordId() {
         return usageDefRecordId;
     }

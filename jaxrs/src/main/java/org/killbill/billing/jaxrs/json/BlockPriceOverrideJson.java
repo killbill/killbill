@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 
 public class BlockPriceOverrideJson {
 
-
     private String unitName;
 
     private Double size;
@@ -84,6 +83,4 @@ public class BlockPriceOverrideJson {
         }
         return true;
     }
-
-
 }

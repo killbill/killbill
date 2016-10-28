@@ -91,5 +91,4 @@ public class CatalogOverrideTierDefinitionModelDao {
     public void setTenantRecordId(Long tenantRecordId) {
         this.tenantRecordId = tenantRecordId;
     }
-
 }

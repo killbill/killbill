@@ -127,7 +127,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         final CatalogOverridePhaseDefinitionSqlDao sqlDao = inTransactionHandle.attach(CatalogOverridePhaseDefinitionSqlDao.class);
 
         if(override.getUsagePriceOverrides() != null && isUsageOverrideListHasOnlyNull(override.getUsagePriceOverrides())) {
-            getOrCreatePhaseDefinitionFromTransactionWithoutUsageOverrides(parentPhaseName, catalogEffectiveDate, override, inTransactionHandle, context);
+            return getOrCreatePhaseDefinitionFromTransactionWithoutUsageOverrides(parentPhaseName, catalogEffectiveDate, override, inTransactionHandle, context);
         }
 
         final CatalogOverrideUsageDefinitionModelDao[] overrideUsageDefinitionModelDaos = new CatalogOverrideUsageDefinitionModelDao[override.getUsagePriceOverrides().size()];
@@ -281,7 +281,6 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
             }
         }
         return resultTierDef;
-
     }
 
     private void createCatalogOverrideTierBlockFromTransaction(final short blockNum, final CatalogOverrideBlockDefinitionModelDao blockDef, final CatalogOverrideTierDefinitionModelDao tierDef, final Handle inTransactionHandle, final InternalCallContext context) {
