@@ -90,21 +90,21 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, SubscriptionBaseApiException, AccountApiException {
         final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(true, context);
+        final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
 
         // Check to see if billing is off for the account
         final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
         final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
+        final DefaultBillingEventSet result;
         if (found_AUTO_INVOICING_OFF) {
-            return new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode()); // billing is off, we are done
+            result = new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode()); // billing is off, we are done
+        } else {
+            result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode());
+
+            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
+            final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
+            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);
         }
-
-        final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
-
-        final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
-        final DefaultBillingEventSet result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode());
-
-        final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
-        addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);
 
         if (result.isEmpty()) {
             log.info("No billing event for accountId='{}'", accountId);
