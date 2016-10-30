@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.ImmutableAccountData;
@@ -70,12 +69,18 @@ public class BillCycleDayCalculator {
         final Plan nextPlan = (transition.getNextPlan() != null) ? catalog.findPlan(transition.getNextPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final Plan plan = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPlan : prevPlan;
+        if (plan == null) {
+            throw new IllegalStateException(String.format("Unable to find plan to calculate BCD: subscriptionId='%s', transition='%s', prevPlan='%s', nextPlan='%s'", subscription.getId(), transition, prevPlan, nextPlan));
+        }
         final Product product = plan.getProduct();
 
         final PlanPhase prevPhase = (transition.getPreviousPhase() != null) ? catalog.findPhase(transition.getPreviousPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
         final PlanPhase nextPhase = (transition.getNextPhase() != null) ? catalog.findPhase(transition.getNextPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final PlanPhase phase = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase;
+        if (phase == null) {
+            throw new IllegalStateException(String.format("Unable to find phase to calculate BCD: subscriptionId='%s', transition='%s', prevPhase='%s', nextPhase='%s'", subscription.getId(), transition, prevPhase, nextPhase));
+        }
 
         final BillingPeriod billingPeriod = phase.getRecurring() != null ? phase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
         final BillingAlignment alignment = catalog.billingAlignment(
