@@ -234,13 +234,18 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final Plan nextPlan = (transition.getNextPlan() != null) ? catalog.findPlan(transition.getNextPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final Plan plan = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPlan : prevPlan;
+        if (plan == null) {
+            throw new IllegalStateException(String.format("Unable to find plan to calculate BCD: subscriptionId='%s', transition='%s', prevPlan='%s', nextPlan='%s'", transition.getSubscriptionId(), transition, prevPlan, nextPlan));
+        }
         final Product product = plan.getProduct();
 
         final PlanPhase prevPhase = (transition.getPreviousPhase() != null) ? catalog.findPhase(transition.getPreviousPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
         final PlanPhase nextPhase = (transition.getNextPhase() != null) ? catalog.findPhase(transition.getNextPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final PlanPhase phase = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase;
-
+        if (phase == null) {
+            throw new IllegalStateException(String.format("Unable to find phase to calculate BCD: subscriptionId='%s', transition='%s', prevPhase='%s', nextPhase='%s'", transition.getSubscriptionId(), transition, prevPhase, nextPhase));
+        }
         final BillingPeriod billingPeriod = phase.getRecurring() != null ? phase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
 
         return new PlanPhaseSpecifier(product.getName(),
