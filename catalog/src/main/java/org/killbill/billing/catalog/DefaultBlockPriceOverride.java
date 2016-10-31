@@ -7,9 +7,6 @@ import org.killbill.billing.catalog.api.Unit;
 
 import java.math.BigDecimal;
 
-/**
- * Created by sruthipendyala on 10/6/16.
- */
 public class DefaultBlockPriceOverride implements BlockPriceOverride {
 
     private String unitName;

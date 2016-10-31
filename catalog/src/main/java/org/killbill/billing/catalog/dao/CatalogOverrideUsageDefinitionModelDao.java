@@ -4,9 +4,6 @@ import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 
-/**
- * Created by sruthipendyala on 10/7/16.
- */
 public class CatalogOverrideUsageDefinitionModelDao {
 
 

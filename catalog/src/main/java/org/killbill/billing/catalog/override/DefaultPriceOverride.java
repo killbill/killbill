@@ -17,23 +17,38 @@
 
 package org.killbill.billing.catalog.override;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
-
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.*;
-import org.killbill.billing.catalog.api.*;
+import org.killbill.billing.catalog.DefaultPlan;
+import org.killbill.billing.catalog.DefaultPlanPhase;
+import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
+import org.killbill.billing.catalog.DefaultTierPriceOverride;
+import org.killbill.billing.catalog.DefaultTieredBlockPriceOverride;
+import org.killbill.billing.catalog.DefaultUsagePriceOverride;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.Tier;
+import org.killbill.billing.catalog.api.TierPriceOverride;
+import org.killbill.billing.catalog.api.TieredBlock;
+import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
+import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.catalog.caching.OverriddenPlanCache;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.dao.CatalogOverridePlanDefinitionModelDao;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 
 public class DefaultPriceOverride implements PriceOverride {
 
@@ -72,7 +87,8 @@ public class DefaultPriceOverride implements PriceOverride {
 
             if(curOverride != null) {
                 List<UsagePriceOverride> resolvedUsageOverrides = getResolvedUsageOverrides(curPhase.getUsages(), curOverride.getUsagePriceOverrides());
-                resolvedOverride[index++] = new DefaultPlanPhasePriceOverride(curPhase.getName(), curOverride.getCurrency(), curOverride.getFixedPrice(), curOverride.getRecurringPrice(), resolvedUsageOverrides);
+                resolvedOverride[index++] = new DefaultPlanPhasePriceOverride(curPhase.getName(), curOverride.getCurrency(), curOverride.getFixedPrice(),
+                        curOverride.getRecurringPrice(), resolvedUsageOverrides);
             }
             else
                 resolvedOverride[index++] = null;
@@ -150,7 +166,8 @@ public class DefaultPriceOverride implements PriceOverride {
             }).orNull();
 
             if(curOverride != null) {
-                List<TieredBlockPriceOverride> tieredBlockPriceOverrides = getResolvedTieredBlockPriceOverrides(curTier.getTieredBlocks(),curOverride.getTieredBlockPriceOverrides());
+                List<TieredBlockPriceOverride> tieredBlockPriceOverrides = getResolvedTieredBlockPriceOverrides(curTier.getTieredBlocks(),
+                        curOverride.getTieredBlockPriceOverrides());
                 resolvedTierOverrides.add(new DefaultTierPriceOverride(tieredBlockPriceOverrides));
             }
             else

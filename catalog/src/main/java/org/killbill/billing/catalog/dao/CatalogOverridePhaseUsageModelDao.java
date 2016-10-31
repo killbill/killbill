@@ -2,9 +2,6 @@ package org.killbill.billing.catalog.dao;
 
 import org.joda.time.DateTime;
 
-/**
- * Created by sruthipendyala on 10/7/16.
- */
 public class CatalogOverridePhaseUsageModelDao {
 
     private Short usageNumber;

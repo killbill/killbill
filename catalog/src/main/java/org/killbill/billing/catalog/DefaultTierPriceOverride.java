@@ -5,9 +5,6 @@ import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 
 import java.util.List;
 
-/**
- * Created by sruthipendyala on 10/6/16.
- */
 public class DefaultTierPriceOverride implements TierPriceOverride {
 
     List<TieredBlockPriceOverride> tieredBlockPriceOverrides;

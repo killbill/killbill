@@ -17,18 +17,23 @@
 
 package org.killbill.billing.catalog;
 
+import org.killbill.billing.ErrorCode;
+import org.killbill.billing.catalog.api.Block;
+import org.killbill.billing.catalog.api.BlockType;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.InternationalPrice;
+import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Unit;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationError;
+import org.killbill.xmlloader.ValidationErrors;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
-
-import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.api.*;
-import org.killbill.xmlloader.ValidatingConfig;
-import org.killbill.xmlloader.ValidationError;
-import org.killbill.xmlloader.ValidationErrors;
-
 import java.math.BigDecimal;
 
 @XmlAccessorType(XmlAccessType.NONE)

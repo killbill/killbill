@@ -1,8 +1,5 @@
 package org.killbill.billing.catalog.dao;
 
-/**
- * Created by sruthipendyala on 10/7/16.
- */
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
@@ -16,7 +13,6 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 import java.util.Collection;
 import java.util.List;
-
 
 @EntitySqlDaoStringTemplate
 public interface CatalogOverridePhaseUsageSqlDao extends Transactional<CatalogOverridePhaseUsageSqlDao>, CloseMe {

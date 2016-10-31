@@ -1,9 +1,5 @@
 package org.killbill.billing.catalog.dao;
 
-/**
- * Created by sruthipendyala on 10/7/16.
- */
-
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;

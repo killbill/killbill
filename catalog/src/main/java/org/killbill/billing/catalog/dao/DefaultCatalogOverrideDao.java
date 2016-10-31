@@ -18,20 +18,19 @@
 package org.killbill.billing.catalog.dao;
 
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.StreamSupport;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.DefaultTierPriceOverride;
-import org.killbill.billing.catalog.DefaultTieredBlockPriceOverride;
-import org.killbill.billing.catalog.DefaultUsagePriceOverride;
-import org.killbill.billing.catalog.api.*;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.Tier;
+import org.killbill.billing.catalog.api.TierPriceOverride;
+import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
+import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.clock.Clock;
 import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.DBI;
@@ -40,9 +39,8 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import com.google.inject.Inject;
-
-import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
@@ -123,7 +121,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         sqlDao.create(modelDao, context);
     }
 
-    private CatalogOverridePhaseDefinitionModelDao getOrCreateOverridePhaseDefinitionFromTransaction(final PlanPhase parentPlanPhase, final String parentPhaseName,final Currency currency, final DateTime catalogEffectiveDate, final PlanPhasePriceOverride override, final Handle inTransactionHandle, final InternalCallContext context) {
+    private CatalogOverridePhaseDefinitionModelDao getOrCreateOverridePhaseDefinitionFromTransaction(final PlanPhase parentPlanPhase, final String parentPhaseName, final Currency currency, final DateTime catalogEffectiveDate, final PlanPhasePriceOverride override, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverridePhaseDefinitionSqlDao sqlDao = inTransactionHandle.attach(CatalogOverridePhaseDefinitionSqlDao.class);
 
         if(override.getUsagePriceOverrides() != null && isUsageOverrideListHasOnlyNull(override.getUsagePriceOverrides())) {
