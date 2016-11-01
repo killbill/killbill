@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -443,52 +443,70 @@ public class AccountResource extends JaxRsResourceBase {
             final Future<List<InvoicePayment>> futureInvoicePaymentsCallable = executor.submit(invoicePaymentsCallable);
             final Future<List<Payment>> futurePaymentsCallable = executor.submit(paymentsCallable);
             final Future<AccountAuditLogs> futureAuditsCallable = executor.submit(auditsCallable);
+            final ImmutableList<Future> toBeCancelled = ImmutableList.<Future>of(futureBundlesCallable, futureInvoicesCallable, futureInvoicePaymentsCallable, futurePaymentsCallable, futureAuditsCallable);
+            final int timeoutMsec = 100;
 
-            try {
-                final long ini = System.currentTimeMillis();
-                do {
-                    bundles = (bundles == null) ? runCallableAndHandleTimeout(futureBundlesCallable, 100) : bundles;
-                    invoices = (invoices == null) ? runCallableAndHandleTimeout(futureInvoicesCallable, 100) : invoices;
-                    invoicePayments = (invoicePayments == null) ? runCallableAndHandleTimeout(futureInvoicePaymentsCallable, 100) : invoicePayments;
-                    payments = (payments == null) ? runCallableAndHandleTimeout(futurePaymentsCallable, 100) : payments;
-                    accountAuditLogs = (accountAuditLogs == null) ? runCallableAndHandleTimeout(futureAuditsCallable, 100) : accountAuditLogs;
-                } while ((System.currentTimeMillis() - ini < jaxrsConfig.getJaxrsTimeout().getMillis()) &&
-                         (bundles == null || invoices == null || invoicePayments == null || payments == null || accountAuditLogs == null));
+            final long ini = System.currentTimeMillis();
+            do {
+                bundles = (bundles == null) ? waitOnFutureAndHandleTimeout("bundles", futureBundlesCallable, timeoutMsec, toBeCancelled) : bundles;
+                invoices = (invoices == null) ? waitOnFutureAndHandleTimeout("invoices", futureInvoicesCallable, timeoutMsec, toBeCancelled) : invoices;
+                invoicePayments = (invoicePayments == null) ? waitOnFutureAndHandleTimeout("invoicePayments", futureInvoicePaymentsCallable, timeoutMsec, toBeCancelled) : invoicePayments;
+                payments = (payments == null) ? waitOnFutureAndHandleTimeout("payments", futurePaymentsCallable, timeoutMsec, toBeCancelled) : payments;
+                accountAuditLogs = (accountAuditLogs == null) ? waitOnFutureAndHandleTimeout("accountAuditLogs", futureAuditsCallable, timeoutMsec, toBeCancelled) : accountAuditLogs;
+            } while ((System.currentTimeMillis() - ini < jaxrsConfig.getJaxrsTimeout().getMillis()) &&
+                     (bundles == null || invoices == null || invoicePayments == null || payments == null || accountAuditLogs == null));
 
-                if (bundles == null || invoices == null || invoicePayments == null || payments == null || accountAuditLogs == null) {
-                    Response.status(Status.SERVICE_UNAVAILABLE).build();
-                }
-            } catch (final InterruptedException e) {
-                handleCallableException(e, ImmutableList.<Future>of(futureBundlesCallable, futureInvoicesCallable, futureInvoicePaymentsCallable, futurePaymentsCallable, futureAuditsCallable));
-            } catch (final ExecutionException e) {
-                handleCallableException(e.getCause(), ImmutableList.<Future>of(futureBundlesCallable, futureInvoicesCallable, futureInvoicePaymentsCallable, futurePaymentsCallable, futureAuditsCallable));
+            if (bundles == null || invoices == null || invoicePayments == null || payments == null || accountAuditLogs == null) {
+                Response.status(Status.SERVICE_UNAVAILABLE).build();
             }
-
         } else {
-            try {
-                invoices = invoicesCallable.call();
-                payments = paymentsCallable.call();
-                bundles = bundlesCallable.call();
-                accountAuditLogs = auditsCallable.call();
-                invoicePayments = invoicePaymentsCallable.call();
-            } catch (final Exception e) {
-                handleCallableException(e);
-            }
+            invoices = runCallable("invoices", invoicesCallable);
+            payments = runCallable("payments", paymentsCallable);
+            bundles = runCallable("bundles", bundlesCallable);
+            accountAuditLogs = runCallable("accountAuditLogs", auditsCallable);
+            invoicePayments = runCallable("invoicePayments", invoicePaymentsCallable);
         }
 
         json = new AccountTimelineJson(account, invoices, payments, invoicePayments, bundles, accountAuditLogs);
         return Response.status(Status.OK).entity(json).build();
     }
 
-    private <T> T runCallableAndHandleTimeout(final Future<T> future, final long timeoutMsec) throws ExecutionException, InterruptedException {
+    private <T> T waitOnFutureAndHandleTimeout(final String logSuffix, final Future<T> future, final long timeoutMsec, final Iterable<Future> toBeCancelled) throws PaymentApiException, AccountApiException, InvoiceApiException, SubscriptionApiException {
+        try {
+            return waitOnFutureAndHandleTimeout(future, timeoutMsec);
+        } catch (final InterruptedException e) {
+            log.warn("InterruptedException while retrieving {}", logSuffix, e);
+            handleCallableException(e, toBeCancelled);
+        } catch (final ExecutionException e) {
+            log.warn("ExecutionException while retrieving {}", logSuffix, e);
+            handleCallableException(e.getCause(), toBeCancelled);
+        }
+
+        // Never reached
+        return null;
+    }
+
+    private <T> T waitOnFutureAndHandleTimeout(final Future<T> future, final long timeoutMsec) throws ExecutionException, InterruptedException {
         try {
             return future.get(timeoutMsec, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
+        } catch (final TimeoutException e) {
             return null;
         }
     }
 
-    private void handleCallableException(final Throwable causeOrException, final List<Future> toBeCancelled) throws AccountApiException, SubscriptionApiException, PaymentApiException, InvoiceApiException {
+    private <T> T runCallable(final String logSuffix, final Callable<T> callable) throws PaymentApiException, AccountApiException, InvoiceApiException, SubscriptionApiException {
+        try {
+            return callable.call();
+        } catch (final Exception e) {
+            log.warn("InterruptedException while retrieving {}", logSuffix, e);
+            handleCallableException(e);
+        }
+
+        // Never reached
+        return null;
+    }
+
+    private void handleCallableException(final Throwable causeOrException, final Iterable<Future> toBeCancelled) throws AccountApiException, SubscriptionApiException, PaymentApiException, InvoiceApiException {
         for (final Future f : toBeCancelled) {
             f.cancel(true);
         }
