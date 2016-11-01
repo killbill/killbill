@@ -50,6 +50,8 @@ public class DatabaseExportDao {
     private enum TableType {
         /* TableName.ACCOUNT */
         KB_ACCOUNT("record_id", "tenant_record_id"),
+        /* TableName.ACCOUNT_HISTORY */
+        KB_ACCOUNT_HISTORY("target_record_id", "tenant_record_id"),
         /* Any per-account data table */
         KB_PER_ACCOUNT("account_record_id", "tenant_record_id"),
         /* bus_events, notifications table */
@@ -102,8 +104,15 @@ public class DatabaseExportDao {
     private void exportDataForAccountAndTable(final DatabaseExportOutputStream out, final List<ColumnInfo> columnsForTable, final InternalTenantContext context) {
 
 
+        TableType tableType = TableType.OTHER;
         final String tableName = columnsForTable.get(0).getTableName();
-        TableType tableType = TableName.ACCOUNT.getTableName().equals(tableName) ? TableType.KB_ACCOUNT : TableType.OTHER;
+
+        if (TableName.ACCOUNT.getTableName().equals(tableName)) {
+            tableType = TableType.KB_ACCOUNT;
+        } else if (TableName.ACCOUNT_HISTORY.getTableName().equals(tableName)) {
+            tableType = TableType.KB_ACCOUNT_HISTORY;
+        }
+
         boolean firstColumn = true;
         final StringBuilder queryBuilder = new StringBuilder("select ");
         for (final ColumnInfo column : columnsForTable) {
@@ -125,7 +134,7 @@ public class DatabaseExportDao {
         }
 
         // Don't export non-account specific tables
-        if (tableType ==  TableType.OTHER) {
+        if (tableType == TableType.OTHER) {
             return;
         }
 
