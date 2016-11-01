@@ -407,6 +407,12 @@ public class PaymentProcessor extends ProcessorBase {
                         throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_OPERATION, paymentStateContext.getTransactionType(), transactionToComplete.getTransactionStatus());
                     }
 
+                    // If Janitor confirmed the status, just return the status to the client.
+                    if (transactionType != TransactionType.AUTHORIZE &&
+                        (transactionToComplete.getTransactionStatus() == TransactionStatus.SUCCESS || transactionToComplete.getTransactionStatus() == TransactionStatus.PAYMENT_FAILURE)) {
+                        return getPayment(paymentId, true, properties, callContext, internalCallContext);
+                    }
+
                     paymentStateContext.setPaymentTransactionModelDao(transactionToComplete);
                 }
             }

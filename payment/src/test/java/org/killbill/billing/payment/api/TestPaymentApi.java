@@ -1672,18 +1672,167 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(authorization.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
 
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
-        final Payment pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.UNDEFINED);
+        Payment pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.UNDEFINED);
         Assert.assertEquals(pendingPayment.getTransactions().size(), 2);
         Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
         Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.UNKNOWN);
 
         try {
             // Attempt to complete the payment
-            createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+            pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+            Assert.assertEquals(pendingPayment.getTransactions().size(), 2);
             Assert.fail();
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
         }
+    }
+
+    @Test(groups = "slow")
+    public void testDoubleCaptureOnASuccessfulCapture() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final Payment authorization = createPayment(TransactionType.AUTHORIZE, null, paymentExternalKey, UUID.randomUUID().toString(), requestedAmount, PaymentPluginStatus.PROCESSED);
+        assertNotNull(authorization);
+        Assert.assertEquals(authorization.getTransactions().size(), 1);
+        Assert.assertEquals(authorization.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+
+        // 1st capture with success
+        Payment pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 2);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        // 2nd capture request with identical transaction external key
+        try {
+            // Attempt to complete the payment
+            pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(pendingPayment.getTransactions().size(), 2); //should be 2
+            Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+            Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+        }
+
+    }
+
+    @Test(groups = "slow")
+    public void testDoubleCaptureOnAPotentiallySuccessfulCapture() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final Payment authorization = createPayment(TransactionType.AUTHORIZE, null, paymentExternalKey, UUID.randomUUID().toString(), requestedAmount, PaymentPluginStatus.PROCESSED);
+        assertNotNull(authorization);
+        Assert.assertEquals(authorization.getTransactions().size(), 1);
+        Assert.assertEquals(authorization.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+
+        // 1st capture with UNDEFINED
+        Payment pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.UNDEFINED);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 2);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.UNKNOWN);
+
+        // but actually successful
+        mockPaymentProviderPlugin.overridePaymentPluginStatus(pendingPayment.getId(), pendingPayment.getTransactions().get(1).getId(), PaymentPluginStatus.PROCESSED);
+
+        // 2nd capture request with identical transaction external key
+        pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 2);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+    }
+
+    @Test(groups = "slow")
+    public void testCaptureWithAPotentiallySuccessfulCapture() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final Payment authorization = createPayment(TransactionType.AUTHORIZE, null, paymentExternalKey, UUID.randomUUID().toString(), requestedAmount, PaymentPluginStatus.PROCESSED);
+        assertNotNull(authorization);
+        Assert.assertEquals(authorization.getTransactions().size(), 1);
+        Assert.assertEquals(authorization.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+
+        // 1st capture with UNDEFINED
+        Payment pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.UNDEFINED);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 2);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.UNKNOWN);
+
+        // but actually successful
+        mockPaymentProviderPlugin.overridePaymentPluginStatus(pendingPayment.getId(), pendingPayment.getTransactions().get(1).getId(), PaymentPluginStatus.PROCESSED);
+
+        final String anotherPaymentTransactionExternalKey = UUID.randomUUID().toString();
+        // 2nd capture request with identical transaction external key
+        pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, anotherPaymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 3);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(2).getTransactionStatus(), TransactionStatus.SUCCESS);
+    }
+
+    @Test(groups = "slow")
+    public void testDoubleCaptureOnAPotentiallyFailedCapture() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final Payment authorization = createPayment(TransactionType.AUTHORIZE, null, paymentExternalKey, UUID.randomUUID().toString(), requestedAmount, PaymentPluginStatus.PROCESSED);
+        assertNotNull(authorization);
+        Assert.assertEquals(authorization.getTransactions().size(), 1);
+        Assert.assertEquals(authorization.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+
+        // 1st capture with UNDEFINED
+        Payment pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.UNDEFINED);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 2);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.UNKNOWN);
+
+        // but actually failed
+        mockPaymentProviderPlugin.overridePaymentPluginStatus(pendingPayment.getId(), pendingPayment.getTransactions().get(1).getId(), PaymentPluginStatus.ERROR);
+
+        // 2nd capture request with identical transaction external key
+        pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 2);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+    }
+
+    @Test(groups = "slow")
+    public void testCaptureWithAPotentiallyFailedCapture() throws Exception {
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+
+        final Payment authorization = createPayment(TransactionType.AUTHORIZE, null, paymentExternalKey, UUID.randomUUID().toString(), requestedAmount, PaymentPluginStatus.PROCESSED);
+        assertNotNull(authorization);
+        Assert.assertEquals(authorization.getTransactions().size(), 1);
+        Assert.assertEquals(authorization.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        final String paymentTransactionExternalKey = UUID.randomUUID().toString();
+
+        // 1st capture with UNDEFINED
+        Payment pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, paymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.UNDEFINED);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 2);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.UNKNOWN);
+
+        // but actually failed
+        mockPaymentProviderPlugin.overridePaymentPluginStatus(pendingPayment.getId(), pendingPayment.getTransactions().get(1).getId(), PaymentPluginStatus.ERROR);
+
+        final String anotherPaymentTransactionExternalKey = UUID.randomUUID().toString();
+        // 2nd capture request with identical transaction external key
+        pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, anotherPaymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
+        Assert.assertEquals(pendingPayment.getTransactions().size(), 3);
+        Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(pendingPayment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertEquals(pendingPayment.getTransactions().get(2).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
     @Test(groups = "slow")
