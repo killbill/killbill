@@ -44,6 +44,7 @@ import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -641,7 +642,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 1);
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
@@ -655,7 +656,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         clock.addDays(31);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 2);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -672,8 +673,14 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // Let's add a bunch of items by hand to pretend we have lots of cancelling items that should be cleaned (data issue after a potential invoice bug)
         //
         // We test both full and partial repair.
+
+        /*
+        final UUID id, @Nullable final DateTime createdDate, final UUID accountId,
+                           @Nullable final Integer invoiceNumber, final LocalDate invoiceDate, final LocalDate targetDate,
+                           final Currency currency, final boolean migrated, final InvoiceStatus status, final boolean isParentInvoice
+         */
         final InvoiceModelDao shellInvoice = new InvoiceModelDao(UUID.randomUUID(), lastInvoice.getCreatedDate(), lastInvoice.getAccountId(), null,
-                                                                 lastInvoice.getInvoiceDate(), lastInvoice.getTargetDate(), lastInvoice.getCurrency(), false);
+                                                                 lastInvoice.getInvoiceDate(), lastInvoice.getTargetDate(), lastInvoice.getCurrency(), false, InvoiceStatus.COMMITTED, false);
 
         final InvoiceItemModelDao recurring1 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.RECURRING, lastInvoice.getId(), lastInvoice.getAccountId(),
                                                                        bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "shotgun-monthly", "shotgun-monthly-evergreen",
@@ -720,7 +727,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         newItems.add(repair23);
         newItems.add(recurring3);
         newItems.add(repair3);
-        invoiceDao.createInvoice(shellInvoice, newItems, false, new FutureAccountNotifications(null, new HashMap<UUID, List<SubscriptionNotification>>()), internalCallContext);
+        invoiceDao.createInvoice(shellInvoice, newItems, false, new FutureAccountNotifications(new HashMap<UUID, List<SubscriptionNotification>>()), internalCallContext);
 
 
         // Move ahead one month, verify nothing from previous data was generated
@@ -728,7 +735,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 3);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
