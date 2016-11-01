@@ -399,13 +399,13 @@ public class AccountResource extends JaxRsResourceBase {
         final Callable<List<SubscriptionBundle>> bundlesCallable = new Callable<List<SubscriptionBundle>>() {
             @Override
             public List<SubscriptionBundle> call() throws Exception {
-                return subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), tenantContext);
+                return subscriptionApi.getSubscriptionBundlesForAccountId(accountId, tenantContext);
             }
         };
         final Callable<List<Invoice>> invoicesCallable = new Callable<List<Invoice>>() {
             @Override
             public List<Invoice> call() throws Exception {
-                return invoiceApi.getInvoicesByAccount(account.getId(), false, tenantContext);
+                return invoiceApi.getInvoicesByAccount(accountId, false, tenantContext);
             }
         };
         final Callable<List<InvoicePayment>> invoicePaymentsCallable = new Callable<List<InvoicePayment>>() {
@@ -436,7 +436,6 @@ public class AccountResource extends JaxRsResourceBase {
         AccountAuditLogs accountAuditLogs = null;
 
         if (parallel) {
-
             final ExecutorService executor = jaxrsExecutors.getJaxrsExecutorService();
             final Future<List<SubscriptionBundle>> futureBundlesCallable = executor.submit(bundlesCallable);
             final Future<List<Invoice>> futureInvoicesCallable = executor.submit(invoicesCallable);
@@ -445,7 +444,7 @@ public class AccountResource extends JaxRsResourceBase {
             final Future<AccountAuditLogs> futureAuditsCallable = executor.submit(auditsCallable);
 
             try {
-                long ini = System.currentTimeMillis();
+                final long ini = System.currentTimeMillis();
                 do {
                     bundles = (bundles == null) ? runCallableAndHandleTimeout(futureBundlesCallable, 100) : bundles;
                     invoices = (invoices == null) ? runCallableAndHandleTimeout(futureInvoicesCallable, 100) : invoices;
@@ -458,9 +457,9 @@ public class AccountResource extends JaxRsResourceBase {
                 if (bundles == null || invoices == null || invoicePayments == null || payments == null || accountAuditLogs == null) {
                     Response.status(Status.SERVICE_UNAVAILABLE).build();
                 }
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 handleCallableException(e, ImmutableList.<Future>of(futureBundlesCallable, futureInvoicesCallable, futureInvoicePaymentsCallable, futurePaymentsCallable, futureAuditsCallable));
-            } catch (ExecutionException e) {
+            } catch (final ExecutionException e) {
                 handleCallableException(e.getCause(), ImmutableList.<Future>of(futureBundlesCallable, futureInvoicesCallable, futureInvoicePaymentsCallable, futurePaymentsCallable, futureAuditsCallable));
             }
 
@@ -471,7 +470,7 @@ public class AccountResource extends JaxRsResourceBase {
                 bundles = bundlesCallable.call();
                 accountAuditLogs = auditsCallable.call();
                 invoicePayments = invoicePaymentsCallable.call();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 handleCallableException(e);
             }
         }
