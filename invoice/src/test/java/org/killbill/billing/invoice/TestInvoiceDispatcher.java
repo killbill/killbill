@@ -48,6 +48,7 @@ import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -69,7 +70,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testDryRunInvoice() throws InvoiceApiException, AccountApiException, CatalogApiException {
+    public void testDryRunInvoice() throws InvoiceApiException, AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         final UUID accountId = account.getId();
 
         final BillingEventSet events = new MockBillingEventSet();

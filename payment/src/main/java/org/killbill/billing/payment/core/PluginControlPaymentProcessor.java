@@ -306,7 +306,8 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                            payment != null ? payment.getExternalKey() : null,
                            paymentTransaction != null ? paymentTransaction.getExternalKey() : null,
                            paymentTransaction != null ? paymentTransaction.getTransactionStatus() : null,
-                           paymentControlPluginNames);
+                           paymentControlPluginNames,
+                           null);
         }
     }
 

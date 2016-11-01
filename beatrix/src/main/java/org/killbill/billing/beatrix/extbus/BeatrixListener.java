@@ -57,6 +57,7 @@ import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.notification.plugin.api.BlockingStateMetadata;
 import org.killbill.billing.notification.plugin.api.BroadcastMetadata;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.notification.plugin.api.PaymentMetadata;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -231,6 +232,8 @@ public class BeatrixListener {
                 objectType = ObjectType.PAYMENT;
                 objectId = realEventPay.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_SUCCESS;
+                final PaymentMetadata paymentInfoMetaDataObj = new PaymentMetadata(realEventPay.getPaymentTransactionId(), realEventPay.getAmount(), realEventPay.getCurrency(), realEventPay.getStatus(), realEventPay.getTransactionType(), realEventPay.getEffectiveDate());
+                metaData = objectMapper.writeValueAsString(paymentInfoMetaDataObj);
                 break;
 
             case PAYMENT_ERROR:
@@ -239,6 +242,8 @@ public class BeatrixListener {
                 objectId = realEventPayErr.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_FAILED;
                 accountId = realEventPayErr.getAccountId();
+                final PaymentMetadata paymentErrorMetaDataObj = new PaymentMetadata(realEventPayErr.getPaymentTransactionId(), realEventPayErr.getAmount(), realEventPayErr.getCurrency(), realEventPayErr.getStatus(), realEventPayErr.getTransactionType(), realEventPayErr.getEffectiveDate());
+                metaData = objectMapper.writeValueAsString(paymentErrorMetaDataObj);
                 break;
 
             case PAYMENT_PLUGIN_ERROR:
@@ -246,6 +251,8 @@ public class BeatrixListener {
                 objectType = ObjectType.PAYMENT;
                 objectId = realEventPayPluginErr.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_FAILED;
+                final PaymentMetadata pluginErrorMetaDataObj = new PaymentMetadata(realEventPayPluginErr.getPaymentTransactionId(), realEventPayPluginErr.getAmount(), realEventPayPluginErr.getCurrency(), realEventPayPluginErr.getStatus(), realEventPayPluginErr.getTransactionType(), realEventPayPluginErr.getEffectiveDate());
+                metaData = objectMapper.writeValueAsString(pluginErrorMetaDataObj);
                 break;
 
             case OVERDUE_CHANGE:

@@ -23,8 +23,10 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.slf4j.Logger;
 
@@ -58,7 +60,8 @@ public abstract class PaymentLoggingHelper {
                            paymentExternalKey,
                            paymentTransactionExternalKey,
                            transactionStatus,
-                           paymentControlPluginNames);
+                           paymentControlPluginNames,
+                           null);
     }
 
     public static void logExitAPICall(final Logger log,
@@ -72,7 +75,8 @@ public abstract class PaymentLoggingHelper {
                                       @Nullable final String paymentExternalKey,
                                       @Nullable final String paymentTransactionExternalKey,
                                       @Nullable final TransactionStatus transactionStatus,
-                                      @Nullable final List<String> paymentControlPluginNames) {
+                                      @Nullable final List<String> paymentControlPluginNames,
+                                      @Nullable final PaymentApiException exception) {
         logAPICallInternal(log,
                            "EXITING ",
                            transactionType,
@@ -85,7 +89,8 @@ public abstract class PaymentLoggingHelper {
                            paymentExternalKey,
                            paymentTransactionExternalKey,
                            transactionStatus,
-                           paymentControlPluginNames);
+                           paymentControlPluginNames,
+                           exception);
     }
 
     public static void logAPICallInternal(final Logger log,
@@ -100,7 +105,8 @@ public abstract class PaymentLoggingHelper {
                                           @Nullable final String paymentExternalKey,
                                           @Nullable final String paymentTransactionExternalKey,
                                           @Nullable final TransactionStatus transactionStatus,
-                                          @Nullable final List<String> paymentControlPluginNames) {
+                                          @Nullable final List<String> paymentControlPluginNames,
+                                          @Nullable final PaymentApiException exception) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder(prefixMsg);
             logLine.append("PaymentApi: transactionType='")
@@ -151,6 +157,17 @@ public abstract class PaymentLoggingHelper {
             if (paymentControlPluginNames != null) {
                 logLine.append(", paymentControlPluginNames='")
                        .append(JOINER.join(paymentControlPluginNames))
+                       .append("'");
+            }
+            if (exception != null) {
+                final ErrorCode error = ErrorCode.fromCode(exception.getCode());
+                if (error == ErrorCode.PAYMENT_PLUGIN_API_ABORTED) {
+                    logLine.append(", aborted=true");
+                }
+                logLine.append(", error='")
+                       .append(error)
+                       .append("', exception='")
+                       .append(exception.getMessage())
                        .append("'");
             }
             log.info(logLine.toString());

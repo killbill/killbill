@@ -1107,5 +1107,20 @@ public class InvoiceResource extends JaxRsResourceBase {
         public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
             return overrides;
         }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("DefaultDryRunArguments{");
+            sb.append("dryRunType=").append(dryRunType);
+            sb.append(", action=").append(action);
+            sb.append(", subscriptionId=").append(subscriptionId);
+            sb.append(", effectiveDate=").append(effectiveDate);
+            sb.append(", specifier=").append(specifier);
+            sb.append(", bundleId=").append(bundleId);
+            sb.append(", billingPolicy=").append(billingPolicy);
+            sb.append(", overrides=").append(overrides);
+            sb.append('}');
+            return sb.toString();
+        }
     }
 }
