@@ -420,7 +420,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     return subscription.getProductCategory().equals(ProductCategory.ADD_ON.toString());
                 }
             }));
-            verifyNumberOfElements(addOnSubscriptionsSize, entitlementsWithAddOns.size() - 1, "It should be " + (entitlementsWithAddOns.size() - 1) + " ADD_ON products.");
+            verifyNumberOfElements(addOnSubscriptionsSize, bulkBaseEntitlementWithAddOns.getBaseEntitlementAndAddOns().size() - 1, "It should be " + (bulkBaseEntitlementWithAddOns.getBaseEntitlementAndAddOns().size() - 1) + " ADD_ON products.");
 
             for (final SubscriptionJson entitlement : bulkBaseEntitlementWithAddOns.getBaseEntitlementAndAddOns()) {
                 // verifications
