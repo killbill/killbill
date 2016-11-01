@@ -160,14 +160,15 @@ public abstract class PaymentLoggingHelper {
                        .append("'");
             }
             if (exception != null) {
-                logLine.append(", exception='")
-                       .append(ErrorCode.fromCode(exception.getCode()))
-                       .append(" - ")
-                       .append(exception.getMessage())
-                       .append("'");
-                if (exception.getCode() == ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode()) {
+                final ErrorCode error = ErrorCode.fromCode(exception.getCode());
+                if (error == ErrorCode.PAYMENT_PLUGIN_API_ABORTED) {
                     logLine.append(", aborted=true");
                 }
+                logLine.append(", error='")
+                       .append(error)
+                       .append("', exception='")
+                       .append(exception.getMessage())
+                       .append("'");
             }
             log.info(logLine.toString());
         }
