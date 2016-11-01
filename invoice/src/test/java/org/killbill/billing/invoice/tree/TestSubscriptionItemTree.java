@@ -394,6 +394,189 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
+    // Will test the case A from ItemsNodeInterval#prune logic (when we delete a node while walking the tree)
+    @Test(groups = "fast")
+    public void testFullRepairPruneLogic1() {
+
+        final LocalDate startDate1 = new LocalDate(2015, 1, 1);
+        final LocalDate endDate1 = new LocalDate(2015, 2, 1);
+
+
+        final LocalDate startDate2 = endDate1;
+        final LocalDate endDate2 = new LocalDate(2015, 3, 1);
+
+        final LocalDate startDate3 = endDate2;
+        final LocalDate endDate3 = new LocalDate(2015, 4, 1);
+
+        final BigDecimal monthlyRate = new BigDecimal("12.00");
+        final BigDecimal monthlyAmount = monthlyRate;
+
+        final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate1, endDate1, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem monthly2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate2, endDate2, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem repairMonthly2 = new RepairAdjInvoiceItem(invoiceId, accountId, startDate2, endDate2, new BigDecimal("-12.00"), currency, monthly2.getId());
+        final InvoiceItem monthly3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate3, endDate3, monthlyAmount, monthlyRate, currency);
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        expectedResult.add(monthly1);
+        expectedResult.add(monthly3);
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(monthly1);
+        tree.addItem(monthly2);
+        tree.addItem(repairMonthly2);
+        tree.addItem(monthly3);
+
+        tree.build();
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+
+    // Will test the case A from ItemsNodeInterval#prune logic (an item is left on the interval)
+    @Test(groups = "fast")
+    public void testFullRepairPruneLogic2() {
+
+        final LocalDate startDate1 = new LocalDate(2015, 1, 1);
+        final LocalDate endDate1 = new LocalDate(2015, 2, 1);
+
+
+        final LocalDate startDate2 = endDate1;
+        final LocalDate endDate2 = new LocalDate(2015, 3, 1);
+
+        final LocalDate startDate3 = endDate2;
+        final LocalDate endDate3 = new LocalDate(2015, 4, 1);
+
+        final BigDecimal monthlyRateInit = new BigDecimal("12.00");
+        final BigDecimal monthlyAmountInit = monthlyRateInit;
+
+        final BigDecimal monthlyRateFinal = new BigDecimal("15.00");
+        final BigDecimal monthlyAmountFinal = monthlyRateFinal;
+
+        final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate1, endDate1, monthlyRateInit, monthlyAmountInit, currency);
+        final InvoiceItem monthly2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate2, endDate2, monthlyRateInit, monthlyAmountInit, currency);
+        final InvoiceItem repairMonthly2 = new RepairAdjInvoiceItem(invoiceId, accountId, startDate2, endDate2, new BigDecimal("-12.00"), currency, monthly2.getId());
+
+        final InvoiceItem monthly2New = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate2, endDate2, monthlyRateFinal, monthlyAmountFinal, currency);
+
+        final InvoiceItem monthly3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate3, endDate3, monthlyRateFinal, monthlyAmountFinal, currency);
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        expectedResult.add(monthly1);
+        expectedResult.add(monthly2New);
+        expectedResult.add(monthly3);
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(monthly1);
+        tree.addItem(monthly2);
+        tree.addItem(repairMonthly2);
+        tree.addItem(monthly2New);
+        tree.addItem(monthly3);
+
+        tree.build();
+        verifyResult(tree.getView(), expectedResult);
+
+    }
+
+
+    // Will test the case B from ItemsNodeInterval#prune logic
+    @Test(groups = "fast")
+    public void testFullRepairByPartsPruneLogic1() {
+
+        final LocalDate startDate = new LocalDate(2015, 2, 1);
+        final LocalDate intermediate1 = new LocalDate(2015, 2, 8);
+        final LocalDate intermediate2 = new LocalDate(2015, 2, 16);
+        final LocalDate intermediate3 = new LocalDate(2015, 2, 24);
+        final LocalDate endDate = new LocalDate(2015, 3, 1);
+
+        final BigDecimal monthlyRate = new BigDecimal("12.00");
+        final BigDecimal monthlyAmount = monthlyRate;
+
+
+        final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem repair11 = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, intermediate1, new BigDecimal("3.00"), currency, monthly1.getId());
+        final InvoiceItem repair12 = new RepairAdjInvoiceItem(invoiceId, accountId, intermediate1, intermediate2, new BigDecimal("3.00"), currency, monthly1.getId());
+        final InvoiceItem repair13 = new RepairAdjInvoiceItem(invoiceId, accountId, intermediate2, intermediate3, new BigDecimal("3.00"), currency, monthly1.getId());
+        final InvoiceItem repair14 = new RepairAdjInvoiceItem(invoiceId, accountId, intermediate3, endDate, new BigDecimal("3.00"), currency, monthly1.getId());
+
+        final InvoiceItem monthly2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem repair21 = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, intermediate1, new BigDecimal("3.00"), currency, monthly2.getId());
+        final InvoiceItem repair22 = new RepairAdjInvoiceItem(invoiceId, accountId, intermediate1, intermediate2, new BigDecimal("3.00"), currency, monthly2.getId());
+        final InvoiceItem repair23 = new RepairAdjInvoiceItem(invoiceId, accountId, intermediate2, intermediate3, new BigDecimal("3.00"), currency, monthly2.getId());
+        final InvoiceItem repair24 = new RepairAdjInvoiceItem(invoiceId, accountId, intermediate3, endDate, new BigDecimal("3.00"), currency, monthly2.getId());
+
+        final InvoiceItem monthly3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
+
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        expectedResult.add(monthly3);
+
+        // First test with items in order
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(monthly1);
+        tree.addItem(repair11);
+        tree.addItem(repair12);
+        tree.addItem(repair13);
+        tree.addItem(repair14);
+
+        tree.addItem(monthly2);
+        tree.addItem(repair21);
+        tree.addItem(repair22);
+        tree.addItem(repair23);
+        tree.addItem(repair24);
+
+        tree.addItem(monthly3);
+
+        tree.build();
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+    // Will test the case A and B from ItemsNodeInterval#prune logic
+    @Test(groups = "fast")
+    public void testFullRepairByPartsPruneLogic2() {
+
+        final LocalDate startDate = new LocalDate(2015, 2, 1);
+        final LocalDate intermediate1 = new LocalDate(2015, 2, 8);
+        final LocalDate intermediate2 = new LocalDate(2015, 2, 16);
+        final LocalDate intermediate3 = new LocalDate(2015, 2, 24);
+        final LocalDate endDate = new LocalDate(2015, 3, 1);
+
+        final BigDecimal monthlyRate = new BigDecimal("12.00");
+        final BigDecimal monthlyAmount = monthlyRate;
+
+
+        final InvoiceItem monthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem repair11 = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, new BigDecimal("-12.00"), currency, monthly1.getId());
+
+        final InvoiceItem monthly2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
+        final InvoiceItem repair21 = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, intermediate1, new BigDecimal("3.00"), currency, monthly2.getId());
+        final InvoiceItem repair22 = new RepairAdjInvoiceItem(invoiceId, accountId, intermediate1, intermediate2, new BigDecimal("3.00"), currency, monthly2.getId());
+        final InvoiceItem repair23 = new RepairAdjInvoiceItem(invoiceId, accountId, intermediate2, intermediate3, new BigDecimal("3.00"), currency, monthly2.getId());
+        final InvoiceItem repair24 = new RepairAdjInvoiceItem(invoiceId, accountId, intermediate3, endDate, new BigDecimal("3.00"), currency, monthly2.getId());
+
+        final InvoiceItem monthly3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount, monthlyRate, currency);
+
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        expectedResult.add(monthly3);
+
+        // First test with items in order
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(monthly1);
+        tree.addItem(repair11);
+
+        tree.addItem(monthly2);
+        tree.addItem(repair21);
+        tree.addItem(repair22);
+        tree.addItem(repair23);
+        tree.addItem(repair24);
+
+        tree.addItem(monthly3);
+
+        tree.build();
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+
+
     @Test(groups = "fast")
     public void testMergeWithNoExisting() {
 
