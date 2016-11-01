@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.killbill.automaton.MissingEntryException;
 import org.killbill.automaton.State;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -47,6 +48,7 @@ import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
+import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -289,7 +291,15 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
         } catch (final AccountApiException e) {
             log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final PaymentApiException e) {
-            log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
+            // Log exception unless nothing left to be paid
+            if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode() &&
+                paymentControlPluginNames != null &&
+                paymentControlPluginNames.size() == 1 &&
+                InvoicePaymentControlPluginApi.PLUGIN_NAME.equals(paymentControlPluginNames.get(0))) {
+                log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'. Invoice has already been paid", attemptId, toPluginNamesOnError(paymentControlPluginNames));
+            } else {
+                log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
+            }
         } catch (final PluginPropertySerializerException e) {
             log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final MissingEntryException e) {
