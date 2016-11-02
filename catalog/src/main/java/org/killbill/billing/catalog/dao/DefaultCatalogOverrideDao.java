@@ -211,9 +211,13 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         }
 
         final CatalogOverrideUsageDefinitionSqlDao sqlDao = inTransactionHandle.attach(CatalogOverrideUsageDefinitionSqlDao.class);
-        final Long targetUsageDefinitionRecordId = getOverrideUsageDefinitionFromTransaction(overrideTierDefinitionModelDaos, inTransactionHandle, context);
-        if (targetUsageDefinitionRecordId != null) {
-            return sqlDao.getByRecordId(targetUsageDefinitionRecordId, context);
+        final List<Long> targetUsageDefinitionRecordIds = getOverrideUsageDefinitionFromTransaction(overrideTierDefinitionModelDaos, inTransactionHandle, context);
+
+        List<CatalogOverrideUsageDefinitionModelDao> results = sqlDao.getByAttributes(parentUsage.getName(), context);
+
+        for(CatalogOverrideUsageDefinitionModelDao usage : results) {
+            if (targetUsageDefinitionRecordIds != null && targetUsageDefinitionRecordIds.contains(usage.getRecordId()))
+                return usage;
         }
 
         final CatalogOverrideUsageDefinitionModelDao inputUsageDef = new CatalogOverrideUsageDefinitionModelDao(parentUsage.getName(), parentUsage.getUsageType().name(), currency.name(), null, null, catalogEffectiveDate);
@@ -229,7 +233,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         return resultUsageDef;
     }
 
-    private Long getOverrideUsageDefinitionFromTransaction(final CatalogOverrideTierDefinitionModelDao[] overrideTierDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
+    private List<Long> getOverrideUsageDefinitionFromTransaction(final CatalogOverrideTierDefinitionModelDao[] overrideTierDefinitionModelDaos, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverrideUsageTierSqlDao sqlDao = inTransactionHandle.attach(CatalogOverrideUsageTierSqlDao.class);
 
         final List<String> keys = new ArrayList<String>();

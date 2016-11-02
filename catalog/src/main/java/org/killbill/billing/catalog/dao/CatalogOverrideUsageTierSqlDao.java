@@ -11,6 +11,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import java.util.Collection;
+import java.util.List;
 
 
 @EntitySqlDaoStringTemplate
@@ -25,9 +26,9 @@ public interface CatalogOverrideUsageTierSqlDao extends Transactional<CatalogOve
                                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getTargetUsageDefinition(@UsageTierKeysCollectionBinder final Collection<String> concatTierNumAndTierDefRecordId,
-                                        @Bind("targetCount") final Integer targetCount,
-                                        @SmartBindBean final InternalTenantContext context);
+    public List<Long> getTargetUsageDefinition(@UsageTierKeysCollectionBinder final Collection<String> concatTierNumAndTierDefRecordId,
+                                               @Bind("targetCount") final Integer targetCount,
+                                               @SmartBindBean final InternalTenantContext context);
 
 
 

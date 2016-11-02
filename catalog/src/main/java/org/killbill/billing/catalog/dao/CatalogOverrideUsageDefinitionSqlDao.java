@@ -10,6 +10,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @EntitySqlDaoStringTemplate
@@ -26,6 +27,10 @@ public interface CatalogOverrideUsageDefinitionSqlDao extends Transactional<Cata
     @SqlQuery
     public List<CatalogOverrideUsageDefinitionModelDao> getOverriddenPhaseUsages(@Bind("targetPhaseDefRecordId") Long targetPhaseDefRecordId,
                                                                                 @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public List<CatalogOverrideUsageDefinitionModelDao> getByAttributes(@Bind("parentUsageName") String parentPhaseName,
+                                                                        @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getLastInsertId();

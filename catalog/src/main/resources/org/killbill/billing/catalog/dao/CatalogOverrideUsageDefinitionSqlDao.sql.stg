@@ -56,6 +56,14 @@ and tenant_record_id = :tenantRecordId
 ;
 >>
 
+getByAttributes() ::= <<
+select <allTableFields()>
+from <tableName()>
+where parent_usage_name = :parentUsageName
+and tenant_record_id = :tenantRecordId
+;
+>>
+
 getOverriddenPhaseUsages() ::= <<
 select <allTableFields("udef.")>
 from <tableName()> udef
