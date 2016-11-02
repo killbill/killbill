@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.Currency;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -34,13 +35,14 @@ public class TestCreditJson extends JaxrsTestSuiteNoDB {
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final BigDecimal creditAmount = BigDecimal.TEN;
+        final Currency currency = Currency.AED;
         final String invoiceId = UUID.randomUUID().toString();
         final String invoiceNumber = UUID.randomUUID().toString();
         final LocalDate effectiveDate = clock.getUTCToday();
         final String accountId = UUID.randomUUID().toString();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final CreditJson creditJson = new CreditJson(creditAmount, invoiceId, invoiceNumber, effectiveDate,
-                                                     accountId, auditLogs);
+        final CreditJson creditJson = new CreditJson(creditAmount, currency.name(), invoiceId, invoiceNumber, effectiveDate,
+                                                     accountId, null, auditLogs);
         Assert.assertEquals(creditJson.getEffectiveDate(), effectiveDate);
         Assert.assertEquals(creditJson.getCreditAmount(), creditAmount);
         Assert.assertEquals(creditJson.getInvoiceId(), invoiceId);

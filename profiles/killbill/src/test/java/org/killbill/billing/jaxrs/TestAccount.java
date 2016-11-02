@@ -116,8 +116,9 @@ public class TestAccount extends TestJaxrsBase {
         // Update Account
         final Account newInput = new Account(input.getAccountId(),
                                              "zozo", 4, input.getExternalKey(), "rr@google.com", 18,
-                                             "USD", null, "UTC", "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
-                                             false, false, null, null);
+                                             "USD", null, false, null, "UTC",
+                                             "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
+                                             "notes", false, false, null, null);
         final Account updatedAccount = killBillClient.updateAccount(newInput, createdBy, reason, comment);
         Assert.assertTrue(updatedAccount.equals(newInput));
 
@@ -185,7 +186,7 @@ public class TestAccount extends TestJaxrsBase {
         //
         // DELETE NON DEFAULT PM
         //
-        killBillClient.deletePaymentMethod(paymentMethodCC.getPaymentMethodId(), false, createdBy, reason, comment);
+        killBillClient.deletePaymentMethod(paymentMethodCC.getPaymentMethodId(), false, false, createdBy, reason, comment);
 
         //
         // FETCH ALL PAYMENT METHODS
@@ -197,7 +198,7 @@ public class TestAccount extends TestJaxrsBase {
         // DELETE DEFAULT PAYMENT METHOD (without special flag first)
         //
         try {
-            killBillClient.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), false, createdBy, reason, comment);
+            killBillClient.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), false, false, createdBy, reason, comment);
             fail();
         } catch (final KillBillClientException e) {
         }
@@ -205,7 +206,7 @@ public class TestAccount extends TestJaxrsBase {
         //
         // RETRY TO DELETE DEFAULT PAYMENT METHOD (with special flag this time)
         //
-        killBillClient.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), true, createdBy, reason, comment);
+        killBillClient.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), true, false, createdBy, reason, comment);
 
         // CHECK ACCOUNT IS NOW AUTO_PAY_OFF
         final List<Tag> tagsJson = killBillClient.getAccountTags(accountJson.getAccountId());
@@ -375,4 +376,65 @@ public class TestAccount extends TestJaxrsBase {
             Assert.assertEquals(accountsByKey.get(0), output);
         }
     }
+
+    @Test(groups = "slow", description = "Can create and retrieve parent/children accounts")
+    public void testParentAccountOk() throws Exception {
+
+        final Account parentAccount = createAccount();
+
+        final Account childInput = getAccount();
+        childInput.setParentAccountId(parentAccount.getAccountId());
+        childInput.setIsPaymentDelegatedToParent(true);
+        final Account childAccount = killBillClient.createAccount(childInput, createdBy, reason, comment);
+
+        // Retrieves child account by external key
+        final Account retrievedAccount = killBillClient.getAccount(childAccount.getExternalKey());
+        Assert.assertTrue(retrievedAccount.equals(childAccount));
+        Assert.assertEquals(retrievedAccount.getParentAccountId(), parentAccount.getAccountId());
+        Assert.assertTrue(retrievedAccount.getIsPaymentDelegatedToParent());
+    }
+
+    @Test(groups = "slow", description = "retrieve children accounts by parent account id")
+    public void testGetChildrenAccounts() throws Exception {
+
+        final Account parentAccount = createAccount();
+
+        final Account childInput = getAccount();
+        childInput.setParentAccountId(parentAccount.getAccountId());
+        childInput.setIsPaymentDelegatedToParent(true);
+        Account childAccount = killBillClient.createAccount(childInput, createdBy, reason, comment);
+        childAccount = killBillClient.getAccount(childAccount.getAccountId(), true, true, basicRequestOptions());
+
+        final Account childInput2 = getAccount();
+        childInput2.setParentAccountId(parentAccount.getAccountId());
+        childInput2.setIsPaymentDelegatedToParent(true);
+        Account childAccount2 = killBillClient.createAccount(childInput2, createdBy, reason, comment);
+        childAccount2 = killBillClient.getAccount(childAccount2.getAccountId(), true, true, basicRequestOptions());
+
+        // Retrieves children accounts by parent account id
+        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(parentAccount.getAccountId(), true, true, requestOptions);
+        Assert.assertEquals(childrenAccounts.size(), 2);
+
+        Assert.assertTrue(childrenAccounts.get(0).equals(childAccount));
+        Assert.assertTrue(childrenAccounts.get(1).equals(childAccount2));
+    }
+
+    @Test(groups = "slow", description = "retrieve an empty children accounts list by a non parent account id")
+    public void testEmptyGetChildrenAccounts() throws Exception {
+
+        // Retrieves children accounts by parent account id
+        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(UUID.randomUUID(), false, false, requestOptions);
+        Assert.assertEquals(childrenAccounts.size(), 0);
+
+    }
+
+    @Test(groups = "slow", description = "retrieve an empty children accounts list by a null id")
+    public void testGetChildrenAccountsByNullId() throws Exception {
+
+        // Retrieves children accounts by parent account id
+        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(null, true, true, requestOptions);
+        Assert.assertEquals(childrenAccounts.size(), 0);
+
+    }
+
 }

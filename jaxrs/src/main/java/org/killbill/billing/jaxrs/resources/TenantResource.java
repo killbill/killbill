@@ -16,13 +16,16 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -36,6 +39,9 @@ import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.callcontext.DefaultCallContext;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.jaxrs.json.TenantJson;
 import org.killbill.billing.jaxrs.json.TenantKeyJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -50,16 +56,18 @@ import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
@@ -70,6 +78,7 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 public class TenantResource extends JaxRsResourceBase {
 
     private final TenantUserApi tenantApi;
+    private final CatalogUserApi catalogUserApi;
 
     @Inject
     public TenantResource(final TenantUserApi tenantApi,
@@ -79,10 +88,12 @@ public class TenantResource extends JaxRsResourceBase {
                           final AuditUserApi auditUserApi,
                           final AccountUserApi accountUserApi,
                           final PaymentApi paymentApi,
+                          final CatalogUserApi catalogUserApi,
                           final Clock clock,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.tenantApi = tenantApi;
+        this.catalogUserApi = catalogUserApi;
     }
 
     @TimedResource
@@ -114,17 +125,23 @@ public class TenantResource extends JaxRsResourceBase {
     @ApiOperation(value = "Create a tenant")
     @ApiResponses(value = {@ApiResponse(code = 500, message = "Tenant already exists")})
     public Response createTenant(final TenantJson json,
+                                 @QueryParam(QUERY_TENANT_USE_GLOBAL_DEFAULT) @DefaultValue("true") final Boolean useGlobalDefault,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
-                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException, CatalogApiException {
         verifyNonNullOrEmpty(json, "TenantJson body should be specified");
         verifyNonNullOrEmpty(json.getApiKey(), "TenantJson apiKey needs to be set",
                              json.getApiSecret(), "TenantJson apiSecret needs to be set");
 
         final TenantData data = json.toTenantData();
         final Tenant tenant = tenantApi.createTenant(data, context.createContext(createdBy, reason, comment, request));
+        if (!useGlobalDefault) {
+            final CallContext callContext = new DefaultCallContext(tenant.getId(), createdBy, CallOrigin.EXTERNAL,
+                                                                   UserType.CUSTOMER, Context.getOrCreateUserToken(), clock);
+            catalogUserApi.createDefaultEmptyCatalog(clock.getUTCNow(),callContext);
+        }
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());
     }
 
@@ -183,6 +200,8 @@ public class TenantResource extends JaxRsResourceBase {
         return insertTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, pluginConfig, uriInfo, "getPluginConfiguration", createdBy, reason, comment, request);
     }
 
+
+
     @TimedResource
     @GET
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
@@ -205,6 +224,64 @@ public class TenantResource extends JaxRsResourceBase {
                                               @HeaderParam(HDR_COMMENT) final String comment,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         return deleteTenantKey(TenantKey.PLUGIN_CONFIG_, pluginName, createdBy, reason, comment, request);
+    }
+
+
+    @TimedResource
+    @GET
+    @Path("/" + UPLOAD_PER_TENANT_CONFIG + "/{keyPrefix:" + ANYTHING_PATTERN + "}" + "/" + SEARCH)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a per tenant key value based on key prefix", response = TenantKeyJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response getAllPluginConfiguration(@PathParam("keyPrefix") final String keyPrefix,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+
+        final TenantContext tenantContext = context.createContext(request);
+        final Map<String, List<String>> apiResult = tenantApi.searchTenantKeyValues(keyPrefix, tenantContext);
+        final List<TenantKeyJson> result = new ArrayList<TenantKeyJson>();
+        for (final String cur : apiResult.keySet()) {
+            result.add(new TenantKeyJson(cur, apiResult.get(cur)));
+        }
+        return Response.status(Status.OK).entity(result).build();
+    }
+
+
+    @TimedResource
+    @POST
+    @Path("/" + UPLOAD_PER_TENANT_CONFIG)
+    @Consumes(TEXT_PLAIN)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Add a per tenant configuration (system properties)")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response uploadPerTenantConfiguration(final String perTenantConfig,
+                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                 @HeaderParam(HDR_REASON) final String reason,
+                                                 @HeaderParam(HDR_COMMENT) final String comment,
+                                                 @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws TenantApiException {
+        return insertTenantKey(TenantKey.PER_TENANT_CONFIG, null, perTenantConfig, uriInfo, "getPerTenantConfiguration", createdBy, reason, comment, request);
+    }
+
+    @TimedResource
+    @GET
+    @Path("/" + UPLOAD_PER_TENANT_CONFIG)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a per tenant configuration (system properties)", response = TenantKeyJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response getPerTenantConfiguration(@javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        return getTenantKey(TenantKey.PER_TENANT_CONFIG, null, request);
+    }
+
+    @TimedResource
+    @DELETE
+    @Path("/" + UPLOAD_PER_TENANT_CONFIG)
+    @ApiOperation(value = "Delete a per tenant configuration (system properties)")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    public Response deletePerTenantConfiguration(@HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                              @HeaderParam(HDR_REASON) final String reason,
+                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+        return deleteTenantKey(TenantKey.PER_TENANT_CONFIG, null, createdBy, reason, comment, request);
     }
 
     @TimedResource

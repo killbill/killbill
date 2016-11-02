@@ -49,6 +49,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
+import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -62,10 +63,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Singleton;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -88,7 +89,7 @@ public class UsageResource extends JaxRsResourceBase {
                          final EntitlementApi entitlementApi,
                          final Clock clock,
                          final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.usageUserApi = usageUserApi;
         this.entitlementApi = entitlementApi;
     }
@@ -104,7 +105,9 @@ public class UsageResource extends JaxRsResourceBase {
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final HttpServletRequest request,
-                                @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException {
+                                @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException,
+                                                                                        AccountApiException,
+                                                                                        UsageApiException {
         verifyNonNullOrEmpty(json, "SubscriptionUsageRecordJson body should be specified");
         verifyNonNullOrEmpty(json.getSubscriptionId(), "SubscriptionUsageRecordJson subscriptionId needs to be set",
                              json.getUnitUsageRecords(), "SubscriptionUsageRecordJson unitUsageRecords needs to be set");

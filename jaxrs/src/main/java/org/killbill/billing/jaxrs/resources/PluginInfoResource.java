@@ -42,8 +42,8 @@ import org.killbill.commons.metrics.TimedResource;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -63,7 +63,7 @@ public class PluginInfoResource extends JaxRsResourceBase {
                               final PluginsInfoApi pluginsInfoApi,
                               final Clock clock,
                               final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.pluginsInfoApi = pluginsInfoApi;
     }
 

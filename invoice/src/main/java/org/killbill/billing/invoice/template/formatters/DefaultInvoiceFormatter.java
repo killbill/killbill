@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 
 import org.joda.money.CurrencyUnit;
@@ -44,6 +43,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
@@ -71,11 +71,10 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     private final CurrencyConversionApi currencyConversionApi;
     private final InternalTenantContext context;
     private final ResourceBundleFactory bundleFactory;
-    private final Map<java.util.Currency, Locale> currencyLocaleMap;
 
     public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale,
                                    final CurrencyConversionApi currencyConversionApi, final ResourceBundleFactory bundleFactory,
-                                   final InternalTenantContext context, final Map<java.util.Currency, Locale> currencyLocaleMap) {
+                                   final InternalTenantContext context) {
         this.config = config;
         this.invoice = invoice;
         this.dateFormatter = DateTimeFormat.mediumDate().withLocale(locale);
@@ -83,7 +82,6 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         this.currencyConversionApi = currencyConversionApi;
         this.bundleFactory = bundleFactory;
         this.context = context;
-        this.currencyLocaleMap = currencyLocaleMap;
     }
 
     @Override
@@ -102,10 +100,8 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
                 // Merge CBA items to avoid confusing the customer, since these are internal
                 // adjustments (auto generated)
                 mergedCBAItem = mergeCBAItem(invoiceItems, mergedCBAItem, item);
-            } else if (InvoiceItemType.REFUND_ADJ.equals(item.getInvoiceItemType()) ||
-                       InvoiceItemType.CREDIT_ADJ.equals(item.getInvoiceItemType())) {
-                // Merge refund adjustments and credit adjustments, as these are both
-                // the same for the customer (invoice adjustment)
+            } else if (InvoiceItemType.CREDIT_ADJ.equals(item.getInvoiceItemType())) {
+                // Merge credit adjustments, as these are both the same for the customer (invoice adjustment)
                 mergedInvoiceAdjustment = mergeInvoiceAdjustmentItem(invoiceItems, mergedInvoiceAdjustment, item);
             } else {
                 invoiceItems.add(item);
@@ -149,7 +145,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
             if (!mergedInvoiceAdjustment.getCurrency().equals(item.getCurrency())) {
                 invoiceItems.add(item);
             } else {
-                mergedInvoiceAdjustment = new CreditAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), invoice.getInvoiceDate(),
+                mergedInvoiceAdjustment = new CreditAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), invoice.getInvoiceDate(), mergedInvoiceAdjustment.getDescription(),
                                                                    mergedInvoiceAdjustment.getAmount().add(item.getAmount()), mergedInvoiceAdjustment.getCurrency());
             }
         }
@@ -241,8 +237,8 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         dfs.setInternationalCurrencySymbol(currencyUnit.getCurrencyCode());
 
         try {
-            final java.util.Currency currency = java.util.Currency.getInstance(invoiceCurrencyCode);
-            dfs.setCurrencySymbol(currency.getSymbol(currencyLocaleMap.get(currency)));
+            Currency currency = Currency.fromCode(invoiceCurrencyCode);
+            dfs.setCurrencySymbol(currency.getSymbol());
         } catch (final IllegalArgumentException e) {
             dfs.setCurrencySymbol(currencyUnit.getSymbol(locale));
         }
@@ -339,6 +335,16 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     @Override
     public DateTime getUpdatedDate() {
         return invoice.getUpdatedDate();
+    }
+
+    @Override
+    public InvoiceStatus getStatus() {
+        return invoice.getStatus();
+    }
+
+    @Override
+    public boolean isParentInvoice() {
+        return invoice.isParentInvoice();
     }
 
     // Expose the fields for children classes. This is useful for further customization of the invoices

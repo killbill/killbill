@@ -55,7 +55,7 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.EntityPaginationBuilder;
@@ -399,6 +399,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
 
     public void deletedPaymentMethod(final Account account, final UUID paymentMethodId,
                                      final boolean deleteDefaultPaymentMethodWithAutoPayOff,
+                                     final boolean forceDefaultPaymentMethodDeletion,
                                      final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
         try {
@@ -414,11 +415,10 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     try {
                         // Note: account.getPaymentMethodId() may be null
                         if (paymentMethodId.equals(account.getPaymentMethodId())) {
-                            if (!deleteDefaultPaymentMethodWithAutoPayOff) {
+                            if (!deleteDefaultPaymentMethodWithAutoPayOff && !forceDefaultPaymentMethodDeletion) {
                                 throw new PaymentApiException(ErrorCode.PAYMENT_DEL_DEFAULT_PAYMENT_METHOD, account.getId());
                             } else {
-                                final boolean isAccountAutoPayOff = isAccountAutoPayOff(account.getId(), context);
-                                if (!isAccountAutoPayOff) {
+                                if (deleteDefaultPaymentMethodWithAutoPayOff && !isAccountAutoPayOff(account.getId(), context)) {
                                     log.info("Setting AUTO_PAY_OFF on accountId='{}' because of default payment method deletion", account.getId());
                                     setAccountAutoPayOff(account.getId(), context);
                                 }
@@ -454,7 +454,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     }
 
                     if (!paymentMethodModel.getAccountId().equals(account.getId())) {
-                        throw new PaymentApiException(ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID, paymentMethodId);
+                        throw new PaymentApiException(ErrorCode.PAYMENT_METHOD_DIFFERENT_ACCOUNT_ID, paymentMethodId);
                     }
 
                     try {

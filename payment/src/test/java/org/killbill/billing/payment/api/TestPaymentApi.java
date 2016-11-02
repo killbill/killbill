@@ -147,9 +147,40 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
 
-        paymentApi.deletePaymentMethod(account, paymentMethodId, true, ImmutableList.<PluginProperty>of(), callContext);
+        paymentApi.deletePaymentMethod(account, paymentMethodId, true, false, ImmutableList.<PluginProperty>of(), callContext);
 
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords, true);
+    }
+
+    @Test(groups = "slow")
+    public void testAddRemovePaymentMethodWithForcedDeletion() throws Exception {
+        final Long baseNbRecords = paymentApi.getPaymentMethods(0L, 1000L, false, ImmutableList.<PluginProperty>of(), callContext).getMaxNbRecords();
+        Assert.assertEquals(baseNbRecords, (Long) 1L);
+
+        final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
+
+        paymentApi.deletePaymentMethod(account, paymentMethodId, false, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords, true);
+    }
+
+    @Test(groups = "slow")
+    public void testAddRemovePaymentMethodWithoutForcedDeletion() throws Exception {
+        final Long baseNbRecords = paymentApi.getPaymentMethods(0L, 1000L, false, ImmutableList.<PluginProperty>of(), callContext).getMaxNbRecords();
+        Assert.assertEquals(baseNbRecords, (Long) 1L);
+
+        final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        try {
+            paymentApi.deletePaymentMethod(account, paymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        } catch (final PaymentApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INTERNAL_ERROR.getCode());
+        }
+        checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
     }
 
     @Test(groups = "slow")
@@ -837,7 +868,25 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(attempts.size(), 1);
     }
 
+    @Test(groups = "slow")
+    public void testCreatePurchaseWithExternalKeyOverLimit() throws PaymentApiException, InvoiceApiException, EventBusException {
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final LocalDate now = clock.getUTCToday();
 
+        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
+
+        final String paymentExternalKey = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.";
+        final String transactionExternalKey = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.";
+
+        try {
+            paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+                                                        createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+            Assert.fail();
+        } catch (final PaymentApiException e) {
+            assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
+        }
+
+    }
 
     @Test(groups = "slow")
     public void testCreateFailedPurchaseWithPaymentControl() throws PaymentApiException, InvoiceApiException, EventBusException {
@@ -871,7 +920,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
 
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments.size(), 1);
         final Payment payment = accountPayments.get(0);
         assertEquals(payment.getExternalKey(), paymentExternalKey);
@@ -928,7 +977,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         }
 
 
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments.size(), 1);
         final Payment payment = accountPayments.get(0);
         assertEquals(payment.getExternalKey(), paymentExternalKey);
@@ -956,7 +1005,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                     createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
 
 
-        final List<Payment> accountPayments2 = paymentApi.getAccountPayments(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> accountPayments2 = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments2.size(), 1);
         final Payment payment2 = accountPayments2.get(0);
         assertEquals(payment2.getTransactions().size(), 2);
@@ -1134,9 +1183,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/477")
     public void testCreateChargeback() throws PaymentApiException {
-        // API change in 0.17
-        final DefaultPaymentApi paymentApi = (DefaultPaymentApi) this.paymentApi;
-
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final Currency currency = Currency.AED;
         final String paymentExternalKey = UUID.randomUUID().toString();
@@ -1372,9 +1418,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCreateChargebackReversalBeforeChargeback() throws PaymentApiException {
-        // API change in 0.17
-        final DefaultPaymentApi paymentApi = (DefaultPaymentApi) this.paymentApi;
-
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final Currency currency = Currency.AED;
         final String paymentExternalKey = UUID.randomUUID().toString();
@@ -1426,7 +1469,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT.getCode());
         }
 
-        assertEquals(paymentApi.getPayment(payment.getId(), false, ImmutableList.<PluginProperty>of(), callContext).getTransactions().size(), 1);
+        assertEquals(paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getTransactions().size(), 1);
 
         assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getStateName(), "PURCHASE_SUCCESS");
         assertEquals(paymentDao.getPayment(payment.getId(), internalCallContext).getLastSuccessStateName(), "PURCHASE_SUCCESS");
@@ -1515,7 +1558,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_NO_SUCH_PAYMENT.getCode());
 
-            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), true, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
             assertEquals(latestPayment, initialPayment);
         }
     }
@@ -1533,7 +1576,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
 
-            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), true, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment latestPayment = paymentApi.getPayment(initialPayment.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
             assertEquals(latestPayment, initialPayment);
         }
     }
@@ -1869,7 +1912,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, pendingAuthorization.getExternalKey(), null, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         try {
@@ -1877,7 +1920,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, pendingAuthorization.getExternalKey(), UUID.randomUUID().toString(), BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         try {
@@ -1885,7 +1928,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         try {
@@ -1913,7 +1956,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, pendingAuthorization.getExternalKey(), null, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         try {
@@ -1921,7 +1964,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, pendingAuthorization.getExternalKey(), UUID.randomUUID().toString(), BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         try {
@@ -1929,7 +1972,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         // Capture with a different transaction external key should go through
@@ -1952,7 +1995,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, null, captureKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         // Second capture with the same transaction external key should go through (completion)
@@ -2016,7 +2059,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, authorization.getExternalKey(), UUID.randomUUID().toString(), BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         try {
@@ -2024,7 +2067,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, authorization.getExternalKey(), UUID.randomUUID().toString(), BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         try {
@@ -2032,7 +2075,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         // Capture with a different transaction external key should go through
@@ -2063,7 +2106,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, null, captureKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         // Second capture with a different transaction external key should go through
@@ -2127,7 +2170,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, failedAuthorization1.getExternalKey(), null, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         try {
@@ -2135,7 +2178,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             createPayment(account1, TransactionType.AUTHORIZE, null, null, authKey, BigDecimal.TEN, PaymentPluginStatus.PROCESSED);
             Assert.fail();
         } catch (final PaymentApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_DIFFERENT_ACCOUNT_ID.getCode());
         }
 
         // Different auth with the same payment external key should go through
@@ -2233,7 +2276,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     private void verifyPaymentViaGetPath(final Payment payment) throws PaymentApiException {
         // We can't use Assert.assertEquals because the updateDate may have been updated by the Janitor
-        final Payment refreshedPayment = paymentApi.getPayment(payment.getId(), true, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment refreshedPayment = paymentApi.getPayment(payment.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
 
         Assert.assertEquals(refreshedPayment.getAccountId(), payment.getAccountId());
 

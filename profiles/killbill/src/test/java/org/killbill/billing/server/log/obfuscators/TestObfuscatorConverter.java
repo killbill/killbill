@@ -54,9 +54,9 @@ public class TestObfuscatorConverter extends ServerTestSuiteNoDB {
                "</gateway>",
                "Starting purchase call: \n" +
                "<gateway>\n" +
-               "<card>***MASKED***1111</card>\n" +
-               "<bankAccountNumber>*MASKED**</bankAccountNumber>\n" +
-               "<password>**MASKED***</password>\n" +
+               "<card>411111******1111</card>\n" +
+               "<bankAccountNumber>*********</bankAccountNumber>\n" +
+               "<password>***********</password>\n" +
                "</gateway>");
     }
 

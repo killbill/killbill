@@ -48,6 +48,7 @@ import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -69,10 +70,10 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testDryRunInvoice() throws InvoiceApiException, AccountApiException, CatalogApiException {
+    public void testDryRunInvoice() throws InvoiceApiException, AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         final UUID accountId = account.getId();
 
-        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
+        final BillingEventSet events = new MockBillingEventSet();
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
         final PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();
         final DateTime effectiveDate = clock.getUTCNow().minusDays(1);
@@ -84,7 +85,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
-        final DateTime target = effectiveDate;
+        final LocalDate target = internalCallContext.toLocalDate(effectiveDate);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
@@ -114,7 +115,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testWithOverdueEvents() throws Exception {
-        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
+        final BillingEventSet events = new MockBillingEventSet();
 
         // Initial trial
         final MockPlan bicycleTrialEvergreen1USD = MockPlan.createBicycleTrialEvergreen1USD();
@@ -144,7 +145,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                    internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    null, invoiceConfig, clock);
 
-        final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), null, context);
+        final Invoice invoice = dispatcher.processAccount(account.getId(), new LocalDate("2012-07-30"), null, context);
         Assert.assertNotNull(invoice);
 
         final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();

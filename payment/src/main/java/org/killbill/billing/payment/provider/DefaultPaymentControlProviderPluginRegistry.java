@@ -23,7 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
-import org.killbill.billing.util.config.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -36,7 +36,12 @@ import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.PluginProperty;
 import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.client.model.Tags;
+import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
+import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.tag.ControlTagType;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedDB {
@@ -111,8 +116,22 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return killBillClient.getAccount(input.getExternalKey());
     }
 
+    protected Account createAccountWithExternalPaymentMethod() throws Exception {
+        final Account input = createAccount();
+
+        final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
+        final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUIDs.randomUUID().toString(), input.getAccountId(),
+                                                                  true, ExternalPaymentProviderPlugin.PLUGIN_NAME, info);
+        killBillClient.createPaymentMethod(paymentMethodJson, requestOptions);
+        return killBillClient.getAccount(input.getExternalKey(), requestOptions);
+    }
+
     protected Account createAccount() throws Exception {
-        final Account input = getAccount();
+        return createAccount(null);
+    }
+
+    protected Account createAccount(final UUID parentAccountId) throws Exception {
+        final Account input = getAccount(parentAccountId);
         return killBillClient.createAccount(input, createdBy, reason, comment);
     }
 
@@ -126,7 +145,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         input.setBillingPeriod(billingPeriod);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        return killBillClient.createSubscription(input, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1, createdBy, reason, comment);
+        return killBillClient.createSubscription(input, null, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1, basicRequestOptions());
     }
 
     protected Account createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
@@ -139,6 +158,37 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         assertNotNull(subscriptionJson);
         clock.addDays(32);
         crappyWaitForLackOfProperSynchonization();
+
+        return accountJson;
+    }
+
+    protected Account createAccountWithExternalPMBundleAndSubscriptionAndManualPayTagAndWaitForFirstInvoice() throws Exception {
+        final Account accountJson = createAccountWithExternalPaymentMethod();
+        assertNotNull(accountJson);
+
+        final Tags accountTag = killBillClient.createAccountTag(accountJson.getAccountId(), ControlTagType.MANUAL_PAY.getId(), requestOptions);
+        assertNotNull(accountTag);
+        assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.MANUAL_PAY.getId());
+
+        // Add a bundle, subscription and move the clock to get the first invoice
+        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        assertNotNull(subscriptionJson);
+        clock.addDays(32);
+        crappyWaitForLackOfProperSynchonization();
+
+        return accountJson;
+    }
+
+    protected Account createAccountNoPMBundleAndSubscription() throws Exception {
+        // Create an account with no payment method
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // Add a bundle, subscription and move the clock to get the first invoice
+        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        assertNotNull(subscriptionJson);
 
         return accountJson;
     }
@@ -161,10 +211,18 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected Account getAccount() {
-        return getAccount(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString().substring(0, 5) + '@' + UUID.randomUUID().toString().substring(0, 5));
+        return getAccount(null);
+    }
+
+    protected Account getAccount(final UUID parentAccountId) {
+        return getAccount(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString().substring(0, 5) + '@' + UUID.randomUUID().toString().substring(0, 5), parentAccountId);
     }
 
     public Account getAccount(final String name, final String externalKey, final String email) {
+        return getAccount(name, externalKey, email, null);
+    }
+
+    public Account getAccount(final String name, final String externalKey, final String email, final UUID parentAccountId) {
         final UUID accountId = UUID.randomUUID();
         final int length = 4;
         final String currency = DEFAULT_CURRENCY;
@@ -178,10 +236,12 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final String country = "France";
         final String locale = "fr";
         final String phone = "81 53 26 56";
+        final String notes = "notes";
+        final boolean isPaymentDelegatedToParent = parentAccountId != null;
 
         // Note: the accountId payload is ignored on account creation
-        return new Account(accountId, name, length, externalKey, email, null, currency, null, timeZone,
-                           address1, address2, postalCode, company, city, state, country, locale, phone, false, false, null, null);
+        return new Account(accountId, name, length, externalKey, email, null, currency, parentAccountId, isPaymentDelegatedToParent, null, timeZone,
+                           address1, address2, postalCode, company, city, state, country, locale, phone, notes, false, false, null, null);
     }
 
     /**
@@ -189,7 +249,12 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
      * but until we have a strong need for it, this is in the TODO list...
      */
     protected void crappyWaitForLackOfProperSynchonization() throws Exception {
-        Thread.sleep(5000);
+        crappyWaitForLackOfProperSynchonization(5000);
+    }
+
+
+    protected void crappyWaitForLackOfProperSynchonization(int sleepValueMSec) throws Exception {
+        Thread.sleep(sleepValueMSec);
     }
 
     /**

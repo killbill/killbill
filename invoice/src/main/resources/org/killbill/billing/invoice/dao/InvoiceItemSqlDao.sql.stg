@@ -6,6 +6,7 @@ tableFields(prefix) ::= <<
   <prefix>type
 , <prefix>invoice_id
 , <prefix>account_id
+, <prefix>child_account_id
 , <prefix>bundle_id
 , <prefix>subscription_id
 , <prefix>description
@@ -26,6 +27,7 @@ tableValues() ::= <<
   :type
 , :invoiceId
 , :accountId
+, :childAccountId
 , :bundleId
 , :subscriptionId
 , :description
@@ -65,5 +67,22 @@ getAdjustedOrRepairedInvoiceItemsByLinkedId() ::= <<
   WHERE linked_item_id = :linkedItemId
   AND type IN ('ITEM_ADJ', 'REPAIR_ADJ')
   <AND_CHECK_TENANT()>
+  ;
+>>
+
+updateAmount() ::= <<
+    UPDATE <tableName()>
+    SET amount = :amount
+    WHERE id = :id
+    <AND_CHECK_TENANT()>;
+>>
+
+getInvoiceItemsByParentInvoice() ::= <<
+  SELECT <allTableFields(("items."))>
+  FROM <tableName()> items
+  INNER JOIN invoice_parent_children invRel ON invRel.child_invoice_id = items.invoice_id
+  WHERE invRel.parent_invoice_id = :parentInvoiceId
+  <AND_CHECK_TENANT("items.")>
+  <defaultOrderBy()>
   ;
 >>

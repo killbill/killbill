@@ -16,21 +16,19 @@
 
 package org.killbill.billing.junction;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.junction.glue.TestJunctionModuleNoDB;
-import org.killbill.billing.junction.plumbing.billing.BillCycleDayCalculator;
 import org.killbill.billing.junction.plumbing.billing.BlockingCalculator;
-import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.tag.dao.TagDao;
+import org.killbill.bus.api.PersistentBus;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -40,8 +38,6 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @Inject
     protected AccountInternalApi accountInternalApi;
-    @Inject
-    protected BillCycleDayCalculator billCycleDayCalculator;
     @Inject
     protected BillingInternalApi billingInternalApi;
     @Inject

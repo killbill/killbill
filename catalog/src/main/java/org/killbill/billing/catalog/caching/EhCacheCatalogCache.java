@@ -24,9 +24,12 @@ import javax.inject.Inject;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
+import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.VersionedCatalogMapper;
 import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
 import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
@@ -51,9 +54,11 @@ public class EhCacheCatalogCache implements CatalogCache {
 
     private final CacheController cacheController;
     private final VersionedCatalogLoader loader;
+    private final CacheLoaderArgument cacheLoaderArgumentWithTemplateFiltering;
     private final CacheLoaderArgument cacheLoaderArgument;
     private final OSGIServiceRegistration<CatalogPluginApi> pluginRegistry;
     private final VersionedCatalogMapper versionedCatalogMapper;
+    private final PriceOverride priceOverride;
     private final InternalCallContextFactory internalCallContextFactory;
 
     private VersionedCatalog defaultCatalog;
@@ -63,13 +68,16 @@ public class EhCacheCatalogCache implements CatalogCache {
                                final VersionedCatalogMapper versionedCatalogMapper,
                                final CacheControllerDispatcher cacheControllerDispatcher,
                                final VersionedCatalogLoader loader,
+                               final PriceOverride priceOverride,
                                final InternalCallContextFactory internalCallContextFactory) {
         this.pluginRegistry = pluginRegistry;
         this.versionedCatalogMapper = versionedCatalogMapper;
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         this.loader = loader;
+        this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.cacheLoaderArgument = initializeCacheLoaderArgument(this);
+        this.cacheLoaderArgumentWithTemplateFiltering = initializeCacheLoaderArgument(true);
+        this.cacheLoaderArgument = initializeCacheLoaderArgument(false);
         setDefaultCatalog();
     }
 
@@ -81,7 +89,7 @@ public class EhCacheCatalogCache implements CatalogCache {
     }
 
     @Override
-    public VersionedCatalog getCatalog(final InternalTenantContext tenantContext) throws CatalogApiException {
+    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext tenantContext) throws CatalogApiException {
 
         // STEPH TODO what are the possibilities for caching here ?
         final VersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext);
@@ -90,16 +98,21 @@ public class EhCacheCatalogCache implements CatalogCache {
         }
 
         if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
-            return defaultCatalog;
+            return useDefaultCatalog ? defaultCatalog : null;
         }
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,
         // but to be on the safe side;;
         try {
-            VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
+            VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(tenantContext.getTenantRecordId(),
+                                                                                    filterTemplateCatalog ? cacheLoaderArgumentWithTemplateFiltering : cacheLoaderArgument);
             // It means we are using a default catalog in a multi-tenant deployment, that does not really match a real use case, but we want to support it
             // for test purpose.
-            if (tenantCatalog == null) {
-                tenantCatalog = new VersionedCatalog(defaultCatalog.getClock(), defaultCatalog.getCatalogName(), defaultCatalog.getRecurringBillingMode(), defaultCatalog.getVersions(), tenantContext);
+            if (useDefaultCatalog && tenantCatalog == null) {
+                tenantCatalog = new VersionedCatalog(defaultCatalog.getClock());
+                for (final StandaloneCatalog cur : defaultCatalog.getVersions()) {
+                    final StandaloneCatalogWithPriceOverride curWithOverride = new StandaloneCatalogWithPriceOverride(cur, priceOverride, tenantContext.getTenantRecordId(), internalCallContextFactory);
+                    tenantCatalog.add(curWithOverride);
+                }
                 cacheController.add(tenantContext.getTenantRecordId(), tenantCatalog);
             }
             return tenantCatalog;
@@ -115,7 +128,7 @@ public class EhCacheCatalogCache implements CatalogCache {
         }
     }
 
-    private VersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) {
+    private VersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) throws CatalogApiException {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
         for (final String service : pluginRegistry.getAllServices()) {
             final CatalogPluginApi plugin = pluginRegistry.getServiceForName(service);
@@ -134,11 +147,11 @@ public class EhCacheCatalogCache implements CatalogCache {
     // nothing about catalog.
     //
     // This is a contract between the TenantCatalogCacheLoader and the EhCacheCatalogCache
-    private CacheLoaderArgument initializeCacheLoaderArgument(final EhCacheCatalogCache parentCache) {
+    private CacheLoaderArgument initializeCacheLoaderArgument(final boolean filterTemplateCatalog) {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
             public Object loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
-                return loader.load(catalogXMLs, tenantRecordId);
+                return loader.load(catalogXMLs, filterTemplateCatalog, tenantRecordId);
             }
         };
         final Object[] args = new Object[1];

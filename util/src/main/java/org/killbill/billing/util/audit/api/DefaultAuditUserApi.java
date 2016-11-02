@@ -84,7 +84,7 @@ public class DefaultAuditUserApi implements AuditUserApi {
             return ImmutableList.<AuditLog>of();
         }
 
-        return auditDao.getAuditLogsForId(tableName, objectId, auditLevel, internalCallContextFactory.createInternalTenantContext(context));
+        return auditDao.getAuditLogsForId(tableName, objectId, auditLevel, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
     }
 
     private TableName getTableNameFromObjectType(final ObjectType objectType) {

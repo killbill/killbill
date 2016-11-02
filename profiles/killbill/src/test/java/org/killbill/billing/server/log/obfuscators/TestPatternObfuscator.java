@@ -45,16 +45,16 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
                "</ns2:shopperName>\n",
                "<ns:expiryMonth>04</expiryMonth>\n" +
                "<ns:expiryYear>2015</expiryYear>\n" +
-               "<ns:holderName>*MASKED*</holderName>\n" +
-               "<ns:number>*****MASKED*****</number>\n" +
-               "<ns2:shopperEmail>****MASKED*****</ns2:shopperEmail>\n" +
+               "<ns:holderName>********</holderName>\n" +
+               "<ns:number>****************</number>\n" +
+               "<ns2:shopperEmail>***************</ns2:shopperEmail>\n" +
                "<ns2:shopperIP>127.0.0.1</ns2:shopperIP>\n" +
                "<ns2:shopperInteraction xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:nil=\"true\"/>\n" +
                "<ns2:shopperName>\n" +
-               "    <firstName>MASKED</firstName>\n" +
+               "    <firstName>***</firstName>\n" +
                "    <gender xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:nil=\"true\"/>\n" +
                "    <infix xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:nil=\"true\"/>\n" +
-               "    <lastName>MASKED</lastName>\n" +
+               "    <lastName>*****</lastName>\n" +
                "</ns2:shopperName>\n");
     }
 
@@ -131,25 +131,25 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
                "      <clientLibraryVersion>1.47.0</clientLibraryVersion>\n" +
                "      <clientEnvironment>java</clientEnvironment>\n" +
                "<billTo>\n" +
-               "  <firstName>MASKED</firstName>\n" +
-               "  <lastName>MASKED</lastName>\n" +
+               "  <firstName>****</firstName>\n" +
+               "  <lastName>***</lastName>\n" +
                "  <street1>5, oakriu road</street1>\n" +
                "  <street2>apt. 298</street2>\n" +
                "  <city>Gdio Foia</city>\n" +
                "  <state>FL</state>\n" +
                "  <postalCode>49302</postalCode>\n" +
                "  <country>US</country>\n" +
-               "  <email>**********MASKED**********</email>\n" +
+               "  <email>**************************</email>\n" +
                "</billTo>\n" +
                "<purchaseTotals>\n" +
                "  <currency>USD</currency>\n" +
                "  <grandTotalAmount>0.00</grandTotalAmount>\n" +
                "</purchaseTotals>\n" +
                "<card>\n" +
-               "  <accountNumber>*****MASKED*****</accountNumber>\n" +
+               "  <accountNumber>****************</accountNumber>\n" +
                "  <expirationMonth>12</expirationMonth>\n" +
                "  <expirationYear>2017</expirationYear>\n" +
-               "  <cvNumber>MASKED</cvNumber>\n" +
+               "  <cvNumber>****</cvNumber>\n" +
                "  <cardType>001</cardType>\n" +
                "</card>\n" +
                "<subscription>\n" +
@@ -171,7 +171,7 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
     @Test(groups = "fast")
     public void testLitle() throws Exception {
         verify("<litleOnlineRequest merchantId=\\\"merchant_id\\\" version=\\\"8.18\\\" xmlns=\\\"http://www.litle.com/schema\\\"><authentication><user>login</user><password>password</password></authentication><sale id=\\\"615b9cb3-8580-4f57-bf69-9\\\" reportGroup=\\\"Default Report Group\\\"><orderId>615b9cb3-8580-4f57-bf69-9</orderId><amount>10000</amount><orderSource>ecommerce</orderSource><billToAddress><name>John Doe</name><email>1428325948-test@tester.com</email><addressLine1>5, oakriu road</addressLine1><addressLine2>apt. 298</addressLine2><city>Gdio Foia</city><state>FL</state><zip>49302</zip><country>US</country></billToAddress><shipToAddress/><card><type>VI</type><number>4242424242424242</number><expDate>1217</expDate><cardValidationNum>1234</cardValidationNum></card></sale></litleOnlineRequest>",
-               "<litleOnlineRequest merchantId=\\\"merchant_id\\\" version=\\\"8.18\\\" xmlns=\\\"http://www.litle.com/schema\\\"><authentication><user>login</user><password>*MASKED*</password></authentication><sale id=\\\"615b9cb3-8580-4f57-bf69-9\\\" reportGroup=\\\"Default Report Group\\\"><orderId>615b9cb3-8580-4f57-bf69-9</orderId><amount>10000</amount><orderSource>ecommerce</orderSource><billToAddress><name>*MASKED*</name><email>**********MASKED**********</email><addressLine1>5, oakriu road</addressLine1><addressLine2>apt. 298</addressLine2><city>Gdio Foia</city><state>FL</state><zip>49302</zip><country>US</country></billToAddress><shipToAddress/><card><type>VI</type><number>*****MASKED*****</number><expDate>1217</expDate><cardValidationNum>MASKED</cardValidationNum></card></sale></litleOnlineRequest>");
+               "<litleOnlineRequest merchantId=\\\"merchant_id\\\" version=\\\"8.18\\\" xmlns=\\\"http://www.litle.com/schema\\\"><authentication><user>login</user><password>********</password></authentication><sale id=\\\"615b9cb3-8580-4f57-bf69-9\\\" reportGroup=\\\"Default Report Group\\\"><orderId>615b9cb3-8580-4f57-bf69-9</orderId><amount>10000</amount><orderSource>ecommerce</orderSource><billToAddress><name>********</name><email>**************************</email><addressLine1>5, oakriu road</addressLine1><addressLine2>apt. 298</addressLine2><city>Gdio Foia</city><state>FL</state><zip>49302</zip><country>US</country></billToAddress><shipToAddress/><card><type>VI</type><number>****************</number><expDate>1217</expDate><cardValidationNum>****</cardValidationNum></card></sale></litleOnlineRequest>");
     }
 
     @Test(groups = "fast")
@@ -203,7 +203,7 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
                "  \"card\": {\n" +
                "    \"id\": \"card_483etw4er9fg4vF3sQdrt3FG\",\n" +
                "    \"object\": \"card\",\n" +
-               "    \"banknumber\": *****MASKED*****,\n" +
+               "    \"banknumber\": ****************,\n" +
                "    \"last4\": \"0000\",\n" +
                "    \"brand\": \"Visa\",\n" +
                "    \"funding\": \"credit\",\n" +
@@ -211,7 +211,7 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
                "    \"exp_year\": 2019,\n" +
                "    \"fingerprint\": \"HOh74kZU387WlUvy\",\n" +
                "    \"country\": \"US\",\n" +
-               "    \"name\": **MASKED***,\n" +
+               "    \"name\": ***********,\n" +
                "    \"address_line1\": null,\n" +
                "    \"address_line2\": null,\n" +
                "    \"address_city\": null,\n" +
@@ -244,7 +244,7 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
                "</entry>\n",
                "<entry>\n" +
                "  <key xsi:type=\"xsd:string\">PayU.ccvv</key>\n" +
-               "  <value xsi:type=\"xsd:string\">MASKED</value>\n" +
+               "  <value xsi:type=\"xsd:string\">****</value>\n" +
                "</entry>\n" +
                "<entry>\n" +
                "  <key xsi:type=\"xsd:string\">PayU.ccnum</key>\n" +
@@ -263,7 +263,7 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
     @Test(groups = "fast", description = "Test for ActiveMerchant wiredump_device logging")
     public void testWithQuotedNewLines() throws Exception {
         verify("[cybersource-plugin] \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?><accountNumber>4111111111111111</accountNumber>\\n  <expirationMonth>09</expirationMonth>\\n  \"",
-               "[cybersource-plugin] \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?><accountNumber>*****MASKED*****</accountNumber>\\n  <expirationMonth>09</expirationMonth>\\n  \"");
+               "[cybersource-plugin] \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?><accountNumber>****************</accountNumber>\\n  <expirationMonth>09</expirationMonth>\\n  \"");
     }
 
     @Test(groups = "fast")

@@ -25,7 +25,7 @@ import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 
 public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPaymentApi {
 
@@ -34,7 +34,7 @@ public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPayme
 
     @Inject
     public DefaultAdminPaymentApi(final PaymentConfig paymentConfig, final PaymentDao paymentDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(paymentConfig);
+        super(paymentConfig, internalCallContextFactory);
         this.paymentDao = paymentDao;
         this.internalCallContextFactory = internalCallContextFactory;
     }

@@ -25,19 +25,26 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.BlockingState;
+import org.killbill.billing.client.model.BlockingStates;
 import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Bundles;
 import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestBundle extends TestJaxrsBase {
 
@@ -74,9 +81,17 @@ public class TestBundle extends TestJaxrsBase {
     public void testBundleNonExistent() throws Exception {
         final Account accountJson = createAccount();
 
-        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID()));
-        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892").isEmpty());
-        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId()).isEmpty());
+        // ID
+        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID(), requestOptions));
+
+        // External Key
+        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID().toString(), requestOptions));
+        Assert.assertTrue(killBillClient.getAllBundlesForExternalKey(UUID.randomUUID().toString(), requestOptions).isEmpty());
+
+        // Account Id
+        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892", requestOptions).isEmpty());
+        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), requestOptions).isEmpty());
+
     }
 
     @Test(groups = "slow", description = "Can handle non existent account")
@@ -98,7 +113,7 @@ public class TestBundle extends TestJaxrsBase {
         final Subscription entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), bundleExternalKey, productName,
                                                                        ProductCategory.BASE, term, true);
 
-        final Bundle originalBundle = killBillClient.getBundle(bundleExternalKey);
+        final Bundle originalBundle = killBillClient.getBundle(bundleExternalKey, requestOptions);
         assertEquals(originalBundle.getAccountId(), accountJson.getAccountId());
         assertEquals(originalBundle.getExternalKey(), bundleExternalKey);
 
@@ -109,12 +124,29 @@ public class TestBundle extends TestJaxrsBase {
         bundle.setBundleId(entitlementJsonNoEvents.getBundleId());
         assertEquals(killBillClient.transferBundle(bundle, createdBy, reason, comment).getAccountId(), newAccount.getAccountId());
 
-        final Bundle newBundle = killBillClient.getBundle(bundleExternalKey);
+        final Bundle newBundle = killBillClient.getBundle(bundleExternalKey, requestOptions);
         assertNotEquals(newBundle.getBundleId(), originalBundle.getBundleId());
         assertEquals(newBundle.getExternalKey(), originalBundle.getExternalKey());
         assertEquals(newBundle.getAccountId(), newAccount.getAccountId());
+
+
+        final Bundles bundles = killBillClient.getAllBundlesForExternalKey(bundleExternalKey, requestOptions);
+        assertEquals(bundles.size(), 2);
+        assertSubscriptionState(bundles, originalBundle.getBundleId(), EntitlementState.CANCELLED);
+        assertSubscriptionState(bundles, newBundle.getBundleId(), EntitlementState.ACTIVE);
     }
 
+    private void assertSubscriptionState(final Bundles bundles, final UUID bundleId, final EntitlementState expectedState) {
+        final Bundle bundle = Iterables.tryFind(bundles, new Predicate<Bundle>() {
+            @Override
+            public boolean apply(final Bundle input) {
+                return input.getBundleId().equals(bundleId);
+            }
+        }).orNull();
+
+        assertNotNull(bundle);
+        assertEquals(bundle.getSubscriptions().get(0).getState(), expectedState);
+    }
 
     @Test(groups = "slow", description = "Block a bundle")
     public void testBlockBundle() throws Exception {
@@ -128,28 +160,35 @@ public class TestBundle extends TestJaxrsBase {
         final String bundleExternalKey = "93199";
 
         final Subscription entitlement = createEntitlement(accountJson.getAccountId(), bundleExternalKey, productName,
-                                                                       ProductCategory.BASE, term, true);
+                                                           ProductCategory.BASE, term, true);
 
         final Bundle bundle = killBillClient.getBundle(bundleExternalKey);
         assertEquals(bundle.getAccountId(), accountJson.getAccountId());
         assertEquals(bundle.getExternalKey(), bundleExternalKey);
 
-        final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "block", "service", false, true, true, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        killBillClient.setBlockingState(bundle.getBundleId(), blockingState, createdBy, reason, comment);
+        final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "block", "service", false, true, true, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
+        killBillClient.setBlockingState(bundle.getBundleId(), blockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), createdBy, reason, comment);
 
         final Subscription subscription = killBillClient.getSubscription(entitlement.getSubscriptionId());
         assertEquals(subscription.getState(), EntitlementState.BLOCKED);
 
         clock.addDays(1);
 
-        final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "unblock", "service", false, false, false, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        killBillClient.setBlockingState(bundle.getBundleId(), unblockingState, createdBy, reason, comment);
+        final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "unblock", "service", false, false, false, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
+        killBillClient.setBlockingState(bundle.getBundleId(), unblockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), createdBy, reason, comment);
 
         final Subscription subscription2 = killBillClient.getSubscription(entitlement.getSubscriptionId());
         assertEquals(subscription2.getState(), EntitlementState.ACTIVE);
+
+        final BlockingStates blockingStates = killBillClient.getBlockingStates(accountJson.getAccountId(), null, ImmutableList.<String>of("service"), AuditLevel.FULL, basicRequestOptions());
+        Assert.assertEquals(blockingStates.size(), 2);
+
+        final BlockingStates blockingStates2 = killBillClient.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, AuditLevel.FULL, basicRequestOptions());
+        Assert.assertEquals(blockingStates2.size(), 2);
+
+        final BlockingStates blockingStates3 = killBillClient.getBlockingStates(accountJson.getAccountId(), null, null, AuditLevel.FULL, basicRequestOptions());
+        Assert.assertEquals(blockingStates3.size(), 3);
     }
-
-
 
     @Test(groups = "slow", description = "Can paginate and search through all bundles")
     public void testBundlesPagination() throws Exception {

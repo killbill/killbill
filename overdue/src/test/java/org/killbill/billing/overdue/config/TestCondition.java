@@ -139,7 +139,7 @@ public class TestCondition extends OverdueTestSuiteNoDB {
     public void testHasControlTag() throws Exception {
         final String xml =
                 "<condition>" +
-                "	<controlTag>OVERDUE_ENFORCEMENT_OFF</controlTag>" +
+                "	<controlTagInclusion>OVERDUE_ENFORCEMENT_OFF</controlTagInclusion>" +
                 "</condition>";
         final InputStream is = new ByteArrayInputStream(xml.getBytes());
         final MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is, MockCondition.class);

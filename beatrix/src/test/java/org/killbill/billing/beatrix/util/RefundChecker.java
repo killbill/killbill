@@ -67,7 +67,7 @@ public class RefundChecker {
 
     public PaymentTransaction checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
 
-        final Payment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), context);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), context);
         final PaymentTransaction refund = Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
             public boolean apply(final PaymentTransaction input) {

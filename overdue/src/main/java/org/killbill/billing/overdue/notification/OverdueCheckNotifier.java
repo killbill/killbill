@@ -59,7 +59,7 @@ public class OverdueCheckNotifier extends DefaultOverdueNotifierBase implements 
             }
 
             final OverdueCheckNotificationKey key = (OverdueCheckNotificationKey) notificationKey;
-            dispatcher.processOverdueForAccount(key.getUuidKey(), createCallContext(userToken, accountRecordId, tenantRecordId));
+            dispatcher.processOverdueForAccount(key.getUuidKey(), eventDate, createCallContext(userToken, accountRecordId, tenantRecordId));
         } catch (IllegalArgumentException e) {
             log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
         }

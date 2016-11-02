@@ -1,0 +1,37 @@
+group InvoiceParentChildrenSqlDao: EntitySqlDao;
+
+tableName() ::= "invoice_parent_children"
+
+tableFields(prefix) ::= <<
+  <prefix>parent_invoice_id
+, <prefix>child_invoice_id
+, <prefix>child_account_id
+, <prefix>created_by
+, <prefix>created_date
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+tableValues() ::= <<
+  :parentInvoiceId
+, :childInvoiceId
+, :childAccountId
+, :createdBy
+, :createdDate
+>>
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+getChildInvoicesByParentInvoiceId() ::= <<
+   SELECT <allTableFields()>
+     FROM <tableName()>
+    WHERE parent_invoice_id = :parentInvoiceId
+    <AND_CHECK_TENANT()>
+    <defaultOrderBy()>
+ >>

@@ -20,7 +20,6 @@ package org.killbill.billing.mock.glue;
 
 import org.killbill.billing.glue.InvoiceModule;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.invoice.api.InvoiceMigrationApi;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -44,16 +43,10 @@ public class MockInvoiceModule extends KillBillModule implements InvoiceModule {
     }
 
     @Override
-    public void installInvoiceMigrationApi() {
-        bind(InvoiceMigrationApi.class).toInstance(Mockito.mock(InvoiceMigrationApi.class));
-    }
-
-    @Override
     protected void configure() {
         installInvoiceUserApi();
         installInvoiceInternalApi();
         installInvoicePaymentApi();
-        installInvoiceMigrationApi();
     }
 
     @Override

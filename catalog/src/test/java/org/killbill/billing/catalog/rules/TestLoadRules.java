@@ -40,13 +40,13 @@ public class TestLoadRules extends CatalogTestSuiteNoDB {
         Assert.assertNotNull(catalog);
         final DefaultPlanRules rules = catalog.getPlanRules();
 
-        final PlanSpecifier specifier = new PlanSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
+        final PlanSpecifier specifier = new PlanSpecifier("Laser-Scope", BillingPeriod.MONTHLY,
                                                           "DEFAULT");
 
         final PlanAlignmentCreate alignment = rules.getPlanCreateAlignment(specifier, catalog);
         Assert.assertEquals(alignment, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
 
-        final PlanSpecifier specifier2 = new PlanSpecifier("Extra-Ammo", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
+        final PlanSpecifier specifier2 = new PlanSpecifier("Extra-Ammo", BillingPeriod.MONTHLY,
                                                            "DEFAULT");
 
         final PlanAlignmentCreate alignment2 = rules.getPlanCreateAlignment(specifier2, catalog);

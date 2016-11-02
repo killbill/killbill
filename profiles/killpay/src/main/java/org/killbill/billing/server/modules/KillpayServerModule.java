@@ -25,6 +25,7 @@ import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.currency.glue.CurrencyModule;
 import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
+import org.killbill.billing.jaxrs.glue.DefaultJaxrsModule;
 import org.killbill.billing.jaxrs.resources.AccountResource;
 import org.killbill.billing.jaxrs.resources.CustomFieldResource;
 import org.killbill.billing.jaxrs.resources.ExportResource;
@@ -54,6 +55,7 @@ import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.BroadcastModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
+import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
@@ -78,6 +80,7 @@ public class KillpayServerModule extends KillbillServerModule {
         install(new BroadcastModule(configSource));
         install(new BeatrixModule(configSource));
         install(new CacheModule(configSource));
+        install(new ConfigModule(configSource));
         install(new CallContextModule(configSource));
         install(new CurrencyModule(configSource));
         install(new CustomFieldModule(configSource));
@@ -103,6 +106,7 @@ public class KillpayServerModule extends KillbillServerModule {
         install(new DefaultSubscriptionModule(configSource));
         install(new TemplateModule(configSource));
         install(new UsageModule(configSource));
+        install(new DefaultJaxrsModule(configSource));
         // TODO Dependencies for AccountResource
         install(new DefaultOverdueModule(configSource));
         install(new EmailModule(configSource));

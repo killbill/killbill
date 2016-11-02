@@ -33,6 +33,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private String name;
     private Integer firstNameLength;
     private Currency currency;
+    private UUID parentAccountId;
+    private Boolean isPaymentDelegatedToParent;
     private int billCycleDayLocal;
     private UUID paymentMethodId;
     private DateTimeZone timeZone;
@@ -45,21 +47,25 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private String country;
     private String postalCode;
     private String phone;
+    private String notes;
     private Boolean isMigrated;
     private Boolean isNotifiedForInvoices;
 
     public DefaultMutableAccountData(final String externalKey, final String email, final String name,
-                                     final int firstNameLength, final Currency currency, final int billCycleDayLocal,
-                                     final UUID paymentMethodId, final DateTimeZone timeZone,
+                                     final int firstNameLength, final Currency currency,
+                                     final UUID parentAccountId, final Boolean isPaymentDelegatedToParent,
+                                     final int billCycleDayLocal, final UUID paymentMethodId, final DateTimeZone timeZone,
                                      final String locale, final String address1, final String address2,
                                      final String companyName, final String city, final String stateOrProvince,
                                      final String country, final String postalCode, final String phone,
-                                     final boolean isMigrated, final boolean isNotifiedForInvoices) {
+                                     final String notes, final boolean isMigrated, final boolean isNotifiedForInvoices) {
         this.externalKey = externalKey;
         this.email = email;
         this.name = name;
         this.firstNameLength = firstNameLength;
         this.currency = currency;
+        this.parentAccountId = parentAccountId;
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
         this.billCycleDayLocal = billCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
@@ -72,6 +78,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.country = country;
         this.postalCode = postalCode;
         this.phone = phone;
+        this.notes = notes;
         this.isMigrated = isMigrated;
         this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
@@ -82,6 +89,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.name = accountData.getName();
         this.firstNameLength = accountData.getFirstNameLength();
         this.currency = accountData.getCurrency();
+        this.parentAccountId = accountData.getParentAccountId();
+        this.isPaymentDelegatedToParent = accountData.isPaymentDelegatedToParent();
         this.billCycleDayLocal = accountData.getBillCycleDayLocal() == null ? DEFAULT_BILLING_CYCLE_DAY_LOCAL : accountData.getBillCycleDayLocal();
         this.paymentMethodId = accountData.getPaymentMethodId();
         this.timeZone = accountData.getTimeZone();
@@ -94,6 +103,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.country = accountData.getCountry();
         this.postalCode = accountData.getPostalCode();
         this.phone = accountData.getPhone();
+        this.notes = accountData.getNotes();
         this.isMigrated = accountData.isMigrated();
         this.isNotifiedForInvoices = accountData.isNotifiedForInvoices();
     }
@@ -269,6 +279,16 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
+    public String getNotes() {
+        return notes;
+    }
+
+    @Override
+    public void setNotes(final String notes) {
+        this.notes = notes;
+    }
+
+    @Override
     public Boolean isMigrated() {
         return isMigrated;
     }
@@ -286,5 +306,25 @@ public class DefaultMutableAccountData implements MutableAccountData {
     @Override
     public void setIsNotifiedForInvoices(final boolean isNotifiedForInvoices) {
         this.isNotifiedForInvoices = isNotifiedForInvoices;
+    }
+
+    @Override
+    public UUID getParentAccountId() {
+        return parentAccountId;
+    }
+
+    @Override
+    public void setParentAccountId(final UUID parentAccountId) {
+        this.parentAccountId = parentAccountId;
+    }
+
+    @Override
+    public void setIsPaymentDelegatedToParent(final boolean isPaymentDelegatedToParent) {
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
+    }
+
+    @Override
+    public Boolean isPaymentDelegatedToParent() {
+        return isPaymentDelegatedToParent;
     }
 }

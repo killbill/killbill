@@ -42,11 +42,11 @@ import java.util.Arrays;
 public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements Tier {
 
     @XmlElementWrapper(name = "limits", required = false)
-    @XmlElement(name = "limit", required = true)
+    @XmlElement(name = "limit", required = false)
     private DefaultLimit[] limits;
 
     @XmlElementWrapper(name = "blocks", required = false)
-    @XmlElement(name = "tieredBlock", required = true)
+    @XmlElement(name = "tieredBlock", required = false)
     private DefaultTieredBlock[] blocks;
 
     // Used to define a fixed price for the whole tier section

@@ -25,21 +25,23 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceInternalApi;
+import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.glue.TestOverdueModule.ApplicatorBlockingApi;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.tag.Tag;
 import org.mockito.Mockito;
 import org.testng.Assert;
-
-import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.invoice.api.Invoice;
-import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.entitlement.api.BlockingState;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;
 
@@ -79,6 +81,7 @@ public class TestOverdueHelper {
             "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
             "                   <unit>DAYS</unit><number>30</number>" +
             "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+            "               <controlTagInclusion>TEST</controlTagInclusion>" +
             "           </condition>" +
             "           <externalMessage>Reached OD1</externalMessage>" +
             "           <blockChanges>true</blockChanges>" +
@@ -93,14 +96,17 @@ public class TestOverdueHelper {
     private final AccountInternalApi accountInternalApi;
     private final InvoiceInternalApi invoiceInternalApi;
     private final BlockingInternalApi blockingInternalApi;
+    private final TagInternalApi tagInternalApi;
 
     @Inject
     public TestOverdueHelper(final AccountInternalApi accountInternalApi,
                              final InvoiceInternalApi invoiceInternalApi,
-                             final BlockingInternalApi blockingInternalApi) {
+                             final BlockingInternalApi blockingInternalApi,
+                             final TagInternalApi tagInternalApi) {
         this.accountInternalApi = accountInternalApi;
         this.invoiceInternalApi = invoiceInternalApi;
         this.blockingInternalApi = blockingInternalApi;
+        this.tagInternalApi = tagInternalApi;
     }
 
     public void checkStateApplied(final OverdueState state) {
@@ -137,6 +143,15 @@ public class TestOverdueHelper {
         final List<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(invoice);
         Mockito.when(invoiceInternalApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(invoices);
+
+        final Tag tag = Mockito.mock(Tag.class);
+        Mockito.when(tag.getObjectId()).thenReturn(accountId);
+        Mockito.when(tag.getObjectType()).thenReturn(ObjectType.ACCOUNT);
+        Mockito.when(tag.getTagDefinitionId()).thenReturn(new UUID(0, 6));
+        final List<Tag> tags = new ArrayList<Tag>();
+        tags.add(tag);
+        Mockito.when(tagInternalApi.getTags(Mockito.eq(account.getId()), Mockito.eq(ObjectType.ACCOUNT), Mockito.<InternalTenantContext>any()))
+               .thenReturn(tags);
 
         return account;
     }

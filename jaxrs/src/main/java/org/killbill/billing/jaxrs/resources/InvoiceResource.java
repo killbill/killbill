@@ -43,6 +43,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -51,8 +52,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -94,6 +93,7 @@ import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.LocaleUtils;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -105,13 +105,13 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
-import org.killbill.clock.ClockUtil;
 import org.killbill.commons.metrics.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -119,10 +119,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
@@ -160,7 +160,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final TenantUserApi tenantApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.invoiceApi = invoiceApi;
         this.invoiceNotifier = invoiceNotifier;
         this.tenantApi = tenantApi;
@@ -176,16 +176,18 @@ public class InvoiceResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Invoice not found")})
     public Response getInvoice(@PathParam("invoiceId") final String invoiceId,
                                @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                               @QueryParam(QUERY_INVOICE_WITH_CHILDREN_ITEMS) @DefaultValue("false") final boolean withChildrenItems,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createContext(request);
         final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), tenantContext);
+        final List<InvoiceItem> childInvoiceItems = withChildrenItems ? invoiceApi.getInvoiceItemsByParentInvoice(invoice.getId(), tenantContext) : null;
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
 
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         } else {
-            final InvoiceJson json = new InvoiceJson(invoice, withItems, accountAuditLogs);
+            final InvoiceJson json = new InvoiceJson(invoice, withItems, childInvoiceItems, accountAuditLogs);
             return Response.status(Status.OK).entity(json).build();
         }
     }
@@ -198,16 +200,18 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice not found")})
     public Response getInvoiceByNumber(@PathParam("invoiceNumber") final Integer invoiceNumber,
                                        @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                                       @QueryParam(QUERY_INVOICE_WITH_CHILDREN_ITEMS) @DefaultValue("false") final boolean withChildrenItems,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createContext(request);
         final Invoice invoice = invoiceApi.getInvoiceByNumber(invoiceNumber, tenantContext);
+        final List<InvoiceItem> childInvoiceItems = withChildrenItems ? invoiceApi.getInvoiceItemsByParentInvoice(invoice.getId(), tenantContext) : null;
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
 
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceNumber);
         } else {
-            final InvoiceJson json = new InvoiceJson(invoice, withItems, accountAuditLogs);
+            final InvoiceJson json = new InvoiceJson(invoice, withItems, childInvoiceItems, accountAuditLogs);
             return Response.status(Status.OK).entity(json).build();
         }
     }
@@ -248,7 +252,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                         if (accountsAuditLogs.get().get(invoice.getAccountId()) == null) {
                                                             accountsAuditLogs.get().put(invoice.getAccountId(), auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext));
                                                         }
-                                                        return new InvoiceJson(invoice, withItems, accountsAuditLogs.get().get(invoice.getAccountId()));
+                                                        return new InvoiceJson(invoice, withItems, null, accountsAuditLogs.get().get(invoice.getAccountId()));
                                                     }
                                                 },
                                                 nextPageUri
@@ -281,7 +285,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                         if (accountsAuditLogs.get().get(invoice.getAccountId()) == null) {
                                                             accountsAuditLogs.get().put(invoice.getAccountId(), auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext));
                                                         }
-                                                        return new InvoiceJson(invoice, withItems, accountsAuditLogs.get().get(invoice.getAccountId()));
+                                                        return new InvoiceJson(invoice, withItems, null, accountsAuditLogs.get().get(invoice.getAccountId()));
                                                     }
                                                 },
                                                 nextPageUri
@@ -302,7 +306,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final HttpServletRequest request,
                                         @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final LocalDate inputDate = toLocalDate(UUID.fromString(accountId), targetDate, callContext);
+        final LocalDate inputDate = toLocalDate(targetDate);
 
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, null,
@@ -315,6 +319,31 @@ public class InvoiceResource extends JaxRsResourceBase {
             throw e;
         }
     }
+
+    @TimedResource
+    @POST
+    @Path("/" + MIGRATION + "/{accountId:" + UUID_PATTERN + "}")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Create a migration invoice", response = InvoiceJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
+    public Response createMigrationInvoice(final Iterable<InvoiceItemJson> items,
+                                           @PathParam("accountId") final String accountId,
+                                           @Nullable @QueryParam(QUERY_TARGET_DATE) final String targetDate,
+                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                           @HeaderParam(HDR_REASON) final String reason,
+                                           @HeaderParam(HDR_COMMENT) final String comment,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request,
+                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
+        final Iterable<InvoiceItem> sanitizedInvoiceItems = validateSanitizeAndTranformInputItems(account.getCurrency(), items);
+        final LocalDate resolvedTargetDate =  toLocalDateDefaultToday(account, targetDate, callContext);
+        final UUID invoiceId = invoiceApi.createMigrationInvoice(UUID.fromString(accountId), resolvedTargetDate, sanitizedInvoiceItems, callContext);
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", invoiceId);
+    }
+
 
     @TimedResource
     @POST
@@ -339,10 +368,10 @@ public class InvoiceResource extends JaxRsResourceBase {
             } else if (DryRunType.SUBSCRIPTION_ACTION.name().equals(dryRunSubscriptionSpec.getDryRunType()) && dryRunSubscriptionSpec.getEffectiveDate() != null) {
                 inputDate = dryRunSubscriptionSpec.getEffectiveDate();
             } else {
-                inputDate = toLocalDate(UUID.fromString(accountId), targetDate, callContext);
+                inputDate = toLocalDate(targetDate);
             }
         } else {
-            inputDate = toLocalDate(UUID.fromString(accountId), targetDate, callContext);
+            inputDate = toLocalDate(targetDate);
         }
 
         // Passing a null or empty body means we are trying to generate an invoice with a (future) targetDate
@@ -366,11 +395,11 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
 
-        final DryRunArguments dryRunArguments = new DefaultDryRunArguments(dryRunSubscriptionSpec, account.getTimeZone(), account.getCurrency(), clock);
+        final DryRunArguments dryRunArguments = new DefaultDryRunArguments(dryRunSubscriptionSpec, account);
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRunArguments,
                                                                                  callContext);
-            return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice, true, null)).build();
+            return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice, true, null, null)).build();
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -426,13 +455,14 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID accountId = UUID.fromString(json.getAccountId());
-        final LocalDate requestedDate = toLocalDate(accountId, requestedDateTimeString, callContext);
+        final LocalDate requestedDate = toLocalDateDefaultToday(accountId, requestedDateTimeString, callContext);
         final InvoiceItem adjustmentItem;
         if (json.getAmount() == null) {
             adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(accountId,
                                                                     UUID.fromString(invoiceId),
                                                                     UUID.fromString(json.getInvoiceItemId()),
                                                                     requestedDate,
+                                                                    json.getDescription(),
                                                                     callContext);
         } else {
             adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(accountId,
@@ -440,7 +470,8 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     UUID.fromString(json.getInvoiceItemId()),
                                                                     requestedDate,
                                                                     json.getAmount(),
-                                                                    json.getCurrency(),
+                                                                    Currency.valueOf(json.getCurrency()),
+                                                                    json.getDescription(),
                                                                     callContext);
         }
 
@@ -460,6 +491,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                           @QueryParam(QUERY_PAY_INVOICE) @DefaultValue("false") final Boolean payInvoice,
                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                          @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
+                                          @QueryParam(QUERY_PAYMENT_EXTERNAL_KEY) final String paymentExternalKey,
+                                          @QueryParam(QUERY_TRANSACTION_EXTERNAL_KEY) final String transactionExternalKey,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
@@ -469,20 +503,19 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
-        final Iterable<InvoiceItemJson> sanitizedExternalChargesJson = cloneRefundItemsWithValidCurrency(account.getCurrency(), externalChargesJson);
+        final Iterable<InvoiceItem> sanitizedExternalChargesJson = validateSanitizeAndTranformInputItems(account.getCurrency(), externalChargesJson);
 
         // Get the effective date of the external charge, in the account timezone
-        final LocalDate requestedDate = toLocalDate(account, requestedDateTimeString, callContext);
+        final LocalDate requestedDate = toLocalDateDefaultToday(account, requestedDateTimeString, callContext);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, sanitizedExternalChargesJson, autoCommit, callContext);
 
-        final Iterable<InvoiceItem> externalCharges = Iterables.<InvoiceItemJson, InvoiceItem>transform(sanitizedExternalChargesJson,
-                                                                                                        new Function<InvoiceItemJson, InvoiceItem>() {
-                                                                                                            @Override
-                                                                                                            public InvoiceItem apply(final InvoiceItemJson invoiceItemJson) {
-                                                                                                                return invoiceItemJson.toInvoiceItem();
-                                                                                                            }
-                                                                                                        }
-                                                                                                       );
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, externalCharges, callContext);
+        // if all createdExternalCharges point to the same invoiceId, use the provided paymentExternalKey and / or transactionExternalKey
+        final boolean haveSameInvoiceId = Iterables.all(createdExternalCharges, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getInvoiceId().equals(createdExternalCharges.get(0).getInvoiceId());
+            }
+        });
 
         if (payInvoice) {
             final Collection<UUID> paidInvoices = new HashSet<UUID>();
@@ -490,7 +523,10 @@ public class InvoiceResource extends JaxRsResourceBase {
                 if (!paidInvoices.contains(externalCharge.getInvoiceId())) {
                     paidInvoices.add(externalCharge.getInvoiceId());
                     final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
-                    createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), account.getPaymentMethodId(), false, pluginProperties, callContext);
+                    createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), account.getPaymentMethodId(), false,
+                                             (haveSameInvoiceId && paymentExternalKey != null) ? paymentExternalKey : null,
+                                             (haveSameInvoiceId && transactionExternalKey != null) ? transactionExternalKey : null,
+                                             pluginProperties, callContext);
                 }
             }
         }
@@ -506,20 +542,22 @@ public class InvoiceResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(createdExternalChargesJson).build();
     }
 
-    private Iterable<InvoiceItemJson> cloneRefundItemsWithValidCurrency(final Currency accountCurrency, final Iterable<InvoiceItemJson> inputItems) throws InvoiceApiException {
+    private Iterable<InvoiceItem> validateSanitizeAndTranformInputItems(final Currency accountCurrency, final Iterable<InvoiceItemJson> inputItems) throws InvoiceApiException {
         try {
-            return Iterables.transform(inputItems, new Function<InvoiceItemJson, InvoiceItemJson>() {
+            final Iterable<InvoiceItemJson> sanitized = Iterables.transform(inputItems, new Function<InvoiceItemJson, InvoiceItemJson>() {
                 @Override
                 public InvoiceItemJson apply(final InvoiceItemJson input) {
                     if (input.getCurrency() != null) {
-                        if (!input.getCurrency().equals(accountCurrency)) {
+                        if (!input.getCurrency().equals(accountCurrency.name())) {
                             throw new IllegalArgumentException(input.getCurrency().toString());
                         }
                         return input;
                     } else {
                         return new InvoiceItemJson(null,
                                                    input.getInvoiceId(),
-                                                   null, input.getAccountId(),
+                                                   null,
+                                                   input.getAccountId(),
+                                                   input.getChildAccountId(),
                                                    input.getBundleId(),
                                                    input.getSubscriptionId(),
                                                    input.getPlanName(),
@@ -530,9 +568,17 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                    input.getStartDate(),
                                                    input.getEndDate(),
                                                    input.getAmount(),
-                                                   accountCurrency,
+                                                   accountCurrency.name(),
+                                                   null,
                                                    null);
                     }
+                }
+            });
+
+            return Iterables.transform(sanitized, new Function<InvoiceItemJson, InvoiceItem>() {
+                @Override
+                public InvoiceItem apply(final InvoiceItemJson input) {
+                    return input.toInvoiceItem();
                 }
             });
         } catch (IllegalArgumentException e) {
@@ -550,6 +596,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     public Response getPayments(@PathParam("invoiceId") final String invoiceId,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, InvoiceApiException {
 
         final TenantContext tenantContext = context.createContext(request);
@@ -568,7 +615,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final List<Payment> payments = new ArrayList<Payment>();
         for (final UUID paymentId : invoicePaymentIds) {
-            final Payment payment = paymentApi.getPayment(paymentId, withPluginInfo, ImmutableList.<PluginProperty>of(), tenantContext);
+            final Payment payment = paymentApi.getPayment(paymentId, withPluginInfo, withAttempts, ImmutableList.<PluginProperty>of(), tenantContext);
             payments.add(payment);
         }
 
@@ -601,7 +648,8 @@ public class InvoiceResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(payment.getAccountId(), "InvoicePaymentJson accountId needs to be set",
                              payment.getTargetInvoiceId(), "InvoicePaymentJson targetInvoiceId needs to be set",
                              payment.getPurchasedAmount(), "InvoicePaymentJson purchasedAmount needs to be set");
-        Preconditions.checkArgument(!externalPayment || payment.getPaymentMethodId() == null, "InvoicePaymentJson should not contain a paymwentMethodId when this is an external payment");
+        Preconditions.checkArgument(!externalPayment || payment.getPaymentMethodId() == null, "InvoicePaymentJson should not contain a paymentMethodId when this is an external payment");
+
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
@@ -612,7 +660,8 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
 
-        final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment, pluginProperties, callContext);
+        final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
+                                                        (payment.getPaymentExternalKey() != null) ? payment.getPaymentExternalKey() : null, null, pluginProperties, callContext);
         return result != null ?
                uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId()) :
                Response.status(Status.NO_CONTENT).build();
@@ -899,7 +948,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Invoice not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final String invoiceIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, InvoiceApiException {
         final UUID invoiceId = UUID.fromString(invoiceIdString);
         final TenantContext tenantContext = context.createContext(request);
@@ -942,6 +991,26 @@ public class InvoiceResource extends JaxRsResourceBase {
                                 context.createContext(createdBy, reason, comment, request));
     }
 
+    @TimedResource
+    @PUT
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + COMMIT_INVOICE)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Perform the invoice status transition from DRAFT to COMMITTED")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice not found")})
+    public Response commitInvoice(@PathParam("invoiceId") final String invoiceIdString,
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws InvoiceApiException {
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID invoiceId = UUID.fromString(invoiceIdString);
+        invoiceApi.commitInvoice(invoiceId, callContext);
+        return Response.status(Response.Status.OK).build();
+    }
+
     @Override
     protected ObjectType getObjectType() {
         return ObjectType.INVOICE;
@@ -952,13 +1021,13 @@ public class InvoiceResource extends JaxRsResourceBase {
         private final DryRunType dryRunType;
         private final SubscriptionEventType action;
         private final UUID subscriptionId;
-        private final DateTime effectiveDate;
+        private final LocalDate effectiveDate;
         private final PlanPhaseSpecifier specifier;
         private final UUID bundleId;
         private final BillingActionPolicy billingPolicy;
         private final List<PlanPhasePriceOverride> overrides;
 
-        public DefaultDryRunArguments(final InvoiceDryRunJson input, final DateTimeZone accountTimeZone, final Currency currency, final Clock clock) {
+        public DefaultDryRunArguments(final InvoiceDryRunJson input, final Account account) {
             if (input == null) {
                 this.dryRunType = DryRunType.TARGET_DATE;
                 this.action = null;
@@ -973,13 +1042,12 @@ public class InvoiceResource extends JaxRsResourceBase {
                 this.action = input.getDryRunAction() != null ? SubscriptionEventType.valueOf(input.getDryRunAction()) : null;
                 this.subscriptionId = input.getSubscriptionId() != null ? UUID.fromString(input.getSubscriptionId()) : null;
                 this.bundleId = input.getBundleId() != null ? UUID.fromString(input.getBundleId()) : null;
-                this.effectiveDate = input.getEffectiveDate() != null ? ClockUtil.computeDateTimeWithUTCReferenceTime(input.getEffectiveDate(), clock.getUTCNow().toLocalTime(), accountTimeZone, clock) : null;
+                this.effectiveDate = input.getEffectiveDate();
                 this.billingPolicy = input.getBillingPolicy() != null ? BillingActionPolicy.valueOf(input.getBillingPolicy()) : null;
                 final PlanPhaseSpecifier planPhaseSpecifier = (input.getProductName() != null &&
                                                                input.getProductCategory() != null &&
                                                                input.getBillingPeriod() != null) ?
                                                               new PlanPhaseSpecifier(input.getProductName(),
-                                                                                     ProductCategory.valueOf(input.getProductCategory()),
                                                                                      BillingPeriod.valueOf(input.getBillingPeriod()),
                                                                                      input.getPriceListName(),
                                                                                      input.getPhaseType() != null ? PhaseType.valueOf(input.getPhaseType()) : null) :
@@ -991,9 +1059,10 @@ public class InvoiceResource extends JaxRsResourceBase {
                                      @Override
                                      public PlanPhasePriceOverride apply(@Nullable final PhasePriceOverrideJson input) {
                                          if (input.getPhaseName() != null) {
-                                             return new DefaultPlanPhasePriceOverride(input.getPhaseName(), currency, input.getFixedPrice(), input.getRecurringPrice(), null);
+
+                                             return new DefaultPlanPhasePriceOverride(input.getPhaseName(), account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice(), null);
                                          } else {
-                                             return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, currency, input.getFixedPrice(), input.getRecurringPrice(), null);
+                                             return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice(), null);
                                          }
                                      }
                                  })) : ImmutableList.<PlanPhasePriceOverride>of();
@@ -1021,7 +1090,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
 
         @Override
-        public DateTime getEffectiveDate() {
+        public LocalDate getEffectiveDate() {
             return effectiveDate;
         }
 
@@ -1039,6 +1108,20 @@ public class InvoiceResource extends JaxRsResourceBase {
         public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
             return overrides;
         }
-    }
 
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("DefaultDryRunArguments{");
+            sb.append("dryRunType=").append(dryRunType);
+            sb.append(", action=").append(action);
+            sb.append(", subscriptionId=").append(subscriptionId);
+            sb.append(", effectiveDate=").append(effectiveDate);
+            sb.append(", specifier=").append(specifier);
+            sb.append(", bundleId=").append(bundleId);
+            sb.append(", billingPolicy=").append(billingPolicy);
+            sb.append(", overrides=").append(overrides);
+            sb.append('}');
+            return sb.toString();
+        }
+    }
 }

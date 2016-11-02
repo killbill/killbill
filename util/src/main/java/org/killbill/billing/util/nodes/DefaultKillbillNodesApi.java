@@ -20,6 +20,8 @@ package org.killbill.billing.util.nodes;
 import java.io.IOException;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.killbill.CreatorName;
 import org.killbill.billing.broadcast.BroadcastApi;
 import org.killbill.billing.osgi.api.PluginInfo;
@@ -34,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -46,38 +49,43 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     private final BroadcastApi broadcastApi;
     private final NodeInfoMapper mapper;
     private final Clock clock;
-    private final PluginsInfoApi pluginInfoApi;
+    private final Function<NodeInfoModelDao, NodeInfo> nodeTransfomer;
 
     @Inject
-    public DefaultKillbillNodesApi(final NodeInfoDao nodeInfoDao, final BroadcastApi broadcastApi, final NodeInfoMapper mapper, final Clock clock, final PluginsInfoApi pluginInfoApi) {
+    public DefaultKillbillNodesApi(final NodeInfoDao nodeInfoDao, final BroadcastApi broadcastApi, final NodeInfoMapper mapper, final Clock clock) {
         this.nodeInfoDao = nodeInfoDao;
         this.broadcastApi = broadcastApi;
-        this.pluginInfoApi = pluginInfoApi;
         this.clock = clock;
         this.mapper = mapper;
+        this.nodeTransfomer = new Function<NodeInfoModelDao, NodeInfo>() {
+            @Override
+            public NodeInfo apply(final NodeInfoModelDao input) {
+                try {
+                    final NodeInfoModelJson nodeInfoModelJson = mapper.deserializeNodeInfo(input.getNodeInfo());
+                    return new DefaultNodeInfo(nodeInfoModelJson);
+                } catch (final IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
     }
 
     @Override
     public Iterable<NodeInfo> getNodesInfo() {
         final List<NodeInfoModelDao> allNodes = nodeInfoDao.getAll();
+        return Iterables.transform(allNodes, nodeTransfomer);
+    }
 
-        final Iterable<NodeInfoModelJson> allModelNodes = Iterables.transform(allNodes, new Function<NodeInfoModelDao, NodeInfoModelJson>() {
+    @Override
+    public NodeInfo getCurrentNodeInfo() {
+        final List<NodeInfoModelDao> allNodes = nodeInfoDao.getAll();
+        final NodeInfoModelDao current = Iterables.find(allNodes, new Predicate<NodeInfoModelDao>() {
             @Override
-            public NodeInfoModelJson apply(final NodeInfoModelDao input) {
-                try {
-                    return mapper.deserializeNodeInfo(input.getNodeInfo());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+            public boolean apply(final NodeInfoModelDao input) {
+                return input.getNodeName().equals(CreatorName.get());
             }
         });
-
-        return Iterables.transform(allModelNodes, new Function<NodeInfoModelJson, NodeInfo>() {
-            @Override
-            public NodeInfo apply(final NodeInfoModelJson input) {
-                return new DefaultNodeInfo(input);
-            }
-        });
+        return nodeTransfomer.apply(current);
     }
 
     @Override
@@ -94,10 +102,10 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     }
 
     @Override
-    public void notifyPluginChanged(final PluginInfo plugin) {
+    public void notifyPluginChanged(final PluginInfo plugin,final Iterable<PluginInfo> latestPlugins) {
         final String updatedNodeInfoJson;
         try {
-            updatedNodeInfoJson = computeLatestNodeInfo();
+            updatedNodeInfoJson = computeLatestNodeInfo(latestPlugins);
             nodeInfoDao.updateNodeInfo(CreatorName.get(), updatedNodeInfoJson);
         } catch (final IOException e) {
             logger.warn("Failed to update nodeInfo after plugin change", e);
@@ -105,12 +113,11 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     }
 
 
-    private String computeLatestNodeInfo() throws IOException {
+    private String computeLatestNodeInfo(final Iterable<PluginInfo> rawPluginInfo) throws IOException {
 
         final NodeInfoModelDao nodeInfo = nodeInfoDao.getByNodeName(CreatorName.get());
         NodeInfoModelJson nodeInfoJson = mapper.deserializeNodeInfo(nodeInfo.getNodeInfo());
 
-        final Iterable<PluginInfo> rawPluginInfo = pluginInfoApi.getPluginsInfo();
         final List<PluginInfo> pluginInfos = rawPluginInfo.iterator().hasNext() ? ImmutableList.<PluginInfo>copyOf(rawPluginInfo) : ImmutableList.<PluginInfo>of();
 
         final NodeInfoModelJson updatedNodeInfoJson = new NodeInfoModelJson(CreatorName.get(),

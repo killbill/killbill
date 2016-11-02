@@ -21,8 +21,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
+import org.killbill.billing.ErrorCode;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.xmlloader.ValidatingConfig;
@@ -60,7 +63,7 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
     }
 
     @Override
-    public DateTime addToDateTime(final DateTime dateTime) {
+    public DateTime addToDateTime(final DateTime dateTime) throws CatalogApiException {
         if ((number == null) && (unit != TimeUnit.UNLIMITED)) {
             return dateTime;
         }
@@ -73,9 +76,27 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
             case YEARS:
                 return dateTime.plusYears(number);
             case UNLIMITED:
-                return dateTime.plusYears(100);
             default:
-                return dateTime;
+                throw new CatalogApiException(ErrorCode.CAT_UNDEFINED_DURATION, unit);
+        }
+    }
+
+    @Override
+    public LocalDate addToLocalDate(final LocalDate localDate) throws CatalogApiException {
+        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {
+            return localDate;
+        }
+
+        switch (unit) {
+            case DAYS:
+                return localDate.plusDays(number);
+            case MONTHS:
+                return localDate.plusMonths(number);
+            case YEARS:
+                return localDate.plusYears(number);
+            case UNLIMITED:
+            default:
+                throw new CatalogApiException(ErrorCode.CAT_UNDEFINED_DURATION, unit);
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,6 +33,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -41,7 +42,6 @@ import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
-import org.killbill.billing.invoice.model.RefundAdjInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.invoice.template.translator.DefaultInvoiceTranslator;
 import org.killbill.billing.util.email.templates.MustacheTemplateEngine;
@@ -55,14 +55,12 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     private TranslatorConfig config;
     private MustacheTemplateEngine templateEngine;
-    private DefaultInvoiceFormatterFactory defaultInvoiceFormatterFactory;
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
         config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();
-        defaultInvoiceFormatterFactory = new DefaultInvoiceFormatterFactory();
     }
 
     @Test(groups = "fast")
@@ -81,7 +79,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                                                                                                          fixedItem.getStartDate(), fixedItem.getAmount().negate(),
                                                                                                          fixedItem.getCurrency());
         final Invoice invoice = new DefaultInvoice(fixedItem.getInvoiceId(), fixedItem.getAccountId(), null,
-                                                   new LocalDate(), new LocalDate(), Currency.USD, false);
+                                                   new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
         invoice.addInvoiceItem(fixedItem);
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem);
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem2);
@@ -91,7 +89,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(invoice.getCreditedAmount().doubleValue(), 0.00);
 
         // Verify the merge
-        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap());
+        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext);
         final List<InvoiceItem> invoiceItems = formatter.getInvoiceItems();
         Assert.assertEquals(invoiceItems.size(), 1);
         Assert.assertEquals(invoiceItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
@@ -108,8 +106,6 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         // Then, the invoice is adjusted for $1:
         // * $-1 credit adjustment
         // * $1 generated CBA due to the credit adjustment
-        // Then, we refund $1 with invoice level adjustment:
-        // * $-1 refund adjustment
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                           UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           new LocalDate(), BigDecimal.TEN, Currency.USD);
@@ -121,31 +117,28 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                                                                                                         fixedItem.getStartDate(), fixedItem.getAmount(),
                                                                                                         fixedItem.getCurrency());
         final CreditAdjInvoiceItem creditAdjInvoiceItem = new CreditAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
-                                                                                   fixedItem.getStartDate(), BigDecimal.ONE.negate(), fixedItem.getCurrency());
+                                                                                   fixedItem.getStartDate(), null, BigDecimal.ONE.negate(), fixedItem.getCurrency());
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
                                                                                                          fixedItem.getStartDate(), creditAdjInvoiceItem.getAmount().negate(),
                                                                                                          fixedItem.getCurrency());
-        final RefundAdjInvoiceItem refundAdjInvoiceItem = new RefundAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
-                                                                                   fixedItem.getStartDate(), BigDecimal.ONE.negate(), fixedItem.getCurrency());
         final DefaultInvoice invoice = new DefaultInvoice(fixedItem.getInvoiceId(), fixedItem.getAccountId(), null,
-                                                          new LocalDate(), new LocalDate(), Currency.USD, false);
+                                                          new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
         invoice.addInvoiceItem(fixedItem);
         invoice.addInvoiceItem(repairAdjInvoiceItem);
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem);
         invoice.addInvoiceItem(creditAdjInvoiceItem);
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem2);
-        invoice.addInvoiceItem(refundAdjInvoiceItem);
         invoice.addPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice.getId(), clock.getUTCNow(), BigDecimal.TEN,
                                                      Currency.USD, Currency.USD, null, true));
         invoice.addPayment(new DefaultInvoicePayment(InvoicePaymentType.REFUND, UUID.randomUUID(), invoice.getId(), clock.getUTCNow(), BigDecimal.ONE.negate(),
                                                      Currency.USD, Currency.USD, null, true));
         // Check the scenario
-        Assert.assertEquals(invoice.getBalance().doubleValue(), 0.00);
+        Assert.assertEquals(invoice.getBalance().doubleValue(), 1.00);
         Assert.assertEquals(invoice.getCreditedAmount().doubleValue(), 11.00);
         Assert.assertEquals(invoice.getRefundedAmount().doubleValue(), -1.00);
 
         // Verify the merge
-        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap());
+        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US, null, resourceBundleFactory, internalCallContext);
         final List<InvoiceItem> invoiceItems = formatter.getInvoiceItems();
         Assert.assertEquals(invoiceItems.size(), 4);
         Assert.assertEquals(invoiceItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
@@ -155,7 +148,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(invoiceItems.get(2).getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
         Assert.assertEquals(invoiceItems.get(2).getAmount().doubleValue(), 11.00);
         Assert.assertEquals(invoiceItems.get(3).getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
-        Assert.assertEquals(invoiceItems.get(3).getAmount().doubleValue(), -2.00);
+        Assert.assertEquals(invoiceItems.get(3).getAmount().doubleValue(), -1.00);
     }
 
     @Test(groups = "fast")
@@ -207,13 +200,13 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
                     "</tr>",
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 499,958 ر.ع.\u200F</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 499,958 ر.ع</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>0,000 ر.ع.\u200F</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>0,000 ر.ع</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 499,958 ر.ع.\u200F</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 499,958 ر.ع</strong></td>\n" +
                     "</tr>",
                     Locale.FRANCE);
     }
@@ -237,13 +230,13 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
                     "</tr>",
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 500 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 500 ¥</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>0 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>0 ¥</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>1 500 ￥</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>1 500 ¥</strong></td>\n" +
                     "</tr>",
                     Locale.FRANCE);
     }
@@ -267,13 +260,13 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     "    <td class=\"amount\"><strong>{{invoice.formattedBalance}}</strong></td>\n" +
                     "</tr>",
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>BTC1,105.28843439</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>Ƀ1,105.28843439</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>BTC0.00000000</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>Ƀ0.00000000</strong></td>\n" +
                     "</tr>\n" +
                     "<tr>\n" +
-                    "    <td class=\"amount\"><strong>BTC1,105.28843439</strong></td>\n" +
+                    "    <td class=\"amount\"><strong>Ƀ1,105.28843439</strong></td>\n" +
                     "</tr>",
                     Locale.US);
     }
@@ -392,7 +385,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testProcessedCurrencyDoesNotExist() throws Exception {
-        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.USD, false);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
 
         checkOutput(invoice,
                     "{{#invoice.processedCurrency}}" +
@@ -412,7 +405,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                                                                              UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("1499.95"), Currency.BRL);
 
-        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.BRL,  false);
+        final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.BRL,  false, InvoiceStatus.COMMITTED);
         invoice.addInvoiceItem(fixedItemBRL);
 
         final String template = "<html>\n" +
@@ -518,7 +511,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
         data.put("text", translator);
 
-        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, Locale.US, currencyConversionApi, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap()));
+        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, Locale.US, currencyConversionApi, resourceBundleFactory, internalCallContext));
 
         final String formattedText = templateEngine.executeTemplateText(template, data);
 
@@ -527,7 +520,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     private void checkOutput(final Invoice invoice, final String template, final String expected, final Locale locale) {
         final Map<String, Object> data = new HashMap<String, Object>();
-        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, locale, null, resourceBundleFactory, internalCallContext, defaultInvoiceFormatterFactory.getCurrencyLocaleMap()));
+        data.put("invoice", new DefaultInvoiceFormatter(config, invoice, locale, null, resourceBundleFactory, internalCallContext));
 
         final String formattedText = templateEngine.executeTemplateText(template, data);
         Assert.assertEquals(formattedText, expected);

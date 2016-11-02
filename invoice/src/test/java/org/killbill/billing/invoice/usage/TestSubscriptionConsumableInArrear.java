@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -28,8 +29,6 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
-import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -75,9 +74,7 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
         LocalDate targetDate = new LocalDate(2013, 6, 23);
 
-        final AccountDateAndTimeZoneContext accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), internalCallContext);
-
-        final SubscriptionConsumableInArrear foo = new SubscriptionConsumableInArrear(accountId, invoiceId, billingEvents, ImmutableList.<RawUsage>of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), accountDateAndTimeZoneContext);
+        final SubscriptionConsumableInArrear foo = new SubscriptionConsumableInArrear(accountId, invoiceId, billingEvents, ImmutableList.<RawUsage>of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), internalCallContext);
         final List<ContiguousIntervalConsumableInArrear> result = foo.computeInArrearUsageInterval();
         assertEquals(result.size(), 3);
 

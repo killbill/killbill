@@ -40,7 +40,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     private final Logger logger = LoggerFactory.getLogger(PaymentOperation.class);
 
     protected final PaymentAutomatonDAOHelper daoHelper;
-    protected PaymentPluginApi plugin;
+    protected PaymentPluginApi paymentPluginApi;
 
     protected PaymentOperation(final GlobalLocker locker,
                                final PaymentAutomatonDAOHelper daoHelper,
@@ -68,17 +68,15 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
-        final String pluginName;
         try {
-            pluginName = daoHelper.getPaymentProviderPluginName();
-            this.plugin = daoHelper.getPaymentPluginApi();
+            this.paymentPluginApi = daoHelper.getPaymentPluginApi();
         } catch (final PaymentApiException e) {
             throw convertToUnknownTransactionStatusAndErroredPaymentState(e);
         }
 
         if (paymentStateContext.shouldLockAccountAndDispatch()) {
             // This will already call unwrapExceptionFromDispatchedTask
-            return doOperationCallbackWithDispatchAndAccountLock(pluginName);
+            return doOperationCallbackWithDispatchAndAccountLock(daoHelper.getPluginName());
         } else {
             try {
                 return doSimpleOperationCallback();

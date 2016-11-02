@@ -37,6 +37,7 @@ import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillHttpClient;
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Tenant;
@@ -53,9 +54,10 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.server.listeners.KillbillGuiceListener;
 import org.killbill.billing.server.modules.KillbillServerModule;
+import org.killbill.billing.tenant.api.TenantCacheInvalidation;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.config.PaymentConfig;
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.jdbi.guice.DaoConfig;
 import org.skife.config.ConfigurationObjectFactory;
@@ -72,6 +74,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
+import net.sf.ehcache.CacheManager;
 
 public class TestJaxrsBase extends KillbillClient {
 
@@ -100,6 +103,12 @@ public class TestJaxrsBase extends KillbillClient {
 
     @Inject
     protected SecurityConfig securityConfig;
+
+    @Inject
+    protected TenantCacheInvalidation tenantCacheInvalidation;
+
+    @Inject
+    protected CacheManager cacheManager;
 
     protected DaoConfig daoConfig;
     protected KillbillServerConfig serverConfig;
@@ -190,6 +199,10 @@ public class TestJaxrsBase extends KillbillClient {
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+
+        // Because we truncate the tables, the database record_id auto_increment will be reset
+        tenantCacheInvalidation.setLatestRecordIdProcessed(0L);
+
         externalBus.start();
         internalBus.start();
         cacheControllerDispatcher.clearAll();
@@ -246,6 +259,7 @@ public class TestJaxrsBase extends KillbillClient {
         server.configure(config, getListeners(), getFilters());
         server.start();
     }
+
 
     protected Iterable<EventListener> getListeners() {
         return new Iterable<EventListener>() {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,18 +21,14 @@ package org.killbill.billing.entitlement;
 import java.util.UUID;
 
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.config.Ini;
 import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.Factory;
 import org.apache.shiro.util.ThreadContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
@@ -60,7 +56,6 @@ import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.AuditUserApi;
-import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.tag.dao.TagDao;
@@ -191,7 +186,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     private Catalog initCatalog(final CatalogService catalogService) throws Exception {
 
         ((DefaultCatalogService) catalogService).loadCatalog();
-        final Catalog catalog = catalogService.getFullCatalog(internalCallContext);
+        final Catalog catalog = catalogService.getFullCatalog(true, true, internalCallContext);
         assertNotNull(catalog);
         return catalog;
     }
@@ -289,9 +284,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected Account createAccount(final AccountData accountData) throws AccountApiException {
         final Account account = accountApi.createAccount(accountData, callContext);
 
-        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID));
-        internalCallContext.setAccountRecordId(accountRecordId);
-        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
+        refreshCallContext(account.getId());
 
         return account;
     }

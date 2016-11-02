@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,13 +26,14 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDao;
 
@@ -72,7 +73,9 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     // Include migrated invoices
     List<InvoiceModelDao> getAllInvoicesByAccount(InternalTenantContext context);
 
-    InvoicePaymentModelDao postChargeback(UUID paymentId, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+    InvoicePaymentModelDao postChargeback(UUID paymentId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+
+    InvoicePaymentModelDao postChargebackReversal(UUID paymentId, String chargebackTransactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
     InvoiceItemModelDao doCBAComplexity(InvoiceModelDao invoice, InternalCallContext context) throws InvoiceApiException;
 
@@ -141,4 +144,73 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @param context   the callcontext
      */
     public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context);
+
+    /**
+     * Update invoice status
+     *
+     * @param invoiceId the invoice id
+     * @param newState the new invoice state
+     * @param context the tenant context
+     * @throws InvoiceApiException if any unexpected error occurs
+     */
+    void changeInvoiceStatus(UUID invoiceId, InvoiceStatus newState, InternalCallContext context) throws InvoiceApiException;
+
+    /**
+     * Save parent/child invoice relationship
+     *
+     * @param invoiceRelation the invoice relation object
+     * @param context the tenant context
+     * @throws InvoiceApiException if any unexpected error occurs
+     */
+    void createParentChildInvoiceRelation(final InvoiceParentChildModelDao invoiceRelation, final InternalCallContext context) throws InvoiceApiException;
+
+    /**
+     * Get parent/child invoice relationship by parent invoice id
+     *
+     * @param parentInvoiceId the parent invoice id
+     * @param context the tenant context
+     * @return a list of parent-children relation
+     * @throws InvoiceApiException if any unexpected error occurs
+     */
+    List<InvoiceParentChildModelDao> getChildInvoicesByParentInvoiceId(UUID parentInvoiceId, final InternalCallContext context) throws InvoiceApiException;
+
+
+    /**
+     * Retrieve parent invoice by the parent account id
+     *
+     * @param parentAccountId the parent account id
+     * @param context the tenant context
+     * @return a parent invoice in DRAFT status
+     * @throws InvoiceApiException if any unexpected error occurs
+     */
+    InvoiceModelDao getParentDraftInvoice(UUID parentAccountId, InternalCallContext context) throws InvoiceApiException;
+
+    /**
+     * Update invoice item amount
+     *
+     * @param invoiceItemId the invoice item id
+     * @param amount the new amount value
+     * @param context the tenant context
+     * @throws InvoiceApiException if any unexpected error occurs
+     */
+    void updateInvoiceItemAmount(UUID invoiceItemId, BigDecimal amount, InternalCallContext context) throws InvoiceApiException;
+
+    /**
+     * Move a given child credit to the parent level
+     *
+     * @param childAccount the child account
+     * @param childAccountContext the tenant context for the child account id
+     * @throws InvoiceApiException if any unexpected error occurs
+     */
+    void transferChildCreditToParent(Account childAccount, InternalCallContext childAccountContext) throws InvoiceApiException;
+
+    /**
+     * Retrieve invoice items details associated to Parent SUMMARY invoice item
+     *
+     * @param parentInvoiceId the parent invoice id
+     * @param context the tenant context
+     * @return a list of invoice items associated with a parent invoice
+     * @throws InvoiceApiException if any unexpected error occurs
+     */
+    List<InvoiceItemModelDao> getInvoiceItemsByParentInvoice(UUID parentInvoiceId, final InternalTenantContext context) throws InvoiceApiException;
 }

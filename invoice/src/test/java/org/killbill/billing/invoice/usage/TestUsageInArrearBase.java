@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -41,8 +42,6 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.usage.RawUsage;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
-import org.killbill.billing.util.timezone.DefaultAccountDateAndTimeZoneContext;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 
@@ -72,10 +71,9 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         currency = Currency.BTC;
     }
 
-    protected ContiguousIntervalConsumableInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
-        final AccountDateAndTimeZoneContext accountDateAndTimeZoneContext = new DefaultAccountDateAndTimeZoneContext(clock.getUTCNow(), internalCallContext);
-        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, accountId, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()), accountDateAndTimeZoneContext);
-        for (BillingEvent event : events) {
+    protected ContiguousIntervalConsumableInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
+        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, accountId, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()), internalCallContext);
+        for (final BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
         }
         intervalConsumableInArrear.build(closedInterval);
@@ -93,7 +91,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     }
 
     protected DefaultTier createDefaultTier(final DefaultTieredBlock... blocks) {
-        DefaultTier tier = new DefaultTier();
+        final DefaultTier tier = new DefaultTier();
         tier.setBlocks(blocks);
         return tier;
     }
@@ -112,7 +110,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return block;
     }
 
-    protected BillingEvent createMockBillingEvent(DateTime effectiveDate, BillingPeriod billingPeriod, final List<Usage> usages) {
+    protected BillingEvent createMockBillingEvent(final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages) {
         final BillingEvent result = Mockito.mock(BillingEvent.class);
         Mockito.when(result.getCurrency()).thenReturn(Currency.BTC);
         Mockito.when(result.getBillCycleDayLocal()).thenReturn(BCD);

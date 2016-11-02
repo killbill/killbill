@@ -21,15 +21,20 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
 public class CBADao {
@@ -60,7 +65,7 @@ public class CBADao {
     // We expect a clean up to date invoice, with all the items except the cba, that we will compute in that method
     public InvoiceItemModelDao computeCBAComplexity(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
 
-        final BigDecimal balance = InvoiceModelDaoHelper.getBalance(invoice);
+        final BigDecimal balance = getInvoiceBalance(invoice);
 
         // Current balance is negative, we need to generate a credit (positive CBA amount).
         if (balance.compareTo(BigDecimal.ZERO) < 0) {
@@ -80,6 +85,31 @@ public class CBADao {
             // 0 balance, nothing to do.
             return null;
         }
+    }
+
+    private BigDecimal getInvoiceBalance(final InvoiceModelDao invoice) {
+
+        final InvoiceModelDao parentInvoice = invoice.getParentInvoice();
+        if ((parentInvoice != null) && (InvoiceModelDaoHelper.getBalance(parentInvoice).compareTo(BigDecimal.ZERO) == 0)) {
+            final Iterable<InvoiceItemModelDao> items = Iterables.filter(parentInvoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
+                @Override
+                public boolean apply(@Nullable final InvoiceItemModelDao input) {
+                    return input.getChildAccountId().equals(invoice.getAccountId());
+                }
+            });
+
+            final BigDecimal childInvoiceAmountCharged = InvoiceModelDaoHelper.getAmountCharged(invoice);
+            BigDecimal parentInvoiceAmountChargedForChild = BigDecimal.ZERO;
+
+            for (InvoiceItemModelDao itemModel : items) {
+                parentInvoiceAmountChargedForChild = parentInvoiceAmountChargedForChild.add(itemModel.getAmount());
+            }
+
+            return childInvoiceAmountCharged.add(parentInvoiceAmountChargedForChild.negate());
+
+        }
+
+        return InvoiceModelDaoHelper.getBalance(invoice);
     }
 
     // We let the code below rehydrate the invoice before we can add the CBA item

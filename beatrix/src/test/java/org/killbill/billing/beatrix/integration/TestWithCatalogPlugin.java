@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -35,7 +35,6 @@ import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
@@ -100,18 +99,16 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testCreateSubscriptionWithCatalogPlugin() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
 
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
-        // We take april as it has 30 days (easier to play with BCD)
-        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-        clock.setDay(new LocalDate(2012, 4, 1));
-
-        //
         // Create original subscription (Trial PHASE) -> $0 invoice.
-        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
     }
@@ -122,10 +119,11 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
         public TestCatalogPluginApi(final PriceOverride priceOverride, final InternalTenantContext internalTenantContext, final InternalCallContextFactory internalCallContextFactory) throws Exception {
             final StandaloneCatalog inputCatalog = XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), StandaloneCatalog.class);
-            final List<StandaloneCatalogWithPriceOverride> versions = new ArrayList<StandaloneCatalogWithPriceOverride>();
+            final List<StandaloneCatalog> versions = new ArrayList<StandaloneCatalog>();
             final StandaloneCatalogWithPriceOverride standaloneCatalogWithPriceOverride = new StandaloneCatalogWithPriceOverride(inputCatalog, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
             versions.add(standaloneCatalogWithPriceOverride);
-            versionedCatalog = new VersionedCatalog(getClock(), inputCatalog.getCatalogName(), inputCatalog.getRecurringBillingMode(), versions, internalTenantContext);
+            versionedCatalog = new VersionedCatalog(getClock());
+            versionedCatalog.addAll(versions);
         }
 
         @Override
@@ -133,23 +131,19 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
             return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), versionedCatalog.getRecurringBillingMode(), toStandalonePluginCatalogs(versionedCatalog.getVersions()));
         }
 
-        private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final List<StandaloneCatalogWithPriceOverride> input) {
-            return Iterables.transform(input, new Function<StandaloneCatalogWithPriceOverride, StandalonePluginCatalog>() {
+        private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final List<StandaloneCatalog> input) {
+            return Iterables.transform(input, new Function<StandaloneCatalog, StandalonePluginCatalog>() {
                 @Override
-                public StandalonePluginCatalog apply(final StandaloneCatalogWithPriceOverride input) {
-                    try {
+                public StandalonePluginCatalog apply(final StandaloneCatalog input) {
 
-                        return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
-                                                                    ImmutableList.copyOf(input.getCurrentSupportedCurrencies()),
-                                                                    ImmutableList.<Product>copyOf(input.getCurrentProducts()),
-                                                                    ImmutableList.<Plan>copyOf(input.getCurrentPlans()),
-                                                                    input.getStandaloneCatalog().getPriceLists().getDefaultPricelist(),
-                                                                    ImmutableList.<PriceList>copyOf(input.getStandaloneCatalog().getPriceLists().getChildPriceLists()),
-                                                                    input.getStandaloneCatalog().getPlanRules(),
-                                                                    null /*ImmutableList.<Unit>copyOf(input.getStandaloneCatalog().getCurrentUnits()) */);
-                    } catch (CatalogApiException e) {
-                        throw new IllegalStateException(e);
-                    }
+                    return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
+                                                                ImmutableList.copyOf(input.getCurrentSupportedCurrencies()),
+                                                                ImmutableList.<Product>copyOf(input.getCurrentProducts()),
+                                                                ImmutableList.<Plan>copyOf(input.getCurrentPlans()),
+                                                                input.getPriceLists().getDefaultPricelist(),
+                                                                ImmutableList.<PriceList>copyOf(input.getPriceLists().getChildPriceLists()),
+                                                                input.getPlanRules(),
+                                                                null /* ImmutableList.<Unit>copyOf(input.getCurrentUnits()) */);
                 }
 
                 private <I, C extends I> List<I> listOf(@Nullable C[] input) {

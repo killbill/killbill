@@ -31,19 +31,19 @@ public class TestConfigMagicObfuscator extends ServerTestSuiteNoDB {
     @Test(groups = "fast")
     public void testKey() throws Exception {
         verify("Assigning value [pass2b78b7cef] for [org.killbill.billing.plugin.avatax.licenseKey] on [org.killbill.billing.plugins.avatax#getLicenseKey()]",
-               "Assigning value [***MASKED****] for [org.killbill.billing.plugin.avatax.licenseKey] on [org.killbill.billing.plugins.avatax#getLicenseKey()]");
+               "Assigning value [*************] for [org.killbill.billing.plugin.avatax.licenseKey] on [org.killbill.billing.plugins.avatax#getLicenseKey()]");
 
         verify("Assigning value [pass2b78b7cef] for [org.killbill.billing.plugin.avatax.apiKey] on [org.killbill.billing.plugins.avatax#getApiKey()]",
-               "Assigning value [***MASKED****] for [org.killbill.billing.plugin.avatax.apiKey] on [org.killbill.billing.plugins.avatax#getApiKey()]");
+               "Assigning value [*************] for [org.killbill.billing.plugin.avatax.apiKey] on [org.killbill.billing.plugins.avatax#getApiKey()]");
     }
 
     @Test(groups = "fast")
     public void testPassword() throws Exception {
         verify("Assigning value [pass2b78b7ce] for [org.killbill.dao.pass] on [org.killbill.commons.jdbi.guice.DaoConfig#getPass()]",
-               "Assigning value [***MASKED***] for [org.killbill.dao.pass] on [org.killbill.commons.jdbi.guice.DaoConfig#getPass()]");
+               "Assigning value [************] for [org.killbill.dao.pass] on [org.killbill.commons.jdbi.guice.DaoConfig#getPass()]");
 
         verify("Assigning value [pass2b78b7ce] for [org.killbill.dao.password] on [org.killbill.commons.jdbi.guice.DaoConfig#getPassword()]",
-               "Assigning value [***MASKED***] for [org.killbill.dao.password] on [org.killbill.commons.jdbi.guice.DaoConfig#getPassword()]");
+               "Assigning value [************] for [org.killbill.dao.password] on [org.killbill.commons.jdbi.guice.DaoConfig#getPassword()]");
     }
 
     private void verify(final String input, final String output) {

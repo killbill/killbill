@@ -21,7 +21,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.events.EventBase;
 
 
@@ -51,18 +50,16 @@ public class PhaseEventData extends EventBase implements PhaseEvent {
                 + ", getType()=" + getType()
                 + ", getPhase()=" + getPhase()
                 + ", getEffectiveDate()=" + getEffectiveDate()
-                + ", getActiveVersion()=" + getActiveVersion()
                 + ", getSubscriptionId()=" + getSubscriptionId()
                 + ", isActive()=" + isActive() + "]\n";
     }
 
-    public static PhaseEvent createNextPhaseEvent(final UUID subscriptionId, final long activeVersion, final String phaseName, final DateTime effectiveDate) {
+    public static PhaseEvent createNextPhaseEvent(final UUID subscriptionId, final String phaseName, final DateTime effectiveDate) {
         return (phaseName == null) ?
                 null :
                 new PhaseEventData(new PhaseEventBuilder()
                                            .setSubscriptionId(subscriptionId)
                                            .setEffectiveDate(effectiveDate)
-                                           .setActiveVersion(activeVersion)
                                            .setPhaseName(phaseName));
     }
 }

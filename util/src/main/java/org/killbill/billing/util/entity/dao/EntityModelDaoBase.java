@@ -66,4 +66,14 @@ public class EntityModelDaoBase extends EntityBase {
     public void setTenantRecordId(final Long tenantRecordId) {
         this.tenantRecordId = tenantRecordId;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("EntityModelDaoBase{");
+        sb.append("recordId=").append(recordId);
+        sb.append(", accountRecordId=").append(accountRecordId);
+        sb.append(", tenantRecordId=").append(tenantRecordId);
+        sb.append('}');
+        return sb.toString();
+    }
 }

@@ -64,8 +64,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
 
         assertEquals(overriddenPlan.getProduct().getName(), plan.getProduct().getName());
         assertEquals(overriddenPlan.getRecurringBillingPeriod(), plan.getRecurringBillingPeriod());
-        if (plan.getEffectiveDateForExistingSubscriptons() != null) {
-            assertEquals(overriddenPlan.getEffectiveDateForExistingSubscriptons().compareTo(plan.getEffectiveDateForExistingSubscriptons()), 0);
+        if (plan.getEffectiveDateForExistingSubscriptions() != null) {
+            assertEquals(overriddenPlan.getEffectiveDateForExistingSubscriptions().compareTo(plan.getEffectiveDateForExistingSubscriptions()), 0);
         }
         assertNotEquals(overriddenPlan.getFinalPhase().getName(), plan.getFinalPhase().getName());
         assertEquals(overriddenPlan.getPlansAllowedInBundle(), plan.getPlansAllowedInBundle());
@@ -131,8 +131,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
 
         assertEquals(overriddenPlan.getProduct().getName(), plan.getProduct().getName());
         assertEquals(overriddenPlan.getRecurringBillingPeriod(), plan.getRecurringBillingPeriod());
-        if (plan.getEffectiveDateForExistingSubscriptons() != null) {
-            assertEquals(overriddenPlan.getEffectiveDateForExistingSubscriptons().compareTo(plan.getEffectiveDateForExistingSubscriptons()), 0);
+        if (plan.getEffectiveDateForExistingSubscriptions() != null) {
+            assertEquals(overriddenPlan.getEffectiveDateForExistingSubscriptions().compareTo(plan.getEffectiveDateForExistingSubscriptions()), 0);
         }
         assertNotEquals(overriddenPlan.getFinalPhase().getName(), plan.getFinalPhase().getName());
         assertEquals(overriddenPlan.getPlansAllowedInBundle(), plan.getPlansAllowedInBundle());

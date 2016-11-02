@@ -68,10 +68,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -89,7 +89,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                  final PaymentApi paymentApi,
                                  final Clock clock,
                                  final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
     }
 
     @TimedResource(name = "getPaymentMethod")
@@ -259,6 +259,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account or payment method not found")})
     public Response deletePaymentMethod(@PathParam("paymentMethodId") final String paymentMethodId,
                                         @QueryParam(QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF) @DefaultValue("false") final Boolean deleteDefaultPaymentMethodWithAutoPayOff,
+                                        @QueryParam(QUERY_FORCE_DEFAULT_PM_DELETION) @DefaultValue("false") final Boolean forceDefaultPaymentMethodDeletion,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -270,7 +271,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, false, pluginProperties, callContext);
         final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), callContext);
 
-        paymentApi.deletePaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, pluginProperties, callContext);
+        paymentApi.deletePaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, forceDefaultPaymentMethodDeletion, pluginProperties, callContext);
 
         return Response.status(Status.OK).build();
     }

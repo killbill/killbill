@@ -83,10 +83,10 @@ public class TestCustomFieldApi extends TestIntegrationBase {
         final BillingPeriod term = BillingPeriod.ANNUAL;
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         Assert.assertEquals(invoices.size(), 1);
 
         final Invoice invoice = invoices.get(0);

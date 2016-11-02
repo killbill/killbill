@@ -28,7 +28,7 @@ import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.realm.text.IniRealm;
 import org.apache.shiro.util.Factory;
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

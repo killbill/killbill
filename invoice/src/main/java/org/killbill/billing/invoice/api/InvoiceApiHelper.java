@@ -41,7 +41,7 @@ import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
@@ -54,7 +54,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class InvoiceApiHelper {
@@ -127,6 +126,7 @@ public class InvoiceApiHelper {
                                             @Nullable final BigDecimal positiveAdjAmount,
                                             @Nullable final Currency currency,
                                             final LocalDate effectiveDate,
+                                            final String description,
                                             final InternalCallContext context) throws InvoiceApiException {
         final InvoiceItem invoiceItemToBeAdjusted = Iterables.<InvoiceItem>tryFind(invoiceToBeAdjusted.getInvoiceItems(),
                                                                                    new Predicate<InvoiceItem>() {
@@ -159,7 +159,7 @@ public class InvoiceApiHelper {
                                       invoiceItemToBeAdjusted.getInvoiceId(),
                                       invoiceItemToBeAdjusted.getAccountId(),
                                       effectiveDate,
-                                      null,
+                                      description,
                                       amountToAdjust,
                                       currencyForAdjustment,
                                       invoiceItemToBeAdjusted.getId());

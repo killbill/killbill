@@ -26,8 +26,9 @@ import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.entitlement.EntitlementTransitionType;
+import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
 import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.events.AccountCreationInternalEvent;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
@@ -38,10 +39,11 @@ import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.events.CustomFieldCreationEvent;
 import org.killbill.billing.events.CustomFieldDeletionEvent;
-import org.killbill.billing.events.EntitlementInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
+import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
+import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
 import org.killbill.billing.events.OverdueChangeInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
@@ -52,8 +54,10 @@ import org.killbill.billing.events.TenantConfigDeletionInternalEvent;
 import org.killbill.billing.events.UserTagCreationInternalEvent;
 import org.killbill.billing.events.UserTagDeletionInternalEvent;
 import org.killbill.billing.lifecycle.glue.BusModule;
+import org.killbill.billing.notification.plugin.api.BlockingStateMetadata;
 import org.killbill.billing.notification.plugin.api.BroadcastMetadata;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.notification.plugin.api.PaymentMetadata;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -140,9 +144,7 @@ public class BeatrixListener {
                 objectType = ObjectType.SUBSCRIPTION;
                 objectId = realEventST.getSubscriptionId();
                 if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
-                    realEventST.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE ||
-                    realEventST.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER ||
-                    realEventST.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT) {
+                    realEventST.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_CREATION;
                 } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.CANCEL) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_CANCEL;
@@ -152,6 +154,8 @@ public class BeatrixListener {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_CHANGE;
                 } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.UNCANCEL) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_UNCANCEL;
+                } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.BCD_CHANGE) {
+                    eventBusType = ExtBusEventType.SUBSCRIPTION_BCD_CHANGE;
                 }
                 break;
 
@@ -165,17 +169,24 @@ public class BeatrixListener {
                     objectType = ObjectType.SUBSCRIPTION;
                 }
                 objectId = realEventBS.getBlockableId();
-                // Probably we should serialize the isTransitionedTo* from BlockingTransitionInternalEvent into the metdata section
-                break;
 
-            case ENTITLEMENT_TRANSITION:
-                final EntitlementInternalEvent realEventET = (EntitlementInternalEvent) event;
-                objectType = ObjectType.BUNDLE;
-                objectId = realEventET.getBundleId();
-                if (realEventET.getTransitionType() == EntitlementTransitionType.BLOCK_BUNDLE) {
-                    eventBusType = ExtBusEventType.BUNDLE_PAUSE;
-                } else if (realEventET.getTransitionType() == EntitlementTransitionType.UNBLOCK_BUNDLE) {
-                    eventBusType = ExtBusEventType.BUNDLE_RESUME;
+                if (EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(realEventBS.getService())) {
+                    if (DefaultEntitlementApi.ENT_STATE_START.equals(realEventBS.getStateName())) {
+                        eventBusType = ExtBusEventType.ENTITLEMENT_CREATION;
+                    } else if (DefaultEntitlementApi.ENT_STATE_BLOCKED.equals(realEventBS.getStateName())) {
+                        eventBusType = ExtBusEventType.BUNDLE_PAUSE;
+                    } else if (DefaultEntitlementApi.ENT_STATE_CLEAR.equals(realEventBS.getStateName())) {
+                        eventBusType = ExtBusEventType.BUNDLE_RESUME;
+                    } else if (DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(realEventBS.getStateName())) {
+                        eventBusType = ExtBusEventType.ENTITLEMENT_CANCEL;
+                    }
+                } else {
+                    eventBusType = ExtBusEventType.BLOCKING_STATE;
+
+                    final BlockingStateMetadata metaDataObj = new BlockingStateMetadata(realEventBS.getBlockableId(), realEventBS.getService(), realEventBS.getStateName(), realEventBS.getBlockingType(), realEventBS.getEffectiveDate(),
+                                                                                        realEventBS.isTransitionedToBlockedBilling(), realEventBS.isTransitionedToUnblockedBilling(),
+                                                                                        realEventBS.isTransitionedToBlockedEntitlement(), realEventBS.isTransitionedToUnblockedEntitlement());
+                    metaData = objectMapper.writeValueAsString(metaDataObj);
                 }
                 break;
 
@@ -202,11 +213,27 @@ public class BeatrixListener {
                 eventBusType = ExtBusEventType.INVOICE_ADJUSTMENT;
                 break;
 
+            case INVOICE_PAYMENT_INFO:
+                final InvoicePaymentInfoInternalEvent realEventInvPay = (InvoicePaymentInfoInternalEvent) event;
+                objectType = ObjectType.INVOICE;
+                objectId = realEventInvPay.getInvoiceId();
+                eventBusType = ExtBusEventType.INVOICE_PAYMENT_SUCCESS;
+                break;
+
+            case INVOICE_PAYMENT_ERROR:
+                final InvoicePaymentErrorInternalEvent realEventInvPayErr = (InvoicePaymentErrorInternalEvent) event;
+                objectType = ObjectType.INVOICE;
+                objectId = realEventInvPayErr.getInvoiceId();
+                eventBusType = ExtBusEventType.INVOICE_PAYMENT_FAILED;
+                break;
+
             case PAYMENT_INFO:
                 final PaymentInfoInternalEvent realEventPay = (PaymentInfoInternalEvent) event;
                 objectType = ObjectType.PAYMENT;
                 objectId = realEventPay.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_SUCCESS;
+                final PaymentMetadata paymentInfoMetaDataObj = new PaymentMetadata(realEventPay.getPaymentTransactionId(), realEventPay.getAmount(), realEventPay.getCurrency(), realEventPay.getStatus(), realEventPay.getTransactionType(), realEventPay.getEffectiveDate());
+                metaData = objectMapper.writeValueAsString(paymentInfoMetaDataObj);
                 break;
 
             case PAYMENT_ERROR:
@@ -215,6 +242,8 @@ public class BeatrixListener {
                 objectId = realEventPayErr.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_FAILED;
                 accountId = realEventPayErr.getAccountId();
+                final PaymentMetadata paymentErrorMetaDataObj = new PaymentMetadata(realEventPayErr.getPaymentTransactionId(), realEventPayErr.getAmount(), realEventPayErr.getCurrency(), realEventPayErr.getStatus(), realEventPayErr.getTransactionType(), realEventPayErr.getEffectiveDate());
+                metaData = objectMapper.writeValueAsString(paymentErrorMetaDataObj);
                 break;
 
             case PAYMENT_PLUGIN_ERROR:
@@ -222,6 +251,8 @@ public class BeatrixListener {
                 objectType = ObjectType.PAYMENT;
                 objectId = realEventPayPluginErr.getPaymentId();
                 eventBusType = ExtBusEventType.PAYMENT_FAILED;
+                final PaymentMetadata pluginErrorMetaDataObj = new PaymentMetadata(realEventPayPluginErr.getPaymentTransactionId(), realEventPayPluginErr.getAmount(), realEventPayPluginErr.getCurrency(), realEventPayPluginErr.getStatus(), realEventPayPluginErr.getTransactionType(), realEventPayPluginErr.getEffectiveDate());
+                metaData = objectMapper.writeValueAsString(pluginErrorMetaDataObj);
                 break;
 
             case OVERDUE_CHANGE:

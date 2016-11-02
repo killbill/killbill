@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.IllegalInstantException;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
@@ -75,12 +76,12 @@ public class TestWithTimeZones extends TestIntegrationBase {
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
 
         final TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
-                                                                   SubscriptionEventType.START_BILLING, null, null, clock.getUTCNow(), null);
+                                                                   SubscriptionEventType.START_BILLING, null, null, null, null);
         final Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 9, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
-        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // Check bundle after BP got created otherwise we get an error from auditApi.
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, expectedInvoices);
@@ -131,10 +132,9 @@ public class TestWithTimeZones extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", ProductCategory.BASE, BillingPeriod.MONTHLY, "notrial", null);
-        final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
-        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Cancel the next month specifying just a LocalDate
@@ -151,7 +151,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01")
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         Assert.assertEquals(invoices.size(), 1);
     }
 
@@ -177,10 +177,9 @@ public class TestWithTimeZones extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", ProductCategory.BASE, BillingPeriod.MONTHLY, "notrial", null);
-        final LocalDate effectiveDate = new LocalDate(clock.getUTCNow());
-        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), effectiveDate, ImmutableList.<PluginProperty>of(), callContext);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Cancel the next month specifying just a LocalDate
@@ -196,7 +195,63 @@ public class TestWithTimeZones extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01"
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         Assert.assertEquals(invoices.size(), 1);
+    }
+
+    @Test(groups = "slow")
+    public void testReferenceTimeInDSTGap() throws Exception {
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        clock.setTime(new DateTime(2015, 3, 7, 2, 0, 0, tz));
+
+        final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .timeZone(tz)
+                                                                .build();
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+        Assert.assertEquals(account.getTimeZone(), tz);
+        Assert.assertEquals(account.getFixedOffsetTimeZone(), DateTimeZone.forOffsetHours(-8));
+
+        // Note the gap: 2015-03-07T02:00:00.000-08:00 to 2015-03-08T03:00:00.000-07:00
+        clock.addDays(1);
+
+        try {
+            // See TimeAwareContext#toUTCDateTime (which uses account.getFixedOffsetTimeZone() instead)
+            new DateTime(clock.getUTCToday().getYear(),
+                         clock.getUTCToday().getMonthOfYear(),
+                         clock.getUTCToday().getDayOfMonth(),
+                         account.getReferenceTime().toDateTime(tz).getHourOfDay(),
+                         account.getReferenceTime().toDateTime(tz).getMinuteOfHour(),
+                         account.getReferenceTime().toDateTime(tz).getSecondOfMinute(),
+                         account.getTimeZone());
+            Assert.fail();
+        } catch (final IllegalInstantException e) {
+            // Illegal instant due to time zone offset transition (daylight savings time 'gap'): 2015-03-08T10:00:00.000 (America/Los_Angeles)
+        }
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+        // Pass a date of today, to trigger TimeAwareContext#toUTCDateTime
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), clock.getUTCToday(), clock.getUTCToday(), false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        Assert.assertEquals(entitlement.getEffectiveStartDate().compareTo(new LocalDate("2015-03-08")), 0);
+        Assert.assertEquals(((DefaultEntitlement) entitlement).getBasePlanSubscriptionBase().getStartDate().compareTo(new DateTime("2015-03-08T02:00:00.000-08:00")), 0);
+
+        invoiceChecker.checkChargedThroughDate(entitlement.getId(), new LocalDate("2015-04-08"), callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(31);
+        assertListenerStatus();
+
+        invoiceChecker.checkChargedThroughDate(entitlement.getId(), new LocalDate("2015-05-08"), callContext);
+
+        for (int i = 0; i < 25 ; i++) {
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+            clock.addMonths(1);
+            assertListenerStatus();
+
+            invoiceChecker.checkChargedThroughDate(entitlement.getId(), new LocalDate("2015-03-08").plusMonths(3 + i), callContext);
+        }
     }
 }

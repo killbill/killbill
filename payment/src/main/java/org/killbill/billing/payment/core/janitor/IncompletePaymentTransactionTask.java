@@ -48,7 +48,7 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -261,9 +261,9 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     }
 
     @VisibleForTesting
-    DateTime getNextNotificationTime(final Integer attemptNumber) {
+    DateTime getNextNotificationTime(final Integer attemptNumber, final InternalTenantContext tenantContext) {
 
-        final List<TimeSpan> retries = paymentConfig.getIncompleteTransactionsRetries();
+        final List<TimeSpan> retries = paymentConfig.getIncompleteTransactionsRetries(tenantContext);
         if (attemptNumber > retries.size()) {
             return null;
         }
@@ -277,10 +277,12 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             return;
         }
 
+        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
+
         // Increment value before we insert
         final Integer newAttemptNumber = attemptNumber.intValue() + 1;
         final NotificationEvent key = new JanitorNotificationKey(paymentTransactionId, IncompletePaymentTransactionTask.class.toString(), newAttemptNumber);
-        final DateTime notificationTime = getNextNotificationTime(newAttemptNumber);
+        final DateTime notificationTime = getNextNotificationTime(newAttemptNumber, tenantContext);
         // Will be null in the GET path or when we run out opf attempts..
         if (notificationTime != null) {
             try {

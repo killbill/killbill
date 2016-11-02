@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
@@ -73,20 +74,56 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
 
     protected abstract T getResult();
 
-
-
     public T getResult(final PlanPhaseSpecifier from,
                        final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
+
+
+
+        final Product inFromProduct;
+        final BillingPeriod inFromBillingPeriod;
+        final ProductCategory inFromProductCategory;
+        final PriceList inFromPriceList;
+        if (from.getPlanName() != null) {
+            final Plan plan = catalog.findCurrentPlan(from.getPlanName());
+            inFromProduct = plan.getProduct();
+            inFromBillingPeriod = plan.getRecurringBillingPeriod();
+            inFromProductCategory = plan.getProduct().getCategory();
+            inFromPriceList = catalog.findCurrentPricelist(plan.getPriceListName());
+        } else {
+            inFromProduct = catalog.findCurrentProduct(from.getProductName());
+            inFromBillingPeriod = from.getBillingPeriod();
+            inFromProductCategory = inFromProduct.getCategory();
+            inFromPriceList = from.getPriceListName() != null ? catalog.findCurrentPricelist(from.getPriceListName()) : null;
+        }
+
+        final Product inToProduct;
+        final BillingPeriod inToBillingPeriod;
+        final ProductCategory inToProductCategory;
+        final PriceList inToPriceList;
+        if (to.getPlanName() != null) {
+            final Plan plan = catalog.findCurrentPlan(to.getPlanName());
+            inToProduct = plan.getProduct();
+            inToBillingPeriod = plan.getRecurringBillingPeriod();
+            inToProductCategory = plan.getProduct().getCategory();
+            inToPriceList = catalog.findCurrentPricelist(plan.getPriceListName());
+        } else {
+            inToProduct = catalog.findCurrentProduct(to.getProductName());
+            inToBillingPeriod = to.getBillingPeriod();
+            inToProductCategory = inToProduct.getCategory();
+            inToPriceList = to.getPriceListName() != null ? catalog.findCurrentPricelist(to.getPriceListName()) : null;
+        }
+
+
         if (
                 (phaseType == null || from.getPhaseType() == phaseType) &&
-                        (fromProduct == null || fromProduct.equals(catalog.findCurrentProduct(from.getProductName()))) &&
-                        (fromProductCategory == null || fromProductCategory.equals(from.getProductCategory())) &&
-                        (fromBillingPeriod == null || fromBillingPeriod.equals(from.getBillingPeriod())) &&
-                        (toProduct == null || toProduct.equals(catalog.findCurrentProduct(to.getProductName()))) &&
-                        (toProductCategory == null || toProductCategory.equals(to.getProductCategory())) &&
-                        (toBillingPeriod == null || toBillingPeriod.equals(to.getBillingPeriod())) &&
-                        (fromPriceList == null || fromPriceList.equals(catalog.findCurrentPricelist(from.getPriceListName()))) &&
-                        (toPriceList == null || toPriceList.equals(catalog.findCurrentPricelist(to.getPriceListName())))
+                (fromProduct == null || fromProduct.equals(inFromProduct)) &&
+                (fromProductCategory == null || fromProductCategory.equals(inFromProductCategory)) &&
+                (fromBillingPeriod == null || fromBillingPeriod.equals(inFromBillingPeriod)) &&
+                (this.toProduct == null || this.toProduct.equals(inToProduct)) &&
+                (this.toProductCategory == null || this.toProductCategory.equals(inToProductCategory)) &&
+                (this.toBillingPeriod == null || this.toBillingPeriod.equals(inToBillingPeriod)) &&
+                (fromPriceList == null || fromPriceList.equals(inFromPriceList)) &&
+                (toPriceList == null || toPriceList.equals(inToPriceList))
                 ) {
             return getResult();
         }
@@ -117,8 +154,8 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
         return this;
     }
 
-    public DefaultCaseChange<T> setFromProduct(final DefaultProduct fromProduct) {
-        this.fromProduct = fromProduct;
+    public DefaultCaseChange<T> setFromProduct(final Product fromProduct) {
+        this.fromProduct = (DefaultProduct) fromProduct;
         return this;
     }
 
@@ -137,8 +174,8 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
         return this;
     }
 
-    public DefaultCaseChange<T> setToProduct(final DefaultProduct toProduct) {
-        this.toProduct = toProduct;
+    public DefaultCaseChange<T> setToProduct(final Product toProduct) {
+        this.toProduct = (DefaultProduct) toProduct;
         return this;
     }
 

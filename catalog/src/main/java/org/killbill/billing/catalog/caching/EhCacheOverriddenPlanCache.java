@@ -86,6 +86,11 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
         return (DefaultPlan) cacheController.get(planName, argument);
     }
 
+    @Override
+    public void addDryRunPlan(final String planName, final Plan plan) {
+        cacheController.putIfAbsent(planName, plan);
+    }
+
     private DefaultPlan loadOverriddenPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
 
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);

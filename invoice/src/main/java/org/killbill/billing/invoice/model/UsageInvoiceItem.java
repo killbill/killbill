@@ -28,7 +28,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class UsageInvoiceItem extends InvoiceItemBase {
 
@@ -51,6 +51,6 @@ public class UsageInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String getDescription() {
-        return Objects.firstNonNull(description, String.format("%s (usage item)", usageName));
+        return MoreObjects.firstNonNull(description, usageName);
     }
 }

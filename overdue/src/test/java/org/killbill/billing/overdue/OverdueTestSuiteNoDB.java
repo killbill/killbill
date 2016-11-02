@@ -25,6 +25,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
+import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.applicator.OverdueBusListenerTester;
 import org.killbill.billing.overdue.applicator.OverdueStateApplicator;
 import org.killbill.billing.overdue.caching.OverdueCacheInvalidationCallback;
@@ -36,6 +37,7 @@ import org.killbill.billing.overdue.notification.OverdueNotifier;
 import org.killbill.billing.overdue.notification.OverduePoster;
 import org.killbill.billing.overdue.service.DefaultOverdueService;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
+import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -86,7 +88,7 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected OverdueStateApplicator applicator;
     @Inject
-    protected OverdueInternalApi overdueApi;
+    protected OverdueApi overdueApi;
     @Inject
     protected OverdueProperties overdueProperties;
     @Inject
@@ -101,6 +103,8 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected OverdueCacheInvalidationCallback cacheInvalidationCallback;
     @Inject
     protected TenantInternalApi tenantInternalApi;
+    @Inject
+    protected TagInternalApi tagInternalApi;
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {

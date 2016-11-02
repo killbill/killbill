@@ -26,7 +26,7 @@ import org.killbill.billing.tenant.dao.DefaultTenantDao;
 import org.killbill.billing.tenant.dao.TenantBroadcastDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.tenant.glue.TestTenantModuleWithEmbeddedDB;
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;

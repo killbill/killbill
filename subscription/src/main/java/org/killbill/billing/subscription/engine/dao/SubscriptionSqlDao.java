@@ -45,15 +45,4 @@ public interface SubscriptionSqlDao extends EntitySqlDao<SubscriptionModelDao, S
     public void updateChargedThroughDate(@Bind("id") String id, @Bind("chargedThroughDate") Date chargedThroughDate,
                                          @BindBean final InternalCallContext context);
 
-    @SqlUpdate
-    @Audited(ChangeType.UPDATE)
-    void updateActiveVersion(@Bind("id") String id, @Bind("activeVersion") long activeVersion,
-                             @BindBean final InternalCallContext context);
-
-    @SqlUpdate
-    @Audited(ChangeType.UPDATE)
-    public void updateForRepair(@Bind("id") String id, @Bind("activeVersion") long activeVersion,
-                                @Bind("startDate") Date startDate,
-                                @Bind("bundleStartDate") Date bundleStartDate,
-                                @BindBean final InternalCallContext context);
 }

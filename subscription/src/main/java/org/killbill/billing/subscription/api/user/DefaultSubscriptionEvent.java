@@ -41,13 +41,16 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
     private final String previousPriceList;
     private final String previousPlan;
     private final String previousPhase;
+    private final Integer previousBillCycleDayLocal;
     private final EntitlementState nextState;
     private final String nextPriceList;
     private final String nextPlan;
     private final String nextPhase;
+    private final Integer nextBillCycleDayLocal;
     private final Integer remainingEventsForUserOperation;
     private final SubscriptionBaseTransitionType transitionType;
     private final DateTime startDate;
+
 
     public DefaultSubscriptionEvent(final SubscriptionBaseTransitionData in, final DateTime startDate,
                                     final Long searchKey1,
@@ -62,10 +65,12 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
              (in.getPreviousPlan() != null) ? in.getPreviousPlan().getName() : null,
              (in.getPreviousPhase() != null) ? in.getPreviousPhase().getName() : null,
              (in.getPreviousPriceList() != null) ? in.getPreviousPriceList().getName() : null,
+             in.getPreviousBillingCycleDayLocal(),
              in.getNextState(),
              (in.getNextPlan() != null) ? in.getNextPlan().getName() : null,
              (in.getNextPhase() != null) ? in.getNextPhase().getName() : null,
              (in.getNextPriceList() != null) ? in.getNextPriceList().getName() : null,
+             in.getNextBillingCycleDayLocal(),
              in.getTotalOrdering(),
              in.getTransitionType(),
              in.getRemainingEventsForUserOperation(),
@@ -85,10 +90,12 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
                                     @JsonProperty("previousPlan") final String previousPlan,
                                     @JsonProperty("previousPhase") final String previousPhase,
                                     @JsonProperty("previousPriceList") final String previousPriceList,
+                                    @JsonProperty("previousBillCycleDayLocal") final Integer previousBillCycleDayLocal,
                                     @JsonProperty("nextState") final EntitlementState nextState,
                                     @JsonProperty("nextPlan") final String nextPlan,
                                     @JsonProperty("nextPhase") final String nextPhase,
                                     @JsonProperty("nextPriceList") final String nextPriceList,
+                                    @JsonProperty("nextBillCycleDayLocal") final Integer nextBillCycleDayLocal,
                                     @JsonProperty("totalOrdering") final Long totalOrdering,
                                     @JsonProperty("transitionType") final SubscriptionBaseTransitionType transitionType,
                                     @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
@@ -104,11 +111,13 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
         this.effectiveTransitionTime = effectiveTransitionTime;
         this.previousState = previousState;
         this.previousPriceList = previousPriceList;
+        this.previousBillCycleDayLocal = previousBillCycleDayLocal;
         this.previousPlan = previousPlan;
         this.previousPhase = previousPhase;
         this.nextState = nextState;
         this.nextPlan = nextPlan;
         this.nextPriceList = nextPriceList;
+        this.nextBillCycleDayLocal = nextBillCycleDayLocal;
         this.nextPhase = nextPhase;
         this.totalOrdering = totalOrdering;
         this.transitionType = transitionType;
@@ -154,6 +163,11 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
     }
 
     @Override
+    public Integer getPreviousBillCycleDayLocal() {
+        return previousBillCycleDayLocal;
+    }
+
+    @Override
     public String getNextPlan() {
         return nextPlan;
     }
@@ -176,6 +190,11 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
     @Override
     public String getNextPriceList() {
         return nextPriceList;
+    }
+
+    @Override
+    public Integer getNextBillCycleDayLocal() {
+        return nextBillCycleDayLocal;
     }
 
     @Override
@@ -221,10 +240,12 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
         sb.append(", effectiveTransitionTime=").append(effectiveTransitionTime);
         sb.append(", previousState=").append(previousState);
         sb.append(", previousPriceList='").append(previousPriceList).append('\'');
+        sb.append(", previousBillCycleDayLocal='").append(previousBillCycleDayLocal).append('\'');
         sb.append(", previousPlan='").append(previousPlan).append('\'');
         sb.append(", previousPhase='").append(previousPhase).append('\'');
         sb.append(", nextState=").append(nextState);
         sb.append(", nextPriceList='").append(nextPriceList).append('\'');
+        sb.append(", nextBillCycleDayLocal='").append(nextBillCycleDayLocal).append('\'');
         sb.append(", nextPlan='").append(nextPlan).append('\'');
         sb.append(", nextPhase='").append(nextPhase).append('\'');
         sb.append(", remainingEventsForUserOperation=").append(remainingEventsForUserOperation);
@@ -263,6 +284,9 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
         if (nextPriceList != null ? !nextPriceList.equals(that.nextPriceList) : that.nextPriceList != null) {
             return false;
         }
+        if (nextBillCycleDayLocal != null ? !nextBillCycleDayLocal.equals(that.nextBillCycleDayLocal) : that.nextBillCycleDayLocal != null) {
+            return false;
+        }
         if (nextState != that.nextState) {
             return false;
         }
@@ -273,6 +297,9 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
             return false;
         }
         if (previousPriceList != null ? !previousPriceList.equals(that.previousPriceList) : that.previousPriceList != null) {
+            return false;
+        }
+        if (previousBillCycleDayLocal != null ? !previousBillCycleDayLocal.equals(that.previousBillCycleDayLocal) : that.previousBillCycleDayLocal != null) {
             return false;
         }
         if (previousState != that.previousState) {
@@ -309,10 +336,12 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
         result = 31 * result + (effectiveTransitionTime != null ? effectiveTransitionTime.hashCode() : 0);
         result = 31 * result + (previousState != null ? previousState.hashCode() : 0);
         result = 31 * result + (previousPriceList != null ? previousPriceList.hashCode() : 0);
+        result = 31 * result + (previousBillCycleDayLocal != null ? previousBillCycleDayLocal.hashCode() : 0);
         result = 31 * result + (previousPlan != null ? previousPlan.hashCode() : 0);
         result = 31 * result + (previousPhase != null ? previousPhase.hashCode() : 0);
         result = 31 * result + (nextState != null ? nextState.hashCode() : 0);
         result = 31 * result + (nextPriceList != null ? nextPriceList.hashCode() : 0);
+        result = 31 * result + (nextBillCycleDayLocal != null ? nextBillCycleDayLocal.hashCode() : 0);
         result = 31 * result + (nextPlan != null ? nextPlan.hashCode() : 0);
         result = 31 * result + (nextPhase != null ? nextPhase.hashCode() : 0);
         result = 31 * result + (remainingEventsForUserOperation != null ? remainingEventsForUserOperation.hashCode() : 0);

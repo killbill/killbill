@@ -42,7 +42,13 @@ public interface EventsStream {
 
     EntitlementState getEntitlementState();
 
+    LocalDate getEntitlementEffectiveStartDate();
+
     LocalDate getEntitlementEffectiveEndDate();
+
+    DateTime getEntitlementEffectiveStartDateTime();
+
+    DateTime getEntitlementEffectiveEndDateTime();
 
     SubscriptionBase getSubscriptionBase();
 
@@ -55,6 +61,8 @@ public interface EventsStream {
     boolean isEntitlementCancelled();
 
     boolean isSubscriptionCancelled();
+
+    int getDefaultBillCycleDayLocal();
 
     Collection<BlockingState> getPendingEntitlementCancellationEvents();
 

@@ -27,8 +27,8 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wordnik.swagger.annotations.ApiModel;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(description = "Payment transaction")
 public class PaymentTransactionJson extends JsonBase {
@@ -49,6 +49,8 @@ public class PaymentTransactionJson extends JsonBase {
     private final BigDecimal amount;
     @ApiModelProperty(value = "Amount currency (account currency unless specified)", dataType = "org.killbill.billing.catalog.api.Currency")
     private final String currency;
+    private final BigDecimal processedAmount;
+    private final String processedCurrency;
     private final String gatewayErrorCode;
     private final String gatewayErrorMsg;
     // Plugin specific fields
@@ -65,6 +67,8 @@ public class PaymentTransactionJson extends JsonBase {
                                   @JsonProperty("amount") final BigDecimal amount,
                                   @JsonProperty("currency") final String currency,
                                   @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                  @JsonProperty("processedAmount") final BigDecimal processedAmount,
+                                  @JsonProperty("processedCurrency") final String processedCurrency,
                                   @JsonProperty("status") final String status,
                                   @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
                                   @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
@@ -82,6 +86,8 @@ public class PaymentTransactionJson extends JsonBase {
         this.status = status;
         this.amount = amount;
         this.currency = currency;
+        this.processedAmount = processedAmount;
+        this.processedCurrency = processedCurrency;
         this.gatewayErrorCode = gatewayErrorCode;
         this.gatewayErrorMsg = gatewayErrorMsg;
         this.firstPaymentReferenceId = firstPaymentReferenceId;
@@ -98,6 +104,8 @@ public class PaymentTransactionJson extends JsonBase {
              transaction.getAmount(),
              transaction.getCurrency() != null ? transaction.getCurrency().toString() : null,
              transaction.getEffectiveDate(),
+             transaction.getProcessedAmount(),
+             transaction.getProcessedCurrency() != null ? transaction.getProcessedCurrency().toString() : null,
              transaction.getTransactionStatus() != null ? transaction.getTransactionStatus().toString() : null,
              transaction.getGatewayErrorCode(),
              transaction.getGatewayErrorMsg(),
@@ -163,6 +171,14 @@ public class PaymentTransactionJson extends JsonBase {
         return paymentExternalKey;
     }
 
+    public BigDecimal getProcessedAmount() {
+        return processedAmount;
+    }
+
+    public String getProcessedCurrency() {
+        return processedCurrency;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("PaymentTransactionJson{");
@@ -174,6 +190,8 @@ public class PaymentTransactionJson extends JsonBase {
         sb.append(", status='").append(status).append('\'');
         sb.append(", amount=").append(amount);
         sb.append(", currency='").append(currency).append('\'');
+        sb.append(", processedAmount=").append(processedAmount);
+        sb.append(", processedCurrency='").append(processedCurrency).append('\'');
         sb.append(", gatewayErrorCode='").append(gatewayErrorCode).append('\'');
         sb.append(", gatewayErrorMsg='").append(gatewayErrorMsg).append('\'');
         sb.append(", firstPaymentReferenceId='").append(firstPaymentReferenceId).append('\'');
@@ -197,7 +215,13 @@ public class PaymentTransactionJson extends JsonBase {
         if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
             return false;
         }
+        if (processedAmount != null ? processedAmount.compareTo(that.processedAmount) != 0 : that.processedAmount != null) {
+            return false;
+        }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
+            return false;
+        }
+        if (processedCurrency != null ? !processedCurrency.equals(that.processedCurrency) : that.processedCurrency != null) {
             return false;
         }
         if (transactionExternalKey != null ? !transactionExternalKey.equals(that.transactionExternalKey) : that.transactionExternalKey != null) {
@@ -233,7 +257,6 @@ public class PaymentTransactionJson extends JsonBase {
         if (transactionType != null ? !transactionType.equals(that.transactionType) : that.transactionType != null) {
             return false;
         }
-
         return true;
     }
 
@@ -247,6 +270,8 @@ public class PaymentTransactionJson extends JsonBase {
         result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (processedAmount != null ? processedAmount.hashCode() : 0);
+        result = 31 * result + (processedCurrency != null ? processedCurrency.hashCode() : 0);
         result = 31 * result + (gatewayErrorCode != null ? gatewayErrorCode.hashCode() : 0);
         result = 31 * result + (gatewayErrorMsg != null ? gatewayErrorMsg.hashCode() : 0);
         result = 31 * result + (firstPaymentReferenceId != null ? firstPaymentReferenceId.hashCode() : 0);

@@ -18,6 +18,7 @@ package org.killbill.billing.events;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 
 // Event for effective blocking state changes (not entitlement specific)
@@ -26,6 +27,12 @@ public interface BlockingTransitionInternalEvent extends BusInternalEvent {
     public UUID getBlockableId();
 
     public BlockingStateType getBlockingType();
+
+    public String getStateName();
+
+    public String getService();
+
+    public DateTime getEffectiveDate();
 
     public Boolean isTransitionedToBlockedBilling();
 

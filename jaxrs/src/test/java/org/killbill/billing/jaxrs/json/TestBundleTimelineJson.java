@@ -36,7 +36,6 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID().toString(),
                                                                       BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                       new LocalDate(),
-                                                                      new LocalDate(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),

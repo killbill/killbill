@@ -25,9 +25,11 @@ import java.util.concurrent.TimeoutException;
 
 import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.events.AccountCreationInternalEvent;
+import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
+import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
 import org.killbill.billing.events.NullInvoiceInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
@@ -105,6 +107,9 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
             case ACCOUNT_CHANGE:
                 onAccountChange((AccountChangeInternalEvent) curEvent);
                 break;
+            case BLOCKING_STATE:
+                onBlockingState((BlockingTransitionInternalEvent) curEvent);
+                break;
             case SUBSCRIPTION_TRANSITION:
                 // We only dispatch the event for the effective date and not the requested date since we have both
                 // for subscription events.
@@ -127,6 +132,9 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
             case PAYMENT_PLUGIN_ERROR:
                 onPaymentPluginError((PaymentPluginErrorInternalEvent) curEvent);
                 break;
+            case INVOICE_PAYMENT_ERROR:
+                onInvoicePaymentError((InvoicePaymentErrorInternalEvent) curEvent);
+                break;
             default:
                 throw new RuntimeException("Unexpected event type " + curEvent.getBusEventType());
         }
@@ -142,6 +150,11 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
 
     @Override
     public void onSubscriptionBaseTransition(final EffectiveSubscriptionInternalEvent curEventEffective) {
+    }
+
+    @Override
+    public void onBlockingState(final BlockingTransitionInternalEvent curEvent) {
+
     }
 
     @Override
@@ -162,5 +175,9 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
 
     @Override
     public void onPaymentPluginError(final PaymentPluginErrorInternalEvent curEvent) {
+    }
+
+    @Override
+    public void onInvoicePaymentError(final InvoicePaymentErrorInternalEvent curEvent) {
     }
 }

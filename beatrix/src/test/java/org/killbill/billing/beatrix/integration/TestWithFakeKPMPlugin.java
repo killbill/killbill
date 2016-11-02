@@ -37,6 +37,7 @@ import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.osgi.BundleRegistry;
 import org.killbill.billing.osgi.BundleWithConfig;
+import org.killbill.billing.osgi.FileInstall;
 import org.killbill.billing.osgi.PureOSGIBundleFinder;
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginStateChange;
@@ -50,6 +51,7 @@ import org.killbill.billing.osgi.pluginconf.PluginConfigException;
 import org.killbill.billing.osgi.pluginconf.PluginFinder;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.jackson.ObjectMapper;
+import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.nodes.NodeCommand;
 import org.killbill.billing.util.nodes.NodeCommandMetadata;
 import org.killbill.billing.util.nodes.NodeCommandProperty;
@@ -223,8 +225,8 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
         private final List<BundleWithMetadata> bundles;
 
         @Inject
-        public FakeBundleRegistry(final PureOSGIBundleFinder osgiBundleFinder, final PluginFinder pluginFinder, final PluginConfigServiceApi pluginConfigServiceApi) {
-            super(osgiBundleFinder, pluginFinder, pluginConfigServiceApi);
+        public FakeBundleRegistry() {
+            super(null);
             bundles = new ArrayList<BundleWithMetadata>();
         }
 

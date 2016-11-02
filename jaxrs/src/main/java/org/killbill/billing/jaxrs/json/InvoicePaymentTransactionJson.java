@@ -41,6 +41,8 @@ public class InvoicePaymentTransactionJson extends PaymentTransactionJson {
                                          @JsonProperty("amount") final BigDecimal amount,
                                          @JsonProperty("currency") final String currency,
                                          @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                         @JsonProperty("processedAmount") final BigDecimal processedAmount,
+                                         @JsonProperty("processedCurrency") final String processedCurrency,
                                          @JsonProperty("status") final String status,
                                          @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
                                          @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
@@ -50,8 +52,8 @@ public class InvoicePaymentTransactionJson extends PaymentTransactionJson {
                                          @JsonProperty("isAdjusted") final Boolean isAdjusted,
                                          @JsonProperty("adjustments") final List<InvoiceItemJson> adjustments,
                                          @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(transactionId, transactionExternalKey, paymentId, paymentExternalKey, transactionType, amount, currency, effectiveDate, status,
-              gatewayErrorCode, gatewayErrorMsg, firstPaymentReferenceId, secondPaymentReferenceId, properties, auditLogs);
+        super(transactionId, transactionExternalKey, paymentId, paymentExternalKey, transactionType, amount, currency, effectiveDate, processedAmount, processedCurrency,
+              status, gatewayErrorCode, gatewayErrorMsg, firstPaymentReferenceId, secondPaymentReferenceId, properties, auditLogs);
         this.isAdjusted = isAdjusted;
         this.adjustments = adjustments;
     }

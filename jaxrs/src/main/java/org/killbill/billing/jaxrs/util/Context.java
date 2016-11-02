@@ -84,7 +84,7 @@ public class Context {
     }
 
     // Use REQUEST_ID_HEADER if this is provided and lloks like a UUID, if not allocate a random one.
-    private UUID getOrCreateUserToken() {
+    public static  UUID getOrCreateUserToken() {
         UUID userToken;
         if (Request.getPerThreadRequestData().getRequestId() != null) {
             try {
@@ -110,6 +110,6 @@ public class Context {
 
     private void populateMDCContext(final TenantContext tenantContext) {
         // InternalCallContextFactory will do it for us
-        internalCallContextFactory.createInternalTenantContext(tenantContext);
+        internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
     }
 }

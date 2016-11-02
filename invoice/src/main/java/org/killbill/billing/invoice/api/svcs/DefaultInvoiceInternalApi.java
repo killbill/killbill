@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,6 +39,7 @@ import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.WithAccountLock;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -146,8 +147,13 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public InvoicePayment recordChargeback(final UUID paymentId, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
-        return new DefaultInvoicePayment(dao.postChargeback(paymentId, amount, currency, context));
+    public InvoicePayment recordChargeback(final UUID paymentId, final String chargebackTransactionExternalKey, final BigDecimal amount, final Currency currency, final InternalCallContext context) throws InvoiceApiException {
+        return new DefaultInvoicePayment(dao.postChargeback(paymentId, chargebackTransactionExternalKey, amount, currency, context));
+    }
+
+    @Override
+    public InvoicePayment recordChargebackReversal(final UUID paymentId, final String chargebackTransactionExternalKey, final InternalCallContext context) throws InvoiceApiException {
+        return new DefaultInvoicePayment(dao.postChargebackReversal(paymentId, chargebackTransactionExternalKey, context));
     }
 
     @Override
@@ -157,6 +163,10 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public Map<UUID, BigDecimal> validateInvoiceItemAdjustments(final UUID paymentId, final Map<UUID, BigDecimal> idWithAmount, final InternalTenantContext context) throws InvoiceApiException {
+        // We want to validate that only refund with invoice *item* adjustments are allowed (as opposed to refund with invoice adjustment)
+        if (idWithAmount.size() == 0) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_ITEMS_ADJUSTMENT_MISSING);
+        }
         final InvoicePayment invoicePayment = getInvoicePayment(paymentId, InvoicePaymentType.ATTEMPT, context);
         return dao.computeItemAdjustments(invoicePayment.getInvoiceId().toString(), idWithAmount, context);
     }
@@ -172,5 +182,10 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
             }
         }).orNull();
         return resultOrNull != null ? new DefaultInvoicePayment(resultOrNull) : null;
+    }
+
+    @Override
+    public void commitInvoice(final UUID invoiceId, final InternalCallContext context) throws InvoiceApiException {
+        dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, context);
     }
 }

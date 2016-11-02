@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -45,7 +45,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
@@ -65,9 +65,9 @@ public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAut
     }
 
     @Override
-    OperationCallback createOperationCallback(final TransactionType transactionType, final PaymentStateControlContext paymentStateContext) {
+    OperationCallback createOperationCallback(final ControlOperation controlOperation, final PaymentStateControlContext paymentStateContext) {
         if (operationCallback == null) {
-            return super.createOperationCallback(transactionType, paymentStateContext);
+            return super.createOperationCallback(controlOperation, paymentStateContext);
         } else {
             return operationCallback;
         }

@@ -18,6 +18,7 @@
 
 package org.killbill.billing.invoice.api;
 
+import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentNotifier;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.InvoiceTagHandler;
@@ -36,13 +37,16 @@ public class DefaultInvoiceService implements InvoiceService {
     private final InvoiceListener invoiceListener;
     private final InvoiceTagHandler tagHandler;
     private final PersistentBus eventBus;
+    private final ParentInvoiceCommitmentNotifier parentInvoiceNotifier;
 
     @Inject
-    public DefaultInvoiceService(final InvoiceListener invoiceListener, final InvoiceTagHandler tagHandler, final PersistentBus eventBus, final NextBillingDateNotifier dateNotifier) {
+    public DefaultInvoiceService(final InvoiceListener invoiceListener, final InvoiceTagHandler tagHandler, final PersistentBus eventBus,
+                                 final NextBillingDateNotifier dateNotifier, final ParentInvoiceCommitmentNotifier parentInvoiceNotifier) {
         this.invoiceListener = invoiceListener;
         this.tagHandler = tagHandler;
         this.eventBus = eventBus;
         this.dateNotifier = dateNotifier;
+        this.parentInvoiceNotifier = parentInvoiceNotifier;
     }
 
     @Override
@@ -59,11 +63,13 @@ public class DefaultInvoiceService implements InvoiceService {
             throw new RuntimeException("Failed to register bus handlers", e);
         }
         dateNotifier.initialize();
+        parentInvoiceNotifier.initialize();
     }
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
         dateNotifier.start();
+        parentInvoiceNotifier.start();
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
@@ -75,5 +81,6 @@ public class DefaultInvoiceService implements InvoiceService {
             throw new RuntimeException("Failed to unregister bus handlers", e);
         }
         dateNotifier.stop();
+        parentInvoiceNotifier.stop();
     }
 }

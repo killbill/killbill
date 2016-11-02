@@ -49,13 +49,15 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         final String country = UUID.randomUUID().toString();
         final String locale = UUID.randomUUID().toString();
         final String phone = UUID.randomUUID().toString();
+        final String notes = UUID.randomUUID().toString();
         final Boolean isMigrated = true;
         final Boolean isNotifiedForInvoice = false;
+        final String parentAccountId = UUID.randomUUID().toString();
 
         final AccountJson accountJson = new AccountJson(accountId, name, length, externalKey,
-                                                        email, billCycleDayLocal, currency, paymentMethodId,
+                                                        email, billCycleDayLocal, currency, parentAccountId, true, paymentMethodId,
                                                         timeZone, address1, address2, postalCode, company, city, state,
-                                                        country, locale, phone, isMigrated, isNotifiedForInvoice, null, null, null);
+                                                        country, locale, phone, notes, isMigrated, isNotifiedForInvoice, null, null, null);
         Assert.assertEquals(accountJson.getAccountId(), accountId);
         Assert.assertEquals(accountJson.getName(), name);
         Assert.assertEquals(accountJson.getFirstNameLength(), length);
@@ -74,8 +76,11 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(accountJson.getCountry(), country);
         Assert.assertEquals(accountJson.getLocale(), locale);
         Assert.assertEquals(accountJson.getPhone(), phone);
+        Assert.assertEquals(accountJson.getNotes(), notes);
         Assert.assertEquals(accountJson.isMigrated(), isMigrated);
         Assert.assertEquals(accountJson.isNotifiedForInvoices(), isNotifiedForInvoice);
+        Assert.assertEquals(accountJson.getParentAccountId(), parentAccountId);
+        Assert.assertEquals(accountJson.isPaymentDelegatedToParent(), Boolean.TRUE);
 
         final String asJson = mapper.writeValueAsString(accountJson);
         final AccountJson fromJson = mapper.readValue(asJson, AccountJson.class);
@@ -105,6 +110,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         accountBuilder.postalCode(UUID.randomUUID().toString());
         accountBuilder.stateOrProvince(UUID.randomUUID().toString());
         accountBuilder.timeZone(DateTimeZone.UTC);
+        accountBuilder.parentAccountId(UUID.randomUUID());
         final Account account = accountBuilder.build();
 
         final AccountJson accountJson = new AccountJson(account, null, null, null);
@@ -125,5 +131,6 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(accountJson.isNotifiedForInvoices(), account.isNotifiedForInvoices());
         Assert.assertEquals(accountJson.getState(), account.getStateOrProvince());
         Assert.assertEquals(accountJson.getTimeZone(), account.getTimeZone().toString());
+        Assert.assertEquals(accountJson.getParentAccountId(), account.getParentAccountId().toString());
     }
 }

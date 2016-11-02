@@ -26,21 +26,25 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.DefaultPriceList;
+import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.PhasePriceOverride;
 import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.ning.http.client.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -222,9 +226,9 @@ public class TestEntitlement extends TestJaxrsBase {
         overrides.add(new PhasePriceOverride(null, PhaseType.TRIAL.toString(), BigDecimal.TEN, null));
         input.setPriceOverrides(overrides);
 
-        final Subscription subscription = killBillClient.createSubscription(input, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+        final Subscription subscription = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
     }
@@ -264,12 +268,12 @@ public class TestEntitlement extends TestJaxrsBase {
         subscriptions.add(base);
         subscriptions.add(addOn1);
         subscriptions.add(addOn2);
-        final Bundle bundle = killBillClient.createSubscriptionWithAddOns(subscriptions, initialDate, 10, "createdBy", "", "");
+        final Bundle bundle = killBillClient.createSubscriptionWithAddOns(subscriptions, initialDate.toLocalDate(), 10, "createdBy", "", "");
         assertNotNull(bundle);
         assertEquals(bundle.getExternalKey(), "base");
         assertEquals(bundle.getSubscriptions().size(), 3);
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, AuditLevel.FULL);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL);
         assertEquals(invoices.size(), 1);
     }
 
@@ -286,7 +290,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setProductCategory(ProductCategory.BASE);
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        final Subscription entitlementJson = killBillClient.createSubscription(input, initialDate.plusMonths(1), -1, createdBy, reason, comment);
+        final Subscription entitlementJson = killBillClient.createSubscription(input, initialDate.toLocalDate().plusMonths(1), -1, createdBy, reason, comment);
 
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
@@ -297,4 +301,103 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         Assert.assertTrue(objFromJson.equals(entitlementJson));
     }
+
+    @Test(groups = "slow", description = "Can create an entitlement with an account with autoPayOff")
+    public void testCreateEntitlementWithAutoPayOff() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // assign autoPaymentOff tag to account
+        Tags tags = killBillClient.createAccountTag(accountJson.getAccountId(), new UUID(0L, 1L), requestOptions);
+        assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_PAY_OFF");
+
+        // verify that number of invoices and payments for account is still 0
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 0);
+        assertEquals(killBillClient.getPaymentsForAccount(accountJson.getAccountId(), requestOptions).size(), 0);
+
+        // create a subscription with no trial plan
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Blowdart");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList("notrial");
+        final Subscription subscriptionJson = killBillClient.createSubscription(input, null, 10, requestOptions);
+        assertNotNull(subscriptionJson);
+
+        // verify that number of invoices is now 1
+        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 1);
+
+        // verify that number of payments is still 0 (no attempts)
+        assertEquals(killBillClient.getPaymentsForAccount(accountJson.getAccountId(), requestOptions).size(), 0);
+    }
+
+    @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
+    public void testMoveEntitlementBCD() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final Subscription entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName,
+                                                               ProductCategory.BASE, term, true);
+
+        Assert.assertEquals(entitlementJson.getBillCycleDayLocal(), new Integer(25));
+
+        final Subscription updatedSubscription = new Subscription();
+        updatedSubscription.setSubscriptionId(entitlementJson.getSubscriptionId());
+        updatedSubscription.setBillCycleDayLocal(9);
+        killBillClient.updateSubscriptionBCD(updatedSubscription, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+
+
+        final Subscription result = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        // Still shows as the 4 (BCD did not take effect)
+        Assert.assertEquals(result.getBillCycleDayLocal(), new Integer(25));
+
+        // 2012, 5, 9
+        clock.addDays(14);
+        crappyWaitForLackOfProperSynchonization();
+
+        final Subscription result2 = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        // Still shows as the 4 (BCD did not take effect)
+        Assert.assertEquals(result2.getBillCycleDayLocal(), new Integer(9));
+    }
+
+
+
+    @Test(groups = "slow", description = "Can create subscription and change plan using planName")
+    public void testEntitlementUsingPlanName() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setExternalKey("somethingSpecial");
+        input.setPlanName("shotgun-monthly");
+
+        final Subscription entitlementJson = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+        Assert.assertEquals(entitlementJson.getProductName(), "Shotgun");
+        Assert.assertEquals(entitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
+        Assert.assertEquals(entitlementJson.getPriceList(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
+        Assert.assertEquals(entitlementJson.getPlanName(), "shotgun-monthly");
+
+
+        final Subscription newInput = new Subscription();
+        newInput.setAccountId(entitlementJson.getAccountId());
+        newInput.setSubscriptionId(entitlementJson.getSubscriptionId());
+        newInput.setPlanName("pistol-monthly");
+        final Subscription newEntitlementJson = killBillClient.updateSubscription(newInput, null, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+        Assert.assertEquals(newEntitlementJson.getProductName(), "Pistol");
+        Assert.assertEquals(newEntitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
+        Assert.assertEquals(newEntitlementJson.getPriceList(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
+        Assert.assertEquals(newEntitlementJson.getPlanName(), "pistol-monthly");
+
+    }
+
+
 }

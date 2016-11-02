@@ -31,7 +31,6 @@ public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     private DateTime updatedDate;
     private DateTime effectiveDate;
 
-    private long activeVersion;
     private boolean isActive;
 
     public EventBaseBuilder() {
@@ -46,7 +45,6 @@ public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         this.effectiveDate = event.getEffectiveDate();
         this.createdDate = event.getCreatedDate();
         this.updatedDate = event.getUpdatedDate();
-        this.activeVersion = event.getActiveVersion();
         this.isActive = event.isActive();
         this.totalOrdering = event.getTotalOrdering();
     }
@@ -57,7 +55,6 @@ public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         this.effectiveDate = copy.effectiveDate;
         this.createdDate = copy.getCreatedDate();
         this.updatedDate = copy.getUpdatedDate();
-        this.activeVersion = copy.activeVersion;
         this.isActive = copy.isActive;
         this.totalOrdering = copy.totalOrdering;
     }
@@ -92,11 +89,6 @@ public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         return (T) this;
     }
 
-    public T setActiveVersion(final long activeVersion) {
-        this.activeVersion = activeVersion;
-        return (T) this;
-    }
-
     public T setActive(final boolean isActive) {
         this.isActive = isActive;
         return (T) this;
@@ -125,11 +117,6 @@ public abstract class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     public DateTime getEffectiveDate() {
         return effectiveDate;
     }
-
-    public long getActiveVersion() {
-        return activeVersion;
-    }
-
     public boolean isActive() {
         return isActive;
     }

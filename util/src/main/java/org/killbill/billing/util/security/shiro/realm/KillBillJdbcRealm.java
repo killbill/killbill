@@ -24,7 +24,7 @@ import javax.sql.DataSource;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.killbill.billing.platform.glue.KillBillPlatformModuleBase;
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 
 public class KillBillJdbcRealm extends JdbcRealm {

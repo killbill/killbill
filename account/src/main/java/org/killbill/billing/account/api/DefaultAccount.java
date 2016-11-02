@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,7 @@ import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.util.account.AccountDateTimeUtils;
 
 import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
 
@@ -37,6 +38,8 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String name;
     private final Integer firstNameLength;
     private final Currency currency;
+    private final UUID parentAccountId;
+    private final Boolean isPaymentDelegatedToParent;
     private final Integer billCycleDayLocal;
     private final UUID paymentMethodId;
     private final DateTimeZone timeZone;
@@ -49,6 +52,7 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String country;
     private final String postalCode;
     private final String phone;
+    private final String notes;
     private final Boolean isMigrated;
     private final Boolean isNotifiedForInvoices;
 
@@ -65,6 +69,8 @@ public class DefaultAccount extends EntityBase implements Account {
              data.getName(),
              data.getFirstNameLength(),
              data.getCurrency(),
+             data.getParentAccountId(),
+             data.isPaymentDelegatedToParent(),
              data.getBillCycleDayLocal(),
              data.getPaymentMethodId(),
              data.getTimeZone(),
@@ -77,18 +83,20 @@ public class DefaultAccount extends EntityBase implements Account {
              data.getCountry(),
              data.getPostalCode(),
              data.getPhone(),
+             data.getNotes(),
              data.isMigrated(),
              data.isNotifiedForInvoices());
     }
 
     // This call is used for testing and update from an existing account
     public DefaultAccount(final UUID id, final String externalKey, final String email,
-                          final String name, final Integer firstNameLength,
-                          final Currency currency, final Integer billCycleDayLocal, final UUID paymentMethodId,
+                          final String name, final Integer firstNameLength, final Currency currency,
+                          final UUID parentAccountId, final Boolean isPaymentDelegatedToParent,
+                          final Integer billCycleDayLocal, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
-                          final String postalCode, final String phone,
+                          final String postalCode, final String phone, final String notes,
                           final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
         this(id,
              null,
@@ -98,6 +106,8 @@ public class DefaultAccount extends EntityBase implements Account {
              name,
              firstNameLength,
              currency,
+             parentAccountId,
+             isPaymentDelegatedToParent,
              billCycleDayLocal,
              paymentMethodId,
              timeZone,
@@ -110,18 +120,20 @@ public class DefaultAccount extends EntityBase implements Account {
              country,
              postalCode,
              phone,
+             notes,
              isMigrated,
              isNotifiedForInvoices);
     }
 
     public DefaultAccount(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                           final String externalKey, final String email,
-                          final String name, final Integer firstNameLength,
-                          final Currency currency, final Integer billCycleDayLocal, final UUID paymentMethodId,
+                          final String name, final Integer firstNameLength, final Currency currency,
+                          final UUID parentAccountId, final Boolean isPaymentDelegatedToParent,
+                          final Integer billCycleDayLocal, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
-                          final String postalCode, final String phone,
+                          final String postalCode, final String phone, final String notes,
                           final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
         super(id, createdDate, updatedDate);
         this.externalKey = externalKey;
@@ -129,6 +141,8 @@ public class DefaultAccount extends EntityBase implements Account {
         this.name = name;
         this.firstNameLength = firstNameLength;
         this.currency = currency;
+        this.parentAccountId = parentAccountId;
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : false;
         this.billCycleDayLocal = billCycleDayLocal == null ? DEFAULT_BILLING_CYCLE_DAY_LOCAL : billCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
@@ -141,6 +155,7 @@ public class DefaultAccount extends EntityBase implements Account {
         this.postalCode = postalCode;
         this.country = country;
         this.phone = phone;
+        this.notes = notes;
         this.isMigrated = isMigrated;
         this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
@@ -154,6 +169,8 @@ public class DefaultAccount extends EntityBase implements Account {
              accountModelDao.getName(),
              accountModelDao.getFirstNameLength(),
              accountModelDao.getCurrency(),
+             accountModelDao.getParentAccountId(),
+             accountModelDao.getIsPaymentDelegatedToParent(),
              accountModelDao.getBillingCycleDayLocal(),
              accountModelDao.getPaymentMethodId(),
              accountModelDao.getTimeZone(),
@@ -166,6 +183,7 @@ public class DefaultAccount extends EntityBase implements Account {
              accountModelDao.getCountry(),
              accountModelDao.getPostalCode(),
              accountModelDao.getPhone(),
+             accountModelDao.getNotes(),
              accountModelDao.getMigrated(),
              accountModelDao.getIsNotifiedForInvoices());
     }
@@ -193,6 +211,16 @@ public class DefaultAccount extends EntityBase implements Account {
     @Override
     public Currency getCurrency() {
         return currency;
+    }
+
+    @Override
+    public UUID getParentAccountId() {
+        return parentAccountId;
+    }
+
+    @Override
+    public Boolean isPaymentDelegatedToParent() {
+        return isPaymentDelegatedToParent;
     }
 
     @Override
@@ -267,6 +295,11 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     @Override
+    public String getNotes() {
+        return notes;
+    }
+
+    @Override
     public MutableAccountData toMutableAccountData() {
         return new DefaultMutableAccountData(this);
     }
@@ -327,6 +360,9 @@ public class DefaultAccount extends EntityBase implements Account {
         accountData.setCountry(country != null ? country : currentAccount.getCountry());
         accountData.setPostalCode(postalCode != null ? postalCode : currentAccount.getPostalCode());
         accountData.setPhone(phone != null ? phone : currentAccount.getPhone());
+        accountData.setNotes(notes != null ? notes : currentAccount.getNotes());
+        accountData.setParentAccountId(parentAccountId != null ? parentAccountId : currentAccount.getParentAccountId());
+        accountData.setIsPaymentDelegatedToParent(isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : currentAccount.isPaymentDelegatedToParent());
         final Boolean isMigrated = this.isMigrated != null ? this.isMigrated : currentAccount.isMigrated();
         if (isMigrated != null) {
             accountData.setIsMigrated(isMigrated);
@@ -344,6 +380,16 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     @Override
+    public DateTimeZone getFixedOffsetTimeZone() {
+        return AccountDateTimeUtils.getFixedOffsetTimeZone(this);
+    }
+
+    @Override
+    public DateTime getReferenceTime() {
+        return AccountDateTimeUtils.getReferenceDateTime(this);
+    }
+
+    @Override
     public String toString() {
         return "DefaultAccount [externalKey=" + externalKey +
                ", email=" + email +
@@ -351,6 +397,8 @@ public class DefaultAccount extends EntityBase implements Account {
                ", firstNameLength=" + firstNameLength +
                ", phone=" + phone +
                ", currency=" + currency +
+               ", parentAccountId=" + parentAccountId +
+               ", isPaymentDelegatedToParent=" + isPaymentDelegatedToParent +
                ", billCycleDayLocal=" + billCycleDayLocal +
                ", paymentMethodId=" + paymentMethodId +
                ", timezone=" + timeZone +
@@ -362,6 +410,7 @@ public class DefaultAccount extends EntityBase implements Account {
                ", stateOrProvince=" + stateOrProvince +
                ", postalCode=" + postalCode +
                ", country=" + country +
+               ", notes=" + notes +
                "]";
     }
 
@@ -400,6 +449,12 @@ public class DefaultAccount extends EntityBase implements Account {
         if (currency != that.currency) {
             return false;
         }
+        if (parentAccountId != null ? !parentAccountId.equals(that.parentAccountId) : that.parentAccountId != null) {
+            return false;
+        }
+        if (isPaymentDelegatedToParent != null ? !isPaymentDelegatedToParent.equals(that.isPaymentDelegatedToParent) : that.isPaymentDelegatedToParent != null) {
+            return false;
+        }
         if (email != null ? !email.equals(that.email) : that.email != null) {
             return false;
         }
@@ -436,6 +491,9 @@ public class DefaultAccount extends EntityBase implements Account {
         if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
             return false;
         }
+        if (notes != null ? !notes.equals(that.notes) : that.notes != null) {
+            return false;
+        }
 
         return true;
     }
@@ -448,6 +506,8 @@ public class DefaultAccount extends EntityBase implements Account {
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (parentAccountId != null ? parentAccountId.hashCode() : 0);
+        result = 31 * result + (isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent.hashCode() : 0);
         result = 31 * result + billCycleDayLocal;
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
@@ -460,6 +520,7 @@ public class DefaultAccount extends EntityBase implements Account {
         result = 31 * result + (country != null ? country.hashCode() : 0);
         result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (notes != null ? notes.hashCode() : 0);
         result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
         result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;

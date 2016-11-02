@@ -255,4 +255,17 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         //result = 31 * result + (usages != null ? Arrays.hashCode(usages) : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultPlanPhase{");
+        sb.append("type=").append(type);
+        sb.append(", duration=").append(duration);
+        sb.append(", fixed=").append(fixed);
+        sb.append(", recurring=").append(recurring);
+        sb.append(", usages=").append(Arrays.toString(usages));
+        sb.append(", plan=").append(plan.getName());
+        sb.append('}');
+        return sb.toString();
+    }
 }

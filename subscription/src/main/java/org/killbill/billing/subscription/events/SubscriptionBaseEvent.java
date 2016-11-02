@@ -27,14 +27,13 @@ public interface SubscriptionBaseEvent extends Comparable<SubscriptionBaseEvent>
 
     public enum EventType {
         API_USER,
-        PHASE
+        PHASE,
+        BCD_UPDATE
     }
 
     public EventType getType();
 
     public long getTotalOrdering();
-
-    public long getActiveVersion();
 
     public boolean isActive();
 

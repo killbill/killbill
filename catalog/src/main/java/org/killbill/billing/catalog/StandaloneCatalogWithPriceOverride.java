@@ -17,45 +17,25 @@
 
 package org.killbill.billing.catalog;
 
-import java.net.URI;
-import java.util.Date;
-import java.util.List;
 import java.util.regex.Matcher;
-
-import javax.annotation.Nullable;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanAlignmentChange;
-import org.killbill.billing.catalog.api.PlanAlignmentCreate;
-import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.xmlloader.ValidatingConfig;
-import org.killbill.xmlloader.ValidationErrors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<StandaloneCatalogWithPriceOverride> implements StaticCatalog {
+public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implements StaticCatalog {
 
-    private final StandaloneCatalog standaloneCatalog;
     private final Long tenantRecordId;
 
     /* Since we offer endpoints that attempt to serialize catalog objects, we need to explicitly tell Jackson to ignore those fields */
@@ -64,26 +44,20 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
     @JsonIgnore
     private final PriceOverride priceOverride;
 
-    public StandaloneCatalogWithPriceOverride(final StandaloneCatalog staticCatalog, final PriceOverride priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
+    public StandaloneCatalogWithPriceOverride(final StandaloneCatalog catalog, final PriceOverride priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
+        // Initialize from input catalog
+        setCatalogName(catalog.getCatalogName());
+        setEffectiveDate(catalog.getEffectiveDate());
+        setRecurringBillingMode(catalog.getRecurringBillingMode());
+        setProducts(catalog.getCurrentProducts());
+        setPlans(catalog.getCurrentPlans());
+        setPriceLists(catalog.getPriceLists());
+        setPlanRules(catalog.getPlanRules());
+        setSupportedCurrencies(catalog.getCurrentSupportedCurrencies());
+        setUnits(catalog.getCurrentUnits());
         this.tenantRecordId = tenantRecordId;
-        this.standaloneCatalog = staticCatalog;
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;
-    }
-
-    public StandaloneCatalogWithPriceOverride(final StandaloneCatalogWithPriceOverride cur, final InternalTenantContext tenantContext) {
-        this.tenantRecordId = tenantContext.getTenantRecordId();
-        this.priceOverride = cur.getPriceOverride();
-        this.standaloneCatalog = cur.getStandaloneCatalog();
-        this.internalCallContextFactory = cur.getInternalCallContextFactory();
-    }
-
-    public StandaloneCatalog getStandaloneCatalog() {
-        return standaloneCatalog;
-    }
-
-    public PriceOverride getPriceOverride() {
-        return priceOverride;
     }
 
     public Long getTenantRecordId() {
@@ -94,68 +68,33 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
         return internalCallContextFactory;
     }
 
-    @Override
-    public String getCatalogName() {
-        return standaloneCatalog.getCatalogName();
-    }
 
     @Override
-    public BillingMode getRecurringBillingMode() {
-        return standaloneCatalog.getRecurringBillingMode();
-    }
-
-    @Override
-    public Date getEffectiveDate() {
-        return standaloneCatalog.getEffectiveDate();
-    }
-
-    @Override
-    public Currency[] getCurrentSupportedCurrencies() throws CatalogApiException {
-        return standaloneCatalog.getCurrentSupportedCurrencies();
-    }
-
-    @Override
-    public DefaultProduct[] getCurrentProducts() throws CatalogApiException {
-        return standaloneCatalog.getCurrentProducts();
-    }
-
-    @Override
-    public Unit[] getCurrentUnits() throws CatalogApiException {
-        return standaloneCatalog.getCurrentUnits();
-    }
-
-    @Override
-    public DefaultPlan[] getCurrentPlans() throws CatalogApiException {
-        return standaloneCatalog.getCurrentPlans();
-    }
-
-    @Override
-    public Plan createOrFindCurrentPlan(final String productName, final BillingPeriod period, final String priceListName, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
-        final Plan defaultPlan = standaloneCatalog.createOrFindCurrentPlan(productName, period, priceListName, null);
-
+    public Plan createOrFindCurrentPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
+        final Plan defaultPlan = super.createOrFindCurrentPlan(spec, null);
         if (overrides == null ||
             overrides.getOverrides() == null ||
             overrides.getOverrides().isEmpty()) {
             return defaultPlan;
         }
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(overrides.getCallContext());
+        final InternalCallContext internalCallContext = overrides.getCallContext() != null ? internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(overrides.getCallContext()) : null;
         return priceOverride.getOrCreateOverriddenPlan(defaultPlan, CatalogDateHelper.toUTCDateTime(getEffectiveDate()), overrides.getOverrides(), internalCallContext);
     }
 
     @Override
-    public Plan findCurrentPlan(final String planName) throws CatalogApiException {
+    public DefaultPlan findCurrentPlan(final String planName) throws CatalogApiException {
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
         if (m.matches()) {
             final InternalTenantContext internalTenantContext = createInternalTenantContext();
-            return priceOverride.getOverriddenPlan(planName, standaloneCatalog, internalTenantContext);
+            return priceOverride.getOverriddenPlan(planName, this, internalTenantContext);
         }
-        return standaloneCatalog.findCurrentPlan(planName);
+        return super.findCurrentPlan(planName);
     }
 
     @Override
     public Product findCurrentProduct(final String productName) throws CatalogApiException {
-        return standaloneCatalog.findCurrentProduct(productName);
+        return super.findCurrentProduct(productName);
     }
 
     @Override
@@ -164,79 +103,10 @@ public class StandaloneCatalogWithPriceOverride extends ValidatingConfig<Standal
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
         if (m.matches()) {
             final InternalTenantContext internalTenantContext = createInternalTenantContext();
-            final Plan plan = priceOverride.getOverriddenPlan(planName, standaloneCatalog, internalTenantContext);
+            final Plan plan = priceOverride.getOverriddenPlan(planName, this, internalTenantContext);
             return plan.findPhase(phaseName);
         }
-        return standaloneCatalog.findCurrentPhase(phaseName);
-    }
-
-    @Override
-    public PriceList findCurrentPricelist(final String priceListName) throws CatalogApiException {
-        return standaloneCatalog.findCurrentPricelist(priceListName);
-    }
-
-    @Override
-    public BillingActionPolicy planChangePolicy(final PlanPhaseSpecifier planPhaseSpecifier, final PlanSpecifier planSpecifier) throws CatalogApiException {
-        return standaloneCatalog.planChangePolicy(planPhaseSpecifier, planSpecifier);
-    }
-
-    @Override
-    public PlanChangeResult planChange(final PlanPhaseSpecifier planPhaseSpecifier, final PlanSpecifier planSpecifier) throws CatalogApiException {
-        return standaloneCatalog.planChange(planPhaseSpecifier, planSpecifier);
-    }
-
-    @Override
-    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhaseSpecifier) throws CatalogApiException {
-        return standaloneCatalog.planCancelPolicy(planPhaseSpecifier);
-    }
-
-    @Override
-    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier planSpecifier) throws CatalogApiException {
-        return standaloneCatalog.planCreateAlignment(planSpecifier);
-    }
-
-    @Override
-    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhaseSpecifier) throws CatalogApiException {
-        return standaloneCatalog.billingAlignment(planPhaseSpecifier);
-    }
-
-    @Override
-    public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier planPhaseSpecifier, final PlanSpecifier planSpecifier) throws CatalogApiException {
-        return standaloneCatalog.planChangeAlignment(planPhaseSpecifier, planSpecifier);
-    }
-
-    @Override
-    public boolean canCreatePlan(final PlanSpecifier planSpecifier) throws CatalogApiException {
-        return standaloneCatalog.canCreatePlan(planSpecifier);
-    }
-
-    @Override
-    public List<Listing> getAvailableBasePlanListings() throws CatalogApiException {
-        return standaloneCatalog.getAvailableBasePlanListings();
-    }
-
-    @Override
-    public List<Listing> getAvailableAddOnListings(final String baseProductName, @Nullable final String priceListName) throws CatalogApiException {
-        return standaloneCatalog.getAvailableAddOnListings(baseProductName, priceListName);
-    }
-
-    @Override
-    public boolean compliesWithLimits(final String phaseName, final String unit, final double value) throws CatalogApiException {
-        return standaloneCatalog.compliesWithLimits(phaseName, unit, value);
-    }
-
-    @Override
-    public ValidationErrors validate(final StandaloneCatalogWithPriceOverride root, final ValidationErrors errors) {
-        return standaloneCatalog.validate(root.standaloneCatalog, errors);
-    }
-
-    @Override
-    public void initialize(final StandaloneCatalogWithPriceOverride root, final URI sourceURI) {
-        standaloneCatalog.initialize(root.standaloneCatalog, sourceURI);
-    }
-
-    public DefaultPriceList findCurrentPriceList(final String priceListName) throws CatalogApiException {
-        return standaloneCatalog.findCurrentPriceList(priceListName);
+        return super.findCurrentPhase(phaseName);
     }
 
     private InternalTenantContext createInternalTenantContext() {

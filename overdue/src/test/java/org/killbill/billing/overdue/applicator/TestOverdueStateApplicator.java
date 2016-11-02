@@ -54,17 +54,17 @@ public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
         OverdueState state;
 
         state = config.getOverdueStatesAccount().findState("OD1");
-        applicator.apply(overdueStateSet, null, account, clearState, state, internalCallContext);
+        applicator.apply(clock.getUTCNow(), overdueStateSet, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD1");
 
         state = config.getOverdueStatesAccount().findState("OD2");
-        applicator.apply(overdueStateSet, null, account, clearState, state, internalCallContext);
+        applicator.apply(clock.getUTCNow(), overdueStateSet, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD2");
 
         state = config.getOverdueStatesAccount().findState("OD3");
-        applicator.apply(overdueStateSet, null, account, clearState, state, internalCallContext);
+        applicator.apply(clock.getUTCNow(), overdueStateSet, null, account, clearState, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD3");
     }

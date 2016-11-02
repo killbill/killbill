@@ -76,11 +76,12 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
         final String country = UUID.randomUUID().toString();
         final String postalCode = UUID.randomUUID().toString();
         final String phone = UUID.randomUUID().toString();
+        final String notes = UUID.randomUUID().toString();
         final Boolean isMigrated = true;
         final Boolean isNotifiedForInvoices = false;
-        final AccountData data = new DefaultAccount(id, externalKey, email, name, firstNameLength, currency, billCycleDay,
+        final AccountData data = new DefaultAccount(id, externalKey, email, name, firstNameLength, currency, null, false, billCycleDay,
                                                     paymentMethodId, timeZone, locale, address1, address2, companyName,
-                                                    city, stateOrProvince, country, postalCode, phone, isMigrated, isNotifiedForInvoices);
+                                                    city, stateOrProvince, country, postalCode, phone, notes, isMigrated, isNotifiedForInvoices);
 
         accountUserApi.createAccount(data, callContext);
 

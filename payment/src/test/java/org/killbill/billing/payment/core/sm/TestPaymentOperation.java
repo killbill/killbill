@@ -38,7 +38,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.mockito.Mockito;
@@ -123,7 +123,7 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
         final PaymentMethodModelDao paymentMethodModelDao = new PaymentMethodModelDao(paymentStateContext.getPaymentMethodId(), UUID.randomUUID().toString(), clock.getUTCNow(), clock.getUTCNow(),
                                                                                       paymentStateContext.getAccount().getId(), MockPaymentProviderPlugin.PLUGIN_NAME, true);
         final PaymentDao paymentDao = Mockito.mock(PaymentDao.class);
-        Mockito.when(paymentDao.getPaymentMethodIncludedDeleted(paymentStateContext.getPaymentMethodId(), internalCallContext)).thenReturn(paymentMethodModelDao);
+        Mockito.when(paymentDao.getPaymentMethod(paymentStateContext.getPaymentMethodId(), internalCallContext)).thenReturn(paymentMethodModelDao);
 
         final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, eventBus, paymentSMHelper);
         paymentOperation = new PaymentOperationTest(paymentPluginStatus, daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);

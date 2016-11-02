@@ -11,6 +11,8 @@ tableFields(prefix) ::= <<
 , <prefix>first_name_length
 , <prefix>currency
 , <prefix>billing_cycle_day_local
+, <prefix>parent_account_id
+, <prefix>is_payment_delegated_to_parent
 , <prefix>payment_method_id
 , <prefix>time_zone
 , <prefix>locale
@@ -22,6 +24,7 @@ tableFields(prefix) ::= <<
 , <prefix>country
 , <prefix>postal_code
 , <prefix>phone
+, <prefix>notes
 , <prefix>migrated
 , <prefix>is_notified_for_invoices
 , <prefix>created_by
@@ -37,6 +40,8 @@ tableValues() ::= <<
 , :firstNameLength
 , :currency
 , :billingCycleDayLocal
+, :parentAccountId
+, :isPaymentDelegatedToParent
 , :paymentMethodId
 , :timeZone
 , :locale
@@ -48,6 +53,7 @@ tableValues() ::= <<
 , :country
 , :postalCode
 , :phone
+, :notes
 , :migrated
 , :isNotifiedForInvoices
 , :createdBy
@@ -66,7 +72,7 @@ update() ::= <<
         currency = :currency, billing_cycle_day_local = :billingCycleDayLocal,
         payment_method_id = :paymentMethodId, time_zone = :timeZone, locale = :locale,
         address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
-        country = :country, postal_code = :postalCode, phone = :phone,
+        country = :country, postal_code = :postalCode, phone = :phone, notes = :notes,
         is_notified_for_invoices = :isNotifiedForInvoices, updated_date = :updatedDate, updated_by = :updatedBy
     WHERE id = :id <AND_CHECK_TENANT()>;
 >>
@@ -106,3 +112,11 @@ getIdFromKey() ::= <<
     WHERE external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
+getAccountsByParentId() ::= <<
+    select <allTableFields()>
+    from accounts
+    where parent_account_id = :parentAccountId
+    <AND_CHECK_TENANT()>
+    <defaultOrderBy()>
+    ;
+>>

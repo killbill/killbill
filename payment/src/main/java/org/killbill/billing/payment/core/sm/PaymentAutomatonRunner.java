@@ -73,7 +73,7 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
@@ -128,6 +128,7 @@ public class PaymentAutomatonRunner {
                                                         final Iterable<PluginProperty> properties,
                                                         final CallContext callContext,
                                                         final InternalCallContext internalCallContext) throws PaymentApiException {
+
         // Retrieve the payment id from the payment external key if needed
         final UUID effectivePaymentId = paymentId != null ? paymentId : retrievePaymentId(paymentExternalKey, paymentTransactionExternalKey, internalCallContext);
 
@@ -165,6 +166,7 @@ public class PaymentAutomatonRunner {
         final OperationCallback operationCallback;
         final LeavingStateCallback leavingStateCallback;
         final EnteringStateCallback enteringStateCallback;
+        Boolean includeDeletedPaymentMethod = Boolean.FALSE;
         switch (transactionType) {
             case PURCHASE:
                 operationCallback = new PurchaseOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
@@ -200,12 +202,13 @@ public class PaymentAutomatonRunner {
                 operationCallback = new ChargebackOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new ChargebackInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new ChargebackCompleted(daoHelper, paymentStateContext);
+                includeDeletedPaymentMethod = Boolean.TRUE;
                 break;
             default:
                 throw new IllegalStateException("Unsupported transaction type " + transactionType);
         }
 
-        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback, paymentStateContext, daoHelper);
+        runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback, includeDeletedPaymentMethod, paymentStateContext, daoHelper);
 
         return paymentStateContext.getPaymentId();
     }
@@ -226,10 +229,11 @@ public class PaymentAutomatonRunner {
                                           final LeavingStateCallback leavingStateCallback,
                                           final OperationCallback operationCallback,
                                           final EnteringStateCallback enteringStateCallback,
+                                          final Boolean includeDeletedPaymentMethod,
                                           final PaymentStateContext paymentStateContext,
                                           final PaymentAutomatonDAOHelper daoHelper) throws PaymentApiException {
         try {
-            final StateMachineConfig stateMachineConfig = paymentSMHelper.getStateMachineConfig(daoHelper.getPaymentProviderPluginName(), paymentStateContext.getInternalCallContext());
+            final StateMachineConfig stateMachineConfig = paymentSMHelper.getStateMachineConfig(daoHelper.getPaymentProviderPluginName(includeDeletedPaymentMethod), paymentStateContext.getInternalCallContext());
             final StateMachine initialStateMachine = stateMachineConfig.getStateMachineForState(initialStateName);
             final State initialState = initialStateMachine.getState(initialStateName);
             final Operation operation = paymentSMHelper.getOperationForTransaction(stateMachineConfig, transactionType);
@@ -284,4 +288,5 @@ public class PaymentAutomatonRunner {
 
         return paymentIdCandidate;
     }
+
 }

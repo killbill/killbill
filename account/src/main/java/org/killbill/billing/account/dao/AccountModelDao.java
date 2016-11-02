@@ -43,6 +43,8 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
     private String name;
     private Integer firstNameLength;
     private Currency currency;
+    private UUID parentAccountId;
+    private Boolean isPaymentDelegatedToParent;
     private int billingCycleDayLocal;
     private UUID paymentMethodId;
     private DateTimeZone timeZone;
@@ -55,23 +57,28 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
     private String country;
     private String postalCode;
     private String phone;
+    private String notes;
     private Boolean migrated;
     private Boolean isNotifiedForInvoices;
+
 
     public AccountModelDao() { /* For the DAO mapper */ }
 
     public AccountModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String externalKey,
                            final String email, final String name, final Integer firstNameLength, final Currency currency,
+                           final UUID parentAccountId, final Boolean isPaymentDelegatedToParent,
                            final int billingCycleDayLocal, final UUID paymentMethodId, final DateTimeZone timeZone,
                            final String locale, final String address1, final String address2, final String companyName,
                            final String city, final String stateOrProvince, final String country, final String postalCode,
-                           final String phone, final Boolean migrated, final Boolean notifiedForInvoices) {
+                           final String phone, final String notes, final Boolean migrated, final Boolean notifiedForInvoices) {
         super(id, createdDate, updatedDate);
         this.externalKey = MoreObjects.firstNonNull(externalKey, id.toString());
         this.email = email;
         this.name = name;
         this.firstNameLength = firstNameLength;
         this.currency = currency;
+        this.parentAccountId = parentAccountId;
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
         this.billingCycleDayLocal = billingCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = MoreObjects.firstNonNull(timeZone, DateTimeZone.UTC);
@@ -84,6 +91,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         this.country = country;
         this.postalCode = postalCode;
         this.phone = phone;
+        this.notes = notes;
         this.migrated = migrated;
         this.isNotifiedForInvoices = notifiedForInvoices;
     }
@@ -97,6 +105,8 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
              account.getName(),
              account.getFirstNameLength(),
              account.getCurrency(),
+             account.getParentAccountId(),
+             account.isPaymentDelegatedToParent(),
              MoreObjects.firstNonNull(account.getBillCycleDayLocal(), DEFAULT_BILLING_CYCLE_DAY_LOCAL),
              account.getPaymentMethodId(),
              account.getTimeZone(),
@@ -109,6 +119,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
              account.getCountry(),
              account.getPostalCode(),
              account.getPhone(),
+             account.getNotes(),
              account.isMigrated(),
              // There is a NOT NULL constraint on the is_notified_for_invoices column
              MoreObjects.firstNonNull(account.isNotifiedForInvoices(), false));
@@ -160,6 +171,22 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
 
     public void setCurrency(final Currency currency) {
         this.currency = currency;
+    }
+
+    public UUID getParentAccountId() {
+        return parentAccountId;
+    }
+
+    public void setParentAccountId(final UUID parentAccountId) {
+        this.parentAccountId = parentAccountId;
+    }
+
+    public Boolean getIsPaymentDelegatedToParent() {
+        return isPaymentDelegatedToParent;
+    }
+
+    public void setIsPaymentDelegatedToParent(final Boolean paymentDelegatedToParent) {
+        this.isPaymentDelegatedToParent = paymentDelegatedToParent;
     }
 
     public Integer getBillingCycleDayLocal() {
@@ -258,6 +285,14 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         this.phone = phone;
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(final String notes) {
+        this.notes = notes;
+    }
+
     public Boolean getMigrated() {
         return migrated;
     }
@@ -285,6 +320,8 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         sb.append(", name='").append(name).append('\'');
         sb.append(", firstNameLength=").append(firstNameLength);
         sb.append(", currency=").append(currency);
+        sb.append(", parentAccountId=").append(parentAccountId);
+        sb.append(", isPaymentDelegatedToParent=").append(isPaymentDelegatedToParent);
         sb.append(", billingCycleDayLocal=").append(billingCycleDayLocal);
         sb.append(", paymentMethodId=").append(paymentMethodId);
         sb.append(", timeZone=").append(timeZone);
@@ -297,6 +334,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         sb.append(", country='").append(country).append('\'');
         sb.append(", postalCode='").append(postalCode).append('\'');
         sb.append(", phone='").append(phone).append('\'');
+        sb.append(", notes='").append(notes).append('\'');
         sb.append(", migrated=").append(migrated);
         sb.append(", isNotifiedForInvoices=").append(isNotifiedForInvoices);
         sb.append('}');
@@ -338,6 +376,12 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         if (currency != that.currency) {
             return false;
         }
+        if (parentAccountId != null ? !parentAccountId.equals(that.parentAccountId) : that.parentAccountId != null) {
+            return false;
+        }
+        if (isPaymentDelegatedToParent != null ? !isPaymentDelegatedToParent.equals(that.isPaymentDelegatedToParent) : that.isPaymentDelegatedToParent != null) {
+            return false;
+        }
         if (email != null ? !email.equals(that.email) : that.email != null) {
             return false;
         }
@@ -365,6 +409,9 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
             return false;
         }
+        if (notes != null ? !notes.equals(that.notes) : that.notes != null) {
+            return false;
+        }
         if (postalCode != null ? !postalCode.equals(that.postalCode) : that.postalCode != null) {
             return false;
         }
@@ -386,6 +433,8 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (parentAccountId != null ? parentAccountId.hashCode() : 0);
+        result = 31 * result + (isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent.hashCode() : 0);
         result = 31 * result + billingCycleDayLocal;
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
@@ -398,6 +447,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         result = 31 * result + (country != null ? country.hashCode() : 0);
         result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (notes != null ? notes.hashCode() : 0);
         result = 31 * result + (migrated != null ? migrated.hashCode() : 0);
         result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;

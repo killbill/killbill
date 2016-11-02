@@ -29,19 +29,15 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class CreditAdjInvoiceItem extends AdjInvoiceItem {
 
     public CreditAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate date,
-                                final BigDecimal amount, final Currency currency) {
-        this(UUIDs.randomUUID(), null, invoiceId, accountId, date, amount, currency);
+                                @Nullable final String description, final BigDecimal amount, final Currency currency) {
+        this(UUIDs.randomUUID(), null, invoiceId, accountId, date, description, amount, currency);
     }
 
-    public CreditAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate date,
-                                final BigDecimal amount, final Currency currency) {
-        this(id, createdDate, invoiceId, accountId, date, null, amount, currency);
-    }
 
     public CreditAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate date,
                                 @Nullable final String description, final BigDecimal amount, final Currency currency) {
@@ -55,6 +51,6 @@ public class CreditAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return Objects.firstNonNull(description, "Invoice adjustment");
+        return MoreObjects.firstNonNull(description, "Invoice adjustment");
     }
 }

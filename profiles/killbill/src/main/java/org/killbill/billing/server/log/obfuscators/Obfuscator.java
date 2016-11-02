@@ -34,17 +34,7 @@ public abstract class Obfuscator {
 
     protected static final int DEFAULT_PATTERN_FLAGS = Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL;
 
-    protected static final String MASK_LABEL = "MASKED";
-    protected static final int MASK_LABEL_LENGTH = MASK_LABEL.length();
     protected static final char PAD_CHAR = '*';
-    protected static final int MASK_LOOKUPS_SIZE = 20;
-    protected final String[] MASK_LOOKUPS = new String[MASK_LOOKUPS_SIZE];
-
-    public Obfuscator() {
-        for (int i = 0; i < MASK_LOOKUPS.length; i++) {
-            MASK_LOOKUPS[i] = buildMask(i);
-        }
-    }
 
     public abstract String obfuscate(final String originalString, final ILoggingEvent event);
 
@@ -111,33 +101,6 @@ public abstract class Obfuscator {
     @VisibleForTesting
     String obfuscateConfidentialData(final CharSequence confidentialSequence, @Nullable final CharSequence unmasked) {
         final int maskedLength = unmasked == null ? confidentialSequence.length() : confidentialSequence.length() - unmasked.length();
-        if (maskedLength < MASK_LOOKUPS_SIZE) {
-            return MASK_LOOKUPS[maskedLength];
-        } else {
-            return buildMask(maskedLength);
-        }
-    }
-
-    /**
-     * Create a masking string with the given length.
-     *
-     * @param maskedLength obfuscated String length
-     * @return a mask string
-     */
-    private String buildMask(final int maskedLength) {
-        final int pads = maskedLength - MASK_LABEL_LENGTH;
-        final StringBuilder mask = new StringBuilder(maskedLength);
-        if (pads <= 0) {
-            mask.append(MASK_LABEL);
-        } else {
-            for (int i = 0; i < pads / 2; i++) {
-                mask.append(PAD_CHAR);
-            }
-            mask.append(MASK_LABEL);
-            while (mask.length() < maskedLength) {
-                mask.append(PAD_CHAR);
-            }
-        }
-        return mask.toString();
+        return new String(new char[maskedLength]).replace('\0', PAD_CHAR);
     }
 }
