@@ -21,6 +21,7 @@ package org.killbill.billing.invoice.tree;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -282,18 +283,19 @@ public class ItemsNodeInterval extends NodeInterval {
     //   it has no more leaves and no more items.
     // Case B - This is a bit more involved: We look for full repair that happened in pieces; this will translate to an ADD element of a NodeInterval,
     // whose children completely map the interval (isPartitionedByChildren) and where each child will have a CANCEL item pointing to the ADD.
-    // When we detect such nodes, we delete both the ADD in the parent interval and the CANCEL in the children
+    // When we detect such nodes, we delete both the ADD in the parent interval and the CANCEL in the children (and cleanup the interval if it does not have items)
     //
     private void pruneTree() {
         walkTree(new WalkCallback() {
             @Override
             public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
 
-                if(curNode.isRoot()) {
+                if (curNode.isRoot()) {
                     return;
                 }
 
                 final ItemsInterval curNodeItems = ((ItemsNodeInterval) curNode).getItemsInterval();
+
                 // Case A:
                 final boolean isEmpty = curNodeItems.mergeCancellingPairs();
                 if (isEmpty && curNode.getLeftChild() == null) {
@@ -305,14 +307,22 @@ public class ItemsNodeInterval extends NodeInterval {
                 }
 
                 // Case B -- look for such case, and if found (foundFullRepairByParts) we fix them below.
-                final Iterator<Item> it =  curNodeItems.get_ADD_items().iterator();
+                List<Item> curNodeItemsToBeRemoved = null;
+                final Iterator<Item> it = curNodeItems.get_ADD_items().iterator();
+                // For each item on this curNode interval we check if there is a matching set of CANCEL items on the children (resulting in completely cancelling that item).
                 while (it.hasNext()) {
 
                     final Item curAddItem = it.next();
 
+                    //
+                    // We already know the children partition fully the 'curNode' interval, we just need to see if for each piece
+                    // we find a matching CANCEL item pointing to this 'curAddItem'
+                    //
                     NodeInterval curChild = curNode.getLeftChild();
-                    Map<ItemsInterval, Item> toBeRemoved = new HashMap<ItemsInterval, Item>();
-                    boolean foundFullRepairByParts = true;
+                    Map<ItemsInterval, Item> childrenCancellingToBeRemoved = new HashMap<ItemsInterval, Item>();
+
+                    // Note that because of previous iterations, curChild could now be null so we need to initialize the foundFullRepairByParts based on that new state.
+                    boolean foundFullRepairByParts = curChild != null;
                     while (curChild != null) {
                         final ItemsInterval curChildItems = ((ItemsNodeInterval) curChild).getItemsInterval();
                         Item cancellingItem = curChildItems.getCancelledItemIfExists(curAddItem.getId());
@@ -320,19 +330,26 @@ public class ItemsNodeInterval extends NodeInterval {
                             foundFullRepairByParts = false;
                             break;
                         }
-                        toBeRemoved.put(curChildItems, cancellingItem);
+                        childrenCancellingToBeRemoved.put(curChildItems, cancellingItem);
                         curChild = curChild.getRightSibling();
                     }
 
                     if (foundFullRepairByParts) {
-                        for (ItemsInterval curItemsInterval : toBeRemoved.keySet()) {
-                            curItemsInterval.remove(toBeRemoved.get(curItemsInterval));
+                        for (ItemsInterval curItemsInterval : childrenCancellingToBeRemoved.keySet()) {
+                            curItemsInterval.remove(childrenCancellingToBeRemoved.get(curItemsInterval));
                             if (curItemsInterval.size() == 0) {
                                 curNode.removeChild(curItemsInterval.getNodeInterval());
                             }
                         }
-                        curNodeItems.remove(curAddItem);
+                        if (curNodeItemsToBeRemoved == null) {
+                            curNodeItemsToBeRemoved = new ArrayList<Item>();
+                        }
+                        curNodeItemsToBeRemoved.add(curAddItem);
                     }
+                }
+                // Finally Execute the removal of the curNodeItems outside of the upper while loop so as to not trigger ConcurrentModificationException (see #641)
+                for (Item curNodeItemsRemoval : curNodeItemsToBeRemoved) {
+                    curNodeItems.remove(curNodeItemsRemoval);
                 }
             }
         });

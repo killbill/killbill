@@ -308,8 +308,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public String toString() {
         return "DefaultPlan [name=" + name + ", effectiveDateForExistingSubscriptions="
-               + effectiveDateForExistingSubscriptions + ", product=" + product + ", initialPhases="
-               + Arrays.toString(initialPhases) + ", finalPhase=" + finalPhase + ", plansAllowedInBundle="
+               + effectiveDateForExistingSubscriptions + ", product=" + product.getName() + ", initialPhases="
+               + Arrays.toString(initialPhases) + ", finalPhase=" + finalPhase.getName() + ", plansAllowedInBundle="
                + plansAllowedInBundle + "]";
     }
 

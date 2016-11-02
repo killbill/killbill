@@ -19,10 +19,13 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -37,8 +40,14 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.invoice.dao.InvoiceDao;
+import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
+import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -51,6 +60,10 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
+
+    @Inject
+    protected InvoiceDao invoiceDao;
+
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
@@ -607,4 +620,130 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         checkNoMoreInvoiceToGenerate(account);
     }
+
+    @Test(groups = "slow")
+    public void testWithSuperflousRepairedItems() throws Exception {
+
+        // We take april as it has 30 days (easier to play with BCD)
+        final LocalDate today = new LocalDate(2012, 4, 1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(today);
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String pricelistName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        //
+
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.BLOCK);
+        assertNotNull(bpEntitlement);
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 1);
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+        invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
+
+        //
+        // Check we get the first invoice at the phase event
+        //
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        // Move the clock to 2012-05-02
+        clock.addDays(31);
+        assertListenerStatus();
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 2);
+
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+        invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
+
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        final Invoice lastInvoice = invoices.get(1);
+        invoiceChecker.checkInvoice(lastInvoice.getId(), callContext, toBeChecked);
+
+
+        //
+        // Let's add a bunch of items by hand to pretend we have lots of cancelling items that should be cleaned (data issue after a potential invoice bug)
+        //
+        // We test both full and partial repair.
+
+        /*
+        final UUID id, @Nullable final DateTime createdDate, final UUID accountId,
+                           @Nullable final Integer invoiceNumber, final LocalDate invoiceDate, final LocalDate targetDate,
+                           final Currency currency, final boolean migrated, final InvoiceStatus status, final boolean isParentInvoice
+         */
+        final InvoiceModelDao shellInvoice = new InvoiceModelDao(UUID.randomUUID(), lastInvoice.getCreatedDate(), lastInvoice.getAccountId(), null,
+                                                                 lastInvoice.getInvoiceDate(), lastInvoice.getTargetDate(), lastInvoice.getCurrency(), false, InvoiceStatus.COMMITTED, false);
+
+        final InvoiceItemModelDao recurring1 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.RECURRING, lastInvoice.getId(), lastInvoice.getAccountId(),
+                                                                       bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "shotgun-monthly", "shotgun-monthly-evergreen",
+                                                                       null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("249.95"), new BigDecimal("249.95"), account.getCurrency(), null);
+
+        final InvoiceItemModelDao repair1 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
+                                                                    bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null,
+                                                                    null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("-249.95"), new BigDecimal("-249.95"), account.getCurrency(), recurring1.getId());
+
+        final InvoiceItemModelDao recurring2 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.RECURRING, lastInvoice.getId(), lastInvoice.getAccountId(),
+                                                                       bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "shotgun-monthly", "shotgun-monthly-evergreen",
+                                                                       null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("249.95"), new BigDecimal("249.95"), account.getCurrency(), null);
+
+
+        final InvoiceItemModelDao repair21 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
+                                                                     bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null,
+                                                                     null, new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 13), new BigDecimal("-100.95"), new BigDecimal("-100.95"), account.getCurrency(), recurring2.getId());
+
+        final InvoiceItemModelDao repair22 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
+                                                                     bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null,
+                                                                     null, new LocalDate(2012, 5, 13), new LocalDate(2012, 5, 22), new BigDecimal("-100"), new BigDecimal("-100"), account.getCurrency(), recurring2.getId());
+
+        final InvoiceItemModelDao repair23 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
+                                                                     bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null,
+                                                                     null, new LocalDate(2012, 5, 22), new LocalDate(2012, 6, 1), new BigDecimal("-49"), new BigDecimal("-49"), account.getCurrency(), recurring2.getId());
+
+
+
+        final InvoiceItemModelDao recurring3 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.RECURRING, lastInvoice.getId(), lastInvoice.getAccountId(),
+                                                                       bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "shotgun-monthly", "shotgun-monthly-evergreen",
+                                                                       null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("249.95"), new BigDecimal("249.95"), account.getCurrency(), null);
+
+
+        final InvoiceItemModelDao repair3 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
+                                                                    bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null,
+                                                                    null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("-249.95"), new BigDecimal("-249.95"), account.getCurrency(), recurring3.getId());
+
+        List<InvoiceItemModelDao> newItems = new ArrayList<InvoiceItemModelDao>();
+        newItems.add(recurring1);
+        newItems.add(repair1);
+        newItems.add(recurring2);
+        newItems.add(repair21);
+        newItems.add(repair22);
+        newItems.add(repair23);
+        newItems.add(recurring3);
+        newItems.add(repair3);
+        invoiceDao.createInvoice(shellInvoice, newItems, false, new FutureAccountNotifications(new HashMap<UUID, List<SubscriptionNotification>>()), internalCallContext);
+
+
+        // Move ahead one month, verify nothing from previous data was generated
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 3);
+
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
+
+
+
+    }
+
 }

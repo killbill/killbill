@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,6 +26,8 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.AccountTimeline;
 import org.killbill.billing.client.model.AuditLog;
@@ -42,6 +44,10 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.HashMultimap;
+
+import static org.killbill.billing.jaxrs.resources.JaxrsResource.QUERY_PARALLEL;
+
 public class TestAccountTimeline extends TestJaxrsBase {
 
     private static final String PAYMENT_REQUEST_PROCESSOR = "PaymentRequestProcessor";
@@ -53,7 +59,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final AccountTimeline timeline = killBillClient.getAccountTimeline(accountJson.getAccountId());
+        final AccountTimeline timeline = getAccountTimeline(accountJson.getAccountId(), AuditLevel.NONE);
         Assert.assertEquals(timeline.getPayments().size(), 1);
         Assert.assertEquals(timeline.getInvoices().size(), 2);
         Assert.assertEquals(timeline.getBundles().size(), 1);
@@ -113,7 +119,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
     private void verifyPayments(final UUID accountId, final DateTime startTime, final DateTime endTime,
                                 final BigDecimal refundAmount, final BigDecimal chargebackAmount) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
-            final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
+            final AccountTimeline timeline = getAccountTimeline(accountId, auditLevel);
 
             Assert.assertEquals(timeline.getPayments().size(), 1);
             final InvoicePayment payment = timeline.getPayments().get(0);
@@ -183,7 +189,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
 
     private void verifyInvoices(final UUID accountId, final DateTime startTime, final DateTime endTime) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
-            final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
+            final AccountTimeline timeline = getAccountTimeline(accountId, auditLevel);
 
             // Verify invoices
             Assert.assertEquals(timeline.getInvoices().size(), 3);
@@ -209,7 +215,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
 
     private void verifyCredits(final UUID accountId, final DateTime startTime, final DateTime endTime, final BigDecimal creditAmount) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
-            final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
+            final AccountTimeline timeline = getAccountTimeline(accountId, auditLevel);
 
             // Verify credits
             final List<Credit> credits = timeline.getInvoices().get(1).getCredits();
@@ -229,7 +235,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
 
     private void verifyBundles(final UUID accountId, final DateTime startTime, final DateTime endTime) throws Exception {
         for (final AuditLevel auditLevel : AuditLevel.values()) {
-            final AccountTimeline timeline = killBillClient.getAccountTimeline(accountId, auditLevel);
+            final AccountTimeline timeline = getAccountTimeline(accountId, auditLevel);
 
             // Verify bundles
             Assert.assertEquals(timeline.getBundles().size(), 1);
@@ -297,5 +303,18 @@ public class TestAccountTimeline extends TestJaxrsBase {
         Assert.assertEquals(auditLogJson.getReasonCode(), reasonCode);
         Assert.assertEquals(auditLogJson.getComments(), comments);
         Assert.assertEquals(auditLogJson.getChangedBy(), changedBy);
+    }
+
+    private AccountTimeline getAccountTimeline(final UUID accountId, final AuditLevel auditLevel) throws KillBillClientException {
+        final AccountTimeline accountTimeline = killBillClient.getAccountTimeline(accountId, auditLevel, RequestOptions.empty());
+
+        // Verify also the parallel path
+        final HashMultimap<String, String> queryParams = HashMultimap.<String, String>create();
+        queryParams.put(QUERY_PARALLEL, "true");
+        final RequestOptions requestOptions = RequestOptions.builder().withQueryParams(queryParams).build();
+        final AccountTimeline accountTimelineInParallel = killBillClient.getAccountTimeline(accountId, auditLevel, requestOptions);
+        Assert.assertEquals(accountTimelineInParallel, accountTimeline);
+
+        return accountTimeline;
     }
 }
