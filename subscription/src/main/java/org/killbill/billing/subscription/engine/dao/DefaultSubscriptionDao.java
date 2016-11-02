@@ -802,8 +802,13 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     private void cancelFutureEventsFromTransaction(final UUID subscriptionId, final DateTime effectiveDate, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
-        final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), effectiveDate.toDate(), context);
+        final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getFutureOrPresentActiveEventForSubscription(subscriptionId.toString(), effectiveDate.toDate(), context);
         for (final SubscriptionEventModelDao cur : eventModels) {
+
+            // Skip CREATE event (because of date equality in the query and we don't want to invalidate CREATE event that match a CANCEL event)
+            if (cur.getEventType() == EventType.API_USER && (cur.getUserType()== ApiEventType.CREATE || cur.getUserType()== ApiEventType.TRANSFER)) {
+                continue;
+            }
             unactivateEventFromTransaction(cur, entitySqlDaoWrapperFactory, context);
         }
     }
