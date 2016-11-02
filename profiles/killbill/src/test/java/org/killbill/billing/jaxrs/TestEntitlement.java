@@ -26,7 +26,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.DefaultPriceList;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -46,8 +45,6 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.ning.http.client.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -272,7 +269,7 @@ public class TestEntitlement extends TestJaxrsBase {
         subscriptions.add(base);
         subscriptions.add(addOn1);
         subscriptions.add(addOn2);
-        final Bundle bundle = killBillClient.createSubscriptionWithAddOns(subscriptions, initialDate.toLocalDate(), 30, "createdBy", "", "");
+        final Bundle bundle = killBillClient.createSubscriptionWithAddOns(subscriptions, null, 10, "createdBy", "", "");
         assertNotNull(bundle);
         assertEquals(bundle.getExternalKey(), "base");
         assertEquals(bundle.getSubscriptions().size(), 3);

@@ -273,12 +273,14 @@ public class AccountResource extends JaxRsResourceBase {
         final UUID uuid = UUID.fromString(accountId);
         final Account account = accountUserApi.getAccountById(uuid, tenantContext);
 
+        List<SubscriptionBundle> bundles = (externalKey != null) ?
+                                                 subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext) :
+                                                 subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext);
+
         boolean filter = (null != bundlesFilter && !bundlesFilter.isEmpty());
-        final List<SubscriptionBundle> bundles = (externalKey != null) ?
-                                                 ((filter) ? filterBundles(subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext), Arrays.asList(bundlesFilter.split(","))) :
-                                                  subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext)):
-                                                 ((filter) ? filterBundles(subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext), Arrays.asList(bundlesFilter.split(","))) :
-                                                  subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext));
+        if (filter) {
+            bundles = filterBundles(bundles, Arrays.asList(bundlesFilter.split(",")));
+        }
 
         final Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
             @Override
@@ -296,9 +298,9 @@ public class AccountResource extends JaxRsResourceBase {
 
     private List<SubscriptionBundle> filterBundles(final List<SubscriptionBundle> subscriptionBundlesForAccountId, final List<String> bundlesFilter) {
         List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>();
-        for (SubscriptionBundle subscription : subscriptionBundlesForAccountId) {
-            if (bundlesFilter.contains(subscription.getId().toString())) {
-                result.add(subscription);
+        for (SubscriptionBundle subscriptionBundle : subscriptionBundlesForAccountId) {
+            if (bundlesFilter.contains(subscriptionBundle.getId().toString())) {
+                result.add(subscriptionBundle);
             }
         }
         return result;
