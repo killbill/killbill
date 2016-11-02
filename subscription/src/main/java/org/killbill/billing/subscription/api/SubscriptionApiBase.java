@@ -62,7 +62,7 @@ public class SubscriptionApiBase {
     protected DefaultSubscriptionBase createSubscriptionForApiUse(SubscriptionBuilder builder, List<SubscriptionBaseEvent> events, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder, apiService, clock);
         if (events.size() > 0) {
-            subscription.rebuildTransitions(events, catalogService.getFullCatalog(context));
+            subscription.rebuildTransitions(events, catalogService.getFullCatalog(true, true, context));
         }
         return subscription;
     }

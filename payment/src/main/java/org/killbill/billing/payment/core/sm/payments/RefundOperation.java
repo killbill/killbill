@@ -24,7 +24,7 @@ import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,13 +44,13 @@ public class RefundOperation extends PaymentOperation {
     @Override
     protected PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException {
         logger.debug("Starting REFUND for payment {} ({} {})", paymentStateContext.getPaymentId(), paymentStateContext.getAmount(), paymentStateContext.getCurrency());
-        return plugin.refundPayment(paymentStateContext.getAccount().getId(),
-                                    paymentStateContext.getPaymentId(),
-                                    paymentStateContext.getTransactionId(),
-                                    paymentStateContext.getPaymentMethodId(),
-                                    paymentStateContext.getAmount(),
-                                    paymentStateContext.getCurrency(),
-                                    paymentStateContext.getProperties(),
-                                    paymentStateContext.getCallContext());
+        return paymentPluginApi.refundPayment(paymentStateContext.getAccount().getId(),
+                                              paymentStateContext.getPaymentId(),
+                                              paymentStateContext.getTransactionId(),
+                                              paymentStateContext.getPaymentMethodId(),
+                                              paymentStateContext.getAmount(),
+                                              paymentStateContext.getCurrency(),
+                                              paymentStateContext.getProperties(),
+                                              paymentStateContext.getCallContext());
     }
 }

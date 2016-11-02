@@ -35,11 +35,17 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.svcs.DefaultAccountEventsStreams;
 import org.killbill.billing.entitlement.block.BlockingChecker;
@@ -88,7 +94,6 @@ public class EventsStreamBuilder {
         this.checker = checker;
         this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
-
         this.defaultBlockingStateDao = new DefaultBlockingStateDao(dbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
         this.blockingStateDao = new OptimizedProxyBlockingStateDao(this, subscriptionInternalApi, dbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
@@ -324,15 +329,59 @@ public class EventsStreamBuilder {
                                              final List<SubscriptionBase> allSubscriptionsForBundle,
                                              final List<BlockingState> blockingStates,
                                              final InternalTenantContext internalTenantContext) throws EntitlementApiException {
-        return new DefaultEventsStream(account,
-                                       bundle,
-                                       blockingStates,
-                                       checker,
-                                       baseSubscription,
-                                       subscription,
-                                       allSubscriptionsForBundle,
-                                       internalTenantContext,
-                                       clock.getUTCNow());
+
+
+        try {
+            int accountBCD = accountInternalApi.getBCD(account.getId(), internalTenantContext);
+            int defaultAlignmentDay = subscriptionInternalApi.getDefaultBillCycleDayLocal(subscription, baseSubscription, createPlanPhaseSpecifier(subscription), account.getTimeZone(), accountBCD, clock.getUTCNow(), internalTenantContext);
+            return new DefaultEventsStream(account,
+                                           bundle,
+                                           blockingStates,
+                                           checker,
+                                           baseSubscription,
+                                           subscription,
+                                           allSubscriptionsForBundle,
+                                           defaultAlignmentDay,
+                                           internalTenantContext,
+                                           clock.getUTCNow());
+        } catch (final SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        } catch (final AccountApiException e) {
+            throw new EntitlementApiException(e);
+        }
+    }
+
+    private PlanPhaseSpecifier createPlanPhaseSpecifier(final SubscriptionBase subscription) {
+
+        final String lastActiveProductName;
+        final BillingPeriod billingPeriod;
+        final ProductCategory productCategory;
+        final String priceListName;
+        final PhaseType phaseType;
+
+        if (subscription.getState() == EntitlementState.PENDING) {
+            final SubscriptionBaseTransition transition = subscription.getPendingTransition();
+            final Product pendingProduct = transition.getNextPlan().getProduct();
+            lastActiveProductName = pendingProduct.getName();
+            productCategory = pendingProduct.getCategory();
+            final PlanPhase pendingPlanPhase = transition.getNextPhase();
+            billingPeriod = pendingPlanPhase.getRecurring() != null ? pendingPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+            priceListName = transition.getNextPriceList().getName();
+            phaseType = transition.getNextPhase().getPhaseType();
+        } else {
+            final Product lastActiveProduct = subscription.getLastActiveProduct();
+            lastActiveProductName = lastActiveProduct.getName();
+            productCategory = lastActiveProduct.getCategory();
+            final PlanPhase lastActivePlanPhase = subscription.getLastActivePhase();
+            billingPeriod = lastActivePlanPhase.getRecurring() != null ? lastActivePlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+            priceListName = subscription.getLastActivePlan().getPriceListName();
+            phaseType = subscription.getLastActivePhase().getPhaseType();
+        }
+        return new PlanPhaseSpecifier(lastActiveProductName,
+                                      billingPeriod,
+                                      priceListName,
+                                      phaseType);
+
     }
 
     private SubscriptionBase findBaseSubscription(final Iterable<SubscriptionBase> subscriptions) {

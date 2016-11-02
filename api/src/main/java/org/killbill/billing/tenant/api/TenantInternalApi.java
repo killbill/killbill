@@ -41,6 +41,8 @@ public interface TenantInternalApi {
 
     public String getTenantOverdueConfig(InternalTenantContext tenantContext);
 
+    public String getTenantConfig(InternalTenantContext tenantContext);
+
     public String getInvoiceTemplate(Locale locale, InternalTenantContext tenantContext);
 
     public String getManualPayInvoiceTemplate(Locale locale, InternalTenantContext tenantContext);

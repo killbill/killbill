@@ -19,20 +19,25 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.ComboPaymentTransaction;
+import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.client.model.PluginProperty;
+import org.killbill.billing.client.model.TagDefinition;
+import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
@@ -42,12 +47,14 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -145,6 +152,129 @@ public class TestPayment extends TestJaxrsBase {
         } catch (KillBillClientException e) {
             assertEquals(504, e.getResponse().getStatusCode());
         }
+    }
+
+    @Test(groups = "slow")
+    public void testWithFailedPaymentAndScheduledAttemptsGetInvoicePayment() throws Exception {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        // Getting Invoice #2 (first after Trial period)
+        UUID failedInvoiceId = killBillClient.getInvoicesForAccount(account.getAccountId(), false, false, RequestOptions.empty()).get(1).getInvoiceId();
+
+        HashMultimap<String, String> queryParams = HashMultimap.create();
+        queryParams.put("withAttempts", "true");
+        RequestOptions inputOptions = RequestOptions.builder()
+                                                    .withCreatedBy(createdBy)
+                                                    .withReason(reason)
+                                                    .withComment(comment)
+                                                    .withQueryParams(queryParams).build();
+
+        InvoicePayments invoicePayments = killBillClient.getInvoicePayment(failedInvoiceId, inputOptions);
+
+        Assert.assertEquals(invoicePayments.get(0).getTargetInvoiceId(), failedInvoiceId);
+        Assert.assertNotNull(invoicePayments.get(0).getPaymentAttempts());
+        Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().size(), 2);
+        Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
+        Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
+
+
+        // Remove the future notification and check SCHEDULED does not appear any longer
+        killBillClient.cancelScheduledPaymentTransaction(null, invoicePayments.get(0).getPaymentAttempts().get(1).getTransactionExternalKey(), inputOptions);
+        invoicePayments = killBillClient.getInvoicePayment(failedInvoiceId, inputOptions);
+        Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().size(), 1);
+        Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
+    }
+
+    @Test(groups = "slow")
+    public void testWithFailedPaymentAndScheduledAttemptsGetPaymentsForAccount() throws Exception {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        HashMultimap<String, String> queryParams = HashMultimap.create();
+        queryParams.put("withAttempts", "true");
+        RequestOptions inputOptions = RequestOptions.builder()
+                                                    .withCreatedBy(createdBy)
+                                                    .withReason(reason)
+                                                    .withComment(comment)
+                                                    .withQueryParams(queryParams).build();
+
+        Payments payments = killBillClient.getPaymentsForAccount(account.getAccountId(), inputOptions);
+
+        Assert.assertNotNull(payments.get(0).getPaymentAttempts());
+        Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
+        Assert.assertEquals(payments.get(0).getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
+    }
+
+    @Test(groups = "slow")
+    public void testWithFailedPaymentAndScheduledAttemptsGetPayments() throws Exception {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        HashMultimap<String, String> queryParams = HashMultimap.create();
+        queryParams.put("withAttempts", "true");
+        RequestOptions inputOptions = RequestOptions.builder()
+                                                    .withCreatedBy(createdBy)
+                                                    .withReason(reason)
+                                                    .withComment(comment)
+                                                    .withQueryParams(queryParams).build();
+
+        Payments payments = killBillClient.getPayments(0L, 100L, null, new HashMap<String, String>(), AuditLevel.NONE, inputOptions);
+
+        Assert.assertNotNull(payments.get(0).getPaymentAttempts());
+        Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
+        Assert.assertEquals(payments.get(0).getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
+    }
+
+    @Test(groups = "slow")
+    public void testWithFailedPaymentAndScheduledAttemptsSearchPayments() throws Exception {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        HashMultimap<String, String> queryParams = HashMultimap.create();
+        queryParams.put("withAttempts", "true");
+        RequestOptions inputOptions = RequestOptions.builder()
+                                                    .withCreatedBy(createdBy)
+                                                    .withReason(reason)
+                                                    .withComment(comment)
+                                                    .withQueryParams(queryParams).build();
+
+        Payments payments = killBillClient.searchPayments("", 0L, 100L, AuditLevel.NONE, inputOptions);
+
+        Assert.assertNotNull(payments.get(0).getPaymentAttempts());
+        Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
+        Assert.assertEquals(payments.get(0).getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
+    }
+
+    @Test(groups = "slow")
+    public void testWithFailedPaymentAndScheduledAttemptsGetPaymentById() throws Exception {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        Payments payments = killBillClient.searchPayments("", 0L, 100L, AuditLevel.NONE, requestOptions);
+        Assert.assertNotNull(payments.get(0));
+        Payment payment = killBillClient.getPayment(payments.get(0).getPaymentId(), false, true, ImmutableMap.<String, String>of(), AuditLevel.NONE, requestOptions);
+
+        Assert.assertNotNull(payment.getPaymentAttempts());
+        Assert.assertEquals(payment.getPaymentAttempts().get(0).getStateName(), "RETRIED");
+        Assert.assertEquals(payment.getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
+    }
+
+    @Test(groups = "slow")
+    public void testDeletePaymentMethodWithAutoPayOff() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        RequestOptions inputOptions = RequestOptions.builder()
+                                                    .withCreatedBy(createdBy)
+                                                    .withReason(reason)
+                                                    .withComment(comment).build();
+
+        killBillClient.deletePaymentMethod(paymentMethodId, true, false, inputOptions);
+
+        Tags accountTags = killBillClient.getAccountTags(account.getAccountId(), inputOptions);
+
+        Assert.assertNotNull(accountTags);
+        Assert.assertEquals(accountTags.get(0).getTagDefinitionName(), "AUTO_PAY_OFF");
     }
 
     @Test(groups = "slow")
@@ -375,15 +505,10 @@ public class TestPayment extends TestJaxrsBase {
 
         final Payment initialPayment = createVerifyTransaction(account, paymentMethodId, paymentExternalKey, authTransactionExternalKey, transactionType, TransactionStatus.SUCCESS.name(), amount, amount, pluginProperties, 1);
 
-        // The payment was already completed
+        // The payment was already completed, it should succeed (no-op)
         final PaymentTransaction completeTransactionByPaymentId = new PaymentTransaction();
         completeTransactionByPaymentId.setPaymentId(initialPayment.getPaymentId());
-        try {
-            killBillClient.completePayment(completeTransactionByPaymentId, pluginProperties, basicRequestOptions());
-            fail("Completion should not succeed, there is no PENDING payment transaction");
-        } catch (final KillBillClientException expected) {
-            // Invalid parameter paymentId: XXXX
-        }
+        killBillClient.completePayment(completeTransactionByPaymentId, pluginProperties, basicRequestOptions());
     }
 
 
@@ -513,6 +638,50 @@ public class TestPayment extends TestJaxrsBase {
         final Payment payment = killBillClient.createPayment(comboPaymentTransaction, ImmutableMap.<String, String>of(), basicRequestOptions());
         // Client returns null in case of a 404
         Assert.assertNull(payment);
+    }
+
+    @Test(groups = "slow")
+    public void testGetTagsForPaymentTransaction() throws Exception {
+        UUID tagDefinitionId = UUID.randomUUID();
+        String tagDefinitionName = "payment-transaction";
+        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", null);
+        final TagDefinition createdTagDefinition = killBillClient.createTagDefinition(tagDefinition, requestOptions);
+
+        final Account account = createAccountWithDefaultPaymentMethod();
+        final String externalPaymentKey = UUID.randomUUID().toString();
+        final UUID paymentId = testCreateRetrievePayment(account, null, externalPaymentKey, 1);
+
+        final Payment payment = killBillClient.getPaymentByExternalKey(externalPaymentKey, requestOptions);
+        assertEquals(payment.getPaymentId(), paymentId);
+
+        UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
+        killBillClient.createPaymentTransactionTag(paymentTransactionId, createdTagDefinition.getId(), requestOptions);
+
+        final Tags paymentTransactionTags = killBillClient.getPaymentTransactionTags(paymentTransactionId, requestOptions);
+
+        Assert.assertNotNull(paymentTransactionTags);
+        Assert.assertEquals(paymentTransactionTags.get(0).getTagDefinitionName(), tagDefinitionName);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateTagForPaymentTransaction() throws Exception {
+        UUID tagDefinitionId = UUID.randomUUID();
+        String tagDefinitionName = "payment-transaction";
+        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", null);
+        final TagDefinition createdTagDefinition = killBillClient.createTagDefinition(tagDefinition, requestOptions);
+
+        final Account account = createAccountWithDefaultPaymentMethod();
+        final String externalPaymentKey = UUID.randomUUID().toString();
+        final UUID paymentId = testCreateRetrievePayment(account, null, externalPaymentKey, 1);
+
+        final Payment payment = killBillClient.getPaymentByExternalKey(externalPaymentKey, requestOptions);
+        assertEquals(payment.getPaymentId(), paymentId);
+
+        UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
+        final Tags paymentTransactionTag = killBillClient.createPaymentTransactionTag(paymentTransactionId, createdTagDefinition.getId(), requestOptions);
+
+        Assert.assertNotNull(paymentTransactionTag);
+        Assert.assertEquals(paymentTransactionTag.get(0).getTagDefinitionName(), tagDefinitionName);
     }
 
     private UUID testCreateRetrievePayment(final Account account, @Nullable final UUID paymentMethodId,

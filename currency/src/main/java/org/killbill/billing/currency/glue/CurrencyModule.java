@@ -25,7 +25,7 @@ import org.killbill.billing.currency.api.DefaultCurrencyConversionApi;
 import org.killbill.billing.currency.plugin.api.CurrencyPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.config.CurrencyConfig;
+import org.killbill.billing.util.config.definition.CurrencyConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 

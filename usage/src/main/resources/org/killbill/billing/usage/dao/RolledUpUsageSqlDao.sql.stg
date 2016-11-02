@@ -8,6 +8,7 @@ tableFields(prefix) ::= <<
 , <prefix>unit_type
 , <prefix>record_date
 , <prefix>amount
+, <prefix>tracking_id
 , <prefix>created_by
 , <prefix>created_date
 >>
@@ -17,10 +18,21 @@ tableValues() ::= <<
 , :unitType
 , :recordDate
 , :amount
+, :trackingId
 , :userName
 , :createdDate
 >>
 
+recordsWithTrackingIdExist() ::= <<
+select
+  1
+from <tableName()>
+where subscription_id = :subscriptionId
+and tracking_id = :trackingId
+<AND_CHECK_TENANT()>
+limit 1
+;
+>>
 
 getUsageForSubscription() ::= <<
 select

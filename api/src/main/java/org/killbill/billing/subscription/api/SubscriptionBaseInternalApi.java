@@ -25,12 +25,16 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
@@ -43,10 +47,10 @@ public interface SubscriptionBaseInternalApi {
 
 
     public SubscriptionBase createSubscription(UUID bundleId, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, DateTime requestedDateWithMs,
-                                               InternalCallContext context) throws SubscriptionBaseApiException;
+                                               final boolean isMigrated, InternalCallContext context) throws SubscriptionBaseApiException;
 
-    public SubscriptionBase createBaseSubscriptionWithAddOns(UUID bundleId, Iterable<EntitlementSpecifier> entitlements, DateTime requestedDateWithMs,
-                                                             InternalCallContext context) throws SubscriptionBaseApiException;
+    public List<SubscriptionBase> createBaseSubscriptionWithAddOns(UUID bundleId, Iterable<EntitlementSpecifier> entitlements, DateTime requestedDateWithMs,
+                                                                   final boolean isMigrated, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, InternalCallContext context) throws SubscriptionBaseApiException;
 
@@ -85,8 +89,7 @@ public interface SubscriptionBaseInternalApi {
 
     public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(SubscriptionBase subscription, InternalTenantContext context);
 
-    public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, String productName, BillingPeriod term,
-                                                     String priceList, DateTime requestedDate, BillingActionPolicy policy, InternalTenantContext context) throws SubscriptionBaseApiException;
+    public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, PlanSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, List<PlanPhasePriceOverride> overrides, InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException;
 
     public List<EntitlementAOStatusDryRun> getDryRunChangePlanStatus(UUID subscriptionId, @Nullable String baseProductName,
                                                                      DateTime requestedDate, InternalTenantContext context) throws SubscriptionBaseApiException;
@@ -96,4 +99,11 @@ public interface SubscriptionBaseInternalApi {
     public Iterable<DateTime> getFutureNotificationsForAccount(InternalCallContext context);
 
     public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final SubscriptionBaseTransitionType eventType, final InternalCallContext internalCallContext);
+
+
+    public void updateBCD(final UUID subscriptionId, final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
+
+    public int getDefaultBillCycleDayLocal(final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
+
+
 }

@@ -28,7 +28,7 @@ public abstract class ServerTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new GuicyKillbillTestModule(configSource));
+        final Injector injector = Guice.createInjector(new TestServerModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 }

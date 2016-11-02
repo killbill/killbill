@@ -22,12 +22,19 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 
 public interface CatalogOverrideDao {
 
-    public CatalogOverridePlanDefinitionModelDao getOrCreateOverridePlanDefinition(String parentPlanName, DateTime catalogEffectiveDate, PlanPhasePriceOverride[] resolvedOverride, InternalCallContext context);
+    public CatalogOverridePlanDefinitionModelDao getOrCreateOverridePlanDefinition(Plan parentPlan, DateTime catalogEffectiveDate, PlanPhasePriceOverride[] resolvedOverride, InternalCallContext context);
 
     public List<CatalogOverridePhaseDefinitionModelDao> getOverriddenPlanPhases(final Long planDefRecordId, final InternalTenantContext context);
+
+    public List<CatalogOverrideUsageDefinitionModelDao> getOverriddenPhaseUsages(final Long phaseDefRecordId, final InternalTenantContext context);
+
+    public List<CatalogOverrideTierDefinitionModelDao> getOverriddenUsageTiers(final Long usageDefRecordId, final InternalTenantContext context);
+
+    public List<CatalogOverrideBlockDefinitionModelDao> getOverriddenTierBlocks(final Long tierDefRecordId, final InternalTenantContext context);
 
 }

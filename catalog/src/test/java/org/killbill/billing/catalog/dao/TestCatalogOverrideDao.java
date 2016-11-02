@@ -45,8 +45,8 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
 
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
         resolvedOverrides[0] = null;
-        resolvedOverrides[1] = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, null, new BigDecimal("128.76"));
-        final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan.getName(), new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
+        resolvedOverrides[1] = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, null, new BigDecimal("128.76"), null);
+        final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
         assertEquals(newPlan.getParentPlanName(), "standard-monthly");
         assertTrue(newPlan.getIsActive());
     }
@@ -58,15 +58,29 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
-        resolvedOverrides[0] = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.TEN, null);
+        resolvedOverrides[0] = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.TEN, null, null);
         resolvedOverrides[1] = null;
-        resolvedOverrides[2] = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, null, new BigDecimal("348.64"));
-        final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan.getName(), new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
+        resolvedOverrides[2] = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, null, new BigDecimal("348.64"), null);
+        final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
+
+        final PlanPhasePriceOverride[] resolvedOverrides1 = new PlanPhasePriceOverride[plan.getAllPhases().length];
+        resolvedOverrides1[0] = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.TEN, null, null);
+        resolvedOverrides1[1] = null;
+        resolvedOverrides1[2] = null;
+        final CatalogOverridePlanDefinitionModelDao newPlan1 = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides1, internalCallContext);
+
+
         assertEquals(newPlan.getParentPlanName(), "discount-standard-monthly");
         assertTrue(newPlan.getIsActive());
 
+        assertEquals(newPlan1.getParentPlanName(), "discount-standard-monthly");
+        assertTrue(newPlan1.getIsActive());
+
         final List<CatalogOverridePhaseDefinitionModelDao> phases = catalogOverrideDao.getOverriddenPlanPhases(newPlan.getRecordId(), internalCallContext);
         assertEquals(phases.size(), 2);
+
+        final List<CatalogOverridePhaseDefinitionModelDao> phases1 = catalogOverrideDao.getOverriddenPlanPhases(newPlan1.getRecordId(), internalCallContext);
+        assertEquals(phases1.size(), 1);
     }
 
     @Test(groups = "slow")
@@ -76,11 +90,11 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
-        resolvedOverrides[0] = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.TEN, BigDecimal.ONE);
-        resolvedOverrides[1] = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[1].getName(), Currency.USD, BigDecimal.ONE, BigDecimal.TEN);
-        resolvedOverrides[2] = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, BigDecimal.ZERO, new BigDecimal("348.64"));
+        resolvedOverrides[0] = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.TEN, BigDecimal.ONE, null);
+        resolvedOverrides[1] = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[1].getName(), Currency.USD, BigDecimal.ONE, BigDecimal.TEN, null);
+        resolvedOverrides[2] = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, BigDecimal.ZERO, new BigDecimal("348.64"), null);
 
-        final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan.getName(), new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
+        final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
 
         final List<CatalogOverridePhaseDefinitionModelDao> phases = catalogOverrideDao.getOverriddenPlanPhases(newPlan.getRecordId(), internalCallContext);
         assertEquals(phases.size(), 3);

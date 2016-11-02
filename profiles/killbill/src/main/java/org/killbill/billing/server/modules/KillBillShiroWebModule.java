@@ -38,7 +38,7 @@ import org.apache.shiro.web.util.WebUtils;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.server.security.FirstSuccessfulStrategyWith540;
 import org.killbill.billing.server.security.KillbillJdbcTenantRealm;
-import org.killbill.billing.util.config.RbacConfig;
+import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.glue.EhCacheManagerProvider;
 import org.killbill.billing.util.glue.IniRealmProvider;
 import org.killbill.billing.util.glue.JDBCSessionDaoProvider;

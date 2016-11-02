@@ -47,6 +47,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -61,10 +62,10 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.collect.ImmutableList;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -83,7 +84,7 @@ public class TransactionResource extends JaxRsResourceBase {
                                final PaymentApi paymentApi,
                                final Clock clock,
                                final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
     }
 
     @TimedResource
@@ -108,7 +109,7 @@ public class TransactionResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID paymentId = UUID.fromString(json.getPaymentId());
-        final Payment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
         final boolean success = TransactionStatus.SUCCESS.name().equals(json.getStatus());
@@ -174,10 +175,10 @@ public class TransactionResource extends JaxRsResourceBase {
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
-                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
+                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
-        //return super.getTags(accountId, invoiceId, auditMode, includedDeleted, tenantContext);
-        throw new IllegalStateException("Not implemented");
+        final Payment payment = paymentApi.getPaymentByTransactionId(UUID.fromString(id), false, false, ImmutableList.<PluginProperty>of(), tenantContext);
+        return super.getTags(payment.getAccountId(), UUID.fromString(id), auditMode, includedDeleted, tenantContext);
     }
 
     @TimedResource

@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.entity.Entity;
 
@@ -39,12 +40,6 @@ public interface SubscriptionBaseTimeline extends Entity {
      */
     public List<ExistingEvent> getExistingEvents();
 
-    /**
-     * @return the active version for the event stream
-     */
-    public long getActiveVersion();
-
-
 
     public interface ExistingEvent {
 
@@ -59,15 +54,17 @@ public interface SubscriptionBaseTimeline extends Entity {
          */
         public PlanPhaseSpecifier getPlanPhaseSpecifier();
 
-        /**
-         * @return the date at which this event should be inserted into the stream
-         */
-        public DateTime getRequestedDate();
 
         /**
          * @return the {@code SubscriptionBaseTransitionType} for the event
          */
         public SubscriptionBaseTransitionType getSubscriptionTransitionType();
+
+        /**
+         *
+         * @return the product category
+         */
+        public ProductCategory getProductCategory();
 
         /**
          * @return the date at which this event was effective
@@ -83,5 +80,11 @@ public interface SubscriptionBaseTimeline extends Entity {
          * @return the name of the phase
          */
         public String getPlanPhaseName();
+
+        /**
+         *
+         * @return the new billCycleDayLocal
+         */
+        public Integer getBillCycleDayLocal();
     }
 }

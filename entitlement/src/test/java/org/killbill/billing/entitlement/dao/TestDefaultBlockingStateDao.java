@@ -58,9 +58,9 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // This is a simple smoke test at the dao level only to make sure we do sane
         // things in case there are no future add-on cancellation events to add in the stream.
         // See TestEntitlementUtils for a more comprehensive test
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        testListener.pushExpectedEvent(NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         final BlockingStateType type = BlockingStateType.SUBSCRIPTION;
@@ -68,14 +68,15 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         final String service = "service";
 
         // Verify initial state
-        Assert.assertEquals(blockingStateDao.getBlockingAllForAccountRecordId(internalCallContext).size(), 0);
+        Assert.assertEquals(blockingStateDao.getBlockingAllForAccountRecordId(internalCallContext).size(), 1);
 
-        // Set a state
+        // Set a state in the future so no event
         final DateTime stateDateTime = new DateTime(2013, 5, 6, 10, 11, 12, DateTimeZone.UTC);
         final BlockingState blockingState = new DefaultBlockingState(entitlement.getId(), type, state, service, false, false, false, stateDateTime);
         blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(blockingState, Optional.<UUID>of(entitlement.getBundleId())), internalCallContext);
+        assertListenerStatus();
 
-        Assert.assertEquals(blockingStateDao.getBlockingAllForAccountRecordId(internalCallContext).size(), 1);
+        Assert.assertEquals(blockingStateDao.getBlockingAllForAccountRecordId(internalCallContext).size(), 2);
     }
 
     // See https://github.com/killbill/killbill/issues/111

@@ -1,0 +1,1 @@
+drop index idx_invoice_payments on invoice_payments;

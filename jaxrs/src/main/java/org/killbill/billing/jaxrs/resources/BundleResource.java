@@ -17,6 +17,7 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
@@ -73,12 +75,13 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -102,7 +105,7 @@ public class BundleResource extends JaxRsResourceBase {
                           final PaymentApi paymentApi,
                           final Clock clock,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, subscriptionApi, clock, context);
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;
     }
@@ -131,14 +134,26 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a bundle by external key", response = BundleJson.class)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Bundle not found")})
     public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
+                                   @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
 
         final TenantContext tenantContext = this.context.createContext(request);
 
-        final SubscriptionBundle bundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, tenantContext);
-        final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
-        final BundleJson json = new BundleJson(bundle, account.getCurrency(), null);
-        return Response.status(Status.OK).entity(json).build();
+        final List<SubscriptionBundle> bundles;
+        if (includedDeleted) {
+            bundles = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, tenantContext);
+        } else {
+            final SubscriptionBundle activeBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, tenantContext);
+            bundles = ImmutableList.of(activeBundle);
+        }
+
+        final List<BundleJson> result = new ArrayList<BundleJson>(bundles.size());
+        for (final SubscriptionBundle bundle : bundles) {
+            final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
+            final BundleJson json = new BundleJson(bundle, account.getCurrency(), null);
+            result.add(json);
+        }
+        return Response.status(Status.OK).entity(result).build();
     }
 
     @TimedResource
@@ -225,12 +240,10 @@ public class BundleResource extends JaxRsResourceBase {
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
-
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
-        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
-        final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
+        final LocalDate inputLocalDate = toLocalDate(requestedDate);
         entitlementApi.pause(bundleId, inputLocalDate, pluginProperties, callContext);
         return Response.status(Status.OK).build();
     }
@@ -250,12 +263,10 @@ public class BundleResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
-
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
-        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
-        final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
+        final LocalDate inputLocalDate = toLocalDate(requestedDate);
         entitlementApi.resume(bundleId, inputLocalDate, pluginProperties, callContext);
         return Response.status(Status.OK).build();
     }
@@ -269,23 +280,13 @@ public class BundleResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response addBundleBlockingState(final BlockingStateJson json,
                                            @PathParam(ID_PARAM_NAME) final String id,
+                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                            @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
                                            @HeaderParam(HDR_COMMENT) final String comment,
                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
-
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID bundleId = UUID.fromString(id);
-
-        final boolean isBlockBilling = (json.isBlockBilling() != null && json.isBlockBilling());
-        final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
-        final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
-
-        entitlementApi.setBlockingState(bundleId, json.getStateName(), json.getService(), json.getEffectiveDate(), isBlockBilling, isBlockEntitlement, isBlockChange, pluginProperties, callContext);
-
-        return Response.status(Status.OK).build();
+        return addBlockingState(json, id, BlockingStateType.SUBSCRIPTION_BUNDLE, requestedDate, pluginPropertiesString, createdBy, reason, comment, request);
     }
 
 
@@ -346,7 +347,7 @@ public class BundleResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final String bundleIdString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
         final UUID bundleId = UUID.fromString(bundleIdString);
         final TenantContext tenantContext = context.createContext(request);
@@ -382,7 +383,7 @@ public class BundleResource extends JaxRsResourceBase {
         final UUID bundleId = UUID.fromString(id);
 
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
-        final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), requestedDate, callContext);
+        final LocalDate inputLocalDate = toLocalDate(requestedDate);
 
         final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, policy, pluginProperties, callContext);
         return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundleId, uriInfo.getBaseUri().toString());

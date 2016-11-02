@@ -26,9 +26,9 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -42,11 +42,14 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     private LocalDate targetDate;
     private Currency currency;
     private boolean migrated;
+    private InvoiceStatus status;
+    private boolean isParentInvoice;
 
     // Not in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems = new LinkedList<InvoiceItemModelDao>();
     private List<InvoicePaymentModelDao> invoicePayments = new LinkedList<InvoicePaymentModelDao>();
     private Currency processedCurrency;
+    private InvoiceModelDao parentInvoice;
 
     private boolean isWrittenOff;
 
@@ -54,7 +57,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
 
     public InvoiceModelDao(final UUID id, @Nullable final DateTime createdDate, final UUID accountId,
                            @Nullable final Integer invoiceNumber, final LocalDate invoiceDate, final LocalDate targetDate,
-                           final Currency currency, final boolean migrated) {
+                           final Currency currency, final boolean migrated, final InvoiceStatus status, final boolean isParentInvoice) {
         super(id, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -63,19 +66,29 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.currency = currency;
         this.migrated = migrated;
         this.isWrittenOff = false;
+        this.status = status;
+        this.isParentInvoice = isParentInvoice;
     }
 
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final boolean migrated) {
-        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, migrated);
+        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, migrated, InvoiceStatus.COMMITTED, false);
+    }
+
+    public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final boolean migrated, final InvoiceStatus status) {
+        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, migrated, status, false);
     }
 
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
-        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, false);
+        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, false, InvoiceStatus.COMMITTED, false);
+    }
+
+    public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final Currency currency, final InvoiceStatus status, final boolean isParentInvoice) {
+        this(UUIDs.randomUUID(), invoiceDate.toDateTimeAtCurrentTime(), accountId, null, invoiceDate, null, currency, false, status, isParentInvoice);
     }
 
     public InvoiceModelDao(final Invoice invoice) {
         this(invoice.getId(), invoice.getCreatedDate(), invoice.getAccountId(), invoice.getInvoiceNumber(), invoice.getInvoiceDate(),
-             invoice.getTargetDate(), invoice.getCurrency(), invoice.isMigrationInvoice());
+             invoice.getTargetDate(), invoice.getCurrency(), invoice.isMigrationInvoice(), invoice.getStatus(), invoice.isParentInvoice());
     }
 
     public void addInvoiceItems(final List<InvoiceItemModelDao> invoiceItems) {
@@ -130,6 +143,14 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         return migrated;
     }
 
+    public InvoiceStatus getStatus() {
+        return status;
+    }
+
+    public boolean isParentInvoice() {
+        return isParentInvoice;
+    }
+
     public void setAccountId(final UUID accountId) {
         this.accountId = accountId;
     }
@@ -170,6 +191,22 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.isWrittenOff = isWrittenOff;
     }
 
+    public void setStatus(final InvoiceStatus status) {
+        this.status = status;
+    }
+
+    public void setParentInvoice(final boolean isParentInvoice) {
+        this.isParentInvoice = isParentInvoice;
+    }
+
+    public void addParentInvoice(InvoiceModelDao parentInvoice) {
+        this.parentInvoice = parentInvoice;
+    }
+
+    public InvoiceModelDao getParentInvoice() {
+        return parentInvoice;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("InvoiceModelDao{");
@@ -179,10 +216,13 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         sb.append(", targetDate=").append(targetDate);
         sb.append(", currency=").append(currency);
         sb.append(", migrated=").append(migrated);
+        sb.append(", status=").append(status);
         sb.append(", invoiceItems=").append(invoiceItems);
         sb.append(", invoicePayments=").append(invoicePayments);
         sb.append(", processedCurrency=").append(processedCurrency);
         sb.append(", isWrittenOff=").append(isWrittenOff);
+        sb.append(", isParentInvoice=").append(isParentInvoice);
+        sb.append(", parentInvoice=").append(parentInvoice);
         sb.append('}');
         return sb.toString();
     }
@@ -204,23 +244,40 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         if (migrated != that.migrated) {
             return false;
         }
+        if (isWrittenOff != that.isWrittenOff) {
+            return false;
+        }
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
-            return false;
-        }
-        if (currency != that.currency) {
-            return false;
-        }
-        if (invoiceDate != null ? !invoiceDate.equals(that.invoiceDate) : that.invoiceDate != null) {
             return false;
         }
         if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
             return false;
         }
-        if (targetDate != null ? !targetDate.equals(that.targetDate) : that.targetDate != null) {
+        if (invoiceDate != null ? invoiceDate.compareTo(that.invoiceDate) != 0 : that.invoiceDate != null) {
             return false;
         }
-
-        return true;
+        if (targetDate != null ? targetDate.compareTo(that.targetDate) != 0 : that.targetDate != null) {
+            return false;
+        }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (status != that.status) {
+            return false;
+        }
+        if (invoiceItems != null ? !invoiceItems.equals(that.invoiceItems) : that.invoiceItems != null) {
+            return false;
+        }
+        if (invoicePayments != null ? !invoicePayments.equals(that.invoicePayments) : that.invoicePayments != null) {
+            return false;
+        }
+        if (isParentInvoice != that.isParentInvoice) {
+            return false;
+        }
+        if (parentInvoice != null ? !parentInvoice.equals(that.parentInvoice) : that.parentInvoice != null) {
+            return false;
+        }
+        return processedCurrency == that.processedCurrency;
     }
 
     @Override
@@ -232,6 +289,13 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         result = 31 * result + (targetDate != null ? targetDate.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (migrated ? 1 : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (invoiceItems != null ? invoiceItems.hashCode() : 0);
+        result = 31 * result + (invoicePayments != null ? invoicePayments.hashCode() : 0);
+        result = 31 * result + (processedCurrency != null ? processedCurrency.hashCode() : 0);
+        result = 31 * result + (isWrittenOff ? 1 : 0);
+        result = 31 * result + (isParentInvoice ? 1 : 0);
+        result = 31 * result + (parentInvoice != null ? parentInvoice.hashCode() : 0);
         return result;
     }
 

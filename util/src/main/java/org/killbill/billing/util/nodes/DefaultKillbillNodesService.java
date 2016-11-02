@@ -66,10 +66,22 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
         return NODES_SERVICE_NAME;
     }
 
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.START_SERVICE)
+    @LifecycleHandlerType(LifecycleLevel.BOOT)
+    public void init() {
+        try {
+            // Compute a first version early on before plugins were installed to at least provide info about Kill Bill component versions
+            createBootNodeInfo(true);
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to create bootNodeInfo", e);
+        }
+    }
+
+
+    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
         try {
-            createBootNodeInfo();
+            // Re-Compute including the plugins
+            createBootNodeInfo(false);
         } catch (JsonProcessingException e) {
             logger.error("Failed to create bootNodeInfo", e);
         }
@@ -80,10 +92,10 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
         nodeInfoDao.delete(CreatorName.get());
     }
 
-    private void createBootNodeInfo() throws JsonProcessingException {
+    private void createBootNodeInfo(final boolean skipPlugins) throws JsonProcessingException {
 
         final DateTime bootTime = clock.getUTCNow();
-        final Iterable<PluginInfo> rawPluginInfo = pluginInfoApi.getPluginsInfo();
+        final Iterable<PluginInfo> rawPluginInfo = skipPlugins ? ImmutableList.<PluginInfo>of() : pluginInfoApi.getPluginsInfo();
         final List<PluginInfo> pluginInfo = rawPluginInfo.iterator().hasNext() ? ImmutableList.<PluginInfo>copyOf(rawPluginInfo) : ImmutableList.<PluginInfo>of();
         final String kbVersion = org.killbill.billing.util.nodes.KillbillVersions.getKillbillVersion();
         final String kbApiVersion  = org.killbill.billing.util.nodes.KillbillVersions.getApiVersion();

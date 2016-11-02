@@ -29,6 +29,7 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
@@ -90,26 +91,24 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
         testEntitlementPluginApi.setPlanPhasePriceOverride(null);
     }
 
-
-        @Test(groups = "slow")
+    @Test(groups = "slow")
     public void testCreateSubscriptionWithEntitlementPlugin() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
 
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
-        // We take april as it has 30 days (easier to play with BCD)
-        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-        clock.setDay(new LocalDate(2012, 4, 1));
-
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, BigDecimal.TEN));
+        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, BigDecimal.TEN, null));
 
         testEntitlementPluginApi.setPlanPhasePriceOverride(overrides);
 
         //
         // Create original subscription (Trial PHASE) -> $0 invoice.
-        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
@@ -146,17 +145,22 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
                     public boolean isAborted() {
                         return false;
                     }
-
                     @Override
-                    public LocalDate getAdjustedEffectiveDate() {
+                    public LocalDate getAdjustedEntitlementEffectiveDate() {
                         return null;
                     }
-
+                    @Override
+                    public LocalDate getAdjustedBillingEffectiveDate() {
+                        return null;
+                    }
+                    @Override
+                    public BillingActionPolicy getAdjustedBillingActionPolicy() {
+                        return null;
+                    }
                     @Override
                     public List<EntitlementSpecifier> getAdjustedEntitlementSpecifiers() {
                         return entitlementSpecifiers;
                     }
-
                     @Override
                     public Iterable<PluginProperty> getAdjustedPluginProperties() {
                         return null;
@@ -180,5 +184,4 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
             this.planPhasePriceOverride = planPhasePriceOverride;
         }
     }
-
 }

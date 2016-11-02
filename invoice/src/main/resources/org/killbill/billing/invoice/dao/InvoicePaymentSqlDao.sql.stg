@@ -53,12 +53,13 @@ getByPaymentId() ::= <<
   ;
 >>
 
-getPaymentsForCookieId() ::= <<
+getPaymentForCookieId() ::= <<
   SELECT <allTableFields()>
   FROM <tableName()>
   WHERE payment_cookie_id = :paymentCookieId
   <AND_CHECK_TENANT()>
   <defaultOrderBy()>
+  LIMIT 1
   ;
 >>
 
@@ -78,7 +79,7 @@ getInvoicePayments() ::= <<
     FROM <tableName()>
     WHERE payment_id = :paymentId
     <AND_CHECK_TENANT()>
-   <defaultOrderBy()>
+    <defaultOrderBy()>
     ;
 >>
 
@@ -106,6 +107,7 @@ getChargeBacksByAccountId() ::= <<
     FROM <tableName()> ip
     INNER JOIN invoices i ON i.id = ip.invoice_id
     WHERE ip.type = 'CHARGED_BACK' AND i.account_id = :accountId
+    AND success
     <AND_CHECK_TENANT("i.")>
     <AND_CHECK_TENANT("ip.")>
     ;
@@ -116,10 +118,10 @@ getChargebacksByPaymentId() ::= <<
     FROM <tableName()>
     WHERE type = 'CHARGED_BACK'
     AND linked_invoice_payment_id IN (SELECT id FROM invoice_payments WHERE payment_id = :paymentId)
+    AND success
     <AND_CHECK_TENANT()>
     ;
 >>
-
 
 updateAttempt() ::= <<
     UPDATE <tableName()>

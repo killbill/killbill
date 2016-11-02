@@ -1,0 +1,81 @@
+group CatalogOverrideBlockDefinitionSqlDao;
+
+tableName() ::= "catalog_override_block_definition"
+
+tableFields(prefix) ::= <<
+  <prefix>parent_unit_name
+, <prefix>size
+, <prefix>max
+, <prefix>currency
+, <prefix>price
+, <prefix>effective_date
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>tenant_record_id
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+tableValues() ::= <<
+  :parentUnitName
+, :size
+, :max
+, :currency
+, :price
+, :effectiveDate
+, :createdDate
+, :createdBy
+, :tenantRecordId
+>>
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields()>
+)
+values (
+<tableValues()>
+)
+;
+>>
+
+getByRecordId() ::= <<
+select <allTableFields()>
+from <tableName()>
+where record_id = :recordId
+and tenant_record_id = :tenantRecordId
+;
+>>
+
+getByAttributes() ::= <<
+select <allTableFields()>
+from <tableName()>
+where parent_unit_name = :parentUnitName
+and currency = :currency
+and price = :price
+and max = :max
+and size = :size;
+>>
+
+getOverriddenTierBlocks() ::= <<
+select <allTableFields("bdef.")>
+from <tableName()> bdef
+join catalog_override_tier_block tb
+on bdef.record_id = tb.block_def_record_id
+where
+tb.target_tier_def_record_id = :targetTierDefRecordId
+and tb.tenant_record_id = :tenantRecordId
+;
+>>
+
+getLastInsertId() ::= <<
+select LAST_INSERT_ID();
+>>
+

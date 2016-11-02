@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -54,5 +54,16 @@ public class DefaultRawUsage implements RawUsage {
     @Override
     public Long getAmount() {
         return amount;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultRawUsage{");
+        sb.append("subscriptionId=").append(subscriptionId);
+        sb.append(", recordDate=").append(recordDate);
+        sb.append(", unitType='").append(unitType).append('\'');
+        sb.append(", amount=").append(amount);
+        sb.append('}');
+        return sb.toString();
     }
 }

@@ -57,8 +57,11 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
     @XmlElement(required = false, name = "response")
     private PaymentResponse[] responseForLastFailedPayment;
 
-    @XmlElement(required = false, name = "controlTag")
-    private ControlTagType controlTag;
+    @XmlElement(required = false, name = "controlTagInclusion")
+    private ControlTagType controlTagInclusion;
+
+    @XmlElement(required = false, name = "controlTagExclusion")
+    private ControlTagType controlTagExclusion;
 
     @Override
     public boolean evaluate(final BillingState state, final LocalDate date) {
@@ -73,7 +76,8 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
                 (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds == null ||
                  (unpaidInvoiceTriggerDate != null && !unpaidInvoiceTriggerDate.isAfter(date))) &&
                 (responseForLastFailedPayment == null || responseIsIn(state.getResponseForLastFailedPayment(), responseForLastFailedPayment)) &&
-                (controlTag == null || isTagIn(controlTag, state.getTags()));
+                (controlTagInclusion == null || isTagIn(controlTagInclusion, state.getTags())) &&
+                (controlTagExclusion == null || isTagNotIn(controlTagExclusion, state.getTags()));
     }
 
     private boolean responseIsIn(final PaymentResponse actualResponse,
@@ -93,6 +97,15 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
             }
         }
         return false;
+    }
+
+    private boolean isTagNotIn(final ControlTagType tagType, final Tag[] tags) {
+        for (final Tag t : tags) {
+            if (t.getTagDefinitionId().equals(tagType.getId())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -135,8 +148,37 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
     }
 
     @Override
-    public ControlTagType getControlTagType() {
-        return controlTag;
+    public ControlTagType getInclusionControlTagType() {
+        return controlTagInclusion;
+    }
+
+    @Override
+    public ControlTagType getExclusionControlTagType() {
+        return controlTagExclusion;
+    }
+
+    public void setNumberOfUnpaidInvoicesEqualsOrExceeds(final Integer numberOfUnpaidInvoicesEqualsOrExceeds) {
+        this.numberOfUnpaidInvoicesEqualsOrExceeds = numberOfUnpaidInvoicesEqualsOrExceeds;
+    }
+
+    public void setTotalUnpaidInvoiceBalanceEqualsOrExceeds(final BigDecimal totalUnpaidInvoiceBalanceEqualsOrExceeds) {
+        this.totalUnpaidInvoiceBalanceEqualsOrExceeds = totalUnpaidInvoiceBalanceEqualsOrExceeds;
+    }
+
+    public void setTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds(final DefaultDuration timeSinceEarliestUnpaidInvoiceEqualsOrExceeds) {
+        this.timeSinceEarliestUnpaidInvoiceEqualsOrExceeds = timeSinceEarliestUnpaidInvoiceEqualsOrExceeds;
+    }
+
+    public void setResponseForLastFailedPayment(final PaymentResponse[] responseForLastFailedPayment) {
+        this.responseForLastFailedPayment = responseForLastFailedPayment;
+    }
+
+    public void setControlTagInclusion(final ControlTagType controlTagInclusion) {
+        this.controlTagInclusion = controlTagInclusion;
+    }
+
+    public void setControlTagExclusion(final ControlTagType controlTagExclusion) {
+        this.controlTagExclusion = controlTagExclusion;
     }
 
     @Override
@@ -146,7 +188,8 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
         sb.append(", totalUnpaidInvoiceBalanceEqualsOrExceeds=").append(totalUnpaidInvoiceBalanceEqualsOrExceeds);
         sb.append(", timeSinceEarliestUnpaidInvoiceEqualsOrExceeds=").append(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds);
         sb.append(", responseForLastFailedPayment=").append(Arrays.toString(responseForLastFailedPayment));
-        sb.append(", controlTag=").append(controlTag);
+        sb.append(", controlTagInclusion=").append(controlTagInclusion);
+        sb.append(", controlTagExclusion=").append(controlTagExclusion);
         sb.append('}');
         return sb.toString();
     }

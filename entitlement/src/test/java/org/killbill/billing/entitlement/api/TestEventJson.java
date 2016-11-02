@@ -31,7 +31,9 @@ public class TestEventJson extends EntitlementTestSuiteNoDB {
 
     @Test(groups = "fast", description = "Test Blocking event deserialization")
     public void testDefaultBlockingTransitionInternalEvent() throws Exception {
-        final BlockingTransitionInternalEvent e = new DefaultBlockingTransitionInternalEvent(UUID.randomUUID(), BlockingStateType.ACCOUNT, true, false, false, true, 1L, 2L, null);
+        final BlockingTransitionInternalEvent e = new DefaultBlockingTransitionInternalEvent(UUID.randomUUID(), "state", "svc",
+                                                                                             clock.getUTCNow(), BlockingStateType.ACCOUNT,
+                                                                                             true, false, false, true, 1L, 2L, null);
 
         final String json = mapper.writeValueAsString(e);
 

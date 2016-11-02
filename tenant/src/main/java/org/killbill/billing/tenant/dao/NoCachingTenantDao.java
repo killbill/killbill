@@ -95,6 +95,11 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
     }
 
     @Override
+    public List<TenantKVModelDao> searchTenantKeyValues(final String searchKey, final InternalTenantContext context) {
+        throw new IllegalStateException("Not implemented by NoCachingTenantDao");
+    }
+
+    @Override
     public TenantModelDao getByRecordId(final Long recordId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantModelDao>() {
             @Override
@@ -106,6 +111,11 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
 
     @Override
     public void addTenantKeyValue(final String key, final String value, final boolean uniqueKey, final InternalCallContext context) {
+        throw new IllegalStateException("Not implemented by NoCachingTenantDao");
+    }
+
+    @Override
+    public void updateTenantLastKeyValue(final String key, final String value, final InternalCallContext context) {
         throw new IllegalStateException("Not implemented by NoCachingTenantDao");
     }
 

@@ -45,12 +45,12 @@ public class DefaultOverdueStatesAccount extends DefaultOverdueStateSet implemen
         return initialReevaluationInterval.toJodaPeriod();
     }
 
-    protected DefaultOverdueStatesAccount setAccountOverdueStates(final DefaultOverdueState[] accountOverdueStates) {
+    public DefaultOverdueStatesAccount setAccountOverdueStates(final DefaultOverdueState[] accountOverdueStates) {
         this.accountOverdueStates = accountOverdueStates;
         return this;
     }
 
-    protected DefaultOverdueStatesAccount setInitialReevaluationInterval(final DefaultDuration initialReevaluationInterval) {
+    public DefaultOverdueStatesAccount setInitialReevaluationInterval(final DefaultDuration initialReevaluationInterval) {
         this.initialReevaluationInterval = initialReevaluationInterval;
         return this;
     }

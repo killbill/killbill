@@ -25,7 +25,7 @@ public interface CatalogCache {
 
     public void loadDefaultCatalog(final String url) throws CatalogApiException;
 
-    public VersionedCatalog getCatalog(InternalTenantContext tenantContext) throws CatalogApiException;
+    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext tenantContext) throws CatalogApiException;
 
     public void clearCatalog(InternalTenantContext tenantContext);
 

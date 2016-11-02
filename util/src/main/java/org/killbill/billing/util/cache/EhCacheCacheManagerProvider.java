@@ -27,7 +27,7 @@ import java.util.LinkedList;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.killbill.billing.util.config.CacheConfig;
+import org.killbill.billing.util.config.definition.EhCacheConfig;
 import org.killbill.xmlloader.UriAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,12 +45,12 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
     private static final Logger logger = LoggerFactory.getLogger(EhCacheCacheManagerProvider.class);
 
     private final MetricRegistry metricRegistry;
-    private final CacheConfig cacheConfig;
+    private final EhCacheConfig cacheConfig;
     private final Collection<BaseCacheLoader> cacheLoaders = new LinkedList<BaseCacheLoader>();
 
     @Inject
     public EhCacheCacheManagerProvider(final MetricRegistry metricRegistry,
-                                       final CacheConfig cacheConfig,
+                                       final EhCacheConfig cacheConfig,
                                        final ImmutableAccountCacheLoader accountCacheLoader,
                                        final AccountBCDCacheLoader accountBCDCacheLoader,
                                        final RecordIdCacheLoader recordIdCacheLoader,
@@ -60,6 +60,7 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
                                        final AuditLogCacheLoader auditLogCacheLoader,
                                        final AuditLogViaHistoryCacheLoader auditLogViaHistoryCacheLoader,
                                        final TenantCatalogCacheLoader tenantCatalogCacheLoader,
+                                       final TenantConfigCacheLoader tenantConfigCacheLoader,
                                        final TenantOverdueConfigCacheLoader tenantOverdueConfigCacheLoader,
                                        final TenantKVCacheLoader tenantKVCacheLoader,
                                        final TenantCacheLoader tenantCacheLoader,
@@ -76,6 +77,7 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
         cacheLoaders.add(auditLogCacheLoader);
         cacheLoaders.add(auditLogViaHistoryCacheLoader);
         cacheLoaders.add(tenantCatalogCacheLoader);
+        cacheLoaders.add(tenantConfigCacheLoader);
         cacheLoaders.add(tenantOverdueConfigCacheLoader);
         cacheLoaders.add(tenantKVCacheLoader);
         cacheLoaders.add(tenantCacheLoader);

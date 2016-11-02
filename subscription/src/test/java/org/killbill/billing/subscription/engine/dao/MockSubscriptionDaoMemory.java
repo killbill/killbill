@@ -38,9 +38,7 @@ import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
-import org.killbill.billing.subscription.api.migration.AccountMigrationData;
-import org.killbill.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
-import org.killbill.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import org.killbill.billing.subscription.api.transfer.BundleTransferData;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -241,16 +239,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void recreateSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> recreateEvents, final InternalCallContext context) {
-        synchronized (events) {
-            events.addAll(recreateEvents);
-            for (final SubscriptionBaseEvent cur : recreateEvents) {
-                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
-            }
-        }
-    }
-
-    @Override
     public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final List<SubscriptionBaseEvent> dryRunEvents, final InternalTenantContext context) {
         final List<SubscriptionBase> results = new ArrayList<SubscriptionBase>();
         for (final SubscriptionBase cur : subscriptions) {
@@ -323,7 +311,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(new SubscriptionBuilder(in), null, clock);
         if (events.size() > 0) {
             try {
-                subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog(context));
+                subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog(true, true, context));
             } catch (final CatalogApiException e) {
                 log.warn("Failed to rebuild subscription", e);
             }
@@ -460,30 +448,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void migrate(final UUID accountId, final AccountMigrationData accountData, final InternalCallContext context) {
-        synchronized (events) {
-
-            for (final BundleMigrationData curBundle : accountData.getData()) {
-                final DefaultSubscriptionBaseBundle bundleData = curBundle.getData();
-                for (final SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
-                    final DefaultSubscriptionBase subData = curSubscription.getData();
-                    for (final SubscriptionBaseEvent curEvent : curSubscription.getInitialEvents()) {
-                        events.add(curEvent);
-                        mockNonEntityDao.addTenantRecordIdMapping(curEvent.getId(), context);
-                        recordFutureNotificationFromTransaction(null, curEvent.getEffectiveDate(),
-                                                                new SubscriptionNotificationKey(curEvent.getId()), context);
-
-                    }
-                    subscriptions.add(subData);
-                    mockNonEntityDao.addTenantRecordIdMapping(subData.getId(), context);
-                }
-                bundles.add(bundleData);
-                mockNonEntityDao.addTenantRecordIdMapping(bundleData.getId(), context);
-            }
-        }
-    }
-
-    @Override
     public SubscriptionBaseEvent getEventById(final UUID eventId, final InternalTenantContext context) {
         synchronized (events) {
             for (final SubscriptionBaseEvent cur : events) {
@@ -529,7 +493,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleMigrationData data,
+    public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleTransferData data,
                          final List<TransferCancelData> transferCancelData, final InternalCallContext fromContext,
                          final InternalCallContext toContext) {
     }
@@ -537,4 +501,10 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     @Override
     public void updateBundleExternalKey(final UUID bundleId, final String externalKey, final InternalCallContext context) {
     }
+
+    @Override
+    public void createBCDChangeEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent bcdEvent, final InternalCallContext context) {
+
+    }
+
 }

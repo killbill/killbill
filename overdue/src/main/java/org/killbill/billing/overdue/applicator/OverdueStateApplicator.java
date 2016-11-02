@@ -86,7 +86,6 @@ public class OverdueStateApplicator {
     private static final Logger log = LoggerFactory.getLogger(OverdueStateApplicator.class);
 
     private final BlockingInternalApi blockingApi;
-    private final Clock clock;
     private final OverduePoster checkPoster;
     private final PersistentBus bus;
     private final AccountInternalApi accountApi;
@@ -102,7 +101,6 @@ public class OverdueStateApplicator {
                                   final AccountInternalApi accountApi,
                                   final EntitlementApi entitlementApi,
                                   final EntitlementInternalApi entitlementInternalApi,
-                                  final Clock clock,
                                   @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverduePoster checkPoster,
                                   final OverdueEmailGenerator overdueEmailGenerator,
                                   final EmailConfig config,
@@ -114,7 +112,6 @@ public class OverdueStateApplicator {
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
         this.entitlementInternalApi = entitlementInternalApi;
-        this.clock = clock;
         this.checkPoster = checkPoster;
         this.overdueEmailGenerator = overdueEmailGenerator;
         this.tagApi = tagApi;
@@ -123,7 +120,7 @@ public class OverdueStateApplicator {
         this.bus = bus;
     }
 
-    public void apply(final OverdueStateSet overdueStateSet, final BillingState billingState,
+    public void apply(final DateTime effectiveDate, final OverdueStateSet overdueStateSet, final BillingState billingState,
                       final ImmutableAccountData account, final OverdueState previousOverdueState,
                       final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException, OverdueApiException {
         try {
@@ -132,7 +129,7 @@ public class OverdueStateApplicator {
                 return;
             }
 
-            log.debug("OverdueStateApplicator: time={}, previousState={}, nextState={}, billingState={}", clock.getUTCNow(), previousOverdueState, nextOverdueState, billingState);
+            log.debug("OverdueStateApplicator: time={}, previousState={}, nextState={}, billingState={}", effectiveDate, previousOverdueState, nextOverdueState, billingState);
 
             final OverdueState firstOverdueState = overdueStateSet.getFirstState();
             final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
@@ -145,8 +142,8 @@ public class OverdueStateApplicator {
                 if (reevaluationInterval == null) {
                     log.debug("OverdueStateApplicator <notificationQ>: missing InitialReevaluationInterval from config, NOT inserting notification for account {}", account.getId());
                 } else {
-                    log.debug("OverdueStateApplicator <notificationQ>: inserting notification for account={}, time={}", account.getId(), clock.getUTCNow().plus(reevaluationInterval));
-                    createFutureNotification(account, clock.getUTCNow().plus(reevaluationInterval), context);
+                    log.debug("OverdueStateApplicator <notificationQ>: inserting notification for account={}, time={}", account.getId(), effectiveDate.plus(reevaluationInterval));
+                    createFutureNotification(account, effectiveDate.plus(reevaluationInterval), context);
                 }
             } else if (nextOverdueState.isClearState()) {
                 clearFutureNotification(account, context);
@@ -157,7 +154,7 @@ public class OverdueStateApplicator {
                 return;
             }
 
-            cancelSubscriptionsIfRequired(account, nextOverdueState, context);
+            cancelSubscriptionsIfRequired(effectiveDate, account, nextOverdueState, context);
 
             sendEmailIfRequired(account.getId(), billingState, nextOverdueState, context);
 
@@ -166,7 +163,7 @@ public class OverdueStateApplicator {
             // Make sure to store the new state last here: the entitlement DAO will send a BlockingTransitionInternalEvent
             // on the bus to which invoice will react. We need the latest state (including AUTO_INVOICE_OFF tag for example)
             // to be present in the database first.
-            storeNewState(account, nextOverdueState, context);
+            storeNewState(effectiveDate, account, nextOverdueState, context);
         } catch (final AccountApiException e) {
             throw new OverdueException(e);
         }
@@ -212,11 +209,11 @@ public class OverdueStateApplicator {
         }
     }
 
-    public void clear(final ImmutableAccountData account, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
+    public void clear(final DateTime effectiveDate, final ImmutableAccountData account, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
 
-        log.debug("OverdueStateApplicator:clear : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueState.getName());
+        log.debug("OverdueStateApplicator:clear : time = " + effectiveDate + ", previousState = " + previousOverdueState.getName());
 
-        storeNewState(account, clearState, context);
+        storeNewState(effectiveDate, account, clearState, context);
 
         clearFutureNotification(account, context);
 
@@ -248,7 +245,7 @@ public class OverdueStateApplicator {
                                              context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
     }
 
-    protected void storeNewState(final ImmutableAccountData blockable, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
+    protected void storeNewState(final DateTime effectiveDate, final ImmutableAccountData blockable, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
             blockingApi.setBlockingState(new DefaultBlockingState(blockable.getId(),
                                                                   BlockingStateType.ACCOUNT,
@@ -257,7 +254,7 @@ public class OverdueStateApplicator {
                                                                   blockChanges(nextOverdueState),
                                                                   blockEntitlement(nextOverdueState),
                                                                   blockBilling(nextOverdueState),
-                                                                  clock.getUTCNow()),
+                                                                  effectiveDate),
                                          context);
         } catch (final Exception e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, blockable.getId(), blockable.getClass().getName());
@@ -291,7 +288,7 @@ public class OverdueStateApplicator {
     }
 
     private boolean blockChanges(final OverdueState nextOverdueState) {
-        return nextOverdueState.isBlockChanges();
+        return nextOverdueState.isBlockChanges() || nextOverdueState.isDisableEntitlementAndChangesBlocked();
     }
 
     private boolean blockBilling(final OverdueState nextOverdueState) {
@@ -312,7 +309,7 @@ public class OverdueStateApplicator {
         checkPoster.clearOverdueCheckNotifications(account.getId(), OverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE, OverdueCheckNotificationKey.class, context);
     }
 
-    private void cancelSubscriptionsIfRequired(final ImmutableAccountData account, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
+    private void cancelSubscriptionsIfRequired(final DateTime effectiveDate, final ImmutableAccountData account, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         if (nextOverdueState.getOverdueCancellationPolicy() == OverdueCancellationPolicy.NONE) {
             return;
         }
@@ -334,7 +331,7 @@ public class OverdueStateApplicator {
             computeEntitlementsToCancel(account, toBeCancelled, callContext);
 
             try {
-                entitlementInternalApi.cancel(toBeCancelled, clock.getToday(account.getTimeZone()), actionPolicy, ImmutableList.<PluginProperty>of(), context);
+                entitlementInternalApi.cancel(toBeCancelled, context.toLocalDate(effectiveDate), actionPolicy, ImmutableList.<PluginProperty>of(), context);
             } catch (final EntitlementApiException e) {
                 throw new OverdueException(e);
             }

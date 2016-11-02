@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,6 +30,7 @@ import org.joda.time.Months;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -37,9 +38,10 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.util.config.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -71,10 +73,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             return new InvoiceWithMetadata(null, ImmutableMap.<UUID, SubscriptionFutureNotificationDates>of());
         }
 
-        validateTargetDate(targetDate);
+        validateTargetDate(targetDate, context);
         final LocalDate adjustedTargetDate = adjustTargetDate(existingInvoices, targetDate);
 
-        final LocalDate invoiceDate = events.getAccountDateAndTimeZoneContext().computeLocalDateFromFixedAccountOffset(clock.getUTCNow());
+        final LocalDate invoiceDate = context.toLocalDate(clock.getUTCNow());
         final Invoice invoice = new DefaultInvoice(account.getId(), invoiceDate, adjustedTargetDate, targetCurrency);
         final UUID invoiceId = invoice.getId();
         final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<UUID, SubscriptionFutureNotificationDates>();
@@ -89,8 +91,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return new InvoiceWithMetadata(invoice.getInvoiceItems().isEmpty() ? null : invoice, perSubscriptionFutureNotificationDates);
     }
 
-    private void validateTargetDate(final LocalDate targetDate) throws InvoiceApiException {
-        final int maximumNumberOfMonths = config.getNumberOfMonthsInFuture();
+    private void validateTargetDate(final LocalDate targetDate, final InternalTenantContext context) throws InvoiceApiException {
+        final int maximumNumberOfMonths = config.getNumberOfMonthsInFuture(context);
 
         if (Months.monthsBetween(clock.getUTCToday(), targetDate).getMonths() > maximumNumberOfMonths) {
             throw new InvoiceApiException(ErrorCode.INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE, targetDate.toString());
@@ -105,7 +107,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         LocalDate maxDate = targetDate;
 
         for (final Invoice invoice : existingInvoices) {
-            if (invoice.getTargetDate().isAfter(maxDate)) {
+            if ((invoice.getTargetDate() != null) && invoice.getTargetDate().isAfter(maxDate)) {
                 maxDate = invoice.getTargetDate();
             }
         }

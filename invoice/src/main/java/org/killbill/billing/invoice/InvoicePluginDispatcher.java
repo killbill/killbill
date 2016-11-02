@@ -45,6 +45,7 @@ public class InvoicePluginDispatcher {
 
     private static final Collection<InvoiceItemType> ALLOWED_INVOICE_ITEM_TYPES = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
                                                                                                                     InvoiceItemType.ITEM_ADJ,
+                                                                                                                    InvoiceItemType.CREDIT_ADJ,
                                                                                                                     InvoiceItemType.TAX);
 
     private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;

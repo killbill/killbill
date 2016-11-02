@@ -26,6 +26,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 
 public class MockPlan implements Plan {
@@ -52,12 +53,17 @@ public class MockPlan implements Plan {
     }
 
     @Override
+    public String getPriceListName() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public String getName() {
         return name;
     }
 
     @Override
-    public Date getEffectiveDateForExistingSubscriptons() {
+    public Date getEffectiveDateForExistingSubscriptions() {
         return new Date();
     }
 

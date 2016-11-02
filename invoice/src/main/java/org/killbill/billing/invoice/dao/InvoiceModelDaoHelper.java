@@ -47,7 +47,8 @@ public class InvoiceModelDaoHelper {
                                                                 public InvoicePayment apply(final InvoicePaymentModelDao input) {
                                                                     return new DefaultInvoicePayment(input);
                                                                 }
-                                                            }));
+                                                            }),
+                                                            invoiceModelDao.isMigrated() || invoiceModelDao.isWrittenOff());
     }
 
     public static BigDecimal getCBAAmount(final InvoiceModelDao invoiceModelDao) {
@@ -58,5 +59,15 @@ public class InvoiceModelDaoHelper {
                                                                            return InvoiceItemFactory.fromModelDao(input);
                                                                        }
                                                                    }));
+    }
+
+    public static BigDecimal getAmountCharged(final InvoiceModelDao invoiceModelDao) {
+        return InvoiceCalculatorUtils.computeInvoiceAmountCharged(invoiceModelDao.getCurrency(),
+                                                            Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
+                                                                @Override
+                                                                public InvoiceItem apply(final InvoiceItemModelDao input) {
+                                                                    return InvoiceItemFactory.fromModelDao(input);
+                                                                }
+                                                            }));
     }
 }

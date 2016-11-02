@@ -17,31 +17,36 @@
 
 package org.killbill.billing.catalog;
 
-import java.util.Arrays;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Tier;
+import org.killbill.billing.catalog.api.TierPriceOverride;
+import org.killbill.billing.catalog.api.TieredBlock;
+import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import java.util.Arrays;
+
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements Tier {
 
     @XmlElementWrapper(name = "limits", required = false)
-    @XmlElement(name = "limit", required = true)
+    @XmlElement(name = "limit", required = false)
     private DefaultLimit[] limits;
 
     @XmlElementWrapper(name = "blocks", required = false)
-    @XmlElement(name = "tieredBlock", required = true)
+    @XmlElement(name = "tieredBlock", required = false)
     private DefaultTieredBlock[] blocks;
 
     // Used to define a fixed price for the whole tier section
@@ -60,6 +65,31 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     public DefaultTier() {
         limits = new DefaultLimit[0];
         blocks = new DefaultTieredBlock[0];
+    }
+
+    public DefaultTier(Tier in, TierPriceOverride override, Currency currency) {
+        this.limits = (DefaultLimit[])in.getLimits();
+        this.blocks = new DefaultTieredBlock[in.getTieredBlocks().length];
+
+        for (int i = 0; i < in.getTieredBlocks().length; i++) {
+            if(override != null && override.getTieredBlockPriceOverrides() != null) {
+                final TieredBlock curTieredBlock = in.getTieredBlocks()[i];
+                final TieredBlockPriceOverride overriddenTierBlock = Iterables.tryFind(override.getTieredBlockPriceOverrides(), new Predicate<TieredBlockPriceOverride>() {
+                    @Override
+                    public boolean apply(final TieredBlockPriceOverride input) {
+                        return (input != null && input.getUnitName().equals(curTieredBlock.getUnit().getName()) &&
+                                Double.compare(input.getSize(), curTieredBlock.getSize()) == 0 &&
+                                Double.compare(input.getMax(), curTieredBlock.getMax()) == 0);
+                    }
+
+                }).orNull();
+                blocks[i] = (overriddenTierBlock != null) ? new DefaultTieredBlock(in.getTieredBlocks()[i], overriddenTierBlock, currency) :
+                        (DefaultTieredBlock) in.getTieredBlocks()[i];
+            }
+            else {
+                blocks[i] = (DefaultTieredBlock) in.getTieredBlocks()[i];
+            }
+        }
     }
 
     @Override

@@ -83,7 +83,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
     }
 
     private Payment getPaymentForExternalKey(final String externalKey) throws PaymentApiException {
-        final Payment payment = paymentProcessor.getPaymentByExternalKey(externalKey, false, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
+        final Payment payment = paymentProcessor.getPaymentByExternalKey(externalKey, false, false, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
         return payment;
     }
 
@@ -247,7 +247,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(payment.getId(), internalCallContext);
         assertEquals(transactions.size(), 1);
 
-        int maxTries = paymentConfig.getPaymentFailureRetryDays().size();
+        int maxTries = paymentConfig.getPaymentFailureRetryDays(internalCallContext).size();
         for (int curFailure = 0; curFailure < maxTries; curFailure++) {
 
             // Set plugin to fail with specific type unless this is the last attempt and we want a success
@@ -334,7 +334,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(payment.getId(), internalCallContext);
         assertEquals(transactions.size(), 1);
 
-        int maxTries = paymentConfig.getPaymentFailureRetryDays().size();
+        int maxTries = paymentConfig.getPaymentFailureRetryDays(internalCallContext).size();
         for (int curFailure = 0; curFailure < maxTries; curFailure++) {
 
             // Set plugin to fail with specific type unless this is the last attempt and we want a success
@@ -394,7 +394,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
     private void moveClockForFailureType(final FailureType failureType, final int curFailure) throws InterruptedException {
         final int nbDays;
         if (failureType == FailureType.PAYMENT_FAILURE) {
-            nbDays = paymentConfig.getPaymentFailureRetryDays().get(curFailure) + 1;
+            nbDays = paymentConfig.getPaymentFailureRetryDays(internalCallContext).get(curFailure) + 1;
         } else {
             nbDays = 1;
         }
@@ -403,7 +403,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
     private int getMaxRetrySizeForFailureType(final FailureType failureType) {
         if (failureType == FailureType.PAYMENT_FAILURE) {
-            return paymentConfig.getPaymentFailureRetryDays().size();
+            return paymentConfig.getPaymentFailureRetryDays(internalCallContext).size();
         } else {
             return 0;
         }

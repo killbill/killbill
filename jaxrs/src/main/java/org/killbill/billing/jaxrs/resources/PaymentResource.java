@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -61,6 +61,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -80,10 +81,11 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import com.google.common.collect.Iterables;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -114,13 +116,14 @@ public class PaymentResource extends ComboPaymentResource {
                            @ApiResponse(code = 404, message = "Payment not found")})
     public Response getPayment(@PathParam("paymentId") final String paymentIdStr,
                                @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                               @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID paymentIdId = UUID.fromString(paymentIdStr);
         final TenantContext tenantContext = context.createContext(request);
-        final Payment payment = paymentApi.getPayment(paymentIdId, withPluginInfo, pluginProperties, tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentIdId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
         final PaymentJson result = new PaymentJson(payment, accountAuditLogs);
         return Response.status(Response.Status.OK).entity(result).build();
@@ -129,9 +132,10 @@ public class PaymentResource extends ComboPaymentResource {
     @TimedResource(name = "getPayment")
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a payment by id", response = PaymentJson.class)
+    @ApiOperation(value = "Retrieve a payment by external key", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Payment not found")})
     public Response getPaymentByExternalKey(@QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                            @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                             @QueryParam(QUERY_EXTERNAL_KEY) final String paymentExternalKey,
                                             @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -139,7 +143,7 @@ public class PaymentResource extends ComboPaymentResource {
         verifyNonNullOrEmpty(paymentExternalKey, "Payment externalKey needs to be specified");
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
-        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, withPluginInfo, pluginProperties, tenantContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
         final PaymentJson result = new PaymentJson(payment, accountAuditLogs);
         return Response.status(Response.Status.OK).entity(result).build();
@@ -157,15 +161,16 @@ public class PaymentResource extends ComboPaymentResource {
                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
 
         final Pagination<Payment> payments;
         if (Strings.isNullOrEmpty(pluginName)) {
-            payments = paymentApi.getPayments(offset, limit, withPluginInfo, pluginProperties, tenantContext);
+            payments = paymentApi.getPayments(offset, limit, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         } else {
-            payments = paymentApi.getPayments(offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
+            payments = paymentApi.getPayments(offset, limit, pluginName, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(PaymentResource.class, "getPayments", payments.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
@@ -201,6 +206,7 @@ public class PaymentResource extends ComboPaymentResource {
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                    @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                   @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createContext(request);
@@ -208,9 +214,9 @@ public class PaymentResource extends ComboPaymentResource {
         // Search the plugin(s)
         final Pagination<Payment> payments;
         if (Strings.isNullOrEmpty(pluginName)) {
-            payments = paymentApi.searchPayments(searchKey, offset, limit, withPluginInfo, pluginProperties, tenantContext);
+            payments = paymentApi.searchPayments(searchKey, offset, limit, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         } else {
-            payments = paymentApi.searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
+            payments = paymentApi.searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         }
 
         final URI nextPageUri = uriBuilder.nextPage(PaymentResource.class, "searchPayments", payments.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
@@ -298,7 +304,12 @@ public class PaymentResource extends ComboPaymentResource {
                                                  final UriInfo uriInfo,
                                                  final HttpServletRequest request) throws PaymentApiException, AccountApiException {
 
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginPropertiesFromBody = extractPluginProperties(json.getProperties());
+
+        final Iterable<PluginProperty> pluginPropertiesFromQuery = extractPluginProperties(pluginPropertiesString);
+
+        final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json == null ? null : json.getPaymentExternalKey(), pluginProperties, callContext);
 
@@ -306,11 +317,17 @@ public class PaymentResource extends ComboPaymentResource {
         final BigDecimal amount = json == null ? null : json.getAmount();
         final Currency currency = json == null || json.getCurrency() == null ? null : Currency.valueOf(json.getCurrency());
 
-            final PaymentTransaction pendingTransaction = lookupPendingTransaction(initialPayment,
-                                                                                   json != null ? json.getTransactionId() : null,
-                                                                                   json != null ? json.getTransactionExternalKey() : null,
-                                                                                   json != null ? json.getTransactionType() : null);
+        final PaymentTransaction pendingOrSuccessTransaction = lookupPendingOrSuccessTransaction(initialPayment,
+                                                                                                 json != null ? json.getTransactionId() : null,
+                                                                                                 json != null ? json.getTransactionExternalKey() : null,
+                                                                                                 json != null ? json.getTransactionType() : null);
+        // If transaction was already completed, return early (See #626)
+        if (pendingOrSuccessTransaction.getTransactionStatus() == TransactionStatus.SUCCESS) {
+            return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId());
+        }
 
+
+        final PaymentTransaction pendingTransaction = pendingOrSuccessTransaction;
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
         switch (pendingTransaction.getTransactionType()) {
@@ -646,6 +663,80 @@ public class PaymentResource extends ComboPaymentResource {
         return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey());
     }
 
+    @TimedResource(name = "chargebackReversalPayment")
+    @POST
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACK_REVERSALS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Record a chargeback reversal")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
+    public Response chargebackReversalPayment(final PaymentTransactionJson json,
+                                              @PathParam("paymentId") final String paymentIdStr,
+                                              @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
+                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                              @HeaderParam(HDR_REASON) final String reason,
+                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                              @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        return chargebackReversalPaymentInternal(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+    }
+
+    @TimedResource(name = "chargebackReversalPayment")
+    @POST
+    @Path("/" + CHARGEBACK_REVERSALS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Record a chargeback reversal")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+                           @ApiResponse(code = 404, message = "Account or payment not found"),
+                           @ApiResponse(code = 402, message = "Transaction declined by gateway"),
+                           @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
+                           @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
+                           @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
+                           @ApiResponse(code = 504, message = "Payment operation timeout")})
+    public Response chargebackReversalPaymentByExternalKey(final PaymentTransactionJson json,
+                                                           @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
+                                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                           @HeaderParam(HDR_REASON) final String reason,
+                                                           @HeaderParam(HDR_COMMENT) final String comment,
+                                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        return chargebackReversalPaymentInternal(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+    }
+
+    private Response chargebackReversalPaymentInternal(final PaymentTransactionJson json,
+                                                       @Nullable final String paymentIdStr,
+                                                       final List<String> paymentControlPluginNames,
+                                                       final List<String> pluginPropertiesString,
+                                                       final String createdBy,
+                                                       final String reason,
+                                                       final String comment,
+                                                       final UriInfo uriInfo,
+                                                       final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
+        verifyNonNullOrEmpty(json.getTransactionExternalKey(), "PaymentTransactionJson transactionExternalKey needs to be set");
+
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
+
+        final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
+
+        final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
+
+        final Payment payment = paymentApi.createChargebackReversalWithPaymentControl(account, initialPayment.getId(), json.getTransactionExternalKey(), paymentOptions, callContext);
+        return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey());
+    }
+
     @TimedResource
     @POST
     @Consumes(APPLICATION_JSON)
@@ -705,6 +796,45 @@ public class PaymentResource extends ComboPaymentResource {
         }
         return createPaymentResponse(uriInfo, result, transactionType, paymentTransactionJson.getTransactionExternalKey());
     }
+
+    @TimedResource(name = "cancelScheduledPaymentTransaction")
+    @DELETE
+    @Path("/{paymentTransactionId:" + UUID_PATTERN + "}/" + CANCEL_SCHEDULED_PAYMENT_TRANSACTION)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Cancels a scheduled payment attempt retry")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentTransactionId supplied")})
+    public Response cancelScheduledPaymentTransactionById(@PathParam("paymentTransactionId") final String paymentTransactionId,
+                                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                          @HeaderParam(HDR_REASON) final String reason,
+                                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        paymentApi.cancelScheduledPaymentTransaction(UUID.fromString(paymentTransactionId), callContext);
+        return Response.status(Status.OK).build();
+    }
+
+    @TimedResource(name = "cancelScheduledPaymentTransaction")
+    @DELETE
+    @Path("/" + CANCEL_SCHEDULED_PAYMENT_TRANSACTION)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Cancels a scheduled payment attempt retry")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentTransactionExternalKey supplied")})
+    public Response cancelScheduledPaymentTransactionByExternalKey(@QueryParam(QUERY_TRANSACTION_EXTERNAL_KEY) final String paymentTransactionExternalKey,
+                                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                                   @HeaderParam(HDR_REASON) final String reason,
+                                                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        paymentApi.cancelScheduledPaymentTransaction(paymentTransactionExternalKey, callContext);
+        return Response.status(Status.OK).build();
+    }
+
+
+
 
     @TimedResource
     @GET
@@ -766,7 +896,7 @@ public class PaymentResource extends ComboPaymentResource {
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
         final UUID paymentId = UUID.fromString(id);
-        final Payment payment = paymentApi.getPayment(paymentId, false, ImmutableList.<PluginProperty>of(), tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), tenantContext);
         return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
     }
 

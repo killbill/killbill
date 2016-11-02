@@ -18,16 +18,8 @@
 
 package org.killbill.billing.catalog;
 
-import java.net.URI;
-import java.util.Arrays;
-
-import javax.annotation.Nullable;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Duration;
@@ -38,9 +30,19 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
+
+import javax.annotation.Nullable;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import java.net.URI;
+import java.util.Arrays;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implements PlanPhase {
@@ -75,7 +77,19 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         this.recurring = override != null && override.getRecurringPrice() != null ? new DefaultRecurring((DefaultRecurring) in.getRecurring(), override) : (DefaultRecurring) in.getRecurring();
         this.usages = new DefaultUsage[in.getUsages().length];
         for (int i = 0; i < in.getUsages().length; i++) {
-            usages[i] = (DefaultUsage) in.getUsages()[i];
+            final Usage curUsage = in.getUsages()[i];
+            if(override != null && override.getUsagePriceOverrides()!= null) {
+                final UsagePriceOverride usagePriceOverride = Iterables.tryFind(override.getUsagePriceOverrides(), new Predicate<UsagePriceOverride>() {
+                 @Override
+                 public boolean apply(final UsagePriceOverride input) {
+                     return input !=null && input.getName().equals(curUsage.getName());
+                 }
+                 }).orNull();
+                usages[i] = (usagePriceOverride !=null) ? new DefaultUsage(in.getUsages()[i], usagePriceOverride, override.getCurrency()) : (DefaultUsage)curUsage;
+            }
+            else {
+                usages[i] = (DefaultUsage)curUsage;
+            }
         }
         this.plan = parentPlan;
     }
@@ -251,7 +265,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         sb.append(", fixed=").append(fixed);
         sb.append(", recurring=").append(recurring);
         sb.append(", usages=").append(Arrays.toString(usages));
-        sb.append(", plan=").append(plan);
+        sb.append(", plan=").append(plan.getName());
         sb.append('}');
         return sb.toString();
     }

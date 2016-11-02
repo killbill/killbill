@@ -20,6 +20,8 @@ package org.killbill.billing.entitlement;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.entitlement.block.BlockingChecker;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
@@ -27,6 +29,7 @@ import org.killbill.billing.entitlement.glue.TestEntitlementModuleNoDB;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.tag.dao.TagDao;
 import org.killbill.bus.api.PersistentBus;
 import org.testng.annotations.AfterMethod;
@@ -40,7 +43,11 @@ import com.google.inject.Injector;
 public abstract class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @Inject
+    protected AccountUserApi accountUserApi;
+    @Inject
     protected AccountInternalApi accountInternalApi;
+    @Inject
+    protected ImmutableAccountInternalApi immutableAccountInternalApi;
     @Inject
     protected BlockingInternalApi blockingInternalApi;
     @Inject
@@ -57,6 +64,8 @@ public abstract class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoD
     protected TagInternalApi tagInternalApi;
     @Inject
     protected BlockingChecker blockingChecker;
+    @Inject
+    protected NonEntityDao nonEntityDao;
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {

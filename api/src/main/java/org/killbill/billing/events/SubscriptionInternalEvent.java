@@ -46,6 +46,8 @@ public interface SubscriptionInternalEvent extends BusInternalEvent {
 
     String getPreviousPhase();
 
+    Integer getPreviousBillCycleDayLocal();
+
     String getNextPlan();
 
     String getNextPhase();
@@ -53,6 +55,8 @@ public interface SubscriptionInternalEvent extends BusInternalEvent {
     EntitlementState getNextState();
 
     String getNextPriceList();
+
+    Integer getNextBillCycleDayLocal();
 
     Integer getRemainingEventsForUserOperation();
 

@@ -185,6 +185,10 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
         return rate;
     }
 
+    @Override
+    public UUID getChildAccountId() {
+        return null;
+    }
 
     @Override
     public String toString() {

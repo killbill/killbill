@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,7 +23,6 @@ import java.math.BigDecimal;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -36,10 +37,8 @@ public abstract class InvoiceCalculatorUtils {
 
     // Invoice adjustments
     public static boolean isInvoiceAdjustmentItem(final InvoiceItem invoiceItem, final Iterable<InvoiceItem> otherInvoiceItems) {
-        // Either REFUND_ADJ
-        return InvoiceItemType.REFUND_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
-               // Or invoice level credit, i.e. credit adj, but NOT on its on own invoice
-               (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
+        // Invoice level credit, i.e. credit adj, but NOT on its on own invoice
+        return (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
                 !(Iterables.size(otherInvoiceItems) == 1 &&
                   InvoiceItemType.CBA_ADJ.equals(otherInvoiceItems.iterator().next().getInvoiceItemType()) &&
                   otherInvoiceItems.iterator().next().getInvoiceId().equals(invoiceItem.getInvoiceId()) &&
@@ -56,6 +55,11 @@ public abstract class InvoiceCalculatorUtils {
         return InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType());
     }
 
+    // Item from Parent Invoice
+    public static boolean isParentSummaryItem(final InvoiceItem invoiceItem) {
+        return InvoiceItemType.PARENT_SUMMARY.equals(invoiceItem.getInvoiceItemType());
+    }
+
     // Regular line item (charges)
     public static boolean isCharge(final InvoiceItem invoiceItem) {
         return InvoiceItemType.TAX.equals(invoiceItem.getInvoiceItemType()) ||
@@ -67,18 +71,43 @@ public abstract class InvoiceCalculatorUtils {
 
     public static BigDecimal computeInvoiceBalance(final Currency currency,
                                                    @Nullable final Iterable<InvoiceItem> invoiceItems,
-                                                   @Nullable final Iterable<InvoicePayment> invoicePayments) {
-        final BigDecimal invoiceBalance = computeInvoiceAmountCharged(currency, invoiceItems)
+                                                   @Nullable final Iterable<InvoicePayment> invoicePayments,
+                                                   boolean writtenOffOrMigrated) {
+        if (writtenOffOrMigrated) {
+            return BigDecimal.ZERO;
+        }
+
+        final BigDecimal amountPaid = computeInvoiceAmountPaid(currency, invoicePayments)
+                .add(computeInvoiceAmountRefunded(currency, invoicePayments));
+
+        final BigDecimal chargedAmount = computeInvoiceAmountCharged(currency, invoiceItems)
                 .add(computeInvoiceAmountCredited(currency, invoiceItems))
-                .add(computeInvoiceAmountAdjustedForAccountCredit(currency, invoiceItems))
-                .add(
-                        computeInvoiceAmountPaid(currency, invoicePayments).negate()
-                                .add(
-                                        computeInvoiceAmountRefunded(currency, invoicePayments).negate()
-                                    )
-                    );
+                .add(computeInvoiceAmountAdjustedForAccountCredit(currency, invoiceItems));
+
+        final BigDecimal invoiceBalance = chargedAmount.add(amountPaid.negate());
 
         return KillBillMoney.of(invoiceBalance, currency);
+    }
+
+    public static BigDecimal computeChildInvoiceAmount(final Currency currency,
+                                                       @Nullable final Iterable<InvoiceItem> invoiceItems) {
+
+        final Iterable<InvoiceItem> chargeItems = Iterables.filter(invoiceItems, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(@Nullable final InvoiceItem input) {
+                return isCharge(input);
+            }
+        });
+
+        if (Iterables.isEmpty(chargeItems)) {
+            // return only credit amount to be subtracted to parent item amount
+            return computeInvoiceAmountCredited(currency, invoiceItems).negate();
+        }
+
+        final BigDecimal chargedAmount = computeInvoiceAmountCharged(currency, invoiceItems)
+                .add(computeInvoiceAmountCredited(currency, invoiceItems))
+                .add(computeInvoiceAmountAdjustedForAccountCredit(currency, invoiceItems));
+        return KillBillMoney.of(chargedAmount, currency);
     }
 
     // Snowflake for the CREDIT_ADJ on its own invoice
@@ -124,7 +153,8 @@ public abstract class InvoiceCalculatorUtils {
 
             if (isCharge(invoiceItem) ||
                 isInvoiceAdjustmentItem(invoiceItem, otherInvoiceItems) ||
-                isInvoiceItemAdjustmentItem(invoiceItem)) {
+                isInvoiceItemAdjustmentItem(invoiceItem) ||
+                isParentSummaryItem(invoiceItem)) {
                 amountCharged = amountCharged.add(invoiceItem.getAmount());
             }
         }

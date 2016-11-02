@@ -20,11 +20,11 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.util.account.AccountDateTimeUtils;
 
 public class MockAccountBuilder {
 
@@ -34,6 +34,8 @@ public class MockAccountBuilder {
     private String name = "";
     private int firstNameLength;
     private Currency currency = Currency.USD;
+    private UUID parentAccountId;
+    private boolean isPaymentDelegatedToParent = false;
     private int billingCycleDayLocal;
     private UUID paymentMethodId;
     private DateTimeZone timeZone = DateTimeZone.UTC;
@@ -46,6 +48,7 @@ public class MockAccountBuilder {
     private String country = "";
     private String postalCode = "";
     private String phone = "";
+    private String notes = "";
     private boolean migrated;
     private boolean isNotifiedForInvoices;
     private DateTime createdDate = new DateTime(DateTimeZone.UTC);
@@ -60,7 +63,6 @@ public class MockAccountBuilder {
     }
 
     public MockAccountBuilder(final AccountData data) {
-        this.id = UUID.randomUUID();
         this.address1(data.getAddress1());
         this.address2(data.getAddress2());
         this.billingCycleDayLocal(data.getBillCycleDayLocal());
@@ -68,6 +70,8 @@ public class MockAccountBuilder {
         this.companyName(data.getCompanyName());
         this.country(data.getCountry());
         this.currency(data.getCurrency());
+        this.parentAccountId(data.getParentAccountId());
+        this.isPaymentDelegatedToParent(data.isPaymentDelegatedToParent());
         this.email(data.getEmail());
         this.externalKey(data.getExternalKey());
         this.firstNameLength(data.getFirstNameLength());
@@ -77,9 +81,17 @@ public class MockAccountBuilder {
         this.name(data.getName());
         this.paymentMethodId(data.getPaymentMethodId());
         this.phone(data.getPhone());
+        this.notes(data.getNotes());
         this.postalCode(data.getPostalCode());
         this.stateOrProvince(data.getStateOrProvince());
         this.timeZone(data.getTimeZone());
+        if (data instanceof Account) {
+            this.id = ((Account) data).getId();
+            this.createdDate(((Account) data).getCreatedDate());
+            this.updatedDate(((Account) data).getUpdatedDate());
+        } else {
+            this.id = UUID.randomUUID();
+        }
     }
 
     public MockAccountBuilder externalKey(final String externalKey) {
@@ -109,6 +121,16 @@ public class MockAccountBuilder {
 
     public MockAccountBuilder currency(final Currency currency) {
         this.currency = currency;
+        return this;
+    }
+
+    public MockAccountBuilder parentAccountId(final UUID parentAccountId) {
+        this.parentAccountId = parentAccountId;
+        return this;
+    }
+
+    public MockAccountBuilder isPaymentDelegatedToParent(final boolean isPaymentDelegatedToParent) {
+        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
         return this;
     }
 
@@ -167,6 +189,11 @@ public class MockAccountBuilder {
         return this;
     }
 
+    public MockAccountBuilder notes(final String notes) {
+        this.notes = notes;
+        return this;
+    }
+
     public MockAccountBuilder migrated(final boolean migrated) {
         this.migrated = migrated;
         return this;
@@ -206,110 +233,117 @@ public class MockAccountBuilder {
 
             @Override
             public String getName() {
-
                 return name;
             }
 
             @Override
             public Integer getFirstNameLength() {
-
                 return firstNameLength;
             }
 
             @Override
             public String getEmail() {
-
                 return email;
             }
 
             @Override
             public Integer getBillCycleDayLocal() {
-
                 return billingCycleDayLocal;
             }
 
             @Override
             public Currency getCurrency() {
-
                 return currency;
             }
 
             @Override
             public UUID getPaymentMethodId() {
-
                 return paymentMethodId;
             }
 
             @Override
             public DateTimeZone getTimeZone() {
-
                 return timeZone;
             }
 
             @Override
-            public String getLocale() {
+            public DateTimeZone getFixedOffsetTimeZone() {
+                return AccountDateTimeUtils.getFixedOffsetTimeZone(this);
+            }
 
+            @Override
+            public DateTime getReferenceTime() {
+                return AccountDateTimeUtils.getReferenceDateTime(this);
+            }
+
+            @Override
+            public String getLocale() {
                 return locale;
             }
 
             @Override
             public String getAddress1() {
-
                 return address1;
             }
 
             @Override
             public String getAddress2() {
-
                 return address2;
             }
 
             @Override
             public String getCompanyName() {
-
                 return companyName;
             }
 
             @Override
             public String getCity() {
-
                 return city;
             }
 
             @Override
             public String getStateOrProvince() {
-
                 return stateOrProvince;
             }
 
             @Override
             public String getPostalCode() {
-
                 return postalCode;
             }
 
             @Override
             public String getCountry() {
-
                 return country;
             }
 
             @Override
             public String getPhone() {
-
                 return phone;
             }
 
             @Override
-            public Boolean isMigrated() {
+            public String getNotes() {
+                return notes;
+            }
 
+            @Override
+            public Boolean isMigrated() {
                 return migrated;
             }
 
             @Override
             public Boolean isNotifiedForInvoices() {
-
                 return isNotifiedForInvoices;
+            }
+
+            @Override
+            public UUID getParentAccountId() {
+                return parentAccountId;
+            }
+
+            @Override
+            public Boolean isPaymentDelegatedToParent() {
+                return isPaymentDelegatedToParent;
             }
 
             @Override

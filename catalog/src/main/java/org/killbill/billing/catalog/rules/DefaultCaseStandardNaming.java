@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlIDREF;
 import org.killbill.billing.catalog.DefaultPriceList;
 import org.killbill.billing.catalog.DefaultProduct;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.rules.Case;
 
@@ -59,8 +60,8 @@ public abstract class DefaultCaseStandardNaming<T> extends DefaultCase<T> implem
         return priceList;
     }
 
-    public DefaultCaseStandardNaming<T> setProduct(final DefaultProduct product) {
-        this.product = product;
+    public DefaultCaseStandardNaming<T> setProduct(final Product product) {
+        this.product = (DefaultProduct) product;
         return this;
     }
 

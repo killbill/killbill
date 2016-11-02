@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -32,8 +35,6 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.realm.Realm;
-import org.apache.shiro.realm.jdbc.JdbcRealm;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.killbill.billing.ErrorCode;
@@ -51,6 +52,9 @@ import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.base.Strings;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -157,7 +161,7 @@ public class DefaultSecurityApi implements SecurityApi {
                     subject.checkPermission(permissionsString[0]);
                 }
             }
-        } catch (AuthorizationException e) {
+        } catch (final AuthorizationException e) {
             throw new SecurityApiException(e, ErrorCode.SECURITY_NOT_ENOUGH_PERMISSIONS);
         }
     }
@@ -177,7 +181,6 @@ public class DefaultSecurityApi implements SecurityApi {
         userDao.updateUserRoles(username, roles, callContext.getUserName());
         invalidateJDBCAuthorizationCache(username);
     }
-
 
     @Override
     public void invalidateUser(final String username, final CallContext callContext) throws SecurityApiException {
@@ -214,16 +217,23 @@ public class DefaultSecurityApi implements SecurityApi {
         }));
     }
 
-    private List<String> sanitizeAndValidatePermissions(final List<String> permissions) throws SecurityApiException {
-
-        if (permissions == null || permissions.isEmpty()) {
-            throw new SecurityApiException(ErrorCode.SECURITY_INVALID_PERMISSIONS, "null");
+    private List<String> sanitizeAndValidatePermissions(final List<String> permissionsRaw) throws SecurityApiException {
+        if (permissionsRaw == null) {
+            return ImmutableList.<String>of();
         }
 
-        final HashMap<String, Set<String>> groupToValues = new HashMap<String, Set<String>>();
-        for (final String curPerm : permissions) {
+        final Collection<String> permissions = Collections2.<String>filter(Lists.<String, String>transform(permissionsRaw,
+                                                                                                           new Function<String, String>() {
+                                                                                                               @Override
+                                                                                                               public String apply(final String input) {
+                                                                                                                   return Strings.emptyToNull(input);
+                                                                                                               }
+                                                                                                           }),
+                                                                           Predicates.<String>notNull());
 
-            if (curPerm.equals("*")) {
+        final Map<String, Set<String>> groupToValues = new HashMap<String, Set<String>>();
+        for (final String curPerm : permissions) {
+            if ("*".equals(curPerm)) {
                 return ImmutableList.of("*");
             }
 
@@ -234,9 +244,6 @@ public class DefaultSecurityApi implements SecurityApi {
 
             boolean resolved = false;
             for (final Permission cur : Permission.values()) {
-                if (resolved) {
-                    break;
-                }
                 if (!cur.getGroup().equals(permissionParts[0])) {
                     continue;
                 }
@@ -246,7 +253,7 @@ public class DefaultSecurityApi implements SecurityApi {
                     groupPermissions = new HashSet<String>();
                     groupToValues.put(permissionParts[0], groupPermissions);
                 }
-                if (permissionParts.length == 1 || permissionParts[1].equals("*")) {
+                if (permissionParts.length == 1 || "*".equals(permissionParts[1])) {
                     groupPermissions.clear();
                     groupPermissions.add("*");
                     resolved = true;
@@ -265,9 +272,9 @@ public class DefaultSecurityApi implements SecurityApi {
         }
 
         final List<String> sanitizedPermissions = new ArrayList<String>();
-        for (String group : groupToValues.keySet()) {
+        for (final String group : groupToValues.keySet()) {
             final Set<String> groupPermissions = groupToValues.get(group);
-            for (String value : groupPermissions) {
+            for (final String value : groupPermissions) {
                 sanitizedPermissions.add(String.format("%s:%s", group, value));
             }
         }
@@ -298,7 +305,7 @@ public class DefaultSecurityApi implements SecurityApi {
         }).orNull();
 
         if (killBillJdbcRealm != null) {
-            SimplePrincipalCollection principals = new SimplePrincipalCollection();
+            final SimplePrincipalCollection principals = new SimplePrincipalCollection();
             principals.add(username, killBillJdbcRealm.getName());
             killBillJdbcRealm.clearCachedAuthorizationInfo(principals);
         }

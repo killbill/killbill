@@ -38,7 +38,7 @@ import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -154,6 +154,32 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
     }
 
     @Override
+    public void updateTenantLastKeyValue(final String key, final String value, final InternalCallContext context) {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUIDs.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
+                final TenantKVSqlDao tenantKVSqlDao = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class);
+
+                // Retrieve all values for key ordered with recordId (last at the end)
+                final List<TenantKVModelDao> tenantKV = tenantKVSqlDao.getTenantValueForKey(key, context);
+                final String id;
+                if (!tenantKV.isEmpty()) {
+                    id = tenantKV.get(tenantKV.size() - 1).getId().toString();
+                    tenantKVSqlDao.updateTenantValueKey(id, value, context);
+                } else {
+                    id = tenantKVModelDao.getId().toString();
+                    tenantKVSqlDao.create(tenantKVModelDao, context);
+                }
+                final TenantKVModelDao rehydrated = tenantKVSqlDao.getById(id, context);
+                broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
+                return null;
+            }
+        });
+
+    }
+
+    @Override
     public void deleteTenantKey(final String key, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
@@ -171,6 +197,16 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
             @Override
             public TenantKVModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getByRecordId(recordId, context);
+            }
+        });
+    }
+
+    @Override
+    public List<TenantKVModelDao> searchTenantKeyValues(final String searchKeyPrefix, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TenantKVModelDao>>() {
+            @Override
+            public List<TenantKVModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).searchTenantKeyValues(String.format("%s%%", searchKeyPrefix), context);
             }
         });
     }

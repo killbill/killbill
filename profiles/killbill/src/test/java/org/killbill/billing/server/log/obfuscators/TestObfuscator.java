@@ -41,7 +41,7 @@ public class TestObfuscator extends ServerTestSuiteNoDB {
         final Pattern pattern = Pattern.compile("number=([^;]+)");
         final ImmutableList<Pattern> patterns = ImmutableList.<Pattern>of(pattern);
         Assert.assertEquals(obfuscator.obfuscate("number=1234;number=12345;number=123456;number=1234567;number=12345678;number=123456789", patterns, Mockito.mock(ILoggingEvent.class)),
-                            "number=MASKED;number=MASKED;number=MASKED;number=MASKED*;number=*MASKED*;number=*MASKED**");
+                            "number=****;number=*****;number=******;number=*******;number=********;number=*********");
 
     }
 
@@ -51,12 +51,12 @@ public class TestObfuscator extends ServerTestSuiteNoDB {
         final Pattern pattern2 = Pattern.compile("numberB=([^;]+)");
         final ImmutableList<Pattern> patterns = ImmutableList.<Pattern>of(pattern1, pattern2);
         Assert.assertEquals(obfuscator.obfuscate("number=1234;numberB=12345;number=123456;numberB=1234567;number=12345678;numberB=123456789", patterns, Mockito.mock(ILoggingEvent.class)),
-                            "number=MASKED;numberB=MASKED;number=MASKED;numberB=MASKED*;number=*MASKED*;numberB=*MASKED**");
+                            "number=****;numberB=*****;number=******;numberB=*******;number=********;numberB=*********");
 
     }
 
     @Test(groups = "fast")
     public void testObfuscateConfidentialData() {
-        Assert.assertEquals(obfuscator.obfuscateConfidentialData("5137004986396403", "6403"), "***MASKED***");
+        Assert.assertEquals(obfuscator.obfuscateConfidentialData("5137004986396403", "6403"), "************");
     }
 }

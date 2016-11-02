@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalTime;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
 
@@ -31,18 +32,21 @@ public class MutableInternalCallContext extends InternalCallContext {
     private final Long initialAccountRecordId;
     private final Long initialTenantRecordId;
     private final DateTimeZone initialReferenceDateTimeZone;
+    private final LocalTime initialReferenceTime;
     private final DateTime initialCreatedDate;
     private final DateTime initialUpdatedDate;
 
     private Long accountRecordId;
     private Long tenantRecordId;
-    private DateTimeZone referenceDateTimeZone;
+    private DateTimeZone fixedOffsetTimeZone;
+    private LocalTime referenceTime;
     private DateTime createdDate;
     private DateTime updatedDate;
 
     public MutableInternalCallContext(final Long tenantRecordId,
                                       @Nullable final Long accountRecordId,
-                                      @Nullable final DateTimeZone referenceDateTimeZone,
+                                      @Nullable final DateTimeZone fixedOffsetTimeZone,
+                                      @Nullable final DateTime referenceTime,
                                       final UUID userToken,
                                       final String userName,
                                       final CallOrigin callOrigin,
@@ -51,10 +55,11 @@ public class MutableInternalCallContext extends InternalCallContext {
                                       final String comment,
                                       final DateTime createdDate,
                                       final DateTime updatedDate) {
-        super(tenantRecordId, accountRecordId, referenceDateTimeZone, userToken, userName, callOrigin, userType, reasonCode, comment, createdDate, updatedDate);
+        super(tenantRecordId, accountRecordId, fixedOffsetTimeZone, referenceTime, userToken, userName, callOrigin, userType, reasonCode, comment, createdDate, updatedDate);
         this.initialAccountRecordId = accountRecordId;
         this.initialTenantRecordId = tenantRecordId;
-        this.initialReferenceDateTimeZone = referenceDateTimeZone;
+        this.initialReferenceDateTimeZone = fixedOffsetTimeZone;
+        this.initialReferenceTime = super.getReferenceTime();
         this.initialCreatedDate = createdDate;
         this.initialUpdatedDate = updatedDate;
 
@@ -80,12 +85,25 @@ public class MutableInternalCallContext extends InternalCallContext {
     }
 
     @Override
-    public DateTimeZone getReferenceDateTimeZone() {
-        return referenceDateTimeZone;
+    public DateTimeZone getFixedOffsetTimeZone() {
+        return fixedOffsetTimeZone;
     }
 
-    public void setReferenceDateTimeZone(final DateTimeZone referenceDateTimeZone) {
-        this.referenceDateTimeZone = referenceDateTimeZone;
+    public void setFixedOffsetTimeZone(final DateTimeZone fixedOffsetTimeZone) {
+        this.fixedOffsetTimeZone = fixedOffsetTimeZone;
+    }
+
+    @Override
+    public LocalTime getReferenceTime() {
+        return referenceTime;
+    }
+
+    public void setReferenceTime(final LocalTime referenceTime) {
+        this.referenceTime = referenceTime;
+    }
+
+    public void setReferenceTime(final DateTime referenceDateTime) {
+        this.referenceTime = computeReferenceTime(referenceDateTime);
     }
 
     @Override
@@ -109,7 +127,8 @@ public class MutableInternalCallContext extends InternalCallContext {
     public void reset() {
         setAccountRecordId(initialAccountRecordId);
         setTenantRecordId(initialTenantRecordId);
-        setReferenceDateTimeZone(initialReferenceDateTimeZone);
+        setFixedOffsetTimeZone(initialReferenceDateTimeZone);
+        setReferenceTime(initialReferenceTime);
         setCreatedDate(initialCreatedDate);
         setUpdatedDate(initialUpdatedDate);
     }

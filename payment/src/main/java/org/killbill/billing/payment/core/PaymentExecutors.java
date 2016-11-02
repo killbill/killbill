@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.concurrent.Executors;
 import org.killbill.commons.concurrent.WithProfilingThreadPoolExecutor;
 

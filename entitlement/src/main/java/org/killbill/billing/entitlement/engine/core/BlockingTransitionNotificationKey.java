@@ -18,6 +18,7 @@ package org.killbill.billing.entitlement.engine.core;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.notificationq.api.NotificationEvent;
 
@@ -29,6 +30,9 @@ public class BlockingTransitionNotificationKey implements NotificationEvent {
     private final UUID blockingStateId;
     private final UUID blockableId;
     private final BlockingStateType blockingType;
+    private final String stateName;
+    private final String service;
+    private final DateTime effectiveDate;
     private final Boolean isTransitionToBlockedBilling;
     private final Boolean isTransitionToUnblockedBilling;
     private final Boolean isTransitionToBlockedEntitlement;
@@ -37,6 +41,9 @@ public class BlockingTransitionNotificationKey implements NotificationEvent {
     @JsonCreator
     public BlockingTransitionNotificationKey(@JsonProperty("blockingStateId") final UUID blockingStateId,
                                              @JsonProperty("blockableId") final UUID blockableId,
+                                             @JsonProperty("stateName") final String stateName,
+                                             @JsonProperty("service") final String service,
+                                             @JsonProperty("effectiveDate") final DateTime effectiveDate,
                                              @JsonProperty("type") final BlockingStateType blockingType,
                                              @JsonProperty("isTransitionToBlockedBilling") final Boolean isTransitionToBlockedBilling,
                                              @JsonProperty("isTransitionToUnblockedBilling") final Boolean isTransitionToUnblockedBilling,
@@ -45,6 +52,9 @@ public class BlockingTransitionNotificationKey implements NotificationEvent {
 
         this.blockingStateId = blockingStateId;
         this.blockableId = blockableId;
+        this.service = service;
+        this.stateName = stateName;
+        this.effectiveDate = effectiveDate;
         this.blockingType = blockingType;
         this.isTransitionToBlockedBilling = isTransitionToBlockedBilling;
         this.isTransitionToUnblockedBilling = isTransitionToUnblockedBilling;
@@ -62,6 +72,18 @@ public class BlockingTransitionNotificationKey implements NotificationEvent {
 
     public BlockingStateType getBlockingType() {
         return blockingType;
+    }
+
+    public String getStateName() {
+        return stateName;
+    }
+
+    public String getService() {
+        return service;
+    }
+
+    public DateTime getEffectiveDate() {
+        return effectiveDate;
     }
 
     @JsonProperty("isTransitionToBlockedBilling")
@@ -115,6 +137,15 @@ public class BlockingTransitionNotificationKey implements NotificationEvent {
         if (blockableId != null ? !blockableId.equals(that.blockableId) : that.blockableId != null) {
             return false;
         }
+        if (stateName != null ? !stateName.equals(that.stateName) : that.stateName != null) {
+            return false;
+        }
+        if (service != null ? !service.equals(that.service) : that.service != null) {
+            return false;
+        }
+        if (effectiveDate != null ? effectiveDate.compareTo(that.effectiveDate) != 0 : that.effectiveDate != null) {
+            return false;
+        }
         if (blockingType != that.blockingType) {
             return false;
         }
@@ -138,6 +169,9 @@ public class BlockingTransitionNotificationKey implements NotificationEvent {
     public int hashCode() {
         int result = blockingStateId != null ? blockingStateId.hashCode() : 0;
         result = 31 * result + (blockableId != null ? blockableId.hashCode() : 0);
+        result = 31 * result + (stateName != null ? stateName.hashCode() : 0);
+        result = 31 * result + (service != null ? service.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (blockingType != null ? blockingType.hashCode() : 0);
         result = 31 * result + (isTransitionToBlockedBilling != null ? isTransitionToBlockedBilling.hashCode() : 0);
         result = 31 * result + (isTransitionToUnblockedBilling != null ? isTransitionToUnblockedBilling.hashCode() : 0);

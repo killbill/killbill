@@ -20,6 +20,7 @@ package org.killbill.billing.catalog.io;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -37,6 +38,7 @@ import org.killbill.clock.Clock;
 import org.killbill.xmlloader.UriAccessor;
 import org.killbill.xmlloader.XMLLoader;
 
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 public class VersionedCatalogLoader implements CatalogLoader {
@@ -63,8 +65,9 @@ public class VersionedCatalogLoader implements CatalogLoader {
                 xmlURIs = new ArrayList<URI>();
                 xmlURIs.add(new URI(uriString));
             } else { // Assume its a directory
+                final URL url = getURLFromString(uriString);
                 final String directoryContents = UriAccessor.accessUriAsString(uriString);
-                xmlURIs = findXmlReferences(directoryContents, new URL(uriString));
+                xmlURIs = findXmlReferences(directoryContents, url);
             }
 
             final VersionedCatalog result = new VersionedCatalog(clock);
@@ -74,11 +77,21 @@ public class VersionedCatalogLoader implements CatalogLoader {
             }
             return result;
         } catch (Exception e) {
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog ", e);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog: ", e.getMessage());
         }
     }
 
-    public VersionedCatalog load(final Iterable<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
+    private URL getURLFromString(final String urlString) {
+        try {
+            // If the string provided is already a URL (with correct scheme, ...) return the URL object
+            return new URL(urlString);
+        } catch (final MalformedURLException ignore) {
+        }
+        // If not, this must be something on the classpath
+        return Resources.getResource(urlString);
+    }
+
+    public VersionedCatalog load(final Iterable<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {
         final VersionedCatalog result = new VersionedCatalog(clock);
         final URI uri;
         try {
@@ -86,13 +99,15 @@ public class VersionedCatalogLoader implements CatalogLoader {
             for (final String cur : catalogXMLs) {
                 final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes());
                 final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(uri, curCatalogStream, StandaloneCatalog.class);
-                result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory));
+                if (!filterTemplateCatalog || !catalog.isTemplateCatalog()) {
+                    result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory));
+                }
             }
             return result;
         } catch (final CatalogApiException e) {
             throw e;
         } catch (final Exception e) {
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, "Problem encountered loading catalog ", e);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
         }
     }
 

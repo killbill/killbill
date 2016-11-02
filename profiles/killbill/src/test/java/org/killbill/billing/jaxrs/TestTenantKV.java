@@ -72,7 +72,7 @@ public class TestTenantKV extends TestJaxrsBase {
         final Tenant otherTenantWithDifferentStateMachine = new Tenant();
         otherTenantWithDifferentStateMachine.setApiKey(UUID.randomUUID().toString());
         otherTenantWithDifferentStateMachine.setApiSecret(UUID.randomUUID().toString());
-        killBillClient.createTenant(otherTenantWithDifferentStateMachine, requestOptions);
+        killBillClient.createTenant(otherTenantWithDifferentStateMachine, true, requestOptions);
         final RequestOptions requestOptionsOtherTenant = requestOptions.extend()
                                                                        .withTenantApiKey(otherTenantWithDifferentStateMachine.getApiKey())
                                                                        .withTenantApiSecret(otherTenantWithDifferentStateMachine.getApiSecret())

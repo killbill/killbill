@@ -298,7 +298,6 @@ values (
 <accountRecordIdValueWithComma()>
 <tenantRecordIdValueWithComma()>
 )
-;
 >>
 
 /** Audits, History **/

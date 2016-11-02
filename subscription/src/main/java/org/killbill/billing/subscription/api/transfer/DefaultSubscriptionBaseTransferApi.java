@@ -37,8 +37,6 @@ import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
-import org.killbill.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
-import org.killbill.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import org.killbill.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
 import org.killbill.billing.subscription.api.timeline.BundleBaseTimeline;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseRepairException;
@@ -85,7 +83,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
         SubscriptionBaseEvent newEvent = null;
 
-        final Catalog catalog = catalogService.getFullCatalog(context);
+        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
 
         final DateTime effectiveDate = existingEvent.getEffectiveDate().isBefore(transferDate) ? transferDate : existingEvent.getEffectiveDate();
 
@@ -101,14 +99,11 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 .setEventPlan(existingEvent.getPlanName())
                 .setEventPlanPhase(currentPhase.getName())
                 .setEventPriceList(spec.getPriceListName())
-                .setActiveVersion(subscription.getActiveVersion())
                 .setEffectiveDate(effectiveDate)
                 .setFromDisk(true);
 
         switch (existingEvent.getSubscriptionTransitionType()) {
             case TRANSFER:
-            case MIGRATE_ENTITLEMENT:
-            case RE_CREATE:
             case CREATE:
                 newEvent = new ApiEventTransfer(apiBuilder);
                 break;
@@ -120,15 +115,9 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
             case PHASE:
                 newEvent = firstEvent ? new ApiEventTransfer(apiBuilder) :
-                           PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(), currentPhase.getName(), effectiveDate);
+                           PhaseEventData.createNextPhaseEvent(subscription.getId(), currentPhase.getName(), effectiveDate);
                 break;
 
-            // Ignore these events except if it's the first event for the new subscription
-            case MIGRATE_BILLING:
-                if (firstEvent) {
-                    newEvent = new ApiEventTransfer(apiBuilder);
-                }
-                break;
             case CANCEL:
                 break;
 
@@ -213,7 +202,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
             final DefaultSubscriptionBaseBundle subscriptionBundleData = new DefaultSubscriptionBaseBundle(bundleKey, destAccountId, effectiveTransferDate,
                                                                                                            bundle.getOriginalCreatedDate(), clock.getUTCNow(), clock.getUTCNow());
-            final List<SubscriptionMigrationData> subscriptionMigrationDataList = new LinkedList<SubscriptionMigrationData>();
+            final List<SubscriptionTransferData> subscriptionTransferDataList = new LinkedList<SubscriptionTransferData>();
 
             final List<TransferCancelData> transferCancelDataList = new LinkedList<TransferCancelData>();
 
@@ -226,7 +215,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                     continue;
                 }
                 final List<ExistingEvent> existingEvents = cur.getExistingEvents();
-                final ProductCategory productCategory = existingEvents.get(0).getPlanPhaseSpecifier().getProductCategory();
+                final ProductCategory productCategory = existingEvents.get(0).getProductCategory();
 
                 // For future add-on cancellations, don't add a cancellation on disk right away (mirror the behavior
                 // on base plan cancellations, even though we don't support un-transfer today)
@@ -238,11 +227,10 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
                     final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                          .setSubscriptionId(cur.getId())
-                                                                                         .setActiveVersion(cur.getActiveVersion())
                                                                                          .setEffectiveDate(effectiveCancelDate)
                                                                                          .setFromDisk(true));
 
-                    TransferCancelData cancelData = new TransferCancelData(oldSubscription, cancelEvent);
+                    final TransferCancelData cancelData = new TransferCancelData(oldSubscription, cancelEvent);
                     transferCancelDataList.add(cancelData);
                 }
 
@@ -266,15 +254,15 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                                                                     ImmutableList.<SubscriptionBaseEvent>of(), fromInternalCallContext);
 
                 final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate, fromInternalCallContext);
-                final SubscriptionMigrationData curData = new SubscriptionMigrationData(defaultSubscriptionBase, events, null);
-                subscriptionMigrationDataList.add(curData);
+                final SubscriptionTransferData curData = new SubscriptionTransferData(defaultSubscriptionBase, events, null);
+                subscriptionTransferDataList.add(curData);
             }
-            BundleMigrationData bundleMigrationData = new BundleMigrationData(subscriptionBundleData, subscriptionMigrationDataList);
+            BundleTransferData bundleTransferData = new BundleTransferData(subscriptionBundleData, subscriptionTransferDataList);
 
             // Atomically cancelWithRequestedDate all subscription on old account and create new bundle, subscriptions, events for new account
-            dao.transfer(sourceAccountId, destAccountId, bundleMigrationData, transferCancelDataList, fromInternalCallContext, toInternalCallContext);
+            dao.transfer(sourceAccountId, destAccountId, bundleTransferData, transferCancelDataList, fromInternalCallContext, toInternalCallContext);
 
-            return bundleMigrationData.getData();
+            return bundleTransferData.getData();
         } catch (SubscriptionBaseRepairException e) {
             throw new SubscriptionBaseTransferApiException(e);
         } catch (CatalogApiException e) {

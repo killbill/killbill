@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
@@ -41,7 +43,6 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +75,7 @@ public class ContiguousIntervalConsumableInArrear {
     private final UUID invoiceId;
     private final AtomicBoolean isBuilt;
     private final LocalDate rawUsageStartDate;
-    private final AccountDateAndTimeZoneContext dateAndTimeZoneContext;
+    private final InternalTenantContext internalTenantContext;
 
     public ContiguousIntervalConsumableInArrear(final Usage usage,
                                                 final UUID accountId,
@@ -82,7 +83,7 @@ public class ContiguousIntervalConsumableInArrear {
                                                 final List<RawUsage> rawSubscriptionUsage,
                                                 final LocalDate targetDate,
                                                 final LocalDate rawUsageStartDate,
-                                                final AccountDateAndTimeZoneContext dateAndTimeZoneContext) {
+                                                final InternalTenantContext internalTenantContext) {
         this.usage = usage;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -90,7 +91,7 @@ public class ContiguousIntervalConsumableInArrear {
         this.rawSubscriptionUsage = rawSubscriptionUsage;
         this.targetDate = targetDate;
         this.rawUsageStartDate = rawUsageStartDate;
-        this.dateAndTimeZoneContext = dateAndTimeZoneContext;
+        this.internalTenantContext = internalTenantContext;
         this.billingEvents = Lists.newLinkedList();
         this.transitionTimes = Lists.newLinkedList();
         this.isBuilt = new AtomicBoolean(false);
@@ -104,7 +105,6 @@ public class ContiguousIntervalConsumableInArrear {
      *
      * @param closedInterval whether there was a last billing event referencing the usage section or whether this is ongoing and
      *                       then targetDate will define the endDate.
-     * @return
      */
     public ContiguousIntervalConsumableInArrear build(final boolean closedInterval) {
 
@@ -112,11 +112,11 @@ public class ContiguousIntervalConsumableInArrear {
         Preconditions.checkState((!closedInterval && billingEvents.size() >= 1) ||
                                  (closedInterval && billingEvents.size() >= 2));
 
-        final LocalDate startDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(billingEvents.get(0).getEffectiveDate());
+        final LocalDate startDate = internalTenantContext.toLocalDate(billingEvents.get(0).getEffectiveDate());
         if (targetDate.isBefore(startDate)) {
             return this;
         }
-        final LocalDate endDate = closedInterval ? dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(billingEvents.get(billingEvents.size() - 1).getEffectiveDate()) : targetDate;
+        final LocalDate endDate = closedInterval ? internalTenantContext.toLocalDate(billingEvents.get(billingEvents.size() - 1).getEffectiveDate()) : targetDate;
 
         final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, getBCD(), usage.getBillingPeriod(), usage.getBillingMode());
 
@@ -142,30 +142,10 @@ public class ContiguousIntervalConsumableInArrear {
         return this;
     }
 
-    public class ConsumableInArrearItemsAndNextNotificationDate {
-        private final List<InvoiceItem> invoiceItems;
-        private final LocalDate nextNotificationDate;
-
-        public ConsumableInArrearItemsAndNextNotificationDate(final List<InvoiceItem> invoiceItems, final LocalDate nextNotificationDate) {
-            this.invoiceItems = invoiceItems;
-            this.nextNotificationDate = nextNotificationDate;
-        }
-
-        public List<InvoiceItem> getInvoiceItems() {
-            return invoiceItems;
-        }
-
-        public LocalDate getNextNotificationDate() {
-            return nextNotificationDate;
-        }
-    }
-
-
     /**
      * Compute the missing usage invoice items based on what should be billed and what has been billed ($ amount comparison).
      *
      * @param existingUsage existing on disk usage items for the subscription
-     * @return
      * @throws CatalogApiException
      */
     public ConsumableInArrearItemsAndNextNotificationDate computeMissingItemsAndNextNotificationDate(final List<InvoiceItem> existingUsage) throws CatalogApiException {
@@ -182,10 +162,10 @@ public class ContiguousIntervalConsumableInArrear {
         // We start by generating 'marker' USAGE items with $0 that will allow to correctly insert the next notification for when there is no USAGE to bill.
         // Those will be removed by the invoicing code later so as to not end up with superfluous $0 items
         LocalDate prevDate = null;
-        for (LocalDate curDate : transitionTimes) {
+        for (final LocalDate curDate : transitionTimes) {
             if (prevDate != null) {
-                InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
-                                                        getPhaseName(), usage.getName(), prevDate, curDate, BigDecimal.ZERO, getCurrency());
+                final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
+                                                              getPhaseName(), usage.getName(), prevDate, curDate, BigDecimal.ZERO, getCurrency());
                 result.add(item);
             }
             prevDate = curDate;
@@ -212,8 +192,8 @@ public class ContiguousIntervalConsumableInArrear {
             if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
                 final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
                 if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
-                    InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
-                                                            getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), amountToBill, getCurrency());
+                    final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
+                                                                  getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), amountToBill, getCurrency());
                     result.add(item);
                 }
             }
@@ -230,25 +210,23 @@ public class ContiguousIntervalConsumableInArrear {
         while (eventIt.hasNext()) {
             final BillingEvent thisEvent = nextEvent;
             nextEvent = eventIt.next();
-            final LocalDate startDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(thisEvent.getEffectiveDate());
-            final LocalDate endDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(nextEvent.getEffectiveDate());
+            final LocalDate startDate = internalTenantContext.toLocalDate(thisEvent.getEffectiveDate());
+            final LocalDate endDate = internalTenantContext.toLocalDate(nextEvent.getEffectiveDate());
 
             final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, thisEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR);
             final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
             result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;
         }
 
-        final LocalDate startDate = dateAndTimeZoneContext.computeLocalDateFromFixedAccountOffset(nextEvent.getEffectiveDate());
+        final LocalDate startDate = internalTenantContext.toLocalDate(nextEvent.getEffectiveDate());
         final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, null, targetDate, nextEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR);
         final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
         result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;
         return result;
     }
 
-
     @VisibleForTesting
     List<RolledUpUsage> getRolledUpUsage() {
-
         final Iterator<RawUsage> rawUsageIterator = rawSubscriptionUsage.iterator();
         if (!rawUsageIterator.hasNext()) {
             return ImmutableList.of();
@@ -280,7 +258,7 @@ public class ContiguousIntervalConsumableInArrear {
         // matching RolledUpUsage for that interval, and we'll detect that in the 'computeMissingItems' logic
         //
         LocalDate prevDate = null;
-        for (LocalDate curDate : transitionTimes) {
+        for (final LocalDate curDate : transitionTimes) {
 
             if (prevDate != null) {
 
@@ -290,8 +268,8 @@ public class ContiguousIntervalConsumableInArrear {
                 // Start consuming prevRawUsage element if it exists and falls into the range
                 if (prevRawUsage != null) {
                     if (prevRawUsage.getDate().compareTo(prevDate) >= 0 && prevRawUsage.getDate().compareTo(curDate) < 0) {
-                        Long currentAmount = perRangeUnitToAmount.get(prevRawUsage.getUnitType());
-                        Long updatedAmount = (currentAmount != null) ? currentAmount + prevRawUsage.getAmount() : prevRawUsage.getAmount();
+                        final Long currentAmount = perRangeUnitToAmount.get(prevRawUsage.getUnitType());
+                        final Long updatedAmount = (currentAmount != null) ? currentAmount + prevRawUsage.getAmount() : prevRawUsage.getAmount();
                         perRangeUnitToAmount.put(prevRawUsage.getUnitType(), updatedAmount);
                         prevRawUsage = null;
                     }
@@ -311,8 +289,8 @@ public class ContiguousIntervalConsumableInArrear {
                             break;
                         }
 
-                        Long currentAmount = perRangeUnitToAmount.get(curRawUsage.getUnitType());
-                        Long updatedAmount = (currentAmount != null) ? currentAmount + curRawUsage.getAmount() : curRawUsage.getAmount();
+                        final Long currentAmount = perRangeUnitToAmount.get(curRawUsage.getUnitType());
+                        final Long updatedAmount = (currentAmount != null) ? currentAmount + curRawUsage.getAmount() : curRawUsage.getAmount();
                         perRangeUnitToAmount.put(curRawUsage.getUnitType(), updatedAmount);
                     }
                 }
@@ -345,7 +323,7 @@ public class ContiguousIntervalConsumableInArrear {
         BigDecimal result = BigDecimal.ZERO;
         final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, unitType);
         int remainingUnits = nbUnits.intValue();
-        for (TieredBlock tieredBlock : tieredBlocks) {
+        for (final TieredBlock tieredBlock : tieredBlocks) {
 
             final int blockTierSize = tieredBlock.getSize().intValue();
             final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
@@ -371,7 +349,7 @@ public class ContiguousIntervalConsumableInArrear {
 
         Preconditions.checkState(isBuilt.get());
         BigDecimal billedAmount = BigDecimal.ZERO;
-        for (InvoiceItem ii : filteredUsageForInterval) {
+        for (final InvoiceItem ii : filteredUsageForInterval) {
             billedAmount = billedAmount.add(ii.getAmount());
         }
         // Return the billed $ amount (not the # of units)
@@ -414,7 +392,6 @@ public class ContiguousIntervalConsumableInArrear {
         return billingEvents.get(0).getBillCycleDayLocal();
     }
 
-
     public UUID getBundleId() {
         return billingEvents.get(0).getSubscription().getBundleId();
     }
@@ -436,8 +413,33 @@ public class ContiguousIntervalConsumableInArrear {
         return billingEvents.get(0).getCurrency();
     }
 
-    public DateTimeZone getAccountTimeZone() {
-        return billingEvents.get(0).getTimeZone();
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ContiguousIntervalConsumableInArrear{");
+        sb.append("transitionTimes=").append(transitionTimes);
+        sb.append(", billingEvents=").append(billingEvents);
+        sb.append(", rawSubscriptionUsage=").append(rawSubscriptionUsage);
+        sb.append(", rawUsageStartDate=").append(rawUsageStartDate);
+        sb.append('}');
+        return sb.toString();
     }
 
+    public class ConsumableInArrearItemsAndNextNotificationDate {
+
+        private final List<InvoiceItem> invoiceItems;
+        private final LocalDate nextNotificationDate;
+
+        public ConsumableInArrearItemsAndNextNotificationDate(final List<InvoiceItem> invoiceItems, final LocalDate nextNotificationDate) {
+            this.invoiceItems = invoiceItems;
+            this.nextNotificationDate = nextNotificationDate;
+        }
+
+        public List<InvoiceItem> getInvoiceItems() {
+            return invoiceItems;
+        }
+
+        public LocalDate getNextNotificationDate() {
+            return nextNotificationDate;
+        }
+    }
 }

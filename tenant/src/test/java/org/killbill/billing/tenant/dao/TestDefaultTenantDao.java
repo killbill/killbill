@@ -17,6 +17,7 @@
 package org.killbill.billing.tenant.dao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -75,4 +76,55 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
         value = tenantDao.getTenantValueForKey("THE_KEY", internalCallContext);
         Assert.assertEquals(value.size(), 0);
     }
+
+
+
+
+    @Test(groups = "slow")
+    public void testTenantKeyValueUpdate() throws Exception {
+        final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
+                                                       UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        tenantDao.create(new TenantModelDao(tenant), internalCallContext);
+
+        tenantDao .addTenantKeyValue("MY_KEY", "TheValue1", false, internalCallContext);
+        tenantDao .addTenantKeyValue("MY_KEY", "TheValue2", false, internalCallContext);
+        tenantDao .addTenantKeyValue("MY_KEY", "TheValue3", false, internalCallContext);
+
+        final List<String> value = tenantDao.getTenantValueForKey("MY_KEY", internalCallContext);
+        Assert.assertEquals(value.size(), 3);
+
+
+        tenantDao.updateTenantLastKeyValue("MY_KEY", "NewValue3", internalCallContext);
+
+        final List<String> newValues = tenantDao.getTenantValueForKey("MY_KEY", internalCallContext);
+        Assert.assertEquals(newValues.size(), 3);
+
+        Assert.assertEquals(newValues.get(0), "TheValue1");
+        Assert.assertEquals(newValues.get(1), "TheValue2");
+        Assert.assertEquals(newValues.get(2), "NewValue3");
+    }
+
+
+    @Test(groups = "slow")
+    public void testTenantSearch() throws Exception {
+        final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
+                                                       UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        tenantDao.create(new TenantModelDao(tenant), internalCallContext);
+
+        tenantDao .addTenantKeyValue("foobar", "foobar1", false, internalCallContext);
+        tenantDao .addTenantKeyValue("foobar", "foobar2", false, internalCallContext);
+        tenantDao .addTenantKeyValue("foobar", "foobar3", false, internalCallContext);
+
+
+        tenantDao.updateTenantLastKeyValue("foo", "foo1", internalCallContext);
+
+        tenantDao.updateTenantLastKeyValue("fooXX", "fooXX1", internalCallContext);
+
+        tenantDao.updateTenantLastKeyValue("bar", "bar", internalCallContext);
+
+        final List<TenantKVModelDao> result = tenantDao.searchTenantKeyValues("foo", internalCallContext);
+        Assert.assertEquals(result.size(), 5);
+
+    }
+
 }

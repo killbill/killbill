@@ -42,6 +42,7 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
+import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner.ControlOperation;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
@@ -61,7 +62,6 @@ import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 import org.mockito.Mockito;
-import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -229,6 +229,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         try {
             runner.run(true,
                        TransactionType.AUTHORIZE,
+                       ControlOperation.AUTHORIZE,
                        account,
                        paymentMethodId,
                        null,
@@ -269,6 +270,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
 
         runner.run(true,
                    TransactionType.AUTHORIZE,
+                   ControlOperation.AUTHORIZE,
                    account,
                    paymentMethodId,
                    null,
@@ -303,6 +305,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
 
         runner.run(true,
                    TransactionType.AUTHORIZE,
+                   ControlOperation.AUTHORIZE,
                    account,
                    paymentMethodId,
                    null,
@@ -337,6 +340,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         try {
             runner.run(true,
                        TransactionType.AUTHORIZE,
+                       ControlOperation.AUTHORIZE,
                        account,
                        paymentMethodId,
                        null,
@@ -375,6 +379,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         try {
             runner.run(true,
                        TransactionType.AUTHORIZE,
+                       ControlOperation.AUTHORIZE,
                        account,
                        paymentMethodId,
                        null,
@@ -412,6 +417,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         try {
             runner.run(true,
                        TransactionType.AUTHORIZE,
+                       ControlOperation.AUTHORIZE,
                        account,
                        paymentMethodId,
                        null,
@@ -449,6 +455,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         try {
             runner.run(true,
                        TransactionType.AUTHORIZE,
+                       ControlOperation.AUTHORIZE,
                        account,
                        paymentMethodId,
                        null,
@@ -493,6 +500,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         runner.run(state,
                    false,
                    TransactionType.AUTHORIZE,
+                   ControlOperation.AUTHORIZE,
                    account,
                    paymentMethodId,
                    null,
@@ -543,6 +551,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
             runner.run(state,
                        false,
                        TransactionType.AUTHORIZE,
+                       ControlOperation.AUTHORIZE,
                        account,
                        paymentMethodId,
                        null,
@@ -590,6 +599,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
             runner.run(state,
                        false,
                        TransactionType.AUTHORIZE,
+                       ControlOperation.AUTHORIZE,
                        account,
                        paymentMethodId,
                        null,

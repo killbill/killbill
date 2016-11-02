@@ -45,7 +45,8 @@ public class InternalCallContext extends InternalTenantContext {
 
     public InternalCallContext(final Long tenantRecordId,
                                @Nullable final Long accountRecordId,
-                               @Nullable final DateTimeZone referenceDateTimeZone,
+                               @Nullable final DateTimeZone fixedOffsetTimeZone,
+                               @Nullable final DateTime referenceDateTime,
                                final UUID userToken,
                                final String userName,
                                final CallOrigin callOrigin,
@@ -54,7 +55,7 @@ public class InternalCallContext extends InternalTenantContext {
                                final String comment,
                                final DateTime createdDate,
                                final DateTime updatedDate) {
-        super(tenantRecordId, accountRecordId, referenceDateTimeZone);
+        super(tenantRecordId, accountRecordId, fixedOffsetTimeZone, referenceDateTime);
         this.userToken = userToken;
         this.createdBy = userName;
         this.updatedBy = userName;
@@ -62,24 +63,42 @@ public class InternalCallContext extends InternalTenantContext {
         this.contextUserType = userType;
         this.reasonCode = reasonCode;
         this.comments = comment;
-        this.createdDate = toUTCDateTime(createdDate);
-        this.updatedDate = toUTCDateTime(updatedDate);
+        this.createdDate = createdDate;
+        this.updatedDate = updatedDate;
     }
 
-    public InternalCallContext(final Long tenantRecordId, final CallContext callContext) {
-        this(tenantRecordId, null, null, callContext.getUserToken(), callContext.getUserName(), callContext.getCallOrigin(),
-             callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getCreatedDate(),
-             callContext.getUpdatedDate());
+    public InternalCallContext(final Long tenantRecordId, final CallContext callContext, final DateTime utcNow) {
+        this(tenantRecordId,
+             null,
+             null,
+             null,
+             callContext.getUserToken(),
+             callContext.getUserName(),
+             callContext.getCallOrigin(),
+             callContext.getUserType(),
+             callContext.getReasonCode(),
+             callContext.getComments(),
+             utcNow,
+             utcNow);
     }
 
-    public InternalCallContext(final InternalCallContext context, final Long accountRecordId, final DateTimeZone referenceDateTimeZone) {
-        this(context.getTenantRecordId(), accountRecordId, referenceDateTimeZone, context.getUserToken(), context.getCreatedBy(), context.getCallOrigin(),
-             context.getContextUserType(), context.getReasonCode(), context.getComments(), context.getCreatedDate(),
-             context.getUpdatedDate());
+    public InternalCallContext(final InternalCallContext context, final Long accountRecordId, final DateTimeZone fixedOffsetTimeZone, final DateTime referenceDateTime, final DateTime utcNow) {
+        this(context.getTenantRecordId(),
+             accountRecordId,
+             fixedOffsetTimeZone,
+             referenceDateTime,
+             context.getUserToken(),
+             context.getCreatedBy(),
+             context.getCallOrigin(),
+             context.getContextUserType(),
+             context.getReasonCode(),
+             context.getComments(),
+             utcNow,
+             utcNow);
     }
 
     public InternalCallContext(final InternalCallContext context, final DateTime updatedDate) {
-        this(context.getTenantRecordId(), context.getAccountRecordId(), context.getReferenceDateTimeZone(), context.getUserToken(), context.getCreatedBy(), context.getCallOrigin(),
+        this(context.getTenantRecordId(), context.getAccountRecordId(), context.getFixedOffsetTimeZone(), context.getReferenceDateTime(), context.getUserToken(), context.getCreatedBy(), context.getCallOrigin(),
              context.getContextUserType(), context.getReasonCode(), context.getComments(), context.getCreatedDate(), updatedDate);
     }
 

@@ -36,12 +36,33 @@ from <tableName()> t
 where t.tenant_key = :tenantKey
 and  t.is_active
 <AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
+;
+>>
+
+searchTenantKeyValues() ::= <<
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where t.tenant_key like :tenantKeyPrefix
+and  t.is_active
+<AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
 ;
 >>
 
 markTenantKeyAsDeleted() ::= <<
 update <tableName()>
 set is_active = false
+where id = :id
+<AND_CHECK_TENANT("")>
+;
+>>
+
+
+updateTenantValueKey() ::= <<
+update <tableName()>
+set tenant_value = :tenantValue
 where id = :id
 <AND_CHECK_TENANT("")>
 ;

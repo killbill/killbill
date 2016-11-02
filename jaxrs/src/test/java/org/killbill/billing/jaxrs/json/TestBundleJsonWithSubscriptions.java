@@ -45,7 +45,6 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID().toString(),
                                                                       BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                       new LocalDate(),
-                                                                      new LocalDate(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
@@ -56,7 +55,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                       UUID.randomUUID().toString(),
                                                                       null);
 
-        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson(null, "somePhaseType", BigDecimal.ONE, null);
+        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson(null, "somePhaseType", BigDecimal.ONE, null, null);
 
         final SubscriptionJson subscription = new SubscriptionJson(UUID.randomUUID().toString(),
                                                                    UUID.randomUUID().toString(),
@@ -70,10 +69,12 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    UUID.randomUUID().toString(),
                                                                    UUID.randomUUID().toString(),
                                                                    UUID.randomUUID().toString(),
+                                                                   UUID.randomUUID().toString(),
                                                                    new LocalDate(),
                                                                    new LocalDate(),
                                                                    new LocalDate(),
                                                                    new LocalDate(),
+                                                                   null,
                                                                    ImmutableList.<EventSubscriptionJson>of(event),
                                                                    ImmutableList.of(priceOverride),
                                                                    auditLogs);
@@ -87,5 +88,6 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         final String asJson = mapper.writeValueAsString(bundleJson);
         final BundleJson fromJson = mapper.readValue(asJson, BundleJson.class);
         Assert.assertEquals(fromJson, bundleJson);
-    }
+
+      }
 }

@@ -42,7 +42,7 @@ import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.util.PluginProperties;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 
 import com.google.common.base.Joiner;
 
@@ -56,7 +56,6 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
     private final ControlPluginRunner controlPluginRunner;
     private final PluginDispatcher<HostedPaymentPageFormDescriptor> paymentPluginFormDispatcher;
     private final PluginDispatcher<GatewayNotification> paymentPluginNotificationDispatcher;
-    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultPaymentGatewayApi(final PaymentConfig paymentConfig,
@@ -64,13 +63,12 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                     final ControlPluginRunner controlPluginRunner,
                                     final PaymentExecutors executors,
                                     final InternalCallContextFactory internalCallContextFactory) {
-        super(paymentConfig);
+        super(paymentConfig, internalCallContextFactory);
         this.paymentGatewayProcessor = paymentGatewayProcessor;
         this.controlPluginRunner = controlPluginRunner;
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentPluginFormDispatcher = new PluginDispatcher<HostedPaymentPageFormDescriptor>(paymentPluginTimeoutSec, executors);
         this.paymentPluginNotificationDispatcher = new PluginDispatcher<GatewayNotification>(paymentPluginTimeoutSec, executors);
-        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -129,7 +127,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                             final CallContext callContext,
                                             final PluginDispatcher<T> pluginDispatcher,
                                             final WithPaymentControlCallback<T> callback) throws PaymentApiException {
-        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions);
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
         if (paymentControlPluginNames.isEmpty()) {
             return callback.doPaymentGatewayApiOperation(paymentMethodId, properties);
         }

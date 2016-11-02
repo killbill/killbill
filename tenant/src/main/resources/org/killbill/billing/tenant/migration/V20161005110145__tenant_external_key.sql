@@ -1,0 +1,1 @@
+alter table tenants modify external_key varchar(255);

@@ -152,8 +152,10 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 log.warn("Error retrieving subscriptionId='{}'", event.getSubscriptionId());
                 return;
             }
-            if (subscription.getActiveVersion() > event.getActiveVersion()) {
-                // Skip repaired events
+
+            final SubscriptionBaseTransitionData transition = subscription.getTransitionFromEvent(event, seqId);
+            if (transition == null) {
+                log.warn("Skipping event ='{}', no matching transition was built", event.getType());
                 return;
             }
 
@@ -163,11 +165,12 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
             } else if (event.getType() == EventType.API_USER && subscription.getCategory() == ProductCategory.BASE) {
                 final CallContext callContext = internalCallContextFactory.createCallContext(context);
                 eventSent = onBasePlanEvent(subscription, event, callContext);
+            } else if (event.getType() == EventType.BCD_UPDATE) {
+                eventSent = false;
             }
 
             if (!eventSent) {
                 // Methods above invoking the DAO will send this event directly from the transaction
-                final SubscriptionBaseTransitionData transition = subscription.getTransitionFromEvent(event, seqId);
                 final BusEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition,
                                                                                 subscription.getAlignStartDate(),
                                                                                 context.getUserToken(),
@@ -184,10 +187,9 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
 
     private boolean onPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final InternalCallContext context) {
         try {
-            final DateTime now = clock.getUTCNow();
-            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, context);
+            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, readyPhaseEvent.getEffectiveDate(), context);
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                                              PhaseEventData.createNextPhaseEvent(subscription.getId(), subscription.getActiveVersion(),
+                                              PhaseEventData.createNextPhaseEvent(subscription.getId(),
                                                                                   nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                               null;
             if (nextPhaseEvent != null) {

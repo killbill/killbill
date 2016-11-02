@@ -136,7 +136,7 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
     public void testEventTotalOrdering() {
         final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE, 1L);
         final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CANCEL, 2L);
-        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.RE_CREATE, 3L);
+        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CANCEL, 3L);
 
         final SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
         set.add(event2);
@@ -187,9 +187,9 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
         final Account account = new MockAccountBuilder().build();
         return new DefaultBillingEvent(sub, effectiveDate, true,
-                                       shotgun, shotgunMonthly,
-                                       BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-                                       "Test Event 1", totalOrdering, type, DateTimeZone.UTC);
+                                       shotgun, shotgunMonthly, BigDecimal.ZERO,
+                                       Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
+                                       "Test Event 1", totalOrdering, type, DateTimeZone.UTC, null, false);
     }
 
     private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,

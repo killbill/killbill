@@ -58,11 +58,14 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.server.DefaultServerService;
 import org.killbill.billing.server.ServerService;
 import org.killbill.billing.server.config.KillbillServerConfig;
+import org.killbill.billing.server.config.MultiTenantNotificationConfig;
 import org.killbill.billing.server.filters.ResponseCorsFilter;
 import org.killbill.billing.server.notifications.PushNotificationListener;
+import org.killbill.billing.server.notifications.PushNotificationRetryService;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
+import org.killbill.billing.util.config.definition.NotificationConfig;
 import org.killbill.billing.util.dao.AuditLogModelDaoMapper;
 import org.killbill.billing.util.dao.RecordIdIdMappingsMapper;
 import org.killbill.billing.util.email.EmailModule;
@@ -72,12 +75,13 @@ import org.killbill.billing.util.glue.BroadcastModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ClockModule;
+import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
-import org.killbill.billing.util.glue.NodesModule;
 import org.killbill.billing.util.glue.KillBillShiroAopModule;
 import org.killbill.billing.util.glue.KillbillApiAopModule;
+import org.killbill.billing.util.glue.NodesModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
@@ -87,15 +91,18 @@ import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
+import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.ResultSetMapperFactory;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 public class KillbillServerModule extends KillbillPlatformModule {
 
     public static final String SHIRO_DATA_SOURCE_ID = "shiro";
+    public static final String STATIC_CONFIG = "StaticConfig";
 
     public KillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final KillbillConfigSource configSource) {
         super(servletContext, serverConfig, configSource);
@@ -145,6 +152,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new BroadcastModule(configSource));
         install(new BeatrixModule(configSource));
         install(new CacheModule(configSource));
+        install(new ConfigModule(configSource));
         install(new CallContextModule(configSource));
         install(new CatalogModule(configSource));
         install(new CurrencyModule(configSource));
@@ -205,7 +213,12 @@ public class KillbillServerModule extends KillbillPlatformModule {
     }
 
     protected void configurePushNotification() {
-        bind(ServerService.class).to(DefaultServerService.class).asEagerSingleton();
+        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final NotificationConfig notificationConfig = factory.build(NotificationConfig.class);
+        bind(NotificationConfig.class).annotatedWith(Names.named(STATIC_CONFIG)).toInstance(notificationConfig);
+        bind(NotificationConfig.class).to(MultiTenantNotificationConfig.class).asEagerSingleton();
         bind(PushNotificationListener.class).asEagerSingleton();
+        bind(PushNotificationRetryService.class).asEagerSingleton();
+        bind(ServerService.class).to(DefaultServerService.class).asEagerSingleton();
     }
 }

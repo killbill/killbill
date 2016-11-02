@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -41,6 +41,7 @@ public class InvoiceItemFactory {
         final DateTime createdDate = invoiceItemModelDao.getCreatedDate();
         final UUID invoiceId = invoiceItemModelDao.getInvoiceId();
         final UUID accountId = invoiceItemModelDao.getAccountId();
+        final UUID childAccountId = invoiceItemModelDao.getChildAccountId();
         final UUID bundleId = invoiceItemModelDao.getBundleId();
         final UUID subscriptionId = invoiceItemModelDao.getSubscriptionId();
         final String planName = invoiceItemModelDao.getPlanName();
@@ -72,9 +73,6 @@ public class InvoiceItemFactory {
             case CREDIT_ADJ:
                 item = new CreditAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency);
                 break;
-            case REFUND_ADJ:
-                item = new RefundAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency);
-                break;
             case REPAIR_ADJ:
                 item = new RepairAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, endDate, description, amount, currency, linkedItemId);
                 break;
@@ -86,6 +84,9 @@ public class InvoiceItemFactory {
                 break;
             case TAX:
                 item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, description, amount, currency, linkedItemId);
+                break;
+            case PARENT_SUMMARY:
+                item = new ParentInvoiceItem(id, createdDate, invoiceId, accountId, childAccountId, amount, currency, description);
                 break;
             default:
                 throw new RuntimeException("Unexpected type of event item " + type);

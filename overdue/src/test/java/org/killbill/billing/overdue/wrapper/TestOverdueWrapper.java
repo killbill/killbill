@@ -51,19 +51,19 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
         state = config.getOverdueStatesAccount().findState("OD1");
         account = testOverdueHelper.createImmutableAccountData(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account, internalCallContext);
-        wrapper.refresh(internalCallContext);
+        wrapper.refresh(clock.getUTCNow(), internalCallContext);
         testOverdueHelper.checkStateApplied(state);
 
         state = config.getOverdueStatesAccount().findState("OD2");
         account = testOverdueHelper.createImmutableAccountData(clock.getUTCToday().minusDays(41));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account, internalCallContext);
-        wrapper.refresh(internalCallContext);
+        wrapper.refresh(clock.getUTCNow(), internalCallContext);
         testOverdueHelper.checkStateApplied(state);
 
         state = config.getOverdueStatesAccount().findState("OD3");
         account = testOverdueHelper.createImmutableAccountData(clock.getUTCToday().minusDays(51));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account, internalCallContext);
-        wrapper.refresh(internalCallContext);
+        wrapper.refresh(clock.getUTCNow(), internalCallContext);
         testOverdueHelper.checkStateApplied(state);
     }
 
@@ -79,7 +79,7 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
         state = config.getOverdueStatesAccount().findState(OverdueWrapper.CLEAR_STATE_NAME);
         account = testOverdueHelper.createImmutableAccountData(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account, internalCallContext);
-        final OverdueState result = wrapper.refresh(internalCallContext);
+        final OverdueState result = wrapper.refresh(clock.getUTCNow(), internalCallContext);
 
         Assert.assertEquals(result.getName(), state.getName());
         Assert.assertEquals(result.isBlockChanges(), state.isBlockChanges());

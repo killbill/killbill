@@ -56,30 +56,12 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testCannotChangeToSamePlan() throws CatalogApiException {
-        final DefaultProduct product1 = cat.getCurrentProducts()[0];
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-
-        final PlanPhaseSpecifier from = new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN);
-        final PlanSpecifier to = new PlanSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName());
-
-        try {
-            cat.getPlanRules().planChange(from, to, cat);
-            Assert.fail("We did not see an exception when  trying to change plan to the same plan");
-        } catch (IllegalPlanChange e) {
-            // Correct - cannot change to the same plan
-        } catch (CatalogApiException e) {
-            Assert.fail("", e);
-        }
-    }
-
-    @Test(groups = "fast")
     public void testExistingPriceListIsKept() throws CatalogApiException {
-        final DefaultProduct product1 = cat.getCurrentProducts()[0];
+        final DefaultProduct product1 = cat.getCurrentProduct(0);
         final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        final PlanPhaseSpecifier from = new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN);
-        final PlanSpecifier to = new PlanSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.ANNUAL, priceList1.getName());
+        final PlanPhaseSpecifier from = new PlanPhaseSpecifier(product1.getName(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN);
+        final PlanSpecifier to = new PlanSpecifier(product1.getName(), BillingPeriod.ANNUAL, priceList1.getName());
 
         PlanChangeResult result = null;
         try {
@@ -97,13 +79,13 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBaseCase() throws CatalogApiException {
-        final DefaultProduct product1 = cat.getCurrentProducts()[0];
-        final DefaultProduct product2 = cat.getCurrentProducts()[1];
+        final DefaultProduct product1 = cat.getCurrentProduct(0);
+        final DefaultProduct product2 = cat.getCurrentProduct(1);
         final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[0];
 
-        final PlanPhaseSpecifier from = new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN);
-        final PlanSpecifier to = new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.MONTHLY, null);
+        final PlanPhaseSpecifier from = new PlanPhaseSpecifier(product1.getName(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN);
+        final PlanSpecifier to = new PlanSpecifier(product2.getName(), BillingPeriod.MONTHLY, null);
 
         PlanChangeResult result = null;
         try {

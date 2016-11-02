@@ -39,18 +39,18 @@ public class TestBillingAlignment extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testTransitionAccountBAToSubscriptionBA() throws Exception {
-        // Set the BCD to the 25th
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
-
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
+
+        // Set the BCD to the 25th
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         // (Start with monthly that has an 'Account' billing alignment)
         //
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));

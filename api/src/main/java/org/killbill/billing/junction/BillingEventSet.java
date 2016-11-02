@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -23,7 +25,6 @@ import java.util.UUID;
 
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.util.AccountDateAndTimeZoneContext;
 
 public interface BillingEventSet extends SortedSet<BillingEvent> {
 
@@ -32,8 +33,6 @@ public interface BillingEventSet extends SortedSet<BillingEvent> {
     public BillingMode getRecurringBillingMode();
 
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff();
-
-    public AccountDateAndTimeZoneContext getAccountDateAndTimeZoneContext();
 
     public Map<String, Usage> getUsages();
 }

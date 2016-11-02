@@ -53,6 +53,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
@@ -65,6 +66,7 @@ import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
@@ -74,7 +76,7 @@ import org.killbill.billing.lifecycle.api.Lifecycle;
 import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.osgi.config.OSGIConfig;
-import org.killbill.billing.overdue.OverdueInternalApi;
+import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.listener.OverdueListener;
@@ -84,8 +86,11 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PaymentOptions;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
+import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -99,16 +104,12 @@ import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
-import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.callcontext.TestCallContext;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
-import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -117,7 +118,10 @@ import org.testng.annotations.BeforeMethod;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -126,6 +130,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
+
 
 public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
@@ -180,7 +185,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     protected SubscriptionBaseTimelineApi repairApi;
 
     @Inject
-    protected OverdueInternalApi overdueUserApi;
+    protected OverdueApi overdueUserApi;
 
     @Inject
     protected InvoiceUserApi invoiceUserApi;
@@ -199,6 +204,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     @Inject
     protected SubscriptionApi subscriptionApi;
+
 
     @Named(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME)
     @Inject
@@ -359,9 +365,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
 
-        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, controlCacheDispatcher.getCacheController(CacheType.RECORD_ID));
-        internalCallContext.setAccountRecordId(accountRecordId);
-        internalCallContext.setReferenceDateTimeZone(account.getTimeZone());
+        refreshCallContext(account.getId());
 
         final PaymentMethodPlugin info = createPaymentMethodPlugin();
 
@@ -385,6 +389,23 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                                        .currency(Currency.USD)
                                        .paymentMethodId(UUID.randomUUID())
                                        .timeZone(DateTimeZone.UTC)
+                                       .build();
+    }
+
+    protected AccountData getChildAccountData(final int billingDay, final UUID parentAccountId, final boolean isPaymentDelegatedToParent) {
+        return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+                                       .firstNameLength(6)
+                                       .email(UUID.randomUUID().toString().substring(1, 8))
+                                       .phone(UUID.randomUUID().toString().substring(1, 8))
+                                       .migrated(false)
+                                       .isNotifiedForInvoices(false)
+                                       .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                                       .billingCycleDayLocal(billingDay)
+                                       .currency(Currency.USD)
+                                       .paymentMethodId(UUID.randomUUID())
+                                       .timeZone(DateTimeZone.UTC)
+                                       .parentAccountId(parentAccountId)
+                                       .isPaymentDelegatedToParent(isPaymentDelegatedToParent)
                                        .build();
     }
 
@@ -433,7 +454,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
                     properties.add(prop1);
                     return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amount, currency, UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, refreshedCallContext());
+                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -452,7 +473,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     properties.add(prop1);
 
                     return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, refreshedCallContext());
+                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -472,7 +493,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     properties.add(prop1);
 
                     return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, EXTERNAL_PAYMENT_OPTIONS, refreshedCallContext());
+                                                                       UUID.randomUUID().toString(), properties, EXTERNAL_PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -491,7 +512,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Payment apply(@Nullable final Void input) {
                 try {
                     return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
-                                                                     PLUGIN_PROPERTIES, PAYMENT_OPTIONS, refreshedCallContext());
+                                                                     PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -500,24 +521,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }, events);
     }
 
-    protected Payment refundPaymentWithAdjustmentAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
-            @Override
-            public Payment apply(@Nullable final Void input) {
-
-                final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
-                properties.add(prop1);
-                try {
-                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
-                                                                     properties, PAYMENT_OPTIONS, refreshedCallContext());
-                } catch (final PaymentApiException e) {
-                    fail(e.toString());
-                    return null;
-                }
-            }
-        }, events);
-    }
 
     protected Payment refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final Payment payment, final Map<UUID, BigDecimal> iias, final NextEvent... events) {
         return refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment, payment.getPurchasedAmount(), payment.getCurrency(), iias, events);
@@ -535,7 +538,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
                 try {
                     return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
-                                                                     properties, PAYMENT_OPTIONS, refreshedCallContext());
+                                                                     properties, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -554,7 +557,33 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Payment apply(@Nullable final Void input) {
                 try {
                     return paymentApi.createChargebackWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
-                                                                         PAYMENT_OPTIONS, refreshedCallContext());
+                                                                         PAYMENT_OPTIONS, callContext);
+                } catch (final PaymentApiException e) {
+                    fail(e.toString());
+                    return null;
+                }
+            }
+        }, events);
+    }
+
+    protected Payment createChargeBackReversalAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+        final PaymentTransaction chargeback = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
+                                                                                 new Predicate<PaymentTransaction>() {
+                                                                                     @Override
+                                                                                     public boolean apply(final PaymentTransaction input) {
+                                                                                         return TransactionType.CHARGEBACK.equals(input.getTransactionType()) &&
+                                                                                                TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
+                                                                                     }
+                                                                                 });
+        return createChargeBackReversalAndCheckForCompletion(account, payment, chargeback.getExternalKey(), events);
+    }
+
+    protected Payment createChargeBackReversalAndCheckForCompletion(final Account account, final Payment payment, final String chargebackTransactionExternalKey, final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
+            @Override
+            public Payment apply(@Nullable final Void input) {
+                try {
+                    return paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), chargebackTransactionExternalKey, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -578,12 +607,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
-                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, null, ImmutableList.<PluginProperty>of(), callContext);
+                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
-                    fail();
+                    fail("Unable to create entitlement", e);
                     return null;
                 }
             }
@@ -612,8 +641,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
-                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final Entitlement entitlement = entitlementApi.addEntitlement(bundleId, spec, null, null, ImmutableList.<PluginProperty>of(), callContext);
+                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+                    final Entitlement entitlement = entitlementApi.addEntitlement(bundleId, spec, null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
@@ -637,9 +666,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     if (billingPolicy == null) {
-                        refreshedEntitlement = refreshedEntitlement.changePlan(productName, billingPeriod, priceList, null, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlan(new PlanSpecifier(productName, billingPeriod, priceList), null, ImmutableList.<PluginProperty>of(), callContext);
                     } else {
-                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, priceList, null, null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(new PlanSpecifier(productName, billingPeriod, priceList), null, null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
                     }
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
@@ -687,8 +716,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Void apply(@Nullable final Void input) {
                 try {
-                    invoiceUserApi.insertCreditForInvoice(account.getId(), invoice.getId(), invoice.getBalance(), invoice.getInvoiceDate(),
-                                                          account.getCurrency(), callContext);
+                    for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+                        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(),
+                                                                   invoice.getId(),
+                                                                   invoiceItem.getId(),
+                                                                   invoice.getInvoiceDate(),
+                                                                   null,
+                                                                   callContext);
+                    }
+
                 } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }
@@ -703,7 +739,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Void apply(@Nullable final Void input) {
                 try {
                     invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), invoice.getInvoiceItems().get(itemNb - 1).getId(),
-                                                               invoice.getInvoiceDate(), callContext);
+                                                               invoice.getInvoiceDate(), null, callContext);
                 } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }
@@ -728,11 +764,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         assertListenerStatus();
     }
 
-    // Update the context dates (matters for payments ordering for instance)
-    protected CallContext refreshedCallContext() {
-        return new TestCallContext(callContext, clock.getUTCNow());
-    }
-
     private <T> T doCallAndCheckForCompletion(final Function<Void, T> f, final NextEvent... events) {
         final Joiner joiner = Joiner.on(", ");
         log.debug("            ************    STARTING BUS HANDLER CHECK : {} ********************", joiner.join(events));
@@ -753,7 +784,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         private final SubscriptionEventType action;
         private final UUID subscriptionId;
         private final UUID bundleId;
-        private final DateTime effectiveDate;
+        private final LocalDate effectiveDate;
         private final BillingActionPolicy billingPolicy;
 
         public TestDryRunArguments(final DryRunType dryRunType) {
@@ -775,10 +806,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                                    final SubscriptionEventType action,
                                    final UUID subscriptionId,
                                    final UUID bundleId,
-                                   final DateTime effectiveDate,
+                                   final LocalDate effectiveDate,
                                    final BillingActionPolicy billingPolicy) {
             this.dryRunType = dryRunType;
-            this.spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceList, phaseType);
+            this.spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList, phaseType);
             this.action = action;
             this.subscriptionId = subscriptionId;
             this.bundleId = bundleId;
@@ -807,7 +838,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public DateTime getEffectiveDate() {
+        public LocalDate getEffectiveDate() {
             return effectiveDate;
         }
 

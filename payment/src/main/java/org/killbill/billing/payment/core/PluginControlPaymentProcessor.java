@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.killbill.automaton.MissingEntryException;
 import org.killbill.automaton.State;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -36,15 +37,18 @@ import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
+import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner.ControlOperation;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
+import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -55,7 +59,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import static org.killbill.billing.payment.logging.PaymentLoggingHelper.logEnterAPICall;
+import static org.killbill.billing.payment.logging.PaymentLoggingHelper.logExitAPICall;
 
 public class PluginControlPaymentProcessor extends ProcessorBase {
 
@@ -86,6 +96,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                        final Iterable<PluginProperty> properties, final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
                                                           TransactionType.AUTHORIZE,
+                                                          ControlOperation.AUTHORIZE,
                                                           account,
                                                           paymentMethodId,
                                                           paymentId,
@@ -104,6 +115,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                  final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
                                                           TransactionType.CAPTURE,
+                                                          ControlOperation.CAPTURE,
                                                           account,
                                                           null,
                                                           paymentId,
@@ -121,6 +133,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                   final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
                                                           TransactionType.PURCHASE,
+                                                          ControlOperation.PURCHASE,
                                                           account,
                                                           paymentMethodId,
                                                           paymentId,
@@ -137,6 +150,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                               final Iterable<PluginProperty> properties, final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
                                                           TransactionType.VOID,
+                                                          ControlOperation.VOID,
                                                           account,
                                                           null,
                                                           paymentId,
@@ -153,6 +167,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                 final Iterable<PluginProperty> properties, final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
                                                           TransactionType.REFUND,
+                                                          ControlOperation.REFUND,
                                                           account,
                                                           null,
                                                           paymentId,
@@ -170,6 +185,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
 
         return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
                                                           TransactionType.CREDIT,
+                                                          ControlOperation.CREDIT,
                                                           account,
                                                           paymentMethodId,
                                                           paymentId,
@@ -186,6 +202,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                     final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
                                                           TransactionType.CHARGEBACK,
+                                                          ControlOperation.CHARGEBACK,
                                                           account,
                                                           null,
                                                           paymentId,
@@ -198,44 +215,109 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                                           callContext, internalCallContext);
     }
 
+    public Payment createChargebackReversal(final boolean isApiPayment, final Account account, final UUID paymentId, final String transactionExternalKey,
+                                            final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+        return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
+                                                          TransactionType.CHARGEBACK,
+                                                          ControlOperation.CHARGEBACK_REVERSAL,
+                                                          account,
+                                                          null,
+                                                          paymentId,
+                                                          null,
+                                                          transactionExternalKey,
+                                                          null,
+                                                          null,
+                                                          ImmutableList.<PluginProperty>of(),
+                                                          paymentControlPluginNames,
+                                                          callContext,
+                                                          internalCallContext);
+    }
+
     public void retryPaymentTransaction(final UUID attemptId, final List<String> paymentControlPluginNames, final InternalCallContext internalCallContext) {
+        final PaymentAttemptModelDao attempt = paymentDao.getPaymentAttempt(attemptId, internalCallContext);
+        log.info("Retrying attemptId='{}', paymentExternalKey='{}', transactionExternalKey='{}'. paymentControlPluginNames='{}'",
+                 attemptId, attempt.getPaymentExternalKey(), attempt.getTransactionExternalKey(), paymentControlPluginNames);
+
+        final PaymentModelDao paymentModelDao = paymentDao.getPaymentByExternalKey(attempt.getPaymentExternalKey(), internalCallContext);
+        final UUID paymentId = paymentModelDao != null ? paymentModelDao.getId() : null;
+
+        final CallContext callContext = buildCallContext(internalCallContext);
+
+        final String transactionType = TransactionType.PURCHASE.name();
+        Account account = null;
+        Payment payment = null;
+        PaymentTransaction paymentTransaction = null;
         try {
-            final PaymentAttemptModelDao attempt = paymentDao.getPaymentAttempt(attemptId, internalCallContext);
-            final PaymentModelDao payment = paymentDao.getPaymentByExternalKey(attempt.getPaymentExternalKey(), internalCallContext);
-            final UUID paymentId = payment != null ? payment.getId() : null;
-
-            final Iterable<PluginProperty> pluginProperties = PluginPropertySerializer.deserialize(attempt.getPluginProperties());
-            final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), internalCallContext);
-            final CallContext callContext = buildCallContext(internalCallContext);
-
+            account = accountInternalApi.getAccountById(attempt.getAccountId(), internalCallContext);
             final State state = paymentControlStateMachineHelper.getState(attempt.getStateName());
+            final Iterable<PluginProperty> pluginProperties = PluginPropertySerializer.deserialize(attempt.getPluginProperties());
 
-            log.debug("Retrying attemptId={}, paymentExternalKey={}, transactionExternalKey={}. paymentControlPluginNames={}, now={}",
-                      attemptId, attempt.getPaymentExternalKey(), attempt.getTransactionExternalKey(), paymentControlPluginNames, clock.getUTCNow());
+            logEnterAPICall(log,
+                            transactionType,
+                            account,
+                            attempt.getPaymentMethodId(),
+                            paymentId,
+                            null,
+                            attempt.getAmount(),
+                            attempt.getCurrency(),
+                            attempt.getPaymentExternalKey(),
+                            attempt.getTransactionExternalKey(),
+                            null,
+                            paymentControlPluginNames);
 
-            pluginControlledPaymentAutomatonRunner.run(state,
-                                                       false,
-                                                       attempt.getTransactionType(),
-                                                       account,
-                                                       attempt.getPaymentMethodId(),
-                                                       paymentId,
-                                                       attempt.getPaymentExternalKey(),
-                                                       attempt.getTransactionExternalKey(),
-                                                       attempt.getAmount(),
-                                                       attempt.getCurrency(),
-                                                       pluginProperties,
-                                                       paymentControlPluginNames,
-                                                       callContext,
-                                                       internalCallContext);
+            payment = pluginControlledPaymentAutomatonRunner.run(state,
+                                                                 false,
+                                                                 attempt.getTransactionType(),
+                                                                 ControlOperation.valueOf(attempt.getTransactionType().toString()),
+                                                                 account,
+                                                                 attempt.getPaymentMethodId(),
+                                                                 paymentId,
+                                                                 attempt.getPaymentExternalKey(),
+                                                                 attempt.getTransactionExternalKey(),
+                                                                 attempt.getAmount(),
+                                                                 attempt.getCurrency(),
+                                                                 pluginProperties,
+                                                                 paymentControlPluginNames,
+                                                                 callContext,
+                                                                 internalCallContext);
 
+            paymentTransaction = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
+                                                                    new Predicate<PaymentTransaction>() {
+                                                                        @Override
+                                                                        public boolean apply(final PaymentTransaction input) {
+                                                                            return attempt.getTransactionExternalKey().equals(input.getExternalKey());
+                                                                        }
+                                                                    });
         } catch (final AccountApiException e) {
             log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final PaymentApiException e) {
-            log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
+            // Log exception unless nothing left to be paid
+            if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode() &&
+                paymentControlPluginNames != null &&
+                paymentControlPluginNames.size() == 1 &&
+                InvoicePaymentControlPluginApi.PLUGIN_NAME.equals(paymentControlPluginNames.get(0))) {
+                log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'. Invoice has already been paid", attemptId, toPluginNamesOnError(paymentControlPluginNames));
+            } else {
+                log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
+            }
         } catch (final PluginPropertySerializerException e) {
             log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final MissingEntryException e) {
             log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
+        } finally {
+            logExitAPICall(log,
+                           transactionType,
+                           account,
+                           payment != null ? payment.getPaymentMethodId() : null,
+                           payment != null ? payment.getId() : null,
+                           paymentTransaction != null ? paymentTransaction.getId() : null,
+                           paymentTransaction != null ? paymentTransaction.getProcessedAmount() : null,
+                           paymentTransaction != null ? paymentTransaction.getProcessedCurrency() : null,
+                           payment != null ? payment.getExternalKey() : null,
+                           paymentTransaction != null ? paymentTransaction.getExternalKey() : null,
+                           paymentTransaction != null ? paymentTransaction.getTransactionStatus() : null,
+                           paymentControlPluginNames,
+                           null);
         }
     }
 

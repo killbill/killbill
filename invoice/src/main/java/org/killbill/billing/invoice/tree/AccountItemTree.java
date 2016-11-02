@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -104,7 +104,6 @@ public class AccountItemTree {
             case TAX:
             case CBA_ADJ:
             case CREDIT_ADJ:
-            case REFUND_ADJ:
             case USAGE:
                 return;
 
@@ -112,6 +111,8 @@ public class AccountItemTree {
             case REPAIR_ADJ:
             case FIXED:
             case ITEM_ADJ:
+                break;
+            case PARENT_SUMMARY:
                 break;
 
             default:

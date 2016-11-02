@@ -1,0 +1,73 @@
+group CatalogOverridePhaseUsageSqlDao;
+
+tableName() ::= "catalog_override_phase_usage"
+
+tableFields(prefix) ::= <<
+  <prefix>usage_number
+, <prefix>usage_def_record_id
+, <prefix>target_phase_def_record_id
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>tenant_record_id
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+tableValues() ::= <<
+  :usageNumber
+, :usageDefRecordId
+, :targetPhaseDefRecordId
+, :createdDate
+, :createdBy
+, :tenantRecordId
+>>
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields()>
+)
+values (
+<tableValues()>
+)
+;
+>>
+
+getByRecordId() ::= <<
+select <allTableFields()>
+from
+<tableName()>
+where record_id = :recordId
+and tenant_record_id = :tenantRecordId
+;
+>>
+
+getTargetPhaseDefinition(keys) ::= <<
+select
+target_phase_def_record_id
+from (select
+      target_phase_def_record_id
+      , count(*) count
+      from
+      <tableName()>
+      where
+      concat_ws(',', usage_number, usage_def_record_id) in (<keys: {key | :key_<i0>}; separator="," >)
+      and tenant_record_id = :tenantRecordId
+      group by target_phase_def_record_id) tmp
+where
+1=1
+and tmp.count = :targetCount
+;
+>>
+
+getLastInsertId() ::= <<
+select LAST_INSERT_ID();
+>>
+

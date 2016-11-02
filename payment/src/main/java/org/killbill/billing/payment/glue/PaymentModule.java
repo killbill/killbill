@@ -32,6 +32,7 @@ import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentService;
 import org.killbill.billing.payment.bus.PaymentBusEventHandler;
+import org.killbill.billing.payment.config.MultiTenantPaymentConfig;
 import org.killbill.billing.payment.caching.EhCacheStateMachineConfigCache;
 import org.killbill.billing.payment.caching.StateMachineConfigCache;
 import org.killbill.billing.payment.caching.StateMachineConfigCacheInvalidationCallback;
@@ -55,8 +56,8 @@ import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.DefaultRetryService.DefaultRetryServiceScheduler;
 import org.killbill.billing.payment.retry.RetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
-import org.killbill.billing.util.config.PaymentConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.xmlloader.XMLLoader;
 import org.skife.config.ConfigurationObjectFactory;
@@ -68,6 +69,8 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
 public class PaymentModule extends KillBillModule {
+
+    public static final String STATIC_CONFIG = "StaticConfig";
 
     public static final String RETRYABLE_NAMED = "Retryable";
 
@@ -134,8 +137,9 @@ public class PaymentModule extends KillBillModule {
     protected void configure() {
         final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
         final PaymentConfig paymentConfig = factory.build(PaymentConfig.class);
+        bind(PaymentConfig.class).annotatedWith(Names.named(STATIC_CONFIG)).toInstance(paymentConfig);
+        bind(PaymentConfig.class).to(MultiTenantPaymentConfig.class).asEagerSingleton();
 
-        bind(PaymentConfig.class).toInstance(paymentConfig);
         bind(new TypeLiteral<OSGIServiceRegistration<PaymentPluginApi>>() {}).toProvider(DefaultPaymentProviderPluginRegistryProvider.class).asEagerSingleton();
         bind(new TypeLiteral<OSGIServiceRegistration<PaymentControlPluginApi>>() {}).toProvider(DefaultPaymentControlProviderPluginRegistryProvider.class).asEagerSingleton();
 

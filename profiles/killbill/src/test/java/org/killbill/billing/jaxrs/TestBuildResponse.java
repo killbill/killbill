@@ -19,7 +19,7 @@ package org.killbill.billing.jaxrs;
 import org.killbill.billing.jaxrs.resources.AccountResource;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.server.log.ServerTestSuiteNoDB;
-import org.killbill.billing.util.config.JaxrsConfig;
+import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.testng.annotations.Test;
 
 import javax.ws.rs.core.Response;

@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.util.config.JaxrsConfig;
+import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.commons.concurrent.WithProfilingThreadPoolExecutor;
 
 public class JaxrsExecutors {

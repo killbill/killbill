@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -50,8 +50,8 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
                                                     @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    InvoicePaymentModelDao getPaymentsForCookieId(@Bind("paymentCookieId") final String paymentCookieId,
-                                                  @BindBean final InternalTenantContext context);
+    InvoicePaymentModelDao getPaymentForCookieId(@Bind("paymentCookieId") final String paymentCookieId,
+                                                 @BindBean final InternalTenantContext context);
 
     @SqlQuery
     BigDecimal getRemainingAmountPaid(@Bind("invoicePaymentId") final String invoicePaymentId,
@@ -68,7 +68,6 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
     @SqlQuery
     List<InvoicePaymentModelDao> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId,
                                                            @BindBean final InternalTenantContext context);
-
 
     @SqlUpdate
     void updateAttempt(@Bind("recordId") Long recordId,

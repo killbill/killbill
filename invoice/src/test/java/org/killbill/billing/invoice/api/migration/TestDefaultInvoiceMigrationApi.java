@@ -23,27 +23,27 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDaoHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+
 public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbeddedDB {
 
-    private final Logger log = LoggerFactory.getLogger(TestDefaultInvoiceMigrationApi.class);
-
     private LocalDate date_migrated;
-    private DateTime date_regular;
+    private LocalDate date_regular;
 
     private UUID accountId;
     private UUID migrationInvoiceId;
@@ -57,7 +57,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         date_migrated = clock.getUTCToday().minusYears(1);
-        date_regular = clock.getUTCNow();
+        date_regular = clock.getUTCToday();
 
         final Account account = invoiceUtil.createAccount(callContext);
         accountId = account.getId();
@@ -66,8 +66,9 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
     }
 
     private UUID createAndCheckMigrationInvoice(final UUID accountId) throws InvoiceApiException {
-        final UUID migrationInvoiceId = migrationApi.createMigrationInvoice(accountId, date_migrated, MIGRATION_INVOICE_AMOUNT,
-                                                                            MIGRATION_INVOICE_CURRENCY, callContext);
+
+        final InvoiceItem recurringItem = new RecurringInvoiceItem(null, accountId, null, null, "planName", "phaseName", new LocalDate(2016, 2, 1), new LocalDate(2016, 3, 1), MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_CURRENCY);
+        final UUID migrationInvoiceId = invoiceUserApi.createMigrationInvoice(accountId, date_migrated, ImmutableList.of(recurringItem), callContext);
         Assert.assertNotNull(migrationInvoiceId);
         //Double check it was created and values are correct
 
@@ -79,7 +80,8 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         //		Assert.assertEquals(invoice.getTargetDate(),now);
         Assert.assertEquals(invoice.getInvoiceItems().size(), 1);
         Assert.assertEquals(invoice.getInvoiceItems().get(0).getAmount().compareTo(MIGRATION_INVOICE_AMOUNT), 0);
-        Assert.assertEquals(InvoiceModelDaoHelper.getBalance(invoice).compareTo(MIGRATION_INVOICE_AMOUNT), 0);
+        Assert.assertEquals(invoice.getInvoiceItems().get(0).getType(), InvoiceItemType.RECURRING);
+        Assert.assertEquals(InvoiceModelDaoHelper.getBalance(invoice).compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(invoice.getCurrency(), MIGRATION_INVOICE_CURRENCY);
         Assert.assertTrue(invoice.isMigrated());
 
@@ -88,7 +90,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
 
     @Test(groups = "slow")
     public void testUserApiAccess() {
-        final List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
+        final List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
         Assert.assertEquals(byAccount.size(), 1);
         Assert.assertEquals(byAccount.get(0).getId(), regularInvoiceId);
 
@@ -97,7 +99,8 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         Assert.assertEquals(byAccountAndDate.get(0).getId(), regularInvoiceId);
 
         final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, new LocalDate(date_regular.plusDays(1)), callContext);
-        Assert.assertEquals(unpaid.size(), 2);
+        Assert.assertEquals(unpaid.size(), 1);
+        Assert.assertEquals(unpaid.iterator().next().getId(), regularInvoiceId);
     }
 
     // ACCOUNT balance should reflect total of migration and non-migration invoices
@@ -108,7 +111,6 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         final BigDecimal balanceOfAllInvoices = InvoiceModelDaoHelper.getBalance(migrationInvoice).add(InvoiceModelDaoHelper.getBalance(regularInvoice));
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
-        log.info("ACCOUNT balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);
         Assert.assertEquals(accountBalance.compareTo(balanceOfAllInvoices), 0);
     }
 }

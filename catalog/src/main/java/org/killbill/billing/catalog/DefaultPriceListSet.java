@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.killbill.billing.ErrorCode;
@@ -37,7 +38,7 @@ import org.killbill.xmlloader.ValidationErrors;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> implements PriceListSet {
     @XmlElement(required = true, name = "defaultPriceList")
-    private PriceListDefault defaultPricelist;
+    private DefaultPriceList defaultPricelist;
 
     @XmlElement(required = false, name = "childPriceList")
     private DefaultPriceList[] childPriceLists;
@@ -48,23 +49,30 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         }
     }
 
-    public DefaultPriceListSet(final PriceListDefault defaultPricelist, final DefaultPriceList[] childPriceLists) {
+    public DefaultPriceListSet(final DefaultPriceList defaultPricelist, final DefaultPriceList[] childPriceLists) {
         this.defaultPricelist = defaultPricelist;
         this.childPriceLists = childPriceLists != null ? childPriceLists : new DefaultPriceList[0];
     }
 
-    public DefaultPlan getPlanFrom(final String priceListName, final Product product,
-                                   final BillingPeriod period) throws CatalogApiException {
-        DefaultPlan result = null;
+    public Plan getPlanFrom(final Product product, final BillingPeriod period, final String priceListName) throws CatalogApiException {
+
+        Collection<Plan> plans = null;
         final DefaultPriceList pl = findPriceListFrom(priceListName);
         if (pl != null) {
-            result = pl.findPlan(product, period);
+            plans = pl.findPlans(product, period);
         }
-        if (result != null) {
-            return result;
+        if (plans.size() == 0) {
+            plans = defaultPricelist.findPlans(product, period);
         }
-
-        return defaultPricelist.findPlan(product, period);
+        switch(plans.size()) {
+            case 0:
+                return null;
+            case 1:
+                return plans.iterator().next();
+            default:
+                throw new CatalogApiException(ErrorCode.CAT_MULTIPLE_MATCHING_PLANS_FOR_PRICELIST,
+                                              priceListName, product.getName(), period);
+        }
     }
 
     public DefaultPriceList findPriceListFrom(final String priceListName) throws CatalogApiException {
@@ -142,8 +150,4 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         return result;
     }
 
-    @Override
-    public Plan getPlanListFrom(final String s, final Product product, final BillingPeriod billingPeriod) {
-        return null;
-    }
 }

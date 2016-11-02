@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -42,8 +43,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -53,16 +52,23 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.entitlement.api.SubscriptionApi;
+import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.jaxrs.json.BillingExceptionJson;
 import org.killbill.billing.jaxrs.json.BillingExceptionJson.StackTraceElementJson;
+import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.JsonBase;
 import org.killbill.billing.jaxrs.json.PluginPropertyJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -98,6 +104,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
@@ -122,6 +129,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final AuditUserApi auditUserApi;
     protected final AccountUserApi accountUserApi;
     protected final PaymentApi paymentApi;
+    protected final SubscriptionApi subscriptionApi;
     protected final Context context;
     protected final Clock clock;
 
@@ -134,6 +142,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                              final AuditUserApi auditUserApi,
                              final AccountUserApi accountUserApi,
                              final PaymentApi paymentApi,
+                             final SubscriptionApi subscriptionApi,
                              final Clock clock,
                              final Context context) {
         this.uriBuilder = uriBuilder;
@@ -142,6 +151,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         this.auditUserApi = auditUserApi;
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
+        this.subscriptionApi = subscriptionApi;
         this.clock = clock;
         this.context = context;
     }
@@ -149,6 +159,33 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected ObjectType getObjectType() {
         return null;
     }
+
+    public Response addBlockingState(final BlockingStateJson json,
+                                     final String id,
+                                     final BlockingStateType type,
+                                     final String requestedDate,
+                                     final List<String> pluginPropertiesString,
+                                     final String createdBy,
+                                     final String reason,
+                                     final String comment,
+                                     final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID blockableId = UUID.fromString(id);
+
+        final boolean isBlockBilling = (json.isBlockBilling() != null && json.isBlockBilling());
+        final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
+        final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
+
+        final LocalDate resolvedRequestedDate = toLocalDate(requestedDate);
+        final BlockingState input = new DefaultBlockingState(blockableId, type, json.getStateName(), json.getService(), isBlockChange, isBlockEntitlement, isBlockBilling, null);
+        subscriptionApi.addBlockingState(input, resolvedRequestedDate, pluginProperties, callContext);
+        return Response.status(Status.OK).build();
+    }
+
+
+
 
     protected Response getTags(final UUID accountId, final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {
         final List<Tag> tags = tagUserApi.getTagsForObject(taggedObjectId, getObjectType(), includeDeleted, context);
@@ -302,19 +339,20 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected void validatePaymentMethodForAccount(final UUID accountId, final UUID paymentMethodId, final CallContext callContext) throws PaymentApiException {
-        verifyNonNull(paymentMethodId, "paymentMethodId should be specified");
-
+        if (paymentMethodId == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, accountId);
+        }
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(paymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
         if (!paymentMethod.getAccountId().equals(accountId)) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
     }
 
-    protected PaymentTransaction lookupPendingTransaction(final Payment initialPayment, @Nullable final String transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
+    protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final String transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
         final Collection<PaymentTransaction> pendingTransaction  =  Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
             public boolean apply(final PaymentTransaction input) {
-                if (input.getTransactionStatus() != TransactionStatus.PENDING) {
+                if (input.getTransactionStatus() != TransactionStatus.PENDING && input.getTransactionStatus() != TransactionStatus.SUCCESS) {
                     return false;
                 }
                 if (transactionId != null && !transactionId.equals(input.getId().toString())) {
@@ -360,51 +398,19 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-    protected LocalDate toLocalDate(final UUID accountId, final String inputDate, final TenantContext context) throws AccountApiException {
-        final LocalDate maybeResult = extractLocalDate(inputDate);
-        if (maybeResult != null) {
-            return maybeResult;
-        }
-        Account account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
-        final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
-        return toLocalDate(account, inputDateTime, context);
+    protected LocalDate toLocalDateDefaultToday(final UUID accountId, @Nullable final String inputDate, final TenantContext context) throws AccountApiException {
+        final Account account = accountId != null ? accountUserApi.getAccountById(accountId, context) : null;
+        return toLocalDateDefaultToday(account, inputDate, context);
     }
 
-    protected LocalDate toLocalDate(final Account account, final String inputDate, final TenantContext context) {
-
-        final LocalDate maybeResult = extractLocalDate(inputDate);
-        if (maybeResult != null) {
-            return maybeResult;
-        }
-        final DateTime inputDateTime = inputDate != null ? DATE_TIME_FORMATTER.parseDateTime(inputDate) : clock.getUTCNow();
-        return toLocalDate(account, inputDateTime, context);
+    protected LocalDate toLocalDateDefaultToday(final Account account, @Nullable final String inputDate, final TenantContext context) {
+        // TODO Switch to cached normalized timezone when available
+        return MoreObjects.firstNonNull(toLocalDate(inputDate), clock.getToday(account.getTimeZone()));
     }
 
-    private LocalDate toLocalDate(final Account account, final DateTime inputDate, final TenantContext context) {
-        if (account == null && inputDate == null) {
-            // We have no inputDate and so accountTimeZone so we default to LocalDate as seen in UTC
-            return new LocalDate(clock.getUTCNow(), DateTimeZone.UTC);
-        } else if (account == null && inputDate != null) {
-            // We were given a date but can't get timezone, default in UTC
-            return new LocalDate(inputDate, DateTimeZone.UTC);
-        } else if (account != null && inputDate == null) {
-            // We have no inputDate but for accountTimeZone so default to LocalDate as seen in account timezone
-            return new LocalDate(clock.getUTCNow(), account.getTimeZone());
-        } else {
-            // Precise LocalDate as requested
-            return new LocalDate(inputDate, account.getTimeZone());
-        }
-    }
-
-    private LocalDate extractLocalDate(final String inputDate) {
-        if (inputDate != null) {
-            try {
-                final LocalDate localDate = LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
-                return localDate;
-            } catch (final IllegalArgumentException expectedAndIgnore) {
-            }
-        }
-        return null;
+    // API for subscription and invoice generation: keep null, the lower layers will default to now()
+    protected LocalDate toLocalDate(@Nullable final String inputDate) {
+        return inputDate == null || inputDate.isEmpty() ? null : LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
     }
 
     protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<PluginPropertyJson> pluginProperties) {
@@ -448,7 +454,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return properties;
     }
 
-    protected Payment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final UUID paymentMethodId, final Boolean externalPayment, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
+    protected Payment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final UUID paymentMethodId, final Boolean externalPayment, final String paymentExternalKey, final String transactionExternalKey, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
 
         final List<PluginProperty> properties = new ArrayList<PluginProperty>();
         final Iterator<PluginProperty> pluginPropertyIterator = pluginProperties.iterator();
@@ -456,8 +462,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             properties.add(pluginPropertyIterator.next());
         }
 
-        final String paymentExternalKey = UUIDs.randomUUID().toString();
-        final String transactionExternalKey = UUIDs.randomUUID().toString();
         final PluginProperty invoiceProperty = new PluginProperty("IPCD_INVOICE_ID" /* InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID (contract with plugin)  */,
                                                                   invoiceId.toString(), false);
         properties.add(invoiceProperty);
@@ -544,8 +548,13 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         Preconditions.checkArgument(actual == expected, errorMessage);
     }
 
-    protected Response createPaymentResponse(final UriInfo uriInfo, final Payment payment, final TransactionType transactionType,
-                                             @Nullable final String transactionExternalKey) {
+    protected void logDeprecationParameterWarningIfNeeded(@Nullable final String deprecatedParam, final String... replacementParams) {
+        if (deprecatedParam != null) {
+            log.warn(String.format("Parameter %s is being deprecated: Instead use parameters %s", deprecatedParam, Joiner.on(",").join(replacementParams)));
+        }
+    }
+
+    protected Response createPaymentResponse(final UriInfo uriInfo, final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey) {
         final PaymentTransaction createdTransaction = findCreatedTransaction(payment, transactionType, transactionExternalKey);
         Preconditions.checkNotNull(createdTransaction, "No transaction of type '%s' found", transactionType);
 

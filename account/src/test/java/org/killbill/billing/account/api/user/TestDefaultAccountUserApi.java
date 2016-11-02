@@ -23,8 +23,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.AccountTestSuiteWithEmbeddedDB;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.account.api.DefaultMutableAccountData;
@@ -40,6 +42,7 @@ import com.google.common.eventbus.Subscribe;
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.killbill.billing.account.AccountTestUtils.createTestAccount;
+import static org.testng.Assert.assertEquals;
 
 public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
@@ -70,9 +73,9 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         final Account account = createAccount(new DefaultAccount(createTestAccount()));
 
         // Update the address and leave other fields null
-        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, 0, null,
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, false, 0, null,
                                                                                     null, null, null, null, null, null,
-                                                                                    null, null, null, null, false, false);
+                                                                                    null, null, null, null, null, false, false);
         final String newAddress1 = UUID.randomUUID().toString();
         mutableAccountData.setAddress1(newAddress1);
 
@@ -127,6 +130,51 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
         public List<AccountCreationInternalEvent> getAccountCreationInternalEvents() {
             return accountCreationInternalEvents;
+        }
+    }
+
+    @Test(groups = "slow", description = "Test Account create Parent and Child")
+    public void testCreateParentAndChildAccounts() throws Exception {
+
+        final Account parentAccount = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
+
+        final AccountModelDao childAccountModel = createTestAccount();
+        childAccountModel.setParentAccountId(parentAccount.getId());
+        childAccountModel.setIsPaymentDelegatedToParent(true);
+        final AccountData childAccountData = new DefaultAccount(childAccountModel);
+        final Account childAccount = accountUserApi.createAccount(childAccountData, callContext);
+
+        final Account retrievedChildAccount = accountUserApi.getAccountById(childAccount.getId(), callContext);
+
+        Assert.assertNull(parentAccount.getParentAccountId());
+        Assert.assertNotNull(retrievedChildAccount.getParentAccountId());
+        Assert.assertEquals(retrievedChildAccount.getId(), childAccount.getId());
+        Assert.assertEquals(retrievedChildAccount.getParentAccountId(), parentAccount.getId());
+        Assert.assertEquals(retrievedChildAccount.isPaymentDelegatedToParent(), childAccount.isPaymentDelegatedToParent());
+    }
+
+    @Test(groups = "slow", description = "Test Account create Child with a non existing Parent",
+            expectedExceptions = AccountApiException.class, expectedExceptionsMessageRegExp = "Account does not exist for id .*")
+    public void testCreateChildAccountWithInvalidParent() throws Exception {
+
+        final AccountModelDao childAccountModel = createTestAccount();
+        childAccountModel.setParentAccountId(UUID.randomUUID());
+        final AccountData childAccountData = new DefaultAccount(childAccountModel);
+        final Account childAccount = accountUserApi.createAccount(childAccountData, callContext);
+
+    }
+
+    @Test(groups = "slow", description = "Test Account creation with External Key over limit")
+        public void testCreateAccountWithExternalKeyOverLimit() throws Exception {
+        AccountModelDao accountModelDao = createTestAccount();
+        // Set an externalKey of 256 characters (over limit)
+        accountModelDao.setExternalKey("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.");
+        final AccountData accountData = new DefaultAccount(accountModelDao);
+        try {
+            accountUserApi.createAccount(accountData, callContext);
+            Assert.fail();
+        } catch (final AccountApiException e) {
+            assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
         }
     }
 }

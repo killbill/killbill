@@ -16,6 +16,7 @@
 
 package org.killbill.billing.account.dao;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
@@ -55,4 +56,8 @@ public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
     public void updatePaymentMethod(@Bind("id") String accountId,
                                     @Bind("paymentMethodId") String paymentMethodId,
                                     @BindBean final InternalCallContext context);
+
+    @SqlQuery
+    List<AccountModelDao> getAccountsByParentId(@Bind("parentAccountId") UUID parentAccountId,
+                                                @BindBean final InternalTenantContext context);
 }

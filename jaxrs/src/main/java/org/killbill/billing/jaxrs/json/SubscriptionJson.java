@@ -26,6 +26,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
@@ -36,10 +37,11 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.util.audit.AccountAuditLogs;
+import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiModelProperty;
 
 public class SubscriptionJson extends JsonBase {
 
@@ -61,14 +63,19 @@ public class SubscriptionJson extends JsonBase {
     private final String phaseType;
     @ApiModelProperty(required = true)
     private final String priceList;
-    @ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementState")
+    @ApiModelProperty(required = true)
+    private final String planName;
+    //@ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementState")
+    @ApiModelProperty(dataType = "string", allowableValues = "PENDING,ACTIVE,BLOCKED,CANCELLED")
     private final String state;
-    @ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType")
+    //@ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType")
+    @ApiModelProperty(dataType = "string", allowableValues = "NATIVE,MIGRATED,TRANSFERRED")
     private final String sourceType;
     private final LocalDate cancelledDate;
     private final LocalDate chargedThroughDate;
     private final LocalDate billingStartDate;
     private final LocalDate billingEndDate;
+    private final Integer billCycleDayLocal;
     private final List<EventSubscriptionJson> events;
     private final List<PhasePriceOverrideJson> priceOverrides;
 
@@ -76,7 +83,6 @@ public class SubscriptionJson extends JsonBase {
 
         private final String eventId;
         private final String billingPeriod;
-        private final LocalDate requestedDate;
         private final LocalDate effectiveDate;
         private final String product;
         private final String priceList;
@@ -91,7 +97,6 @@ public class SubscriptionJson extends JsonBase {
         @JsonCreator
         public EventSubscriptionJson(@JsonProperty("eventId") final String eventId,
                                      @JsonProperty("billingPeriod") final String billingPeriod,
-                                     @JsonProperty("requestedDt") final LocalDate requestedDate,
                                      @JsonProperty("effectiveDt") final LocalDate effectiveDate,
                                      @JsonProperty("product") final String product,
                                      @JsonProperty("priceList") final String priceList,
@@ -105,7 +110,6 @@ public class SubscriptionJson extends JsonBase {
             super(auditLogs);
             this.eventId = eventId;
             this.billingPeriod = billingPeriod;
-            this.requestedDate = requestedDate;
             this.effectiveDate = effectiveDate;
             this.product = product;
             this.priceList = priceList;
@@ -118,14 +122,14 @@ public class SubscriptionJson extends JsonBase {
         }
 
         public EventSubscriptionJson(final SubscriptionEvent subscriptionEvent, @Nullable final AccountAuditLogs accountAuditLogs) {
-            super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscriptionEvent(subscriptionEvent.getId())));
+
+            super(toAuditLogJson(getAuditLogsForSubscriptionEvent(subscriptionEvent, accountAuditLogs)));
             final BillingPeriod billingPeriod = subscriptionEvent.getNextBillingPeriod() != null ? subscriptionEvent.getNextBillingPeriod() : subscriptionEvent.getPrevBillingPeriod();
             final Product product = subscriptionEvent.getNextProduct() != null ? subscriptionEvent.getNextProduct() : subscriptionEvent.getPrevProduct();
             final PriceList priceList = subscriptionEvent.getNextPriceList() != null ? subscriptionEvent.getNextPriceList() : subscriptionEvent.getPrevPriceList();
             final PlanPhase phase = subscriptionEvent.getNextPhase() != null ? subscriptionEvent.getNextPhase() : subscriptionEvent.getPrevPhase();
             this.eventId = subscriptionEvent.getId().toString();
             this.billingPeriod = billingPeriod != null ? billingPeriod.toString() : null;
-            this.requestedDate = subscriptionEvent.getRequestedDate();
             this.effectiveDate = subscriptionEvent.getEffectiveDate();
             this.product = product != null ? product.getName() : null;
             this.priceList = priceList != null ? priceList.getName() : null;
@@ -137,16 +141,26 @@ public class SubscriptionJson extends JsonBase {
             this.phase = phase != null ? phase.getName() : null;
         }
 
+
+        private static List<AuditLog> getAuditLogsForSubscriptionEvent(final SubscriptionEvent subscriptionEvent, @Nullable final AccountAuditLogs accountAuditLogs) {
+            if (accountAuditLogs == null) {
+                return null;
+            }
+            final ObjectType subscriptionEventObjectType = subscriptionEvent.getSubscriptionEventType().getObjectType();
+            if (subscriptionEventObjectType == ObjectType.SUBSCRIPTION_EVENT) {
+                return accountAuditLogs.getAuditLogsForSubscriptionEvent(subscriptionEvent.getId());
+            } else if (subscriptionEventObjectType == ObjectType.BLOCKING_STATES) {
+                return accountAuditLogs.getAuditLogsForBlockingState(subscriptionEvent.getId());
+            }
+            throw new IllegalStateException("Unepxected objectType " + subscriptionEventObjectType + " for SubscriptionEvent " + subscriptionEvent.getId());
+        }
+
         public String getEventId() {
             return eventId;
         }
 
         public String getBillingPeriod() {
             return billingPeriod;
-        }
-
-        public LocalDate getRequestedDate() {
-            return requestedDate;
         }
 
         public LocalDate getEffectiveDate() {
@@ -190,7 +204,6 @@ public class SubscriptionJson extends JsonBase {
             final StringBuilder sb = new StringBuilder("EventSubscriptionJson{");
             sb.append("eventId='").append(eventId).append('\'');
             sb.append(", billingPeriod='").append(billingPeriod).append('\'');
-            sb.append(", requestedDate=").append(requestedDate);
             sb.append(", effectiveDate=").append(effectiveDate);
             sb.append(", product='").append(product).append('\'');
             sb.append(", priceList='").append(priceList).append('\'');
@@ -242,9 +255,6 @@ public class SubscriptionJson extends JsonBase {
             if (product != null ? !product.equals(that.product) : that.product != null) {
                 return false;
             }
-            if (requestedDate != null ? requestedDate.compareTo(that.requestedDate) != 0 : that.requestedDate != null) {
-                return false;
-            }
             if (serviceName != null ? !serviceName.equals(that.serviceName) : that.serviceName != null) {
                 return false;
             }
@@ -259,7 +269,6 @@ public class SubscriptionJson extends JsonBase {
         public int hashCode() {
             int result = eventId != null ? eventId.hashCode() : 0;
             result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
-            result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
             result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
             result = 31 * result + (product != null ? product.hashCode() : 0);
             result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
@@ -284,12 +293,14 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("billingPeriod") @Nullable final String billingPeriod,
                             @JsonProperty("phaseType") @Nullable final String phaseType,
                             @JsonProperty("priceList") @Nullable final String priceList,
+                            @JsonProperty("planName") @Nullable final String planName,
                             @JsonProperty("state") @Nullable final String state,
                             @JsonProperty("sourceType") @Nullable final String sourceType,
                             @JsonProperty("cancelledDate") @Nullable final LocalDate cancelledDate,
                             @JsonProperty("chargedThroughDate") @Nullable final LocalDate chargedThroughDate,
                             @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
                             @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate,
+                            @JsonProperty("billCycleDayLocal") @Nullable final Integer billCycleDayLocal,
                             @JsonProperty("events") @Nullable final List<EventSubscriptionJson> events,
                             @JsonProperty("priceOverrides") final List<PhasePriceOverrideJson> priceOverrides,
                             @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
@@ -300,12 +311,14 @@ public class SubscriptionJson extends JsonBase {
         this.billingPeriod = billingPeriod;
         this.phaseType = phaseType;
         this.priceList = priceList;
+        this.planName = planName;
         this.state = state;
         this.sourceType = sourceType;
         this.cancelledDate = cancelledDate;
         this.chargedThroughDate = chargedThroughDate;
         this.billingStartDate = billingStartDate;
         this.billingEndDate = billingEndDate;
+        this.billCycleDayLocal = billCycleDayLocal;
         this.accountId = accountId;
         this.bundleId = bundleId;
         this.subscriptionId = subscriptionId;
@@ -345,6 +358,12 @@ public class SubscriptionJson extends JsonBase {
         } else {
             this.priceList = subscription.getLastActivePriceList().getName();
         }
+        if (subscription.getLastActivePlan() == null) {
+            this.planName = firstEvent == null ? null : firstEvent.getNextPlan().getName();
+        } else {
+            this.planName = subscription.getLastActivePlan().getName();
+        }
+
 
         this.state = subscription.getState().name();
         this.sourceType = subscription.getSourceType().name();
@@ -352,6 +371,7 @@ public class SubscriptionJson extends JsonBase {
         this.chargedThroughDate = subscription.getChargedThroughDate();
         this.billingStartDate = subscription.getBillingStartDate();
         this.billingEndDate = subscription.getBillingEndDate();
+        this.billCycleDayLocal = subscription.getBillCycleDayLocal();
         this.accountId = subscription.getAccountId().toString();
         this.bundleId = subscription.getBundleId().toString();
         this.subscriptionId = subscription.getId().toString();
@@ -369,7 +389,7 @@ public class SubscriptionJson extends JsonBase {
                 for (final PlanPhase cur : plan.getAllPhases()) {
                     final BigDecimal fixedPrice = cur.getFixed() != null ? cur.getFixed().getPrice().getPrice(currency) : null;
                     final BigDecimal recurringPrice = cur.getRecurring() != null ? cur.getRecurring().getRecurringPrice().getPrice(currency) : null;
-                    final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(cur.getName(), cur.getPhaseType().toString(), fixedPrice, recurringPrice);
+                    final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(cur.getName(), cur.getPhaseType().toString(), fixedPrice, recurringPrice, cur.getUsages(),currency);
                     priceOverrides.add(phase);
                 }
             }
@@ -416,6 +436,10 @@ public class SubscriptionJson extends JsonBase {
         return priceList;
     }
 
+    public String getPlanName() {
+        return planName;
+    }
+
     public String getState() {
         return state;
     }
@@ -440,6 +464,10 @@ public class SubscriptionJson extends JsonBase {
         return billingEndDate;
     }
 
+    public Integer getBillCycleDayLocal() {
+        return billCycleDayLocal;
+    }
+
     public List<EventSubscriptionJson> getEvents() {
         return events;
     }
@@ -461,12 +489,14 @@ public class SubscriptionJson extends JsonBase {
         sb.append(", billingPeriod='").append(billingPeriod).append('\'');
         sb.append(", phaseType='").append(phaseType).append('\'');
         sb.append(", priceList='").append(priceList).append('\'');
+        sb.append(", planName='").append(planName).append('\'');
         sb.append(", state='").append(state).append('\'');
         sb.append(", sourceType='").append(sourceType).append('\'');
         sb.append(", cancelledDate=").append(cancelledDate);
         sb.append(", chargedThroughDate=").append(chargedThroughDate);
         sb.append(", billingStartDate=").append(billingStartDate);
         sb.append(", billingEndDate=").append(billingEndDate);
+        sb.append(", billCycleDayLocal=").append(billCycleDayLocal);
         sb.append(", events=").append(events);
         sb.append(", priceOverrides=").append(priceOverrides);
         sb.append('}');
@@ -517,6 +547,9 @@ public class SubscriptionJson extends JsonBase {
         if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
             return false;
         }
+        if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
+            return false;
+        }
         if (productCategory != null ? !productCategory.equals(that.productCategory) : that.productCategory != null) {
             return false;
         }
@@ -538,6 +571,9 @@ public class SubscriptionJson extends JsonBase {
         if (priceOverrides != null ? !priceOverrides.equals(that.priceOverrides) : that.priceOverrides != null) {
             return false;
         }
+        if (billCycleDayLocal != null ? !billCycleDayLocal.equals(that.billCycleDayLocal) : that.billCycleDayLocal != null) {
+            return false;
+        }
         return true;
     }
 
@@ -553,12 +589,14 @@ public class SubscriptionJson extends JsonBase {
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         result = 31 * result + (phaseType != null ? phaseType.hashCode() : 0);
         result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
+        result = 31 * result + (planName != null ? planName.hashCode() : 0);
         result = 31 * result + (state != null ? state.hashCode() : 0);
         result = 31 * result + (sourceType != null ? sourceType.hashCode() : 0);
         result = 31 * result + (cancelledDate != null ? cancelledDate.hashCode() : 0);
         result = 31 * result + (chargedThroughDate != null ? chargedThroughDate.hashCode() : 0);
         result = 31 * result + (billingStartDate != null ? billingStartDate.hashCode() : 0);
         result = 31 * result + (billingEndDate != null ? billingEndDate.hashCode() : 0);
+        result = 31 * result + (billCycleDayLocal != null ? billCycleDayLocal.hashCode() : 0);
         result = 31 * result + (events != null ? events.hashCode() : 0);
         result = 31 * result + (priceOverrides != null ? priceOverrides.hashCode() : 0);
         return result;

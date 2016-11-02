@@ -18,6 +18,7 @@ package org.killbill.billing.overdue.listener;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,25 +39,25 @@ public class OverdueDispatcher {
         this.factory = factory;
     }
 
-    public void processOverdueForAccount(final UUID accountId, final InternalCallContext context) {
-        processOverdue(accountId, context);
+    public void processOverdueForAccount(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
+        processOverdue(accountId, effectiveDate, context);
     }
 
-    public void clearOverdueForAccount(final UUID accountId, final InternalCallContext context) {
-        clearOverdue(accountId, context);
+    public void clearOverdueForAccount(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
+        clearOverdue(accountId, effectiveDate, context);
     }
 
-    private void processOverdue(final UUID accountId, final InternalCallContext context) {
+    private void processOverdue(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
         try {
-            factory.createOverdueWrapperFor(accountId, context).refresh(context);
+            factory.createOverdueWrapperFor(accountId, context).refresh(effectiveDate, context);
         } catch (BillingExceptionBase e) {
             log.warn("Error processing Overdue for accountId='{}'", accountId, e);
         }
     }
 
-    private void clearOverdue(final UUID accountId, final InternalCallContext context) {
+    private void clearOverdue(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
         try {
-            factory.createOverdueWrapperFor(accountId, context).clear(context);
+            factory.createOverdueWrapperFor(accountId, context).clear(effectiveDate, context);
         } catch (BillingExceptionBase e) {
             log.warn("Error processing Overdue for accountId='{}'", accountId, e);
         }

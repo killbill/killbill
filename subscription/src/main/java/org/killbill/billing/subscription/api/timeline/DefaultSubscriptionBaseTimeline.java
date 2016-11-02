@@ -37,6 +37,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
@@ -45,12 +46,10 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
     private final UUID id;
     private final List<ExistingEvent> existingEvents;
-    private final long activeVersion;
 
     public DefaultSubscriptionBaseTimeline(final DefaultSubscriptionBase input, final Catalog catalog) throws CatalogApiException {
         this.id = input.getId();
-        this.existingEvents = toExistingEvents(catalog, input.getActiveVersion(), input.getCategory(), input.getEvents());
-        this.activeVersion = input.getActiveVersion();
+        this.existingEvents = toExistingEvents(catalog, input.getCategory(), input.getEvents());
     }
 
     private BillingPeriod getBillingPeriod(final Catalog catalog, @Nullable final String phaseName, final DateTime effectiveDate, DateTime startDate) throws CatalogApiException {
@@ -61,7 +60,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
         return phase.getRecurring() != null ? phase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
     }
 
-    private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long activeVersion, final ProductCategory category, final List<SubscriptionBaseEvent> events)
+    private List<ExistingEvent> toExistingEvents(final Catalog catalog, final ProductCategory category, final List<SubscriptionBaseEvent> events)
             throws CatalogApiException {
 
         final List<ExistingEvent> result = new LinkedList<SubscriptionBaseTimeline.ExistingEvent>();
@@ -76,11 +75,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
         for (final SubscriptionBaseEvent cur : events) {
 
-            // First active event is used to figure out which catalog version to use.
-            //startDate = (startDate == null && cur.getActiveVersion() == activeVersion) ?  cur.getEffectiveDate() : startDate;
-
-            // STEPH that needs to be reviewed if we support multi version events
-            if (cur.getActiveVersion() != activeVersion || !cur.isActive()) {
+            if (!cur.isActive()) {
                 continue;
             }
             startDate = (startDate == null) ? cur.getEffectiveDate() : startDate;
@@ -91,6 +86,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
             PhaseType phaseType = null;
             String planName = null;
             String planPhaseName = null;
+            Integer billCycleDayLocal = null;
 
             ApiEventType apiType = null;
             switch (cur.getType()) {
@@ -103,6 +99,11 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                     productName = prevProductName;
                     billingPeriod = getBillingPeriod(catalog, phaseEV.getPhase(), cur.getEffectiveDate(), startDate);
                     priceListName = prevPriceListName;
+                    break;
+
+                case BCD_UPDATE:
+                    final BCDEvent bcdEvent = (BCDEvent) cur;
+                    billCycleDayLocal = bcdEvent.getBillCycleDayLocal();
                     break;
 
                 case API_USER:
@@ -122,7 +123,8 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
             final String planNameWithClosure = planName;
             final String planPhaseNameWithClosure = planPhaseName;
-            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
+            final Integer billCycleDayLocalWithClosure = billCycleDayLocal;
+            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(planName, phaseType);
             result.add(new ExistingEvent() {
                 @Override
                 public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
@@ -130,8 +132,8 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                 }
 
                 @Override
-                public DateTime getRequestedDate() {
-                    return cur.getEffectiveDate();
+                public ProductCategory getProductCategory() {
+                    return category;
                 }
 
                 @Override
@@ -157,6 +159,11 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                 @Override
                 public String getPlanPhaseName() {
                     return planPhaseNameWithClosure;
+                }
+
+                @Override
+                public Integer getBillCycleDayLocal() {
+                    return billCycleDayLocalWithClosure;
                 }
             });
 
@@ -189,11 +196,6 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
     @Override
     public List<ExistingEvent> getExistingEvents() {
         return existingEvents;
-    }
-
-    @Override
-    public long getActiveVersion() {
-        return activeVersion;
     }
 
     private void sortExistingEvent(final List<ExistingEvent> events) {

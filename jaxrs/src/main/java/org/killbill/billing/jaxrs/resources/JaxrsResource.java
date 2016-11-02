@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,9 +29,12 @@ public interface JaxrsResource {
     public static final String TIMELINE = "timeline";
     public static final String REGISTER_NOTIFICATION_CALLBACK = "registerNotificationCallback";
     public static final String UPLOAD_PLUGIN_CONFIG = "uploadPluginConfig";
+    public static final String UPLOAD_PER_TENANT_CONFIG = "uploadPerTenantConfig";
     public static final String UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG = "uploadPluginPaymentStateMachineConfig";
     public static final String USER_KEY_VALUE = "userKeyValue";
     public static final String SEARCH = "search";
+
+    public static final String PLUGIN_CONFIG = "pluginConfig";
 
     /*
      * Multi-Tenancy headers
@@ -68,22 +71,34 @@ public interface JaxrsResource {
     public static final String QUERY_EXTERNAL_KEY = "externalKey";
     public static final String QUERY_API_KEY = "apiKey";
     public static final String QUERY_REQUESTED_DT = "requestedDate";
+    public static final String QUERY_PAYMENT_EXTERNAL_KEY = "paymentExternalKey";
+    public static final String QUERY_TRANSACTION_EXTERNAL_KEY = "transactionExternalKey";
+    public static final String QUERY_ENTITLEMENT_REQUESTED_DT = "entitlementDate";
+    public static final String QUERY_BILLING_REQUESTED_DT = "billingDate";
     public static final String QUERY_CALL_COMPLETION = "callCompletion";
     public static final String QUERY_USE_REQUESTED_DATE_FOR_BILLING = "useRequestedDateForBilling";
     public static final String QUERY_CALL_TIMEOUT = "callTimeoutSec";
     public static final String QUERY_TARGET_DATE = "targetDate";
     public static final String QUERY_BILLING_POLICY = "billingPolicy";
+    public static final String QUERY_MIGRATED = "migrated";
     public static final String QUERY_ENTITLEMENT_POLICY = "entitlementPolicy";
     public static final String QUERY_SEARCH_OFFSET = "offset";
     public static final String QUERY_SEARCH_LIMIT = "limit";
+    public static final String QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT = "effectiveFromDate";
 
     public static final String QUERY_ACCOUNT_WITH_BALANCE = "accountWithBalance";
     public static final String QUERY_ACCOUNT_WITH_BALANCE_AND_CBA = "accountWithBalanceAndCBA";
 
     public static final String QUERY_ACCOUNT_ID = "accountId";
 
+    public static final String QUERY_BLOCKING_STATE_TYPES = "blockingStateTypes";
+    public static final String QUERY_BLOCKING_STATE_SVCS = "blockingStateSvcs";
+
+
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
+    public static final String QUERY_WITH_MIGRATION_INVOICES = "withMigrationInvoices";
     public static final String QUERY_UNPAID_INVOICES_ONLY = "unpaidInvoicesOnly";
+    public static final String QUERY_INVOICE_WITH_CHILDREN_ITEMS = "withChildrenItems";
 
     public static final String QUERY_PAYMENT_EXTERNAL = "externalPayment";
     public static final String QUERY_PAYMENT_AMOUNT = "paymentAmount";
@@ -92,15 +107,17 @@ public interface JaxrsResource {
     public static final String QUERY_PAYMENT_METHOD_ID = "paymentMethodId";
     public static final String QUERY_PAYMENT_CONTROL_PLUGIN_NAME = "controlPluginName";
 
+    public static final String QUERY_TENANT_USE_GLOBAL_DEFAULT = "useGlobalDefault";
+    public static final String QUERY_TAGS_INCLUDED_DELETED = "includedDeleted";
 
     public static final String QUERY_TAGS = "tagList";
-    public static final String QUERY_TAGS_INCLUDED_DELETED = "includedDeleted";
     public static final String QUERY_CUSTOM_FIELDS = "customFieldList";
 
     public static final String QUERY_OBJECT_TYPE = "objectType";
 
     public static final String QUERY_PAYMENT_METHOD_PLUGIN_NAME = "pluginName";
     public static final String QUERY_WITH_PLUGIN_INFO = "withPluginInfo";
+    public static final String QUERY_WITH_ATTEMPTS = "withAttempts";
     public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "isDefault";
 
     public static final String QUERY_PAY_ALL_UNPAID_INVOICES = "payAllUnpaidInvoices";
@@ -118,9 +135,15 @@ public interface JaxrsResource {
 
     public static final String QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF = "deleteDefaultPmWithAutoPayOff";
 
+    public static final String QUERY_FORCE_DEFAULT_PM_DELETION = "forceDefaultPmDeletion";
+
     public static final String QUERY_AUDIT = "audit";
 
+    public static final String QUERY_BCD = "bcd";
+
     public static final String QUERY_PARALLEL = "parallel";
+
+    public static final String QUERY_AUTO_COMMIT = "autoCommit";
 
     public static final String QUERY_NOTIFICATION_CALLBACK = "cb";
 
@@ -181,6 +204,9 @@ public interface JaxrsResource {
     public static final String CHARGEBACKS = "chargebacks";
     public static final String CHARGEBACKS_PATH = PREFIX + "/" + CHARGEBACKS;
 
+    public static final String CHARGEBACK_REVERSALS = "chargebackReversals";
+    public static final String CHARGEBACK_REVERSALS_PATH = PREFIX + "/" + CHARGEBACK_REVERSALS;
+
     public static final String ALL_TAGS = "allTags";
     public static final String TAGS = "tags";
     public static final String TAGS_PATH = PREFIX + "/" + TAGS;
@@ -232,12 +258,25 @@ public interface JaxrsResource {
     public static final String FORM = "form";
     public static final String NOTIFICATION = "notification";
 
+    public static final String CANCEL_SCHEDULED_PAYMENT_TRANSACTION = "cancelScheduledPaymentTransaction";
+
 
     public static final String INVOICE_TEMPLATE = "template";
     public static final String INVOICE_MP_TEMPLATE = "manualPayTemplate";
     public static final String INVOICE_TRANSLATION = "translation";
     public static final String INVOICE_CATALOG_TRANSLATION = "catalogTranslation";
+    public static final String COMMIT_INVOICE = "commitInvoice";
 
     public static final String COMBO = "combo";
+    public static final String MIGRATION = "migration";
+
+    public static final String CHILDREN = "children";
+    public static final String BCD = "bcd";
+    public static final String TRANSFER_CREDIT = "transferCredit";
+
+    public static final String CACHE = "cache";
+
+    public static final String QUERY_INCLUDED_DELETED = "includedDeleted";
+
 
 }

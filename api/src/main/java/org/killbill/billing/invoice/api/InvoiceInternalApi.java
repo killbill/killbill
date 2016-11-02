@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -62,7 +62,9 @@ public interface InvoiceInternalApi {
     public InvoicePayment recordRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
                                        String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
-    public InvoicePayment recordChargeback(UUID paymentId, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+    public InvoicePayment recordChargeback(UUID paymentId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+
+    public InvoicePayment recordChargebackReversal(UUID paymentId, String chargebackTransactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
     /**
      * Rebalance CBA for account which have credit and unpaid invoices
@@ -73,4 +75,6 @@ public interface InvoiceInternalApi {
     public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) throws InvoiceApiException;
 
     public Map<UUID, BigDecimal> validateInvoiceItemAdjustments(final UUID paymentId, final Map<UUID, BigDecimal> idWithAmount, final InternalTenantContext context) throws InvoiceApiException;
+
+    public void commitInvoice(UUID invoiceId, InternalCallContext context) throws InvoiceApiException;
 }

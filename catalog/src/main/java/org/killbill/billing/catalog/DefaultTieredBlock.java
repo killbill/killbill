@@ -21,7 +21,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 import org.killbill.billing.catalog.api.BlockType;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.TieredBlock;
+import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultTieredBlock extends DefaultBlock implements TieredBlock {
@@ -37,6 +39,14 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock {
     public DefaultTieredBlock setMax(final Double max) {
         this.max = max;
         return this;
+    }
+
+    public DefaultTieredBlock() {
+    }
+
+    public DefaultTieredBlock(TieredBlock in, TieredBlockPriceOverride override, Currency currency) {
+        super((DefaultUnit)in.getUnit(), in.getSize(),(DefaultInternationalPrice)in.getPrice(), override.getPrice(),currency);
+        this.max = in.getMax();
     }
 
     @Override

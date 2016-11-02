@@ -19,6 +19,7 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,13 +47,12 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
         final String bundleId = UUID.randomUUID().toString();
         final String subscriptionId = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
-        final DateTime requestedDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
+
         final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId.toString(),
                                                                          BillingPeriod.NO_BILLING_PERIOD.toString(),
-                                                                         requestedDate.toLocalDate(),
                                                                          effectiveDate.toLocalDate(),
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),
@@ -64,7 +64,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                          PhaseType.DISCOUNT.toString(),
                                                                          auditLogs);
 
-        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson("bar", null, BigDecimal.TEN, BigDecimal.ONE);
+        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson("bar", null, BigDecimal.TEN, BigDecimal.ONE,null);
 
         final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(accountId,
                                                                                 bundleId,
@@ -78,10 +78,12 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                 UUID.randomUUID().toString(),
                                                                                 UUID.randomUUID().toString(),
                                                                                 UUID.randomUUID().toString(),
+                                                                                UUID.randomUUID().toString(),
                                                                                 new LocalDate(),
                                                                                 new LocalDate(),
                                                                                 new LocalDate(),
                                                                                 new LocalDate(),
+                                                                                null,
                                                                                 ImmutableList.<EventSubscriptionJson>of(newEvent),
                                                                                 ImmutableList.of(priceOverride),
                                                                                 null);

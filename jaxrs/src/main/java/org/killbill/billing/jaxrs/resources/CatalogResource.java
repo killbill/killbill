@@ -35,14 +35,19 @@ import javax.ws.rs.core.UriInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Listing;
+import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
 import org.killbill.billing.jaxrs.json.CatalogJson;
 import org.killbill.billing.jaxrs.json.PlanDetailJson;
+import org.killbill.billing.jaxrs.json.SimplePlanJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
@@ -57,9 +62,9 @@ import org.killbill.xmlloader.XMLWriter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
@@ -81,7 +86,7 @@ public class CatalogResource extends JaxRsResourceBase {
                            final CatalogUserApi catalogUserApi,
                            final Clock clock,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.catalogUserApi = catalogUserApi;
     }
 
@@ -118,15 +123,24 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiResponses(value = {})
     public Response getCatalogJson(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
-        DateTime catalogDateVersion = clock.getUTCNow();
-        if (requestedDate != null) {
-            catalogDateVersion = DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC);
-        }
 
         final TenantContext tenantContext = context.createContext(request);
-        final Catalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
-        final CatalogJson json = new CatalogJson(catalog, catalogDateVersion);
-        return Response.status(Status.OK).entity(json).build();
+        final DateTime catalogDateVersion = requestedDate != null ?
+                                      DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
+                                      null;
+
+        // Yack...
+        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
+
+        final List<CatalogJson> result = new ArrayList<CatalogJson>();
+        if (catalogDateVersion != null) {
+            result.add(new CatalogJson(catalog, catalogDateVersion));
+        } else {
+            for (final StandaloneCatalog v : catalog.getVersions()) {
+                result.add(new CatalogJson(catalog, new DateTime(v.getEffectiveDate())));
+            }
+        }
+        return Response.status(Status.OK).entity(result).build();
     }
 
     // Need to figure out dependency on StandaloneCatalog
@@ -177,6 +191,35 @@ public class CatalogResource extends JaxRsResourceBase {
             details.add(new PlanDetailJson(listing));
         }
         return Response.status(Status.OK).entity(details).build();
+    }
+
+
+    @TimedResource
+    @POST
+    @Path("/simplePlan")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Upload the full catalog as XML")
+    @ApiResponses(value = {})
+    public Response addSimplePlan(final SimplePlanJson simplePlan,
+                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                     @HeaderParam(HDR_REASON) final String reason,
+                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request,
+                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor(simplePlan.getPlanId(),
+                                                                          simplePlan.getProductName(),
+                                                                          simplePlan.getProductCategory(),
+                                                                          simplePlan.getCurrency(),
+                                                                          simplePlan.getAmount(),
+                                                                          simplePlan.getBillingPeriod(),
+                                                                          simplePlan.getTrialLength(),
+                                                                          simplePlan.getTrialTimeUnit(),
+                                                                          simplePlan.getAvailableBaseProducts());
+        catalogUserApi.addSimplePlan(desc, clock.getUTCNow(), callContext);
+        return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null);
     }
 
 }

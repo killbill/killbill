@@ -42,6 +42,7 @@ public class GuicyKillbillTestModule extends KillBillModule {
     private final MutableInternalCallContext internalCallContext = new MutableInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID,
                                                                                                   1687L,
                                                                                                   DateTimeZone.UTC,
+                                                                                                  GuicyKillbillTestSuite.getClock().getUTCNow(),
                                                                                                   UUID.randomUUID(),
                                                                                                   UUID.randomUUID().toString(),
                                                                                                   CallOrigin.TEST,

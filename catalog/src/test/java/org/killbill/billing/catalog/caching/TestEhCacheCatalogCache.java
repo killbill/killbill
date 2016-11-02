@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,9 +30,11 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.DefaultProduct;
+import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -70,7 +73,7 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testMissingDefaultCatalog() throws CatalogApiException {
         catalogCache.loadDefaultCatalog(null);
-        Assert.assertEquals(catalogCache.getCatalog(internalCallContext).getCatalogName(), "EmptyCatalog");
+        Assert.assertEquals(catalogCache.getCatalog(true, true, internalCallContext).getCatalogName(), "EmptyCatalog");
     }
 
     //
@@ -80,17 +83,21 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
     public void testDefaultCatalog() throws CatalogApiException {
         catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
 
-        final VersionedCatalog result = catalogCache.getCatalog(internalCallContext);
+        final VersionedCatalog result = catalogCache.getCatalog(true, true, internalCallContext);
         Assert.assertNotNull(result);
-        final DefaultProduct[] products = result.getProducts(clock.getUTCNow());
-        Assert.assertEquals(products.length, 3);
+        final Collection<Product> products = result.getProducts(clock.getUTCNow());
+        Assert.assertEquals(products.size(), 3);
 
         // Verify the lookup with other contexts
-        final VersionedCatalog resultForMultiTenantContext = new VersionedCatalog(result.getClock(), result.getCatalogName(), result.getRecurringBillingMode(), result.getVersions(), multiTenantContext);
-        Assert.assertEquals(catalogCache.getCatalog(multiTenantContext).getCatalogName(), resultForMultiTenantContext.getCatalogName());
-        Assert.assertEquals(catalogCache.getCatalog(multiTenantContext).getVersions().size(), resultForMultiTenantContext.getVersions().size());
-        for (int i = 0; i < catalogCache.getCatalog(multiTenantContext).getVersions().size(); i++) {
-            Assert.assertEquals(catalogCache.getCatalog(multiTenantContext).getVersions().get(i).getTenantRecordId(), resultForMultiTenantContext.getVersions().get(i).getTenantRecordId());
+        final VersionedCatalog resultForMultiTenantContext = new VersionedCatalog(result.getClock());
+        for (final StandaloneCatalog cur : result.getVersions()) {
+            resultForMultiTenantContext.add(new StandaloneCatalogWithPriceOverride(cur, priceOverride, multiTenantContext.getTenantRecordId(), internalCallContextFactory));
+        }
+
+        Assert.assertEquals(catalogCache.getCatalog(true, true, multiTenantContext).getCatalogName(), resultForMultiTenantContext.getCatalogName());
+        Assert.assertEquals(catalogCache.getCatalog(true, true, multiTenantContext).getVersions().size(), resultForMultiTenantContext.getVersions().size());
+        for (int i = 0; i < catalogCache.getCatalog(true, true, multiTenantContext).getVersions().size(); i++) {
+           Assert.assertEquals(((StandaloneCatalogWithPriceOverride) catalogCache.getCatalog(true, true, multiTenantContext).getVersions().get(i)).getTenantRecordId(), ((StandaloneCatalogWithPriceOverride) resultForMultiTenantContext.getVersions().get(i)).getTenantRecordId());
         }
     }
 
@@ -131,14 +138,14 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         });
 
         // Verify the lookup for a non-cached tenant. No system config is set yet but EhCacheCatalogCache returns a default empty one
-        VersionedCatalog differentResult = catalogCache.getCatalog(differentMultiTenantContext);
+        VersionedCatalog differentResult = catalogCache.getCatalog(true, true, differentMultiTenantContext);
         Assert.assertNotNull(differentResult);
         Assert.assertEquals(differentResult.getCatalogName(), "EmptyCatalog");
 
         // Make sure the cache loader isn't invoked, see https://github.com/killbill/killbill/issues/300
         shouldThrow.set(true);
 
-        differentResult = catalogCache.getCatalog(differentMultiTenantContext);
+        differentResult = catalogCache.getCatalog(true, true, differentMultiTenantContext);
         Assert.assertNotNull(differentResult);
         Assert.assertEquals(differentResult.getCatalogName(), "EmptyCatalog");
 
@@ -148,30 +155,30 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
 
         // Verify the lookup for this tenant
-        final VersionedCatalog result = catalogCache.getCatalog(multiTenantContext);
+        final VersionedCatalog result = catalogCache.getCatalog(true, true, multiTenantContext);
         Assert.assertNotNull(result);
-        final DefaultProduct[] products = result.getProducts(clock.getUTCNow());
-        Assert.assertEquals(products.length, 6);
+        final Collection<Product> products = result.getProducts(clock.getUTCNow());
+        Assert.assertEquals(products.size(), 6);
 
         // Verify the lookup for another tenant
-        final VersionedCatalog otherResult = catalogCache.getCatalog(otherMultiTenantContext);
+        final VersionedCatalog otherResult = catalogCache.getCatalog(true, true, otherMultiTenantContext);
         Assert.assertNotNull(otherResult);
-        final DefaultProduct[] otherProducts = otherResult.getProducts(clock.getUTCNow());
-        Assert.assertEquals(otherProducts.length, 3);
+        final Collection<Product> otherProducts = otherResult.getProducts(clock.getUTCNow());
+        Assert.assertEquals(otherProducts.size(), 3);
 
         shouldThrow.set(true);
 
         // Verify the lookup for this tenant
-        final VersionedCatalog result2 = catalogCache.getCatalog(multiTenantContext);
+        final VersionedCatalog result2 = catalogCache.getCatalog(true, true, multiTenantContext);
         Assert.assertEquals(result2, result);
 
         // Verify the lookup with another context for the same tenant
         final InternalCallContext sameMultiTenantContext = Mockito.mock(InternalCallContext.class);
         Mockito.when(sameMultiTenantContext.getAccountRecordId()).thenReturn(9102L);
         Mockito.when(sameMultiTenantContext.getTenantRecordId()).thenReturn(multiTenantRecordId);
-        Assert.assertEquals(catalogCache.getCatalog(sameMultiTenantContext), result);
+        Assert.assertEquals(catalogCache.getCatalog(true, true, sameMultiTenantContext), result);
 
         // Verify the lookup with the other tenant
-        Assert.assertEquals(catalogCache.getCatalog(otherMultiTenantContext), otherResult);
+        Assert.assertEquals(catalogCache.getCatalog(true, true, otherMultiTenantContext), otherResult);
     }
 }

@@ -35,7 +35,7 @@ import org.killbill.billing.tenant.dao.NoCachingTenantDao;
 import org.killbill.billing.tenant.dao.TenantBroadcastDao;
 import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.config.TenantConfig;
+import org.killbill.billing.util.config.definition.TenantConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.glue.NoCachingInternalCallContextFactoryProvider;
 import org.skife.config.ConfigurationObjectFactory;

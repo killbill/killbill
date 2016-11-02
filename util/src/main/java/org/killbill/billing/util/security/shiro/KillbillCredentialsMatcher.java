@@ -21,7 +21,7 @@ package org.killbill.billing.util.security.shiro;
 import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.crypto.hash.Sha512Hash;
-import org.killbill.billing.util.config.SecurityConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 
 public class KillbillCredentialsMatcher {
 

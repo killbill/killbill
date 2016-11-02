@@ -21,32 +21,40 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
-import org.killbill.billing.util.config.PaymentConfig;
+import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 
 import com.google.common.collect.ImmutableList;
 
 public class DefaultApiBase {
 
     private final PaymentConfig paymentConfig;
+    protected final InternalCallContextFactory internalCallContextFactory;
 
-    public DefaultApiBase(final PaymentConfig paymentConfig) {
+    public DefaultApiBase(final PaymentConfig paymentConfig, final InternalCallContextFactory internalCallContextFactory) {
         this.paymentConfig = paymentConfig;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    protected List<String> toPaymentControlPluginNames(final PaymentOptions paymentOptions) {
+    protected List<String> toPaymentControlPluginNames(final PaymentOptions paymentOptions, final CallContext callContext) {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
+
         // Special path for JAX-RS InvoicePayment endpoints (see JaxRsResourceBase)
-        if (paymentConfig.getPaymentControlPluginNames() != null &&
+        final List<String> controlPluginNames = paymentConfig.getPaymentControlPluginNames(internalTenantContext);
+        if (controlPluginNames != null &&
             paymentOptions.getPaymentControlPluginNames() != null &&
             paymentOptions.getPaymentControlPluginNames().size() == 1 &&
             InvoicePaymentControlPluginApi.PLUGIN_NAME.equals(paymentOptions.getPaymentControlPluginNames().get(0))) {
             final List<String> paymentControlPluginNames = new LinkedList<String>(paymentOptions.getPaymentControlPluginNames());
-            paymentControlPluginNames.addAll(paymentConfig.getPaymentControlPluginNames());
+            paymentControlPluginNames.addAll(controlPluginNames);
             return paymentControlPluginNames;
         } else if (paymentOptions.getPaymentControlPluginNames() != null && !paymentOptions.getPaymentControlPluginNames().isEmpty()) {
             return paymentOptions.getPaymentControlPluginNames();
-        } else if (paymentConfig.getPaymentControlPluginNames() != null && !paymentConfig.getPaymentControlPluginNames().isEmpty()) {
-            return paymentConfig.getPaymentControlPluginNames();
+        } else if (controlPluginNames != null && !controlPluginNames.isEmpty()) {
+            return controlPluginNames;
         } else {
             return ImmutableList.<String>of();
         }
@@ -55,6 +63,12 @@ public class DefaultApiBase {
     protected void checkNotNullParameter(final Object parameter, final String parameterName) throws PaymentApiException {
         if (parameter == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_PARAMETER, parameterName, "should not be null");
+        }
+    }
+
+    protected void checkExternalKeyLength(final String externalKey) throws PaymentApiException {
+        if (null != externalKey && externalKey.length() > 255) {
+            throw new PaymentApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
         }
     }
 }

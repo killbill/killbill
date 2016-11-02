@@ -22,6 +22,7 @@ import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.dao.EntityDao;
 
 public interface TenantDao extends EntityDao<TenantModelDao, Tenant, TenantApiException> {
@@ -32,8 +33,12 @@ public interface TenantDao extends EntityDao<TenantModelDao, Tenant, TenantApiEx
 
     public void addTenantKeyValue(final String key, final String value, final boolean uniqueKey, final InternalCallContext context);
 
+    public void updateTenantLastKeyValue(final String key, final String value, final InternalCallContext context);
+
     public void deleteTenantKey(final String key, final InternalCallContext context);
 
     public TenantKVModelDao getKeyByRecordId(Long recordId, InternalTenantContext context);
+
+    public List<TenantKVModelDao> searchTenantKeyValues(String searchKey, InternalTenantContext context);
 
 }

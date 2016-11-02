@@ -22,7 +22,7 @@ import org.killbill.billing.jaxrs.JaxrsExecutors;
 import org.killbill.billing.jaxrs.JaxrsService;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.config.JaxrsConfig;
+import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 

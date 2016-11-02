@@ -31,7 +31,10 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+import io.swagger.annotations.ApiModelProperty;
 
 public class InvoiceItemJson extends JsonBase {
 
@@ -43,6 +46,8 @@ public class InvoiceItemJson extends JsonBase {
     private final String linkedInvoiceItemId;
     @ApiModelProperty(dataType = "java.util.UUID", required = true)
     private final String accountId;
+    @ApiModelProperty(dataType = "java.util.UUID", required = false)
+    private final String childAccountId;
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String bundleId;
     @ApiModelProperty(dataType = "java.util.UUID")
@@ -55,13 +60,15 @@ public class InvoiceItemJson extends JsonBase {
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final BigDecimal amount;
-    private final Currency currency;
+    private final String currency;
+    private List<InvoiceItemJson> childItems;
 
     @JsonCreator
     public InvoiceItemJson(@JsonProperty("invoiceItemId") final String invoiceItemId,
                            @JsonProperty("invoiceId") final String invoiceId,
                            @JsonProperty("linkedInvoiceItemId") final String linkedInvoiceItemId,
                            @JsonProperty("accountId") final String accountId,
+                           @JsonProperty("childAccountId") final String childAccountId,
                            @JsonProperty("bundleId") final String bundleId,
                            @JsonProperty("subscriptionId") final String subscriptionId,
                            @JsonProperty("planName") final String planName,
@@ -72,13 +79,15 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("startDate") final LocalDate startDate,
                            @JsonProperty("endDate") final LocalDate endDate,
                            @JsonProperty("amount") final BigDecimal amount,
-                           @JsonProperty("currency") final Currency currency,
+                           @JsonProperty("currency") final String currency,
+                           @JsonProperty("childItems") final List<InvoiceItemJson> childItems,
                            @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.invoiceItemId = invoiceItemId;
         this.invoiceId = invoiceId;
         this.linkedInvoiceItemId = linkedInvoiceItemId;
         this.accountId = accountId;
+        this.childAccountId = childAccountId;
         this.bundleId = bundleId;
         this.subscriptionId = subscriptionId;
         this.planName = planName;
@@ -90,14 +99,27 @@ public class InvoiceItemJson extends JsonBase {
         this.endDate = endDate;
         this.amount = amount;
         this.currency = currency;
+        this.childItems = childItems;
     }
 
-    public InvoiceItemJson(final InvoiceItem item, @Nullable final List<AuditLog> auditLogs) {
+    public InvoiceItemJson(final InvoiceItem item, final List<InvoiceItem> childItems, @Nullable final List<AuditLog> auditLogs) {
         this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getLinkedItemId()),
-             toString(item.getAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
+             toString(item.getAccountId()), toString(item.getChildAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
              item.getPlanName(), item.getPhaseName(), item.getUsageName(), item.getInvoiceItemType().toString(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
-             item.getAmount(), item.getCurrency(), toAuditLogJson(auditLogs));
+             item.getAmount(), item.getCurrency().name(), toInvoiceItemJson(childItems), toAuditLogJson(auditLogs));
+    }
+
+    private static List<InvoiceItemJson> toInvoiceItemJson(final List<InvoiceItem> childItems) {
+        if (childItems == null) {
+            return null;
+        }
+        return ImmutableList.copyOf(Collections2.transform(childItems, new Function<InvoiceItem, InvoiceItemJson>() {
+            @Override
+            public InvoiceItemJson apply(final InvoiceItem input) {
+                return new InvoiceItemJson(input);
+            }
+        }));
     }
 
     public InvoiceItem toInvoiceItem() {
@@ -118,6 +140,11 @@ public class InvoiceItemJson extends JsonBase {
             }
 
             @Override
+            public UUID getChildAccountId() {
+                return childAccountId != null ? UUID.fromString(childAccountId) : null;
+            }
+
+            @Override
             public LocalDate getStartDate() {
                 return startDate;
             }
@@ -134,7 +161,7 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public Currency getCurrency() {
-                return currency;
+                return Currency.valueOf(currency);
             }
 
             @Override
@@ -200,7 +227,7 @@ public class InvoiceItemJson extends JsonBase {
     }
 
     public InvoiceItemJson(final InvoiceItem input) {
-        this(input, null);
+        this(input, null, null);
     }
 
     public String getInvoiceItemId() {
@@ -217,6 +244,10 @@ public class InvoiceItemJson extends JsonBase {
 
     public String getAccountId() {
         return accountId;
+    }
+
+    public String getChildAccountId() {
+        return childAccountId;
     }
 
     public String getBundleId() {
@@ -259,8 +290,12 @@ public class InvoiceItemJson extends JsonBase {
         return amount;
     }
 
-    public Currency getCurrency() {
+    public String getCurrency() {
         return currency;
+    }
+
+    public List<InvoiceItemJson> getChildItems() {
+        return childItems;
     }
 
     @Override
@@ -271,6 +306,7 @@ public class InvoiceItemJson extends JsonBase {
         sb.append(", invoiceId='").append(invoiceId).append('\'');
         sb.append(", linkedInvoiceItemId='").append(linkedInvoiceItemId).append('\'');
         sb.append(", accountId='").append(accountId).append('\'');
+        sb.append(", childAccountId='").append(childAccountId).append('\'');
         sb.append(", bundleId='").append(bundleId).append('\'');
         sb.append(", subscriptionId='").append(subscriptionId).append('\'');
         sb.append(", planName='").append(planName).append('\'');
@@ -281,6 +317,7 @@ public class InvoiceItemJson extends JsonBase {
         sb.append(", endDate=").append(endDate);
         sb.append(", amount=").append(amount);
         sb.append(", currency=").append(currency);
+        sb.append(", childItems=").append(childItems);
         sb.append('}');
         return sb.toString();
     }
@@ -299,14 +336,16 @@ public class InvoiceItemJson extends JsonBase {
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (!((amount == null && that.amount == null) ||
-              (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
+        if (childAccountId != null ? !childAccountId.equals(that.childAccountId) : that.childAccountId != null) {
+            return false;
+        }
+        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
             return false;
         }
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
-        if (currency != that.currency) {
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
         if (description != null ? !description.equals(that.description) : that.description != null) {
@@ -341,6 +380,9 @@ public class InvoiceItemJson extends JsonBase {
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
         }
+        if (childItems != null ? !childItems.equals(that.childItems) : that.childItems != null) {
+            return false;
+        }
 
         return true;
     }
@@ -351,6 +393,7 @@ public class InvoiceItemJson extends JsonBase {
         result = 31 * result + (invoiceItemId != null ? invoiceItemId.hashCode() : 0);
         result = 31 * result + (linkedInvoiceItemId != null ? linkedInvoiceItemId.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (childAccountId != null ? childAccountId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (planName != null ? planName.hashCode() : 0);
@@ -361,6 +404,7 @@ public class InvoiceItemJson extends JsonBase {
         result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (childItems != null ? childItems.hashCode() : 0);
         return result;
     }
 }

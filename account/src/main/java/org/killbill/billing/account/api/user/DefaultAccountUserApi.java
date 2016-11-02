@@ -32,6 +32,7 @@ import org.killbill.billing.account.api.DefaultAccountEmail;
 import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.dao.AccountEmailModelDao;
 import org.killbill.billing.account.dao.AccountModelDao;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -66,7 +67,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public Account getAccountByKey(final String key, final TenantContext context) throws AccountApiException {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         return getAccountByKey(key, internalTenantContext);
     }
 
@@ -84,8 +85,20 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
             throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, data.getExternalKey());
         }
 
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context);
+
+        if (data.getParentAccountId() != null) {
+            // verify that parent account exists if parentAccountId is not null
+            getAccountById(data.getParentAccountId(), internalContext);
+        }
+
         final AccountModelDao account = new AccountModelDao(data);
-        accountDao.create(account, internalCallContextFactory.createInternalCallContext(context));
+
+        if (null != account.getExternalKey() && account.getExternalKey().length() > 255) {
+            throw new AccountApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
+        }
+
+        accountDao.create(account, internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
 
         return new DefaultAccount(account);
     }
@@ -97,7 +110,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                               new SourcePaginationBuilder<AccountModelDao, AccountApiException>() {
                                                   @Override
                                                   public Pagination<AccountModelDao> build() {
-                                                      return accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                      return accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
                                               new Function<AccountModelDao, Account>() {
@@ -115,7 +128,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                               new SourcePaginationBuilder<AccountModelDao, AccountApiException>() {
                                                   @Override
                                                   public Pagination<AccountModelDao> build() {
-                                                      return accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContext(context));
+                                                      return accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
                                               new Function<AccountModelDao, Account>() {
@@ -129,7 +142,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public UUID getIdFromKey(final String externalKey, final TenantContext context) throws AccountApiException {
-        return accountDao.getIdFromKey(externalKey, internalCallContextFactory.createInternalTenantContext(context));
+        return accountDao.getIdFromKey(externalKey, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
     }
 
     @Override
@@ -170,7 +183,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId, final TenantContext context) {
-        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountDao.getEmailsByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountDao.getEmailsByAccountId(accountId, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
                                                                          new Function<AccountEmailModelDao, AccountEmail>() {
                                                                              @Override
                                                                              public AccountEmail apply(final AccountEmailModelDao input) {
@@ -187,5 +200,16 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
     @Override
     public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
         accountDao.removeEmail(new AccountEmailModelDao(email, false), internalCallContextFactory.createInternalCallContext(accountId, context));
+    }
+
+    @Override
+    public List<Account> getChildrenAccounts(final UUID parentAccountId, final TenantContext context) throws AccountApiException {
+        return ImmutableList.<Account>copyOf(Collections2.transform(accountDao.getAccountsByParentId(parentAccountId, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
+                                                                         new Function<AccountModelDao, Account>() {
+                                                                             @Override
+                                                                             public Account apply(final AccountModelDao input) {
+                                                                                 return new DefaultAccount(input);
+                                                                             }
+                                                                         }));
     }
 }

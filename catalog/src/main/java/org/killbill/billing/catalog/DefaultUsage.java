@@ -17,8 +17,25 @@
 
 package org.killbill.billing.catalog;
 
-import java.net.URI;
-import java.util.Arrays;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Block;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.InternationalPrice;
+import org.killbill.billing.catalog.api.Limit;
+import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Tier;
+import org.killbill.billing.catalog.api.TierPriceOverride;
+import org.killbill.billing.catalog.api.TieredBlock;
+import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
+import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.UsagePriceOverride;
+import org.killbill.billing.catalog.api.UsageType;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationError;
+import org.killbill.xmlloader.ValidationErrors;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -26,19 +43,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
-
-import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Block;
-import org.killbill.billing.catalog.api.InternationalPrice;
-import org.killbill.billing.catalog.api.Limit;
-import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.Tier;
-import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.catalog.api.UsageType;
-import org.killbill.xmlloader.ValidatingConfig;
-import org.killbill.xmlloader.ValidationError;
-import org.killbill.xmlloader.ValidationErrors;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements Usage {
@@ -58,17 +65,17 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
 
     // Used for when billing usage IN_ADVANCE & CAPACITY
     @XmlElementWrapper(name = "limits", required = false)
-    @XmlElement(name = "limit", required = true)
+    @XmlElement(name = "limit", required = false)
     private DefaultLimit[] limits;
 
     // Used for when billing usage IN_ADVANCE & CONSUMABLE
     @XmlElementWrapper(name = "blocks", required = false)
-    @XmlElement(name = "block", required = true)
+    @XmlElement(name = "block", required = false)
     private DefaultBlock[] blocks;
 
     // Used for when billing usage IN_ARREAR
     @XmlElementWrapper(name = "tiers", required = false)
-    @XmlElement(name = "tier", required = true)
+    @XmlElement(name = "tier", required = false)
     private DefaultTier[] tiers;
 
     // Used to define a fixed price for the whole usage section -- bundle several limits/blocks of units.
@@ -86,6 +93,48 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         limits = new DefaultLimit[0];
         blocks = new DefaultBlock[0];
         tiers = new DefaultTier[0];
+    }
+
+    public DefaultUsage(final Usage in, UsagePriceOverride override, Currency currency) {
+              this.name = in.getName();
+              this.usageType = in.getUsageType();
+              this.billingPeriod = in.getBillingPeriod();
+              this.billingMode = in.getBillingMode();
+              this.limits = (DefaultLimit[]) in.getLimits();
+              this.blocks = (DefaultBlock[]) in.getBlocks();
+              this.tiers = new DefaultTier[in.getTiers().length];
+
+              for (int i = 0; i < in.getTiers().length; i++) {
+                  if(override != null && override.getTierPriceOverrides()!=null) {
+                      final TieredBlock[] curTieredBlocks = in.getTiers()[i].getTieredBlocks();
+
+                      final TierPriceOverride overriddenTier = Iterables.tryFind(override.getTierPriceOverrides(), new Predicate<TierPriceOverride>() {
+                          @Override
+                          public boolean apply(final TierPriceOverride input) {
+
+                            if(input !=null) {
+                              final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
+                              for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
+                                 String unitName = blockDef.getUnitName();
+                                 Double max = blockDef.getMax();
+                                 Double size = blockDef.getSize();
+                                 for (TieredBlock curTieredBlock : curTieredBlocks)
+                                     if (unitName.equals(curTieredBlock.getUnit().getName()) &&
+                                             Double.compare(size, curTieredBlock.getSize()) == 0 &&
+                                             Double.compare(max, curTieredBlock.getMax()) == 0) {
+                                         return true;
+                                     }
+                               }
+                            }
+                            return false;
+                          }
+                      }).orNull();
+                      tiers[i] = (overriddenTier != null) ? new DefaultTier(in.getTiers()[i], overriddenTier, currency) : (DefaultTier)in.getTiers()[i] ;
+                  }
+                  else {
+                      tiers[i] = (DefaultTier) in.getTiers()[i];
+                  }
+              }
     }
 
     @Override

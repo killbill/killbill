@@ -36,6 +36,7 @@ import org.killbill.billing.overdue.config.DefaultOverdueState;
 import org.killbill.billing.overdue.config.DefaultOverdueStateSet;
 import org.killbill.billing.overdue.config.api.OverdueException;
 import org.killbill.billing.overdue.config.api.OverdueStateSet;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
@@ -54,6 +55,7 @@ public class OverdueWrapperFactory {
     private final GlobalLocker locker;
     private final Clock clock;
     private final OverdueConfigCache overdueConfigCache;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public OverdueWrapperFactory(final BlockingInternalApi api,
@@ -62,7 +64,8 @@ public class OverdueWrapperFactory {
                                  final BillingStateCalculator billingStateCalculator,
                                  final OverdueStateApplicator overdueStateApplicatorBundle,
                                  final OverdueConfigCache overdueConfigCache,
-                                 final AccountInternalApi accountApi) {
+                                 final AccountInternalApi accountApi,
+                                 final InternalCallContextFactory internalCallContextFactory) {
         this.billingStateCalculator = billingStateCalculator;
         this.overdueStateApplicator = overdueStateApplicatorBundle;
         this.accountApi = accountApi;
@@ -70,16 +73,17 @@ public class OverdueWrapperFactory {
         this.locker = locker;
         this.clock = clock;
         this.overdueConfigCache = overdueConfigCache;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     public OverdueWrapper createOverdueWrapperFor(final ImmutableAccountData blockable, final InternalTenantContext context) throws OverdueException {
-        return new OverdueWrapper(blockable, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator);
+        return new OverdueWrapper(blockable, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator, internalCallContextFactory);
     }
 
     public OverdueWrapper createOverdueWrapperFor(final UUID id, final InternalTenantContext context) throws OverdueException {
         try {
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(id, context);
-            return new OverdueWrapper(account, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator);
+            return new OverdueWrapper(account, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator, internalCallContextFactory);
         } catch (final AccountApiException e) {
             throw new OverdueException(e);
         }
