@@ -83,7 +83,6 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
                     }
 
                 }).orNull();
-
                 blocks[i] = (overriddenTierBlock != null) ? new DefaultTieredBlock(in.getTieredBlocks()[i], overriddenTierBlock, currency) :
                         (DefaultTieredBlock) in.getTieredBlocks()[i];
             }

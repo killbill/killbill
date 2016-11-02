@@ -42,6 +42,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import java.net.URI;
+import java.util.Arrays;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implements PlanPhase {

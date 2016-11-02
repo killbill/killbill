@@ -165,7 +165,6 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
                 public boolean apply(final CatalogOverrideTierDefinitionModelDao input) {
                     final List<CatalogOverrideBlockDefinitionModelDao> blockDefs = overrideDao.getOverriddenTierBlocks(input.getRecordId(), context);
                      for(CatalogOverrideBlockDefinitionModelDao blockDef : blockDefs) {
-
                          String unitName = blockDef.getParentUnitName();
                          Double max = blockDef.getMax();
                          Double size = blockDef.getSize();

@@ -201,7 +201,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("bar-monthly", null);
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), account.getCurrency(), null, BigDecimal.ONE));
+        overrides.add(new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), account.getCurrency(), null, BigDecimal.ONE, null));
         final Entitlement baseEntitlement = createEntitlement(spec, overrides, true);
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);

@@ -112,25 +112,23 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
                           @Override
                           public boolean apply(final TierPriceOverride input) {
 
-                              if(input !=null) {
-                                  final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
-                                  for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
-                                      String unitName = blockDef.getUnitName();
-                                      Double max = blockDef.getMax();
-                                      Double size = blockDef.getSize();
-
-                                      for (TieredBlock curTieredBlock : curTieredBlocks)
-                                          if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                                  Double.compare(size, curTieredBlock.getSize()) == 0 &&
-                                                  Double.compare(max, curTieredBlock.getMax()) == 0) {
-                                              return true;
-                                          }
-                                  }
-                              }
-                              return false;
+                            if(input !=null) {
+                              final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
+                              for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
+                                 String unitName = blockDef.getUnitName();
+                                 Double max = blockDef.getMax();
+                                 Double size = blockDef.getSize();
+                                 for (TieredBlock curTieredBlock : curTieredBlocks)
+                                     if (unitName.equals(curTieredBlock.getUnit().getName()) &&
+                                             Double.compare(size, curTieredBlock.getSize()) == 0 &&
+                                             Double.compare(max, curTieredBlock.getMax()) == 0) {
+                                         return true;
+                                     }
+                               }
+                            }
+                            return false;
                           }
                       }).orNull();
-
                       tiers[i] = (overriddenTier != null) ? new DefaultTier(in.getTiers()[i], overriddenTier, currency) : (DefaultTier)in.getTiers()[i] ;
                   }
                   else {

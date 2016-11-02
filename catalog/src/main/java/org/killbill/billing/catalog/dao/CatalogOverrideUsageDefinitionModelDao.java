@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 
 public class CatalogOverrideUsageDefinitionModelDao {
 
-
     private Long recordId;
     private String parentUsageName;
     private String parentUsageType;
