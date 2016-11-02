@@ -36,11 +36,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
@@ -131,6 +129,10 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
         public Plan findPlan(final StandaloneCatalog catalog) throws CatalogApiException {
             return catalog.createOrFindCurrentPlan(spec, overrides);
         }
+
+        public PlanSpecifier getSpec() {
+            return spec;
+        }
     }
 
     private CatalogPlanEntry findCatalogPlanEntry(final PlanRequestWrapper wrapper,
@@ -169,7 +171,12 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
             }
         }
 
-        throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
+        final PlanSpecifier spec = wrapper.getSpec();
+        throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND,
+                                      spec.getPlanName() != null ? spec.getPlanName() : "undefined",
+                                      spec.getProductName() != null ? spec.getProductName() : "undefined",
+                                      spec.getBillingPeriod() != null ? spec.getBillingPeriod() : "undefined",
+                                      spec.getPriceListName() != null ? spec.getPriceListName() : "undefined");
     }
 
     private static class CatalogPlanEntry {
