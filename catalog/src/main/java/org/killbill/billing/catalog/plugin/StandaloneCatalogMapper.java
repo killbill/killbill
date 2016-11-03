@@ -257,7 +257,7 @@ public class StandaloneCatalogMapper {
         if (tmpDefaultProducts == null) {
             final Map<String, Product> map = new HashMap<String, Product>();
             for (final Product product : input) map.put(product.getName(), toDefaultProduct(product));
-            tmpDefaultProducts = ImmutableMap.copyOf(map);
+            tmpDefaultProducts = map;
         }
         return tmpDefaultProducts.values();
     }
@@ -285,7 +285,7 @@ public class StandaloneCatalogMapper {
         if (tmpDefaultPlans == null) {
             final Map<String, Plan> map = new HashMap<String, Plan>();
             for (final Plan plan : input) map.put(plan.getName(), toDefaultPlan(plan));
-            tmpDefaultPlans = ImmutableMap.copyOf(map);
+            tmpDefaultPlans = map;
         }
         return tmpDefaultPlans.values();
     }
