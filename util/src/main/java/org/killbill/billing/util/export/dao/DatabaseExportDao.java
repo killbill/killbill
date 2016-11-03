@@ -23,17 +23,16 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.api.ColumnInfo;
+import org.killbill.billing.util.api.DatabaseExportOutputStream;
+import org.killbill.billing.util.dao.TableName;
+import org.killbill.billing.util.validation.DefaultColumnInfo;
+import org.killbill.billing.util.validation.dao.DatabaseSchemaDao;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.ResultIterator;
 import org.skife.jdbi.v2.tweak.HandleCallback;
-
-import org.killbill.billing.util.api.ColumnInfo;
-import org.killbill.billing.util.api.DatabaseExportOutputStream;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.util.dao.TableName;
-import org.killbill.billing.util.validation.DefaultColumnInfo;
-import org.killbill.billing.util.validation.dao.DatabaseSchemaDao;
 
 @Singleton
 public class DatabaseExportDao {
@@ -46,6 +45,35 @@ public class DatabaseExportDao {
                              final IDBI dbi) {
         this.databaseSchemaDao = databaseSchemaDao;
         this.dbi = dbi;
+    }
+
+    private enum TableType {
+        /* TableName.ACCOUNT */
+        KB_ACCOUNT("record_id", "tenant_record_id"),
+        /* TableName.ACCOUNT_HISTORY */
+        KB_ACCOUNT_HISTORY("target_record_id", "tenant_record_id"),
+        /* Any per-account data table */
+        KB_PER_ACCOUNT("account_record_id", "tenant_record_id"),
+        /* bus_events, notifications table */
+        NOTIFICATION("search_key1", "search_key2"),
+        /* To be discarded */
+        OTHER(null, null);
+
+        private final String accountRecordIdColumnName;
+        private final String tenantRecordIdColumnName;
+
+        TableType(final String accountRecordIdColumnName, final String tenantRecordIdColumnName) {
+            this.accountRecordIdColumnName = accountRecordIdColumnName;
+            this.tenantRecordIdColumnName = tenantRecordIdColumnName;
+        }
+
+        public String getAccountRecordIdColumnName() {
+            return accountRecordIdColumnName;
+        }
+
+        public String getTenantRecordIdColumnName() {
+            return tenantRecordIdColumnName;
+        }
     }
 
     public void exportDataForAccount(final DatabaseExportOutputStream out, final InternalTenantContext context) {
@@ -72,8 +100,19 @@ public class DatabaseExportDao {
         exportDataForAccountAndTable(out, columnsForTable, context);
     }
 
+
     private void exportDataForAccountAndTable(final DatabaseExportOutputStream out, final List<ColumnInfo> columnsForTable, final InternalTenantContext context) {
-        boolean hasAccountRecordIdColumn = false;
+
+
+        TableType tableType = TableType.OTHER;
+        final String tableName = columnsForTable.get(0).getTableName();
+
+        if (TableName.ACCOUNT.getTableName().equals(tableName)) {
+            tableType = TableType.KB_ACCOUNT;
+        } else if (TableName.ACCOUNT_HISTORY.getTableName().equals(tableName)) {
+            tableType = TableType.KB_ACCOUNT_HISTORY;
+        }
+
         boolean firstColumn = true;
         final StringBuilder queryBuilder = new StringBuilder("select ");
         for (final ColumnInfo column : columnsForTable) {
@@ -84,27 +123,29 @@ public class DatabaseExportDao {
             }
 
             queryBuilder.append(column.getColumnName());
-            if (column.getColumnName().equals("account_record_id")) {
-                hasAccountRecordIdColumn = true;
+
+            if (tableType == TableType.OTHER) {
+                if (column.getColumnName().equals(TableType.KB_PER_ACCOUNT.getAccountRecordIdColumnName())) {
+                    tableType = TableType.KB_PER_ACCOUNT;
+                } else if (column.getColumnName().equals(TableType.NOTIFICATION.getAccountRecordIdColumnName())) {
+                    tableType = TableType.NOTIFICATION;
+                }
             }
         }
 
-        final String tableName = columnsForTable.get(0).getTableName();
-        final boolean isAccountTable = TableName.ACCOUNT.getTableName().equals(tableName);
-
         // Don't export non-account specific tables
-        if (!isAccountTable && !hasAccountRecordIdColumn) {
+        if (tableType == TableType.OTHER) {
             return;
         }
 
         // Build the query - make sure to filter by account and tenant!
         queryBuilder.append(" from ")
-                    .append(tableName);
-        if (isAccountTable) {
-            queryBuilder.append(" where record_id = :accountRecordId and tenant_record_id = :tenantRecordId");
-        } else {
-            queryBuilder.append(" where account_record_id = :accountRecordId and tenant_record_id = :tenantRecordId");
-        }
+                    .append(tableName)
+                    .append(" where ")
+                    .append(tableType.getAccountRecordIdColumnName())
+                    .append(" = :accountRecordId and ")
+                    .append(tableType.getTenantRecordIdColumnName())
+                    .append("  = :tenantRecordId");
 
         // Notify the stream that we're about to write data for a different table
         out.newTable(tableName, columnsForTable);
@@ -124,7 +165,6 @@ public class DatabaseExportDao {
                 } finally {
                     iterator.close();
                 }
-
                 return null;
             }
         });

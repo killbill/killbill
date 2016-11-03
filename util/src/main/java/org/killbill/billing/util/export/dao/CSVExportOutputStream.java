@@ -30,7 +30,8 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema.ColumnType;
 
-public class CSVExportOutputStream extends OutputStream implements DatabaseExportOutputStream {
+public class
+CSVExportOutputStream extends OutputStream implements DatabaseExportOutputStream {
 
     private static final CsvMapper mapper = new CsvMapper();
 
@@ -63,6 +64,8 @@ public class CSVExportOutputStream extends OutputStream implements DatabaseExpor
         currentTableName = tableName;
 
         final CsvSchema.Builder builder = CsvSchema.builder();
+        builder.disableQuoteChar();
+
         for (final ColumnInfo columnInfo : columnsForTable) {
             builder.addColumn(columnInfo.getColumnName(), getColumnTypeFromSqlType(columnInfo.getDataType()));
         }
