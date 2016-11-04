@@ -225,7 +225,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             return ImmutableList.copyOf(Iterables.transform(result, new Function<DefaultSubscriptionBase, SubscriptionBase>() {
                 @Override
                 public SubscriptionBase apply(final DefaultSubscriptionBase input) {
-                    return (SubscriptionBase) input;
+                    return input;
                 }
             }));
         } catch (final CatalogApiException e) {
@@ -294,10 +294,10 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         try {
             final Catalog catalog = catalogService.getFullCatalog(true, true, context);
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
+            final DateTime now = clock.getUTCNow();
 
             final List<SubscriptionAndAddOnsSpecifier> subscriptionAndAddOns = new ArrayList<SubscriptionAndAddOnsSpecifier>();
             for (BaseEntitlementWithAddOnsSpecifier entitlementWithAddOnsSpecifier : baseEntitlementWithAddOnsSpecifier) {
-                final DateTime now = clock.getUTCNow();
                 final DateTime effectiveDate = (entitlementWithAddOnsSpecifier.getEntitlementEffectiveDate() != null) ?
                                                DefaultClock.truncateMs(entitlementWithAddOnsSpecifier.getEntitlementEffectiveDate().toDateTimeAtCurrentTime()) : now;
 
@@ -321,7 +321,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             return ImmutableList.copyOf(Iterables.transform(result, new Function<DefaultSubscriptionBase, SubscriptionBase>() {
                 @Override
                 public SubscriptionBase apply(final DefaultSubscriptionBase input) {
-                    return (SubscriptionBase) input;
+                    return input;
                 }
             }));
 

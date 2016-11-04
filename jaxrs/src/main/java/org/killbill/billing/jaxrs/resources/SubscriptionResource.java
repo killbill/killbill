@@ -99,11 +99,11 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.weakref.jmx.internal.guava.collect.Iterators;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -373,7 +373,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
             verifyNumberOfElements(Iterators.size(baseEntitlements.iterator()), 1, "Only one BASE product is allowed per bundle.");
 
             SubscriptionJson baseEntitlement = baseEntitlements.iterator().next();
-            verifyNonNull(baseEntitlement.getAccountId(), "SubscriptionJson accountId needs to be set for BASE product.");
 
             final int addOnSubscriptionsSize = Iterables.size(Iterables.filter(bulkBaseEntitlementWithAddOns.getBaseEntitlementAndAddOns(), new Predicate<SubscriptionJson>() {
                 @Override
