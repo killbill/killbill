@@ -273,16 +273,14 @@ public class AccountResource extends JaxRsResourceBase {
         final UUID uuid = UUID.fromString(accountId);
         final Account account = accountUserApi.getAccountById(uuid, tenantContext);
 
-        List<SubscriptionBundle> bundles = (externalKey != null) ?
+        final List<SubscriptionBundle> bundles = (externalKey != null) ?
                                                  subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext) :
                                                  subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext);
 
         boolean filter = (null != bundlesFilter && !bundlesFilter.isEmpty());
-        if (filter) {
-            bundles = filterBundles(bundles, Arrays.asList(bundlesFilter.split(",")));
-        }
 
-        final Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
+        final Collection<BundleJson> result = Collections2.transform(
+                (filter) ? filterBundles(bundles, Arrays.asList(bundlesFilter.split(","))) : bundles, new Function<SubscriptionBundle, BundleJson>() {
             @Override
             public BundleJson apply(final SubscriptionBundle input) {
                 try {
