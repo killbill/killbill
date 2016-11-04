@@ -1769,7 +1769,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         mockPaymentProviderPlugin.overridePaymentPluginStatus(pendingPayment.getId(), pendingPayment.getTransactions().get(1).getId(), PaymentPluginStatus.PROCESSED);
 
         final String anotherPaymentTransactionExternalKey = UUID.randomUUID().toString();
-        // 2nd capture request with identical transaction external key
+        // 2nd capture request with a different transaction external key
         pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, anotherPaymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
         Assert.assertEquals(pendingPayment.getTransactions().size(), 3);
         Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
@@ -1827,7 +1827,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         mockPaymentProviderPlugin.overridePaymentPluginStatus(pendingPayment.getId(), pendingPayment.getTransactions().get(1).getId(), PaymentPluginStatus.ERROR);
 
         final String anotherPaymentTransactionExternalKey = UUID.randomUUID().toString();
-        // 2nd capture request with identical transaction external key
+        // 2nd capture request with different transaction external key
         pendingPayment = createPayment(TransactionType.CAPTURE, authorization.getId(), paymentExternalKey, anotherPaymentTransactionExternalKey, requestedAmount, PaymentPluginStatus.PROCESSED);
         Assert.assertEquals(pendingPayment.getTransactions().size(), 3);
         Assert.assertEquals(pendingPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
