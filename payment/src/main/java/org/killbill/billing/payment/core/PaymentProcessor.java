@@ -405,12 +405,8 @@ public class PaymentProcessor extends ProcessorBase {
                     // We can't tell where we should be in the state machine - bail (cannot be enforced by the state machine unfortunately because UNKNOWN and PLUGIN_FAILURE are both treated as EXCEPTION)
                     if (transactionToComplete.getTransactionStatus() == TransactionStatus.UNKNOWN) {
                         throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_OPERATION, paymentStateContext.getTransactionType(), transactionToComplete.getTransactionStatus());
-                    }
-
-                    // If Janitor confirmed the status, just return the status to the client.
-                    if (transactionType != TransactionType.AUTHORIZE &&
-                        (transactionToComplete.getTransactionStatus() == TransactionStatus.SUCCESS || transactionToComplete.getTransactionStatus() == TransactionStatus.PAYMENT_FAILURE)) {
-                        return getPayment(paymentId, true, properties, callContext, internalCallContext);
+                    } else if (transactionToComplete.getTransactionStatus() == TransactionStatus.SUCCESS ){
+                        throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
                     }
 
                     paymentStateContext.setPaymentTransactionModelDao(transactionToComplete);
