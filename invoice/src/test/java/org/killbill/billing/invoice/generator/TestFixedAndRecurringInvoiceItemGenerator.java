@@ -19,11 +19,14 @@ package org.killbill.billing.invoice.generator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.MockInternationalPrice;
@@ -37,21 +40,25 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.MockBillingEventSet;
+import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
+import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
+import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteNoDB {
 
@@ -67,7 +74,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             account = invoiceUtil.createAccount(callContext);
             subscription = invoiceUtil.createSubscription();
         } catch (final Exception e) {
-            Assert.fail(e.getMessage());
+            fail(e.getMessage());
         }
     }
 
@@ -180,7 +187,6 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                        SubscriptionBaseTransitionType.CREATE);
         events.add(event1);
 
-
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-01-08"),
                                                                        plan, phase,
                                                                        null, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
@@ -213,7 +219,6 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                        SubscriptionBaseTransitionType.CREATE);
         events.add(event1);
 
-
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-01-09"),
                                                                        plan, phase,
                                                                        null, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
@@ -227,7 +232,6 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         assertEquals(proposedItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
         assertEquals(proposedItems.get(0).getAmount().compareTo(fixedPriceAmount), 0);
     }
-
 
     @Test(groups = "fast")
     public void testProcessFixedBillingEventsWithMultipleChangeOnSameDay() throws InvoiceApiException {
@@ -249,8 +253,6 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                        SubscriptionBaseTransitionType.CREATE);
         events.add(event1);
 
-
-
         final BigDecimal fixedPriceAmount2 = null;
         final MockInternationalPrice fixedPrice2 = new MockInternationalPrice(new DefaultPrice(fixedPriceAmount2, Currency.USD));
         final Plan plan2 = new MockPlan("my-plan2");
@@ -262,7 +264,6 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                        BillingMode.IN_ADVANCE, "Billing Event Desc", 2L,
                                                                        SubscriptionBaseTransitionType.CHANGE);
         events.add(event2);
-
 
         final BigDecimal fixedPriceAmount3 = BigDecimal.ONE;
         final MockInternationalPrice fixedPrice3 = new MockInternationalPrice(new DefaultPrice(fixedPriceAmount3, Currency.USD));
@@ -283,4 +284,64 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         assertEquals(proposedItems.get(0).getAmount().compareTo(fixedPriceAmount3), 0);
     }
 
+    @Test(groups = "fast")
+    public void testSafetyBounds() throws InvoiceApiException {
+        final int threshold = 15;
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final BillingEventSet events = new MockBillingEventSet();
+        final BigDecimal amount = BigDecimal.TEN;
+        final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(amount, account.getCurrency()));
+        final Plan plan = new MockPlan("my-plan");
+        final PlanPhase planPhase = new MockPlanPhase(price, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        final BillingEvent event = invoiceUtil.createMockBillingEvent(account,
+                                                                      subscription,
+                                                                      startDate.toDateTimeAtStartOfDay(),
+                                                                      plan,
+                                                                      planPhase,
+                                                                      null,
+                                                                      amount,
+                                                                      account.getCurrency(),
+                                                                      planPhase.getRecurring().getBillingPeriod(),
+                                                                      1,
+                                                                      BillingMode.IN_ADVANCE,
+                                                                      "Billing Event Desc",
+                                                                      1L,
+                                                                      SubscriptionBaseTransitionType.CREATE);
+        events.add(event);
+
+        // Simulate a big catch-up
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        for (int i = 0; i < threshold; i++) {
+            final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate.plusMonths(i), account.getCurrency());
+            invoice.addInvoiceItem(new RecurringInvoiceItem(UUID.randomUUID(),
+                                                            clock.getUTCNow(),
+                                                            invoice.getId(),
+                                                            account.getId(),
+                                                            subscription.getBundleId(),
+                                                            subscription.getId(),
+                                                            event.getPlan().getName(),
+                                                            event.getPlanPhase().getName(),
+                                                            startDate.plusMonths(i),
+                                                            startDate.plusMonths(1 + i),
+                                                            amount,
+                                                            amount,
+                                                            account.getCurrency()));
+            existingInvoices.add(invoice);
+        }
+
+        try {
+            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                                                         UUID.randomUUID(),
+                                                                                                         events,
+                                                                                                         existingInvoices,
+                                                                                                         startDate.plusMonths(threshold),
+                                                                                                         account.getCurrency(),
+                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                                                         internalCallContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+        }
+    }
 }
