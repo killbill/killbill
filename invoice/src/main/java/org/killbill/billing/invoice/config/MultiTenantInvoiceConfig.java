@@ -55,6 +55,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
+    public int getMaxDailyNumberOfItemsSafetyBound() {
+        return staticConfig.getMaxDailyNumberOfItemsSafetyBound();
+    }
+
+    @Override
+    public int getMaxDailyNumberOfItemsSafetyBound(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getMaxDailyNumberOfItemsSafetyBound", tenantContext);
+        if (result != null) {
+            return Integer.parseInt(result);
+        }
+        return getMaxDailyNumberOfItemsSafetyBound();
+    }
+
+    @Override
     public TimeSpan getDryRunNotificationSchedule() {
         return staticConfig.getDryRunNotificationSchedule();
     }
