@@ -20,14 +20,14 @@ package org.killbill.billing.util.security.shiro.dao;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
+import org.killbill.billing.util.UUIDs;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,15 +54,10 @@ public class JDBCSessionDao extends CachingSessionDAO {
 
     @Override
     protected Serializable doCreate(final Session session) {
-        final Serializable sessionId = jdbcSessionSqlDao.inTransaction(new Transaction<Long, JDBCSessionSqlDao>() {
-            @Override
-            public Long inTransaction(final JDBCSessionSqlDao transactional, final TransactionStatus status) throws Exception {
-                transactional.create(new SessionModelDao(session));
-                return transactional.getLastInsertId();
-            }
-        });
+        final UUID sessionId = UUIDs.randomUUID();
         // See SessionModelDao#toSimpleSession for why we use toString()
         assignSessionId(session, sessionId.toString());
+        jdbcSessionSqlDao.create(new SessionModelDao(session));
         return sessionId;
     }
 
@@ -73,15 +68,9 @@ public class JDBCSessionDao extends CachingSessionDAO {
             return null;
         }
 
-        // Ignore unsupported JSESSIONID cookies
-        final Long recordId;
-        try {
-            recordId = Long.parseLong(sessionId.toString().trim());
-        } catch (final NumberFormatException e) {
-            return null;
-        }
+        final String sessionIdString = sessionId.toString();
+        final SessionModelDao sessionModelDao = jdbcSessionSqlDao.read(sessionIdString);
 
-        final SessionModelDao sessionModelDao = jdbcSessionSqlDao.read(recordId);
         if (sessionModelDao == null) {
             return null;
         }

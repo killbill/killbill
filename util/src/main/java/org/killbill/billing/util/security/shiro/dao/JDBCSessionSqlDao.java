@@ -29,7 +29,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 public interface JDBCSessionSqlDao extends Transactional<JDBCSessionSqlDao> {
 
     @SqlQuery
-    public SessionModelDao read(@Bind("recordId") final Long sessionId);
+    public SessionModelDao read(@Bind("id") final String sessionId);
 
     @SqlUpdate
     public void create(@SmartBindBean final SessionModelDao sessionModelDao);
@@ -40,6 +40,4 @@ public interface JDBCSessionSqlDao extends Transactional<JDBCSessionSqlDao> {
     @SqlUpdate
     public void delete(@SmartBindBean final SessionModelDao sessionModelDao);
 
-    @SqlQuery
-    public Long getLastInsertId();
 }
