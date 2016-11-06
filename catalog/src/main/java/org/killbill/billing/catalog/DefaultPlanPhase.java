@@ -251,7 +251,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         sb.append(", fixed=").append(fixed);
         sb.append(", recurring=").append(recurring);
         sb.append(", usages=").append(Arrays.toString(usages));
-        sb.append(", plan=").append(plan);
+        sb.append(", plan=").append(plan.getName());
         sb.append('}');
         return sb.toString();
     }
