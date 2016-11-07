@@ -343,6 +343,45 @@ public class NodeInterval {
         return result;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("NodeInterval{");
+        sb.append("this=[")
+          .append(start)
+          .append(",")
+          .append(end)
+          .append("]");
+        if (parent == null) {
+            sb.append(", parent=").append(parent);
+        } else {
+            sb.append(", parent=[")
+              .append(parent.getStart())
+              .append(",")
+              .append(parent.getEnd())
+              .append("]");
+        }
+        if (leftChild == null) {
+            sb.append(", leftChild=").append(leftChild);
+        } else {
+            sb.append(", leftChild=[")
+              .append(leftChild.getStart())
+              .append(",")
+              .append(leftChild.getEnd())
+              .append("]");
+        }
+        if (rightSibling == null) {
+            sb.append(", rightSibling=").append(rightSibling);
+        } else {
+            sb.append(", rightSibling=[")
+              .append(rightSibling.getStart())
+              .append(",")
+              .append(rightSibling.getEnd())
+              .append("]");
+        }
+        sb.append('}');
+        return sb.toString();
+    }
+
     /**
      * Since items may be added out of order, there is no guarantee that we don't suddenly have a new node
      * whose interval emcompasses cuurent node(s). In which case we need to rebalance the tree.

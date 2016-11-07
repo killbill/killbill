@@ -93,6 +93,10 @@ public class Item {
     }
 
     public Item(final InvoiceItem item, final UUID targetInvoiceId, final ItemAction action) {
+        this(item, item.getStartDate(), item.getEndDate(), targetInvoiceId, action);
+    }
+
+    public Item(final InvoiceItem item, final LocalDate startDate, final LocalDate endDate, final UUID targetInvoiceId, final ItemAction action) {
         this.id = item.getId();
         this.accountId = item.getAccountId();
         this.bundleId = item.getBundleId();
@@ -101,8 +105,8 @@ public class Item {
         this.invoiceId = item.getInvoiceId();
         this.planName = item.getPlanName();
         this.phaseName = item.getPhaseName();
-        this.startDate = item.getStartDate();
-        this.endDate = item.getEndDate();
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.amount = item.getAmount().abs();
         this.rate = item.getRate();
         this.currency = item.getCurrency();
