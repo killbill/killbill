@@ -24,11 +24,14 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.tree.Item.ItemAction;
 import org.killbill.billing.util.jackson.ObjectMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -221,22 +224,31 @@ public class ItemsNodeInterval extends NodeInterval {
 
     /**
      * Add the adjustment amount on the item specified by the targetId.
-     *
-     * @param adjustementDate date of the adjustment
-     * @param amount          amount of the adjustment
-     * @param targetId        item that has been adjusted
      */
-    public void addAdjustment(final LocalDate adjustementDate, final BigDecimal amount, final UUID targetId) {
-        // TODO we should really be using findNode(adjustementDate, new SearchCallback() instead but wrong dates in test
-        // creates test panic.
+    public void addAdjustment(final InvoiceItem item) {
+        final UUID targetId = item.getLinkedItemId();
+
+        // TODO we should really be using findNode(adjustmentDate, callback) instead but wrong dates in test creates panic.
         final NodeInterval node = findNode(new SearchCallback() {
             @Override
             public boolean isMatch(final NodeInterval curNode) {
-                return ((ItemsNodeInterval) curNode).getItemsInterval().containsItem(targetId);
+                return ((ItemsNodeInterval) curNode).getItemsInterval().findItem(targetId) != null;
             }
         });
-        Preconditions.checkNotNull(node, "Cannot add adjustment for item = " + targetId + ", date = " + adjustementDate);
-        ((ItemsNodeInterval) node).setAdjustment(amount.negate(), targetId);
+        Preconditions.checkNotNull(node, "Unable to find item interval for id='%s', tree=%s", targetId, this);
+
+        final ItemsInterval targetItemsInterval = ((ItemsNodeInterval) node).getItemsInterval();
+        final List<Item> targetItems = targetItemsInterval.getItems();
+        final Item targetItem = targetItemsInterval.findItem(targetId);
+        Preconditions.checkNotNull(targetItem, "Unable to find item with id='%s', items=%s", targetId, targetItems);
+
+        final BigDecimal adjustmentAmount = item.getAmount().negate();
+        if (targetItem.getAmount().compareTo(adjustmentAmount) == 0) {
+            // Full item adjustment - treat it like a repair
+            addExistingItem(new ItemsNodeInterval(this, targetInvoiceId, new Item(item, targetItem.getStartDate(), targetItem.getEndDate(), targetInvoiceId, ItemAction.CANCEL)));
+        } else {
+            targetItem.incrementAdjustedAmount(adjustmentAmount);
+        }
     }
 
     public void jsonSerializeTree(final ObjectMapper mapper, final OutputStream output) throws IOException {
@@ -272,10 +284,6 @@ public class ItemsNodeInterval extends NodeInterval {
         generator.close();
     }
 
-    protected void setAdjustment(final BigDecimal amount, final UUID linkedId) {
-        items.setAdjustment(amount, linkedId);
-    }
-
     //
     // Before we build the tree, we make a first pass at removing full repaired items; those can come in two shapes:
     // Case A - The first one, is the mergeCancellingPairs logics which simply look for one CANCEL pointing to one ADD item in the same
@@ -307,7 +315,7 @@ public class ItemsNodeInterval extends NodeInterval {
                 }
 
                 // Case B -- look for such case, and if found (foundFullRepairByParts) we fix them below.
-                List<Item> curNodeItemsToBeRemoved = null;
+                List<Item> curNodeItemsToBeRemoved = new ArrayList<Item>();
                 final Iterator<Item> it = curNodeItems.get_ADD_items().iterator();
                 // For each item on this curNode interval we check if there is a matching set of CANCEL items on the children (resulting in completely cancelling that item).
                 while (it.hasNext()) {
@@ -340,9 +348,6 @@ public class ItemsNodeInterval extends NodeInterval {
                             if (curItemsInterval.size() == 0) {
                                 curNode.removeChild(curItemsInterval.getNodeInterval());
                             }
-                        }
-                        if (curNodeItemsToBeRemoved == null) {
-                            curNodeItemsToBeRemoved = new ArrayList<Item>();
                         }
                         curNodeItemsToBeRemoved.add(curAddItem);
                     }

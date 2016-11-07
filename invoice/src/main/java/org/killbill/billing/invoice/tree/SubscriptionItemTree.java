@@ -89,8 +89,9 @@ public class SubscriptionItemTree {
      */
     public void build() {
         Preconditions.checkState(!isBuilt);
+
         for (InvoiceItem item : pendingItemAdj) {
-            root.addAdjustment(item.getStartDate(), item.getAmount(), item.getLinkedItemId());
+            root.addAdjustment(item);
         }
         pendingItemAdj.clear();
         root.buildForExistingItems(items);

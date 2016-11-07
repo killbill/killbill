@@ -116,15 +116,15 @@ public class NodeInterval {
             }
 
             if (curChild.isItemOverlap(newNode)) {
-                if (callback.shouldInsertNode(this)) {
-                    rebalance(newNode);
-                    return true;
-                } else {
-                    return false;
+                if (rebalance(newNode)) {
+                    return callback.shouldInsertNode(this);
                 }
             }
 
             if (newNode.getStart().compareTo(curChild.getStart()) < 0) {
+
+                Preconditions.checkState(newNode.getEnd().compareTo(end) <= 0);
+
                 if (callback.shouldInsertNode(this)) {
                     newNode.rightSibling = curChild;
                     if (prevChild == null) {
@@ -343,13 +343,52 @@ public class NodeInterval {
         return result;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("NodeInterval{");
+        sb.append("this=[")
+          .append(start)
+          .append(",")
+          .append(end)
+          .append("]");
+        if (parent == null) {
+            sb.append(", parent=").append(parent);
+        } else {
+            sb.append(", parent=[")
+              .append(parent.getStart())
+              .append(",")
+              .append(parent.getEnd())
+              .append("]");
+        }
+        if (leftChild == null) {
+            sb.append(", leftChild=").append(leftChild);
+        } else {
+            sb.append(", leftChild=[")
+              .append(leftChild.getStart())
+              .append(",")
+              .append(leftChild.getEnd())
+              .append("]");
+        }
+        if (rightSibling == null) {
+            sb.append(", rightSibling=").append(rightSibling);
+        } else {
+            sb.append(", rightSibling=[")
+              .append(rightSibling.getStart())
+              .append(",")
+              .append(rightSibling.getEnd())
+              .append("]");
+        }
+        sb.append('}');
+        return sb.toString();
+    }
+
     /**
      * Since items may be added out of order, there is no guarantee that we don't suddenly have a new node
      * whose interval emcompasses cuurent node(s). In which case we need to rebalance the tree.
      *
      * @param newNode node that triggered a rebalance operation
      */
-    private void rebalance(final NodeInterval newNode) {
+    private boolean rebalance(final NodeInterval newNode) {
 
         NodeInterval prevRebalanced = null;
         NodeInterval curChild = leftChild;
@@ -365,6 +404,10 @@ public class NodeInterval {
             }
             curChild = curChild.rightSibling;
         } while (curChild != null);
+
+        if (toBeRebalanced.isEmpty()) {
+            return false;
+        }
 
         newNode.parent = this;
         final NodeInterval lastNodeToRebalance = toBeRebalanced.get(toBeRebalanced.size() - 1);
@@ -386,6 +429,7 @@ public class NodeInterval {
             }
             prev = cur;
         }
+        return true;
     }
 
     private void computeRootInterval(final NodeInterval newNode) {
