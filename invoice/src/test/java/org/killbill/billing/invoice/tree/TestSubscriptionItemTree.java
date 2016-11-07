@@ -21,6 +21,7 @@ package org.killbill.billing.invoice.tree;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +35,7 @@ import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.util.jackson.ObjectMapper;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Lists;
@@ -50,6 +52,63 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     private final String planName = "my-plan";
     private final String phaseName = "my-phase";
     private final Currency currency = Currency.USD;
+
+
+
+    @Test(groups = "fast")
+    public void testWithExistingSplitRecurring() {
+
+        final BigDecimal rate = new BigDecimal("40.00");
+
+        // We assume we have the right items for the period [2016, 9, 8; 2016, 10, 8] but split in pieces
+        final InvoiceItem recurring1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, new LocalDate(2016, 9, 8), new LocalDate(2016, 9, 9), new BigDecimal("2.0"), rate, currency);
+        final InvoiceItem recurring2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, new LocalDate(2016, 9, 9), new LocalDate(2016, 10, 8), new BigDecimal("38.0"), rate, currency);
+
+        final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
+        existingItems.add(recurring1);
+        existingItems.add(recurring2);
+
+        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        for (InvoiceItem e : existingItems) {
+            tree.addItem(e);
+        }
+        tree.build();
+        tree.flatten(true);
+
+        // We  generate the correct item for the period [2016, 9, 8; 2016, 10, 8]
+        final InvoiceItem proposedItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, new LocalDate(2016, 9, 8), new LocalDate(2016, 10, 8), rate, rate, currency);
+        tree.mergeProposedItem(proposedItem);
+        tree.buildForMerge();
+
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        expectedResult.add(proposedItem);
+        expectedResult.add( new RepairAdjInvoiceItem(invoiceId, accountId, recurring1.getStartDate(), recurring1.getEndDate(), recurring1.getAmount().negate(), currency, recurring1.getId()));
+        expectedResult.add( new RepairAdjInvoiceItem(invoiceId, accountId, recurring2.getStartDate(), recurring2.getEndDate(), recurring2.getAmount().negate(), currency, recurring2.getId()));
+
+        // We expect to see the repair for initail split items and the new full item
+        verifyResult(tree.getView(), expectedResult);
+
+        // Stage II: Try again.. with existing items
+        existingItems.addAll(tree.getView());
+
+        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        for (InvoiceItem e : existingItems) {
+            tree.addItem(e);
+        }
+        tree.build();
+        tree.flatten(true);
+
+        // Regenerate proposedItem so it has a different id and Item#isSameKind correctly detect we are proposing the same kind
+        final InvoiceItem proposedItem2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, new LocalDate(2016, 9, 8), new LocalDate(2016, 10, 8), rate, rate, currency);
+
+        tree.mergeProposedItem(proposedItem2);
+        tree.buildForMerge();
+
+        // Nothing should be generated
+        Assert.assertTrue(tree.getView().isEmpty());
+    }
+
 
     @Test(groups = "fast")
     public void testSimpleRepair() {
