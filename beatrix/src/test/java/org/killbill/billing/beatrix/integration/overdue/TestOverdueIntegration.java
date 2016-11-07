@@ -946,7 +946,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
             if (i == invoicesToAdjust.size() - 1) {
                 fullyAdjustInvoiceAndCheckForCompletion(account, invoicesToAdjust.get(i), NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
             } else {
-                fullyAdjustInvoiceAndCheckForCompletion(account, invoicesToAdjust.get(i), NextEvent.INVOICE_ADJUSTMENT);
+                fullyAdjustInvoiceAndCheckForCompletion(account, invoicesToAdjust.get(i), NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_ADJUSTMENT);
             }
         }
 
