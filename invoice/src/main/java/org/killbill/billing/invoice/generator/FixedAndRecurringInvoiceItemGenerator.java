@@ -19,6 +19,7 @@ package org.killbill.billing.invoice.generator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -399,25 +400,39 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
     // Trigger an exception if we create too many subscriptions for a subscription on a given day
     private void safetyBound(final Iterable<InvoiceItem> resultingItems, final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalTenantContext internalCallContext) throws InvoiceApiException {
+        if (config.getMaxDailyNumberOfItemsSafetyBound(internalCallContext) == -1) {
+            // Safety bound disabled
+            return;
+        }
+
         for (final InvoiceItem invoiceItem : resultingItems) {
             if (invoiceItem.getSubscriptionId() != null) {
-                trackInvoiceItemCreatedDay(invoiceItem, createdItemsPerDayPerSubscription, internalCallContext);
+                final LocalDate resultingItemCreationDay = trackInvoiceItemCreatedDay(invoiceItem, createdItemsPerDayPerSubscription, internalCallContext);
 
-                if (createdItemsPerDayPerSubscription.get(invoiceItem.getSubscriptionId()).size() > config.getMaxDailyNumberOfItemsSafetyBound(internalCallContext)) {
-                    // Proposed items have already been logged
-                    throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, String.format("SAFETY BOUND TRIGGERED subscriptionId='%s', resultingItem=%s", invoiceItem.getSubscriptionId(), invoiceItem));
+                final Collection<LocalDate> creationDaysForSubscription = createdItemsPerDayPerSubscription.get(invoiceItem.getSubscriptionId());
+                int i = 0;
+                for (final LocalDate creationDayForSubscription : creationDaysForSubscription) {
+                    if (creationDayForSubscription.compareTo(resultingItemCreationDay) == 0) {
+                        i++;
+                        if (i > config.getMaxDailyNumberOfItemsSafetyBound(internalCallContext)) {
+                            // Proposed items have already been logged
+                            throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, String.format("SAFETY BOUND TRIGGERED subscriptionId='%s', resultingItem=%s", invoiceItem.getSubscriptionId(), invoiceItem));
+                        }
+
+                    }
                 }
             }
         }
     }
 
-    private void trackInvoiceItemCreatedDay(final InvoiceItem invoiceItem, final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalTenantContext internalCallContext) {
+    private LocalDate trackInvoiceItemCreatedDay(final InvoiceItem invoiceItem, final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalTenantContext internalCallContext) {
         final UUID subscriptionId = invoiceItem.getSubscriptionId();
         if (subscriptionId == null) {
-            return;
+            return null;
         }
 
         final LocalDate createdDay = internalCallContext.toLocalDate(invoiceItem.getCreatedDate());
         createdItemsPerDayPerSubscription.put(subscriptionId, createdDay);
+        return createdDay;
     }
 }

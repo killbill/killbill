@@ -42,6 +42,7 @@ import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
+import org.killbill.clock.ClockMock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.slf4j.Logger;
@@ -91,7 +92,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected GlobalLocker locker;
     @Inject
-    protected Clock clock;
+    protected ClockMock clock;
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
     @Inject
@@ -127,6 +128,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
         controllerDispatcher.clearAll();
         bus.start();
         restartInvoiceService(invoiceService);
+        clock.resetDeltaFromReality();
     }
 
     private void restartInvoiceService(final InvoiceService invoiceService) throws Exception {
