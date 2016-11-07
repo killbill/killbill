@@ -1122,4 +1122,54 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
             assertTrue(result.get(i).matches(expectedResult.get(i)));
         }
     }
+
+
+    @Test(groups = "fast")
+    public void testWithWrongInitialItemInLoop() {
+
+        final LocalDate wrongStartDate = new LocalDate(2016, 9, 9);
+        final LocalDate correctStartDate = new LocalDate(2016, 9, 8);
+        final LocalDate endDate = new LocalDate(2016, 10, 8);
+
+        final BigDecimal rate1 = new BigDecimal("12.00");
+        final BigDecimal amount1 = rate1;
+
+        final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
+        final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
+        final InvoiceItem wrongInitialItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, wrongStartDate, endDate, amount1, rate1, currency);
+        proposedItems.add(wrongInitialItem);
+
+        int previousExistingSize = existingItems.size();
+        int iteration = 0;
+        do {
+
+            SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+            for (InvoiceItem e : existingItems) {
+                tree.addItem(e);
+            }
+            tree.build();
+            tree.flatten(true);
+
+            for (InvoiceItem p : proposedItems) {
+                tree.mergeProposedItem(p);
+            }
+            tree.buildForMerge();
+
+            existingItems.addAll(tree.getView());
+            if (iteration == 0) {
+                final InvoiceItem itemAdj = new ItemAdjInvoiceItem(wrongInitialItem, new LocalDate(2016, 10, 2), amount1.negate(), currency);
+                existingItems.add(itemAdj);
+            }
+
+            previousExistingSize = existingItems.size();
+
+            proposedItems.clear();
+            final InvoiceItem correctInitialItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, correctStartDate, endDate, amount1, rate1, currency);
+            proposedItems.add(correctInitialItem);
+            iteration++;
+        } while (iteration < 10);
+
+        // We have repaired wrongInitialItem and generated the correctInitialItem and stopped
+        Assert.assertEquals(previousExistingSize, 3);
+    }
 }
