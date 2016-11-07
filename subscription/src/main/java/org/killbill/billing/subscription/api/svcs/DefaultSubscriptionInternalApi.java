@@ -197,42 +197,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
     }
 
-    @Override
-    public List<SubscriptionBase> createBaseSubscriptionWithAddOns(final UUID bundleId, final Iterable<EntitlementSpecifier> entitlements, final DateTime requestedDateWithMs, final boolean isMigrated, final InternalCallContext context) throws SubscriptionBaseApiException {
-
-        final DateTime now = clock.getUTCNow();
-        final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
-
-        try {
-            final Catalog catalog = catalogService.getFullCatalog(true, true, context);
-            final CallContext callContext = internalCallContextFactory.createCallContext(context);
-
-            final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(bundleId, context);
-            if (bundle == null) {
-                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
-            }
-
-            final List<SubscriptionSpecifier> subscriptions = verifyAndBuildSubscriptionSpecifiers(bundleId,
-                                                                                                   entitlements,
-                                                                                                   isMigrated,
-                                                                                                   context,
-                                                                                                   now,
-                                                                                                   effectiveDate,
-                                                                                                   catalog,
-                                                                                                   callContext);
-
-            final List<DefaultSubscriptionBase> result = apiService.createPlans(subscriptions, callContext);
-            return ImmutableList.copyOf(Iterables.transform(result, new Function<DefaultSubscriptionBase, SubscriptionBase>() {
-                @Override
-                public SubscriptionBase apply(final DefaultSubscriptionBase input) {
-                    return input;
-                }
-            }));
-        } catch (final CatalogApiException e) {
-            throw new SubscriptionBaseApiException(e);
-        }
-    }
-
     private List<SubscriptionSpecifier> verifyAndBuildSubscriptionSpecifiers(final UUID bundleId, final Iterable<EntitlementSpecifier> entitlements, final boolean isMigrated, final InternalCallContext context, final DateTime now, final DateTime effectiveDate, final Catalog catalog, final CallContext callContext) throws SubscriptionBaseApiException, CatalogApiException {
         final List<SubscriptionSpecifier> subscriptions = new ArrayList<SubscriptionSpecifier>();
         boolean first = true;

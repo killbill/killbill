@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
@@ -30,6 +31,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
+import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -234,13 +236,48 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         specifierList.add(baseEntitlementSpecifier);
         specifierList.add(addOnEntitlementSpecifier1);
 
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.BLOCK);
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, entitlementMigrationDate, billingMigrationDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BLOCK,
+                                      NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE,
+                                      NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new BaseEntitlementWithAddOnsSpecifier() {
+            @Override
+            public UUID getBundleId() {
+                return null;
+            }
+            @Override
+            public String getExternalKey() {
+                return externalKey;
+            }
+            @Override
+            public Iterable<EntitlementSpecifier> getEntitlementSpecifier() {
+                return specifierList;
+            }
+            @Override
+            public LocalDate getEntitlementEffectiveDate() {
+                return entitlementMigrationDate;
+            }
+            @Override
+            public LocalDate getBillingEffectiveDate() {
+                return billingMigrationDate;
+            }
+            @Override
+            public boolean isMigrated() {
+                return false;
+            }
+        };
+        List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+        baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
+
+        final List<Entitlement> baseEntitlement = entitlementApi.createBaseEntitlementsWithAddOns(
+                account.getId(),
+                baseEntitlementWithAddOnsSpecifierList,
+                ImmutableList.<PluginProperty>of(),
+                callContext);
         assertListenerStatus();
-        Assert.assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(baseEntitlement.get(0).getState(), EntitlementState.ACTIVE);
 
         // Billing starts straight on EVERGREEN
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.NULL_INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
     }

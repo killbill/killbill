@@ -117,20 +117,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public List<DefaultSubscriptionBase> createPlans(final Iterable<SubscriptionSpecifier> subscriptions, final CallContext context) throws SubscriptionBaseApiException {
-        Map<UUID, List<SubscriptionBaseEvent>> eventsMap = new HashMap<UUID, List<SubscriptionBaseEvent>>();
-        List<DefaultSubscriptionBase> subscriptionBaseList = new ArrayList<DefaultSubscriptionBase>();
-        createEvents(subscriptions, context, eventsMap, subscriptionBaseList);
-
-        final InternalCallContext internalCallContext = createCallContextFromBundleId(subscriptionBaseList.get(0).getBundleId(), context);
-        dao.createSubscriptionsWithAddOns(subscriptionBaseList, eventsMap, internalCallContext);
-
-        final DefaultSubscriptionBase baseSubscription = findBaseSubscription(subscriptionBaseList);
-        rebuildTransitions(internalCallContext, subscriptionBaseList, baseSubscription);
-        return subscriptionBaseList;
-    }
-
-    @Override
     public List<DefaultSubscriptionBase> createPlansWithAddOns(final UUID accountId, final Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, final CallContext context) throws SubscriptionBaseApiException {
         Map<UUID, List<SubscriptionBaseEvent>> eventsMap = new HashMap<UUID, List<SubscriptionBaseEvent>>();
         List<List<DefaultSubscriptionBase>> subscriptionBaseAndAddOnsList = new ArrayList<List<DefaultSubscriptionBase>>();

@@ -25,7 +25,6 @@ import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
@@ -36,7 +35,6 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionAndAddOnsSpecifier;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
-import org.killbill.billing.subscription.api.user.SubscriptionSpecifier;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -46,9 +44,6 @@ public interface SubscriptionBaseApiService {
     public DefaultSubscriptionBase createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
                                               String realPriceList, DateTime effectiveDate, DateTime processedDate,
                                               CallContext context)
-            throws SubscriptionBaseApiException;
-
-    public List<DefaultSubscriptionBase> createPlans(Iterable<SubscriptionSpecifier> subscriptions, CallContext context)
             throws SubscriptionBaseApiException;
 
     public List<DefaultSubscriptionBase> createPlansWithAddOns(UUID accountId, Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, CallContext context)
