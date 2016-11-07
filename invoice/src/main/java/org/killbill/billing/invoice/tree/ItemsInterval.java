@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,14 +18,11 @@
 
 package org.killbill.billing.invoice.tree;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -35,7 +32,9 @@ import org.killbill.billing.invoice.tree.Item.ItemAction;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 /**
  * Keeps track of all the items existing on a specified interval.
@@ -59,23 +58,13 @@ public class ItemsInterval {
         }
     }
 
-    public boolean containsItem(final UUID targetId) {
+    public Item findItem(final UUID targetId) {
         return Iterables.tryFind(items, new Predicate<Item>() {
             @Override
             public boolean apply(final Item input) {
                 return input.getId().equals(targetId);
             }
-        }).orNull() != null;
-    }
-
-    public void setAdjustment(final BigDecimal amount, final UUID targetId) {
-        final Item item = Iterables.tryFind(items, new Predicate<Item>() {
-            @Override
-            public boolean apply(final Item input) {
-                return input.getId().equals(targetId);
-            }
-        }).get();
-        item.incrementAdjustedAmount(amount);
+        }).orNull();
     }
 
     public List<Item> getItems() {
@@ -109,25 +98,23 @@ public class ItemsInterval {
      * @return true if there is no more items
      */
     public boolean mergeCancellingPairs() {
-
-        final Map<UUID, List<Item>> tmp = new HashMap<UUID, List<Item>>();
-        for (Item cur : items) {
-            final UUID idToConsider = (cur.getAction() == ItemAction.ADD) ? cur.getId() : cur.getLinkedId();
-            List<Item> listForItem = tmp.get(idToConsider);
-            if (listForItem == null) {
-                listForItem = new ArrayList<Item>(2);
-                tmp.put(idToConsider, listForItem);
-            }
-            listForItem.add(cur);
+        final Multimap<UUID, Item> cancellingPairPerInvoiceItemId = LinkedListMultimap.<UUID, Item>create();
+        for (final Item item : items) {
+            final UUID invoiceItemId = (item.getAction() == ItemAction.ADD) ? item.getId() : item.getLinkedId();
+            cancellingPairPerInvoiceItemId.put(invoiceItemId, item);
         }
 
-        for (List<Item> listForIds : tmp.values()) {
-            if (listForIds.size() == 2) {
-                items.remove(listForIds.get(0));
-                items.remove(listForIds.get(1));
+        for (final UUID invoiceItemId : cancellingPairPerInvoiceItemId.keySet()) {
+            final Collection<Item> itemsToRemove = cancellingPairPerInvoiceItemId.get(invoiceItemId);
+            Preconditions.checkArgument(itemsToRemove.size() <= 2, "Too many repairs for invoiceItemId='%s': %s", invoiceItemId, itemsToRemove);
+            if (itemsToRemove.size() == 2) {
+                for (final Item itemToRemove : itemsToRemove) {
+                    items.remove(itemToRemove);
+                }
             }
         }
-        return items.size() == 0;
+
+        return items.isEmpty();
     }
 
     public Iterable<Item> get_ADD_items() {

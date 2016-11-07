@@ -24,11 +24,14 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.tree.Item.ItemAction;
 import org.killbill.billing.util.jackson.ObjectMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -221,22 +224,31 @@ public class ItemsNodeInterval extends NodeInterval {
 
     /**
      * Add the adjustment amount on the item specified by the targetId.
-     *
-     * @param adjustementDate date of the adjustment
-     * @param amount          amount of the adjustment
-     * @param targetId        item that has been adjusted
      */
-    public void addAdjustment(final LocalDate adjustementDate, final BigDecimal amount, final UUID targetId) {
-        // TODO we should really be using findNode(adjustementDate, new SearchCallback() instead but wrong dates in test
-        // creates test panic.
+    public void addAdjustment(final InvoiceItem item) {
+        final UUID targetId = item.getLinkedItemId();
+
+        // TODO we should really be using findNode(adjustmentDate, callback) instead but wrong dates in test creates panic.
         final NodeInterval node = findNode(new SearchCallback() {
             @Override
             public boolean isMatch(final NodeInterval curNode) {
-                return ((ItemsNodeInterval) curNode).getItemsInterval().containsItem(targetId);
+                return ((ItemsNodeInterval) curNode).getItemsInterval().findItem(targetId) != null;
             }
         });
-        Preconditions.checkNotNull(node, "Cannot add adjustment for item = " + targetId + ", date = " + adjustementDate);
-        ((ItemsNodeInterval) node).setAdjustment(amount.negate(), targetId);
+        Preconditions.checkNotNull(item, "Unable to find item interval for id='%s', tree=%s", targetId, this);
+
+        final ItemsInterval targetItemsInterval = ((ItemsNodeInterval) node).getItemsInterval();
+        final List<Item> targetItems = targetItemsInterval.getItems();
+        final Item targetItem = targetItemsInterval.findItem(targetId);
+        Preconditions.checkNotNull(item, "Unable to find item with id='%s', items=%s", targetId, targetItems);
+
+        final BigDecimal adjustmentAmount = item.getAmount().negate();
+        if (targetItem.getAmount().compareTo(adjustmentAmount) == 0) {
+            // Full item adjustment - treat it like a repair
+            addExistingItem(new ItemsNodeInterval(this, targetInvoiceId, new Item(item, targetItem.getStartDate(), targetItem.getEndDate(), targetInvoiceId, ItemAction.CANCEL)));
+        } else {
+            targetItem.incrementAdjustedAmount(adjustmentAmount);
+        }
     }
 
     public void jsonSerializeTree(final ObjectMapper mapper, final OutputStream output) throws IOException {
@@ -270,10 +282,6 @@ public class ItemsNodeInterval extends NodeInterval {
             }
         });
         generator.close();
-    }
-
-    protected void setAdjustment(final BigDecimal amount, final UUID linkedId) {
-        items.setAdjustment(amount, linkedId);
     }
 
     //

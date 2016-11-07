@@ -38,12 +38,21 @@ import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    static {
+        OBJECT_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
+    }
 
     private final UUID invoiceId = UUID.randomUUID();
     private final UUID accountId = UUID.randomUUID();
@@ -1091,7 +1100,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     }
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/286")
-    public void testMaxedOutProRation() {
+    public void testMaxedOutProRation() throws IOException {
         final LocalDate startDate = new LocalDate(2014, 1, 1);
         final LocalDate cancelDate = new LocalDate(2014, 1, 25);
         final LocalDate endDate = new LocalDate(2014, 2, 1);
@@ -1108,12 +1117,111 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.addItem(existingItemAdj1);
         tree.flatten(true);
 
+        //printTree(tree);
+
         final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, cancelDate, monthlyAmount1, monthlyRate1, currency);
         tree.mergeProposedItem(proposed1);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        //printTree(tree);
+
+        // We expect the proposed item because item adjustments don't change the subscription view of invoice
+        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(proposed1);
         verifyResult(tree.getView(), expectedResult);
+    }
+
+    @Test(groups = "fast")
+    public void testPartialProRation() {
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate cancelDate = new LocalDate(2014, 1, 25);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final BigDecimal monthlyRate1 = new BigDecimal("12.00");
+        final BigDecimal monthlyAmount1 = monthlyRate1;
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+
+        final InvoiceItem existing1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyAmount1, monthlyRate1, currency);
+        tree.addItem(existing1);
+        // Partially item adjust the recurring item
+        final InvoiceItem existingItemAdj1 = new ItemAdjInvoiceItem(existing1, startDate, monthlyRate1.negate().add(BigDecimal.ONE), currency);
+        tree.addItem(existingItemAdj1);
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, cancelDate, monthlyAmount1, monthlyRate1, currency);
+        tree.mergeProposedItem(proposed1);
+        tree.buildForMerge();
+
+        final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, cancelDate, endDate, BigDecimal.ONE.negate(), Currency.USD, existing1.getId());
+        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(repair);
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+    @Test(groups = "fast")
+    public void testWithWrongInitialItem() throws IOException {
+        final LocalDate wrongStartDate = new LocalDate(2016, 9, 9);
+        final LocalDate correctStartDate = new LocalDate(2016, 9, 8);
+        final LocalDate endDate = new LocalDate(2016, 10, 8);
+
+        final BigDecimal rate = new BigDecimal("12.00");
+        final BigDecimal amount = rate;
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+
+        final InvoiceItem wrongInitialItem = new RecurringInvoiceItem(invoiceId,
+                                                                      accountId,
+                                                                      bundleId,
+                                                                      subscriptionId,
+                                                                      planName,
+                                                                      phaseName,
+                                                                      wrongStartDate,
+                                                                      endDate,
+                                                                      amount,
+                                                                      rate,
+                                                                      currency);
+        tree.addItem(wrongInitialItem);
+
+        final InvoiceItem itemAdj = new ItemAdjInvoiceItem(wrongInitialItem,
+                                                           new LocalDate(2016, 10, 2),
+                                                           amount.negate(),
+                                                           currency);
+        tree.addItem(itemAdj);
+
+        final InvoiceItem correctInitialItem = new RecurringInvoiceItem(invoiceId,
+                                                                        accountId,
+                                                                        bundleId,
+                                                                        subscriptionId,
+                                                                        planName,
+                                                                        phaseName,
+                                                                        correctStartDate,
+                                                                        endDate,
+                                                                        amount,
+                                                                        rate,
+                                                                        currency);
+        tree.addItem(correctInitialItem);
+
+        assertEquals(tree.getRoot().getStart(), correctStartDate);
+        assertEquals(tree.getRoot().getEnd(), endDate);
+        assertEquals(tree.getRoot().getLeftChild().getStart(), correctStartDate);
+        assertEquals(tree.getRoot().getLeftChild().getEnd(), endDate);
+        assertEquals(tree.getRoot().getLeftChild().getLeftChild().getStart(), wrongStartDate);
+        assertEquals(tree.getRoot().getLeftChild().getLeftChild().getEnd(), endDate);
+        assertNull(tree.getRoot().getLeftChild().getLeftChild().getLeftChild());
+        assertNull(tree.getRoot().getLeftChild().getLeftChild().getRightSibling());
+        assertNull(tree.getRoot().getLeftChild().getRightSibling());
+        assertNull(tree.getRoot().getRightSibling());
+
+        tree.flatten(true);
+
+        assertEquals(tree.getRoot().getStart(), correctStartDate);
+        assertEquals(tree.getRoot().getEnd(), endDate);
+        assertEquals(tree.getRoot().getLeftChild().getStart(), correctStartDate);
+        assertEquals(tree.getRoot().getLeftChild().getEnd(), endDate);
+        assertNull(tree.getRoot().getLeftChild().getLeftChild());
+        assertNull(tree.getRoot().getLeftChild().getRightSibling());
+        assertNull(tree.getRoot().getRightSibling());
+
+        //printTree(tree);
     }
 
     private void verifyResult(final List<InvoiceItem> result, final List<InvoiceItem> expectedResult) {
@@ -1122,7 +1230,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
             assertTrue(result.get(i).matches(expectedResult.get(i)));
         }
     }
-
 
     @Test(groups = "fast")
     public void testWithWrongInitialItemInLoop() {
@@ -1171,5 +1278,11 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
         // We have repaired wrongInitialItem and generated the correctInitialItem and stopped
         Assert.assertEquals(previousExistingSize, 3);
+    }
+
+    private void printTree(final SubscriptionItemTree tree) throws IOException {
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        tree.getRoot().jsonSerializeTree(OBJECT_MAPPER, outputStream);
+        System.out.println(outputStream.toString("UTF-8"));
     }
 }
