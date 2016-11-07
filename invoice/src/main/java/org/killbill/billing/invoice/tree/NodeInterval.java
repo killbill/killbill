@@ -116,15 +116,15 @@ public class NodeInterval {
             }
 
             if (curChild.isItemOverlap(newNode)) {
-                if (callback.shouldInsertNode(this)) {
-                    rebalance(newNode);
-                    return true;
-                } else {
-                    return false;
+                if (rebalance(newNode)) {
+                    return callback.shouldInsertNode(this);
                 }
             }
 
             if (newNode.getStart().compareTo(curChild.getStart()) < 0) {
+
+                Preconditions.checkState(newNode.getEnd().compareTo(end) <= 0);
+
                 if (callback.shouldInsertNode(this)) {
                     newNode.rightSibling = curChild;
                     if (prevChild == null) {
@@ -349,7 +349,7 @@ public class NodeInterval {
      *
      * @param newNode node that triggered a rebalance operation
      */
-    private void rebalance(final NodeInterval newNode) {
+    private boolean rebalance(final NodeInterval newNode) {
 
         NodeInterval prevRebalanced = null;
         NodeInterval curChild = leftChild;
@@ -365,6 +365,10 @@ public class NodeInterval {
             }
             curChild = curChild.rightSibling;
         } while (curChild != null);
+
+        if (toBeRebalanced.isEmpty()) {
+            return false;
+        }
 
         newNode.parent = this;
         final NodeInterval lastNodeToRebalance = toBeRebalanced.get(toBeRebalanced.size() - 1);
@@ -386,6 +390,7 @@ public class NodeInterval {
             }
             prev = cur;
         }
+        return true;
     }
 
     private void computeRootInterval(final NodeInterval newNode) {
