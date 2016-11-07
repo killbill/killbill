@@ -26,12 +26,44 @@ public class TierPriceOverrideJson {
 
     private final List<BlockPriceOverrideJson> blockPriceOverrides;
 
+    @JsonCreator
+    public TierPriceOverrideJson(@JsonProperty("blockPriceOverrides") final List<BlockPriceOverrideJson> blockPriceOverrides) {
+        this.blockPriceOverrides = blockPriceOverrides;
+    }
+
     public List<BlockPriceOverrideJson> getBlockPriceOverrides() {
         return blockPriceOverrides;
     }
 
-    @JsonCreator
-    public TierPriceOverrideJson(@JsonProperty("blockPriceOverrides") final List<BlockPriceOverrideJson> blockPriceOverrides) {
-        this.blockPriceOverrides = blockPriceOverrides;
+    @Override
+    public String toString() {
+        return "TierPriceOverrideJson{" +
+                "blockPriceOverrides='" + blockPriceOverrides + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof TierPriceOverrideJson)) {
+            return false;
+        }
+
+        final TierPriceOverrideJson that = (TierPriceOverrideJson) o;
+
+        if (blockPriceOverrides != null ? !blockPriceOverrides.equals(that.blockPriceOverrides) : that.blockPriceOverrides != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = blockPriceOverrides != null ? blockPriceOverrides.hashCode() : 0;
+        result = 31 * result + (blockPriceOverrides != null ? blockPriceOverrides.hashCode() : 0);
+        return result;
     }
 }

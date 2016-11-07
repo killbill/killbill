@@ -156,7 +156,7 @@ public class PhasePriceOverrideJson {
         if (recurringPrice != null ? recurringPrice.compareTo(that.recurringPrice) != 0 : that.recurringPrice != null) {
             return false;
         }
-        if (usagePriceOverrides != null ? usagePriceOverrides.equals(that.usagePriceOverrides)  : that.usagePriceOverrides != null) {
+        if (usagePriceOverrides != null ? !usagePriceOverrides.equals(that.usagePriceOverrides)  : that.usagePriceOverrides != null) {
             return false;
         }
         return true;
