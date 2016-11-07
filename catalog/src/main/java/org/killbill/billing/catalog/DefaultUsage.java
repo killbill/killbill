@@ -17,8 +17,17 @@
 
 package org.killbill.billing.catalog;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlID;
+
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Block;
@@ -37,15 +46,9 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlID;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements Usage {
@@ -118,12 +121,13 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
                                  String unitName = blockDef.getUnitName();
                                  Double max = blockDef.getMax();
                                  Double size = blockDef.getSize();
-                                 for (TieredBlock curTieredBlock : curTieredBlocks)
+                                 for (TieredBlock curTieredBlock : curTieredBlocks) {
                                      if (unitName.equals(curTieredBlock.getUnit().getName()) &&
                                              Double.compare(size, curTieredBlock.getSize()) == 0 &&
                                              Double.compare(max, curTieredBlock.getMax()) == 0) {
                                          return true;
                                      }
+                                 }
                                }
                             }
                             return false;

@@ -125,8 +125,8 @@ CREATE INDEX catalog_override_usage_tier_idx ON catalog_override_usage_tier(tena
 DROP TABLE IF EXISTS catalog_override_tier_block;
 create table catalog_override_tier_block
 (
-block_number smallint(5) unsigned,
 record_id serial unique,
+block_number smallint(5) unsigned,
 block_def_record_id bigint /*! unsigned */ not null,
 target_tier_def_record_id bigint /*! unsigned */ not null,
 created_date datetime NOT NULL,

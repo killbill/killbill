@@ -63,24 +63,11 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         resolvedOverrides[2] = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, null, new BigDecimal("348.64"), null);
         final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
 
-        final PlanPhasePriceOverride[] resolvedOverrides1 = new PlanPhasePriceOverride[plan.getAllPhases().length];
-        resolvedOverrides1[0] = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.TEN, null, null);
-        resolvedOverrides1[1] = null;
-        resolvedOverrides1[2] = null;
-        final CatalogOverridePlanDefinitionModelDao newPlan1 = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides1, internalCallContext);
-
-
         assertEquals(newPlan.getParentPlanName(), "discount-standard-monthly");
         assertTrue(newPlan.getIsActive());
 
-        assertEquals(newPlan1.getParentPlanName(), "discount-standard-monthly");
-        assertTrue(newPlan1.getIsActive());
-
         final List<CatalogOverridePhaseDefinitionModelDao> phases = catalogOverrideDao.getOverriddenPlanPhases(newPlan.getRecordId(), internalCallContext);
         assertEquals(phases.size(), 2);
-
-        final List<CatalogOverridePhaseDefinitionModelDao> phases1 = catalogOverrideDao.getOverriddenPlanPhases(newPlan1.getRecordId(), internalCallContext);
-        assertEquals(phases1.size(), 1);
     }
 
     @Test(groups = "slow")

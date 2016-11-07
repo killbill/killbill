@@ -17,8 +17,13 @@
 
 package org.killbill.billing.catalog;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import java.util.Arrays;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
@@ -32,11 +37,10 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import java.util.Arrays;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+
+
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements Tier {

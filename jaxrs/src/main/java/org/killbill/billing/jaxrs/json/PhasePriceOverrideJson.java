@@ -17,11 +17,13 @@
 
 package org.killbill.billing.jaxrs.json;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import java.math.BigDecimal;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import com.google.common.base.Preconditions;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.DefaultTierPriceOverride;
 import org.killbill.billing.catalog.DefaultTieredBlockPriceOverride;
@@ -39,10 +41,11 @@ import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 
-import javax.annotation.Nullable;
-import java.math.BigDecimal;
-import java.util.LinkedList;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class PhasePriceOverrideJson {
 
@@ -179,8 +182,8 @@ public class PhasePriceOverrideJson {
             public PlanPhasePriceOverride apply(@Nullable final PhasePriceOverrideJson input) {
 
                 List <UsagePriceOverride> usagePriceOverrides = new LinkedList<UsagePriceOverride>();
-                assert input != null;
-                if(input.getUsagePriceOverrides()!=null) {
+                Preconditions.checkNotNull(input);
+                if(input.getUsagePriceOverrides()!= null) {
                     for (final UsagePriceOverrideJson usageOverrideJson : input.getUsagePriceOverrides()) {
                         List<TierPriceOverride> tierPriceOverrides = new LinkedList<TierPriceOverride>();
                         for (final TierPriceOverrideJson tierPriceOverrideJson : usageOverrideJson.getTierPriceOverrides()) {

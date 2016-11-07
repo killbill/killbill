@@ -17,8 +17,9 @@
 
 package org.killbill.billing.catalog.dao;
 
+import java.util.ArrayList;
+import java.util.List;
 
-import com.google.inject.Inject;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -39,8 +40,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.google.inject.Inject;
 
 public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
@@ -124,27 +124,28 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
     private CatalogOverridePhaseDefinitionModelDao getOrCreateOverridePhaseDefinitionFromTransaction(final PlanPhase parentPlanPhase, final String parentPhaseName, final Currency currency, final DateTime catalogEffectiveDate, final PlanPhasePriceOverride override, final Handle inTransactionHandle, final InternalCallContext context) {
         final CatalogOverridePhaseDefinitionSqlDao sqlDao = inTransactionHandle.attach(CatalogOverridePhaseDefinitionSqlDao.class);
 
-        if(override.getUsagePriceOverrides() != null && isUsageOverrideListHasOnlyNull(override.getUsagePriceOverrides())) {
+        if(override.getUsagePriceOverrides() == null || (override.getUsagePriceOverrides() != null && isUsageOverrideListHasOnlyNull(override.getUsagePriceOverrides()))) {
             return getOrCreatePhaseDefinitionFromTransactionWithoutUsageOverrides(parentPhaseName, catalogEffectiveDate, override, inTransactionHandle, context);
         }
 
         final CatalogOverrideUsageDefinitionModelDao[] overrideUsageDefinitionModelDaos = new CatalogOverrideUsageDefinitionModelDao[override.getUsagePriceOverrides().size()];
-        List<UsagePriceOverride> resolvedUsageOverrides = override.getUsagePriceOverrides();
-        for (int i = 0; i < resolvedUsageOverrides.size(); i++) {
+         List<UsagePriceOverride> resolvedUsageOverrides = override.getUsagePriceOverrides();
+          for (int i = 0; i < resolvedUsageOverrides.size(); i++) {
             final UsagePriceOverride curOverride = resolvedUsageOverrides.get(i);
-            if (curOverride != null) {
+             if (curOverride != null) {
                 Usage parentUsage = parentPlanPhase.getUsages()[i];
-                final CatalogOverrideUsageDefinitionModelDao createdOverrideUsageDefinitionModelDao = getOrCreateOverrideUsageDefinitionFromTransaction(parentUsage,currency, catalogEffectiveDate, curOverride, inTransactionHandle, context);
+                final CatalogOverrideUsageDefinitionModelDao createdOverrideUsageDefinitionModelDao = getOrCreateOverrideUsageDefinitionFromTransaction(parentUsage, currency, catalogEffectiveDate, curOverride, inTransactionHandle, context);
                 overrideUsageDefinitionModelDaos[i] = createdOverrideUsageDefinitionModelDao;
-            }
-        }
+             }
+          }
 
         final List<Long> targetPhaseDefinitionRecordIds = getOverridePhaseDefinitionFromTransaction(overrideUsageDefinitionModelDaos, inTransactionHandle, context);
         List<CatalogOverridePhaseDefinitionModelDao> results = sqlDao.getByAttributes(parentPhaseName, override.getCurrency().name(), override.getFixedPrice(), override.getRecurringPrice(), context);
 
         for(CatalogOverridePhaseDefinitionModelDao phase : results) {
-            if (targetPhaseDefinitionRecordIds != null && targetPhaseDefinitionRecordIds.contains(phase.getRecordId()))
+            if (targetPhaseDefinitionRecordIds != null && targetPhaseDefinitionRecordIds.contains(phase.getRecordId())) {
                 return phase;
+            }
         }
 
         final CatalogOverridePhaseDefinitionModelDao inputPhaseDef = new CatalogOverridePhaseDefinitionModelDao(parentPhaseName, override.getCurrency().name(), override.getFixedPrice(), override.getRecurringPrice(),
@@ -165,9 +166,11 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
         final CatalogOverridePhaseDefinitionSqlDao sqlDao = inTransactionHandle.attach(CatalogOverridePhaseDefinitionSqlDao.class);
         List<CatalogOverridePhaseDefinitionModelDao> resultPhases = sqlDao.getByAttributes(parentPhaseName, override.getCurrency().name(), override.getFixedPrice(), override.getRecurringPrice(), context);
-        for(CatalogOverridePhaseDefinitionModelDao resultPhase : resultPhases)
-            if (resultPhase != null && getOverriddenPhaseUsages(resultPhase.getRecordId(), context).size() == 0)
+        for(CatalogOverridePhaseDefinitionModelDao resultPhase : resultPhases) {
+            if (resultPhase != null && getOverriddenPhaseUsages(resultPhase.getRecordId(), context).size() == 0) {
                 return resultPhase;
+            }
+        }
 
         final CatalogOverridePhaseDefinitionModelDao phaseDef = new CatalogOverridePhaseDefinitionModelDao(parentPhaseName, override.getCurrency().name(), override.getFixedPrice(), override.getRecurringPrice(),
                 catalogEffectiveDate);
@@ -216,8 +219,9 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         List<CatalogOverrideUsageDefinitionModelDao> results = sqlDao.getByAttributes(parentUsage.getName(), context);
 
         for(CatalogOverrideUsageDefinitionModelDao usage : results) {
-            if (targetUsageDefinitionRecordIds != null && targetUsageDefinitionRecordIds.contains(usage.getRecordId()))
+            if (targetUsageDefinitionRecordIds != null && targetUsageDefinitionRecordIds.contains(usage.getRecordId())) {
                 return usage;
+            }
         }
 
         final CatalogOverrideUsageDefinitionModelDao inputUsageDef = new CatalogOverrideUsageDefinitionModelDao(parentUsage.getName(), parentUsage.getUsageType().name(), currency.name(), null, null, catalogEffectiveDate);
@@ -368,8 +372,11 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
 
     private boolean isUsageOverrideListHasOnlyNull(List<UsagePriceOverride> usagePriceOverrides) {
-        for (UsagePriceOverride override : usagePriceOverrides)
-            if (override != null) return false;
+        for (UsagePriceOverride override : usagePriceOverrides) {
+            if (override != null) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -380,5 +387,4 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         key.append(recordId);
         return key;
     }
-
 }

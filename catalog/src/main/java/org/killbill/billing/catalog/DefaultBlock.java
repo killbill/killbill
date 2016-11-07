@@ -17,6 +17,14 @@
 
 package org.killbill.billing.catalog;
 
+import java.math.BigDecimal;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlIDREF;
+
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.Block;
 import org.killbill.billing.catalog.api.BlockType;
@@ -28,13 +36,6 @@ import org.killbill.billing.catalog.api.Unit;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlIDREF;
-import java.math.BigDecimal;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements Block {

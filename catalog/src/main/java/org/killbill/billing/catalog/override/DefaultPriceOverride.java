@@ -17,12 +17,8 @@
 
 package org.killbill.billing.catalog.override;
 
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
@@ -54,9 +50,9 @@ import org.killbill.billing.catalog.caching.OverriddenPlanCache;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.dao.CatalogOverridePlanDefinitionModelDao;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
 
 public class DefaultPriceOverride implements PriceOverride {
 
@@ -100,8 +96,9 @@ public class DefaultPriceOverride implements PriceOverride {
                 resolvedOverride[index++] = new DefaultPlanPhasePriceOverride(curPhase.getName(), curOverride.getCurrency(), curOverride.getFixedPrice(),
                         curOverride.getRecurringPrice(), resolvedUsageOverrides);
             }
-            else
+            else {
                 resolvedOverride[index++] = null;
+            }
         }
 
         for (int i = 0; i < resolvedOverride.length; i++) {
@@ -149,8 +146,9 @@ public class DefaultPriceOverride implements PriceOverride {
               if(curOverride != null) {
                   List<TierPriceOverride>  tierPriceOverrides = getResolvedTierOverrides(curUsage.getTiers(), curOverride.getTierPriceOverrides());
                   resolvedUsageOverrides.add(new DefaultUsagePriceOverride(curUsage.getName(), curUsage.getUsageType(),tierPriceOverrides));
-              } else
-                 resolvedUsageOverrides.add(null);
+              } else {
+                  resolvedUsageOverrides.add(null);
+              }
         }
 
         return resolvedUsageOverrides;
@@ -189,8 +187,9 @@ public class DefaultPriceOverride implements PriceOverride {
                         curOverride.getTieredBlockPriceOverrides());
                 resolvedTierOverrides.add(new DefaultTierPriceOverride(tieredBlockPriceOverrides));
             }
-            else
+            else {
                 resolvedTierOverrides.add(null);
+            }
         }
 
         return resolvedTierOverrides;
@@ -214,10 +213,10 @@ public class DefaultPriceOverride implements PriceOverride {
             if(curOverride != null) {
                 resolvedTieredBlockPriceOverrides.add(new DefaultTieredBlockPriceOverride(curTieredBlock.getUnit().getName(), curOverride.getSize(), curOverride.getPrice(), curOverride.getMax())) ;
             }
-            else
+            else {
                 resolvedTieredBlockPriceOverrides.add(null);
+            }
         }
-
         return resolvedTieredBlockPriceOverrides;
     }
 

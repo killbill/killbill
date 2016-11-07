@@ -17,8 +17,12 @@
 
 package org.killbill.billing.catalog.caching;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+
+import javax.inject.Inject;
+
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -51,10 +55,8 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.cache.OverriddenPlanCacheLoader.LoaderCallback;
 
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
 
@@ -119,12 +121,13 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
                 }
             }).orNull();
 
-            if(overriddenPhase != null){
+            if(overriddenPhase != null) {
               List<UsagePriceOverride> usagePriceOverrides =  getUsagePriceOverrides(curPhase, overriddenPhase, context);
               result[i] = new DefaultPlanPhasePriceOverride(curPhase.getName(), Currency.valueOf(overriddenPhase.getCurrency()), overriddenPhase.getFixedPrice(), overriddenPhase.getRecurringPrice(), usagePriceOverrides);
             }
-            else
-              result[i] = null;
+            else {
+                result[i] = null;
+            }
         }
         return result;
     }
@@ -169,12 +172,13 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
                          Double max = blockDef.getMax();
                          Double size = blockDef.getSize();
 
-                         for(TieredBlock curTieredBlock : curTieredBlocks)
+                         for(TieredBlock curTieredBlock : curTieredBlocks) {
                              if (unitName.equals(curTieredBlock.getUnit().getName()) &&
                                      Double.compare(size, curTieredBlock.getSize()) == 0 &&
                                      Double.compare(max, curTieredBlock.getMax()) == 0) {
                                  return true;
                              }
+                         }
                      }
                     return false;
                 }
@@ -206,8 +210,9 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
                 }
             }).orNull();
 
-            if(overriddenTierBlock != null)
+            if(overriddenTierBlock != null) {
                 blockPriceOverrides.add(new DefaultTieredBlockPriceOverride(overriddenTierBlock.getParentUnitName(), overriddenTierBlock.getSize(), overriddenTierBlock.getPrice(), overriddenTierBlock.getMax()));
+            }
         }
         return blockPriceOverrides;
     }
