@@ -235,12 +235,12 @@ public class ItemsNodeInterval extends NodeInterval {
                 return ((ItemsNodeInterval) curNode).getItemsInterval().findItem(targetId) != null;
             }
         });
-        Preconditions.checkNotNull(item, "Unable to find item interval for id='%s', tree=%s", targetId, this);
+        Preconditions.checkNotNull(node, "Unable to find item interval for id='%s', tree=%s", targetId, this);
 
         final ItemsInterval targetItemsInterval = ((ItemsNodeInterval) node).getItemsInterval();
         final List<Item> targetItems = targetItemsInterval.getItems();
         final Item targetItem = targetItemsInterval.findItem(targetId);
-        Preconditions.checkNotNull(item, "Unable to find item with id='%s', items=%s", targetId, targetItems);
+        Preconditions.checkNotNull(targetItem, "Unable to find item with id='%s', items=%s", targetId, targetItems);
 
         final BigDecimal adjustmentAmount = item.getAmount().negate();
         if (targetItem.getAmount().compareTo(adjustmentAmount) == 0) {
