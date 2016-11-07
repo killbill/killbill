@@ -376,6 +376,13 @@ public class PaymentProcessor extends ProcessorBase {
                 throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
             }
 
+            final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext());
+            // Always invoke the Janitor first to get the latest state. The state machine will then
+            // prevent disallowed transitions in case the state couldn't be fixed (or if it's already in a final state).
+            final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), internalCallContext);
+            final List<PaymentTransactionInfoPlugin> pluginTransactions = getPaymentTransactionInfoPlugins(plugin, paymentModelDao, properties, callContext);
+            paymentModelDao = invokeJanitor(paymentModelDao, paymentTransactionsForCurrentPayment, pluginTransactions, internalCallContext);
+
             if (paymentStateContext.getPaymentTransactionExternalKey() != null) {
                 final List<PaymentTransactionModelDao> allPaymentTransactionsForKey = daoHelper.getPaymentDao().getPaymentTransactionsByExternalKey(paymentStateContext.getPaymentTransactionExternalKey(), internalCallContext);
                 runSanityOnTransactionExternalKey(allPaymentTransactionsForKey, paymentStateContext, internalCallContext);
@@ -383,16 +390,9 @@ public class PaymentProcessor extends ProcessorBase {
 
             if (paymentStateContext.getTransactionId() != null || paymentStateContext.getPaymentTransactionExternalKey() != null) {
                 // If a transaction id or key is passed, we are maybe completing an existing transaction (unless a new key was provided)
-                final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext());
                 PaymentTransactionModelDao transactionToComplete = findTransactionToCompleteAndRunSanityChecks(paymentModelDao, paymentTransactionsForCurrentPayment, paymentStateContext, internalCallContext);
 
                 if (transactionToComplete != null) {
-                    // For completion calls, always invoke the Janitor first to get the latest state. The state machine will then
-                    // prevent disallowed transitions in case the state couldn't be fixed (or if it's already in a final state).
-                    final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), internalCallContext);
-                    final List<PaymentTransactionInfoPlugin> pluginTransactions = getPaymentTransactionInfoPlugins(plugin, paymentModelDao, properties, callContext);
-                    paymentModelDao = invokeJanitor(paymentModelDao, paymentTransactionsForCurrentPayment, pluginTransactions, internalCallContext);
-
                     final UUID transactionToCompleteId = transactionToComplete.getId();
                     transactionToComplete = Iterables.<PaymentTransactionModelDao>find(paymentTransactionsForCurrentPayment,
                                                                                        new Predicate<PaymentTransactionModelDao>() {
@@ -405,8 +405,6 @@ public class PaymentProcessor extends ProcessorBase {
                     // We can't tell where we should be in the state machine - bail (cannot be enforced by the state machine unfortunately because UNKNOWN and PLUGIN_FAILURE are both treated as EXCEPTION)
                     if (transactionToComplete.getTransactionStatus() == TransactionStatus.UNKNOWN) {
                         throw new PaymentApiException(ErrorCode.PAYMENT_INVALID_OPERATION, paymentStateContext.getTransactionType(), transactionToComplete.getTransactionStatus());
-                    } else if (transactionToComplete.getTransactionStatus() == TransactionStatus.SUCCESS ){
-                        throw new PaymentApiException(ErrorCode.PAYMENT_ACTIVE_TRANSACTION_KEY_EXISTS, paymentStateContext.getPaymentTransactionExternalKey());
                     }
 
                     paymentStateContext.setPaymentTransactionModelDao(transactionToComplete);
