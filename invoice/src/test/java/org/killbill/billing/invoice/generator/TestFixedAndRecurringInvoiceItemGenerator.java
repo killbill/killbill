@@ -315,7 +315,35 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         for (int i = 0; i < threshold; i++) {
             final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate.plusMonths(i), account.getCurrency());
             invoice.addInvoiceItem(new RecurringInvoiceItem(UUID.randomUUID(),
-                                                            clock.getUTCNow(),
+                                                            startDate.plusMonths(i).toDateTimeAtStartOfDay(), // Different days - should not trigger the safety bounds
+                                                            invoice.getId(),
+                                                            account.getId(),
+                                                            subscription.getBundleId(),
+                                                            subscription.getId(),
+                                                            event.getPlan().getName(),
+                                                            event.getPlanPhase().getName(),
+                                                            startDate.plusMonths(i),
+                                                            startDate.plusMonths(1 + i),
+                                                            amount,
+                                                            amount,
+                                                            account.getCurrency()));
+            existingInvoices.add(invoice);
+        }
+
+        assertEquals(fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                         UUID.randomUUID(),
+                                                                         events,
+                                                                         existingInvoices,
+                                                                         startDate.plusMonths(threshold),
+                                                                         account.getCurrency(),
+                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                         internalCallContext).size(), 1);
+
+        // Simulate a big catch-up on that day
+        for (int i = threshold; i < 2 * threshold; i++) {
+            final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate.plusMonths(i), account.getCurrency());
+            invoice.addInvoiceItem(new RecurringInvoiceItem(UUID.randomUUID(),
+                                                            clock.getUTCNow(), // Same day
                                                             invoice.getId(),
                                                             account.getId(),
                                                             subscription.getBundleId(),
@@ -335,7 +363,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                          UUID.randomUUID(),
                                                                                                          events,
                                                                                                          existingInvoices,
-                                                                                                         startDate.plusMonths(threshold),
+                                                                                                         startDate.plusMonths(2 * threshold),
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
                                                                                                          internalCallContext);
