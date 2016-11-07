@@ -70,6 +70,7 @@ and effective_date > :now
 ;
 >>
 
+
 getFutureOrPresentActiveEventForSubscription() ::= <<
 select <allTableFields()>
 , record_id as total_ordering

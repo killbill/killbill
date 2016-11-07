@@ -36,6 +36,16 @@ public interface InvoiceConfig extends KillbillConfig {
     @Description("Maximum target date to consider when generating an invoice")
     int getNumberOfMonthsInFuture(@Param("dummy") final InternalTenantContext tenantContext);
 
+    @Config("org.killbill.invoice.maxDailyNumberOfItemsSafetyBound")
+    @Default("15")
+    @Description("Maximum daily number of invoice items to generate for a subscription id")
+    int getMaxDailyNumberOfItemsSafetyBound();
+
+    @Config("org.killbill.invoice.maxDailyNumberOfItemsSafetyBound")
+    @Default("15")
+    @Description("Maximum daily number of invoice items to generate for a subscription id")
+    int getMaxDailyNumberOfItemsSafetyBound(@Param("dummy") final InternalTenantContext tenantContext);
+
     @Config("org.killbill.invoice.dryRunNotificationSchedule")
     @Default("0s")
     @Description("DryRun invoice notification time before targetDate (ignored if set to 0s)")
