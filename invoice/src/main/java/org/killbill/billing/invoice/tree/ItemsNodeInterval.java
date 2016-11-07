@@ -307,7 +307,7 @@ public class ItemsNodeInterval extends NodeInterval {
                 }
 
                 // Case B -- look for such case, and if found (foundFullRepairByParts) we fix them below.
-                List<Item> curNodeItemsToBeRemoved = null;
+                List<Item> curNodeItemsToBeRemoved = new ArrayList<Item>();
                 final Iterator<Item> it = curNodeItems.get_ADD_items().iterator();
                 // For each item on this curNode interval we check if there is a matching set of CANCEL items on the children (resulting in completely cancelling that item).
                 while (it.hasNext()) {
@@ -340,9 +340,6 @@ public class ItemsNodeInterval extends NodeInterval {
                             if (curItemsInterval.size() == 0) {
                                 curNode.removeChild(curItemsInterval.getNodeInterval());
                             }
-                        }
-                        if (curNodeItemsToBeRemoved == null) {
-                            curNodeItemsToBeRemoved = new ArrayList<Item>();
                         }
                         curNodeItemsToBeRemoved.add(curAddItem);
                     }
