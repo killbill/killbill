@@ -262,8 +262,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
             final List<SubscriptionAndAddOnsSpecifier> subscriptionAndAddOns = new ArrayList<SubscriptionAndAddOnsSpecifier>();
             for (BaseEntitlementWithAddOnsSpecifier entitlementWithAddOnsSpecifier : baseEntitlementWithAddOnsSpecifier) {
-                final DateTime effectiveDate = (entitlementWithAddOnsSpecifier.getEntitlementEffectiveDate() != null) ?
-                                               DefaultClock.truncateMs(entitlementWithAddOnsSpecifier.getEntitlementEffectiveDate().toDateTimeAtCurrentTime()) : now;
+                final DateTime effectiveDate = (entitlementWithAddOnsSpecifier.getBillingEffectiveDate() != null) ?
+                                               DefaultClock.truncateMs(entitlementWithAddOnsSpecifier.getBillingEffectiveDate().toDateTimeAtStartOfDay()) : now;
 
                 final SubscriptionBaseBundle bundle = createBundleForAccount(accountId, entitlementWithAddOnsSpecifier.getExternalKey(), context);
 

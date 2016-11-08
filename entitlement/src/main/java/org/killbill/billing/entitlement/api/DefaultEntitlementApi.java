@@ -211,7 +211,8 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     final List<SubscriptionBase> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(accountId, baseEntitlementSpecifiersWithAddOns, contextWithValidAccountRecordId);
                     final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
                     for (final SubscriptionBase cur : subscriptionsWithAddOns) {
-                        final BlockingState blockingState = new DefaultBlockingState(cur.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, cur.getAllTransitions().get(0).getEffectiveTransitionTime());
+                        final BlockingState blockingState = new DefaultBlockingState(cur.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false,
+                                                                                     dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementEffectiveDate(), contextWithValidAccountRecordId));
                         blockingStates.add(blockingState);
                     }
                     entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(blockingStates, subscriptionsWithAddOns.get(0).getBundleId(), contextWithValidAccountRecordId);

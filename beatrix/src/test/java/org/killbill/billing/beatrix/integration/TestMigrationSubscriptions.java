@@ -236,9 +236,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         specifierList.add(baseEntitlementSpecifier);
         specifierList.add(addOnEntitlementSpecifier1);
 
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BLOCK,
-                                      NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE,
-                                      NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.BLOCK);
         BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new BaseEntitlementWithAddOnsSpecifier() {
             @Override
             public UUID getBundleId() {
@@ -277,8 +275,9 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         Assert.assertEquals(baseEntitlement.get(0).getState(), EntitlementState.ACTIVE);
 
         // Billing starts straight on EVERGREEN
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.NULL_INVOICE,
+                                      NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         assertListenerStatus();
     }
 

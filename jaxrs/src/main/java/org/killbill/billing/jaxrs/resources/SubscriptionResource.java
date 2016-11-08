@@ -103,7 +103,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -369,8 +368,18 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     return ProductCategory.BASE.toString().equalsIgnoreCase(subscription.getProductCategory());
                 }
             });
-            Preconditions.checkArgument(Iterators.size(baseEntitlements.iterator()) > 0, "SubscriptionJson Base Entitlement needs to be provided");
-            verifyNumberOfElements(Iterators.size(baseEntitlements.iterator()), 1, "Only one BASE product is allowed per bundle.");
+            Preconditions.checkArgument(Iterables.size(baseEntitlements) > 0, "SubscriptionJson Base Entitlement needs to be provided");
+            verifyNumberOfElements(Iterables.size(baseEntitlements), 1, "Only one BASE product is allowed per bundle.");
+
+            final Iterable<SubscriptionJson> entitlementsWithBundleSpecified = Iterables.filter(
+                bulkBaseEntitlementWithAddOns.getBaseEntitlementAndAddOns(), new Predicate<SubscriptionJson>() {
+                    @Override
+                    public boolean apply(final SubscriptionJson subscription) {
+                        return subscription.getBundleId() != null;
+                    }
+                }
+            );
+            Preconditions.checkArgument(Iterables.size(entitlementsWithBundleSpecified) == 0, "BundleId must not be specified when creating new bulks");
 
             SubscriptionJson baseEntitlement = baseEntitlements.iterator().next();
 
@@ -387,9 +396,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
             // create the baseEntitlementSpecifierWithAddOns
             final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(entitlementDate);
             final LocalDate resolvedBillingDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(billingDate);
-            final UUID bundleId = baseEntitlement.getBundleId() != null ? UUID.fromString(baseEntitlement.getBundleId()) : null;
 
-            BaseEntitlementWithAddOnsSpecifier baseEntitlementSpecifierWithAddOns = buildBaseEntitlementWithAddOnsSpecifier(entitlementSpecifierList, resolvedEntitlementDate, resolvedBillingDate, bundleId, baseEntitlement, isMigrated);
+            BaseEntitlementWithAddOnsSpecifier baseEntitlementSpecifierWithAddOns = buildBaseEntitlementWithAddOnsSpecifier(entitlementSpecifierList, resolvedEntitlementDate, resolvedBillingDate, null, baseEntitlement, isMigrated);
             baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementSpecifierWithAddOns);
         }
 
