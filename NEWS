@@ -25,6 +25,16 @@
 0.17.0
     See https://github.com/killbill/killbill/releases/tag/killbill-0.17.0
 
+0.16.11
+    See https://github.com/killbill/killbill/releases/tag/killbill-0.16.11
+
+0.16.10
+    See https://github.com/killbill/killbill/releases/tag/killbill-0.16.10
+
+0.16.9
+    Fix issues with payment transaction external keys (make sure transaction external keys aren't shared across payments)
+    Fix #613
+
 0.16.8
     See https://github.com/killbill/killbill/releases/tag/killbill-0.16.8
 
