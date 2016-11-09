@@ -70,6 +70,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -117,16 +118,27 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public List<DefaultSubscriptionBase> createPlansWithAddOns(final UUID accountId, final Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, final CallContext context) throws SubscriptionBaseApiException {
+    public List<DefaultSubscriptionBaseWithAddOns> createPlansWithAddOns(final UUID accountId, final Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, final CallContext context) throws SubscriptionBaseApiException {
         Map<UUID, List<SubscriptionBaseEvent>> eventsMap = new HashMap<UUID, List<SubscriptionBaseEvent>>();
         List<List<DefaultSubscriptionBase>> subscriptionBaseAndAddOnsList = new ArrayList<List<DefaultSubscriptionBase>>();
-        List<DefaultSubscriptionBase> allSubscriptions = new ArrayList<DefaultSubscriptionBase>();
+        List<DefaultSubscriptionBaseWithAddOns> allSubscriptions = new ArrayList<DefaultSubscriptionBaseWithAddOns>();
 
         for (SubscriptionAndAddOnsSpecifier subscriptionAndAddOns : subscriptionsAndAddOns) {
             List<DefaultSubscriptionBase> subscriptionBaseList = new ArrayList<DefaultSubscriptionBase>();
             createEvents(subscriptionAndAddOns.getSubscriptionSpecifiers(), context, eventsMap, subscriptionBaseList);
+
             subscriptionBaseAndAddOnsList.add(subscriptionBaseList);
-            allSubscriptions.addAll(subscriptionBaseList);
+
+            DefaultSubscriptionBaseWithAddOns defaultSubscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(
+                    subscriptionAndAddOns.getBundleId(),
+                    ImmutableList.copyOf(Iterables.transform(subscriptionBaseList, new Function<DefaultSubscriptionBase, SubscriptionBase>() {
+                        @Override
+                        public SubscriptionBase apply(final DefaultSubscriptionBase input) {
+                            return input;
+                        }
+                    })),
+                    subscriptionAndAddOns.getEffectiveDate());
+            allSubscriptions.add(defaultSubscriptionBaseWithAddOns);
         }
 
         final InternalCallContext internalCallContext = createCallContextFromAccountId(accountId, context);
@@ -176,9 +188,9 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     private DefaultSubscriptionBase findBaseSubscription(final List<DefaultSubscriptionBase> subscriptionBaseList) {
-        return Iterables.tryFind(subscriptionBaseList, new Predicate<DefaultSubscriptionBase>() {
+        return Iterables.tryFind(subscriptionBaseList, new Predicate<SubscriptionBase>() {
             @Override
-            public boolean apply(final DefaultSubscriptionBase subscription) {
+            public boolean apply(final SubscriptionBase subscription) {
                 return ProductCategory.BASE.equals(subscription.getCategory());
             }
         }).orNull();

@@ -54,6 +54,7 @@ import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEv
 import org.killbill.billing.subscription.api.user.DefaultRequestedSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -513,27 +514,34 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public void createSubscriptionsWithAddOns(final List<DefaultSubscriptionBase> subscriptions, final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final InternalCallContext context) {
+    public void createSubscriptionsWithAddOns(final List<DefaultSubscriptionBaseWithAddOns> subscriptions, final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
                 final SubscriptionEventSqlDao eventsDaoFromSameTransaction = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+                for (DefaultSubscriptionBaseWithAddOns subscription : subscriptions) {
+                    List<DefaultSubscriptionBase> currentSubscriptionBaseList = ImmutableList.copyOf(Iterables.transform(subscription.getSubscriptionBaseList(), new Function<SubscriptionBase, DefaultSubscriptionBase>() {
+                        @Override
+                        public DefaultSubscriptionBase apply(final SubscriptionBase input) {
+                            return (DefaultSubscriptionBase) input;
+                        }
+                    }));
+                    for (DefaultSubscriptionBase subscriptionBase : currentSubscriptionBaseList) {
+                        transactional.create(new SubscriptionModelDao(subscriptionBase), context);
 
-                for (DefaultSubscriptionBase subscription : subscriptions) {
-                    transactional.create(new SubscriptionModelDao(subscription), context);
+                        final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(subscriptionBase.getId());
+                        for (final SubscriptionBaseEvent cur : initialEvents) {
+                            eventsDaoFromSameTransaction.create(new SubscriptionEventModelDao(cur), context);
 
-                    final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(subscription.getId());
-                    for (final SubscriptionBaseEvent cur : initialEvents) {
-                        eventsDaoFromSameTransaction.create(new SubscriptionEventModelDao(cur), context);
+                            final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
+                            recordBusOrFutureNotificationFromTransaction(subscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
 
-                        final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
-                        recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
-
-                    }
-                    // Notify the Bus of the latest requested change, if needed
-                    if (initialEvents.size() > 0) {
-                        notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, initialEvents.get(initialEvents.size() - 1), SubscriptionBaseTransitionType.CREATE, context);
+                        }
+                        // Notify the Bus of the latest requested change, if needed
+                        if (initialEvents.size() > 0) {
+                            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscriptionBase, initialEvents.get(initialEvents.size() - 1), SubscriptionBaseTransitionType.CREATE, context);
+                        }
                     }
                 }
                 return null;

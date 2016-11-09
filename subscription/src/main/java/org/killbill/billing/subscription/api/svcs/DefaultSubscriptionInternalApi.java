@@ -63,12 +63,14 @@ import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEv
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionStatusDryRun;
 import org.killbill.billing.subscription.api.user.SubscriptionAndAddOnsSpecifier;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.api.user.SubscriptionSpecifier;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
@@ -254,7 +256,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public List<SubscriptionBase> createBaseSubscriptionsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier, final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
             final Catalog catalog = catalogService.getFullCatalog(true, true, context);
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
@@ -267,24 +269,25 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 final SubscriptionBaseBundle bundle = createBundleForAccount(accountId, entitlementWithAddOnsSpecifier.getExternalKey(), context);
 
-                final List<SubscriptionSpecifier> subscriptions = verifyAndBuildSubscriptionSpecifiers(bundle.getId(),
-                                                                                                       entitlementWithAddOnsSpecifier.getEntitlementSpecifier(),
-                                                                                                       entitlementWithAddOnsSpecifier.isMigrated(),
-                                                                                                       context,
-                                                                                                       now,
-                                                                                                       effectiveDate,
-                                                                                                       catalog,
-                                                                                                       callContext);
-
-                SubscriptionAndAddOnsSpecifier subscriptionAndAddOnsSpecifier = new SubscriptionAndAddOnsSpecifier();
-                subscriptionAndAddOnsSpecifier.setSubscriptionSpecifiers(subscriptions);
+                SubscriptionAndAddOnsSpecifier subscriptionAndAddOnsSpecifier = new SubscriptionAndAddOnsSpecifier(
+                        bundle.getId(),
+                        effectiveDate,
+                        verifyAndBuildSubscriptionSpecifiers(bundle.getId(),
+                                                             entitlementWithAddOnsSpecifier.getEntitlementSpecifier(),
+                                                             entitlementWithAddOnsSpecifier.isMigrated(),
+                                                             context,
+                                                             now,
+                                                             effectiveDate,
+                                                             catalog,
+                                                             callContext)
+                );
                 subscriptionAndAddOns.add(subscriptionAndAddOnsSpecifier);
             }
 
-            final List<DefaultSubscriptionBase> result = apiService.createPlansWithAddOns(accountId, subscriptionAndAddOns, callContext);
-            return ImmutableList.copyOf(Iterables.transform(result, new Function<DefaultSubscriptionBase, SubscriptionBase>() {
+            final List<DefaultSubscriptionBaseWithAddOns> result = apiService.createPlansWithAddOns(accountId, subscriptionAndAddOns, callContext);
+            return ImmutableList.copyOf(Iterables.transform(result, new Function<DefaultSubscriptionBaseWithAddOns, SubscriptionBaseWithAddOns>() {
                 @Override
-                public SubscriptionBase apply(final DefaultSubscriptionBase input) {
+                public SubscriptionBaseWithAddOns apply(final DefaultSubscriptionBaseWithAddOns input) {
                     return input;
                 }
             }));

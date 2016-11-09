@@ -20,36 +20,35 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class SubscriptionAndAddOnsSpecifier {
+public class DefaultSubscriptionBaseWithAddOns implements SubscriptionBaseWithAddOns {
 
-    private UUID bundleId;
-    private DateTime effectiveDate;
-    private List<SubscriptionSpecifier> subscriptionSpecifiers;
+    private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionBaseWithAddOns.class);
 
-    public SubscriptionAndAddOnsSpecifier() {
-    }
+    private final UUID bundleId;
+    private final List<SubscriptionBase> subscriptionBaseList;
+    private final DateTime effectiveDate;
 
-    public SubscriptionAndAddOnsSpecifier(final UUID bundleId, final DateTime effectiveDate,
-                                          final List<SubscriptionSpecifier> subscriptionSpecifiers) {
+    public DefaultSubscriptionBaseWithAddOns(final UUID bundleId, final List<SubscriptionBase> subscriptionBaseList, final DateTime effectiveDate) {
         this.bundleId = bundleId;
+        this.subscriptionBaseList = subscriptionBaseList;
         this.effectiveDate = effectiveDate;
-        this.subscriptionSpecifiers = subscriptionSpecifiers;
     }
 
+    @Override
     public UUID getBundleId() {
         return bundleId;
     }
 
+    @Override
+    public List<SubscriptionBase> getSubscriptionBaseList() {
+        return subscriptionBaseList;
+    }
+
     public DateTime getEffectiveDate() {
         return effectiveDate;
-    }
-
-    public List<SubscriptionSpecifier> getSubscriptionSpecifiers() {
-        return subscriptionSpecifiers;
-    }
-
-    public void setSubscriptionSpecifiers(final List<SubscriptionSpecifier> subscriptionSpecifiers) {
-        this.subscriptionSpecifiers = subscriptionSpecifiers;
     }
 }

@@ -32,6 +32,7 @@ import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.SubscriptionAndAddOnsSpecifier;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -46,7 +47,7 @@ public interface SubscriptionBaseApiService {
                                               CallContext context)
             throws SubscriptionBaseApiException;
 
-    public List<DefaultSubscriptionBase> createPlansWithAddOns(UUID accountId, Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, CallContext context)
+    public List<DefaultSubscriptionBaseWithAddOns> createPlansWithAddOns(UUID accountId, Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, CallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean cancel(DefaultSubscriptionBase subscription, CallContext context)

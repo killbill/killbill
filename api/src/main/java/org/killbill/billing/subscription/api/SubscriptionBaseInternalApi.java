@@ -40,6 +40,7 @@ import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseWithAddOns;
 import org.killbill.billing.util.entity.Pagination;
 
 public interface SubscriptionBaseInternalApi {
@@ -48,8 +49,8 @@ public interface SubscriptionBaseInternalApi {
     public SubscriptionBase createSubscription(UUID bundleId, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, DateTime requestedDateWithMs,
                                                final boolean isMigrated, InternalCallContext context) throws SubscriptionBaseApiException;
 
-    public List<SubscriptionBase> createBaseSubscriptionsWithAddOns(UUID accountId, Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier,
-                                                                    InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
+    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(UUID accountId, Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier,
+                                                                              InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
 
     public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, InternalCallContext context) throws SubscriptionBaseApiException;
 
