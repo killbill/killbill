@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package org.killbill.billing.subscription.api.user;
+package org.killbill.billing.subscription.api;
 
 import java.util.List;
 import java.util.UUID;

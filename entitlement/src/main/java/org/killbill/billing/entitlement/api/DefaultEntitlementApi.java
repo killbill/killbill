@@ -20,6 +20,7 @@ package org.killbill.billing.entitlement.api;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -53,11 +54,11 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseWithAddOns;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -210,19 +211,20 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
                 try {
                     final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(accountId, baseEntitlementWithAddOnsSpecifiers, contextWithValidAccountRecordId);
-                    final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
-                    final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = Lists.newArrayList(baseEntitlementWithAddOnsSpecifiers.iterator());
-                    for (final SubscriptionBaseWithAddOns cur : subscriptionsWithAddOns) {
-                        for (SubscriptionBase subscriptionBase : cur.getSubscriptionBaseList()) {
+                    Map<BlockingState, UUID> blockingStateMap = new HashMap<BlockingState, UUID>();
+                    int i = 0;
+                    for (Iterator<BaseEntitlementWithAddOnsSpecifier> it = baseEntitlementWithAddOnsSpecifiers.iterator(); it.hasNext(); i++) {
+                        BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = it.next();
+                        for (SubscriptionBase subscriptionBase : subscriptionsWithAddOns.get(i).getSubscriptionBaseList()) {
                             final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION,
                                                                                          DefaultEntitlementApi.ENT_STATE_START,
                                                                                          EntitlementService.ENTITLEMENT_SERVICE_NAME,
                                                                                          false, false, false,
-                                                                                         dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifierList.get(subscriptionsWithAddOns.indexOf(cur)).getEntitlementEffectiveDate(), contextWithValidAccountRecordId));
-                            blockingStates.add(blockingState);
+                                                                                         dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), contextWithValidAccountRecordId));
+                            blockingStateMap.put(blockingState, subscriptionsWithAddOns.get(i).getBundleId());
                         }
-                        entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(blockingStates, cur.getBundleId(), contextWithValidAccountRecordId);
                     }
+                    entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingStateMap, contextWithValidAccountRecordId);
                     return buildEntitlementList(accountId, subscriptionsWithAddOns, callContext);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
