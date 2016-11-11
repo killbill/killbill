@@ -18,8 +18,10 @@
 
 package org.killbill.billing.junction.plumbing.billing;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
@@ -180,7 +182,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
         boolean updatedAccountBCD = dryRunMode;
 
-        final int currentAccountBCD = accountApi.getBCD(account.getId(), context);
+        final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
+
+        int currentAccountBCD = accountApi.getBCD(account.getId(), context);
+
         for (final SubscriptionBase subscription : subscriptions) {
 
             // The subscription did not even start, so there is nothing to do yet, we can skip and avoid some NPE down the line when calculating the BCD
@@ -210,7 +215,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 overridenBCD = transition.getNextBillCycleDayLocal() != null ? transition.getNextBillCycleDayLocal() : overridenBCD;
                 final int bcdLocal = overridenBCD != null ?
                                      overridenBCD :
-                                     calculateBcdForTransition(catalog, baseSubscription, subscription, account, currentAccountBCD, transition);
+                                     calculateBcdForTransition(catalog, bcdCache, baseSubscription, subscription, account, currentAccountBCD, transition);
 
                 if (currentAccountBCD == 0 && !updatedAccountBCD) {
                     log.info("Setting account BCD='{}', accountId='{}'", bcdLocal, account.getId());
@@ -224,10 +229,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
     }
 
-    private int calculateBcdForTransition(final Catalog catalog, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final ImmutableAccountData account, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition)
+    private int calculateBcdForTransition(final Catalog catalog, final Map<UUID, Integer> bcdCache, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final ImmutableAccountData account, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition)
             throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
         final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveTransitionTime());
-        return BillCycleDayCalculator.calculateBcdForAlignment(subscription, baseSubscription, alignment, account.getTimeZone(), accountBillCycleDayLocal);
+        return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, account.getTimeZone(), accountBillCycleDayLocal);
     }
 
     private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final Catalog catalog, final EffectiveSubscriptionInternalEvent transition) throws CatalogApiException {

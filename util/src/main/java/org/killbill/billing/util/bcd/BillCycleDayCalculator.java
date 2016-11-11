@@ -17,6 +17,9 @@
 
 package org.killbill.billing.util.bcd;
 
+import java.util.Map;
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.BillingAlignment;
@@ -29,18 +32,27 @@ public abstract class BillCycleDayCalculator {
 
     private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 
-    public static int calculateBcdForAlignment(final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final BillingAlignment alignment, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal) {
+    public static int calculateBcdForAlignment(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final BillingAlignment alignment, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal) {
         int result = 0;
         switch (alignment) {
             case ACCOUNT:
-                result = accountBillCycleDayLocal != 0 ? accountBillCycleDayLocal : calculateBcdFromSubscription(subscription, accountTimeZone);
+                result = accountBillCycleDayLocal != 0 ? accountBillCycleDayLocal : calculateOrRetrieveBcdFromSubscription(bcdCache, subscription, accountTimeZone);
                 break;
             case BUNDLE:
-                result = calculateBcdFromSubscription(baseSubscription, accountTimeZone);
+                result = calculateOrRetrieveBcdFromSubscription(bcdCache, baseSubscription, accountTimeZone);
                 break;
             case SUBSCRIPTION:
-                result = calculateBcdFromSubscription(subscription, accountTimeZone);
+                result = calculateOrRetrieveBcdFromSubscription(bcdCache, subscription, accountTimeZone);
                 break;
+        }
+        return result;
+    }
+
+    private static int calculateOrRetrieveBcdFromSubscription(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final DateTimeZone accountTimeZone) {
+        Integer result = bcdCache.get(subscription.getId());
+        if (result == null) {
+            result = calculateBcdFromSubscription(subscription, accountTimeZone);
+            bcdCache.put(subscription.getId(), result);
         }
         return result;
     }

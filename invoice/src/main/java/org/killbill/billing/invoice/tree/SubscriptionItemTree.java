@@ -26,7 +26,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
 
@@ -48,7 +47,9 @@ public class SubscriptionItemTree {
 
     private ItemsNodeInterval root;
     private boolean isBuilt;
+    private boolean isMerged;
     private List<Item> items;
+    private List<Item> existingFullyAdjustedItems;
     private List<InvoiceItem> existingFixedItems;
     private Map<LocalDate, InvoiceItem> remainingFixedItems;
     private List<InvoiceItem> pendingItemAdj;
@@ -78,6 +79,7 @@ public class SubscriptionItemTree {
         this.targetInvoiceId = targetInvoiceId;
         this.root = new ItemsNodeInterval(targetInvoiceId);
         this.items = new LinkedList<Item>();
+        this.existingFullyAdjustedItems = new LinkedList<Item>();
         this.existingFixedItems = new LinkedList<InvoiceItem>();
         this.remainingFixedItems = new HashMap<LocalDate, InvoiceItem>();
         this.pendingItemAdj = new LinkedList<InvoiceItem>();
@@ -91,7 +93,10 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
 
         for (InvoiceItem item : pendingItemAdj) {
-            root.addAdjustment(item);
+            final Item fullyAdjustedItem = root.addAdjustment(item);
+            if (fullyAdjustedItem != null) {
+                existingFullyAdjustedItems.add(fullyAdjustedItem);
+            }
         }
         pendingItemAdj.clear();
         root.buildForExistingItems(items);
@@ -122,6 +127,7 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
         root.mergeExistingAndProposed(items);
         isBuilt = true;
+        isMerged = true;
     }
 
     /**
@@ -203,7 +209,23 @@ public class SubscriptionItemTree {
         tmp.addAll(Collections2.filter(Collections2.transform(items, new Function<Item, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final Item input) {
-                return input.toInvoiceItem();
+                final InvoiceItem resultingCandidate = input.toInvoiceItem();
+
+                // Post merge, the ADD items are the candidates for the resulting RECURRING items (see toInvoiceItem()).
+                // We will ignore any resulting item matching existing items on disk though as these are the result of full item adjustments.
+                // See https://github.com/killbill/killbill/issues/654
+                if (isMerged) {
+                    for (final Item existingAdjustedItem : existingFullyAdjustedItems) {
+                        // Note: we DO keep the item in case of partial matches, e.g. if the new proposed item end date is before
+                        // the existing (adjusted) item. See TestSubscriptionItemTree#testMaxedOutProRation
+                        final InvoiceItem fullyAdjustedInvoiceItem = existingAdjustedItem.toInvoiceItem();
+                        if (resultingCandidate.matches(fullyAdjustedInvoiceItem)) {
+                            return null;
+                        }
+                    }
+                }
+
+                return resultingCandidate;
             }
         }), new Predicate<InvoiceItem>() {
             @Override

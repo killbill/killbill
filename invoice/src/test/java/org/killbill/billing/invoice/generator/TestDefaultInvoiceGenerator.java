@@ -57,6 +57,7 @@ import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
+import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
@@ -1022,7 +1023,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     // Regression test for #170 (see https://github.com/killbill/killbill/pull/173)
     @Test(groups = "fast")
     public void testRegressionFor170() throws EntityPersistenceException, InvoiceApiException, CatalogApiException {
-        final UUID accountId = UUID.randomUUID();
+        final UUID accountId = account.getId();
         final Currency currency = Currency.USD;
         final SubscriptionBase subscription = createSubscription();
         final MockInternationalPrice recurringPrice = new MockInternationalPrice(new DefaultPrice(new BigDecimal("2.9500"), Currency.USD));
@@ -1203,6 +1204,55 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final Invoice invoice3 = invoiceWithMetadata3.getInvoice();
         assertNotNull(invoice3);
         assertTrue(invoice3.getBalance().compareTo(FIFTEEN.multiply(TWO).add(TWELVE)) == 0);
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/654")
+    public void testCancelEOTWithFullItemAdjustment() throws CatalogApiException, InvoiceApiException {
+        final BigDecimal rate = new BigDecimal("39.95");
+
+        final BillingEventSet events = new MockBillingEventSet();
+
+        final SubscriptionBase sub = createSubscription();
+        final LocalDate startDate = invoiceUtil.buildDate(2016, 10, 9);
+        final LocalDate endDate = invoiceUtil.buildDate(2016, 11, 9);
+
+        final Plan plan = new MockPlan();
+        final PlanPhase phase = createMockMonthlyPlanPhase(rate);
+
+        final BillingEvent event = createBillingEvent(sub.getId(), sub.getBundleId(), startDate, plan, phase, 9);
+        events.add(event);
+
+        final LocalDate targetDate = invoiceUtil.buildDate(2016, 10, 9);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, null, targetDate, Currency.USD, internalCallContext);
+        final Invoice invoice = invoiceWithMetadata.getInvoice();
+
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 1);
+        assertEquals(invoice.getBalance(), KillBillMoney.of(rate, invoice.getCurrency()));
+        assertEquals(invoice.getInvoiceItems().get(0).getSubscriptionId(), sub.getId());
+
+        assertEquals(invoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), startDate);
+        assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), endDate);
+
+        // Cancel EOT and Add the item adjustment
+        final BillingEvent event2 = invoiceUtil.createMockBillingEvent(account, sub, endDate.toDateTimeAtStartOfDay(),
+                                                                       null, phase,
+                                                                       ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 9,
+                                                                       BillingMode.IN_ADVANCE, "Cancel", 2L,
+                                                                       SubscriptionBaseTransitionType.CANCEL);
+        events.add(event2);
+
+        final InvoiceItem itemAdj = new ItemAdjInvoiceItem(invoice.getInvoiceItems().get(0), new LocalDate(2016, 10, 12), rate.negate(), Currency.USD);
+
+        invoice.addInvoiceItem(itemAdj);
+
+        final List<Invoice> existingInvoices = new ArrayList<Invoice>();
+        existingInvoices.add(invoice);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, existingInvoices, targetDate, Currency.USD, internalCallContext);
+        final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
+
+        assertNull(invoice2);
     }
 
     private void printDetailInvoice(final Invoice invoice) {
