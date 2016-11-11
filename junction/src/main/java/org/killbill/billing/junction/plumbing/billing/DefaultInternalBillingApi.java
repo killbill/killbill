@@ -18,8 +18,10 @@
 
 package org.killbill.billing.junction.plumbing.billing;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
@@ -170,6 +172,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
         boolean updatedAccountBCD = dryRunMode;
 
+        final Map<UUID, Integer> bcdCache =new HashMap<UUID, Integer>();
 
         int currentAccountBCD = accountApi.getBCD(account.getId(), context);
         for (final SubscriptionBase subscription : subscriptions) {
@@ -191,7 +194,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             }
 
             for (final EffectiveSubscriptionInternalEvent transition : billingTransitions) {
-                final int bcdLocal = bcdCalculator.calculateBcd(account, currentAccountBCD, bundleId, subscription, transition, context);
+                final int bcdLocal = bcdCalculator.calculateBcd(account, currentAccountBCD, bundleId, subscription, transition, bcdCache, context);
 
                 if (currentAccountBCD == 0 && !updatedAccountBCD) {
                     accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);

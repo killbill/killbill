@@ -19,6 +19,7 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -60,7 +61,11 @@ public class BillCycleDayCalculator {
         this.subscriptionApi = subscriptionApi;
     }
 
-    protected int calculateBcd(final ImmutableAccountData account, final int accountBillCycleDayLocal, final UUID bundleId, final SubscriptionBase subscription, final EffectiveSubscriptionInternalEvent transition, final InternalCallContext context)
+    private interface BCDAlignmentComputation {
+        public Integer compute() throws AccountApiException, SubscriptionBaseApiException, CatalogApiException;
+    }
+
+    protected int calculateBcd(final ImmutableAccountData account, final int accountBillCycleDayLocal, final UUID bundleId, final SubscriptionBase subscription, final EffectiveSubscriptionInternalEvent transition, final Map<UUID, Integer> bcdCache, final InternalCallContext context)
             throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
 
         final Catalog catalog = catalogService.getFullCatalog(context);
@@ -91,28 +96,49 @@ public class BillCycleDayCalculator {
                                        phase.getPhaseType()),
                 transition.getRequestedTransitionTime());
 
-        return calculateBcdForAlignment(account, accountBillCycleDayLocal, subscription, alignment, bundleId, catalog, plan, context);
+        return calculateBcdForAlignment(account, accountBillCycleDayLocal, subscription, alignment, bundleId, catalog, plan, bcdCache, context);
     }
 
     @VisibleForTesting
     int calculateBcdForAlignment(final ImmutableAccountData account, final int accountBillCycleDayLocal, final SubscriptionBase subscription, final BillingAlignment alignment, final UUID bundleId,
-                                 final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, SubscriptionBaseApiException, CatalogApiException {
-        int result = 0;
+                                 final Catalog catalog, final Plan plan, final Map<UUID, Integer> bcdCache, final InternalCallContext context) throws AccountApiException, SubscriptionBaseApiException, CatalogApiException {
+        Integer result = 0;
+        final BCDAlignmentComputation callback;
         switch (alignment) {
             case ACCOUNT:
-                result = accountBillCycleDayLocal != 0 ? accountBillCycleDayLocal : calculateBcdFromSubscription(subscription, plan, account, catalog, context);
+                 callback = new BCDAlignmentComputation() {
+                     @Override
+                     public Integer compute() throws AccountApiException, SubscriptionBaseApiException, CatalogApiException {
+                         return accountBillCycleDayLocal != 0 ? accountBillCycleDayLocal : calculateBcdFromSubscription(subscription, plan, account, catalog, context);
+                     }
+                 };
+                result = computeOrRetrieveBCDForAlignment(account.getId(), bcdCache, callback);
                 break;
+
             case BUNDLE:
-                final SubscriptionBase baseSub = subscriptionApi.getBaseSubscription(bundleId, context);
-                Plan basePlan = baseSub.getCurrentPlan();
-                if (basePlan == null) {
-                    // The BP has been cancelled
-                    basePlan = baseSub.getLastActivePlan();
-                }
-                result = calculateBcdFromSubscription(baseSub, basePlan, account, catalog, context);
+                callback = new BCDAlignmentComputation() {
+                    @Override
+                    public Integer compute() throws AccountApiException, SubscriptionBaseApiException, CatalogApiException {
+                        final SubscriptionBase baseSub = subscriptionApi.getBaseSubscription(bundleId, context);
+                        Plan basePlan = baseSub.getCurrentPlan();
+                        if (basePlan == null) {
+                            // The BP has been cancelled
+                            basePlan = baseSub.getLastActivePlan();
+                        }
+                        return calculateBcdFromSubscription(baseSub, basePlan, account, catalog, context);
+                    }
+                };
+                result = computeOrRetrieveBCDForAlignment(bundleId, bcdCache, callback);
                 break;
+
             case SUBSCRIPTION:
-                result = calculateBcdFromSubscription(subscription, plan, account, catalog, context);
+                callback = new BCDAlignmentComputation() {
+                    @Override
+                    public Integer compute() throws AccountApiException, SubscriptionBaseApiException, CatalogApiException {
+                        return calculateBcdFromSubscription(subscription, plan, account, catalog, context);
+                    }
+                };
+                result = computeOrRetrieveBCDForAlignment(subscription.getId(), bcdCache, callback);
                 break;
         }
 
@@ -120,6 +146,16 @@ public class BillCycleDayCalculator {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_BILLING_ALIGNMENT, alignment.toString());
         }
 
+        return result;
+    }
+
+
+    int computeOrRetrieveBCDForAlignment(final UUID objectId, final Map<UUID, Integer> bcdCache, final BCDAlignmentComputation callback) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
+        Integer result = bcdCache.get(objectId);
+        if (result == null) {
+            result = callback.compute();
+            bcdCache.put(objectId, result);
+        }
         return result;
     }
 

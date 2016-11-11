@@ -16,6 +16,7 @@
 
 package org.killbill.billing.junction.plumbing.billing;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -63,7 +64,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
         final Integer billCycleDayLocal = billCycleDayCalculator.calculateBcdForAlignment(account, 0, subscription, BillingAlignment.BUNDLE, bundle.getId(),
-                                                                                          catalog, null, internalCallContext);
+                                                                                          catalog, null, new HashMap<UUID, Integer>(), internalCallContext);
 
         Assert.assertEquals(billCycleDayLocal, (Integer) expectedBCDUTC);
     }
