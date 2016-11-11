@@ -1210,7 +1210,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     public void testCancelEOTWithFullItemAdjustment() throws CatalogApiException, InvoiceApiException {
         final BigDecimal rate = new BigDecimal("39.95");
 
-        final BillingEventSet events = new MockBillingEventSet(internalCallContext);
+        final BillingEventSet events = new MockBillingEventSet();
 
         final SubscriptionBase sub = createSubscription();
         final LocalDate startDate = invoiceUtil.buildDate(2016, 10, 9);
