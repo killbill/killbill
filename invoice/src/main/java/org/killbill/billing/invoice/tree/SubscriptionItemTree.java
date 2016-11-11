@@ -49,7 +49,7 @@ public class SubscriptionItemTree {
     private boolean isBuilt;
     private boolean isMerged;
     private List<Item> items;
-    private List<InvoiceItem> allExistingRecurringItems;
+    private List<Item> existingFullyAdjustedItems;
     private List<InvoiceItem> existingFixedItems;
     private Map<LocalDate, InvoiceItem> remainingFixedItems;
     private List<InvoiceItem> pendingItemAdj;
@@ -79,7 +79,7 @@ public class SubscriptionItemTree {
         this.targetInvoiceId = targetInvoiceId;
         this.root = new ItemsNodeInterval(targetInvoiceId);
         this.items = new LinkedList<Item>();
-        this.allExistingRecurringItems = new LinkedList<InvoiceItem>();
+        this.existingFullyAdjustedItems = new LinkedList<Item>();
         this.existingFixedItems = new LinkedList<InvoiceItem>();
         this.remainingFixedItems = new HashMap<LocalDate, InvoiceItem>();
         this.pendingItemAdj = new LinkedList<InvoiceItem>();
@@ -93,7 +93,10 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
 
         for (InvoiceItem item : pendingItemAdj) {
-            root.addAdjustment(item);
+            final Item fullyAdjustedItem = root.addAdjustment(item);
+            if (fullyAdjustedItem != null) {
+                existingFullyAdjustedItems.add(fullyAdjustedItem);
+            }
         }
         pendingItemAdj.clear();
         root.buildForExistingItems(items);
@@ -137,7 +140,6 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
-                allExistingRecurringItems.add(invoiceItem);
                 root.addExistingItem(new ItemsNodeInterval(root, targetInvoiceId, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD)));
                 break;
 
@@ -213,10 +215,11 @@ public class SubscriptionItemTree {
                 // We will ignore any resulting item matching existing items on disk though as these are the result of full item adjustments.
                 // See https://github.com/killbill/killbill/issues/654
                 if (isMerged) {
-                    for (final InvoiceItem existingRecurringItem : allExistingRecurringItems) {
+                    for (final Item existingAdjustedItem : existingFullyAdjustedItems) {
                         // Note: we DO keep the item in case of partial matches, e.g. if the new proposed item end date is before
                         // the existing (adjusted) item. See TestSubscriptionItemTree#testMaxedOutProRation
-                        if (resultingCandidate.matches(existingRecurringItem)) {
+                        final InvoiceItem fullyAdjustedInvoiceItem = existingAdjustedItem.toInvoiceItem();
+                        if (resultingCandidate.matches(fullyAdjustedInvoiceItem)) {
                             return null;
                         }
                     }

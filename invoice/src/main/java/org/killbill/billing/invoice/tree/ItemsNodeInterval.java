@@ -224,8 +224,10 @@ public class ItemsNodeInterval extends NodeInterval {
 
     /**
      * Add the adjustment amount on the item specified by the targetId.
+     *
+     * @return linked item if fully adjusted, null otherwise
      */
-    public void addAdjustment(final InvoiceItem item) {
+    public Item addAdjustment(final InvoiceItem item) {
         final UUID targetId = item.getLinkedItemId();
 
         // TODO we should really be using findNode(adjustmentDate, callback) instead but wrong dates in test creates panic.
@@ -246,8 +248,10 @@ public class ItemsNodeInterval extends NodeInterval {
         if (targetItem.getAmount().compareTo(adjustmentAmount) == 0) {
             // Full item adjustment - treat it like a repair
             addExistingItem(new ItemsNodeInterval(this, targetInvoiceId, new Item(item, targetItem.getStartDate(), targetItem.getEndDate(), targetInvoiceId, ItemAction.CANCEL)));
+            return targetItem;
         } else {
             targetItem.incrementAdjustedAmount(adjustmentAmount);
+            return null;
         }
     }
 
