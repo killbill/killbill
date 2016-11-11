@@ -71,20 +71,21 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
 
     @Test(groups = "slow")
-    public void testCancellationEOTWithInvoiceItemAdjustemtsOnInvoiceWithMultipleItems() throws Exception {
-
+    public void testCancellationEOTWithInvoiceItemAdjustmentsOnInvoiceWithMultipleItems() throws Exception {
         final int billingDay = 1;
+        Boolean foo = true;
+        System.out.println(Boolean.TRUE.equals(foo) ? "trye" : false);
         final DateTime initialCreationDate = new DateTime(2016, 9, 1, 0, 3, 42, 0, testTimeZone);
-
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
 
-        final DefaultEntitlement bpEntitlement1 = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+
+        final DefaultEntitlement bpEntitlement1 = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement1);
 
-        final DefaultEntitlement bpEntitlement2 = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey2", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement2 = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey2", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement2);
 
         paymentPlugin.makeNextPaymentFailWithError();
@@ -104,7 +105,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         bpEntitlement1.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         final Invoice thirdInvoice = invoices.get(2);
         final InvoiceItem itemForBPEntitlement1 = Iterables.tryFind(thirdInvoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
             @Override
@@ -115,7 +116,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertNotNull(itemForBPEntitlement1);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), thirdInvoice.getId(), itemForBPEntitlement1.getId(), new LocalDate(2016, 10, 2), callContext);
+        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), thirdInvoice.getId(), itemForBPEntitlement1.getId(), new LocalDate(2016, 10, 2), UUID.randomUUID().toString(), callContext);
         assertListenerStatus();
 
         // Expect also payment for previous invoice
@@ -123,7 +124,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         final Invoice fourthInvoice = invoices.get(3);
 
         Assert.assertEquals(fourthInvoice.getInvoiceItems().size(), 1);
