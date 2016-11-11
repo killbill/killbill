@@ -237,48 +237,117 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         specifierList.add(addOnEntitlementSpecifier1);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.BLOCK);
-        BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new BaseEntitlementWithAddOnsSpecifier() {
-            @Override
-            public UUID getBundleId() {
-                return null;
-            }
-            @Override
-            public String getExternalKey() {
-                return externalKey;
-            }
-            @Override
-            public Iterable<EntitlementSpecifier> getEntitlementSpecifier() {
-                return specifierList;
-            }
-            @Override
-            public LocalDate getEntitlementEffectiveDate() {
-                return entitlementMigrationDate;
-            }
-            @Override
-            public LocalDate getBillingEffectiveDate() {
-                return billingMigrationDate;
-            }
-            @Override
-            public boolean isMigrated() {
-                return false;
-            }
-        };
+        BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = buildBaseEntitlementWithAddOnsSpecifier(entitlementMigrationDate, billingMigrationDate, externalKey, specifierList);
         List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
 
-        final List<Entitlement> baseEntitlement = entitlementApi.createBaseEntitlementsWithAddOns(
+        final List<Entitlement> baseEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(
                 account.getId(),
                 baseEntitlementWithAddOnsSpecifierList,
                 ImmutableList.<PluginProperty>of(),
                 callContext);
         assertListenerStatus();
-        Assert.assertEquals(baseEntitlement.get(0).getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(baseEntitlements.get(0).getState(), EntitlementState.ACTIVE);
 
         // Billing starts straight on EVERGREEN
         clock.addMonths(1);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.NULL_INVOICE,
                                       NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         assertListenerStatus();
+    }
+
+
+    @Test(groups = "slow")
+    public void testMigrationWithMultipleBundlesAndDifferentDates() throws Exception {
+
+        clock.setDay(new LocalDate(2016, 1, 1));
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // We set both entitlement and billing date with desired value
+        final LocalDate entitlementMigrationDateBundle1 = new LocalDate(2015, 12, 20);
+        final LocalDate billingMigrationDateBundle1 = new LocalDate(2016, 2, 1);
+
+        // We set both entitlement and billing date with desired value
+        final LocalDate entitlementMigrationDateBundle2 = new LocalDate(2015, 12, 20);
+        final LocalDate billingMigrationDateBundle2 = new LocalDate(2016, 3, 1);
+
+        final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
+        final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
+
+        final String externalKey = "baseExternalKey";
+        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
+        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
+
+        final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
+        specifierList.add(baseEntitlementSpecifier);
+        specifierList.add(addOnEntitlementSpecifier1);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK);
+        BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifierBundle1 =
+                buildBaseEntitlementWithAddOnsSpecifier(entitlementMigrationDateBundle1, billingMigrationDateBundle1, externalKey, specifierList);
+        List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+        BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifierBundle2 =
+                buildBaseEntitlementWithAddOnsSpecifier(entitlementMigrationDateBundle2, billingMigrationDateBundle2, externalKey, specifierList);
+        baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifierBundle1);
+        baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifierBundle2);
+
+        final List<Entitlement> baseEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(
+                account.getId(),
+                baseEntitlementWithAddOnsSpecifierList,
+                ImmutableList.<PluginProperty>of(),
+                callContext);
+        assertListenerStatus();
+        Assert.assertEquals(baseEntitlements.get(0).getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(baseEntitlements.get(1).getState(), EntitlementState.ACTIVE);
+
+        // Billing starts straight on EVERGREEN for Bundle 1 after 1 month
+        clock.addMonths(1);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.NULL_INVOICE,
+                                      NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        assertListenerStatus();
+
+        // Billing starts straight on EVERGREEN for Bundle 2 after 2 months
+        clock.addMonths(1);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.INVOICE,
+                                      NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE,
+                                      NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        assertListenerStatus();
+
+        // Next month we should still get one single invoice and payment / invoice payment
+        clock.addMonths(1);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        assertListenerStatus();
+    }
+
+    private BaseEntitlementWithAddOnsSpecifier buildBaseEntitlementWithAddOnsSpecifier(final LocalDate entitlementMigrationDate, final LocalDate billingMigrationDate, final String externalKey, final List<EntitlementSpecifier> specifierList) {
+        return new BaseEntitlementWithAddOnsSpecifier() {
+                @Override
+                public UUID getBundleId() {
+                    return null;
+                }
+                @Override
+                public String getExternalKey() {
+                    return externalKey;
+                }
+                @Override
+                public Iterable<EntitlementSpecifier> getEntitlementSpecifier() {
+                    return specifierList;
+                }
+                @Override
+                public LocalDate getEntitlementEffectiveDate() {
+                    return entitlementMigrationDate;
+                }
+                @Override
+                public LocalDate getBillingEffectiveDate() {
+                    return billingMigrationDate;
+                }
+                @Override
+                public boolean isMigrated() {
+                    return false;
+                }
+            };
     }
 
 }
