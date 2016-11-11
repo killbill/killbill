@@ -59,6 +59,7 @@ import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
@@ -70,7 +71,6 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.api.user.SubscriptionSpecifier;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
@@ -284,14 +284,26 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 subscriptionAndAddOns.add(subscriptionAndAddOnsSpecifier);
             }
 
-            final List<DefaultSubscriptionBaseWithAddOns> result = apiService.createPlansWithAddOns(accountId, subscriptionAndAddOns, callContext);
-            return ImmutableList.copyOf(Iterables.transform(result, new Function<DefaultSubscriptionBaseWithAddOns, SubscriptionBaseWithAddOns>() {
-                @Override
-                public SubscriptionBaseWithAddOns apply(final DefaultSubscriptionBaseWithAddOns input) {
-                    return input;
-                }
-            }));
-
+            final List<DefaultSubscriptionBaseWithAddOns> defaultSubscriptionBaseWithAddOnsList = apiService.createPlansWithAddOns(accountId, subscriptionAndAddOns, callContext);
+            List<SubscriptionBaseWithAddOns> subscriptionBaseWithAddOnsList = new ArrayList<SubscriptionBaseWithAddOns>();
+            for (final DefaultSubscriptionBaseWithAddOns cur : defaultSubscriptionBaseWithAddOnsList) {
+                SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new SubscriptionBaseWithAddOns() {
+                    @Override
+                    public UUID getBundleId() {
+                        return cur.getBundleId();
+                    }
+                    @Override
+                    public List<SubscriptionBase> getSubscriptionBaseList() {
+                        return cur.getSubscriptionBaseList();
+                    }
+                    @Override
+                    public DateTime getEffectiveDate() {
+                        return cur.getEffectiveDate();
+                    }
+                };
+                subscriptionBaseWithAddOnsList.add(subscriptionBaseWithAddOns);
+            }
+           return subscriptionBaseWithAddOnsList;
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
