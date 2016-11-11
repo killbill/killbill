@@ -1070,30 +1070,34 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, existingInvoices, targetDate, currency, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
-        assertEquals(invoice.getNumberOfItems(), 6);
-        assertEquals(invoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
+        assertEquals(invoice.getNumberOfItems(), 7);
+        assertEquals(invoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), new LocalDate(2013, 6, 15));
-        assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), new LocalDate(2013, 6, 21));
+        assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), new LocalDate(2013, 7, 15));
 
         assertEquals(invoice.getInvoiceItems().get(1).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
-        assertEquals(invoice.getInvoiceItems().get(1).getStartDate(), new LocalDate(2013, 6, 26));
-        assertEquals(invoice.getInvoiceItems().get(1).getEndDate(), new LocalDate(2013, 7, 15));
+        assertEquals(invoice.getInvoiceItems().get(1).getStartDate(), new LocalDate(2013, 6, 15));
+        assertEquals(invoice.getInvoiceItems().get(1).getEndDate(), new LocalDate(2013, 6, 21));
 
-        assertEquals(invoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.RECURRING);
-        assertEquals(invoice.getInvoiceItems().get(2).getStartDate(), new LocalDate(2013, 7, 15));
-        assertEquals(invoice.getInvoiceItems().get(2).getEndDate(), new LocalDate(2013, 8, 15));
+        assertEquals(invoice.getInvoiceItems().get(2).getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
+        assertEquals(invoice.getInvoiceItems().get(2).getStartDate(), new LocalDate(2013, 6, 26));
+        assertEquals(invoice.getInvoiceItems().get(2).getEndDate(), new LocalDate(2013, 7, 15));
 
         assertEquals(invoice.getInvoiceItems().get(3).getInvoiceItemType(), InvoiceItemType.RECURRING);
-        assertEquals(invoice.getInvoiceItems().get(3).getStartDate(), new LocalDate(2013, 8, 15));
-        assertEquals(invoice.getInvoiceItems().get(3).getEndDate(), new LocalDate(2013, 9, 15));
+        assertEquals(invoice.getInvoiceItems().get(3).getStartDate(), new LocalDate(2013, 7, 15));
+        assertEquals(invoice.getInvoiceItems().get(3).getEndDate(), new LocalDate(2013, 8, 15));
 
         assertEquals(invoice.getInvoiceItems().get(4).getInvoiceItemType(), InvoiceItemType.RECURRING);
-        assertEquals(invoice.getInvoiceItems().get(4).getStartDate(), new LocalDate(2013, 9, 15));
-        assertEquals(invoice.getInvoiceItems().get(4).getEndDate(), new LocalDate(2013, 10, 15));
+        assertEquals(invoice.getInvoiceItems().get(4).getStartDate(), new LocalDate(2013, 8, 15));
+        assertEquals(invoice.getInvoiceItems().get(4).getEndDate(), new LocalDate(2013, 9, 15));
 
         assertEquals(invoice.getInvoiceItems().get(5).getInvoiceItemType(), InvoiceItemType.RECURRING);
-        assertEquals(invoice.getInvoiceItems().get(5).getStartDate(), new LocalDate(2013, 10, 15));
-        assertEquals(invoice.getInvoiceItems().get(5).getEndDate(), new LocalDate(2013, 11, 15));
+        assertEquals(invoice.getInvoiceItems().get(5).getStartDate(), new LocalDate(2013, 9, 15));
+        assertEquals(invoice.getInvoiceItems().get(5).getEndDate(), new LocalDate(2013, 10, 15));
+
+        assertEquals(invoice.getInvoiceItems().get(6).getInvoiceItemType(), InvoiceItemType.RECURRING);
+        assertEquals(invoice.getInvoiceItems().get(6).getStartDate(), new LocalDate(2013, 10, 15));
+        assertEquals(invoice.getInvoiceItems().get(6).getEndDate(), new LocalDate(2013, 11, 15));
 
         // Add newly generated invoice to existing invoices
         existingInvoices.add(invoice);
