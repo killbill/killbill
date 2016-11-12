@@ -39,6 +39,7 @@ import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.events.CustomFieldCreationEvent;
 import org.killbill.billing.events.CustomFieldDeletionEvent;
+import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
@@ -58,6 +59,8 @@ import org.killbill.billing.notification.plugin.api.BlockingStateMetadata;
 import org.killbill.billing.notification.plugin.api.BroadcastMetadata;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.notification.plugin.api.PaymentMetadata;
+import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
+import org.killbill.billing.notification.plugin.api.SubscriptionMetadata.ActionType;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -157,6 +160,10 @@ public class BeatrixListener {
                 } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.BCD_CHANGE) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_BCD_CHANGE;
                 }
+
+                SubscriptionMetadata.ActionType actionType = (event instanceof EffectiveSubscriptionInternalEvent) ? ActionType.EFFECTIVE : ActionType.REQUESTED;
+                final SubscriptionMetadata subscriptionMetadataObj = new SubscriptionMetadata(actionType);
+                metaData = objectMapper.writeValueAsString(subscriptionMetadataObj);
                 break;
 
             case BLOCKING_STATE:
