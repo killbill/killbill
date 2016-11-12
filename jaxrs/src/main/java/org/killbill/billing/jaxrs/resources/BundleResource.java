@@ -118,13 +118,15 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response getBundle(@PathParam("bundleId") final String bundleId,
+                              @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
         final UUID id = UUID.fromString(bundleId);
 
         final TenantContext tenantContext = this.context.createContext(request);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, tenantContext);
         final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
-        final BundleJson json = new BundleJson(bundle, account.getCurrency(), null);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext);
+        final BundleJson json = new BundleJson(bundle, account.getCurrency(), accountAuditLogs);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -135,6 +137,7 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Bundle not found")})
     public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                    @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                                   @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
 
         final TenantContext tenantContext = this.context.createContext(request);
@@ -146,11 +149,11 @@ public class BundleResource extends JaxRsResourceBase {
             final SubscriptionBundle activeBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, tenantContext);
             bundles = ImmutableList.of(activeBundle);
         }
-
         final List<BundleJson> result = new ArrayList<BundleJson>(bundles.size());
         for (final SubscriptionBundle bundle : bundles) {
             final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
-            final BundleJson json = new BundleJson(bundle, account.getCurrency(), null);
+            final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext);
+            final BundleJson json = new BundleJson(bundle, account.getCurrency(), accountAuditLogs);
             result.add(json);
         }
         return Response.status(Status.OK).entity(result).build();

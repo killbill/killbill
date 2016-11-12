@@ -25,6 +25,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.transfer.BundleTransferData;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -82,7 +83,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
     // SubscriptionBase creation, cancellation, changePlanWithRequestedDate apis
     public void createSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> initialEvents, InternalCallContext context);
 
-    public void createSubscriptionsWithAddOns(List<DefaultSubscriptionBaseWithAddOns> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, InternalCallContext context);
+    public void createSubscriptionsWithAddOns(List<SubscriptionBaseWithAddOns> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, InternalCallContext context);
 
     public void cancelSubscriptionsOnBasePlanEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, InternalCallContext context);
 

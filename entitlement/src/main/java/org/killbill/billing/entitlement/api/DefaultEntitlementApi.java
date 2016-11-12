@@ -92,7 +92,6 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     private final BlockingChecker checker;
     private final BlockingStateDao blockingStateDao;
     private final EntitlementDateHelper dateHelper;
-    private final PersistentBus eventBus;
     private final EventsStreamBuilder eventsStreamBuilder;
     private final EntitlementUtils entitlementUtils;
     private final NotificationQueueService notificationQueueService;
@@ -108,7 +107,6 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                  final EntitlementPluginExecution pluginExecution,
                                  final SecurityApi securityApi) {
         super(eventBus, null, pluginExecution, internalCallContextFactory, subscriptionInternalApi, accountApi, blockingStateDao, clock, checker, notificationQueueService, eventsStreamBuilder, entitlementUtils, securityApi);
-        this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
         this.subscriptionBaseInternalApi = subscriptionInternalApi;
         this.subscriptionBaseTransferApi = subscriptionTransferApi;
@@ -125,7 +123,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
     @Override
     public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final List<PlanPhasePriceOverride> overrides,
-                                             @Nullable final LocalDate entitlementEffectiveDate, @Nullable  LocalDate billingEffectiveDate, final boolean isMigrated,
+                                             @Nullable final LocalDate entitlementEffectiveDate, @Nullable final LocalDate billingEffectiveDate, final boolean isMigrated,
                                              final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         logCreateEntitlement(log, null, planPhaseSpecifier, overrides, entitlementEffectiveDate, billingEffectiveDate);
@@ -183,12 +181,21 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     }
 
     private EntitlementSpecifier getFirstEntitlementSpecifier(final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers) throws SubscriptionBaseApiException {
-        if ((baseEntitlementWithAddOnsSpecifiers == null) || baseEntitlementWithAddOnsSpecifiers.iterator().hasNext()) {
-            if ((baseEntitlementWithAddOnsSpecifiers.iterator().next().getEntitlementSpecifier() == null) || !baseEntitlementWithAddOnsSpecifiers.iterator().next().getEntitlementSpecifier().iterator().hasNext()) {
-                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
-            }
+        if (baseEntitlementWithAddOnsSpecifiers == null) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
         }
-        return baseEntitlementWithAddOnsSpecifiers.iterator().next().getEntitlementSpecifier().iterator().next();
+
+        final Iterator<BaseEntitlementWithAddOnsSpecifier> iterator = baseEntitlementWithAddOnsSpecifiers.iterator();
+        if (!iterator.hasNext()) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
+        }
+
+        final BaseEntitlementWithAddOnsSpecifier entitlementWithAddOnsSpecifier = iterator.next();
+        if (entitlementWithAddOnsSpecifier.getEntitlementSpecifier() == null || !entitlementWithAddOnsSpecifier.getEntitlementSpecifier().iterator().hasNext()) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
+        } else {
+            return entitlementWithAddOnsSpecifier.getEntitlementSpecifier().iterator().next();
+        }
     }
 
     @Override
@@ -211,11 +218,11 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
                 try {
                     final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(accountId, baseEntitlementWithAddOnsSpecifiers, contextWithValidAccountRecordId);
-                    Map<BlockingState, UUID> blockingStateMap = new HashMap<BlockingState, UUID>();
+                    final Map<BlockingState, UUID> blockingStateMap = new HashMap<BlockingState, UUID>();
                     int i = 0;
-                    for (Iterator<BaseEntitlementWithAddOnsSpecifier> it = baseEntitlementWithAddOnsSpecifiers.iterator(); it.hasNext(); i++) {
-                        BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = it.next();
-                        for (SubscriptionBase subscriptionBase : subscriptionsWithAddOns.get(i).getSubscriptionBaseList()) {
+                    for (final Iterator<BaseEntitlementWithAddOnsSpecifier> it = baseEntitlementWithAddOnsSpecifiers.iterator(); it.hasNext(); i++) {
+                        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = it.next();
+                        for (final SubscriptionBase subscriptionBase : subscriptionsWithAddOns.get(i).getSubscriptionBaseList()) {
                             final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION,
                                                                                          DefaultEntitlementApi.ENT_STATE_START,
                                                                                          EntitlementService.ENTITLEMENT_SERVICE_NAME,
@@ -234,13 +241,13 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         return pluginExecution.executeWithPlugin(createBaseEntitlementsWithAddOns, pluginContext);
     }
 
-    private List<Entitlement> buildEntitlementList(final UUID accountId, final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns, final CallContext callContext) throws EntitlementApiException {
-        List<Entitlement> result = new ArrayList<Entitlement>();
-        for (SubscriptionBaseWithAddOns subscriptionWithAddOns : subscriptionsWithAddOns) {
-            for (SubscriptionBase subscriptionBase : subscriptionWithAddOns.getSubscriptionBaseList()) {
-                Entitlement entitlement = new DefaultEntitlement(accountId, subscriptionBase.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
-                                                                 blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
-                                                                 entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
+    private List<Entitlement> buildEntitlementList(final UUID accountId, final Iterable<SubscriptionBaseWithAddOns> subscriptionsWithAddOns, final CallContext callContext) throws EntitlementApiException {
+        final List<Entitlement> result = new ArrayList<Entitlement>();
+        for (final SubscriptionBaseWithAddOns subscriptionWithAddOns : subscriptionsWithAddOns) {
+            for (final SubscriptionBase subscriptionBase : subscriptionWithAddOns.getSubscriptionBaseList()) {
+                final Entitlement entitlement = new DefaultEntitlement(accountId, subscriptionBase.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
+                                                                       blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
+                                                                       entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
                 result.add(entitlement);
             }
         }

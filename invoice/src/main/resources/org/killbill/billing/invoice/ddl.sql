@@ -1,4 +1,4 @@
-/*! SET storage_engine=INNODB */;
+/*! SET default_storage_engine=INNODB */;
 
 DROP TABLE IF EXISTS invoice_items;
 CREATE TABLE invoice_items (

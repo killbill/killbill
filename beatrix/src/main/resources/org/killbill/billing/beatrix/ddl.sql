@@ -1,4 +1,4 @@
-/*! SET storage_engine=INNODB */;
+/*! SET default_storage_engine=INNODB */;
 
 DROP TABLE IF EXISTS bus_ext_events;
 CREATE TABLE bus_ext_events (

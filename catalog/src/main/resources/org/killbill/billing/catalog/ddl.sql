@@ -1,4 +1,4 @@
-/*! SET storage_engine=INNODB */;
+/*! SET default_storage_engine=INNODB */;
 
 DROP TABLE IF EXISTS catalog_override_plan_definition;
 CREATE TABLE catalog_override_plan_definition (

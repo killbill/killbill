@@ -29,6 +29,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.ReadableInstant;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -36,6 +37,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogEntity;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
@@ -44,7 +46,6 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -52,13 +53,13 @@ import org.killbill.billing.subscription.alignment.PlanAligner;
 import org.killbill.billing.subscription.alignment.TimedPhase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.svcs.DefaultPlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
-import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
@@ -70,7 +71,6 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -118,41 +118,34 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public List<DefaultSubscriptionBaseWithAddOns> createPlansWithAddOns(final UUID accountId, final Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, final CallContext context) throws SubscriptionBaseApiException {
-        Map<UUID, List<SubscriptionBaseEvent>> eventsMap = new HashMap<UUID, List<SubscriptionBaseEvent>>();
-        List<List<DefaultSubscriptionBase>> subscriptionBaseAndAddOnsList = new ArrayList<List<DefaultSubscriptionBase>>();
-        List<DefaultSubscriptionBaseWithAddOns> allSubscriptions = new ArrayList<DefaultSubscriptionBaseWithAddOns>();
+    public List<SubscriptionBaseWithAddOns> createPlansWithAddOns(final UUID accountId, final Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, final CallContext context) throws SubscriptionBaseApiException {
+        final Map<UUID, List<SubscriptionBaseEvent>> eventsMap = new HashMap<UUID, List<SubscriptionBaseEvent>>();
+        final Collection<List<SubscriptionBase>> subscriptionBaseAndAddOnsList = new ArrayList<List<SubscriptionBase>>();
 
-        for (SubscriptionAndAddOnsSpecifier subscriptionAndAddOns : subscriptionsAndAddOns) {
-            List<DefaultSubscriptionBase> subscriptionBaseList = new ArrayList<DefaultSubscriptionBase>();
+        final List<SubscriptionBaseWithAddOns> allSubscriptions = new ArrayList<SubscriptionBaseWithAddOns>();
+        for (final SubscriptionAndAddOnsSpecifier subscriptionAndAddOns : subscriptionsAndAddOns) {
+            final List<SubscriptionBase> subscriptionBaseList = new ArrayList<SubscriptionBase>();
             createEvents(subscriptionAndAddOns.getSubscriptionSpecifiers(), context, eventsMap, subscriptionBaseList);
-
             subscriptionBaseAndAddOnsList.add(subscriptionBaseList);
 
-            DefaultSubscriptionBaseWithAddOns defaultSubscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(
-                    subscriptionAndAddOns.getBundleId(),
-                    ImmutableList.copyOf(Iterables.transform(subscriptionBaseList, new Function<DefaultSubscriptionBase, SubscriptionBase>() {
-                        @Override
-                        public SubscriptionBase apply(final DefaultSubscriptionBase input) {
-                            return input;
-                        }
-                    })),
-                    subscriptionAndAddOns.getEffectiveDate());
-            allSubscriptions.add(defaultSubscriptionBaseWithAddOns);
+            final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(subscriptionAndAddOns.getBundleId(),
+                                                                                                                subscriptionBaseList,
+                                                                                                                subscriptionAndAddOns.getEffectiveDate());
+            allSubscriptions.add(subscriptionBaseWithAddOns);
         }
 
         final InternalCallContext internalCallContext = createCallContextFromAccountId(accountId, context);
         dao.createSubscriptionsWithAddOns(allSubscriptions, eventsMap, internalCallContext);
 
-        for (List<DefaultSubscriptionBase> subscriptions : subscriptionBaseAndAddOnsList) {
-            final DefaultSubscriptionBase baseSubscription = findBaseSubscription(subscriptions);
+        for (final List<SubscriptionBase> subscriptions : subscriptionBaseAndAddOnsList) {
+            final SubscriptionBase baseSubscription = findBaseSubscription(subscriptions);
             rebuildTransitions(internalCallContext, subscriptions, baseSubscription);
         }
         return allSubscriptions;
     }
 
-    private void createEvents(final Iterable<SubscriptionSpecifier> subscriptions, final CallContext context, final Map<UUID, List<SubscriptionBaseEvent>> eventsMap, final List<DefaultSubscriptionBase> subscriptionBaseList) throws SubscriptionBaseApiException {
-        for (SubscriptionSpecifier subscription : subscriptions) {
+    private void createEvents(final Iterable<SubscriptionSpecifier> subscriptions, final CallContext context, final Map<UUID, List<SubscriptionBaseEvent>> eventsMap, final Collection<SubscriptionBase> subscriptionBaseList) throws SubscriptionBaseApiException {
+        for (final SubscriptionSpecifier subscription : subscriptions) {
             try {
                 final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(subscription.getBuilder(), this, clock);
                 final InternalCallContext internalCallContext = createCallContextFromBundleId(subscriptionBase.getBundleId(), context);
@@ -162,32 +155,33 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                                subscription.getEffectiveDate(), subscription.getProcessedDate(), internalCallContext);
                 eventsMap.put(subscriptionBase.getId(), events);
                 subscriptionBaseList.add(subscriptionBase);
-
             } catch (final CatalogApiException e) {
                 throw new SubscriptionBaseApiException(e);
             }
         }
     }
 
-    private void rebuildTransitions(final InternalCallContext internalCallContext, final List<DefaultSubscriptionBase> subscriptions, final DefaultSubscriptionBase baseSubscription) throws SubscriptionBaseApiException {
+    private void rebuildTransitions(final InternalCallContext internalCallContext, final Iterable<SubscriptionBase> subscriptions, final SubscriptionBase baseSubscription) throws SubscriptionBaseApiException {
         try {
-            baseSubscription.rebuildTransitions(dao.getEventsForSubscription(baseSubscription.getId(), internalCallContext),
-                                                catalogService.getFullCatalog(true, true, internalCallContext));
+            // Safe cast
+            ((DefaultSubscriptionBase) baseSubscription).rebuildTransitions(dao.getEventsForSubscription(baseSubscription.getId(), internalCallContext),
+                                                                            catalogService.getFullCatalog(true, true, internalCallContext));
 
-            for (final DefaultSubscriptionBase input : subscriptions) {
+            for (final SubscriptionBase input : subscriptions) {
                 if (input.getId().equals(baseSubscription.getId())) {
                     continue;
                 }
 
-                input.rebuildTransitions(dao.getEventsForSubscription(input.getId(), internalCallContext),
-                                         catalogService.getFullCatalog(true, true, internalCallContext));
+                // Safe cast
+                ((DefaultSubscriptionBase) input).rebuildTransitions(dao.getEventsForSubscription(input.getId(), internalCallContext),
+                                                                     catalogService.getFullCatalog(true, true, internalCallContext));
             }
-        } catch (CatalogApiException e) {
+        } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
     }
 
-    private DefaultSubscriptionBase findBaseSubscription(final List<DefaultSubscriptionBase> subscriptionBaseList) {
+    private SubscriptionBase findBaseSubscription(final Iterable<SubscriptionBase> subscriptionBaseList) {
         return Iterables.tryFind(subscriptionBaseList, new Predicate<SubscriptionBase>() {
             @Override
             public boolean apply(final SubscriptionBase subscription) {
@@ -400,7 +394,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final InternalTenantContext internalCallContext = createTenantContextFromBundleId(subscription.getBundleId(), context);
             final Plan currentPlan = subscription.getCurrentPlan();
 
-            final PriceList currentPriceList = subscription.getCurrentPriceList();
             final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getName(),
                                                                             subscription.getCurrentPhase().getPhaseType());
             planChangeResult = catalogService.getFullCatalog(true, true, internalCallContext).planChange(fromPlanPhase, toPlanPhase, effectiveDate);
@@ -459,7 +452,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 .setEventPriceList(realPriceList)
                 .setEffectiveDate(effectiveDate)
                 .setFromDisk(true);
-        final ApiEvent creationEvent = new ApiEventCreate(createBuilder);
+        final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
 
         final TimedPhase nextTimedPhase = curAndNextPhases[1];
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
@@ -478,7 +471,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                              final String newPriceList, final DateTime effectiveDate, final DateTime processedDate,
                                                              final boolean addCancellationAddOnForEventsIfRequired, final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
         final Collection<DefaultSubscriptionBase> addOnSubscriptionsToBeCancelled = new ArrayList<DefaultSubscriptionBase>();
-        final List<SubscriptionBaseEvent> addOnCancelEvents = new ArrayList<SubscriptionBaseEvent>();
+        final Collection<SubscriptionBaseEvent> addOnCancelEvents = new ArrayList<SubscriptionBaseEvent>();
 
         final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPriceList, effectiveDate, addCancellationAddOnForEventsIfRequired, addOnSubscriptionsToBeCancelled, addOnCancelEvents, internalTenantContext);
         changeEvents.addAll(addOnCancelEvents);
@@ -489,7 +482,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                               final String newPriceList, final DateTime effectiveDate,
                                                               final boolean addCancellationAddOnForEventsIfRequired,
                                                               final Collection<DefaultSubscriptionBase> addOnSubscriptionsToBeCancelled,
-                                                              final List<SubscriptionBaseEvent> addOnCancelEvents,
+                                                              final Collection<SubscriptionBaseEvent> addOnCancelEvents,
                                                               final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
         final TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList, effectiveDate, internalTenantContext);
 
@@ -550,7 +543,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         return subscriptionsToBeCancelled.size();
     }
 
-    private List<DefaultSubscriptionBase> computeAddOnsToCancel(final List<SubscriptionBaseEvent> cancelEvents, final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final InternalCallContext internalCallContext) throws CatalogApiException {
+    private List<DefaultSubscriptionBase> computeAddOnsToCancel(final Collection<SubscriptionBaseEvent> cancelEvents, final CatalogEntity baseProduct, final UUID bundleId, final DateTime effectiveDate, final InternalCallContext internalCallContext) throws CatalogApiException {
         // If cancellation/change occur in the future, there is nothing to do
         final DateTime now = clock.getUTCNow();
         if (effectiveDate.compareTo(now) > 0) {
@@ -560,7 +553,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         }
     }
 
-    private List<DefaultSubscriptionBase> addCancellationAddOnForEventsIfRequired(final List<SubscriptionBaseEvent> events, final Product baseProduct, final UUID bundleId,
+    private List<DefaultSubscriptionBase> addCancellationAddOnForEventsIfRequired(final Collection<SubscriptionBaseEvent> events, final CatalogEntity baseProduct, final UUID bundleId,
                                                                                   final DateTime effectiveDate, final InternalTenantContext internalTenantContext) throws CatalogApiException {
 
         final List<DefaultSubscriptionBase> subscriptionsToBeCancelled = new ArrayList<DefaultSubscriptionBase>();
@@ -592,7 +585,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         return subscriptionsToBeCancelled;
     }
 
-    private void validateEffectiveDate(final DefaultSubscriptionBase subscription, final DateTime effectiveDate) throws SubscriptionBaseApiException {
+    private void validateEffectiveDate(final SubscriptionBase subscription, final ReadableInstant effectiveDate) throws SubscriptionBaseApiException {
 
         final SubscriptionBaseTransition previousTransition = subscription.getPreviousTransition();
 

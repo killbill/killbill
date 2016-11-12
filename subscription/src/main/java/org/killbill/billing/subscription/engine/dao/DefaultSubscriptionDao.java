@@ -46,6 +46,7 @@ import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
 import org.killbill.billing.subscription.api.transfer.BundleTransferData;
 import org.killbill.billing.subscription.api.transfer.SubscriptionTransferData;
@@ -80,9 +81,11 @@ import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
@@ -339,12 +342,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         for (final UUID bundleId : subscriptionsFromAccountId.keySet()) {
 
             final List<SubscriptionBase> subscriptionsForBundle = subscriptionsFromAccountId.get(bundleId);
-            final Collection<UUID> subscriptionIdsForBundle = Collections2.transform(subscriptionsForBundle, new Function<SubscriptionBase, UUID>() {
-                @Override
-                public UUID apply(final SubscriptionBase input) {
-                    return input.getId();
-                }
-            });
             final Multimap<UUID, SubscriptionBaseEvent> eventsForSubscriptions = ArrayListMultimap.create();
 
             for (final SubscriptionBase cur : subscriptionsForBundle) {
@@ -434,7 +431,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<SubscriptionBaseEvent>() {
             @Override
             public SubscriptionBaseEvent inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                SubscriptionEventModelDao model = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getById(eventId.toString(), context);
+                final SubscriptionEventModelDao model = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getById(eventId.toString(), context);
                 return SubscriptionEventModelDao.toSubscriptionEvent(model);
             }
         });
@@ -477,13 +474,12 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             @Override
             public List<SubscriptionBaseEvent> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
-                final List<SubscriptionBaseEvent> events = new ArrayList<SubscriptionBaseEvent>(Collections2.transform(eventModels, new Function<SubscriptionEventModelDao, SubscriptionBaseEvent>() {
+                return new ArrayList<SubscriptionBaseEvent>(Collections2.transform(eventModels, new Function<SubscriptionEventModelDao, SubscriptionBaseEvent>() {
                     @Override
                     public SubscriptionBaseEvent apply(@Nullable final SubscriptionEventModelDao input) {
                         return SubscriptionEventModelDao.toSubscriptionEvent(input);
                     }
                 }));
-                return events;
             }
         });
     }
@@ -505,7 +501,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
                 }
                 // Notify the Bus of the latest requested change, if needed
-                if (initialEvents.size() > 0) {
+                if (!initialEvents.isEmpty()) {
                     notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, initialEvents.get(initialEvents.size() - 1), SubscriptionBaseTransitionType.CREATE, context);
                 }
                 return null;
@@ -514,33 +510,31 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public void createSubscriptionsWithAddOns(final List<DefaultSubscriptionBaseWithAddOns> subscriptions, final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final InternalCallContext context) {
+    public void createSubscriptionsWithAddOns(final List<SubscriptionBaseWithAddOns> subscriptions, final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
                 final SubscriptionEventSqlDao eventsDaoFromSameTransaction = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-                for (DefaultSubscriptionBaseWithAddOns subscription : subscriptions) {
-                    List<DefaultSubscriptionBase> currentSubscriptionBaseList = ImmutableList.copyOf(Iterables.transform(subscription.getSubscriptionBaseList(), new Function<SubscriptionBase, DefaultSubscriptionBase>() {
-                        @Override
-                        public DefaultSubscriptionBase apply(final SubscriptionBase input) {
-                            return (DefaultSubscriptionBase) input;
-                        }
-                    }));
-                    for (DefaultSubscriptionBase subscriptionBase : currentSubscriptionBaseList) {
-                        transactional.create(new SubscriptionModelDao(subscriptionBase), context);
 
-                        final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(subscriptionBase.getId());
+                for (final SubscriptionBaseWithAddOns subscription : subscriptions) {
+                    for (final SubscriptionBase subscriptionBase : subscription.getSubscriptionBaseList()) {
+                        // Safe cast
+                        final DefaultSubscriptionBase defaultSubscriptionBase = (DefaultSubscriptionBase) subscriptionBase;
+
+                        transactional.create(new SubscriptionModelDao(defaultSubscriptionBase), context);
+
+                        final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(defaultSubscriptionBase.getId());
                         for (final SubscriptionBaseEvent cur : initialEvents) {
                             eventsDaoFromSameTransaction.create(new SubscriptionEventModelDao(cur), context);
 
                             final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
-                            recordBusOrFutureNotificationFromTransaction(subscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
-
+                            recordBusOrFutureNotificationFromTransaction(defaultSubscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
                         }
+
                         // Notify the Bus of the latest requested change, if needed
-                        if (initialEvents.size() > 0) {
-                            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscriptionBase, initialEvents.get(initialEvents.size() - 1), SubscriptionBaseTransitionType.CREATE, context);
+                        if (!initialEvents.isEmpty()) {
+                            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, defaultSubscriptionBase, initialEvents.get(initialEvents.size() - 1), SubscriptionBaseTransitionType.CREATE, context);
                         }
                     }
                 }
@@ -653,7 +647,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         });
     }
 
-    private List<SubscriptionBaseEvent> filterSubscriptionBaseEvents(final List<SubscriptionEventModelDao> models) {
+    private List<SubscriptionBaseEvent> filterSubscriptionBaseEvents(final Collection<SubscriptionEventModelDao> models) {
         final Collection<SubscriptionEventModelDao> filteredModels = Collections2.filter(models, new Predicate<SubscriptionEventModelDao>() {
             @Override
             public boolean apply(@Nullable final SubscriptionEventModelDao input) {
@@ -738,7 +732,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         return futureEvent;
     }
 
-    private void unactivateEventFromTransaction(final SubscriptionEventModelDao event, final EntitySqlDaoWrapperFactory dao, final InternalCallContext context) {
+    private void unactivateEventFromTransaction(final Entity event, final EntitySqlDaoWrapperFactory dao, final InternalCallContext context) {
         if (event != null) {
             final String eventId = event.getId().toString();
             dao.become(SubscriptionEventSqlDao.class).unactiveEvent(eventId, context);
@@ -774,15 +768,15 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     private List<SubscriptionBase> buildBundleSubscriptions(final List<SubscriptionBase> input, @Nullable final Multimap<UUID, SubscriptionBaseEvent> eventsForSubscription,
-                                                            @Nullable List<SubscriptionBaseEvent> dryRunEvents, final InternalTenantContext context) throws CatalogApiException {
-        if (input == null || input.size() == 0) {
+                                                            @Nullable final Collection<SubscriptionBaseEvent> dryRunEvents, final InternalTenantContext context) throws CatalogApiException {
+        if (input == null || input.isEmpty()) {
             return Collections.emptyList();
         }
 
         // Make sure BasePlan -- if exists-- is first
         Collections.sort(input, DefaultSubscriptionInternalApi.SUBSCRIPTIONS_COMPARATOR);
 
-        final List<ApiEventChange> baseChangeEvents = new LinkedList<ApiEventChange>();
+        final Collection<ApiEventChange> baseChangeEvents = new LinkedList<ApiEventChange>();
         ApiEventCancel baseCancellationEvent = null;
         final List<SubscriptionBase> result = new ArrayList<SubscriptionBase>(input.size());
         for (final SubscriptionBase cur : input) {
@@ -856,11 +850,11 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         return result;
     }
 
-    private void mergeDryRunEvents(final UUID subscriptionId, final List<SubscriptionBaseEvent> events, @Nullable List<SubscriptionBaseEvent> dryRunEvents) {
+    private void mergeDryRunEvents(final UUID subscriptionId, final List<SubscriptionBaseEvent> events, @Nullable final Collection<SubscriptionBaseEvent> dryRunEvents) {
         if (dryRunEvents == null || dryRunEvents.isEmpty()) {
             return;
         }
-        for (SubscriptionBaseEvent curDryRun : dryRunEvents) {
+        for (final SubscriptionBaseEvent curDryRun : dryRunEvents) {
             if (curDryRun.getSubscriptionId() != null && curDryRun.getSubscriptionId().equals(subscriptionId)) {
 
                 //boolean inserted = false;
@@ -951,9 +945,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
     }
 
-    private DefaultSubscriptionBase createSubscriptionForInternalUse(final SubscriptionBase shellSubscription, final List<SubscriptionBaseEvent> events, final InternalTenantContext context) throws CatalogApiException {
+    private SubscriptionBase createSubscriptionForInternalUse(final SubscriptionBase shellSubscription, final List<SubscriptionBaseEvent> events, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase result = new DefaultSubscriptionBase(new SubscriptionBuilder(((DefaultSubscriptionBase) shellSubscription)), null, clock);
-        if (events.size() > 0) {
+        if (!events.isEmpty()) {
             final Catalog fullCatalog = catalogService.getFullCatalog(true, true, context);
             result.rebuildTransitions(events, fullCatalog);
         }
@@ -1029,14 +1023,14 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultSubscriptionBaseService.SUBSCRIPTION_SERVICE_NAME,
                                                                                                            DefaultSubscriptionBaseService.NOTIFICATION_QUEUE_NAME);
             subscriptionEventQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), effectiveDate, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
-        } catch (NoSuchNotificationQueue e) {
+        } catch (final NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void transferBundleDataFromTransaction(final BundleTransferData bundleTransferData, final SubscriptionEventSqlDao transactional,
+    private void transferBundleDataFromTransaction(final BundleTransferData bundleTransferData, final EntitySqlDao transactional,
                                                    final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException {
 
         final SubscriptionSqlDao transSubDao = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
@@ -1045,7 +1039,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         final DefaultSubscriptionBaseBundle bundleData = bundleTransferData.getData();
 
         final List<SubscriptionBundleModelDao> existingBundleModels = transBundleDao.getBundlesFromAccountAndKey(bundleData.getAccountId().toString(), bundleData.getExternalKey(), context);
-        if (existingBundleModels.size() != 0) {
+        if (!existingBundleModels.isEmpty()) {
             log.warn("Bundle already exists for accountId='{}', bundleExternalKey='{}'", bundleData.getAccountId(), bundleData.getExternalKey());
             return;
         }
@@ -1072,7 +1066,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     //
     // Creates a copy of the existing subscriptions whose 'transitions' will reflect the new event
     //
-    private DefaultSubscriptionBase createSubscriptionWithNewEvent(final DefaultSubscriptionBase subscription, SubscriptionBaseEvent newEvent, final InternalTenantContext context) throws CatalogApiException {
+    private DefaultSubscriptionBase createSubscriptionWithNewEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent newEvent, final InternalTenantContext context) throws CatalogApiException {
 
         final DefaultSubscriptionBase subscriptionWithNewEvent = new DefaultSubscriptionBase(subscription, null, clock);
         final List<SubscriptionBaseEvent> allEvents = new LinkedList<SubscriptionBaseEvent>();

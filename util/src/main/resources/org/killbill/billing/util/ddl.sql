@@ -1,4 +1,4 @@
-/*! SET storage_engine=INNODB */;
+/*! SET default_storage_engine=INNODB */;
 
 DROP TABLE IF EXISTS custom_fields;
 CREATE TABLE custom_fields (
@@ -235,6 +235,7 @@ CREATE TABLE bus_events_history (
 drop table if exists sessions;
 create table sessions (
   record_id serial unique
+, id varchar(36) NOT NULL
 , start_timestamp datetime not null
 , last_access_time datetime default null
 , timeout int
@@ -242,6 +243,7 @@ create table sessions (
 , session_data mediumblob default null
 , primary key(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE UNIQUE INDEX sessions_id ON sessions(id);
 
 
 DROP TABLE IF EXISTS users;
