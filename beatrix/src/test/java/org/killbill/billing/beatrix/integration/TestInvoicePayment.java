@@ -73,8 +73,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testCancellationEOTWithInvoiceItemAdjustmentsOnInvoiceWithMultipleItems() throws Exception {
         final int billingDay = 1;
-        Boolean foo = true;
-        System.out.println(Boolean.TRUE.equals(foo) ? "trye" : false);
+
         final DateTime initialCreationDate = new DateTime(2016, 9, 1, 0, 3, 42, 0, testTimeZone);
 
         // set clock to the initial start date
