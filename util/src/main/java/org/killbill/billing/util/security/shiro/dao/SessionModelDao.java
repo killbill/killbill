@@ -33,6 +33,7 @@ public class SessionModelDao {
     private final Serializer<Map> serializer = new DefaultSerializer<Map>();
 
     private Long recordId;
+    private String id;
     private DateTime startTimestamp;
     private DateTime lastAccessTime;
     private long timeout;
@@ -42,7 +43,7 @@ public class SessionModelDao {
     public SessionModelDao() { /* For the DAO mapper */ }
 
     public SessionModelDao(final Session session) {
-        this.recordId = session.getId() == null ? null : Long.valueOf(session.getId().toString());
+        this.id = session.getId() == null ? null : session.getId().toString();
         this.startTimestamp = new DateTime(session.getStartTimestamp(), DateTimeZone.UTC);
         this.lastAccessTime = new DateTime(session.getLastAccessTime(), DateTimeZone.UTC);
         this.timeout = session.getTimeout();
@@ -56,11 +57,11 @@ public class SessionModelDao {
 
     public Session toSimpleSession() throws IOException {
         final SimpleSession simpleSession = new SimpleSession();
-        if (recordId != null) {
+        if (id != null) {
             // Make sure to use a String here! It will be used as-is as the key in Ehcache.
-            // When retrieving the session, the sessionId will be a String: if a Long is used,
-            // the lookup will trigger a miss. See https://github.com/killbill/killbill/issues/299
-            simpleSession.setId(recordId.toString());
+            // When retrieving the session, the sessionId will be a String
+            // See https://github.com/killbill/killbill/issues/299
+            simpleSession.setId(id);
         }
         simpleSession.setStartTimestamp(startTimestamp.toDate());
         simpleSession.setLastAccessTime(lastAccessTime.toDate());
@@ -76,6 +77,10 @@ public class SessionModelDao {
 
     public Long getRecordId() {
         return recordId;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public DateTime getStartTimestamp() {
@@ -102,6 +107,7 @@ public class SessionModelDao {
     public String toString() {
         final StringBuilder sb = new StringBuilder("SessionModelDao{");
         sb.append("recordId=").append(recordId);
+        sb.append(", id='").append(id).append('\'');
         sb.append(", startTimestamp=").append(startTimestamp);
         sb.append(", lastAccessTime=").append(lastAccessTime);
         sb.append(", timeout=").append(timeout);
@@ -125,33 +131,34 @@ public class SessionModelDao {
         if (timeout != that.timeout) {
             return false;
         }
-        if (host != null ? !host.equals(that.host) : that.host != null) {
-            return false;
-        }
-        if (lastAccessTime != null ? !lastAccessTime.equals(that.lastAccessTime) : that.lastAccessTime != null) {
-            return false;
-        }
         if (recordId != null ? !recordId.equals(that.recordId) : that.recordId != null) {
             return false;
         }
-        if (!Arrays.equals(sessionData, that.sessionData)) {
+        if (id != null ? !id.equals(that.id) : that.id != null) {
             return false;
         }
         if (startTimestamp != null ? !startTimestamp.equals(that.startTimestamp) : that.startTimestamp != null) {
             return false;
         }
+        if (lastAccessTime != null ? !lastAccessTime.equals(that.lastAccessTime) : that.lastAccessTime != null) {
+            return false;
+        }
+        if (host != null ? !host.equals(that.host) : that.host != null) {
+            return false;
+        }
+        return Arrays.equals(sessionData, that.sessionData);
 
-        return true;
     }
 
     @Override
     public int hashCode() {
         int result = recordId != null ? recordId.hashCode() : 0;
+        result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (startTimestamp != null ? startTimestamp.hashCode() : 0);
         result = 31 * result + (lastAccessTime != null ? lastAccessTime.hashCode() : 0);
         result = 31 * result + (int) (timeout ^ (timeout >>> 32));
         result = 31 * result + (host != null ? host.hashCode() : 0);
-        result = 31 * result + (sessionData != null ? Arrays.hashCode(sessionData) : 0);
+        result = 31 * result + Arrays.hashCode(sessionData);
         return result;
     }
 

@@ -3,25 +3,28 @@ group JDBCSessionSqlDao;
 read() ::= <<
 select
   record_id
+, id
 , start_timestamp
 , last_access_time
 , timeout
 , host
 , session_data
 from sessions
-where record_id = :recordId
+where id = :id
 ;
 >>
 
 create() ::= <<
 insert into sessions (
-  start_timestamp
+  id
+, start_timestamp
 , last_access_time
 , timeout
 , host
 , session_data
 ) values (
-  :startTimestamp
+  :id
+, :startTimestamp
 , :lastAccessTime
 , :timeout
 , :host
@@ -36,16 +39,12 @@ update sessions set
 , timeout = :timeout
 , host = :host
 , session_data = :sessionData
-where record_id = :recordId
+where id = :id
 ;
 >>
 
 delete() ::= <<
 delete from sessions
-where record_id = :recordId
+where id = :id
 ;
->>
-
-getLastInsertId() ::= <<
-select LAST_INSERT_ID();
 >>
