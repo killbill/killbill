@@ -22,10 +22,10 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
+import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
@@ -64,6 +64,22 @@ public abstract class EntitlementLoggingHelper {
                 logLine.append(", billDate='")
                        .append(billingDate)
                        .append("'");
+            }
+            log.info(logLine.toString());
+        }
+    }
+
+    public static void logCreateEntitlementsWithAOs(final Logger log, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementSpecifiersWithAddOns) {
+        if (log.isInfoEnabled()) {
+            final StringBuilder logLine = new StringBuilder("Create Entitlements with AddOns: ");
+
+            if (baseEntitlementSpecifiersWithAddOns != null && baseEntitlementSpecifiersWithAddOns.iterator().hasNext()) {
+                for (BaseEntitlementWithAddOnsSpecifier cur : baseEntitlementSpecifiersWithAddOns) {
+                    logCreateEntitlementWithAOs(log, cur.getExternalKey(),
+                                                cur.getEntitlementSpecifier(),
+                                                cur.getEntitlementEffectiveDate(),
+                                                cur.getBillingEffectiveDate());
+                }
             }
             log.info(logLine.toString());
         }

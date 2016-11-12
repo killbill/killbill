@@ -609,7 +609,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     private URI getPaymentLocation(final UriInfo uriInfo, final Payment payment) {
-        return uriBuilder.buildLocation(uriInfo, PaymentResource.class, "getPayment", payment.getId());
+        return uriBuilder.buildLocation(uriInfo, PaymentResource.class, "getPayment", payment.getId(), null);
     }
 
     private PaymentTransaction findCreatedTransaction(final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey) {
