@@ -86,12 +86,14 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
@@ -148,12 +150,14 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Subscription not found")})
     public Response getEntitlement(@PathParam("subscriptionId") final String subscriptionId,
+                                   @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
         final TenantContext context = this.context.createContext(request);
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(uuid, context);
         final Account account = accountUserApi.getAccountById(subscription.getAccountId(), context);
-        final SubscriptionJson json = new SubscriptionJson(subscription, account.getCurrency(), null);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(subscription.getAccountId(), auditMode.getLevel(), context);
+        final SubscriptionJson json = new SubscriptionJson(subscription, account.getCurrency(), accountAuditLogs);
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -596,7 +600,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 if (operationResponse.getStatus() != Status.OK.getStatusCode()) {
                     return operationResponse;
                 }
-                return getEntitlement(subscriptionId, request);
+                return getEntitlement(subscriptionId, new AuditMode(AuditLevel.NONE.toString()), request);
             }
         };
 
