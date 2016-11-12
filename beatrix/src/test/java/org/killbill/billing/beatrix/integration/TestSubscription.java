@@ -22,12 +22,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -35,6 +33,8 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
+import org.killbill.billing.entitlement.api.DefaultBaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -42,8 +42,6 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
-import org.killbill.billing.entitlement.api.Subscription;
-import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
@@ -56,7 +54,6 @@ import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestSubscription extends TestIntegrationBase {
 
@@ -192,7 +189,7 @@ public class TestSubscription extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testCreateSubscriptionWithAddOns() throws Exception {
+    public void testCreateMultipleSubscriptionsWithAddOns() throws Exception {
         final LocalDate initialDate = new LocalDate(2015, 10, 1);
         clock.setDay(initialDate);
 
@@ -202,29 +199,51 @@ public class TestSubscription extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
-        final String externalKey = "baseExternalKey";
-        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
-        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
-        EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2, null);
+        final String externalKeyA = "baseExternalKeyAAA";
+        final EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
+        final EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
+        final EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2, null);
 
-        final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
-        specifierList.add(baseEntitlementSpecifier);
-        specifierList.add(addOnEntitlementSpecifier1);
-        specifierList.add(addOnEntitlementSpecifier2);
+        final List<EntitlementSpecifier> specifierListA = new ArrayList<EntitlementSpecifier>();
+        specifierListA.add(baseEntitlementSpecifier);
+        specifierListA.add(addOnEntitlementSpecifier1);
+        specifierListA.add(addOnEntitlementSpecifier2);
 
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        final String externalKeyB = "baseExternalKeyBBB";
+
+        final List<EntitlementSpecifier> specifierListB = new ArrayList<EntitlementSpecifier>();
+        specifierListB.add(baseEntitlementSpecifier);
+        specifierListB.add(addOnEntitlementSpecifier1);
+        specifierListB.add(addOnEntitlementSpecifier2);
+
+        final List<BaseEntitlementWithAddOnsSpecifier> entitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+        final BaseEntitlementWithAddOnsSpecifier cartSpecifierA = new DefaultBaseEntitlementWithAddOnsSpecifier(null, externalKeyA, specifierListA, null, null, false);
+        final BaseEntitlementWithAddOnsSpecifier cartSpecifierB = new DefaultBaseEntitlementWithAddOnsSpecifier(null, externalKeyB, specifierListB, null, null, false);
+        entitlementWithAddOnsSpecifierList.add(cartSpecifierA);
+        entitlementWithAddOnsSpecifierList.add(cartSpecifierB);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK,
+                                      NextEvent.CREATE, NextEvent.BLOCK,
+                                      NextEvent.CREATE, NextEvent.BLOCK,
+                                      NextEvent.CREATE, NextEvent.BLOCK,
+                                      NextEvent.CREATE, NextEvent.BLOCK,
+                                      NextEvent.CREATE, NextEvent.BLOCK,
+                                      NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE,
+                                      NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE,
+                                      NextEvent.NULL_INVOICE,
+                                      NextEvent.INVOICE,
+                                      NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT
+                                     );
+        final List<Entitlement> allEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), entitlementWithAddOnsSpecifierList, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         checkNoMoreInvoiceToGenerate(account);
 
-        assertNotNull(entitlement);
+        assertNotNull(allEntitlements);
+        assertEquals(allEntitlements.size(), 6);
 
-        final List<Entitlement> allEntitlementsForBundle = entitlementApi.getAllEntitlementsForBundle(entitlement.getBundleId(), callContext);
-        assertTrue(allEntitlementsForBundle.size() == 3);
-
-        final Entitlement baseEntitlement = allEntitlementsForBundle.get(0);
-        final Entitlement addOnEntitlement1 = allEntitlementsForBundle.get(1);
-        final Entitlement addOnEntitlement2 = allEntitlementsForBundle.get(2);
+        final Entitlement baseEntitlement = allEntitlements.get(0);
+        final Entitlement addOnEntitlement1 = allEntitlements.get(1);
+        final Entitlement addOnEntitlement2 = allEntitlements.get(2);
 
         assertEquals(baseEntitlement.getLastActiveProduct().getName(), "Shotgun");
         assertEquals(baseEntitlement.getLastActiveProductCategory(), ProductCategory.BASE);
@@ -236,10 +255,13 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(addOnEntitlement2.getLastActiveProductCategory(), ProductCategory.ADD_ON);
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
-        assertTrue(invoices.size() == 1); // ONLY ONE INVOICE
-        assertTrue(invoices.get(0).getInvoiceItems().size() == 3);
+        assertEquals(invoices.size(), 1); // ONLY ONE INVOICE
+        assertEquals(invoices.get(0).getInvoiceItems().size(), 6);
 
         final ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("387.05")), // amount=387.05, rate=399.95 -> Telescopic-Scope
+                new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("967.69")), // amount=967.69, rate=999.95 -> Laser-Scope
+                new ExpectedInvoiceItemCheck(initialDate, null, InvoiceItemType.FIXED, new BigDecimal("0")), // Shotgun
                 new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("387.05")), // amount=387.05, rate=399.95 -> Telescopic-Scope
                 new ExpectedInvoiceItemCheck(initialDate, new LocalDate(2015, 10, 31), InvoiceItemType.RECURRING, new BigDecimal("967.69")), // amount=967.69, rate=999.95 -> Laser-Scope
                 new ExpectedInvoiceItemCheck(initialDate, null, InvoiceItemType.FIXED, new BigDecimal("0"))); // Shotgun
@@ -247,36 +269,70 @@ public class TestSubscription extends TestIntegrationBase {
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
     }
 
-    @Test(groups = "slow")
-    public void testCreateSubscriptionWithAddOnsWithLimitException() throws Exception {
+    @Test(groups = "slow", expectedExceptions = EntitlementApiException.class, expectedExceptionsMessageRegExp = "Missing Base Subscription.")
+    public void testCreateMultipleSubscriptionsWithoutBase() throws Exception {
         final LocalDate initialDate = new LocalDate(2015, 10, 1);
         clock.setDay(initialDate);
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final PlanPhaseSpecifier addOnSpec3 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
-        final String externalKey = "baseExternalKey";
-        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
-        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
-        EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2, null);
-        EntitlementSpecifier addOnEntitlementSpecifier3 = new DefaultEntitlementSpecifier(addOnSpec3, null);
+        final String externalKeyA = "baseExternalKeyAAA";
+        final EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
+        final EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
+        final EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2, null);
 
-        final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
-        specifierList.add(baseEntitlementSpecifier);
-        specifierList.add(addOnEntitlementSpecifier1);
-        specifierList.add(addOnEntitlementSpecifier2);
-        specifierList.add(addOnEntitlementSpecifier3);
+        final List<EntitlementSpecifier> specifierListA = new ArrayList<EntitlementSpecifier>();
+        specifierListA.add(baseEntitlementSpecifier);
+        specifierListA.add(addOnEntitlementSpecifier1);
+        specifierListA.add(addOnEntitlementSpecifier2);
 
-        // Trying to add the third add_on with the same plan should throw an exception (the limit is 2 for this plan)
-        try {
-            entitlementApi.createBaseEntitlementWithAddOns(account.getId(), externalKey, specifierList, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
-        } catch (final EntitlementApiException e) {
-            assertEquals(e.getCode(), ErrorCode.SUB_CREATE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE.getCode());
-        }
+        final String externalKeyB = "baseExternalKeyBBB";
+        final List<EntitlementSpecifier> specifierListB = new ArrayList<EntitlementSpecifier>();
+        specifierListB.add(addOnEntitlementSpecifier1);
+        specifierListB.add(addOnEntitlementSpecifier2);
+
+        final List<BaseEntitlementWithAddOnsSpecifier> entitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+        final BaseEntitlementWithAddOnsSpecifier cartSpecifierA = new DefaultBaseEntitlementWithAddOnsSpecifier(null, externalKeyA, specifierListA, null, null, false);
+        final BaseEntitlementWithAddOnsSpecifier cartSpecifierB = new DefaultBaseEntitlementWithAddOnsSpecifier(null, externalKeyB, specifierListB, null, null, false);
+        entitlementWithAddOnsSpecifierList.add(cartSpecifierA);
+        entitlementWithAddOnsSpecifierList.add(cartSpecifierB);
+
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), entitlementWithAddOnsSpecifierList, ImmutableList.<PluginProperty>of(), callContext);
+    }
+
+    @Test(groups = "slow", expectedExceptions = EntitlementApiException.class,
+            expectedExceptionsMessageRegExp = "Can't create AddOn laser-scope-monthly, the number of Subscriptions allowed by this Plan and Bundle has reached its limit")
+    public void testCreateMultipleSubscriptionsExceedLimit() throws Exception {
+        final LocalDate initialDate = new LocalDate(2015, 10, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        final String externalKeyA = "baseExternalKeyAAA";
+        final EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
+        final EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
+        final EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2, null);
+
+        final List<EntitlementSpecifier> specifierListA = new ArrayList<EntitlementSpecifier>();
+        specifierListA.add(baseEntitlementSpecifier);
+        specifierListA.add(addOnEntitlementSpecifier1);
+        specifierListA.add(addOnEntitlementSpecifier2);
+        specifierListA.add(addOnEntitlementSpecifier2);
+        specifierListA.add(addOnEntitlementSpecifier2);
+
+        final List<BaseEntitlementWithAddOnsSpecifier> entitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+        final BaseEntitlementWithAddOnsSpecifier cartSpecifierA = new DefaultBaseEntitlementWithAddOnsSpecifier(null, externalKeyA, specifierListA, null, null, false);
+        entitlementWithAddOnsSpecifierList.add(cartSpecifierA);
+
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), entitlementWithAddOnsSpecifierList, ImmutableList.<PluginProperty>of(), callContext);
     }
 
     @Test(groups = "slow")

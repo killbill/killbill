@@ -46,15 +46,29 @@ public class JaxrsUriBuilder {
 
     public Response buildResponse(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
                                   final String getMethodName, final Object objectId) {
-        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId);
+        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId, null);
+        return !jaxrsConfig.isJaxrsLocationFullUrl() ?
+               Response.status(Response.Status.CREATED).header("Location", location.getPath()).build() :
+               Response.created(location).build();
+    }
+
+    public Response buildResponse(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
+                                  final String getMethodName, final Object objectId, final Map<String, String> params) {
+        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId, params);
         return !jaxrsConfig.isJaxrsLocationFullUrl() ?
                Response.status(Response.Status.CREATED).header("Location", location.getPath()).build() :
                Response.created(location).build();
     }
 
     public URI buildLocation(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
-                             final String getMethodName, final Object objectId) {
+                             final String getMethodName, final Object objectId, final Map<String, String> params) {
         final UriBuilder uriBuilder = getUriBuilder(uriInfo.getBaseUri().getPath(), theClass, getMethodName);
+
+        if (null != params && !params.isEmpty()) {
+            for (final String key : params.keySet()) {
+                uriBuilder.queryParam(key, params.get(key));
+            }
+        }
 
         if (jaxrsConfig.isJaxrsLocationFullUrl()) {
             uriBuilder.scheme(uriInfo.getAbsolutePath().getScheme())

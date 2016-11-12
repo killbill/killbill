@@ -43,6 +43,7 @@ import org.killbill.billing.subscription.api.transfer.TransferCancelData;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -68,6 +69,9 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> implements SubscriptionDao {
@@ -220,20 +224,27 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         mockNonEntityDao.addTenantRecordIdMapping(updatedSubscription.getId(), context);
     }
 
-    @Override
-    public void createSubscriptionWithAddOns(final List<DefaultSubscriptionBase> subscriptions,
-                                             final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap,
-                                             final InternalCallContext context) {
+    public void createSubscriptionsWithAddOns(final List<DefaultSubscriptionBaseWithAddOns> subscriptions,
+                                              final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap,
+                                              final InternalCallContext context) {
         synchronized (events) {
-            for (DefaultSubscriptionBase subscription : subscriptions) {
-                final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(subscription.getId());
-                events.addAll(initialEvents);
-                for (final SubscriptionBaseEvent cur : initialEvents) {
-                    recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
+            for (DefaultSubscriptionBaseWithAddOns subscription : subscriptions) {
+                List<DefaultSubscriptionBase> currentSubscriptionBaseList = ImmutableList.copyOf(Iterables.transform(subscription.getSubscriptionBaseList(), new Function<SubscriptionBase, DefaultSubscriptionBase>() {
+                    @Override
+                    public DefaultSubscriptionBase apply(final SubscriptionBase input) {
+                        return (DefaultSubscriptionBase) input;
+                    }
+                }));
+                for (DefaultSubscriptionBase subscriptionBase : currentSubscriptionBaseList) {
+                    final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(subscriptionBase.getId());
+                    events.addAll(initialEvents);
+                    for (final SubscriptionBaseEvent cur : initialEvents) {
+                        recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
+                    }
+                    final SubscriptionBase updatedSubscription = buildSubscription(subscriptionBase, context);
+                    this.subscriptions.add(updatedSubscription);
+                    mockNonEntityDao.addTenantRecordIdMapping(updatedSubscription.getId(), context);
                 }
-                final SubscriptionBase updatedSubscription = buildSubscription(subscription, context);
-                this.subscriptions.add(updatedSubscription);
-                mockNonEntityDao.addTenantRecordIdMapping(updatedSubscription.getId(), context);
             }
         }
     }
