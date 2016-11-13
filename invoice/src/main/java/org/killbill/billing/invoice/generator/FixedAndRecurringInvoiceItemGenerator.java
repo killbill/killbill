@@ -51,10 +51,12 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
@@ -69,9 +71,12 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
     private final InvoiceConfig config;
 
+    private final Clock clock;
+
     @Inject
-    public FixedAndRecurringInvoiceItemGenerator(final InvoiceConfig config) {
+    public FixedAndRecurringInvoiceItemGenerator(final InvoiceConfig config, final Clock clock) {
         this.config = config;
+        this.clock = clock;
     }
 
     public List<InvoiceItem> generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
@@ -431,7 +436,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             return null;
         }
 
-        final LocalDate createdDay = internalCallContext.toLocalDate(invoiceItem.getCreatedDate());
+        final LocalDate createdDay = internalCallContext.toLocalDate(MoreObjects.firstNonNull(invoiceItem.getCreatedDate(), clock.getUTCNow()));
         createdItemsPerDayPerSubscription.put(subscriptionId, createdDay);
         return createdDay;
     }
