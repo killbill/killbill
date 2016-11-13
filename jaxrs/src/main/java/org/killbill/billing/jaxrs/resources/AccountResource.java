@@ -267,6 +267,7 @@ public class AccountResource extends JaxRsResourceBase {
     public Response getAccountBundles(@PathParam("accountId") final String accountId,
                                       @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                       @QueryParam(QUERY_BUNDLES_FILTER) final String bundlesFilter,
+                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionApiException {
         final TenantContext tenantContext = context.createContext(request);
 
@@ -277,6 +278,10 @@ public class AccountResource extends JaxRsResourceBase {
                                                  subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext) :
                                                  subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext);
 
+
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
+
+
         boolean filter = (null != bundlesFilter && !bundlesFilter.isEmpty());
 
         final Collection<BundleJson> result = Collections2.transform(
@@ -284,7 +289,7 @@ public class AccountResource extends JaxRsResourceBase {
             @Override
             public BundleJson apply(final SubscriptionBundle input) {
                 try {
-                    return new BundleJson(input, account.getCurrency(), null);
+                    return new BundleJson(input, account.getCurrency(), accountAuditLogs);
                 } catch (final CatalogApiException e) {
                     // Not the cleanest thing, but guava Api don't allow throw..
                     throw new RuntimeException(e);
