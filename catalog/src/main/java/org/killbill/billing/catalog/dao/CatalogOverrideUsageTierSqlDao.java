@@ -17,7 +17,7 @@
 
 package org.killbill.billing.catalog.dao;
 
-import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -31,26 +31,20 @@ import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 @EntitySqlDaoStringTemplate
-public interface CatalogOverridePhaseDefinitionSqlDao extends Transactional<CatalogOverridePhaseDefinitionSqlDao>, CloseMe {
+public interface CatalogOverrideUsageTierSqlDao extends Transactional<CatalogOverrideUsageTierSqlDao>, CloseMe {
 
     @SqlUpdate
-    public void create(@SmartBindBean final CatalogOverridePhaseDefinitionModelDao entity,
+    public void create(@SmartBindBean final CatalogOverrideUsageTierModelDao entity,
                        @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
-    public CatalogOverridePhaseDefinitionModelDao getByRecordId(@Bind("recordId") final Long recordId,
-                                                                @SmartBindBean final InternalTenantContext context);
+    public CatalogOverrideUsageTierModelDao getByRecordId(@Bind("recordId") final Long recordId,
+                                                          @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<CatalogOverridePhaseDefinitionModelDao> getByAttributes(@Bind("parentPhaseName") String parentPhaseName,
-                                                                  @Bind("currency") String currency,
-                                                                  @Bind("fixedPrice") BigDecimal fixedPrice,
-                                                                  @Bind("recurringPrice") BigDecimal recurringPrice,
-                                                                  @SmartBindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public List<CatalogOverridePhaseDefinitionModelDao> getOverriddenPlanPhases(@Bind("targetPlanDefRecordId") Long targetPlanDefRecordId,
-                                                                                @SmartBindBean final InternalTenantContext context);
+    public List<Long> getTargetUsageDefinition(@UsageTierKeysCollectionBinder final Collection<String> concatTierNumAndTierDefRecordId,
+                                               @Bind("targetCount") final Integer targetCount,
+                                               @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getLastInsertId();

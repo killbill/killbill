@@ -103,7 +103,7 @@ public class TestCatalogOverridePhaseDefinitionSqlDao extends CatalogTestSuiteWi
             }
 
             private void checkRehydrated(final CatalogOverridePhaseDefinitionModelDao obj, final CatalogOverridePhaseDefinitionSqlDao sqlDao) {
-                final CatalogOverridePhaseDefinitionModelDao rehydrated = sqlDao.getByAttributes(obj.getParentPhaseName(), obj.getCurrency(), obj.getFixedPrice(), obj.getRecurringPrice(), internalCallContext);
+                final CatalogOverridePhaseDefinitionModelDao rehydrated = sqlDao.getByAttributes(obj.getParentPhaseName(), obj.getCurrency(), obj.getFixedPrice(), obj.getRecurringPrice(), internalCallContext).get(0);
                 assertEquals(rehydrated.getParentPhaseName(), obj.getParentPhaseName());
                 if (obj.getFixedPrice() != null) {
                     assertEquals(rehydrated.getFixedPrice().compareTo(obj.getFixedPrice()), 0);

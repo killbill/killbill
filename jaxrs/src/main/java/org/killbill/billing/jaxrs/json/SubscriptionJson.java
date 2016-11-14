@@ -389,7 +389,7 @@ public class SubscriptionJson extends JsonBase {
                 for (final PlanPhase cur : plan.getAllPhases()) {
                     final BigDecimal fixedPrice = cur.getFixed() != null ? cur.getFixed().getPrice().getPrice(currency) : null;
                     final BigDecimal recurringPrice = cur.getRecurring() != null ? cur.getRecurring().getRecurringPrice().getPrice(currency) : null;
-                    final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(cur.getName(), cur.getPhaseType().toString(), fixedPrice, recurringPrice);
+                    final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(cur.getName(), cur.getPhaseType().toString(), fixedPrice, recurringPrice, cur.getUsages(),currency);
                     priceOverrides.add(phase);
                 }
             }

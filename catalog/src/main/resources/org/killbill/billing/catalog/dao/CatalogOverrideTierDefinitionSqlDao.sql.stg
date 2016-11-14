@@ -1,0 +1,67 @@
+group CatalogOverrideTierDefinitionSqlDao;
+
+tableName() ::= "catalog_override_tier_definition"
+
+tableFields(prefix) ::= <<
+  <prefix>fixed_price
+, <prefix>recurring_price
+, <prefix>effective_date
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>currency
+, <prefix>tenant_record_id
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+tableValues() ::= <<
+  :fixedPrice
+, :recurringPrice
+, :effectiveDate
+, :createdDate
+, :createdBy
+, :currency
+, :tenantRecordId
+>>
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields()>
+)
+values (
+<tableValues()>
+)
+;
+>>
+
+getByRecordId() ::= <<
+select <allTableFields()>
+from <tableName()>
+where record_id = :recordId
+and tenant_record_id = :tenantRecordId
+;
+>>
+
+getOverriddenUsageTiers() ::= <<
+select <allTableFields("tdef.")>
+from <tableName()> tdef
+join catalog_override_usage_tier ut
+on tdef.record_id = ut.tier_def_record_id
+where
+ut.target_usage_def_record_id = :targetUsageDefRecordId
+and ut.tenant_record_id = :tenantRecordId
+;
+>>
+
+getLastInsertId() ::= <<
+    select LAST_INSERT_ID();
+>>
+

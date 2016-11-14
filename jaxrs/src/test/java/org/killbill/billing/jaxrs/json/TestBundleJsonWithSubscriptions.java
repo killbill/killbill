@@ -55,7 +55,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                       UUID.randomUUID().toString(),
                                                                       null);
 
-        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson(null, "somePhaseType", BigDecimal.ONE, null);
+        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson(null, "somePhaseType", BigDecimal.ONE, null, null);
 
         final SubscriptionJson subscription = new SubscriptionJson(UUID.randomUUID().toString(),
                                                                    UUID.randomUUID().toString(),
@@ -88,5 +88,6 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         final String asJson = mapper.writeValueAsString(bundleJson);
         final BundleJson fromJson = mapper.readValue(asJson, BundleJson.class);
         Assert.assertEquals(fromJson, bundleJson);
-    }
+
+      }
 }

@@ -1059,9 +1059,10 @@ public class InvoiceResource extends JaxRsResourceBase {
                                      @Override
                                      public PlanPhasePriceOverride apply(@Nullable final PhasePriceOverrideJson input) {
                                          if (input.getPhaseName() != null) {
-                                             return new DefaultPlanPhasePriceOverride(input.getPhaseName(), account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice());
+
+                                             return new DefaultPlanPhasePriceOverride(input.getPhaseName(), account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice(), null);
                                          } else {
-                                             return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice());
+                                             return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice(), null);
                                          }
                                      }
                                  })) : ImmutableList.<PlanPhasePriceOverride>of();

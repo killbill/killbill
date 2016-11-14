@@ -57,7 +57,7 @@ public class TestWithPriceOverride extends TestIntegrationBase {
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-trial", account.getCurrency(), BigDecimal.ONE, null));
+        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-trial", account.getCurrency(), BigDecimal.ONE, null, null));
 
         final DefaultEntitlement bpSubscription = createBaseEntitlementWithPriceOverrideAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, overrides, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // Check bundle after BP got created otherwise we get an error from auditApi.
@@ -76,7 +76,7 @@ public class TestWithPriceOverride extends TestIntegrationBase {
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, BigDecimal.TEN));
+        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, BigDecimal.TEN, null));
 
         final DefaultEntitlement bpSubscription = createBaseEntitlementWithPriceOverrideAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, overrides, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // Check bundle after BP got created otherwise we get an error from auditApi.
@@ -118,7 +118,7 @@ public class TestWithPriceOverride extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, new BigDecimal("279.95")));
+        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, new BigDecimal("279.95"), null));
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         bpSubscription.changePlanOverrideBillingPolicy(new PlanSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), overrides, new LocalDate(2012, 5, 1), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
@@ -165,7 +165,7 @@ public class TestWithPriceOverride extends TestIntegrationBase {
         assertListenerStatus();
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("telescopic-scope-monthly-evergreen", account.getCurrency(), null, new BigDecimal("1200.00")));
+        overrides.add(new DefaultPlanPhasePriceOverride("telescopic-scope-monthly-evergreen", account.getCurrency(), null, new BigDecimal("1200.00"), null));
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         aoEntitlement.changePlanOverrideBillingPolicy(new PlanSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), overrides, new LocalDate(2012, 5, 5), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);

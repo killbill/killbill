@@ -103,7 +103,7 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, BigDecimal.TEN));
+        overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, BigDecimal.TEN, null));
 
         testEntitlementPluginApi.setPlanPhasePriceOverride(overrides);
 

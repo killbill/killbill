@@ -17,7 +17,6 @@
 
 package org.killbill.billing.catalog.dao;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -31,26 +30,23 @@ import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 @EntitySqlDaoStringTemplate
-public interface CatalogOverridePhaseDefinitionSqlDao extends Transactional<CatalogOverridePhaseDefinitionSqlDao>, CloseMe {
+public interface CatalogOverrideUsageDefinitionSqlDao extends Transactional<CatalogOverrideUsageDefinitionSqlDao>, CloseMe {
 
     @SqlUpdate
-    public void create(@SmartBindBean final CatalogOverridePhaseDefinitionModelDao entity,
+    public void create(@SmartBindBean final CatalogOverrideUsageDefinitionModelDao entity,
                        @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
-    public CatalogOverridePhaseDefinitionModelDao getByRecordId(@Bind("recordId") final Long recordId,
-                                                                @SmartBindBean final InternalTenantContext context);
+    public CatalogOverrideUsageDefinitionModelDao getByRecordId(@Bind("recordId") final Long recordId,
+                                                               @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<CatalogOverridePhaseDefinitionModelDao> getByAttributes(@Bind("parentPhaseName") String parentPhaseName,
-                                                                  @Bind("currency") String currency,
-                                                                  @Bind("fixedPrice") BigDecimal fixedPrice,
-                                                                  @Bind("recurringPrice") BigDecimal recurringPrice,
-                                                                  @SmartBindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public List<CatalogOverridePhaseDefinitionModelDao> getOverriddenPlanPhases(@Bind("targetPlanDefRecordId") Long targetPlanDefRecordId,
+    public List<CatalogOverrideUsageDefinitionModelDao> getOverriddenPhaseUsages(@Bind("targetPhaseDefRecordId") Long targetPhaseDefRecordId,
                                                                                 @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public List<CatalogOverrideUsageDefinitionModelDao> getByAttributes(@Bind("parentUsageName") String parentPhaseName,
+                                                                        @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getLastInsertId();

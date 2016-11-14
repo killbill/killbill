@@ -31,25 +31,26 @@ import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 @EntitySqlDaoStringTemplate
-public interface CatalogOverridePhaseDefinitionSqlDao extends Transactional<CatalogOverridePhaseDefinitionSqlDao>, CloseMe {
+public interface CatalogOverrideBlockDefinitionSqlDao extends Transactional<CatalogOverrideBlockDefinitionSqlDao>, CloseMe {
 
     @SqlUpdate
-    public void create(@SmartBindBean final CatalogOverridePhaseDefinitionModelDao entity,
+    public void create(@SmartBindBean final CatalogOverrideBlockDefinitionModelDao entity,
                        @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
-    public CatalogOverridePhaseDefinitionModelDao getByRecordId(@Bind("recordId") final Long recordId,
+    public CatalogOverrideBlockDefinitionModelDao getByRecordId(@Bind("recordId") final Long recordId,
                                                                 @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<CatalogOverridePhaseDefinitionModelDao> getByAttributes(@Bind("parentPhaseName") String parentPhaseName,
-                                                                  @Bind("currency") String currency,
-                                                                  @Bind("fixedPrice") BigDecimal fixedPrice,
-                                                                  @Bind("recurringPrice") BigDecimal recurringPrice,
+    public CatalogOverrideBlockDefinitionModelDao getByAttributes(@Bind("parentUnitName") final String parentUnitName,
+                                                                  @Bind("currency") final String currency,
+                                                                  @Bind("price") final BigDecimal price,
+                                                                  @Bind("max") final double max,
+                                                                  @Bind("size") final double size,
                                                                   @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<CatalogOverridePhaseDefinitionModelDao> getOverriddenPlanPhases(@Bind("targetPlanDefRecordId") Long targetPlanDefRecordId,
+    public List<CatalogOverrideBlockDefinitionModelDao> getOverriddenTierBlocks(@Bind("targetTierDefRecordId") Long targetTierDefRecordId,
                                                                                 @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery

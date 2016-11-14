@@ -51,9 +51,9 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.ONE, null);
+        final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.ONE, null,null);
         overrides.add(phase1);
-        final PlanPhasePriceOverride phase3 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[2].getName(), Currency.USD, null, new BigDecimal("142.41"));
+        final PlanPhasePriceOverride phase3 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[2].getName(), Currency.USD, null, new BigDecimal("142.41"),null);
         overrides.add(phase3);
 
         final DefaultPlan overriddenPlan = priceOverride.getOrCreateOverriddenPlan(plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
@@ -104,7 +104,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, null, BigDecimal.ONE);
+        final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, null, BigDecimal.ONE,null);
         overrides.add(phase1);
 
         priceOverride.getOrCreateOverriddenPlan(plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
@@ -118,9 +118,9 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.ONE, null);
+        final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.ONE, null, null);
         overrides.add(phase1);
-        final PlanPhasePriceOverride phase3 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[2].getName(), Currency.USD, null, new BigDecimal("142.41"));
+        final PlanPhasePriceOverride phase3 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[2].getName(), Currency.USD, null, new BigDecimal("142.41"),null);
         overrides.add(phase3);
 
         final DefaultPlan overriddenPlanCreated = priceOverride.getOrCreateOverriddenPlan(plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
