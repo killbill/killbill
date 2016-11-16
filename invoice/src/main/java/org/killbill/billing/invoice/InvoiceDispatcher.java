@@ -484,18 +484,9 @@ public class InvoiceDispatcher {
                                                            final Iterable<InvoiceItemModelDao> invoiceItemModelDaos,
                                                            final FutureAccountNotifications futureAccountNotifications,
                                                            final boolean isRealInvoiceWithItems, final InternalCallContext context) throws SubscriptionBaseApiException, InvoiceApiException {
-        // We filter any zero amount for USAGE items prior we generate the invoice, which may leave us with an invoice with no items;
-        // we recompute the isRealInvoiceWithItems flag based on what is left (the call to invoice is still necessary to set the future notifications).
-        final Iterable<InvoiceItemModelDao> filteredInvoiceItemModelDaos = Iterables.filter(invoiceItemModelDaos, new Predicate<InvoiceItemModelDao>() {
-            @Override
-            public boolean apply(@Nullable final InvoiceItemModelDao input) {
-                return (input.getType() != InvoiceItemType.USAGE || input.getAmount().compareTo(BigDecimal.ZERO) != 0);
-            }
-        });
-
-        final boolean isThereAnyItemsLeft = filteredInvoiceItemModelDaos.iterator().hasNext();
+        final boolean isThereAnyItemsLeft = invoiceItemModelDaos.iterator().hasNext();
         if (isThereAnyItemsLeft) {
-            invoiceDao.createInvoice(invoiceModelDao, ImmutableList.copyOf(filteredInvoiceItemModelDaos), isRealInvoiceWithItems, futureAccountNotifications, context);
+            invoiceDao.createInvoice(invoiceModelDao, ImmutableList.copyOf(invoiceItemModelDaos), isRealInvoiceWithItems, futureAccountNotifications, context);
         } else {
             invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, context);
         }

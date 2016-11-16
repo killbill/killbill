@@ -78,6 +78,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         }
     }
 
+
     @Test(groups = "fast")
     public void testIsSameDayAndSameSubscriptionWithNullPrevEvent() {
 
