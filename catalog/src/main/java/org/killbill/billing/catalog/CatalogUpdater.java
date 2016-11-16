@@ -266,7 +266,7 @@ public class CatalogUpdater {
     private void validateNewPlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {
         if (desc.getProductCategory() == null ||
             desc.getBillingPeriod() == null ||
-            (desc.getAmount() == null || desc.getAmount().compareTo(BigDecimal.ZERO) <= 0) ||
+            (desc.getAmount() == null || desc.getAmount().compareTo(BigDecimal.ZERO) < 0) ||
             desc.getCurrency() == null) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
         }
