@@ -51,7 +51,6 @@ import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.invoice.api.Invoice;
-import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -65,7 +64,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -229,8 +227,6 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         assertEquals(invoices.get(2).getChargedAmount().compareTo(new BigDecimal("9.00")), 0); // 10 (recurring) - 1 (repair)
     }
 
-
-
     // Use custom plan definition to create a THIRTY_DAYS plan with no trial and test issue #598
     @Test(groups = "slow")
     public void testWithThirtyDaysPlan() throws Exception {
@@ -240,7 +236,6 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         catalogUserApi.addSimplePlan(desc1, init, testCallContext);
         StaticCatalog catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
         assertEquals(catalog.getCurrentPlans().size(), 1);
-
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("thirty-monthly", null);
 
@@ -277,9 +272,8 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         }
     }
 
-
     @Test(groups = "slow")
-    public void testWith$0RecurruingPlan() throws Exception {
+    public void testWith$0RecurringPlan() throws Exception {
 
         // Create a per-tenant catalog with one plan
         final SimplePlanDescriptor zeroDesc = new DefaultSimplePlanDescriptor("zeroDesc-monthly", "Zero", ProductCategory.BASE, account.getCurrency(), BigDecimal.ZERO, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
@@ -296,14 +290,12 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 7, 1));
 
-
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
 
         refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 8, 1));
-
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
@@ -312,20 +304,17 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 9, 1));
 
-
         // Add another Plan in the catalog
         final SimplePlanDescriptor descNonZero = new DefaultSimplePlanDescriptor("superfoo-monthly", "SuperFoo", ProductCategory.BASE, account.getCurrency(), new BigDecimal("20.00"), BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
         catalogUserApi.addSimplePlan(descNonZero, init, testCallContext);
         catalog = catalogUserApi.getCurrentCatalog("dummy", testCallContext);
         assertEquals(catalog.getCurrentPlans().size(), 2);
 
-
         final PlanPhaseSpecifier specNonZero = new PlanPhaseSpecifier("superfoo-monthly", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final Entitlement baseEntitlement2 = entitlementApi.createBaseEntitlement(account.getId(), specNonZero, UUID.randomUUID().toString(), ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
-
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -334,6 +323,8 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 10, 1));
 
+        Subscription refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), testCallContext);
+        assertEquals(refreshedBaseEntitlement2.getChargedThroughDate(), new LocalDate(2016, 10, 1));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -342,10 +333,12 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 11, 1));
 
+        refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), testCallContext);
+        assertEquals(refreshedBaseEntitlement2.getChargedThroughDate(), new LocalDate(2016, 11, 1));
+
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         baseEntitlement.cancelEntitlementWithDateOverrideBillingPolicy(clock.getUTCToday(), BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
-
 
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -354,6 +347,8 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 11, 1));
 
+        refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), testCallContext);
+        assertEquals(refreshedBaseEntitlement2.getChargedThroughDate(), new LocalDate(2016, 12, 1));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -362,15 +357,15 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 11, 1));
 
+        refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), testCallContext);
+        assertEquals(refreshedBaseEntitlement2.getChargedThroughDate(), new LocalDate(2017, 1, 1));
+
     }
-
-
 
     private Entitlement createEntitlement(final String planName, final boolean expectPayment) throws EntitlementApiException {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(planName, null);
         return createEntitlement(spec, null, expectPayment);
     }
-
 
     private Entitlement createEntitlement(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final boolean expectPayment) throws EntitlementApiException {
         if (expectPayment) {

@@ -46,7 +46,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
 
 public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
 
@@ -63,7 +62,7 @@ public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
             account = invoiceUtil.createAccount(callContext);
             subscription = invoiceUtil.createSubscription();
         } catch (final Exception e) {
-            fail(e.getMessage());
+            Assert.fail(e.getMessage());
         }
     }
 
