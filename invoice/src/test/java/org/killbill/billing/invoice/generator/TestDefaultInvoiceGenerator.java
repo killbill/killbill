@@ -629,7 +629,9 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, null, targetDate, Currency.USD, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
-        assertNull(invoice);
+        assertNotNull(invoice);
+        assertEquals(invoice.getInvoiceItems().size(), 1);
+        assertEquals(invoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
     }
 
     @Test(groups = "fast")
