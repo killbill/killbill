@@ -120,7 +120,7 @@ public class EntitlementPluginExecution {
                 continue;
             }
             prevResult = plugin.priorCall(currentContext, currentContext.getPluginProperties());
-            if (prevResult.isAborted()) {
+            if (prevResult != null && prevResult.isAborted()) {
                 break;
             }
             currentContext = new DefaultEntitlementContext(currentContext, prevResult);
