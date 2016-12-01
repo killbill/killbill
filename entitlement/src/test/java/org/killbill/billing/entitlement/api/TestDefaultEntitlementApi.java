@@ -387,6 +387,41 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), callContext);
         Assert.assertEquals(subscription.getSubscriptionEvents().size(), 7);
 
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(0).getServiceName(), "entitlement-service");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(0).getServiceStateName(), "ENT_STARTED");
+        Assert.assertNull(subscription.getSubscriptionEvents().get(0).getPrevPhase());
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(0).getNextPhase().getName(), "shotgun-annual-trial");
+
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(1).getServiceName(), "billing-service");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(1).getServiceStateName(), "START_BILLING");
+        Assert.assertNull(subscription.getSubscriptionEvents().get(1).getPrevPhase());
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(1).getNextPhase().getName(), "shotgun-annual-trial");
+
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(2).getServiceName(), "entitlement+billing-service");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(2).getServiceStateName(), "PHASE");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(2).getPrevPhase().getName(), "shotgun-annual-trial");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(2).getNextPhase().getName(), "shotgun-annual-evergreen");
+
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(3).getServiceName(), "entitlement-service");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(3).getServiceStateName(), "ENT_BLOCKED");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(3).getPrevPhase().getName(), "shotgun-annual-evergreen");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(3).getNextPhase().getName(), "shotgun-annual-evergreen");
+
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(4).getServiceName(), "billing-service");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(4).getServiceStateName(), "ENT_BLOCKED");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(4).getPrevPhase().getName(), "shotgun-annual-evergreen");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(4).getNextPhase().getName(), "shotgun-annual-evergreen");
+
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(5).getServiceName(), "entitlement-service");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(5).getServiceStateName(), "ENT_CLEAR");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(5).getPrevPhase().getName(), "shotgun-annual-evergreen");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(5).getNextPhase().getName(), "shotgun-annual-evergreen");
+
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(6).getServiceName(), "billing-service");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(6).getServiceStateName(), "ENT_CLEAR");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(6).getPrevPhase().getName(), "shotgun-annual-evergreen");
+        Assert.assertEquals(subscription.getSubscriptionEvents().get(6).getNextPhase().getName(), "shotgun-annual-evergreen");
+
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         clock.setDay(pauseDate);
         assertListenerStatus();

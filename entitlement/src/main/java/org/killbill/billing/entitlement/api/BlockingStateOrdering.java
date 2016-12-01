@@ -31,7 +31,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
@@ -64,8 +63,6 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
     }
 
     private void computeEvents(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> inputAndOutputResult) {
-
-
         final Collection<UUID> allEntitlementUUIDs = new HashSet<UUID>();
         final Collection<BlockingState> blockingStates = new LinkedList<BlockingState>();
         for (final Entitlement entitlement : entitlements) {
@@ -245,6 +242,13 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                 nextPriceList = prev.getNextPriceList();
                 nextBillingPeriod = prev.getNextBillingPeriod();
             }
+        } else if (prev != null && (SubscriptionEventType.START_ENTITLEMENT.equals(eventType) || SubscriptionEventType.START_BILLING.equals(eventType))) {
+            // For start events, next is actually the prev (e.g. the trial, not the phase)
+            nextProduct = prev.getNextProduct();
+            nextPlan = prev.getNextPlan();
+            nextPlanPhase = prev.getNextPhase();
+            nextPriceList = prev.getNextPriceList();
+            nextBillingPeriod = prev.getNextBillingPeriod();
         } else {
             nextProduct = next.getNextProduct();
             nextPlan = next.getNextPlan();
