@@ -86,6 +86,10 @@ public class CatalogJson {
         for (final Plan plan : plans) {
             // Build the product associated with this plan
             final Product product = plan.getProduct();
+            if (product == null) {
+                // TODO Should we import a logger here?
+                continue;
+            }
             ProductJson productJson = productMap.get(product.getName());
             if (productJson == null) {
                 productJson = new ProductJson(product.getCategory().toString(),
