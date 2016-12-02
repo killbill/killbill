@@ -206,4 +206,98 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorCode(), "error-code");
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorMsg(), "error-msg");
     }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill-adyen-plugin/pull/60")
+    public void testFixPaymentTransactionStateRefundSuccessToRefundFailed() throws PaymentApiException {
+        final Payment payment = paymentApi.createPurchase(account,
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          BigDecimal.TEN,
+                                                          Currency.EUR,
+                                                          UUID.randomUUID().toString(),
+                                                          UUID.randomUUID().toString(),
+                                                          ImmutableList.<PluginProperty>of(),
+                                                          callContext);
+
+        final PaymentModelDao paymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
+        final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(payment.getTransactions().get(0).getId(), internalCallContext);
+        Assert.assertEquals(paymentModelDao.getStateName(), "PURCHASE_SUCCESS");
+        Assert.assertEquals(paymentModelDao.getLastSuccessStateName(), "PURCHASE_SUCCESS");
+        Assert.assertEquals(paymentTransactionModelDao.getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        final Payment refund = paymentApi.createRefund(account,
+                                                       payment.getId(),
+                                                       payment.getPurchasedAmount(),
+                                                       payment.getCurrency(),
+                                                       UUID.randomUUID().toString(),
+                                                       ImmutableList.<PluginProperty>of(),
+                                                       callContext);
+
+        final PaymentModelDao paymentModelDao2 = paymentDao.getPayment(payment.getId(), internalCallContext);
+        final PaymentTransactionModelDao paymentTransactionModelDao2 = paymentDao.getPaymentTransaction(refund.getTransactions().get(1).getId(), internalCallContext);
+        Assert.assertEquals(paymentModelDao2.getStateName(), "REFUND_SUCCESS");
+        Assert.assertEquals(paymentModelDao2.getLastSuccessStateName(), "REFUND_SUCCESS");
+        Assert.assertEquals(paymentTransactionModelDao2.getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        adminPaymentApi.fixPaymentTransactionState(refund,
+                                                   refund.getTransactions().get(1),
+                                                   TransactionStatus.PAYMENT_FAILURE,
+                                                   null, /* Let Kill Bill figure it out */
+                                                   null, /* Let Kill Bill figure it out */
+                                                   ImmutableList.<PluginProperty>of(),
+                                                   callContext);
+
+        final PaymentModelDao paymentModelDao3 = paymentDao.getPayment(payment.getId(), internalCallContext);
+        final PaymentTransactionModelDao paymentTransactionModelDao3 = paymentDao.getPaymentTransaction(refund.getTransactions().get(1).getId(), internalCallContext);
+        Assert.assertEquals(paymentModelDao3.getStateName(), "REFUND_FAILED");
+        Assert.assertEquals(paymentModelDao3.getLastSuccessStateName(), "PURCHASE_SUCCESS");
+        Assert.assertEquals(paymentTransactionModelDao3.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill-adyen-plugin/pull/60")
+    public void testFixPaymentTransactionStateRefundFailedToRefundSuccess() throws PaymentApiException {
+        final Payment payment = paymentApi.createPurchase(account,
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          BigDecimal.TEN,
+                                                          Currency.EUR,
+                                                          UUID.randomUUID().toString(),
+                                                          UUID.randomUUID().toString(),
+                                                          ImmutableList.<PluginProperty>of(),
+                                                          callContext);
+
+        final PaymentModelDao paymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
+        final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(payment.getTransactions().get(0).getId(), internalCallContext);
+        Assert.assertEquals(paymentModelDao.getStateName(), "PURCHASE_SUCCESS");
+        Assert.assertEquals(paymentModelDao.getLastSuccessStateName(), "PURCHASE_SUCCESS");
+        Assert.assertEquals(paymentTransactionModelDao.getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        final Payment refund = paymentApi.createRefund(account,
+                                                       payment.getId(),
+                                                       payment.getPurchasedAmount(),
+                                                       payment.getCurrency(),
+                                                       UUID.randomUUID().toString(),
+                                                       ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.ERROR.toString(), false)),
+                                                       callContext);
+
+        final PaymentModelDao paymentModelDao2 = paymentDao.getPayment(payment.getId(), internalCallContext);
+        final PaymentTransactionModelDao paymentTransactionModelDao2 = paymentDao.getPaymentTransaction(refund.getTransactions().get(1).getId(), internalCallContext);
+        Assert.assertEquals(paymentModelDao2.getStateName(), "REFUND_FAILED");
+        Assert.assertEquals(paymentModelDao2.getLastSuccessStateName(), "PURCHASE_SUCCESS");
+        Assert.assertEquals(paymentTransactionModelDao2.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
+
+        adminPaymentApi.fixPaymentTransactionState(refund,
+                                                   refund.getTransactions().get(1),
+                                                   TransactionStatus.SUCCESS,
+                                                   null, /* Let Kill Bill figure it out */
+                                                   null, /* Let Kill Bill figure it out */
+                                                   ImmutableList.<PluginProperty>of(),
+                                                   callContext);
+
+        final PaymentModelDao paymentModelDao3 = paymentDao.getPayment(payment.getId(), internalCallContext);
+        final PaymentTransactionModelDao paymentTransactionModelDao3 = paymentDao.getPaymentTransaction(refund.getTransactions().get(1).getId(), internalCallContext);
+        Assert.assertEquals(paymentModelDao3.getStateName(), "REFUND_SUCCESS");
+        Assert.assertEquals(paymentModelDao3.getLastSuccessStateName(), "REFUND_SUCCESS");
+        Assert.assertEquals(paymentTransactionModelDao3.getTransactionStatus(), TransactionStatus.SUCCESS);
+    }
 }

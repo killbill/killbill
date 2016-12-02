@@ -22,6 +22,7 @@ import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
+import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -29,12 +30,17 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 
 public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPaymentApi {
 
+    private final PaymentStateMachineHelper paymentSMHelper;
     private final PaymentDao paymentDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultAdminPaymentApi(final PaymentConfig paymentConfig, final PaymentDao paymentDao, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultAdminPaymentApi(final PaymentConfig paymentConfig,
+                                  final PaymentStateMachineHelper paymentSMHelper,
+                                  final PaymentDao paymentDao,
+                                  final InternalCallContextFactory internalCallContextFactory) {
         super(paymentConfig, internalCallContextFactory);
+        this.paymentSMHelper = paymentSMHelper;
         this.paymentDao = paymentDao;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -42,19 +48,54 @@ public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPayme
     @Override
     public void fixPaymentTransactionState(final Payment payment,
                                            final PaymentTransaction paymentTransaction,
-                                           @Nullable final TransactionStatus transactionStatusMaybeNull,
-                                           @Nullable final String lastSuccessPaymentState,
-                                           final String currentPaymentStateName,
+                                           @Nullable final TransactionStatus transactionStatusOrNull,
+                                           @Nullable final String lastSuccessPaymentStateOrNull,
+                                           @Nullable final String currentPaymentStateNameOrNull,
                                            final Iterable<PluginProperty> properties,
                                            final CallContext callContext) throws PaymentApiException {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(payment.getAccountId(), callContext);
 
-        final TransactionStatus transactionStatus;
-        if (transactionStatusMaybeNull == null) {
+        TransactionStatus transactionStatus = transactionStatusOrNull;
+        if (transactionStatusOrNull == null) {
             checkNotNullParameter(paymentTransaction.getPaymentInfoPlugin(), "PaymentTransactionInfoPlugin");
             transactionStatus = PaymentTransactionInfoPluginConverter.toTransactionStatus(paymentTransaction.getPaymentInfoPlugin());
-        } else {
-            transactionStatus = transactionStatusMaybeNull;
+        }
+
+        String currentPaymentStateName = currentPaymentStateNameOrNull;
+        if (currentPaymentStateName == null) {
+            switch (transactionStatus) {
+                case PENDING:
+                    currentPaymentStateName = paymentSMHelper.getPendingStateForTransaction(paymentTransaction.getTransactionType());
+                    break;
+                case SUCCESS:
+                    currentPaymentStateName = paymentSMHelper.getSuccessfulStateForTransaction(paymentTransaction.getTransactionType());
+                    break;
+                case PAYMENT_FAILURE:
+                    currentPaymentStateName = paymentSMHelper.getFailureStateForTransaction(paymentTransaction.getTransactionType());
+                    break;
+                case PLUGIN_FAILURE:
+                case UNKNOWN:
+                default:
+                    currentPaymentStateName = paymentSMHelper.getErroredStateForTransaction(paymentTransaction.getTransactionType());
+                    break;
+            }
+        }
+
+        String lastSuccessPaymentState = lastSuccessPaymentStateOrNull;
+        if (lastSuccessPaymentState == null &&
+            // Verify we are not updating an older transaction (only the last one has an impact on lastSuccessPaymentState)
+            paymentTransaction.getId().equals(payment.getTransactions().get(payment.getTransactions().size() - 1).getId())) {
+            if (paymentSMHelper.isSuccessState(currentPaymentStateName)) {
+                lastSuccessPaymentState = currentPaymentStateName;
+            } else {
+                for (int i = payment.getTransactions().size() - 2; i >= 0; i--) {
+                    final PaymentTransaction transaction = payment.getTransactions().get(i);
+                    if (TransactionStatus.SUCCESS.equals(transaction.getTransactionStatus())) {
+                        lastSuccessPaymentState = paymentSMHelper.getSuccessfulStateForTransaction(transaction.getTransactionType());
+                        break;
+                    }
+                }
+            }
         }
 
         paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(),
