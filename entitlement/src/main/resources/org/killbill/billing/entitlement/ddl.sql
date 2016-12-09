@@ -22,4 +22,5 @@ CREATE TABLE blocking_states (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX blocking_states_id ON blocking_states(blockable_id);
+CREATE INDEX blocking_states_id_real ON blocking_states(id);
 CREATE INDEX blocking_states_tenant_account_record_id ON blocking_states(tenant_record_id, account_record_id);
