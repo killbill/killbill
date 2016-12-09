@@ -1,0 +1,2 @@
+CREATE INDEX invoice_payments_payment_id ON invoice_payments(payment_id);
+CREATE INDEX invoice_payments_payment_cookie_id ON invoice_payments(payment_cookie_id);
