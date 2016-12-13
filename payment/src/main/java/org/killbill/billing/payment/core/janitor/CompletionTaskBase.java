@@ -100,6 +100,10 @@ abstract class CompletionTaskBase<T> implements Runnable {
         }
     }
 
+    public synchronized void start() {
+        this.isStopped = false;
+    }
+
     public synchronized void stop() {
         this.isStopped = true;
     }
@@ -119,15 +123,22 @@ abstract class CompletionTaskBase<T> implements Runnable {
     }
 
     protected <T> T doJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) {
+        try {
+            return tryToDoJanitorOperationWithAccountLock(callback, internalTenantContext);
+        } catch (final LockFailedException e) {
+            log.warn("Error locking accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
+        }
+        return null;
+    }
+
+    protected <T> T tryToDoJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) throws LockFailedException {
         GlobalLock lock = null;
         try {
             final ImmutableAccountData account = accountInternalApi.getImmutableAccountDataByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getExternalKey(), paymentConfig.getMaxGlobalLockRetries());
             return callback.doIteration();
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             log.warn("Error retrieving accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
-        } catch (LockFailedException e) {
-            log.warn("Error locking accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
         } finally {
             if (lock != null) {
                 lock.release();
