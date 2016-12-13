@@ -17,15 +17,15 @@
 
 package org.killbill.billing.catalog.dao;
 
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
+
+import org.joda.time.DateTime;
 
 public class CatalogOverrideUsageDefinitionModelDao {
 
     private Long recordId;
     private String parentUsageName;
-    private String parentUsageType;
+    private String type;
     private String currency;
     private BigDecimal fixedPrice;
     private BigDecimal recurringPrice;
@@ -37,10 +37,10 @@ public class CatalogOverrideUsageDefinitionModelDao {
     public CatalogOverrideUsageDefinitionModelDao() {
     }
 
-    public CatalogOverrideUsageDefinitionModelDao(String parentUsageName, String parentUsageType, String currency, BigDecimal fixedPrice, BigDecimal recurringPrice, DateTime effectiveDate) {
+    public CatalogOverrideUsageDefinitionModelDao(String parentUsageName, String type, String currency, BigDecimal fixedPrice, BigDecimal recurringPrice, DateTime effectiveDate) {
 
         this.parentUsageName = parentUsageName;
-        this.parentUsageType = parentUsageType;
+        this.type = type;
         this.currency = currency;
         this.fixedPrice = fixedPrice;
         this.recurringPrice = recurringPrice;
@@ -59,8 +59,8 @@ public class CatalogOverrideUsageDefinitionModelDao {
         this.parentUsageName = parentUsageName;
     }
 
-    public void setParentUsageType(String parentUsageType) {
-        this.parentUsageType = parentUsageType;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public void setCurrency(String currency) {
@@ -95,8 +95,8 @@ public class CatalogOverrideUsageDefinitionModelDao {
         return parentUsageName;
     }
 
-    public String getParentUsageType() {
-        return parentUsageType;
+    public String getType() {
+        return type;
     }
 
     public String getCurrency() {

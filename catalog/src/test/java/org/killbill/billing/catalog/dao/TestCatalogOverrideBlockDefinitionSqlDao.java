@@ -29,7 +29,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
 
 public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWithEmbeddedDB {
 
@@ -42,8 +41,7 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
     @Test(groups = "slow")
     public void testBasic() throws Exception {
 
-        final CatalogOverrideBlockDefinitionModelDao obj1 = new CatalogOverrideBlockDefinitionModelDao("p1","USD" ,BigDecimal.ONE ,1 ,1 , clock.getUTCNow());
-
+        final CatalogOverrideBlockDefinitionModelDao obj1 = new CatalogOverrideBlockDefinitionModelDao("p1", "USD", BigDecimal.ONE, 1 , 1, clock.getUTCNow());
         performTestInTransaction(new WithCatalogOverrideBlockDefinitionSqlDaoTransaction<Void>() {
             @Override
             public Void doTransaction(final CatalogOverrideBlockDefinitionSqlDao sqlDao) {
@@ -52,7 +50,7 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
 
                 final CatalogOverrideBlockDefinitionModelDao rehydrated = sqlDao.getByRecordId(lastInserted, internalCallContext);
                 assertEquals(rehydrated.getParentUnitName(), obj1.getParentUnitName());
-                assertEquals(rehydrated.getCurrency().compareTo(obj1.getCurrency()), 0);
+                assertEquals(rehydrated.getCurrency(), obj1.getCurrency());
                 assertEquals(rehydrated.getPrice().compareTo(obj1.getPrice()), 0);
                 assertEquals(rehydrated.getSize(), obj1.getSize());
                 assertEquals(rehydrated.getMax(), obj1.getMax());
@@ -64,35 +62,32 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
     @Test(groups = "slow")
     public void testGetByAttributes() throws Exception {
 
-        final CatalogOverrideBlockDefinitionModelDao objWithNoNullPrice = new CatalogOverrideBlockDefinitionModelDao("p2", "USD", BigDecimal.ONE, 1, 5, clock.getUTCNow());
+        final CatalogOverrideBlockDefinitionModelDao objWithNoNullPrice = new CatalogOverrideBlockDefinitionModelDao("p2", "USD", BigDecimal.ONE, new Double("1"), new Double("5"), clock.getUTCNow());
 
         performTestInTransaction(new WithCatalogOverrideBlockDefinitionSqlDaoTransaction<Void>() {
             @Override
             public Void doTransaction(final CatalogOverrideBlockDefinitionSqlDao sqlDao) {
                 sqlDao.create(objWithNoNullPrice, internalCallContext);
-                final Long lastInserted = sqlDao.getLastInsertId();
                 checkRehydrated(objWithNoNullPrice, sqlDao);
 
                 return null;
             }
 
             private void checkRehydrated(final CatalogOverrideBlockDefinitionModelDao obj, final CatalogOverrideBlockDefinitionSqlDao sqlDao) {
-                final CatalogOverrideBlockDefinitionModelDao rehydrated = sqlDao.getByAttributes(obj.getParentUnitName(), obj.getCurrency(), obj.getPrice(), obj.getSize(),obj.getMax(), internalCallContext);
-               /* assertEquals(rehydrated.getParentUnitName(), obj.getParentUnitName());
+                final CatalogOverrideBlockDefinitionModelDao rehydrated = sqlDao.getByAttributes(obj.getParentUnitName(), obj.getCurrency(), obj.getPrice(),obj.getMax(),obj.getSize(), internalCallContext);
+                assertEquals(rehydrated.getParentUnitName(), obj.getParentUnitName());
                 assertEquals(rehydrated.getCurrency(), obj.getCurrency());
-                assertEquals(rehydrated.getPrice(), obj.getPrice());
+                assertEquals(rehydrated.getPrice().compareTo(obj.getPrice()), 0);
                 assertEquals(rehydrated.getSize(), obj.getSize());
-                assertEquals(rehydrated.getMax(), obj.getMax()); */
+                assertEquals(rehydrated.getMax(), obj.getMax());
             }
         });
     }
 
-  private interface WithCatalogOverrideBlockDefinitionSqlDaoTransaction<T> {
+    private interface WithCatalogOverrideBlockDefinitionSqlDaoTransaction<T> {
 
         public <T> T doTransaction(final CatalogOverrideBlockDefinitionSqlDao sqlDao);
     }
-
-
 
     private <T> T performTestInTransaction(final WithCatalogOverrideBlockDefinitionSqlDaoTransaction<T> callback) {
         return dbi.inTransaction(new TransactionCallback<T>() {
@@ -103,5 +98,4 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
             }
         });
     }
-
 }

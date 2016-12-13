@@ -23,7 +23,7 @@ public class CatalogOverrideTierBlockModelDao {
     private Short blockNumber;
     private Long recordId;
     private Long blockDefRecordId;
-    private Long targetTierRecordId;
+    private Long targetTierDefRecordId;
     private DateTime createdDate;
     private String createdBy;
     private Long tenantRecordId;
@@ -31,10 +31,10 @@ public class CatalogOverrideTierBlockModelDao {
     public CatalogOverrideTierBlockModelDao() {
     }
 
-    public CatalogOverrideTierBlockModelDao(Short blockNumber, Long blockDefRecordId, Long targetTierRecordId) {
+    public CatalogOverrideTierBlockModelDao(Short blockNumber, Long blockDefRecordId, Long targetTierDefRecordId) {
         this.blockNumber = blockNumber;
         this.blockDefRecordId = blockDefRecordId;
-        this.targetTierRecordId = targetTierRecordId;
+        this.targetTierDefRecordId = targetTierDefRecordId;
     }
 
     public Short getBlockNumber() {
@@ -49,8 +49,8 @@ public class CatalogOverrideTierBlockModelDao {
         return blockDefRecordId;
     }
 
-    public Long getTargetTierRecordId() {
-        return targetTierRecordId;
+    public Long getTargetTierDefRecordId() {
+        return targetTierDefRecordId;
     }
 
     public String getCreatedBy() {
@@ -77,8 +77,8 @@ public class CatalogOverrideTierBlockModelDao {
         this.blockDefRecordId = blockDefRecordId;
     }
 
-    public void setTargetTierRecordId(Long targetTierRecordId) {
-        this.targetTierRecordId = targetTierRecordId;
+    public void setTargetTierDefRecordId(Long targetTierDefRecordId) {
+        this.targetTierDefRecordId = targetTierDefRecordId;
     }
 
     public void setCreatedDate(DateTime createdDate) {

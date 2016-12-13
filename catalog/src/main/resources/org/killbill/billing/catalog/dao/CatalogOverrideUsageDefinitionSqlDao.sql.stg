@@ -22,7 +22,7 @@ allTableFields(prefix) ::= <<
 
 tableValues() ::= <<
   :parentUsageName
-, :parentUsageType
+, :type
 , :fixedPrice
 , :recurringPrice
 , :effectiveDate

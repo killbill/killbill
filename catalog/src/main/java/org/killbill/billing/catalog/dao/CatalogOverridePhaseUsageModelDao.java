@@ -21,8 +21,8 @@ import org.joda.time.DateTime;
 
 public class CatalogOverridePhaseUsageModelDao {
 
-    private Short usageNumber;
     private Long recordId;
+    private Short usageNumber;
     private Long usageDefRecordId;
     private Long targetPhaseDefRecordId;
     private DateTime createdDate;
