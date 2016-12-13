@@ -200,6 +200,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
         validateCollection(catalog, errors, initialPhases);
         finalPhase.validate(catalog, errors);
+
+        if (product == null) {
+            errors.add(new ValidationError(String.format("Invalid product for plan '%s'", name), catalog.getCatalogURI(), DefaultProduct.class, ""));
+        }
+
         return errors;
     }
 
