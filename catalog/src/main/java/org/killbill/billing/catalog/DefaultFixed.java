@@ -16,6 +16,7 @@
 
 package org.killbill.billing.catalog;
 
+import java.math.BigDecimal;
 import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -23,6 +24,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Fixed;
 import org.killbill.billing.catalog.api.FixedType;
 import org.killbill.billing.catalog.api.InternationalPrice;
@@ -62,6 +64,16 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
     public void initialize(final StandaloneCatalog root, final URI uri) {
         if (fixedPrice != null) {
             fixedPrice.initialize(root, uri);
+        } else if (root.getCurrentSupportedCurrencies() != null && root.getCurrentSupportedCurrencies().length > 0){
+            fixedPrice = new DefaultInternationalPrice();
+
+            final DefaultPrice [] tmp = new DefaultPrice[root.getCurrentSupportedCurrencies().length];
+            int i = 0;
+            for (Currency cur : root.getCurrentSupportedCurrencies()) {
+                tmp[i] = new DefaultPrice(BigDecimal.ZERO, cur);
+                i++;
+            }
+            fixedPrice.setPrices(tmp);
         }
     }
 
