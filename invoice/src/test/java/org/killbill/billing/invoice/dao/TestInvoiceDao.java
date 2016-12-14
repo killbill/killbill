@@ -818,7 +818,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         createCredit(accountId, clock.getUTCToday(), new BigDecimal("20.0"));
 
         final String description = UUID.randomUUID().toString();
-        final InvoiceModelDao invoiceForExternalCharge = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final InvoiceModelDao invoiceForExternalCharge = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false);
         final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(invoiceForExternalCharge.getId(), accountId, bundleId, description, clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD));
         invoiceForExternalCharge.addInvoiceItem(externalCharge);
         final InvoiceItemModelDao charge = invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceForExternalCharge), context).get(0);
@@ -1704,7 +1704,6 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceModelDao invoiceModelDao;
         if (invoiceId == null) {
             invoiceModelDao = new InvoiceModelDao(accountId, effectiveDate, effectiveDate, Currency.USD, false, InvoiceStatus.DRAFT);
-
         } else {
             invoiceModelDao = invoiceDao.getById(invoiceId, context);
         }

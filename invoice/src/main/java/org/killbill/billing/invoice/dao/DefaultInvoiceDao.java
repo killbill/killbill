@@ -1120,34 +1120,41 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // create child and parent invoices
 
-                final DateTime effectiveDate = childAccountContext.getCreatedDate();
+                final DateTime childCreatedDate = childAccountContext.getCreatedDate();
                 final BigDecimal accountCBA = getAccountCBA(childAccount.getId(), childAccountContext);
 
                 // create external charge to child account
-                final Invoice invoiceForExternalCharge = new DefaultInvoice(childAccount.getId(), effectiveDate.toLocalDate(),
-                                                                            effectiveDate.toLocalDate(),
-                                                                            childAccount.getCurrency(), InvoiceStatus.COMMITTED);
+                final LocalDate childInvoiceDate = childAccountContext.toLocalDate(childAccountContext.getCreatedDate());
+                final Invoice invoiceForExternalCharge = new DefaultInvoice(childAccount.getId(),
+                                                                            childInvoiceDate,
+                                                                            childCreatedDate.toLocalDate(),
+                                                                            childAccount.getCurrency(),
+                                                                            InvoiceStatus.COMMITTED);
                 final String chargeDescription = "Charge to move credit from child to parent account";
                 final InvoiceItem externalChargeItem = new ExternalChargeInvoiceItem(UUIDs.randomUUID(),
-                                                                                 effectiveDate,
+                                                                                 childCreatedDate,
                                                                                  invoiceForExternalCharge.getId(),
                                                                                  childAccount.getId(),
                                                                                  null,
                                                                                  chargeDescription,
-                                                                                 effectiveDate.toLocalDate(),
+                                                                                 childCreatedDate.toLocalDate(),
                                                                                  accountCBA,
                                                                                  childAccount.getCurrency());
                 invoiceForExternalCharge.addInvoiceItem(externalChargeItem);
 
                 // create credit to parent account
-                final Invoice invoiceForCredit = new DefaultInvoice(childAccount.getParentAccountId(), effectiveDate.toLocalDate(), effectiveDate.toLocalDate(),
-                                                                    childAccount.getCurrency(), InvoiceStatus.COMMITTED);
+                final LocalDate parentInvoiceDate = parentAccountContext.toLocalDate(parentAccountContext.getCreatedDate());
+                final Invoice invoiceForCredit = new DefaultInvoice(childAccount.getParentAccountId(),
+                                                                    parentInvoiceDate,
+                                                                    childCreatedDate.toLocalDate(),
+                                                                    childAccount.getCurrency(),
+                                                                    InvoiceStatus.COMMITTED);
                 final String creditDescription = "Credit migrated from child account " + childAccount.getId();
                 final InvoiceItem creditItem = new CreditAdjInvoiceItem(UUIDs.randomUUID(),
-                                                                        effectiveDate,
+                                                                        childCreatedDate,
                                                                         invoiceForCredit.getId(),
                                                                         childAccount.getParentAccountId(),
-                                                                        effectiveDate.toLocalDate(),
+                                                                        childCreatedDate.toLocalDate(),
                                                                         creditDescription,
                                                                         // Note! The amount is negated here!
                                                                         accountCBA.negate(),

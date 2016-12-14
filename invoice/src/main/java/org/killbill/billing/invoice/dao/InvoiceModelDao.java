@@ -78,10 +78,6 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, migrated, status, false);
     }
 
-    public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
-        this(UUIDs.randomUUID(), null, accountId, null, invoiceDate, targetDate, currency, false, InvoiceStatus.COMMITTED, false);
-    }
-
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final Currency currency, final InvoiceStatus status, final boolean isParentInvoice) {
         this(UUIDs.randomUUID(), invoiceDate.toDateTimeAtCurrentTime(), accountId, null, invoiceDate, null, currency, false, status, isParentInvoice);
     }
