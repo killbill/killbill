@@ -150,8 +150,10 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
                 final boolean isApiPayment = true; // unclear
                 final PaymentStateControlContext paymentStateContext = new PaymentStateControlContext(attempt.toPaymentControlPluginNames(),
                                                                                                       isApiPayment,
+                                                                                                      null,
                                                                                                       transaction.getPaymentId(),
                                                                                                       attempt.getPaymentExternalKey(),
+                                                                                                      transaction.getId(),
                                                                                                       transaction.getTransactionExternalKey(),
                                                                                                       transaction.getTransactionType(),
                                                                                                       account,

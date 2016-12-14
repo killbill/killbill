@@ -74,13 +74,13 @@ public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAut
     }
 
     @Override
-    PaymentStateControlContext createContext(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
-                                             @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
+    PaymentStateControlContext createContext(final boolean isApiPayment, final Boolean isSuccess, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
+                                             @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, @Nullable final UUID transactionId, final String paymentTransactionExternalKey,
                                              @Nullable final BigDecimal amount, @Nullable final Currency currency,
                                              final Iterable<PluginProperty> properties,
                                              final List<String> pluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         if (context == null) {
-            return super.createContext(isApiPayment, transactionType, account, paymentMethodId, paymentId, paymentExternalKey, paymentTransactionExternalKey,
+            return super.createContext(isApiPayment, isSuccess, transactionType, account, paymentMethodId, paymentId, paymentExternalKey, transactionId, paymentTransactionExternalKey,
                                        amount, currency, properties, pluginNames, callContext, internalCallContext);
         } else {
             return context;

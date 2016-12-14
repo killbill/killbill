@@ -76,6 +76,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -176,16 +177,34 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                             log.warn("processedCurrency='{}' of invoice paymentId='{}' doesn't match invoice currency='{}', assuming it is a full payment", paymentControlContext.getProcessedCurrency(), paymentControlContext.getPaymentId(), paymentControlContext.getCurrency());
                             invoicePaymentAmount = paymentControlContext.getAmount();
                         }
-                        log.debug("Notifying invoice of successful paymentId='{}', amount='{}', currency='{}', invoiceId='{}'", paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
-                        invoiceApi.recordPaymentAttemptCompletion(invoiceId,
-                                                                  invoicePaymentAmount,
-                                                                  paymentControlContext.getCurrency(),
-                                                                  paymentControlContext.getProcessedCurrency(),
-                                                                  paymentControlContext.getPaymentId(),
-                                                                  paymentControlContext.getTransactionExternalKey(),
-                                                                  paymentControlContext.getCreatedDate(),
-                                                                  true,
-                                                                  internalContext);
+
+                        final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(paymentControlContext.getTransactionId(), internalContext);
+                        // If it's not SUCCESS, it is PENDING
+                        final boolean success = paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.SUCCESS;
+                        log.debug("Notifying invoice of {} paymentId='{}', amount='{}', currency='{}', invoiceId='{}'", success ? "successful" : "pending", paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
+
+                        if (success) {
+                            invoiceApi.recordPaymentAttemptCompletion(invoiceId,
+                                                                      invoicePaymentAmount,
+                                                                      paymentControlContext.getCurrency(),
+                                                                      paymentControlContext.getProcessedCurrency(),
+                                                                      paymentControlContext.getPaymentId(),
+                                                                      paymentControlContext.getTransactionExternalKey(),
+                                                                      paymentControlContext.getCreatedDate(),
+                                                                      success,
+                                                                      internalContext);
+                        } else {
+                            // For PENDING payments, we re-call recordPaymentAttemptInit to simply update the current
+                            // entry in invoice_payments (update the payment id, processed amount, etc.)
+                            invoiceApi.recordPaymentAttemptInit(invoiceId,
+                                                                invoicePaymentAmount,
+                                                                paymentControlContext.getCurrency(),
+                                                                paymentControlContext.getProcessedCurrency(),
+                                                                paymentControlContext.getPaymentId(),
+                                                                paymentControlContext.getTransactionExternalKey(),
+                                                                paymentControlContext.getCreatedDate(),
+                                                                internalContext);
+                        }
                     }
                     break;
 
@@ -355,7 +374,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 // but onSuccessCall callback never gets called (leaving the place for a double payment if user retries the operation)
                 //
                 invoiceApi.recordPaymentAttemptInit(invoice.getId(),
-                                                    BigDecimal.ZERO,
+                                                    MoreObjects.firstNonNull(paymentControlPluginContext.getAmount(), BigDecimal.ZERO),
                                                     paymentControlPluginContext.getCurrency(),
                                                     paymentControlPluginContext.getCurrency(),
                                                     // Likely to be null, but we don't care as we use the transactionExternalKey

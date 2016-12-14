@@ -54,6 +54,7 @@ import org.killbill.billing.payment.core.sm.control.CreditControlOperation;
 import org.killbill.billing.payment.core.sm.control.DefaultControlCompleted;
 import org.killbill.billing.payment.core.sm.control.DefaultControlInitiated;
 import org.killbill.billing.payment.core.sm.control.NoopControlInitiated;
+import org.killbill.billing.payment.core.sm.control.NotificationOfStateChangeControlOperation;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.core.sm.control.PurchaseControlOperation;
 import org.killbill.billing.payment.core.sm.control.RefundControlOperation;
@@ -83,7 +84,8 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
         CREDIT,
         PURCHASE,
         REFUND,
-        VOID
+        VOID,
+        NOTIFICATION_OF_STATE_CHANGE
     }
 
     protected final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry;
@@ -107,25 +109,138 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
         this.paymentConfig = paymentConfig;
     }
 
-    public Payment run(final boolean isApiPayment, final TransactionType transactionType, final ControlOperation controlOperation, final Account account, @Nullable final UUID paymentMethodId,
-                       @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
-                       @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                       final Iterable<PluginProperty> properties, @Nullable final List<String> paymentControlPluginNames,
-                       final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        return run(paymentControlStateMachineHelper.getInitialState(), isApiPayment, transactionType, controlOperation, account, paymentMethodId, paymentId, paymentExternalKey, paymentTransactionExternalKey,
-                   amount, currency, properties, paymentControlPluginNames, callContext, internalCallContext);
+    public Payment run(final boolean isApiPayment,
+                       final TransactionType transactionType,
+                       final ControlOperation controlOperation,
+                       final Account account,
+                       @Nullable final UUID paymentMethodId,
+                       @Nullable final UUID paymentId,
+                       @Nullable final String paymentExternalKey,
+                       final String paymentTransactionExternalKey,
+                       @Nullable final BigDecimal amount,
+                       @Nullable final Currency currency,
+                       final Iterable<PluginProperty> properties,
+                       @Nullable final List<String> paymentControlPluginNames,
+                       final CallContext callContext,
+                       final InternalCallContext internalCallContext) throws PaymentApiException {
+        return run(paymentControlStateMachineHelper.getInitialState(),
+                   isApiPayment,
+                   null,
+                   transactionType,
+                   controlOperation,
+                   account,
+                   paymentMethodId,
+                   paymentId,
+                   paymentExternalKey,
+                   null,
+                   paymentTransactionExternalKey,
+                   amount,
+                   currency,
+                   properties,
+                   paymentControlPluginNames,
+                   callContext,
+                   internalCallContext);
     }
 
-    public Payment run(final State state, final boolean isApiPayment, final TransactionType transactionType, final ControlOperation controlOperation, final Account account, @Nullable final UUID paymentMethodId,
-                       @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
-                       @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                       final Iterable<PluginProperty> properties, @Nullable final List<String> paymentControlPluginNames,
+    public Payment run(final boolean isApiPayment,
+                       final Boolean isSuccess,
+                       final TransactionType transactionType,
+                       final ControlOperation controlOperation,
+                       final Account account,
+                       @Nullable final UUID paymentMethodId,
+                       @Nullable final UUID paymentId,
+                       @Nullable final String paymentExternalKey,
+                       @Nullable final UUID transactionId,
+                       final String paymentTransactionExternalKey,
+                       @Nullable final BigDecimal amount,
+                       @Nullable final Currency currency,
+                       final Iterable<PluginProperty> properties,
+                       @Nullable final List<String> paymentControlPluginNames,
+                       final CallContext callContext,
+                       final InternalCallContext internalCallContext) throws PaymentApiException {
+        return run(paymentControlStateMachineHelper.getInitialState(),
+                   isApiPayment,
+                   isSuccess,
+                   transactionType,
+                   controlOperation,
+                   account,
+                   paymentMethodId,
+                   paymentId,
+                   paymentExternalKey,
+                   transactionId,
+                   paymentTransactionExternalKey,
+                   amount,
+                   currency,
+                   properties,
+                   paymentControlPluginNames,
+                   callContext,
+                   internalCallContext);
+    }
+
+    public Payment run(final State state,
+                       final boolean isApiPayment,
+                       final TransactionType transactionType,
+                       final ControlOperation controlOperation,
+                       final Account account,
+                       @Nullable final UUID paymentMethodId,
+                       @Nullable final UUID paymentId,
+                       @Nullable final String paymentExternalKey,
+                       final String paymentTransactionExternalKey,
+                       @Nullable final BigDecimal amount,
+                       @Nullable final Currency currency,
+                       final Iterable<PluginProperty> properties,
+                       @Nullable final List<String> paymentControlPluginNames,
                        final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        final PaymentStateControlContext paymentStateContext = createContext(isApiPayment, transactionType, account, paymentMethodId,
-                                                                             paymentId, paymentExternalKey,
+        return run(state,
+                   isApiPayment,
+                   null,
+                   transactionType,
+                   controlOperation,
+                   account,
+                   paymentMethodId,
+                   paymentId,
+                   paymentExternalKey,
+                   null,
+                   paymentTransactionExternalKey,
+                   amount,
+                   currency,
+                   properties,
+                   paymentControlPluginNames,
+                   callContext,
+                   internalCallContext);
+    }
+
+    public Payment run(final State state,
+                       final boolean isApiPayment,
+                       final Boolean isSuccess,
+                       final TransactionType transactionType,
+                       final ControlOperation controlOperation,
+                       final Account account,
+                       @Nullable final UUID paymentMethodId,
+                       @Nullable final UUID paymentId,
+                       @Nullable final String paymentExternalKey,
+                       @Nullable final UUID transactionId,
+                       final String paymentTransactionExternalKey,
+                       @Nullable final BigDecimal amount,
+                       @Nullable final Currency currency,
+                       final Iterable<PluginProperty> properties,
+                       @Nullable final List<String> paymentControlPluginNames,
+                       final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+        final PaymentStateControlContext paymentStateContext = createContext(isApiPayment,
+                                                                             isSuccess,
+                                                                             transactionType,
+                                                                             account,
+                                                                             paymentMethodId,
+                                                                             paymentId,
+                                                                             paymentExternalKey,
+                                                                             transactionId,
                                                                              paymentTransactionExternalKey,
-                                                                             amount, currency,
-                                                                             properties, paymentControlPluginNames, callContext, internalCallContext);
+                                                                             amount,
+                                                                             currency,
+                                                                             properties,
+                                                                             paymentControlPluginNames,
+                                                                             callContext,
+                                                                             internalCallContext);
         try {
             final OperationCallback callback = createOperationCallback(controlOperation, paymentStateContext);
             final LeavingStateCallback leavingStateCallback = new DefaultControlInitiated(this, paymentStateContext, paymentDao, paymentControlStateMachineHelper.getInitialState(), paymentControlStateMachineHelper.getRetriedState(), transactionType);
@@ -171,11 +286,11 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
     }
 
     @VisibleForTesting
-    PaymentStateControlContext createContext(final boolean isApiPayment, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
-                                             @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, final String paymentTransactionExternalKey,
+    PaymentStateControlContext createContext(final boolean isApiPayment, final Boolean isSuccess, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
+                                             @Nullable final UUID paymentId, @Nullable final String paymentExternalKey,@Nullable final UUID transactionId, final String paymentTransactionExternalKey,
                                              @Nullable final BigDecimal amount, @Nullable final Currency currency, final Iterable<PluginProperty> properties,
                                              final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        return new PaymentStateControlContext(paymentControlPluginNames, isApiPayment, paymentId, paymentExternalKey, paymentTransactionExternalKey, transactionType, account,
+        return new PaymentStateControlContext(paymentControlPluginNames, isApiPayment, isSuccess, paymentId, paymentExternalKey, transactionId, paymentTransactionExternalKey, transactionType, account,
                                               paymentMethodId, amount, currency, properties, internalCallContext, callContext);
     }
 
@@ -206,6 +321,9 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
                 break;
             case CHARGEBACK_REVERSAL:
                 callback = new ChargebackReversalControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
+                break;
+            case NOTIFICATION_OF_STATE_CHANGE:
+                callback = new NotificationOfStateChangeControlOperation(locker, paymentPluginDispatcher, paymentConfig, paymentStateContext, paymentProcessor, controlPluginRunner);
                 break;
             default:
                 throw new IllegalStateException("Unsupported control operation " + controlOperation);

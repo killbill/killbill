@@ -100,7 +100,6 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
         dao.notifyOfPaymentInit(new InvoicePaymentModelDao(invoicePayment), context);
     }
 
-
     @Override
     public void recordPaymentAttemptCompletion(final UUID invoiceId, final BigDecimal amount, final Currency currency, final Currency processedCurrency, final UUID paymentId, final String transactionExternalKey, final DateTime paymentDate, final boolean success, final InternalCallContext context) throws InvoiceApiException {
         final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, transactionExternalKey, success);

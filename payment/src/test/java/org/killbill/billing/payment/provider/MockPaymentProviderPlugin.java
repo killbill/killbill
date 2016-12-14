@@ -73,6 +73,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     private final AtomicBoolean makeNextPaymentFailWithCancellation = new AtomicBoolean(false);
     private final AtomicBoolean makeNextPaymentFailWithException = new AtomicBoolean(false);
     private final AtomicBoolean makeAllPaymentsFailWithError = new AtomicBoolean(false);
+    private final AtomicBoolean makeNextPaymentPending = new AtomicBoolean(false);
     private final AtomicInteger makePluginWaitSomeMilliseconds = new AtomicInteger(0);
     private final AtomicReference<BigDecimal> overrideNextProcessedAmount = new AtomicReference<BigDecimal>();
     private final AtomicReference<Currency> overrideNextProcessedCurrency = new AtomicReference<Currency>();
@@ -200,6 +201,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         makeAllPaymentsFailWithError.set(false);
         makeNextPaymentFailWithError.set(false);
         makeNextPaymentFailWithCancellation.set(false);
+        makeNextPaymentPending.set(false);
         makePluginWaitSomeMilliseconds.set(0);
         overrideNextProcessedAmount.set(null);
         paymentMethods.clear();
@@ -210,6 +212,10 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
 
     public void makeNextPaymentFailWithError() {
         makeNextPaymentFailWithError.set(true);
+    }
+
+    public void makeNextPaymentPending() {
+        makeNextPaymentPending.set(true);
     }
 
     public void makeNextPaymentFailWithCancellation() {
@@ -432,6 +438,8 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             status = PaymentPluginStatus.ERROR;
         } else if (makeNextPaymentFailWithCancellation.getAndSet(false)) {
             status = PaymentPluginStatus.CANCELED;
+        } else if (makeNextPaymentPending.getAndSet(false)) {
+            status = PaymentPluginStatus.PENDING;
         } else {
             status = PaymentPluginStatus.PROCESSED;
         }

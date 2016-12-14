@@ -19,6 +19,7 @@ package org.killbill.billing.payment.dispatcher;
 
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.apache.shiro.mgt.SecurityManager;
@@ -44,7 +45,12 @@ public class CallableWithRequestData<T> implements Callable<T> {
                                    final Subject subject,
                                    final Map<String, String> mdcContextMap,
                                    final Callable<T> delegate) {
-        this.requestData = requestData;
+        if (requestData == null) {
+            // To make locks re-entrant (for the Janitor), we need a request id
+            this.requestData = new RequestData(UUID.randomUUID().toString());
+        } else {
+            this.requestData = requestData;
+        }
         this.random = random;
         this.securityManager = securityManager;
         this.subject = subject;
