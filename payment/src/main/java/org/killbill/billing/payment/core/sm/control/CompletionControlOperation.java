@@ -88,6 +88,10 @@ public class CompletionControlOperation extends OperationControlCallback {
                     final boolean success = transaction.getTransactionStatus() == TransactionStatus.SUCCESS || transaction.getTransactionStatus() == TransactionStatus.PENDING;
                     if (success) {
                         executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
+
+                        // Remove scheduled retry, if any
+                        paymentProcessor.cancelScheduledPaymentTransaction(paymentStateControlContext.getAttemptId(), paymentStateControlContext.getInternalCallContext());
+
                         return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
                     } else {
                         throw new OperationException(null, executePluginOnFailureCallsAndSetRetryDate(updatedPaymentControlContext));

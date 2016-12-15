@@ -125,6 +125,9 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     public void beforeMethod() throws Exception {
         super.beforeMethod();
 
+        retryService.initialize();
+        retryService.start();
+
         eventBus.register(handler);
         testListener.reset();
         eventBus.register(testListener);
@@ -136,6 +139,8 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        retryService.stop();
+
         testListener.assertListenerStatus();
 
         eventBus.unregister(handler);

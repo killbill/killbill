@@ -38,6 +38,7 @@ import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -63,6 +64,8 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected PaymentMethodProcessor paymentMethodProcessor;
     @Inject
     protected PaymentProcessor paymentProcessor;
+    @Inject
+    protected DefaultRetryService retryService;
     @Inject
     protected InvoiceInternalApi invoiceApi;
     @Inject
