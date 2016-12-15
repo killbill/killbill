@@ -781,7 +781,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments2.get(0).getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
         assertEquals(payments2.get(0).getPaymentAttempts().size(), 1);
         assertEquals(payments2.get(0).getPaymentAttempts().get(0).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
-        // Note that because notifyPendingTransactionOfStateChangedWithPaymentControl is considered an API call, not retry will be attempted
+        // Note that because notifyPendingTransactionOfStateChangedWithPaymentControl is considered an API call, no retry will be attempted
         assertEquals(payments2.get(0).getPaymentAttempts().get(0).getStateName(), "ABORTED");
     }
 
@@ -882,7 +882,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments2.get(0).getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
         assertEquals(payments2.get(0).getPaymentAttempts().size(), 1);
         assertEquals(payments2.get(0).getPaymentAttempts().get(0).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
-        // Note that because fixPaymentTransactionState is considered an API call, not retry will be attempted
+        // Note that because fixPaymentTransactionState is considered an API call, no retry will be attempted
         assertEquals(payments2.get(0).getPaymentAttempts().get(0).getStateName(), "ABORTED");
 
         // Verify account transitions to OD1
