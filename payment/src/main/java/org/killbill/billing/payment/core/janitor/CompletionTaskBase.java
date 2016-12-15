@@ -135,7 +135,7 @@ abstract class CompletionTaskBase<T> implements Runnable {
         GlobalLock lock = null;
         try {
             final ImmutableAccountData account = accountInternalApi.getImmutableAccountDataByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
-            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getExternalKey(), paymentConfig.getMaxGlobalLockRetries());
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getId().toString(), paymentConfig.getMaxGlobalLockRetries());
             return callback.doIteration();
         } catch (final AccountApiException e) {
             log.warn("Error retrieving accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);

@@ -722,7 +722,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         GlobalLock lock = null;
         try {
             // Grab lock so that operation later will fail...
-            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getExternalKey(), 1);
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getId().toString(), 1);
 
             mockRetryProviderPlugin
                     .setAborted(false)
