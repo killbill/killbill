@@ -183,28 +183,16 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                         final boolean success = paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.SUCCESS;
                         log.debug("Notifying invoice of {} paymentId='{}', amount='{}', currency='{}', invoiceId='{}'", success ? "successful" : "pending", paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
 
-                        if (success) {
-                            invoiceApi.recordPaymentAttemptCompletion(invoiceId,
-                                                                      invoicePaymentAmount,
-                                                                      paymentControlContext.getCurrency(),
-                                                                      paymentControlContext.getProcessedCurrency(),
-                                                                      paymentControlContext.getPaymentId(),
-                                                                      paymentControlContext.getTransactionExternalKey(),
-                                                                      paymentControlContext.getCreatedDate(),
-                                                                      success,
-                                                                      internalContext);
-                        } else {
-                            // For PENDING payments, we re-call recordPaymentAttemptInit to simply update the current
-                            // entry in invoice_payments (update the payment id, processed amount, etc.)
-                            invoiceApi.recordPaymentAttemptInit(invoiceId,
-                                                                invoicePaymentAmount,
-                                                                paymentControlContext.getCurrency(),
-                                                                paymentControlContext.getProcessedCurrency(),
-                                                                paymentControlContext.getPaymentId(),
-                                                                paymentControlContext.getTransactionExternalKey(),
-                                                                paymentControlContext.getCreatedDate(),
-                                                                internalContext);
-                        }
+                        // For PENDING payments, the attempt will be kept as unsuccessful and an InvoicePaymentErrorInternalEvent sent on the bus (e.g. for Overdue)
+                        invoiceApi.recordPaymentAttemptCompletion(invoiceId,
+                                                                  invoicePaymentAmount,
+                                                                  paymentControlContext.getCurrency(),
+                                                                  paymentControlContext.getProcessedCurrency(),
+                                                                  paymentControlContext.getPaymentId(),
+                                                                  paymentControlContext.getTransactionExternalKey(),
+                                                                  paymentControlContext.getCreatedDate(),
+                                                                  success,
+                                                                  internalContext);
                     }
                     break;
 

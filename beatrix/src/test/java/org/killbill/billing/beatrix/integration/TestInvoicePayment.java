@@ -17,6 +17,8 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +46,8 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
+import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
@@ -51,6 +55,7 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
+import org.killbill.xmlloader.XMLLoader;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -595,19 +600,44 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testWithPendingPaymentThenSuccess() throws Exception {
+        // Verify integration with Overdue in that particular test
+        final String configXml = "<overdueConfig>" +
+                                 "   <accountOverdueStates>" +
+                                 "       <initialReevaluationInterval>" +
+                                 "           <unit>DAYS</unit><number>1</number>" +
+                                 "       </initialReevaluationInterval>" +
+                                 "       <state name=\"OD1\">" +
+                                 "           <condition>" +
+                                 "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "                   <unit>DAYS</unit><number>1</number>" +
+                                 "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "           </condition>" +
+                                 "           <externalMessage>Reached OD1</externalMessage>" +
+                                 "           <blockChanges>true</blockChanges>" +
+                                 "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
+                                 "       </state>" +
+                                 "   </accountOverdueStates>" +
+                                 "</overdueConfig>";
+        final InputStream is = new ByteArrayInputStream(configXml.getBytes());
+        final DefaultOverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
+        overdueConfigCache.loadDefaultOverdueConfig(config);
+
         clock.setDay(new LocalDate(2012, 4, 1));
 
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME, account.getId());
+
         paymentPlugin.makeNextPaymentPending();
 
-        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        clock.addDays(30);
-        assertListenerStatus();
+        // INVOICE_PAYMENT_ERROR is sent for PENDING payments
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT_ERROR);
+
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 1), callContext);
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 2);
@@ -639,14 +669,20 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments.get(0).getPaymentAttempts().get(0).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
         assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "SUCCESS");
 
+        // Verify account transitions to OD1 while payment is PENDING
+        addDaysAndCheckForCompletion(2, NextEvent.BLOCK);
+        checkODState("OD1", account.getId());
+
         // Transition the payment to success
         final List<String> paymentControlPluginNames = ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         final PaymentOptions paymentOptions = Mockito.mock(PaymentOptions.class);
         Mockito.when(paymentOptions.getPaymentControlPluginNames()).thenReturn(paymentControlPluginNames);
 
-        busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         paymentApi.notifyPendingTransactionOfStateChangedWithPaymentControl(account, payments.get(0).getTransactions().get(0).getId(), true, paymentOptions, callContext);
         assertListenerStatus();
+
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME, account.getId());
 
         final Invoice invoice2 = invoiceUserApi.getInvoice(invoice1.getId(), callContext);
         assertTrue(invoice2.getBalance().compareTo(BigDecimal.ZERO) == 0);
