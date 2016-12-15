@@ -45,6 +45,8 @@ public class PaymentStateControlContext extends PaymentStateContext {
     private DateTime retryDate;
     private List<String> paymentControlPluginNames;
     private Payment result;
+    private BigDecimal processedAmount;
+    private Currency processedCurrency;
 
     public PaymentStateControlContext(@Nullable final List<String> paymentControlPluginNames,
                                       final boolean isApiPayment,
@@ -86,6 +88,22 @@ public class PaymentStateControlContext extends PaymentStateContext {
 
     public Boolean isSuccess() {
         return isSuccess;
+    }
+
+    public BigDecimal getProcessedAmount() {
+        return processedAmount;
+    }
+
+    public void setProcessedAmount(final BigDecimal processedAmount) {
+        this.processedAmount = processedAmount;
+    }
+
+    public Currency getProcessedCurrency() {
+        return processedCurrency;
+    }
+
+    public void setProcessedCurrency(final Currency processedCurrency) {
+        this.processedCurrency = processedCurrency;
     }
 
     public PaymentTransaction getCurrentTransaction() {

@@ -142,9 +142,22 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                                      try {
                                                          priorCallResult = controlPluginRunner.executePluginPriorCalls(account,
                                                                                                                        paymentMethodId,
-                                                                                                                       null, null, null, null,
-                                                                                                                       PaymentApiType.HPP, null, HPPType.BUILD_FORM_DESCRIPTOR,
-                                                                                                                       null, null, true, paymentControlPluginNames, properties, callContext);
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       PaymentApiType.HPP,
+                                                                                                                       null,
+                                                                                                                       HPPType.BUILD_FORM_DESCRIPTOR,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       true,
+                                                                                                                       paymentControlPluginNames,
+                                                                                                                       properties,
+                                                                                                                       callContext);
 
                                                      } catch (final PaymentControlApiAbortException e) {
                                                          throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_API_ABORTED, e.getPluginName());
@@ -156,16 +169,42 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                                          final T result = callback.doPaymentGatewayApiOperation(priorCallResult.getAdjustedPaymentMethodId(), priorCallResult.getAdjustedPluginProperties());
                                                          controlPluginRunner.executePluginOnSuccessCalls(account,
                                                                                                          paymentMethodId,
-                                                                                                         null, null, null, null, null,
-                                                                                                         PaymentApiType.HPP, null, HPPType.BUILD_FORM_DESCRIPTOR,
-                                                                                                         null, null, null, null, true, paymentControlPluginNames, priorCallResult.getAdjustedPluginProperties(), callContext);
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         PaymentApiType.HPP,
+                                                                                                         null,
+                                                                                                         HPPType.BUILD_FORM_DESCRIPTOR,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         true,
+                                                                                                         paymentControlPluginNames,
+                                                                                                         priorCallResult.getAdjustedPluginProperties(),
+                                                                                                         callContext);
                                                          return PluginDispatcher.createPluginDispatcherReturnType(result);
                                                      } catch (final PaymentApiException e) {
                                                          controlPluginRunner.executePluginOnFailureCalls(account,
                                                                                                          paymentMethodId,
-                                                                                                         null, null, null, null,
-                                                                                                         PaymentApiType.HPP, null, HPPType.BUILD_FORM_DESCRIPTOR,
-                                                                                                         null, null, true, paymentControlPluginNames, priorCallResult.getAdjustedPluginProperties(), callContext);
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         PaymentApiType.HPP,
+                                                                                                         null,
+                                                                                                         HPPType.BUILD_FORM_DESCRIPTOR,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         true,
+                                                                                                         paymentControlPluginNames,
+                                                                                                         priorCallResult.getAdjustedPluginProperties(),
+                                                                                                         callContext);
                                                          throw e;
                                                      }
                                                  }

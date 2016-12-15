@@ -38,10 +38,7 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
-import org.killbill.commons.request.Request;
-import org.killbill.commons.request.RequestData;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -91,14 +88,6 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                                                   }
                                               },
                                               testPaymentControlPluginApi);
-
-        // Required for re-entrant locks to work
-        Request.setPerThreadRequestData(new RequestData(UUID.randomUUID().toString()));
-    }
-
-    @AfterMethod(groups = "slow")
-    public void tearDown() throws Exception {
-        Request.resetPerThreadRequestData();
     }
 
     // Verify Payment control API can be used to change the paymentMethodId on the fly and this is reflected in the created Payment.
@@ -111,6 +100,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.TEN, Currency.USD, UUID.randomUUID().toString(),
                                                                                  UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getPaymentMethodId(), newPaymentMethodId);
+
+        verifyOnSuccess(payment.getId(),
+                        payment.getExternalKey(),
+                        payment.getTransactions().get(0).getId(),
+                        payment.getTransactions().get(0).getExternalKey(),
+                        BigDecimal.TEN,
+                        Currency.USD);
     }
 
     @Test(groups = "slow")
@@ -126,6 +122,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
+        verifyOnSuccess(payment.getId(),
+                        payment.getExternalKey(),
+                        payment.getTransactions().get(0).getId(),
+                        payment.getTransactions().get(0).getExternalKey(),
+                        requestedAmount,
+                        Currency.USD);
+
         payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
                                                                    payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
@@ -133,6 +136,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+
+        verifyPriorAndOnSuccess(payment.getId(),
+                                payment.getExternalKey(),
+                                payment.getTransactions().get(0).getId(),
+                                payment.getTransactions().get(0).getExternalKey(),
+                                requestedAmount,
+                                Currency.USD);
     }
 
     @Test(groups = "slow")
@@ -148,6 +158,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
+        verifyOnFailure(payment.getId(),
+                        payment.getExternalKey(),
+                        payment.getTransactions().get(0).getId(),
+                        payment.getTransactions().get(0).getExternalKey(),
+                        BigDecimal.ZERO,
+                        Currency.USD);
+
         try {
             payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
                                                                        payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
@@ -161,6 +178,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.UNKNOWN);
         Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+
+        verifyPriorAndOnFailure(payment.getId(),
+                                payment.getExternalKey(),
+                                payment.getTransactions().get(0).getId(),
+                                payment.getTransactions().get(0).getExternalKey(),
+                                BigDecimal.ZERO,
+                                Currency.USD);
     }
 
     @Test(groups = "slow")
@@ -187,6 +211,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.PENDING);
         Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
 
+        verifyOnSuccessForFollowOnTransaction(payment.getId(),
+                                              payment.getExternalKey(),
+                                              payment.getTransactions().get(1).getId(),
+                                              payment.getTransactions().get(1).getExternalKey(),
+                                              requestedAmount,
+                                              Currency.USD);
+
         payment = paymentApi.createCaptureWithPaymentControl(account, payment.getId(), requestedAmount, payment.getCurrency(), paymentTransactionExternalKey,
                                                              ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
@@ -196,6 +227,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
         Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
+
+        verifyPriorAndOnSuccess(payment.getId(),
+                                payment.getExternalKey(),
+                                payment.getTransactions().get(1).getId(),
+                                payment.getTransactions().get(1).getExternalKey(),
+                                requestedAmount,
+                                Currency.USD);
     }
 
     @Test(groups = "slow")
@@ -222,6 +260,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.UNKNOWN);
         Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
 
+        verifyOnFailureForFollowOnTransaction(payment.getId(),
+                                              payment.getExternalKey(),
+                                              payment.getTransactions().get(1).getId(),
+                                              payment.getTransactions().get(1).getExternalKey(),
+                                              BigDecimal.ZERO,
+                                              Currency.USD);
+
         try {
             payment = paymentApi.createCaptureWithPaymentControl(account, payment.getId(), requestedAmount, payment.getCurrency(), paymentTransactionExternalKey,
                                                                  pendingPluginProperties, PAYMENT_OPTIONS, callContext);
@@ -236,6 +281,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.UNKNOWN);
         Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
+
+        verifyPriorAndOnFailure(payment.getId(),
+                                payment.getExternalKey(),
+                                payment.getTransactions().get(1).getId(),
+                                payment.getTransactions().get(1).getExternalKey(),
+                                BigDecimal.ZERO,
+                                Currency.USD);
     }
 
     @Test(groups = "slow")
@@ -250,6 +302,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+
+        verifyOnSuccess(payment.getId(),
+                        payment.getExternalKey(),
+                        payment.getTransactions().get(0).getId(),
+                        payment.getTransactions().get(0).getExternalKey(),
+                        requestedAmount,
+                        Currency.USD);
 
         payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
                                                  payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), callContext);
@@ -272,6 +331,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+
+        verifyOnFailure(payment.getId(),
+                        payment.getExternalKey(),
+                        payment.getTransactions().get(0).getId(),
+                        payment.getTransactions().get(0).getExternalKey(),
+                        BigDecimal.ZERO,
+                        Currency.USD);
 
         try {
             payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), payment.getExternalKey(),
@@ -312,6 +378,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.PENDING);
         Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
 
+        verifyOnSuccessForFollowOnTransaction(payment.getId(),
+                                              payment.getExternalKey(),
+                                              payment.getTransactions().get(1).getId(),
+                                              payment.getTransactions().get(1).getExternalKey(),
+                                              requestedAmount,
+                                              Currency.USD);
+
         payment = paymentApi.createCapture(account, payment.getId(), requestedAmount, payment.getCurrency(), paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(requestedAmount), 0);
@@ -345,6 +418,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.UNKNOWN);
         Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
+
+        verifyOnFailureForFollowOnTransaction(payment.getId(),
+                                              payment.getExternalKey(),
+                                              payment.getTransactions().get(1).getId(),
+                                              payment.getTransactions().get(1).getExternalKey(),
+                                              BigDecimal.ZERO,
+                                              Currency.USD);
 
         try {
             payment = paymentApi.createCapture(account, payment.getId(), requestedAmount, payment.getCurrency(), paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
@@ -381,6 +461,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+
+        verifyPriorAndOnSuccess(payment.getId(),
+                                payment.getExternalKey(),
+                                payment.getTransactions().get(0).getId(),
+                                payment.getTransactions().get(0).getExternalKey(),
+                                requestedAmount,
+                                Currency.USD);
     }
 
     @Test(groups = "slow")
@@ -409,8 +496,14 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.UNKNOWN);
         Assert.assertEquals(payment.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
-    }
 
+        verifyPriorAndOnFailure(payment.getId(),
+                                payment.getExternalKey(),
+                                payment.getTransactions().get(0).getId(),
+                                payment.getTransactions().get(0).getExternalKey(),
+                                BigDecimal.ZERO,
+                                Currency.USD);
+    }
 
     @Test(groups = "slow")
     public void testCreateAuthSuccessCapturePendingNoControlCompleteWithControl() throws PaymentApiException {
@@ -444,6 +537,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
         Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
+
+        verifyPriorAndOnSuccess(payment.getId(),
+                                payment.getExternalKey(),
+                                payment.getTransactions().get(1).getId(),
+                                payment.getTransactions().get(1).getExternalKey(),
+                                requestedAmount,
+                                Currency.USD);
     }
 
     @Test(groups = "slow")
@@ -483,6 +583,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
         Assert.assertEquals(payment.getTransactions().get(1).getTransactionStatus(), TransactionStatus.UNKNOWN);
         Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
+
+        verifyPriorAndOnFailure(payment.getId(),
+                                payment.getExternalKey(),
+                                payment.getTransactions().get(1).getId(),
+                                payment.getTransactions().get(1).getExternalKey(),
+                                BigDecimal.ZERO,
+                                Currency.USD);
     }
 
     @Test(groups = "slow")
@@ -495,6 +602,13 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
+
+        verifyOnSuccess(payment.getId(),
+                        payment.getExternalKey(),
+                        payment.getTransactions().get(0).getId(),
+                        payment.getTransactions().get(0).getExternalKey(),
+                        requestedAmount,
+                        Currency.USD);
 
         payment = paymentApi.createCapture(account, payment.getId(), payment.getAuthAmount(), payment.getCurrency(), UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
@@ -522,6 +636,193 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().size(), 2);
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
         Assert.assertNotNull(((DefaultPaymentTransaction) payment.getTransactions().get(1)).getAttemptId());
+
+        verifyOnSuccessForFollowOnTransaction(payment.getId(),
+                                              payment.getExternalKey(),
+                                              payment.getTransactions().get(1).getId(),
+                                              payment.getTransactions().get(1).getExternalKey(),
+                                              requestedAmount,
+                                              Currency.USD);
+    }
+
+    private void verifyPriorAndOnSuccess(final UUID paymentId,
+                                         final String paymentExternalKey,
+                                         final UUID paymentTransactionId,
+                                         final String paymentTransactionExternalKey,
+                                         final BigDecimal processAmount,
+                                         final Currency processedCurrency) {
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentId(), paymentId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionId(), paymentTransactionId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallProcessedAmount().compareTo(processAmount), 0);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallProcessedCurrency(), processedCurrency);
+
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallPaymentId(), paymentId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallTransactionId(), paymentTransactionId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallProcessedAmount().compareTo(processAmount), 0);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallProcessedCurrency(), processedCurrency);
+
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallPaymentId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallPaymentExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallTransactionId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallTransactionExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallProcessedAmount());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallProcessedCurrency());
+
+        testPaymentControlPluginApi.resetActualValues();
+    }
+
+    private void verifyOnSuccess(final UUID paymentId,
+                                 final String paymentExternalKey,
+                                 final UUID paymentTransactionId,
+                                 final String paymentTransactionExternalKey,
+                                 final BigDecimal processAmount,
+                                 final Currency processedCurrency) {
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallPaymentId());
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallTransactionId());
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallProcessedAmount());
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallProcessedCurrency());
+
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallPaymentId(), paymentId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallTransactionId(), paymentTransactionId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallProcessedAmount().compareTo(processAmount), 0);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallProcessedCurrency(), processedCurrency);
+
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallPaymentId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallPaymentExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallTransactionId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallTransactionExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallProcessedAmount());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallProcessedCurrency());
+
+        testPaymentControlPluginApi.resetActualValues();
+    }
+
+    private void verifyOnSuccessForFollowOnTransaction(final UUID paymentId,
+                                                       final String paymentExternalKey,
+                                                       final UUID paymentTransactionId,
+                                                       final String paymentTransactionExternalKey,
+                                                       final BigDecimal processAmount,
+                                                       final Currency processedCurrency) {
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentId(), paymentId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallTransactionId());
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallProcessedAmount());
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallProcessedCurrency());
+
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallPaymentId(), paymentId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallTransactionId(), paymentTransactionId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallProcessedAmount().compareTo(processAmount), 0);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallProcessedCurrency(), processedCurrency);
+
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallPaymentId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallPaymentExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallTransactionId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallTransactionExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallProcessedAmount());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnFailureCallProcessedCurrency());
+
+        testPaymentControlPluginApi.resetActualValues();
+    }
+
+    private void verifyPriorAndOnFailure(final UUID paymentId,
+                                         final String paymentExternalKey,
+                                         final UUID paymentTransactionId,
+                                         final String paymentTransactionExternalKey,
+                                         final BigDecimal processAmount,
+                                         final Currency processedCurrency) {
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentId(), paymentId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionId(), paymentTransactionId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallProcessedAmount().compareTo(processAmount), 0);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallProcessedCurrency(), processedCurrency);
+
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallPaymentId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallPaymentExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallTransactionId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallTransactionExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallProcessedAmount());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallProcessedCurrency());
+
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallPaymentId(), paymentId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallTransactionId(), paymentTransactionId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallProcessedAmount().compareTo(processAmount), 0);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallProcessedCurrency(), processedCurrency);
+
+        testPaymentControlPluginApi.resetActualValues();
+    }
+
+    private void verifyOnFailure(final UUID paymentId,
+                                 final String paymentExternalKey,
+                                 final UUID paymentTransactionId,
+                                 final String paymentTransactionExternalKey,
+                                 final BigDecimal processAmount,
+                                 final Currency processedCurrency) {
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallPaymentId());
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallTransactionId());
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallProcessedAmount());
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallProcessedCurrency());
+
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallPaymentId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallPaymentExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallTransactionId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallTransactionExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallProcessedAmount());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallProcessedCurrency());
+
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallPaymentId(), paymentId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallTransactionId(), paymentTransactionId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallProcessedAmount().compareTo(processAmount), 0);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallProcessedCurrency(), processedCurrency);
+
+        testPaymentControlPluginApi.resetActualValues();
+    }
+
+    private void verifyOnFailureForFollowOnTransaction(final UUID paymentId,
+                                                       final String paymentExternalKey,
+                                                       final UUID paymentTransactionId,
+                                                       final String paymentTransactionExternalKey,
+                                                       final BigDecimal processAmount,
+                                                       final Currency processedCurrency) {
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentId(), paymentId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallTransactionId());
+        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallProcessedAmount());
+        Assert.assertNull(testPaymentControlPluginApi.getActualPriorCallProcessedCurrency());
+
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallPaymentId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallPaymentExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallTransactionId());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallTransactionExternalKey());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallProcessedAmount());
+        Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallProcessedCurrency());
+
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallPaymentId(), paymentId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallPaymentExternalKey(), paymentExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallTransactionId(), paymentTransactionId);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallTransactionExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallProcessedAmount().compareTo(processAmount), 0);
+        Assert.assertEquals(testPaymentControlPluginApi.getActualOnFailureCallProcessedCurrency(), processedCurrency);
+
+        testPaymentControlPluginApi.resetActualValues();
     }
 
     public static class TestPaymentControlPluginApi implements PaymentControlPluginApi {
@@ -530,12 +831,112 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         private UUID newPaymentMethodId;
 
+        private UUID actualPriorCallPaymentId;
+        private String actualPriorCallPaymentExternalKey;
+        private UUID actualPriorCallTransactionId;
+        private String actualPriorCallTransactionExternalKey;
+        private BigDecimal actualPriorCallProcessedAmount;
+        private Currency actualPriorCallProcessedCurrency;
+
+        private UUID actualOnSuccessCallPaymentId;
+        private String actualOnSuccessCallPaymentExternalKey;
+        private UUID actualOnSuccessCallTransactionId;
+        private String actualOnSuccessCallTransactionExternalKey;
+        private BigDecimal actualOnSuccessCallProcessedAmount;
+        private Currency actualOnSuccessCallProcessedCurrency;
+
+        private UUID actualOnFailureCallPaymentId;
+        private String actualOnFailureCallPaymentExternalKey;
+        private UUID actualOnFailureCallTransactionId;
+        private String actualOnFailureCallTransactionExternalKey;
+        private BigDecimal actualOnFailureCallProcessedAmount;
+        private Currency actualOnFailureCallProcessedCurrency;
+
         public void setNewPaymentMethodId(final UUID newPaymentMethodId) {
             this.newPaymentMethodId = newPaymentMethodId;
         }
 
+        public UUID getActualPriorCallPaymentId() {
+            return actualPriorCallPaymentId;
+        }
+
+        public String getActualPriorCallPaymentExternalKey() {
+            return actualPriorCallPaymentExternalKey;
+        }
+
+        public UUID getActualPriorCallTransactionId() {
+            return actualPriorCallTransactionId;
+        }
+
+        public String getActualPriorCallTransactionExternalKey() {
+            return actualPriorCallTransactionExternalKey;
+        }
+
+        public BigDecimal getActualPriorCallProcessedAmount() {
+            return actualPriorCallProcessedAmount;
+        }
+
+        public Currency getActualPriorCallProcessedCurrency() {
+            return actualPriorCallProcessedCurrency;
+        }
+
+        public UUID getActualOnSuccessCallPaymentId() {
+            return actualOnSuccessCallPaymentId;
+        }
+
+        public String getActualOnSuccessCallPaymentExternalKey() {
+            return actualOnSuccessCallPaymentExternalKey;
+        }
+
+        public UUID getActualOnSuccessCallTransactionId() {
+            return actualOnSuccessCallTransactionId;
+        }
+
+        public String getActualOnSuccessCallTransactionExternalKey() {
+            return actualOnSuccessCallTransactionExternalKey;
+        }
+
+        public BigDecimal getActualOnSuccessCallProcessedAmount() {
+            return actualOnSuccessCallProcessedAmount;
+        }
+
+        public Currency getActualOnSuccessCallProcessedCurrency() {
+            return actualOnSuccessCallProcessedCurrency;
+        }
+
+        public UUID getActualOnFailureCallPaymentId() {
+            return actualOnFailureCallPaymentId;
+        }
+
+        public String getActualOnFailureCallPaymentExternalKey() {
+            return actualOnFailureCallPaymentExternalKey;
+        }
+
+        public UUID getActualOnFailureCallTransactionId() {
+            return actualOnFailureCallTransactionId;
+        }
+
+        public String getActualOnFailureCallTransactionExternalKey() {
+            return actualOnFailureCallTransactionExternalKey;
+        }
+
+        public BigDecimal getActualOnFailureCallProcessedAmount() {
+            return actualOnFailureCallProcessedAmount;
+        }
+
+        public Currency getActualOnFailureCallProcessedCurrency() {
+            return actualOnFailureCallProcessedCurrency;
+        }
+
         @Override
         public PriorPaymentControlResult priorCall(final PaymentControlContext context, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+            actualPriorCallPaymentId = context.getPaymentId();
+            actualPriorCallPaymentExternalKey = context.getPaymentExternalKey();
+            actualPriorCallTransactionId = context.getTransactionId();
+            actualPriorCallTransactionExternalKey = context.getTransactionExternalKey();
+            actualPriorCallProcessedAmount = context.getProcessedAmount();
+            actualPriorCallProcessedCurrency = context.getProcessedCurrency();
+
             return new PriorPaymentControlResult() {
                 @Override
                 public boolean isAborted() {
@@ -566,12 +967,49 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         @Override
         public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext context, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+            actualOnSuccessCallPaymentId = context.getPaymentId();
+            actualOnSuccessCallPaymentExternalKey = context.getPaymentExternalKey();
+            actualOnSuccessCallTransactionId = context.getTransactionId();
+            actualOnSuccessCallTransactionExternalKey = context.getTransactionExternalKey();
+            actualOnSuccessCallProcessedAmount = context.getProcessedAmount();
+            actualOnSuccessCallProcessedCurrency = context.getProcessedCurrency();
+
             return new DefaultOnSuccessPaymentControlResult();
         }
 
         @Override
         public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext context, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+            actualOnFailureCallPaymentId = context.getPaymentId();
+            actualOnFailureCallPaymentExternalKey = context.getPaymentExternalKey();
+            actualOnFailureCallTransactionId = context.getTransactionId();
+            actualOnFailureCallTransactionExternalKey = context.getTransactionExternalKey();
+            actualOnFailureCallProcessedAmount = context.getProcessedAmount();
+            actualOnFailureCallProcessedCurrency = context.getProcessedCurrency();
+
             return new DefaultFailureCallResult(null);
+        }
+
+        public void resetActualValues() {
+            actualPriorCallPaymentId = null;
+            actualPriorCallPaymentExternalKey = null;
+            actualPriorCallTransactionId = null;
+            actualPriorCallTransactionExternalKey = null;
+            actualPriorCallProcessedAmount = null;
+            actualPriorCallProcessedCurrency = null;
+
+            actualOnSuccessCallPaymentId = null;
+            actualOnSuccessCallPaymentExternalKey = null;
+            actualOnSuccessCallTransactionId = null;
+            actualOnSuccessCallTransactionExternalKey = null;
+            actualOnSuccessCallProcessedAmount = null;
+            actualOnSuccessCallProcessedCurrency = null;
+
+            actualOnFailureCallPaymentId = null;
+            actualOnFailureCallPaymentExternalKey = null;
+            actualOnFailureCallTransactionId = null;
+            actualOnFailureCallTransactionExternalKey = null;
+            actualOnFailureCallProcessedAmount = null;
+            actualOnFailureCallProcessedCurrency = null;
         }
     }
 }

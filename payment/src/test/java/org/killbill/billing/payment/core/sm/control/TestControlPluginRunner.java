@@ -43,6 +43,7 @@ public class TestControlPluginRunner extends PaymentTestSuiteNoDB {
         final UUID paymentMethodId = UUIDs.randomUUID();
         final UUID paymentId = UUIDs.randomUUID();
         final String paymentExternalKey = UUIDs.randomUUID().toString();
+        final UUID paymentTransactionId = UUIDs.randomUUID();
         final String paymentTransactionExternalKey = UUIDs.randomUUID().toString();
         final BigDecimal amount = BigDecimal.ONE;
         final Currency currency = Currency.USD;
@@ -55,12 +56,15 @@ public class TestControlPluginRunner extends PaymentTestSuiteNoDB {
                                                                                                            null,
                                                                                                            paymentId,
                                                                                                            paymentExternalKey,
+                                                                                                           paymentTransactionId,
                                                                                                            paymentTransactionExternalKey,
                                                                                                            PaymentApiType.PAYMENT_TRANSACTION,
                                                                                                            TransactionType.AUTHORIZE,
                                                                                                            null,
                                                                                                            amount,
                                                                                                            currency,
+                                                                                                           null,
+                                                                                                           null,
                                                                                                            true,
                                                                                                            paymentControlPluginNames,
                                                                                                            pluginProperties,
