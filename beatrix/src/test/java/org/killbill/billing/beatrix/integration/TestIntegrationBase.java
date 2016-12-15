@@ -86,6 +86,7 @@ import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
+import org.killbill.billing.payment.api.AdminPaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -206,6 +207,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     @Inject
     protected PaymentApi paymentApi;
+
+    @Inject
+    protected AdminPaymentApi adminPaymentApi;
 
     @Inject
     protected EntitlementApi entitlementApi;

@@ -212,7 +212,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         adjustStateContextPluginProperties(paymentStateContext, result.getAdjustedPluginProperties());
     }
 
-    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentControlContext paymentControlContext) {
+    protected OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentControlContext paymentControlContext) {
         final DateTime retryDate = executePluginOnFailureCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
         if (retryDate != null) {
             ((PaymentStateControlContext) paymentStateContext).setRetryDate(retryDate);

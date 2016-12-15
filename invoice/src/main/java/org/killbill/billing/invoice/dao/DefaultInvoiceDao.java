@@ -763,7 +763,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                     if (existingAttempt == null) {
                         transactional.create(invoicePayment, context);
-                    } else if (!existingAttempt.getSuccess()) {
+                    } else {
                         transactional.updateAttempt(existingAttempt.getRecordId(),
                                                     invoicePayment.getPaymentId().toString(),
                                                     invoicePayment.getPaymentDate().toDate(),

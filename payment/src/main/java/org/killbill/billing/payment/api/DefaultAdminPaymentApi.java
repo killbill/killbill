@@ -17,30 +17,40 @@
 
 package org.killbill.billing.payment.api;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
+import org.killbill.billing.payment.core.janitor.IncompletePaymentAttemptTask;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
+import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+
 public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPaymentApi {
 
     private final PaymentStateMachineHelper paymentSMHelper;
+    private final IncompletePaymentAttemptTask incompletePaymentAttemptTask;
     private final PaymentDao paymentDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultAdminPaymentApi(final PaymentConfig paymentConfig,
                                   final PaymentStateMachineHelper paymentSMHelper,
+                                  final IncompletePaymentAttemptTask incompletePaymentAttemptTask,
                                   final PaymentDao paymentDao,
                                   final InternalCallContextFactory internalCallContextFactory) {
         super(paymentConfig, internalCallContextFactory);
         this.paymentSMHelper = paymentSMHelper;
+        this.incompletePaymentAttemptTask = incompletePaymentAttemptTask;
         this.paymentDao = paymentDao;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -111,5 +121,20 @@ public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPayme
                                                            paymentTransaction.getGatewayErrorCode(),
                                                            paymentTransaction.getGatewayErrorMsg(),
                                                            internalCallContext);
+
+        // If there is a payment attempt associated with that transaction, we need to update it as well
+        final List<PaymentAttemptModelDao> paymentAttemptsModelDao = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransaction.getExternalKey(), internalCallContext);
+        final PaymentAttemptModelDao paymentAttemptModelDao = Iterables.<PaymentAttemptModelDao>tryFind(paymentAttemptsModelDao,
+                                                                                                        new Predicate<PaymentAttemptModelDao>() {
+                                                                                                            @Override
+                                                                                                            public boolean apply(final PaymentAttemptModelDao input) {
+                                                                                                                return paymentTransaction.getId().equals(input.getTransactionId());
+                                                                                                            }
+                                                                                                        }).orNull();
+        if (paymentAttemptModelDao != null) {
+            // We can re-use the logic from IncompletePaymentAttemptTask as it is doing very similar work (i.e. run the completion part of
+            // the state machine to call the plugins and update the attempt in the right terminal state)
+            incompletePaymentAttemptTask.doIteration(paymentAttemptModelDao);
+        }
     }
 }
